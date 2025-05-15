@@ -4,4 +4,9 @@
     <h3>{{post.title}}</h3>
     <img src="{{post.image.url}}" alt="">
     <p>{{post.content}}</p>
+    <form action="{% url 'ddokfarm:comment_create' post.id %}" method="POST">
+        {% csrf_token %}
+        {{form}}
+        <input type="submit">
+    </form>
 {% endblock %}
