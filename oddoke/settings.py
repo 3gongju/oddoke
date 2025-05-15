@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ddokfarm',
     'accounts',
+    'django_browser_reload',
 ]
 
 MIDDLEWARE = [

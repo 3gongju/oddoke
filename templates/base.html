@@ -1,14 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oddoke</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- (선택) Tailwind 설정 확장 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4f46e5', // indigo-600
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <h1>어덕해 ⌯>ㅅ•⌯ಣ</h1>
-    <p>프로젝트 내용</p>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex items-center justify-center p-8">
+
+    <div class="text-center">
+        <h1 class="text-4xl font-bold text-primary mb-4">어덕해 ⌯>ㅅ•⌯ಣ</h1>
+        <p class="text-lg text-gray-600">어떻게 어덕해? 어떻게 어떡해~</p>
+    </div>
+
     {% block body %}
     {% endblock %}
+
 </body>
 </html>
