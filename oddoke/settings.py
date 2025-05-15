@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ddokfarm',
     'accounts',
-    'tailwind',
+    #'tailwind',
     #'theme',
 ]
 
@@ -131,4 +131,4 @@ MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'accounts.User'
 
-TAILWIND_APP_NAME = 'theme'
+# TAILWIND_APP_NAME = 'theme'
