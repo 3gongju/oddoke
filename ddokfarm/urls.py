@@ -3,4 +3,7 @@ from . import views
 
 app_name = 'ddokfarm'
 
-urlpatterns = [path('create/', views.create, name='create')]
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('create/', views.create, name='create'),
+]

@@ -1,7 +1,7 @@
 from django.forms import ModelForm
-from .models import Article
+from .models import Post
 
 class PostForm(ModelForm):
     class Meta():
         model = Post
-        fields = ('content', 'image', )
+        fields = ('title', 'content', 'image', )
