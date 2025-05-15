@@ -2,10 +2,10 @@ from django.shortcuts import render, redirect
 from .forms import PostForm
 from .models import Post
 from django.contrib.auth.decorators import login_required
-
+from django.shortcuts import render
 # Create your views here.
 def main(request):
-    return render(request, 'base.html')
+    return render(request, 'main/home.html') #home.html로 렌더링
 
 @login_required
 def create(request):
