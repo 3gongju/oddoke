@@ -44,3 +44,14 @@ def login(request):
 def logout(request):
     auth_logout(request)
     return redirect('ddokfarm:index')
+
+
+@login_required
+def profile(request, username):
+    user_profile = User.objects.get(username=username) # user와 충돌해서 변수 이름 변경
+
+    context = {
+        'user_profile':user_profile,
+    }
+
+    return render(request, 'profile.html', context)

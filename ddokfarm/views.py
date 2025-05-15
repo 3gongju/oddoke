@@ -25,20 +25,48 @@ def create(request):
 
 def index(request):
     posts = Post.objects.all()
-    form = CommentForm()
 
     context = {
         'posts': posts,
-        'form':form,
     }
 
     return render(request, 'index.html', context)
 
+@login_required
+def update(request, id):
+    post = Post.objects.get(id=id) 
+    
+    if request.method == 'POST':
+            form = PostForm(request.POST, instance=post) 
+            if form.is_valid(): # form에 대해 유효성 검사
+                form.save()
+                return redirect('ddokfarm:detail', id=id)
+
+    else:
+        form = PostForm(instance=post) #instance
+
+    context = {
+        'form':form,
+    }
+
+    return render(request, 'update.html', context)
+
+@login_required
+def delete(request, id):
+    post = Post.objects.get(id=id)
+    post.delete()
+
+    return redirect('ddokfarm:index')
+
 def detail(request, id):
     post = Post.objects.get(id=id)
+    comments = post.comment_set.all() 
+    form = CommentForm()
 
     context = {
         'post': post,
+        'comments': comments,
+        'form':form,
     }
 
     return render(request, 'detail.html', context)
@@ -54,3 +82,10 @@ def comment_create(request, post_id):
         comment.save()
 
         return redirect('ddokfarm:detail', id=post_id)
+
+@login_required
+def comment_delete(request, post_id, id): # id의 id값을 찾음.
+    comment = Comment.objects.get(id=id)
+    comment.delete()
+
+    return redirect('ddokfarm:detail', id=post_id) # detail로 돌아감.
