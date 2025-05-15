@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'ddokfarm',
     'accounts',
     'django_browser_reload',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +101,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+LOGIN_REDIRECT_URL = '/'#로그인 시 home.html로 리다이렉트
+LOGOUT_REDIRECT_URL = '/' #로그아웃 시 home.html로 리다이렉트
 
 
 # Internationalization
