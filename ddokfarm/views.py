@@ -4,6 +4,9 @@ from .models import Post
 from django.contrib.auth.decorators import login_required
 
 # Create your views here.
+def main(request):
+    return render(request, 'base.html')
+
 @login_required
 def create(request):
     if request.method == 'POST':
