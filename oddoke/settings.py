@@ -39,8 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ddokfarm',
     'accounts',
-    #'tailwind',
-    #'theme',
 ]
 
 MIDDLEWARE = [
