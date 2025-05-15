@@ -6,5 +6,5 @@ class CustomUserCreationForm(UserCreationForm):
         model = User
         fields = ('username', 'profile_image', )
 
-class CustomUserCreationForm(AuthenticationForm):
+class CustomAuthenticationForm(AuthenticationForm):
     pass
