@@ -1,0 +1,25 @@
+<div>
+    <label for="id_title" class="block text-sm font-medium text-gray-700">제목</label>
+    <input type="text" name="title" id="id_title"
+           value="{{ form.title.value|default:'' }}"
+           class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+</div>
+
+<div>
+    <label for="id_content" class="block text-sm font-medium text-gray-700">내용</label>
+    <textarea name="content" id="id_content" rows="5"
+              class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500">{{ form.content.value|default:'' }}</textarea>
+</div>
+
+<div>
+    <label for="id_image" class="block text-sm font-medium text-gray-700">이미지</label>
+    {% if post.image %}
+        <p class="text-sm text-gray-500 mb-2">현재 이미지: {{ post.image.name }}</p>
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-32 h-32 object-cover mb-2 border">
+    {% endif %}
+    <input type="file" name="image" id="id_image"
+           class="mt-1 block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:bg-blue-500 file:text-white hover:file:bg-blue-600" />
+</div>
