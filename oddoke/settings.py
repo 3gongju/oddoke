@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ddokfarm',
+    'ddokdam',
     'accounts',
     'django_browser_reload',
     'widget_tweaks',
