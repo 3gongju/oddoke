@@ -1,5 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from .forms import PostForm
 from .models import Post
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 def index(request):
@@ -9,3 +11,20 @@ def index(request):
         'posts':posts,
     }
     return render(request,'index.html', context)
+
+@login_required
+def create(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
+            return redirect('ddokdam:index')
+    else:
+        form = PostForm()
+    
+    context = {
+        'form':form,
+    }
+    return render(request, 'create.html', context)
