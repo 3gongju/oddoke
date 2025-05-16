@@ -8,9 +8,20 @@
         <div class="col-9">
             <div class="row">
                 <div class="col-3">{{user_profile.username}}</div>
+                {% if user != user_profile %}
+                <div class="col-9">
+                    {% if user in user_profile.followers.all %}
+                        <a href="{% url 'accounts:follow' user_profile.username %}" class="btn btn-secondary">팔로우 취소</a>
+                    {% else %}
+                        <a href="{% url 'accounts:follow' user_profile.username %}" class="btn btn-primary">팔로우</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
             <div class="row">
                 <div class="col-4">게시물 : {{user_profile.post_set.all|length}}</div>
+                <div class="col-4">팔로워 : {{user_profile.followers.all|length}}</div>
+                <div class="col-4">팔로우 : {{user_profile.followings.all|length}}</div>
             </div>
         </div> 
     </div>

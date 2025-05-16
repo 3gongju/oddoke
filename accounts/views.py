@@ -57,3 +57,20 @@ def profile(request, username):
     }
 
     return render(request, 'profile.html', context)
+
+@login_required
+def follow(request, username):
+    me = request.user
+    you = User.objects.get(username=username)
+
+    if me==you: # 스스로 팔로우하는 것 방지 (백엔드)
+        return redirect('accounts:profile', username)
+
+#   if you in me.followings.all():
+    if me in you.followers.all():
+        you.followers.remove(me)
+        #me.followings.remove(me)
+    else:
+#        you.followers.add(me)
+        me.followings.add(you)
+    return redirect('accounts:profile', username)
