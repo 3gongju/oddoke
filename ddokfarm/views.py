@@ -3,9 +3,8 @@ from .forms import PostForm, CommentForm
 from .models import Post, Comment
 from django.contrib.auth.decorators import login_required
 
-# Create your views here.
 def main(request):
-    return render(request, 'base.html')
+    return render(request, 'main/home.html') #home.html로 렌더링
 
 @login_required
 def create(request):

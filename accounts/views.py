@@ -5,6 +5,8 @@ from django.contrib.auth import logout as auth_logout
 from .models import User
 from django.contrib.auth.decorators import login_required
 
+
+
 # Create your views here.
 def signup(request):
     if request.method == 'POST':
@@ -25,25 +27,25 @@ def login(request):
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, request.POST)
         if form.is_valid():
-
             user = form.get_user()
-
             auth_login(request, user)
 
-            return redirect('ddokfarm:index')
+            # next 파라미터 우선 적용
+            next_url = request.GET.get('next') or '/'
+            return redirect(next_url)
     else:
         form = CustomAuthenticationForm()
 
     context = {
         'form': form,
     }
-
     return render(request, 'login.html', context)
+
 
 @login_required
 def logout(request):
     auth_logout(request)
-    return redirect('ddokfarm:index')
+    return redirect('/')  # 로그아웃 후 home.html 경로로 이동
 
 
 @login_required
