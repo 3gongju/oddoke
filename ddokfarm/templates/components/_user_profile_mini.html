@@ -1,0 +1,13 @@
+<div class="flex items-center p-3 border-b border-gray-100">
+    {% if user.profile_image %}
+        <img src="{{ user.profile_image.url }}" alt="{{ user.username }}" 
+             class="w-8 h-8 rounded-full mr-2 object-cover">
+    {% else %}
+        <div class="w-8 h-8 rounded-full bg-gray-200 mr-2 flex items-center justify-center">
+            <span class="text-gray-500 text-xs">{{ user.username|first|upper }}</span>
+        </div>
+    {% endif %}
+    <a href="{% url 'accounts:profile' user.username %}" class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
+        {{ user.username }}
+    </a>
+</div>
