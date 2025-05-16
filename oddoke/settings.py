@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ddokfarm',
+    'ddokdam',
     'accounts',
     'django_browser_reload',
     'widget_tweaks',
@@ -135,6 +136,4 @@ MEDIA_URL = '/media/'
 AUTH_USER_MODEL = 'accounts.User'
 
 # TAILWIND_APP_NAME = 'theme'
-
-# settings.py
 

@@ -24,5 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main, name='home'),  # ✅ 메인페이지
     path('ddokfarm/', include('ddokfarm.urls')),
+    path('ddokdam/', include('ddokdam.urls')),
     path('accounts/', include('accounts.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
