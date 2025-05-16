@@ -1,4 +1,4 @@
-<!-- Tailwind 기반 UI 구성 전용 -->
+<!-- components/_post_form_ui.html -->
 <!-- 이미지 필드 -->
 <div class="mb-4">
   <label for="id_image" class="block text-sm font-medium text-gray-700">상품 이미지</label>
@@ -84,8 +84,8 @@
     {% endfor %}
   </div>
   
-  <!-- 희망 장소 입력 (항상 표시) -->
-  <div>
+  <!-- 희망 장소 입력 (직거래 가능 선택 시에만 표시) -->
+  <div id="location-field" class="{% if form.direct_deal.value != 'possible' %}hidden{% endif %}">
     <label for="id_preferred_location" class="block text-sm font-medium text-gray-700 mb-1">희망 장소 (직거래 가능 시)</label>
     {{ form.preferred_location }}
   </div>
@@ -109,3 +109,27 @@
   <label for="id_content" class="block text-sm font-medium text-gray-700 mb-1">내용</label>
   {{ form.content }}
 </div>
+
+<!-- JavaScript 추가: 페이지 끝 부분에 추가 -->
+<script>
+  // 라디오 버튼 변경 감지
+  document.addEventListener('DOMContentLoaded', function() {
+    // 모든 직거래 관련 라디오 버튼 가져오기
+    const directDealRadios = document.querySelectorAll('input[name="direct_deal"]');
+    const locationField = document.getElementById('location-field');
+    
+    // 각 라디오 버튼에 이벤트 리스너 추가
+    directDealRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        // 직거래 가능이 선택되었는지 확인
+        if (this.value === 'possible') {
+          // 가능하면 필드 표시
+          locationField.classList.remove('hidden');
+        } else {
+          // 불가능하면 필드 숨기기
+          locationField.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>

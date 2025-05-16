@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    {% include 'components/_category_header_ui.html' %}
+    
+    <!-- 카테고리 섹션들 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <!-- 덕담 한마디 섹션 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% include 'components/_community_section_ui.html' with posts=community_posts %}
+        </div>
+        
+        <!-- 예절샷 섹션 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% include 'components/_food_section_ui.html' with posts=food_posts %}
+        </div>
+        
+        <!-- 덕생 후기 섹션 -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            {% include 'components/_cafe_section_ui.html' with posts=cafe_posts %}
+        </div>
+    </div>
+</div>
+{% endblock %}

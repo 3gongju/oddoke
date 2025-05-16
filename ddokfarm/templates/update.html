@@ -3,19 +3,19 @@
 {% block body %}
 <div class="max-w-xl mx-auto mt-12 mb-8">
     <div class="bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-6 text-center">게시물 수정</h1>
+        <h1 class="text-2xl font-bold mb-6 text-center">상품 수정</h1>
         
         <form method="POST" enctype="multipart/form-data" class="space-y-4">
             {% csrf_token %}
             
-            {% include 'components/_update_form_ui.html' with form=form post=post %}
+            {% include 'components/_post_form_ui.html' with form=form post=post categories=categories %}
             
             <div class="flex justify-between pt-2">
                 <a href="{% url 'ddokfarm:detail' post.id %}" 
                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-800">
                     취소
                 </a>
-                <button type="submit" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white">
+                <button type="submit" class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 rounded text-white font-bold">
                     수정 완료
                 </button>
             </div>
