@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    {# 작성자 전용: 수정 / 삭제 / 판매완료 버튼 (문의하기 버튼 아래 간격 충분히 띄워 배치) #}
+    <!-- {# 작성자 전용: 수정 / 삭제 / 판매완료 버튼 (문의하기 버튼 아래 간격 충분히 띄워 배치) #} -->
     {% if user == post.user %}
     <div class="flex justify-end space-x-3 mt-8">
       <a href="{% url 'ddokfarm:update' post.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
