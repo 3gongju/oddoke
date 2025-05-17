@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="max-w-5xl mx-auto px-4 py-10 bg-white rounded-lg shadow">
+    <!-- 헤더 - 제목 및 사용자 정보 -->
+    {% include 'components/post/_header_ui.html' with post=post %}
+    
+    <!-- 게시물 내용 -->
+    {% include 'components/post/_content_ui.html' with post=post %}
+    
+    <!-- 댓글 작성 -->
+    {% include 'components/post/_form_ui.html' with post=post %}
+    
+    <!-- 댓글 목록 -->
+    {% include 'components/comment/_list_ui.html' with comments=comments post=post %}
+</div>
+{% endblock %}

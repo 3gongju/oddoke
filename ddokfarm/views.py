@@ -33,12 +33,12 @@ def create(request):
 def index(request):
     """게시물 목록을 보여줍니다."""
     posts = Post.objects.all().order_by('-created_at')
-    
+
     # 카테고리 필터링 처리
     category_id = request.GET.get('category')
     if category_id:
         posts = posts.filter(category_id=category_id)
-    
+
     # 정렬 처리
     sort = request.GET.get('sort', 'latest')  # 기본값은 최신순
     if sort == 'price_low':
@@ -46,11 +46,11 @@ def index(request):
     elif sort == 'price_high':
         posts = posts.order_by('-price')
     elif sort == 'latest':
-        posts = posts.order_by('-created_at')  # 기본값, 명시적으로 설정
-    
+        posts = posts.order_by('-created_at')  # 명시적으로 설정
+
     # 카테고리 목록 가져오기
     categories = Category.objects.all()
-    
+
     context = {
         'posts': posts,
         'categories': categories,
@@ -58,7 +58,9 @@ def index(request):
         'current_sort': sort,
     }
 
-    return render(request, 'index.html', context)
+    return render(request, 'ddokfarm/index.html', context)
+
+
 
 @login_required
 def update(request, id):
@@ -104,10 +106,10 @@ def delete(request, id):
         print(f"삭제 오류: {e}")
         return redirect('ddokfarm:detail', id=id)
 
-def detail(request, id):
+def detail(request, post_id):  # ✅ 매개변수 이름을 URL 패턴과 일치시켜야 함
     """게시물 상세 내용을 보여줍니다."""
-    post = get_object_or_404(Post, id=id)
-    comments = post.comment_set.all()  # 해당 게시물에 연결된 모든 댓글 가져오기
+    post = get_object_or_404(Post, id=post_id)
+    comments = post.comment_set.all()
     form = CommentForm()
 
     context = {
@@ -115,8 +117,7 @@ def detail(request, id):
         'comments': comments,
         'form': form,
     }
-
-    return render(request, 'detail.html', context)
+    return render(request, 'ddokfarm/detail.html', context)  # ✅ 템플릿 경로 수정
 
 @login_required
 def comment_create(request, post_id):

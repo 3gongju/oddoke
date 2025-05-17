@@ -1,0 +1,39 @@
+<!-- 상단 2열 그리드 -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- 좌측 이미지 (대표 이미지) -->
+  <div class="bg-white p-6 flex justify-center items-center rounded-lg shadow">
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="max-w-full max-h-[500px] object-contain">
+  </div>
+
+  <!-- 우측 정보 -->
+  <div class="space-y-4">
+    <h1 class="text-2xl font-bold">{{ post.title }}</h1>
+
+    <div class="text-xl text-yellow-600 font-semibold">
+      ₩{{ post.price|floatformat:"0" }}
+      {% if post.is_sold %}
+        <span class="ml-2 text-sm bg-gray-500 text-white px-2 py-1 rounded-full">판매완료</span>
+      {% else %}
+        <span class="ml-2 text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">판매중</span>
+      {% endif %}
+    </div>
+
+    <!-- 판매자 정보 -->
+    <div class="flex items-center space-x-3">
+      {% if post.user.profile_image %}
+        <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}"
+             class="w-10 h-10 rounded-full object-cover">
+      {% endif %}
+      <span class="text-sm text-gray-600">{{ post.user.username }}</span>
+    </div>
+
+    <!-- 버튼 -->
+    <div class="space-y-2">
+      <button class="w-full bg-yellow-500 text-white py-2 rounded-md font-semibold hover:bg-yellow-600">구매하기</button>
+      <div class="flex gap-2">
+        <button class="w-1/2 border border-yellow-500 text-yellow-600 py-2 rounded-md">찜하기</button>
+        <button class="w-1/2 border border-gray-300 text-gray-600 py-2 rounded-md">문의하기</button>
+      </div>
+    </div>
+  </div>
+</div>

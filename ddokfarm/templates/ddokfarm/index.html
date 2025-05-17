@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    justify-items: center;
+    padding-bottom: 4rem;
+  }
+
+  @media (min-width: 1024px) {
+    .product-grid {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- 검색/정렬 필터 UI -->
+{% include 'components/shared/_index_header_ui.html' %}
+
+<!-- 게시글 카드 그리드 -->
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    {% for post in posts %}
+      {% include 'components/post/_post_card_ui.html' %}
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
