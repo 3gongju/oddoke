@@ -1,0 +1,51 @@
+<!-- JS용 스크립트 분리 -->
+<!-- Javascript 이벤트 처리 (예: 이미지 미리보기, 해시태그 추가, 크롭 기능 등) -->
+
+<!-- 이미지 크롭은 CropperJS 또는 filepond + image-preview 등을 연동해 서버에 base64로 전송하거나, 자르기 좌표를 함께 전송하여 Pillow로 처리해야함함. -->
+
+<!-- 해시태그는 별도 모델(Hashtag, ManyToManyField)로 저장하려면 추가 설계가 필요 -->
+
+ <!-- create_form_ui.html의 연결-->
+
+ <script>
+function previewImage(event) {
+  const file = event.target.files[0];
+  if (!file || !file.type.startsWith('image/')) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const container = document.getElementById('imagePreviewContainer');
+    const image = document.getElementById('imagePreview');
+    image.src = e.target.result;
+    container.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("hashtagInput");
+  const tagContainer = document.getElementById("hashtagContainer");
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === "," || e.key === " ") {
+      e.preventDefault();
+      const tagText = input.value.trim().replace(/^#/, "");
+      if (!tagText) return;
+
+      const tag = document.createElement("span");
+      tag.className = "bg-yellow-100 text-yellow-800 text-sm px-2 py-1 rounded-full mr-2 mb-2";
+      tag.innerHTML = `#${tagText} <button onclick="this.parentElement.remove()" class="ml-1 text-xs">×</button>`;
+
+      tagContainer.appendChild(tag);
+
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "hashtags";
+      hidden.value = tagText;
+      tag.appendChild(hidden);
+
+      input.value = "";
+    }
+  });
+});
+</script>

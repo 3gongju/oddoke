@@ -1,5 +1,5 @@
-<!-- templates/ddokdam/category_list.html -->
 {% extends 'base.html' %}
+
 {% block body %}
 <div class="max-w-5xl mx-auto mt-10 px-4">
   <!-- 헤더 -->
@@ -10,19 +10,19 @@
 
   <!-- 카테고리 탭 -->
   <div class="flex space-x-2 mb-4">
-    <a href="{% url 'ddokdam:index' %}" class="px-3 py-1 rounded bg-purple-200">전체</a>
-    <a href="{% url 'ddokdam:category_list' category='community' %}" class="px-3 py-1 rounded bg-gray-100">덕담 한마디</a>
-    <a href="{% url 'ddokdam:category_list' category='food' %}" class="px-3 py-1 rounded bg-gray-100">예절 차리기</a>
-    <a href="{% url 'ddokdam:category_list' category='cafe' %}" class="px-3 py-1 rounded bg-gray-100">덕생 후기</a>
+    <a href="{% url 'ddokdam:index' %}" class="px-3 py-1 rounded {% if category == '' %}bg-purple-200{% else %}bg-gray-100{% endif %}">전체</a>
+    <a href="{% url 'ddokdam:category_list' category='community' %}" class="px-3 py-1 rounded {% if category == 'community' %}bg-purple-200{% else %}bg-gray-100{% endif %}">덕담 한마디</a>
+    <a href="{% url 'ddokdam:category_list' category='food' %}" class="px-3 py-1 rounded {% if category == 'food' %}bg-purple-200{% else %}bg-gray-100{% endif %}">예절 차리기</a>
+    <a href="{% url 'ddokdam:category_list' category='cafe' %}" class="px-3 py-1 rounded {% if category == 'cafe' %}bg-purple-200{% else %}bg-gray-100{% endif %}">덕생 후기</a>
   </div>
 
   <!-- 정렬 탭 -->
   <div class="flex justify-between items-center mb-4">
     <input type="text" placeholder="검색어를 입력하세요" class="w-2/3 px-3 py-2 border rounded" />
     <div class="space-x-2">
-      <a href="?sort=latest" class="px-3 py-1 bg-purple-100 rounded">최신순</a>
-      <a href="?sort=likes" class="px-3 py-1 bg-gray-100 rounded">인기순</a>
-      <a href="?sort=comments" class="px-3 py-1 bg-gray-100 rounded">댓글순</a>
+      <a href="?sort=latest" class="px-3 py-1 {% if current_sort == 'latest' %}bg-purple-100{% else %}bg-gray-100{% endif %} rounded">최신순</a>
+      <a href="?sort=likes" class="px-3 py-1 {% if current_sort == 'likes' %}bg-purple-100{% else %}bg-gray-100{% endif %} rounded">인기순</a>
+      <a href="?sort=comments" class="px-3 py-1 {% if current_sort == 'comments' %}bg-purple-100{% else %}bg-gray-100{% endif %} rounded">댓글순</a>
     </div>
   </div>
 

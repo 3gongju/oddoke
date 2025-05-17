@@ -4,16 +4,22 @@ from .models import DdokdamPost, DdokdamComment
 from .forms import DdokdamPostForm, DdokdamCommentForm
 
 def index(request):
-    community_posts = DdokdamPost.objects.filter(category='community').order_by('-created_at')[:2]
-    food_posts = DdokdamPost.objects.filter(category='food').order_by('-created_at')[:2]
-    cafe_posts = DdokdamPost.objects.filter(category='cafe').order_by('-created_at')[:2]
+    posts = DdokdamPost.objects.all().order_by('-created_at')
+    sort = request.GET.get('sort', 'latest')
+
+    if sort == 'likes':
+        posts = posts.order_by('-created_at')  # 좋아요 정렬 구현 필요
+    elif sort == 'comments':
+        posts = posts.order_by('-created_at')  # 댓글 정렬 구현 필요
 
     context = {
-        'community_posts': community_posts,
-        'food_posts': food_posts,
-        'cafe_posts': cafe_posts,
+        'posts': posts,
+        'category': '',  # 전체
+        'category_name': '전체',
+        'current_sort': sort,
     }
-    return render(request, 'ddokdam/index.html', context)
+    return render(request, 'ddokdam/category_list.html', context)
+
 
 @login_required
 def create(request):
@@ -23,11 +29,20 @@ def create(request):
             post = form.save(commit=False)
             post.user = request.user
             post.save()
-            return redirect('ddokdam:index')
+
+            # ✅ 해시태그 저장 (models.py에 hashtags 필드가 있어야 함)
+            hashtags = request.POST.getlist('hashtags')  # JS에서 <input name="hashtags"> 로 여러 개 넘어옴
+            if hashtags:
+                post.hashtags = ','.join(hashtags)  # 문자열로 저장 (DB에 #없이 저장)
+                post.save()
+
+            return redirect('ddokdam:detail', post_id=post.id)
     else:
         form = DdokdamPostForm()
 
     return render(request, 'create.html', {'form': form})
+
+
 
 
 def detail(request, post_id):
@@ -99,8 +114,10 @@ def comment_create(request, post_id):
         form = DdokdamCommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
-            comment.post = post
             comment.user = request.user
+            comment.post = post
             comment.save()
+        return redirect('ddokdam:detail', post_id=post_id)  # indent 중요
 
+    # POST가 아닌 경우나 실패해도 리디렉션 필수
     return redirect('ddokdam:detail', post_id=post_id)

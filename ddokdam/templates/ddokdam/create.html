@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block head %}
-  <script src="https://cdn.tailwindcss.com"></script>
-{% endblock %}
-
 {% block body %}
-  <div class="max-w-xl mx-auto mt-12">
-    <form method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow-md space-y-4">
-      {% csrf_token %}
+<div class="max-w-xl mx-auto mt-10 space-y-6">
+  <h2 class="text-xl font-bold mb-4">게시물 작성</h2>
 
-      {% include 'create_form_ui.html' %}  <!-- UI만 분리 -->
+  {% if form.errors %}
+    <div class="text-red-500 text-sm mb-4">{{ form.errors }}</div>
+  {% endif %}
 
-      <button type="submit"
-              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
-        작성 완료
-      </button>
-    </form>
-  </div>
+  <form method="post" enctype="multipart/form-data" id="postForm" class="space-y-6">
+    {% csrf_token %}
+    {% include 'ddokdam/create_form_ui.html' %}
+    <button type="submit"
+      class="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-4 py-2 rounded w-full">
+      작성 완료
+    </button>
+  </form>
+</div>
+
+{% include 'ddokdam/create_form_script.html' %}
 {% endblock %}
