@@ -11,7 +11,7 @@
         class="bg-white p-6 rounded-lg shadow-md space-y-4">
     {% csrf_token %}
 
-    {% include 'components/create_form_ui.html' %}
+    {% include 'components/post/_form_ui.html' %}
 
     <div class="pt-4">
       <button type="submit"
@@ -22,5 +22,5 @@
   </form>
 </div>
 
-{% include 'components/create_form_script.html' %}
+{% include 'components/shared/create_form_script.html' %}
 {% endblock %}
