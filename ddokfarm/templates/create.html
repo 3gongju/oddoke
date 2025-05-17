@@ -6,16 +6,21 @@
 {% endblock %}
 
 {% block body %}
-  <div class="max-w-xl mx-auto mt-12">
-    <form method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow-md space-y-4">
-      {% csrf_token %}
+<div class="max-w-xl mx-auto mt-12">
+  <form method="POST" enctype="multipart/form-data"
+        class="bg-white p-6 rounded-lg shadow-md space-y-4">
+    {% csrf_token %}
 
-      {% include 'create_form_ui.html' %}  <!-- UI만 분리 -->
+    {% include 'components/create_form_ui.html' %}
 
+    <div class="pt-4">
       <button type="submit"
               class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
         작성 완료
       </button>
-    </form>
-  </div>
+    </div>
+  </form>
+</div>
+
+{% include 'components/create_form_script.html' %}
 {% endblock %}
