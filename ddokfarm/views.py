@@ -120,24 +120,6 @@ def detail(request, id):
 
 @login_required
 def comment_create(request, post_id):
-<<<<<<< HEAD
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        # post가 없는 경우에도 404 대신 안전한 리디렉션 또는 메시지 처리
-        return redirect('ddokfarm:index')  # 예: 게시판 메인으로 이동
-
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.post = post
-            comment.save()
-
-    # 폼이 유효하지 않거나 GET 요청일 경우에도 detail로 이동
-    return redirect('ddokfarm:detail', post_id=post.id)
-=======
     """댓글을 생성합니다."""
     post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST)
@@ -151,7 +133,6 @@ def comment_create(request, post_id):
     
     # 폼이 유효하지 않을 경우, 다시 상세 페이지로
     return redirect('ddokfarm:detail', id=post_id)
->>>>>>> 0fc38c738e3dab5016788bbea9138ef1876252bb
 
 @login_required
 def comment_delete(request, post_id, id):
