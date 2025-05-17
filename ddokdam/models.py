@@ -13,5 +13,3 @@ class Post(models.Model):
         crop=['middle', 'center'],
         upload_to='image'
     )
-
-   
