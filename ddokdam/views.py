@@ -1,20 +1,26 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.http import JsonResponse
+
 from .models import DdokdamPost, DdokdamComment
 from .forms import DdokdamPostForm, DdokdamCommentForm
 
+
 def index(request):
-    posts = DdokdamPost.objects.all().order_by('-created_at')
     sort = request.GET.get('sort', 'latest')
+    posts = DdokdamPost.objects.all()
 
     if sort == 'likes':
-        posts = posts.order_by('-created_at')  # 좋아요 정렬 구현 필요
+        posts = posts.annotate(num_likes=Count('like_users')).order_by('-num_likes')
     elif sort == 'comments':
-        posts = posts.order_by('-created_at')  # 댓글 정렬 구현 필요
+        posts = posts.annotate(num_comments=Count('ddokdamcomment')).order_by('-num_comments')
+    else:
+        posts = posts.order_by('-created_at')
 
     context = {
         'posts': posts,
-        'category': '',  # 전체
+        'category': '',
         'category_name': '전체',
         'current_sort': sort,
     }
@@ -30,10 +36,9 @@ def create(request):
             post.user = request.user
             post.save()
 
-            # ✅ 해시태그 저장 (models.py에 hashtags 필드가 있어야 함)
-            hashtags = request.POST.getlist('hashtags')  # JS에서 <input name="hashtags"> 로 여러 개 넘어옴
+            hashtags = request.POST.getlist('hashtags')
             if hashtags:
-                post.hashtags = ','.join(hashtags)  # 문자열로 저장 (DB에 #없이 저장)
+                post.idol = ','.join(hashtags)
                 post.save()
 
             return redirect('ddokdam:detail', post_id=post.id)
@@ -41,8 +46,6 @@ def create(request):
         form = DdokdamPostForm()
 
     return render(request, 'create.html', {'form': form})
-
-
 
 
 def detail(request, post_id):
@@ -55,15 +58,18 @@ def detail(request, post_id):
         'comments': comments,
         'comment_form': comment_form,
     })
-    
-def category_list(request, category):
-    posts = DdokdamPost.objects.filter(category=category).order_by('-created_at')
 
+
+def category_list(request, category):
+    posts = DdokdamPost.objects.filter(category=category)
     sort = request.GET.get('sort', 'latest')
+
     if sort == 'likes':
-        posts = posts.order_by('-created_at')  # 향후 좋아요 수로 수정 가능
+        posts = posts.annotate(num_likes=Count('like_users')).order_by('-num_likes')
     elif sort == 'comments':
-        posts = posts.order_by('-created_at')  # 향후 댓글 수로 수정 가능
+        posts = posts.annotate(num_comments=Count('ddokdamcomment')).order_by('-num_comments')
+    else:
+        posts = posts.order_by('-created_at')
 
     category_name = dict(DdokdamPost.CATEGORY_CHOICES).get(category, '알 수 없음')
 
@@ -75,10 +81,10 @@ def category_list(request, category):
     }
     return render(request, 'ddokdam/category_list.html', context)
 
+
 @login_required
 def update(request, post_id):
     post = get_object_or_404(DdokdamPost, id=post_id)
-
     if request.user != post.user:
         return redirect('ddokdam:detail', post_id=post_id)
 
@@ -90,21 +96,18 @@ def update(request, post_id):
     else:
         form = DdokdamPostForm(instance=post)
 
-    context = {
-        'form': form,
-        'post': post,
-    }
-    return render(request, 'ddokdam/update.html', context)
+    return render(request, 'ddokdam/update.html', {'form': form, 'post': post})
+
 
 @login_required
 def delete(request, post_id):
     post = get_object_or_404(DdokdamPost, id=post_id)
-
     if request.user != post.user:
         return redirect('ddokdam:detail', post_id=post_id)
 
     post.delete()
     return redirect('ddokdam:index')
+
 
 @login_required
 def comment_create(request, post_id):
@@ -117,7 +120,30 @@ def comment_create(request, post_id):
             comment.user = request.user
             comment.post = post
             comment.save()
-        return redirect('ddokdam:detail', post_id=post_id)  # indent 중요
 
-    # POST가 아닌 경우나 실패해도 리디렉션 필수
     return redirect('ddokdam:detail', post_id=post_id)
+
+
+@login_required
+def comment_delete(request, post_id, comment_id):
+    comment = get_object_or_404(DdokdamComment, id=comment_id, post_id=post_id)
+
+    if request.user != comment.user:
+        return redirect('ddokdam:detail', post_id=post_id)
+
+    comment.delete()
+    return redirect('ddokdam:detail', post_id=post_id)
+
+
+@login_required
+def like(request, post_id):
+    post = get_object_or_404(DdokdamPost, id=post_id)
+
+    if request.user in post.like_users.all():
+        post.like_users.remove(request.user)
+        liked = False
+    else:
+        post.like_users.add(request.user)
+        liked = True
+
+    return JsonResponse({'liked': liked, 'like_count': post.like_users.count()})

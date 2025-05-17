@@ -1,0 +1,62 @@
+<!-- components/_category_header_ui.html -->
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">덕담 - 아이돌 팬 커뮤니티</h1>
+    <a href="{% url 'ddokdam:create' %}" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+        <span class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            게시물 작성하기
+        </span>
+    </a>
+</div>
+
+<!-- 카테고리 필터 섹션 -->
+<div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'ddokdam:index' %}" class="px-3 py-1 rounded {% if not category %}bg-purple-500 text-white{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+            전체
+        </a>
+        <a href="{% url 'ddokdam:category_list' category='community' %}" 
+           class="px-3 py-1 rounded {% if category == 'community' %}bg-purple-500 text-white{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+            덕담 한마디
+        </a>
+        <a href="{% url 'ddokdam:category_list' category='food' %}" 
+           class="px-3 py-1 rounded {% if category == 'food' %}bg-pink-500 text-white{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+            예절 차리기(예절샷)
+        </a>
+        <a href="{% url 'ddokdam:category_list' category='cafe' %}" 
+           class="px-3 py-1 rounded {% if category == 'cafe' %}bg-blue-500 text-white{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+            덕생 후기
+        </a>
+    </div>
+</div>
+
+<!-- 검색 섹션 -->
+<div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+    <div class="flex flex-col md:flex-row md:justify-between gap-4">
+        <!-- 검색창 -->
+        <div class="relative flex-grow">
+            <input type="text" placeholder="검색어를 입력하세요" 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button class="absolute right-2 top-2 text-gray-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </div>
+        
+        <!-- 정렬 옵션 -->
+        <div class="flex gap-2">
+            <a href="?sort=latest" class="px-3 py-1 rounded {% if current_sort == 'latest' or not current_sort %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+                최신순
+            </a>
+            <a href="?sort=likes" class="px-3 py-1 rounded {% if current_sort == 'likes' %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+                인기순
+            </a>
+            <a href="?sort=comments" class="px-3 py-1 rounded {% if current_sort == 'comments' %}bg-purple-100 text-purple-800{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
+                댓글순
+            </a>
+        </div>
+    </div>
+</div>

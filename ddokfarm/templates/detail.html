@@ -1,28 +1,17 @@
 {% extends 'base.html' %}
 
 {% block body %}
-    <h3>{{post.title}}</h3>
-    <p> 
-        <a href="{% url 'ddokfarm:update' post.id %}">update</a>
-        <a href="{% url 'ddokfarm:delete' post.id %}">delete</a>
-        <a href="{% url 'accounts:profile' post.user.username %}">{{post.user.username}}</a>
-    </p>
-
-
-    <img src="{{post.image.url}}" alt="">
-    <p>{{post.content}}</p>
-
-    <form action="{% url 'ddokfarm:comment_create' post.id %}" method="POST">
-        {% csrf_token %}
-        {{form}}
-        <input type="submit">
-    </form>
-
-    <hr> 
-
-    {% for comment in comments %}
-        <li>{{comment.content}}</li>
-        <a href="{% url 'ddokfarm:comment_delete' post.id comment.id %}">delete</a>
-    {% endfor %}
-
+<div class="max-w-4xl mx-auto p-4 md:p-6 bg-white shadow-md rounded-lg my-8">
+    <!-- 헤더 - 제목 및 사용자 정보 -->
+    {% include 'components/_post_header_ui.html' with post=post %}
+    
+    <!-- 게시물 내용 -->
+    {% include 'components/_post_content_ui.html' with post=post %}
+    
+    <!-- 댓글 작성 -->
+    {% include 'components/_comment_form_ui.html' with post=post %}
+    
+    <!-- 댓글 목록 -->
+    {% include 'components/_comment_list_ui.html' with comments=comments post=post %}
+</div>
 {% endblock %}

@@ -1,0 +1,27 @@
+<!-- components/_community_section_ui.html -->
+<div class="bg-purple-500 text-white p-4 flex justify-between items-center">
+    <h2 class="text-xl font-bold">덕담 한마디</h2>
+    <a href="{% url 'ddokdam:category_list' category='community' %}" class="text-white hover:underline text-sm">
+        더보기 →
+    </a>
+</div>
+<div class="p-4">
+    {% if posts %}
+        <ul class="divide-y">
+            {% for post in posts %}
+            <li class="py-3">
+                <a href="{% url 'ddokdam:detail' post_id=post.id %}" class="block">
+                    <h3 class="font-medium text-gray-900 truncate">{{ post.title }}</h3>
+                    <div class="flex items-center mt-1 text-sm text-gray-500">
+                        <span>{{ post.user.username }}</span>
+                        <span class="mx-1">•</span>
+                        <span>{{ post.created_at|date:"Y.m.d" }}</span>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-center py-4 text-gray-500">아직 게시물이 없습니다.</p>
+    {% endif %}
+</div>

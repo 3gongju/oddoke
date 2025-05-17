@@ -1,0 +1,36 @@
+<!-- components/_post_content_ui.html -->
+<div class="mb-8">
+    <div class="border-b pb-4 mb-4">
+        <h2 class="text-lg font-semibold mb-3">상품 이미지</h2>
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full max-h-96 object-contain mb-4">
+    </div>
+    
+    <div class="border-b pb-4 mb-4">
+        <h2 class="text-lg font-semibold mb-3">상품 정보</h2>
+        <div class="bg-gray-50 p-4 rounded-md">
+            <table class="w-full">
+                <tr class="border-b">
+                    <td class="py-2 px-3 text-gray-600 w-1/4">카테고리</td>
+                    <td class="py-2 px-3">{{ post.category.name|default:"미분류" }}</td>
+                </tr>
+                <tr class="border-b">
+                    <td class="py-2 px-3 text-gray-600">상태</td>
+                    <td class="py-2 px-3">{{ post.get_condition_display }}</td>
+                </tr>
+                <tr class="border-b">
+                    <td class="py-2 px-3 text-gray-600">교환여부</td>
+                    <td class="py-2 px-3">{{ post.get_exchange_display }}</td>
+                </tr>
+                <tr>
+                    <td class="py-2 px-3 text-gray-600">배송방법</td>
+                    <td class="py-2 px-3">{{ post.get_shipping_display }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <div>
+        <h2 class="text-lg font-semibold mb-3">상품 설명</h2>
+        <p class="text-gray-800 whitespace-pre-line">{{ post.content }}</p>
+    </div>
+</div>
