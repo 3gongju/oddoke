@@ -6,22 +6,16 @@
 {% endblock %}
 
 {% block body %}
-  <div class="max-w-xl mx-auto mt-12 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <h1 class="text-2xl font-bold mb-6 text-center">상품 등록</h1>
-      
-      <form method="POST" enctype="multipart/form-data" class="space-y-4">
-        {% csrf_token %}
+  <div class="max-w-xl mx-auto mt-12">
+    <form method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+      {% csrf_token %}
 
-        {% include 'components/_post_form_ui.html' with form=form categories=categories %}
+      {% include 'create_form_ui.html' %}  <!-- UI만 분리 -->
 
-        <div class="flex justify-end pt-2">
-          <button type="submit"
-                class="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded">
-            작성 완료
-          </button>
-        </div>
-      </form>
-    </div>
+      <button type="submit"
+              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded">
+        작성 완료
+      </button>
+    </form>
   </div>
 {% endblock %}

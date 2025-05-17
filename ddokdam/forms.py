@@ -1,13 +1,14 @@
 from django import forms
-from .models import Post, Comment
+from .models import DdokdamPost, DdokdamComment
 
-class PostForm(forms.ModelForm):
+
+class DdokdamPostForm(forms.ModelForm):
     class Meta:
-        model = Post
+        model = DdokdamPost
         fields = ('image', 'content',)
 
+
 class CommunityPostForm(forms.ModelForm):
-    """커뮤니티 게시물 폼"""
     idol = forms.CharField(required=False, widget=forms.Select(choices=[
         ('', '선택하세요 (선택사항)'),
         ('bts', 'BTS'),
@@ -20,11 +21,10 @@ class CommunityPostForm(forms.ModelForm):
         ('ive', 'IVE'),
         ('aespa', 'aespa'),
         ('newjeans', 'NewJeans'),
-        # 추후 DB에서 동적으로 로드
     ]))
-    
+
     class Meta:
-        model = Post
+        model = DdokdamPost
         fields = ('title', 'content', 'image', 'idol')
         widgets = {
             'content': forms.Textarea(attrs={
@@ -38,13 +38,13 @@ class CommunityPostForm(forms.ModelForm):
             }),
         }
 
+
 class FoodPostForm(forms.ModelForm):
-    """예절샷 게시물 폼"""
     location = forms.CharField(required=True, widget=forms.TextInput(attrs={
         'placeholder': '식당 또는 카페 이름을 입력하세요',
         'class': 'w-full px-3 py-2 border border-gray-300 rounded-md'
     }))
-    
+
     doll = forms.CharField(required=False, widget=forms.Select(choices=[
         ('', '선택하세요'),
         ('bts', 'BTS 인형'),
@@ -53,9 +53,9 @@ class FoodPostForm(forms.ModelForm):
         ('exo', 'EXO 인형'),
         ('etc', '기타'),
     ]))
-    
+
     class Meta:
-        model = Post
+        model = DdokdamPost
         fields = ('title', 'image', 'content', 'location', 'doll')
         widgets = {
             'content': forms.Textarea(attrs={
@@ -69,8 +69,8 @@ class FoodPostForm(forms.ModelForm):
             }),
         }
 
+
 class CafePostForm(forms.ModelForm):
-    """생일카페 게시물 폼"""
     idol = forms.CharField(required=True, widget=forms.Select(choices=[
         ('', '선택하세요'),
         ('bts', 'BTS'),
@@ -84,29 +84,29 @@ class CafePostForm(forms.ModelForm):
         ('aespa', 'aespa'),
         ('newjeans', 'NewJeans'),
     ]))
-    
+
     cafe_name = forms.CharField(required=True, widget=forms.TextInput(attrs={
         'placeholder': '생일카페 이름을 입력하세요',
         'class': 'w-full px-3 py-2 border border-gray-300 rounded-md'
     }))
-    
+
     cafe_location = forms.CharField(required=True, widget=forms.TextInput(attrs={
         'placeholder': '주소를 입력하세요',
         'class': 'w-full px-3 py-2 border border-gray-300 rounded-md'
     }))
-    
+
     start_date = forms.DateField(required=False, widget=forms.DateInput(attrs={
         'type': 'date',
         'class': 'w-full px-3 py-2 border border-gray-300 rounded-md'
     }))
-    
+
     end_date = forms.DateField(required=False, widget=forms.DateInput(attrs={
         'type': 'date',
         'class': 'w-full px-3 py-2 border border-gray-300 rounded-md'
     }))
-    
+
     class Meta:
-        model = Post
+        model = DdokdamPost
         fields = ('title', 'content', 'image', 'idol', 'cafe_name', 'cafe_location', 'start_date', 'end_date')
         widgets = {
             'content': forms.Textarea(attrs={
@@ -120,9 +120,10 @@ class CafePostForm(forms.ModelForm):
             }),
         }
 
-class CommentForm(forms.ModelForm):
+
+class DdokdamCommentForm(forms.ModelForm):
     class Meta:
-        model = Comment
+        model = DdokdamComment
         fields = ('content',)
         widgets = {
             'content': forms.Textarea(attrs={
