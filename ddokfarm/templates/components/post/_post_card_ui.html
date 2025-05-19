@@ -1,0 +1,30 @@
+<div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition duration-150 hover:shadow-md">
+  <!-- 사용자 정보 -->
+  <div class="flex items-center px-2 py-2 border-b border-gray-100 text-xs text-gray-600">
+    {% if post.user.profile_image %}
+      <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-5 h-5 rounded-full object-cover mr-2">
+    {% endif %}
+    <span>{{ post.user.username }}</span>
+  </div>
+
+  <!-- 상품 이미지 -->
+  <a href="{% url 'ddokfarm:detail' post.id %}">
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-36 object-cover">
+  </a>
+
+  <!-- 상품 정보 -->
+  <div class="px-2 py-2 space-y-1">
+    <h3 class="text-sm font-medium truncate leading-tight">{{ post.title }}</h3>
+    <p class="text-[13px] text-gray-500 truncate leading-snug">{{ post.content|truncatechars:40 }}</p>
+
+    <!-- 가격 + 상태 -->
+    <div class="flex justify-between items-center pt-1">
+      <span class="text-sm font-bold text-yellow-600">₩{{ post.price|floatformat:"0" }}</span>
+      {% if post.is_sold %}
+        <span class="bg-gray-400 text-white text-[10px] px-1.5 py-0.5 rounded-full">판매완료</span>
+      {% else %}
+        <span class="bg-yellow-100 text-yellow-700 text-[10px] px-1.5 py-0.5 rounded-full">판매중</span>
+      {% endif %}
+    </div>
+  </div>
+</div>

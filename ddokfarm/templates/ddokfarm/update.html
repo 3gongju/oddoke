@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+  <script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block body %}
+<div class="max-w-xl mx-auto mt-12">
+  <form method="POST" enctype="multipart/form-data"
+        class="bg-white p-6 rounded-lg shadow-md space-y-4">
+    {% csrf_token %}
+
+    {% include 'components/post/_form_ui.html' with form=form post=post %}
+
+    <div class="pt-4 flex justify-between">
+      <a href="{% url 'ddokfarm:detail' post.id %}"
+         class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-800">취소</a>
+      <button type="submit"
+              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded text-white">수정 완료</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
