@@ -4,6 +4,13 @@ from django_resized import ResizedImageField
 
 # Create your models here.
 class User(AbstractUser):
+    email = models.EmailField(unique=True, error_messages={
+        'unique': "이미 사용중인 이메일입니다."
+    })
+    username = models.CharField(max_length=20, unique=True, error_messages={
+        'unique': "이미 사용 중인 닉네임입니다."
+    })
+
     profile_image = ResizedImageField(
         size=[500, 500],
         crop=['middle', 'center'],
