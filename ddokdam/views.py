@@ -96,8 +96,7 @@ def update(request, post_id):
     else:
         form = DdokdamPostForm(instance=post)
 
-    return render(request, 'ddokdam/update.html', {'form': form, 'post': post})
-
+    return render(request, 'update.html', {'form': form, 'post': post})
 
 @login_required
 def delete(request, post_id):
