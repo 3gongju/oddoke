@@ -1,0 +1,44 @@
+<!-- HTML 구조 및 Tailwind 기반 UI 구성 담당 (입력 필드, 버튼, 레이아웃 등) -->
+
+<!-- 제목 -->
+<div>
+  <label for="id_title" class="block text-sm font-medium text-gray-700">제목</label>
+  <input type="text" name="title" id="id_title"
+         value="{{ form.title.value|default:'' }}"
+         class="mt-1 w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:ring-yellow-500 focus:border-yellow-500" />
+</div>
+
+<!-- 이미지 -->
+<div>
+  <label for="id_image" class="block text-sm font-medium text-gray-700">이미지</label>
+  <input type="file" name="image" id="id_image" accept="image/*"
+         class="mt-1 w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0
+                file:bg-yellow-500 file:text-white hover:file:bg-yellow-600"
+         onchange="previewImage(event)" />
+  <div id="imagePreviewContainer" class="mt-4 hidden">
+    <img id="imagePreview" class="w-full h-64 object-cover rounded border" alt="미리보기" />
+  </div>
+</div>
+
+<!-- 카테고리 -->
+<div>
+  <label for="id_category" class="block text-sm font-medium text-gray-700">카테고리</label>
+  {{ form.category }}
+</div>
+
+<!-- 해시태그 -->
+<div>
+  <label class="block text-sm font-medium text-gray-700">해시태그</label>
+  <input type="text" id="hashtagInput" placeholder="엔터로 태그 추가"
+         class="w-full mt-1 px-3 py-2 border rounded focus:ring-yellow-500 focus:border-yellow-500" />
+  <div id="hashtagContainer" class="mt-2 flex flex-wrap gap-2"></div>
+</div>
+
+<!-- 내용 -->
+<div>
+  <label for="id_content" class="block text-sm font-medium text-gray-700">내용</label>
+  <textarea name="content" id="id_content" rows="5"
+            class="mt-1 w-full rounded border border-gray-300 px-3 py-2 shadow-sm focus:ring-yellow-500 focus:border-yellow-500">
+    {{ form.content.value|default:'' }}
+  </textarea>
+</div>

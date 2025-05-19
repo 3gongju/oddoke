@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <h2 class="text-2xl font-bold mb-6">덕담 - 아이돌 팬 커뮤니티</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for block in category_blocks %}
+    <div class="bg-yellow-200 p-4 rounded-md shadow">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="font-semibold text-lg">{{ block.title }}</h3>
+        <a href="{% url 'ddokdam:category_list' block.key %}" class="text-sm text-gray-700 hover:underline">더보기 →</a>
+      </div>
+
+      {% if block.posts %}
+        {% for post in block.posts %}
+          <div class="py-1 text-sm border-b border-gray-300 last:border-0">
+            <a href="{% url 'ddokdam:detail' post.id %}" class="font-medium hover:underline">
+              {{ post.title }}
+            </a>
+            <div class="text-xs text-gray-600">
+              {{ post.user.username }} · {{ post.created_at|date:"Y.m.d" }}
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-sm text-gray-600">아직 게시물이 없습니다.</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

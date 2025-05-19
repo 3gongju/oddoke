@@ -1,0 +1,108 @@
+<!-- {# 
+  게시글 헤더 컴포넌트
+
+  역할:
+  - 게시글의 핵심 정보 표시 (제목, 가격, 판매 상태)
+  - 작성자 프로필 및 사용자 인터랙션 버튼 (구매, 찜, 문의)
+  - 작성자 전용 수정/삭제/판매완료 토글 버튼 포함
+
+  나눈 이유:
+  - 게시글 상세 내용과 UI를 분리하여 코드 가독성 향상
+  - 사용자 행동 유도 버튼과 기본 정보는 헤더에서 집중 관리
+  - 작성자 전용 기능을 포함해 중복 코드 방지 및 관리 편의성 증대
+#} -->
+
+
+<!-- {# components/post/_header_ui.html #} -->
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+  <!-- 좌측 이미지 -->
+  <div class="bg-white p-6 flex justify-center items-center rounded-lg shadow max-w-lg mx-auto">
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="max-w-full max-h-[500px] object-contain" />
+  </div>
+
+  <!-- 우측 정보 -->
+  <div class="space-y-6">
+    <h1 class="text-3xl font-extrabold">{{ post.title }}</h1>
+
+    <!-- 가격 및 판매 상태 -->
+    <div class="flex items-center justify-end space-x-3 text-yellow-600 font-semibold text-3xl">
+      <span>₩{{ post.price|floatformat:"0" }}</span>
+      {% if post.is_sold %}
+        <span class="text-sm bg-gray-500 text-white px-2 py-1 rounded-full">판매완료</span>
+      {% else %}
+        <span class="text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">판매중</span>
+      {% endif %}
+    </div>
+
+    <!-- 판매자 프로필 -->
+    <div class="flex items-center space-x-3">
+      {% if post.user.profile_image %}
+        <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-10 h-10 rounded-full object-cover" />
+      {% endif %}
+      <span class="text-sm text-gray-600">{{ post.user.username }}</span>
+    </div>
+
+    <!-- 상품 상태 정보 (카테고리, 상태, 교환여부, 직거래, 배송방법) -->
+    <div class="mt-2 text-sm text-gray-700 bg-gray-50 border rounded-md p-3 space-y-1 max-w-md">
+      <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center">
+        <span class="font-medium text-gray-600 truncate">카테고리</span>
+        <span class="text-right truncate">{{ post.category.name }}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center">
+        <span class="font-medium text-gray-600 truncate">상태</span>
+        <span class="text-right truncate">{{ post.get_condition_display }}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center">
+        <span class="font-medium text-gray-600 truncate">교환여부</span>
+        <span class="text-right truncate">{{ post.get_exchange_display }}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center">
+        <span class="font-medium text-gray-600 truncate">직거래 여부</span>
+        <span class="text-right truncate">{{ post.get_direct_deal_display }}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-x-2 gap-y-1 items-center">
+        <span class="font-medium text-gray-600 truncate">배송방법</span>
+        <span class="text-right truncate">{{ post.get_shipping_display }}</span>
+      </div>
+    </div>
+
+    <!-- 구매하기 / 찜하기 / 문의하기 버튼 -->
+    <div class="space-y-4 mt-4">
+      <button class="w-full bg-yellow-500 text-white py-3 rounded-md font-semibold hover:bg-yellow-600 transition">
+        구매하기
+      </button>
+      <div class="flex gap-3">
+        <button class="flex-1 border border-yellow-500 text-yellow-600 py-3 rounded-md hover:bg-yellow-50 transition">찜하기</button>
+        <button class="flex-1 border border-gray-300 text-gray-600 py-3 rounded-md hover:bg-gray-100 transition">문의하기</button>
+      </div>
+    </div>
+
+    <!-- {# 작성자 전용: 수정 / 삭제 / 판매완료 버튼 (문의하기 버튼 아래 간격 충분히 띄워 배치) #} -->
+    {% if user == post.user %}
+    <div class="flex justify-end space-x-3 mt-8">
+      <a href="{% url 'ddokfarm:update' post.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+        수정
+      </a>
+
+      <form method="POST" action="{% url 'ddokfarm:delete' post.id %}">
+        {% csrf_token %}
+        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">
+          삭제
+        </button>
+      </form>
+
+      <form method="POST" action="{% url 'ddokfarm:mark_as_sold' post.id %}">
+        {% csrf_token %}
+        <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition">
+          {% if post.is_sold %}
+            판매중으로 변경
+          {% else %}
+            판매완료로 변경
+          {% endif %}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
