@@ -8,9 +8,26 @@
   </div>
 
   <!-- 상품 이미지 -->
-  <a href="{% url 'ddokfarm:detail' post.id %}">
-    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-36 object-cover">
-  </a>
+  <div class="relative bg-white border p-4 rounded-lg shadow-sm">
+    <a href="{% url 'ddokfarm:detail' post.id %}">
+      <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-36 object-cover" />
+    </a>
+
+    <!-- ❤️ 하트 버튼 (우하단 고정) -->
+    {% if user.is_authenticated %}
+    <div class="absolute bottom-2 right-2">
+      <button id="like-btn-{{ post.id }}"
+              data-post-id="{{ post.id }}"
+              class="like-toggle text-xl">
+        {% if user in post.liked_users.all %}
+          ❤️
+        {% else %}
+          🤍
+        {% endif %}
+      </button>
+    </div>
+    {% endif %}
+  </div>
 
   <!-- 상품 정보 -->
   <div class="px-2 py-2 space-y-1">
@@ -28,3 +45,5 @@
     </div>
   </div>
 </div>
+
+    
