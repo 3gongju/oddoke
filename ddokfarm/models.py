@@ -52,15 +52,6 @@ class Post(models.Model):
     )
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # 작성자
-    
-    # models.py (Post 모델 안에 추가)
-
-    liked_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name='liked_posts', # post, user m:n으로 연결 
-        blank=True
-    )
-
 
     # 이커머스 필드
     price = models.IntegerField(default=0)  # 가격

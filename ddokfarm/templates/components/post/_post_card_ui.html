@@ -28,14 +28,3 @@
     </div>
   </div>
 </div>
-
-  <!-- 찜 하트 표시 -->
-  <div class="mt-1">
-    {% if user.is_authenticated %}
-      {% if user in post.liked_users.all %}
-        <span class="text-pink-500 text-lg">❤️</span>
-      {% else %}
-        <span class="text-gray-400 text-lg">🤍</span>
-      {% endif %}
-    {% endif %}
-  </div>

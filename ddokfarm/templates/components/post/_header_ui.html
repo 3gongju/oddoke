@@ -67,18 +67,6 @@
       </div>
     </div>
 
-    <!-- 찜하기 (기능 추가) -->
-    <div class="mt-4">
-      <form method="POST" action="{% url 'ddokfarm:toggle_like' post.id %}" class="inline">
-        {% csrf_token %}
-        {% if user in post.liked_users.all %}
-          <button type="submit" class="text-pink-500 text-xl">❤️</button>
-        {% else %}
-          <button type="submit" class="text-gray-400 text-xl">🤍</button>
-        {% endif %}
-      </form>
-    </div>
-
 
     <!-- 구매하기 / 찜하기 / 문의하기 버튼 -->
     <div class="space-y-4 mt-4">

@@ -4,8 +4,6 @@ from django.views.decorators.http import require_POST
 from .forms import PostForm, CommentForm
 from .models import Post, Comment, Category
 
-from django.http import JsonResponse
-
 
 
 # ✅ 홈 화면 (루트 URL)
@@ -123,22 +121,6 @@ def mark_as_sold(request, post_id):
     post.is_sold = not post.is_sold
     post.save()
     return redirect('ddokfarm:detail', post_id=post.id)
-
-# 찜하기 기능 추가
-@require_POST
-@login_required
-def toggle_like(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-
-    if request.user in post.liked_users.all():
-        post.liked_users.remove(request.user)
-        liked = False
-    else:
-        post.liked_users.add(request.user)
-        liked = True
-
-    return JsonResponse({'liked': liked, 'likes_count': post.liked_users.count()})
-
 
 # ✅ 댓글 생성
 @require_POST
