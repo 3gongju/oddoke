@@ -53,6 +53,15 @@ class Post(models.Model):
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # 작성자
     
+    # models.py (Post 모델 안에 추가)
+
+    liked_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='liked_posts', # post, user m:n으로 연결 
+        blank=True
+    )
+
+
     # 이커머스 필드
     price = models.IntegerField(default=0)  # 가격
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)  # 카테고리
@@ -66,12 +75,16 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-# 댓글 모델 (기존 유지)
+# 대댓글 기능 수정 
 class Comment(models.Model):
     content = models.CharField(max_length=200)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)  # 작성일 추가
-    
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')  # ✅ 대댓글
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+
     def __str__(self):
         return self.content
+
+    def is_reply(self):
+        return self.parent is not None
