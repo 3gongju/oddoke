@@ -59,7 +59,9 @@ def create(request):
 # ✅ 게시글 상세 보기
 def detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    comments = post.comment_set.all()
+
+    comments = Comment.objects.filter(post=post).select_related('user').prefetch_related('replies')
+
     form = CommentForm()
     context = {
         'post': post,
@@ -67,7 +69,6 @@ def detail(request, post_id):
         'form': form,
     }
     return render(request, 'ddokfarm/detail.html', context)
-
 
 # ✅ 게시글 수정
 @login_required
@@ -120,8 +121,8 @@ def mark_as_sold(request, post_id):
     return redirect('ddokfarm:detail', post_id=post.id)
 
 # ✅ 댓글 생성
-@login_required
 @require_POST
+@login_required
 def comment_create(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST)
@@ -131,8 +132,10 @@ def comment_create(request, post_id):
         comment.user = request.user
         comment.post = post
         comment.save()
+        return redirect('ddokfarm:detail', post_id=post_id)
 
-    return redirect('ddokfarm:detail', post_id=post.id)
+    return redirect('ddokfarm:detail', post_id=post_id)
+
 
 
 # ✅ 댓글 삭제
