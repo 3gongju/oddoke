@@ -53,7 +53,7 @@ def detail(request, post_id):
     comments = DdokdamComment.objects.filter(post=post).order_by('-created_at')
     comment_form = DdokdamCommentForm()
 
-    return render(request, 'detail.html', {
+    return render(request, 'ddokdam/detail.html', {
         'post': post,
         'comments': comments,
         'comment_form': comment_form,
@@ -84,15 +84,18 @@ def category_list(request, category):
 
 @login_required
 def update(request, post_id):
+    # 디버깅 로그 추가
+    print(f"Update view called for post_id: {post_id}")
+    
     post = get_object_or_404(DdokdamPost, id=post_id)
     if request.user != post.user:
-        return redirect('ddokdam:detail', post_id=post_id)
+        return redirect('ddokdam:detail', post_id=post_id)  # 여기가 올바른지 확인
 
     if request.method == 'POST':
         form = DdokdamPostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
             form.save()
-            return redirect('ddokdam:detail', post_id=post_id)
+            return redirect('ddokdam:detail', post_id=post_id)  # 여기가 올바른지 확인
     else:
         form = DdokdamPostForm(instance=post)
 
