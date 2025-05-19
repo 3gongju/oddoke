@@ -1,0 +1,32 @@
+<!-- 게시글 상단 정보 (ddokdam 전용) -->
+<div class="flex justify-between items-start border-b pb-4 mb-4">
+    <div>
+        <div class="{% if post.category == 'community' %}bg-purple-100 text-purple-800
+                     {% elif post.category == 'food' %}bg-pink-100 text-pink-800
+                     {% else %}bg-blue-100 text-blue-800{% endif %}
+                     text-xs px-2 py-1 rounded inline-block mb-2">
+            {{ post.get_category_display }}
+        </div>
+        <h1 class="text-2xl font-bold mb-2">{{ post.title }}</h1>
+        <div class="flex items-center text-sm text-gray-500">
+            {% include 'components/_user_profile_mini.html' with user=post.user %}
+            <span class="ml-4">{{ post.created_at|date:"Y.m.d H:i" }}</span>
+        </div>
+    </div>
+
+    {% if user == post.user %}
+    <div class="flex space-x-2">
+        <!-- 수정 버튼 -->
+        <a href="{% url 'ddokdam:update' post_id=post.id %}"
+           class="text-sm px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600">
+            수정
+        </a>
+        <!-- 삭제 버튼 -->
+        <a href="{% url 'ddokdam:delete' post_id=post.id %}"
+           class="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+           onclick="return confirm('정말 삭제하시겠습니까?')">
+            삭제
+        </a>
+    </div>
+    {% endif %}
+</div>
