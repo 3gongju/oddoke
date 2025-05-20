@@ -10,9 +10,9 @@ class Artist(models.Model):
     def __str__(self):
         return self.display_name
 
-class Member(models.Model):
-    group = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='members')
-    name = models.CharField(max_length=100)
+# class Member(models.Model):
+#     group = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='members')
+#     name = models.CharField(max_length=100)
 
-    def __str__(self):
-        return f"{self.name} ({self.group.display_name})"
+#     def __str__(self):
+#         return f"{self.name} ({self.group.display_name})"
