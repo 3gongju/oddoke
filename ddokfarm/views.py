@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from .forms import PostForm, CommentForm
-from .models import Post, Comment, Category
+from .forms import DdokfarmPostForm, DdokfarmCommentForm
+from .models import DdokfarmPost, DdokfarmComment, Category
 from django.urls import reverse
 
 
@@ -16,7 +16,7 @@ def main(request):
 
 # ✅ 게시글 목록 (카테고리, 정렬 포함)
 def index(request):
-    posts = Post.objects.all().order_by('-created_at')
+    posts = DdokfarmPost.objects.all().order_by('-created_at')
 
     category_slug = request.GET.get('category')
     current_category = None
@@ -52,7 +52,7 @@ def index(request):
 @login_required
 def create(request):
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
+        form = DdokfarmPostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
@@ -60,7 +60,7 @@ def create(request):
             post.save()
             return redirect('ddokfarm:detail', post_id=post.id)
     else:
-        form = PostForm()
+        form = DdokfarmPostForm()
 
     categories = Category.objects.all()
     return render(request, 'ddokfarm/create.html', {
@@ -71,11 +71,11 @@ def create(request):
 
 # ✅ 게시글 상세 보기
 def detail(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(DdokfarmPost, id=post_id)
 
-    comments = Comment.objects.filter(post=post).select_related('user').prefetch_related('replies')
+    comments = DdokfarmComment.objects.filter(post=post).select_related('user').prefetch_related('replies')
 
-    form = CommentForm()
+    form = DdokfarmCommentForm()
     context = {
         'post': post,
         'comments': comments,
@@ -86,18 +86,18 @@ def detail(request, post_id):
 # ✅ 게시글 수정
 @login_required
 def update(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(DdokfarmPost, id=post_id)
 
     if request.user != post.user:
         return redirect('ddokfarm:detail', post_id=post.id)
 
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES, instance=post)
+        form = DdokfarmPostForm(request.POST, request.FILES, instance=post)
         if form.is_valid():
             form.save()
             return redirect('ddokfarm:detail', post_id=post.id)
     else:
-        form = PostForm(instance=post)
+        form = DdokfarmPostForm(instance=post)
 
     categories = Category.objects.all()
     context = {
@@ -112,7 +112,7 @@ def update(request, post_id):
 @login_required
 @require_POST
 def delete(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(DdokfarmPost, id=post_id)
 
     if request.user != post.user:
         return redirect('ddokfarm:detail', post_id=post.id)
@@ -143,7 +143,7 @@ def toggle_like(request, post_id):
 @require_POST
 @login_required
 def mark_as_sold(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(DdokfarmPost, id=post_id)
 
     if request.user != post.user:
         return redirect('ddokfarm:detail', post_id=post.id)
@@ -156,8 +156,8 @@ def mark_as_sold(request, post_id):
 @require_POST
 @login_required
 def comment_create(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    form = CommentForm(request.POST)
+    post = get_object_or_404(DdokfarmPost, id=post_id)
+    form = DdokfarmCommentForm(request.POST)
 
     if form.is_valid():
         comment = form.save(commit=False)
@@ -174,7 +174,7 @@ def comment_create(request, post_id):
 @login_required
 @require_POST
 def comment_delete(request, post_id, id):
-    comment = get_object_or_404(Comment, id=id)
+    comment = get_object_or_404(DdokfarmComment, id=id)
 
     if request.user != comment.user:
         return redirect('ddokfarm:detail', post_id=post_id)

@@ -12,7 +12,7 @@ class Category(models.Model):
         return self.name
 
 # 상품 모델 (기존 Post 모델 확장)
-class Post(models.Model):
+class DdokfarmPost(models.Model):
     # 상품 상태 선택지
     CONDITION_CHOICES = [
         ('new', '새상품'),
@@ -78,9 +78,9 @@ class Post(models.Model):
         return self.title
 
 # 대댓글 기능 수정 
-class Comment(models.Model):
+class DdokfarmComment(models.Model):
     content = models.CharField(max_length=200)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(DdokfarmPost, on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')  # ✅ 대댓글
     created_at = models.DateTimeField(auto_now_add=True, null=True)
