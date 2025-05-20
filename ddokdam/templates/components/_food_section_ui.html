@@ -1,25 +1,37 @@
-<!-- components/_food_section_ui.html -->
-<div class="bg-pink-500 text-white p-4 flex justify-between items-center">
-    <h2 class="text-xl font-bold">예절 차리기(예절샷)</h2>
-    <a href="{% url 'ddokdam:category_list' category='food' %}" class="text-white hover:underline text-sm">
-        더보기 →
-    </a>
-</div>
-<div class="p-4">
-    {% if posts %}
-        <div class="grid grid-cols-2 gap-3">
-            {% for post in posts %}
-            <a href="{% url 'ddokdam:detail' post_id=post.id %}" class="block">
-                <div class="relative">
-                    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-32 w-full object-cover rounded">
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-2">
-                        <h3 class="text-white text-sm font-medium truncate">{{ post.title }}</h3>
-                    </div>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="text-center py-4 text-gray-500">아직 게시물이 없습니다.</p>
-    {% endif %}
+<div id="food-form" class="category-form hidden">
+  <div class="mb-6">
+    <label for="id_food_title">제목</label>
+    <input type="text" name="title" id="id_food_title" required class="w-full border rounded-md p-2" />
+  </div>
+  <div class="mb-6">
+    <label for="id_food_image">이미지</label>
+    <input type="file" name="image" id="id_food_image" required class="block w-full" />
+  </div>
+  <div class="mb-6">
+    <label for="id_location">장소</label>
+    <input type="text" name="location" id="id_location" required class="w-full border rounded-md p-2" />
+  </div>
+  <div class="mb-6">
+    <label for="id_food_content">내용</label>
+    <textarea name="content" id="id_food_content" rows="4" required class="w-full border rounded-md p-2"></textarea>
+  </div>
+  <div class="mb-6">
+    <label for="id_doll">인형</label>
+    <select name="doll" id="id_doll" class="w-full px-3 py-2 border rounded-md">
+      <option value="">선택</option>
+      <option value="bts">BTS 인형</option>
+      <option value="twice">TWICE 인형</option>
+      <!-- 기타 생략 -->
+    </select>
+  </div><!-- components/_food_section_ui.html -->
+<input type="text" name="title_food" placeholder="제목" class="form-input" required />
+<textarea name="content_food" placeholder="내용" class="form-textarea" required></textarea>
+<input type="file" name="image_food" accept="image/*" class="form-file" required />
+<input type="text" name="location_food" placeholder="장소" class="form-input" required />
+<select name="doll_food" class="form-select">
+  <option value="">선택하세요</option>
+  {% for doll in ['BTS','BLACKPINK','TWICE','EXO','ETC'] %}
+    <option value="{{ doll|lower }}">{{ doll }} 인형</option>
+  {% endfor %}
+</select>
 </div>
