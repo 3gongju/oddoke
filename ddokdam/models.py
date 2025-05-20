@@ -1,6 +1,6 @@
+# ✅ models.py (최적화된 버전)
 from django.db import models
 from django.conf import settings
-
 
 class DdokdamPost(models.Model):
     CATEGORY_CHOICES = [
@@ -11,18 +11,22 @@ class DdokdamPost(models.Model):
 
     title = models.CharField(max_length=100)
     content = models.TextField()
-    image = models.ImageField(upload_to='ddokdam/image', blank=True, null=True)
+    image = models.ImageField(upload_to='ddokdam/image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='community')
-    idol = models.CharField(max_length=200, blank=True, null=True)  # 아이돌 정보
-    hashtags = models.CharField(max_length=200, blank=True, null=True)  # 해시태그
-    location = models.CharField(max_length=255, blank=True, null=True)  # 위치
-    cafe_name = models.CharField(max_length=255, blank=True, null=True)  # 카페 이름
-    cafe_location = models.CharField(max_length=255, blank=True, null=True)  # 카페 위치
-    start_date = models.DateField(blank=True, null=True)  # 시작 날짜
-    end_date = models.DateField(blank=True, null=True)  # 종료 날짜
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+
+    idol = models.CharField(max_length=200, blank=True, null=True)
+    hashtags = models.CharField(max_length=200, blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    cafe_name = models.CharField(max_length=255, blank=True, null=True)
+    cafe_location = models.CharField(max_length=255, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return f"[{self.get_category_display()}] {self.title}"
 
 
 class DdokdamComment(models.Model):
@@ -33,3 +37,41 @@ class DdokdamComment(models.Model):
 
     def __str__(self):
         return self.content
+
+
+# ✅ forms.py (카테고리별 필수 항목 지정)
+from django import forms
+from .models import DdokdamPost, DdokdamComment
+
+class CommunityPostForm(forms.ModelForm):
+    idol = forms.CharField(required=True)
+
+    class Meta:
+        model = DdokdamPost
+        fields = ['title', 'content', 'image', 'idol']
+
+
+class FoodPostForm(forms.ModelForm):
+    location = forms.CharField(required=True)
+
+    class Meta:
+        model = DdokdamPost
+        fields = ['title', 'content', 'image', 'location']
+
+
+class CafePostForm(forms.ModelForm):
+    idol = forms.CharField(required=True)
+    cafe_name = forms.CharField(required=True)
+    cafe_location = forms.CharField(required=True)
+    start_date = forms.DateField(required=True)
+    end_date = forms.DateField(required=True)
+
+    class Meta:
+        model = DdokdamPost
+        fields = ['title', 'content', 'image', 'idol', 'cafe_name', 'cafe_location', 'start_date', 'end_date']
+
+
+class DdokdamCommentForm(forms.ModelForm):
+    class Meta:
+        model = DdokdamComment
+        fields = ['content']

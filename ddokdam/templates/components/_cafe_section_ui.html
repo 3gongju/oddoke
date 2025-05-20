@@ -1,37 +1,73 @@
-<!-- ddokdam/templates/ddokdam/components/_cafe_section_ui.html -->
+<!-- community / food / cafe 각각의 UI 템플릿에서 -->
+<div class="space-y-4">
+  {% if form.non_field_errors %}
+    <p class="text-red-500 text-sm">{{ form.non_field_errors.0 }}</p>
+  {% endif %}
+
+
 <div class="space-y-4">
   <div>
     <label for="id_title" class="block text-sm font-medium text-gray-700">제목</label>
     {{ form.title }}
+    {% if form.title.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+    {% endif %}
   </div>
+
   <div>
     <label for="id_image" class="block text-sm font-medium text-gray-700">이미지</label>
     {{ form.image }}
+    {% if form.image.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.image.errors.0 }}</p>
+    {% endif %}
   </div>
+
   <div>
     <label for="id_content" class="block text-sm font-medium text-gray-700">내용</label>
     {{ form.content }}
+    {% if form.content.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.content.errors.0 }}</p>
+    {% endif %}
   </div>
+
   <div>
     <label for="id_idol" class="block text-sm font-medium text-gray-700">아이돌 선택</label>
     {{ form.idol }}
+    {% if form.idol.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.idol.errors.0 }}</p>
+    {% endif %}
   </div>
+
   <div>
     <label for="id_cafe_name" class="block text-sm font-medium text-gray-700">카페 이름</label>
     {{ form.cafe_name }}
+    {% if form.cafe_name.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.cafe_name.errors.0 }}</p>
+    {% endif %}
   </div>
+
   <div>
     <label for="id_cafe_location" class="block text-sm font-medium text-gray-700">카페 위치</label>
     {{ form.cafe_location }}
+    {% if form.cafe_location.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.cafe_location.errors.0 }}</p>
+    {% endif %}
   </div>
+
   <div class="flex gap-4">
     <div class="w-1/2">
       <label for="id_start_date" class="block text-sm font-medium text-gray-700">시작일</label>
       {{ form.start_date }}
+      {% if form.start_date.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>
+      {% endif %}
     </div>
     <div class="w-1/2">
       <label for="id_end_date" class="block text-sm font-medium text-gray-700">종료일</label>
       {{ form.end_date }}
+      {% if form.end_date.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.end_date.errors.0 }}</p>
+      {% endif %}
     </div>
   </div>
 </div>
