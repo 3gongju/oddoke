@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 from .forms import PostForm, CommentForm
 from .models import Post, Comment, Category
 
@@ -108,6 +109,25 @@ def delete(request, post_id):
 
     post.delete()
     return redirect('ddokfarm:index')
+
+# 찜하기 추가 
+@require_POST
+@login_required
+def toggle_like(request, post_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': '로그인 필요'}, status=403)
+
+    post = get_object_or_404(Post, id=post_id)
+    user = request.user
+
+    if user in post.liked_users.all():
+        post.liked_users.remove(user)
+        liked = False
+    else:
+        post.liked_users.add(user)
+        liked = True
+
+    return JsonResponse({'liked': liked, 'likes_count': post.liked_users.count()})
 
 # 판매 완료 표시시
 @require_POST
