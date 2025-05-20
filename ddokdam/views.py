@@ -5,7 +5,7 @@ from django.http import JsonResponse
 import sys  # 디버깅용 추가
 
 from .models import DdokdamPost, DdokdamComment
-from .forms import DdokdamPostForm, DdokdamCommentForm
+from .forms import DdokdamPostForm, DdokdamCommentForm, PostForm
 from .forms import CommunityPostForm, FoodPostForm, CafePostForm
 
 
@@ -29,7 +29,7 @@ def index(request):
     return render(request, 'ddokdam/category_list.html', context)
 
 
-# @login_required
+# @login_requiredPPPP
 # def create(request):
 #     if request.method == 'POST':
 #         category = request.POST.get('category')
@@ -65,36 +65,50 @@ def index(request):
 
 #     return render(request, 'ddokdam/create.html', {'form': form})
 
+# def create(request):
+#     if request.method == 'POST':
+#         category = request.POST.get('category')
+#         post = DdokdamPost(user=request.user, category=category)
+
+#         # 공통 필드 처리
+#         post.title = request.POST.get(f'title_{category}')
+#         post.content = request.POST.get(f'content_{category}')
+#         post.image = request.FILES.get(f'image_{category}')
+
+#         # 카테고리별 추가 필드 처리
+#         if category == 'community':
+#             post.idol = request.POST.get('idol_community')
+
+#         elif category == 'food':
+#             post.location = request.POST.get('location_food')
+            
+
+#         elif category == 'cafe':
+#             post.idol = request.POST.get('idol_cafe')
+#             post.cafe_name = request.POST.get('cafe_name')
+#             post.cafe_location = request.POST.get('cafe_location')
+#             post.start_date = request.POST.get('start_date')
+#             post.end_date = request.POST.get('end_date')
+
+#         post.save()
+#         return redirect('ddokdam:category_list', category=category)
+
+#     return render(request, 'ddokdam/create.html')
+
 def create(request):
     if request.method == 'POST':
-        category = request.POST.get('category')
-        post = DdokdamPost(user=request.user, category=category)
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
 
-        # 공통 필드 처리
-        post.title = request.POST.get(f'title_{category}')
-        post.content = request.POST.get(f'content_{category}')
-        post.image = request.FILES.get(f'image_{category}')
+            return redirect('ddokdam:category_list', category=post.category)
 
-        # 카테고리별 추가 필드 처리
-        if category == 'community':
-            post.idol = request.POST.get('idol_community')
+    else:
+        form = PostForm()
 
-        elif category == 'food':
-            post.location = request.POST.get('location_food')
-            post.doll = request.POST.get('doll_food')
-
-        elif category == 'cafe':
-            post.idol = request.POST.get('idol_cafe')
-            post.cafe_name = request.POST.get('cafe_name')
-            post.cafe_location = request.POST.get('cafe_location')
-            post.start_date = request.POST.get('start_date')
-            post.end_date = request.POST.get('end_date')
-
-        post.save()
-        return redirect('ddokdam:category_list', category=category)
-
-    return render(request, 'ddokdam/create.html')
-
+    return render(request, 'ddokdam/create.html', {'form': form})
 
 
 def detail(request, post_id):
@@ -133,22 +147,35 @@ def category_list(request, category):
 
 @login_required
 def update(request, post_id):
-    # 디버깅 로그 추가
-    print(f"Update view called for post_id: {post_id}")
-    
-    post = get_object_or_404(DdokdamPost, id=post_id)
-    if request.user != post.user:
-        return redirect('ddokdam:detail', post_id=post_id)  # 여기가 올바른지 확인
+    post = get_object_or_404(DdokdamPost, pk=post_id)
 
-    if request.method == 'POST':
-        form = DdokdamPostForm(request.POST, request.FILES, instance=post)
-        if form.is_valid():
-            form.save()
-            return redirect('ddokdam:detail', post_id=post_id)  # 여기가 올바른지 확인
-    else:
-        form = DdokdamPostForm(instance=post)
+    if request.method == "POST":
+        post.title = request.POST.get("title")
+        post.content = request.POST.get("content")
+        if request.FILES.get("image"):
+            post.image = request.FILES["image"]
 
-    return render(request, 'ddokdam/update.html', {'form': form, 'post': post})
+        if post.category == "community" or post.category == "cafe":
+            post.idol = request.POST.get("idol")
+        if post.category == "food":
+            post.location = request.POST.get("location")
+
+        if post.category == "cafe":
+            post.cafe_name = request.POST.get("cafe_name")
+            post.cafe_location = request.POST.get("cafe_location")
+            post.start_date = request.POST.get("start_date") or None
+            post.end_date = request.POST.get("end_date") or None
+
+        post.save()
+        return redirect("ddokdam:detail", post_id=post.id)
+
+    return render(request, "ddokdam/update.html", {
+        "post": post,
+        "form": DdokdamPostForm(instance=post),
+        "idol_list": ["bts", "blackpink", "twice", "exo", "itzy", "seventeen", "nct", "ive", "aespa", "newjeans"],
+        
+    })
+
 
 @login_required
 def delete(request, post_id):

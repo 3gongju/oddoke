@@ -1,37 +1,37 @@
-<div id="food-form" class="category-form hidden">
-  <div class="mb-6">
-    <label for="id_food_title">제목</label>
-    <input type="text" name="title" id="id_food_title" required class="w-full border rounded-md p-2" />
-  </div>
-  <div class="mb-6">
-    <label for="id_food_image">이미지</label>
-    <input type="file" name="image" id="id_food_image" required class="block w-full" />
-  </div>
-  <div class="mb-6">
-    <label for="id_location">장소</label>
-    <input type="text" name="location" id="id_location" required class="w-full border rounded-md p-2" />
-  </div>
-  <div class="mb-6">
-    <label for="id_food_content">내용</label>
-    <textarea name="content" id="id_food_content" rows="4" required class="w-full border rounded-md p-2"></textarea>
-  </div>
-  <div class="mb-6">
-    <label for="id_doll">인형</label>
-    <select name="doll" id="id_doll" class="w-full px-3 py-2 border rounded-md">
-      <option value="">선택</option>
-      <option value="bts">BTS 인형</option>
-      <option value="twice">TWICE 인형</option>
-      <!-- 기타 생략 -->
-    </select>
-  </div><!-- components/_food_section_ui.html -->
-<input type="text" name="title_food" placeholder="제목" class="form-input" required />
-<textarea name="content_food" placeholder="내용" class="form-textarea" required></textarea>
-<input type="file" name="image_food" accept="image/*" class="form-file" required />
-<input type="text" name="location_food" placeholder="장소" class="form-input" required />
-<select name="doll_food" class="form-select">
-  <option value="">선택하세요</option>
-  {% for doll in ['BTS','BLACKPINK','TWICE','EXO','ETC'] %}
-    <option value="{{ doll|lower }}">{{ doll }} 인형</option>
-  {% endfor %}
-</select>
+<!-- components/_food_section_ui.html -->
+<!-- ✅ 예절샷 작성 폼 -->
+<!-- 제목 -->
+<div class="mb-6">
+  <label for="id_food_title" class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+  <input type="text" name="title" id="id_food_title"
+         placeholder="어떤 메뉴를 먹었나요?"
+         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required />
+</div>
+
+<!-- 이미지 -->
+<div class="mb-6">
+  <label for="id_food_image" class="block text-sm font-medium text-gray-700 mb-1">예절샷 이미지</label>
+  <input type="file" name="image" id="id_food_image" accept="image/*"
+         class="mt-1 block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:bg-yellow-500 file:text-white hover:file:bg-yellow-600" required />
+</div>
+
+<!-- 장소 -->
+<div class="mb-6">
+  <label for="id_location" class="block text-sm font-medium text-gray-700 mb-1">장소</label>
+  <input type="text" name="location" id="id_location"
+         placeholder="식당 또는 카페 이름을 입력하세요"
+         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required />
+</div>
+
+<!-- 내용 -->
+<div class="mb-6">
+  <label for="id_food_content" class="block text-sm font-medium text-gray-700 mb-1">내용</label>
+  <textarea name="content" id="id_food_content" rows="4"
+            placeholder="음식과 분위기에 대해 설명해주세요"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" required></textarea>
+</div>
+
 </div>

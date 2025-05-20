@@ -20,11 +20,7 @@ class Migration(migrations.Migration):
             name='cafe_name',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
-        migrations.AddField(
-            model_name='ddokdampost',
-            name='doll',
-            field=models.CharField(blank=True, max_length=50, null=True),
-        ),
+       
         migrations.AddField(
             model_name='ddokdampost',
             name='end_date',
