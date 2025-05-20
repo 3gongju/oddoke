@@ -27,6 +27,7 @@
       <div class="flex items-center space-x-2">
         {% if request.user.is_authenticated %}
           <span class="text-sm text-gray-700">👤 {{ request.user.username }}님</span>
+          <a href="{% url 'accounts:profile' user.username %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
           <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
         {% else %}
           <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary">로그인</a>
