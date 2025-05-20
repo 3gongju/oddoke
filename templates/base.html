@@ -57,7 +57,8 @@
         })
         .then(response => response.json())
         .then(data => {
-          this.textContent = data.liked ? "❤️" : "🤍";
+          const heartSpan = this.querySelector(".heart-icon");
+          heartSpan.textContent = data.liked ? "❤️" : "🤍";
         })
         .catch(error => console.error("에러:", error));
       });

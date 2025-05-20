@@ -79,11 +79,14 @@
           <button id="like-btn-{{ post.id }}"
                   data-post-id="{{ post.id }}"
                   class="like-toggle bg-yellow-50 text-yellow-600 py-1.5 p-3 rounded-md border border-yellow-300 hover:bg-yellow-100 transition">
-            {% if user in post.liked_users.all %}
-              ❤️ 찜하기
-            {% else %}
-              🤍 찜하기
-            {% endif %}
+            <span class="heart-icon">
+              {% if user in post.liked_users.all %}
+                ❤️
+              {% else %}
+                🤍
+              {% endif %}
+            </span>
+            <span>찜하기</span>
           </button>
         <button class="flex-1 border border-gray-300 text-gray-600 py-3 rounded-md hover:bg-gray-100 transition">문의하기</button>
       </div>
