@@ -1,35 +1,45 @@
 {% extends 'base.html' %}
 
 {% block body %}
-    <div class="row my-3"> 
-        <div class="col-3">
-            <img src="{{user_profile.profile_image.url}}" alt="" class="img-fluid rounded-circle">
-        </div> 
-        <div class="col-9">
-            <div class="row">
-                <div class="col-3">{{user_profile.username}}</div>
-                {% if user != user_profile %}
-                <div class="col-9">
-                    {% if user in user_profile.followers.all %}
-                        <a href="{% url 'accounts:follow' user_profile.username %}" class="btn btn-secondary">팔로우 취소</a>
-                    {% else %}
-                        <a href="{% url 'accounts:follow' user_profile.username %}" class="btn btn-primary">팔로우</a>
-                    {% endif %}
-                </div>
-                {% endif %}
+    <div class="min-h-screen bg-gray-100 p-6">
+        
+        <!-- Profile Section -->
+        <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6 flex items-center">
+            <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
+                <img src="{{user_profile.profile_image.url}}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
             </div>
-            <div class="row">
-                <div class="col-4">게시물 : {{user_profile.post_set.all|length}}</div>
-                <div class="col-4">팔로워 : {{user_profile.followers.all|length}}</div>
-                <div class="col-4">팔로우 : {{user_profile.followings.all|length}}</div>
+            <div class="ml-4 flex-1">
+                <h2 class="text-lg font-semibold">{{user_profile.username}}</h2>
+                <p class="text-gray-600">{{user_profile.email}}</p>
             </div>
-        </div> 
-    </div>
-    <div class="row"> 
-        {% for post in user_profile.post_set.all %}
-            <div class="col-4">
-                <img src="{{post.image.url}}" alt="" class="img-fluid">
+            <div class="flex space-x-4">
+                <a href="#" class="bg-blue-500 text-white py-2 px-4 rounded-lg">팔로우 관리</a>
+                <a href="#" class="bg-blue-500 text-white py-2 px-4 rounded-lg">프로필 관리</a>
             </div>
-        {% endfor %}
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="container bg-white shadow mx-auto mb-6 flex space-x-4 justify-center bg-gray-100 p-4 rounded-lg">
+            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">베몬</div>
+            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">보넥도</div>
+            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">에스파</div>
+        </div>
+
+        <!-- Tabs Section -->
+        <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6">
+            <div class="flex space-x-4 mb-4">
+                <button class="bg-blue-500 text-white py-2 px-4 rounded-lg">덕팜</button>
+                <button class="bg-blue-500 text-white py-2 px-4 rounded-lg">덕담</button>
+            </div>
+            <div class="grid grid-cols-3 gap-4 auto-rows-[1fr]">
+                {% for post in user_profile.post_set.all %}
+                    <div class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center overflow-hidden space-y-2">
+                        <h4 class="font-semibold">{{ post.title }}</h4>
+                        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-40 object-cover rounded-lg mb-2">
+                        <p class="text-sm text-gray-600">{{ post.created_at }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 {% endblock %}
