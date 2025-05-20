@@ -18,6 +18,7 @@
                 class="px-3 py-1 rounded border transition {% if not current_category %}bg-yellow-500 text-white{% else %}bg-white text-gray-800 border-gray-300 hover:bg-yellow-100{% endif %}">
                 전체
             </a>
+            
             <a href="?category=junggogeorae"
                 class="px-3 py-1 rounded border transition {% if current_category == 'junggogeorae' %}bg-yellow-500 text-white{% else %}bg-white text-gray-800 border-gray-300 hover:bg-yellow-100{% endif %}">
                 중고거래
@@ -32,14 +33,6 @@
                 class="px-3 py-1 rounded border transition {% if current_category == 'split' %}bg-yellow-500 text-white{% else %}bg-white text-gray-800 border-gray-300 hover:bg-yellow-100{% endif %}">
                 분철팟
             </a>
-
-
-            {% for category in categories %}
-                <a href="?category={{ category.id }}{% if current_sort %}&sort={{ current_sort }}{% endif %}" class="px-3 py-1 rounded 
-                    {% if category.id|stringformat:"s" == current_category %}bg-yellow-500 text-white{% else %}bg-gray-100 text-gray-800 hover:bg-gray-200{% endif %}">
-                    {{ category.name }}
-                </a>
-            {% endfor %}
         </div>
     </div>
 

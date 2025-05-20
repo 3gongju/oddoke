@@ -54,6 +54,7 @@ def create(request):
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
+            post.category = form.cleaned_data['category'] 
             post.save()
             return redirect('ddokfarm:detail', post_id=post.id)
     else:
