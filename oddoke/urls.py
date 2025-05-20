@@ -23,6 +23,9 @@ from oddoke import views  # ✅ oddoke/views.py
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.main, name='home'),  # ✅ 메인페이지
+    # 이름 충돌이 있어 매개변수를 명시적으로 지정할수도
     path('ddokfarm/', include('ddokfarm.urls')),
+    path('ddokdam/', include('ddokdam.urls')),
     path('accounts/', include('accounts.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

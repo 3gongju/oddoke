@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+  <script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}
+
+{% block body %}
+  <div class="max-w-4xl mx-auto my-12">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <!-- 헤더 -->
+      <div class="bg-yellow-500 px-6 py-4 border-b">
+        <h1 class="text-xl font-bold text-white">게시물 수정</h1>
+      </div>
+      
+      <!-- 폼 내용 - action 속성 추가됨 -->
+      <form method="POST" enctype="multipart/form-data" action="{% url 'ddokdam:update' post.id %}" class="p-6">
+        {% csrf_token %}
+        
+        <!-- 카테고리 표시 (수정 불가) -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
+          <div class="px-3 py-2 bg-gray-100 rounded-md">
+            {{ post.get_category_display }}
+          </div>
+        </div>
+        
+        <!-- 제목 (모든 카테고리 공통) -->
+        <div class="mb-6">
+          <label for="id_title" class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+          <input type="text" name="title" id="id_title" 
+                 value="{{ form.title.value }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+        </div>
+        
+        <!-- 카테고리별 추가 필드 -->
+        {% if post.category == 'community' %}
+          <!-- 아이돌 선택 (community 카테고리) -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">아이돌 선택</label>
+            <select name="idol" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+              <option value="">선택하세요 (선택사항)</option>
+              <option value="bts" {% if post.idol == 'bts' %}selected{% endif %}>BTS</option>
+              <option value="blackpink" {% if post.idol == 'blackpink' %}selected{% endif %}>BLACKPINK</option>
+              <option value="twice" {% if post.idol == 'twice' %}selected{% endif %}>TWICE</option>
+              <option value="exo" {% if post.idol == 'exo' %}selected{% endif %}>EXO</option>
+              <option value="itzy" {% if post.idol == 'itzy' %}selected{% endif %}>ITZY</option>
+              <option value="seventeen" {% if post.idol == 'seventeen' %}selected{% endif %}>SEVENTEEN</option>
+              <option value="nct" {% if post.idol == 'nct' %}selected{% endif %}>NCT</option>
+              <option value="ive" {% if post.idol == 'ive' %}selected{% endif %}>IVE</option>
+              <option value="aespa" {% if post.idol == 'aespa' %}selected{% endif %}>aespa</option>
+              <option value="newjeans" {% if post.idol == 'newjeans' %}selected{% endif %}>NewJeans</option>
+            </select>
+          </div>
+        {% elif post.category == 'food' %}
+          <!-- 장소 태그 (food 카테고리) -->
+          <div class="mb-6">
+            <label for="id_location" class="block text-sm font-medium text-gray-700 mb-1">장소</label>
+            <input type="text" name="location" id="id_location" 
+                   value="{{ post.location }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+          </div>
+          
+          <!-- 인형 (food 카테고리) -->
+          <div class="mb-6">
+            <label for="id_doll" class="block text-sm font-medium text-gray-700 mb-1">인형</label>
+            <select name="doll" id="id_doll" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+              <option value="">선택하세요</option>
+              <option value="bts" {% if post.doll == 'bts' %}selected{% endif %}>BTS 인형</option>
+              <option value="blackpink" {% if post.doll == 'blackpink' %}selected{% endif %}>BLACKPINK 인형</option>
+              <option value="twice" {% if post.doll == 'twice' %}selected{% endif %}>TWICE 인형</option>
+              <option value="exo" {% if post.doll == 'exo' %}selected{% endif %}>EXO 인형</option>
+              <option value="etc" {% if post.doll == 'etc' %}selected{% endif %}>기타</option>
+            </select>
+          </div>
+        {% elif post.category == 'cafe' %}
+          <!-- 아이돌 선택 (cafe 카테고리) -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1">아이돌 선택</label>
+            <select name="idol" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+              <option value="">선택하세요</option>
+              <option value="bts" {% if post.idol == 'bts' %}selected{% endif %}>BTS</option>
+              <option value="blackpink" {% if post.idol == 'blackpink' %}selected{% endif %}>BLACKPINK</option>
+              <option value="twice" {% if post.idol == 'twice' %}selected{% endif %}>TWICE</option>
+              <option value="exo" {% if post.idol == 'exo' %}selected{% endif %}>EXO</option>
+              <option value="itzy" {% if post.idol == 'itzy' %}selected{% endif %}>ITZY</option>
+              <option value="seventeen" {% if post.idol == 'seventeen' %}selected{% endif %}>SEVENTEEN</option>
+              <option value="nct" {% if post.idol == 'nct' %}selected{% endif %}>NCT</option>
+              <option value="ive" {% if post.idol == 'ive' %}selected{% endif %}>IVE</option>
+              <option value="aespa" {% if post.idol == 'aespa' %}selected{% endif %}>aespa</option>
+              <option value="newjeans" {% if post.idol == 'newjeans' %}selected{% endif %}>NewJeans</option>
+            </select>
+          </div>
+          
+          <!-- 카페명 (cafe 카테고리) -->
+          <div class="mb-6">
+            <label for="id_cafe_name" class="block text-sm font-medium text-gray-700 mb-1">카페명</label>
+            <input type="text" name="cafe_name" id="id_cafe_name" 
+                   value="{{ post.cafe_name }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+          </div>
+          
+          <!-- 위치 (cafe 카테고리) -->
+          <div class="mb-6">
+            <label for="id_cafe_location" class="block text-sm font-medium text-gray-700 mb-1">위치</label>
+            <input type="text" name="cafe_location" id="id_cafe_location" 
+                   value="{{ post.cafe_location }}"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+          </div>
+          
+          <!-- 운영기간 (cafe 카테고리) -->
+          <div class="mb-6 grid grid-cols-2 gap-4">
+            <div>
+              <label for="id_start_date" class="block text-sm font-medium text-gray-700 mb-1">시작 날짜</label>
+              <input type="date" name="start_date" id="id_start_date" 
+                     value="{{ post.start_date|date:'Y-m-d' }}"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+            </div>
+            <div>
+              <label for="id_end_date" class="block text-sm font-medium text-gray-700 mb-1">종료 날짜</label>
+              <input type="date" name="end_date" id="id_end_date" 
+                     value="{{ post.end_date|date:'Y-m-d' }}"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" />
+            </div>
+          </div>
+        {% endif %}
+        
+        <!-- 내용 (모든 카테고리 공통) -->
+        <div class="mb-6">
+          <label for="id_content" class="block text-sm font-medium text-gray-700 mb-1">내용</label>
+          <textarea name="content" id="id_content" rows="6"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">{{ form.content.value }}</textarea>
+        </div>
+        
+        <!-- 이미지 업데이트 -->
+        <div class="mb-6">
+          <label for="id_image" class="block text-sm font-medium text-gray-700 mb-1">이미지</label>
+          {% if post.image %}
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-40 h-40 object-cover mb-2 border rounded-md">
+          {% endif %}
+          <input type="file" name="image" id="id_image" accept="image/*"
+                 class="mt-1 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:bg-yellow-500 file:text-white hover:file:bg-yellow-600" />
+          <p class="text-xs text-gray-500 mt-1">새 이미지를 업로드하지 않으면 기존 이미지가 유지됩니다.</p>
+        </div>
+        
+        <!-- 제출 버튼 -->
+        <div class="flex justify-end mt-8">
+          <a href="{% url 'ddokdam:detail' post.id %}" class="px-4 py-2 mr-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+            취소
+          </a>
+          <button type="submit" class="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+            수정 완료
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ddokfarm',
+    'ddokdam',
     'accounts',
     'django_browser_reload',
     'widget_tweaks',
@@ -58,7 +60,7 @@ ROOT_URLCONF = 'oddoke.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -135,6 +137,4 @@ MEDIA_URL = '/media/'
 AUTH_USER_MODEL = 'accounts.User'
 
 # TAILWIND_APP_NAME = 'theme'
-
-# settings.py
 

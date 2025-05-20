@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Oddoke</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ✅ 추가: 서브 템플릿에서 head 영역 확장 가능하게 -->
+    {% block head %}{% endblock %}
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
 
@@ -16,7 +19,7 @@
       <div class="flex items-center space-x-4">
         <a href="/" class="text-xl font-bold text-primary">어덕해</a>
         <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
-        <a href="#" class="hover:text-primary text-sm font-medium">덕담</a>
+        <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
         <a href="#" class="hover:text-primary text-sm font-medium">덕생</a>
       </div>
 
@@ -24,6 +27,7 @@
       <div class="flex items-center space-x-2">
         {% if request.user.is_authenticated %}
           <span class="text-sm text-gray-700">👤 {{ request.user.username }}님</span>
+          <a href="{% url 'accounts:profile' user.username %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
           <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
         {% else %}
           <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary">로그인</a>
@@ -33,10 +37,35 @@
   </div>
 </nav>
 
-
 <!-- ✅ 본문 블록 -->
 {% block body %}
 {% endblock %}
+
+<!-- 좋아요 하트 비동기 처리 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".like-toggle").forEach(btn => {
+      btn.addEventListener("click", function() {
+        const postId = this.dataset.postId;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`/ddokfarm/${postId}/like/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken,
+            "Content-Type": "application/json"
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          const heartSpan = this.querySelector(".heart-icon");
+          heartSpan.textContent = data.liked ? "❤️" : "🤍";
+        })
+        .catch(error => console.error("에러:", error));
+      });
+    });
+  });
+</script>
 
 </body>
 </html>

@@ -1,0 +1,49 @@
+<script>
+function toggleRequiredFields(form, enable) {
+  form.querySelectorAll('input, textarea, select').forEach(el => {
+    if (enable) {
+      if (el.dataset.wasRequired === 'true') el.setAttribute('required', 'required');
+    } else {
+      if (el.hasAttribute('required')) {
+        el.dataset.wasRequired = 'true';
+        el.removeAttribute('required');
+      } else {
+        el.dataset.wasRequired = 'false';
+      }
+    }
+  });
+}
+
+function showCategoryForm(category) {
+  document.querySelectorAll('.category-form').forEach(form => {
+    form.classList.add('hidden');
+    toggleRequiredFields(form, false);
+  });
+
+  const selected = document.getElementById(`${category}-form`);
+  if (selected) {
+    selected.classList.remove('hidden');
+    toggleRequiredFields(selected, true);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll('input[name="category"]').forEach(radio => {
+    radio.addEventListener('change', () => showCategoryForm(radio.value));
+  });
+
+  const defaultChecked = document.querySelector('input[name="category"]:checked');
+  if (defaultChecked) {
+    showCategoryForm(defaultChecked.value);
+  }
+
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('.category-form.hidden').forEach(f => toggleRequiredFields(f, false));
+      setTimeout(() => form.submit(), 0);
+    });
+  }
+});
+</script>
