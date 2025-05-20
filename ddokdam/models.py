@@ -18,6 +18,18 @@ class DdokdamPost(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='community')
     idol = models.CharField(max_length=200, blank=True, null=True)  # 해시태그 문자열 저장
     like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='like_ddokdam_posts', blank=True)
+    
+    
+        # 카테고리별 선택 필드
+    idol = models.CharField(max_length=50, blank=True, null=True)         # 선택용
+    hashtags = models.CharField(max_length=200, blank=True, null=True)    # 해시태그 저장용
+
+    doll = models.CharField(max_length=50, blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    cafe_name = models.CharField(max_length=255, blank=True, null=True)
+    cafe_location = models.CharField(max_length=255, blank=True, null=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"[{self.get_category_display()}] {self.title}"

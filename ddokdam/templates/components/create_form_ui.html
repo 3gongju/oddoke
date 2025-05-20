@@ -1,0 +1,32 @@
+{# templates/components/create_form_ui.html #}
+
+<!-- ✅ 카테고리 선택 -->
+<div class="mb-8">
+  <h2 class="text-lg font-semibold mb-3">카테고리 선택</h2>
+  <div class="grid grid-cols-3 gap-3">
+    {% for key, label in [('community', '커뮤니티'), ('food', '예절샷'), ('cafe', '생일카페')] %}
+    <label class="relative flex items-center justify-center p-4 border rounded-lg cursor-pointer hover:bg-yellow-50 transition group">
+      <input type="radio" name="category" value="{{ key }}" class="absolute opacity-0" {% if forloop.first %}checked{% endif %}>
+      <div class="text-center transition-all group-hover:-translate-y-1">
+        <div class="mb-2 text-yellow-500 flex justify-center">
+          <span class="h-8 w-8">🧾</span>  {# 아이콘은 자유롭게 바꾸세요 #}
+        </div>
+        <div class="font-medium">{{ label }}</div>
+      </div>
+    </label>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ✅ 폼 include -->
+<div id="community-form" class="category-form">
+  {% include 'components/_community_section_ui.html' %}
+</div>
+
+<div id="food-form" class="category-form hidden">
+  {% include 'components/_food_section_ui.html' %}
+</div>
+
+<div id="cafe-form" class="category-form hidden">
+  {% include 'components/_cafe_section_ui.html' %}
+</div>

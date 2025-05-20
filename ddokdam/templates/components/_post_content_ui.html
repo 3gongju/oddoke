@@ -1,14 +1,18 @@
 <!-- ddokdam/templates/ddokdam/components/_post_content_ui.html -->
 <div class="mb-8">
     <!-- 이미지 -->
-    <div class="mb-6">
-        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full max-h-96 object-contain rounded">
-    </div>
+    {% if post.image %}
+      <div class="mb-6">
+          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full max-h-96 object-contain rounded">
+      </div>
+    {% endif %}
     
     <!-- 카테고리 정보 -->
     <div class="mb-4">
         <span class="inline-block px-3 py-1 text-sm rounded-full 
-            {% if post.category == 'community' %}bg-purple-100 text-purple-800{% elif post.category == 'food' %}bg-pink-100 text-pink-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            {% if post.category == 'community' %}bg-purple-100 text-purple-800
+            {% elif post.category == 'food' %}bg-pink-100 text-pink-800
+            {% else %}bg-blue-100 text-blue-800{% endif %}">
             {{ post.get_category_display }}
         </span>
     </div>
