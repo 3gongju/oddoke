@@ -95,20 +95,52 @@ def index(request):
 
 #     return render(request, 'ddokdam/create.html')
 
+# def create(request):
+#     if request.method == 'POST':
+#         form = PostForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             post = form.save(commit=False)
+#             post.user = request.user
+#             post.save()
+
+#             return redirect('ddokdam:category_list', category=post.category)
+
+#     else:
+#         form = PostForm()
+
+#     return render(request, 'ddokdam/create.html', {'form': form})
+
+# ddokdam/views.py
+
 def create(request):
     if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
+        category = request.POST.get('category')
+        form = None
+
+        if category == 'community':
+            form = CommunityPostForm(request.POST, request.FILES)
+        elif category == 'food':
+            form = FoodPostForm(request.POST, request.FILES)
+        elif category == 'cafe':
+            form = CafePostForm(request.POST, request.FILES)
+
+        if form and form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
+            post.category = category
             post.save()
-
-            return redirect('ddokdam:category_list', category=post.category)
-
+            return redirect('ddokdam:detail', post.id)
     else:
-        form = PostForm()
+        # GET 요청일 때는 빈 폼을 각각 생성해서 템플릿에 전달
+        community_form = CommunityPostForm()
+        food_form = FoodPostForm()
+        cafe_form = CafePostForm()
 
-    return render(request, 'ddokdam/create.html', {'form': form})
+    return render(request, 'ddokdam/create.html', {
+        'community_form': community_form,
+        'food_form': food_form,
+        'cafe_form': cafe_form,
+    })
 
 
 def detail(request, post_id):

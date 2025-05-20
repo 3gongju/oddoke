@@ -1,15 +1,72 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block body %}
-<div class="max-w-2xl mx-auto py-12 px-6">
+<div class="max-w-3xl mx-auto py-12 px-4">
+  <h1 class="text-2xl font-bold mb-6">덕담 작성하기</h1>
+
+  <!-- 카테고리 선택 버튼 -->
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <button type="button" class="category-btn bg-gray-200 py-2 rounded" data-category="community">커뮤니티</button>
+    <button type="button" class="category-btn bg-gray-200 py-2 rounded" data-category="food">예절샷</button>
+    <button type="button" class="category-btn bg-gray-200 py-2 rounded" data-category="cafe">생일카페</button>
+  </div>
+
+  <!-- 폼 영역 -->
   <form method="POST" enctype="multipart/form-data" action="{% url 'ddokdam:create' %}" class="space-y-6">
     {% csrf_token %}
-    {% include 'components/create_form_ui.html' %}
+
+    <!-- ✅ 선택된 카테고리를 서버에 전달할 hidden input -->
+    <input type="hidden" name="category" id="selected-category" value="community">
+
+    <!-- 커뮤니티 폼 -->
+    <div id="community-form" class="category-form hidden">
+      {% include 'components/_community_section_ui.html' with form=community_form %}
+    </div>
+
+    <!-- 예절샷 폼 -->
+    <div id="food-form" class="category-form hidden">
+      {% include 'components/_food_section_ui.html' with form=food_form %}
+    </div>
+
+    <!-- 생일카페 폼 -->
+    <div id="cafe-form" class="category-form hidden">
+      {% include 'components/_cafe_section_ui.html' with form=cafe_form %}
+    </div>
+
     <div class="text-right">
-      <button type="submit" class="px-6 py-2 bg-yellow-400 hover:bg-yellow-500 text-white rounded-lg">
-        작성 완료
-      </button>
+      <button type="submit" class="bg-yellow-400 hover:bg-yellow-500 px-4 py-2 text-white rounded">작성 완료</button>
     </div>
   </form>
 </div>
+
+<!-- JavaScript: 카테고리 버튼 클릭 시 해당 폼 전환 + hidden input 갱신 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const buttons = document.querySelectorAll(".category-btn");
+    const forms = document.querySelectorAll(".category-form");
+    const categoryInput = document.getElementById("selected-category");
+
+    buttons.forEach(button => {
+      button.addEventListener("click", function() {
+        const selected = this.dataset.category;
+
+        // 모든 폼 숨기기
+        forms.forEach(form => form.classList.add("hidden"));
+        // 선택된 폼 보이기
+        document.getElementById(`${selected}-form`).classList.remove("hidden");
+
+        // 버튼 스타일 변경
+        buttons.forEach(btn => btn.classList.remove("bg-yellow-400", "text-white"));
+        this.classList.add("bg-yellow-400", "text-white");
+
+        // ✅ 선택된 값을 hidden input에 반영
+        categoryInput.value = selected;
+      });
+    });
+
+    // 기본값: 커뮤니티 선택
+    document.querySelector('[data-category="community"]').click();
+  });
+</script>
 {% endblock %}
