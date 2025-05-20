@@ -60,7 +60,10 @@ def create(request):
         form = PostForm()
 
     categories = Category.objects.all()
-    return render(request, 'ddokfarm/create.html', {'form': form, 'categories': categories})
+    return render(request, 'ddokfarm/create.html', {
+        'form': form, 
+        'categories': categories,
+    })
 
 
 # ✅ 게시글 상세 보기
