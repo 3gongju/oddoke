@@ -1,11 +1,13 @@
 from django.db import models
 from django_resized import ResizedImageField
 from django.conf import settings
+from django.utils.text import slugify
 
 # 카테고리 모델
 class Category(models.Model):
-    name = models.CharField(max_length=50)
-    
+    name = models.CharField(max_length=20)
+    slug = models.SlugField(max_length=50, unique=True)  # URL 노출용: junggogeorae 등
+
     def __str__(self):
         return self.name
 

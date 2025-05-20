@@ -16,10 +16,14 @@ def main(request):
 def index(request):
     posts = Post.objects.all().order_by('-created_at')
 
-    # 카테고리 필터링
-    category_id = request.GET.get('category')
-    if category_id:
-        posts = posts.filter(category_id=category_id)
+    category_slug = request.GET.get('category')
+    current_category = None
+
+    if category_slug:
+        category = Category.objects.filter(slug=category_slug).first()
+        if category:
+            posts = posts.filter(category=category)
+            current_category = category.slug
 
     # 정렬 조건
     sort = request.GET.get('sort', 'latest')
@@ -34,8 +38,8 @@ def index(request):
 
     context = {
         'posts': posts,
-        'categories': categories,
-        'current_category': category_id,
+        'categories': Category.objects.all(),
+        'current_category': current_category,
         'current_sort': sort,
     }
 
@@ -50,13 +54,17 @@ def create(request):
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
+            post.category = form.cleaned_data['category'] 
             post.save()
             return redirect('ddokfarm:detail', post_id=post.id)
     else:
         form = PostForm()
 
     categories = Category.objects.all()
-    return render(request, 'ddokfarm/create.html', {'form': form, 'categories': categories})
+    return render(request, 'ddokfarm/create.html', {
+        'form': form, 
+        'categories': categories,
+    })
 
 
 # ✅ 게시글 상세 보기
