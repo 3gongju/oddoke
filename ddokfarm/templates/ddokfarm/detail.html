@@ -21,3 +21,24 @@
     {% include 'components/comment/_list_ui.html' with comments=comments post=post %}
 </div>
 {% endblock %}
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith("#comment-")) {
+      setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.style.backgroundColor = "#FEF9C3";
+          setTimeout(() => {
+            el.style.backgroundColor = "";
+          }, 2000);
+        }
+      }, 300);  // ✅ 렌더링 완료 후 강제 이동 (딜레이 추가)
+    }
+  });
+</script>
+
+

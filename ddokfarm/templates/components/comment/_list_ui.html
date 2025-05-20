@@ -1,6 +1,6 @@
 {% for comment in comments %}
   {% if not comment.parent %}
-    <div class="border p-2">
+    <div class="border p-2" id="comment-{{ comment.id }}">
       <strong>{{ comment.user.username }}</strong> {{ comment.content }}
 
       <!-- 답글 쓰기 버튼 -->
@@ -25,7 +25,7 @@
 
       <!-- 대댓글 출력 -->
       {% for reply in comment.replies.all %}
-        <div class="ml-4 mt-2 border-l pl-2">
+        <div class="ml-4 mt-2 border-l pl-2" id="comment-{{ reply.id }}">
           ↳ <strong>{{ reply.user.username }}</strong> {{ reply.content }}
         </div>
       {% endfor %}
