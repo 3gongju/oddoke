@@ -4,6 +4,8 @@ from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from .forms import PostForm, CommentForm
 from .models import Post, Comment, Category
+from django.urls import reverse
+
 
 
 
@@ -162,7 +164,7 @@ def comment_create(request, post_id):
         comment.user = request.user
         comment.post = post
         comment.save()
-        return redirect('ddokfarm:detail', post_id=post_id)
+        return redirect(f'{reverse("ddokfarm:detail", args=[post_id])}#comment-{comment.id}')
 
     return redirect('ddokfarm:detail', post_id=post_id)
 
