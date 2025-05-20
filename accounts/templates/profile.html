@@ -29,8 +29,72 @@
         <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6">
             <div class="flex space-x-4 mb-4">
                 <button class="bg-blue-500 text-white py-2 px-4 rounded-lg">덕팜</button>
+ 
                 <button class="bg-blue-500 text-white py-2 px-4 rounded-lg">덕담</button>
             </div>
+            <!-- ✅ 덕팜 탭: 내가 올린 게시글 / 찜한 게시글 / 댓글 작성 -->
+            <div class="container mx-auto bg-white p-6 shadow rounded-lg">
+            <!-- 탭 버튼 -->
+            <div class="flex justify-center space-x-4 mb-6">
+                <button onclick="showTab('my_posts')" class="tab-btn bg-blue-500 text-white px-4 py-2 rounded">내 게시글</button>
+                <button onclick="showTab('liked_posts')" class="tab-btn bg-white text-blue-500 px-4 py-2 border border-blue-500 rounded">내가 찜한 게시글</button>
+                <button onclick="showTab('my_comments')" class="tab-btn bg-white text-blue-500 px-4 py-2 border border-blue-500 rounded">내가 작성한 댓글</button>
+            </div>
+
+            <!-- 탭 콘텐츠: 내가 올린 게시글 -->
+            <div id="my_posts" class="tab-content">
+                <div class="grid grid-cols-2 gap-4">
+                
+                </div>
+            </div>
+
+            <!-- 탭 콘텐츠: 내가 찜한 게시글 -->
+            <div id="liked_posts" class="tab-content hidden">
+                <div class="grid grid-cols-2 gap-4">
+                {% for post in user_profile.liked_posts.all %}
+                    <div class="border p-4 rounded shadow">
+                    <h3 class="font-bold">{{ post.title }}</h3>
+                    <p>{{ post.created_at }}</p>
+                    </div>
+                {% empty %}
+                    <p>찜한 게시물이 없습니다.</p>
+                {% endfor %}
+                </div>
+            </div>
+
+            <!-- 탭 콘텐츠: 내가 작성한 댓글 -->
+            <div id="my_comments" class="tab-content hidden">
+                <ul class="space-y-2">
+                {% for comment in user_profile.comment_set.all %}
+                    <li class="border p-2 rounded">
+                    <p class="text-sm text-gray-700">{{ comment.content }}</p>
+                    <p class="text-xs text-gray-500">{{ comment.created_at }}</p>
+                    </li>
+                {% empty %}
+                    <p>작성한 댓글이 없습니다.</p>
+                {% endfor %}
+                </ul>
+            </div>
+            </div>
+
+            <!-- 탭 전환용 스크립트 -->
+            <script>
+            function showTab(tabId) {
+                const tabs = document.querySelectorAll(".tab-content");
+                const buttons = document.querySelectorAll(".tab-btn");
+                tabs.forEach(tab => tab.classList.add("hidden"));
+                buttons.forEach(btn => btn.classList.remove("bg-blue-500", "text-white"));
+                buttons.forEach(btn => btn.classList.add("bg-white", "text-blue-500", "border", "border-blue-500"));
+
+                document.getElementById(tabId).classList.remove("hidden");
+                event.target.classList.remove("bg-white", "text-blue-500", "border", "border-blue-500");
+                event.target.classList.add("bg-blue-500", "text-white");
+            }
+            </script>
+
+
+
+
             <div class="grid grid-cols-3 gap-4 auto-rows-[1fr]">
                 {% for post in user_profile.post_set.all %}
                     <div class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center overflow-hidden space-y-2">
