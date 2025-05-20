@@ -9,10 +9,16 @@ from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 def signup(request):
+    preview_image_url = None
+
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            
+            if user.profile_image:
+                preview_image_url = user.profile_image.url
+
             return redirect('accounts:login')
     else:
         form = CustomUserCreationForm()
