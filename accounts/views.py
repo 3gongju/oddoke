@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -56,12 +56,11 @@ def logout(request):
 
 @login_required
 def profile(request, username):
-    user_profile = User.objects.get(username=username) # user와 충돌해서 변수 이름 변경
+    user_profile = User.objects.get(username=username)
 
     context = {
-        'user_profile':user_profile,
+        'user_profile': user_profile,
     }
-
     return render(request, 'profile.html', context)
 
 @login_required
