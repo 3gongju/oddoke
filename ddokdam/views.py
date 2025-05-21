@@ -3,29 +3,68 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.db.models import Count
 from django.http import JsonResponse
-
-from .models import DdokdamPost, DdokdamComment
-from .forms import DdokdamCommentForm, CommunityPostForm, FoodPostForm, CafePostForm
-
+from itertools import chain
+from operator import attrgetter
+from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
+# from .forms import DdokdamCommentForm, CommunityPostForm, FoodPostForm, CafePostForm
 
 def index(request):
-    sort = request.GET.get('sort', 'latest')
-    posts = DdokdamPost.objects.all()
+    category = request.GET.get('category')
 
-    if sort == 'likes':
-        posts = posts.annotate(num_likes=Count('like_users')).order_by('-num_likes')
-    elif sort == 'comments':
-        posts = posts.annotate(num_comments=Count('ddokdamcomment')).order_by('-num_comments')
+    community_posts = DamCommunityPost.objects.all()
+    manner_posts = DamMannerPost.objects.all()
+    bdaycafe_posts = DamBdaycafePost.objects.all()
+
+    # 카테고리 필터링
+    if category == 'community':
+        posts = community_posts
+    elif category == 'manner':
+        posts = manner_posts
+    elif category == 'bdaycafe':
+        posts = bdaycafe_posts
     else:
-        posts = posts.order_by('-created_at')
+        posts = chain(community_posts, manner_posts, bdaycafe_posts)
+
+    # 정렬
+    posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
     context = {
         'posts': posts,
-        'category': '',
-        'category_name': '전체',
-        'current_sort': sort,
+        'category': category,
     }
-    return render(request, 'ddokdam/category_list.html', context)
+
+    return render(request, 'ddokdam/index.html', context)
+
+# 커뮤니티 게시글 보기
+def community_index(request):
+    return redirect('/ddokdam/?category=community')
+
+# 덕매너 게시글 보기
+def manner_index(request):
+    return redirect('/ddokdam/?category=manner')
+
+# 생카 게시글 보기
+def bdaycafe_index(request):
+    return redirect('/ddokdam/?category=bdaycafe')
+
+# def index(request):
+#     sort = request.GET.get('sort', 'latest')
+#     posts = DdokdamPost.objects.all()
+
+#     if sort == 'likes':
+#         posts = posts.annotate(num_likes=Count('like_users')).order_by('-num_likes')
+#     elif sort == 'comments':
+#         posts = posts.annotate(num_comments=Count('ddokdamcomment')).order_by('-num_comments')
+#     else:
+#         posts = posts.order_by('-created_at')
+
+#     context = {
+#         'posts': posts,
+#         'category': '',
+#         'category_name': '전체',
+#         'current_sort': sort,
+#     }
+#     return render(request, 'ddokdam/category_list.html', context)
 
 
 @login_required

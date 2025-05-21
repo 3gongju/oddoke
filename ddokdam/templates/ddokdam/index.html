@@ -1,33 +1,67 @@
 {% extends 'base.html' %}
 
-{% block content %}
+{% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <h2 class="text-2xl font-bold mb-6">덕담 - 아이돌 팬 커뮤니티</h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    {% for block in category_blocks %}
-    <div class="bg-yellow-200 p-4 rounded-md shadow">
-      <div class="flex justify-between items-center mb-2">
-        <h3 class="font-semibold text-lg">{{ block.title }}</h3>
-        <a href="{% url 'ddokdam:category_list' block.key %}" class="text-sm text-gray-700 hover:underline">더보기 →</a>
-      </div>
+<div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
+  <a href="{% url 'ddokdam:index' %}"
+     class="px-3 py-1 rounded-full border
+            {% if not category %}
+              bg-yellow-400 text-white
+            {% else %}
+              bg-white text-gray-700 hover:bg-yellow-100
+            {% endif %}">
+    전체
+  </a>
 
-      {% if block.posts %}
-        {% for post in block.posts %}
-          <div class="py-1 text-sm border-b border-gray-300 last:border-0">
-            <a href="{% url 'ddokdam:detail' post.id %}" class="font-medium hover:underline">
-              {{ post.title }}
-            </a>
-            <div class="text-xs text-gray-600">
-              {{ post.user.username }} · {{ post.created_at|date:"Y.m.d" }}
-            </div>
+  <a href="{% url 'ddokdam:community_index' %}"
+     class="px-3 py-1 rounded-full border
+            {% if category == 'community' %}
+              bg-yellow-400 text-white
+            {% else %}
+              bg-white text-gray-700 hover:bg-yellow-100
+            {% endif %}">
+    덕담 한마디
+  </a>
+
+  <a href="{% url 'ddokdam:manner_index' %}"
+     class="px-3 py-1 rounded-full border
+            {% if category == 'manner' %}
+              bg-yellow-400 text-white
+            {% else %}
+              bg-white text-gray-700 hover:bg-yellow-100
+            {% endif %}">
+    예절 차리기
+  </a>
+
+  <a href="{% url 'ddokdam:bdaycafe_index' %}"
+     class="px-3 py-1 rounded-full border
+            {% if category == 'bdaycafe' %}
+              bg-yellow-400 text-white
+            {% else %}
+              bg-white text-gray-700 hover:bg-yellow-100
+            {% endif %}">
+    생카 후기
+  </a>
+</div>
+
+
+  {% if posts %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {% for post in posts %}
+        <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-60 object-cover">
+
+          <div class="p-3">
+            <h3 class="text-sm font-semibold truncate">{{ post.title }}</h3>
+            <p class="text-xs text-gray-400">{{ post.created_at|date:"Y-m-d" }}</p>
           </div>
-        {% endfor %}
-      {% else %}
-        <p class="text-sm text-gray-600">아직 게시물이 없습니다.</p>
-      {% endif %}
+        </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
+  {% else %}
+    <p class="text-gray-500">게시글이 없습니다.</p>
+  {% endif %}
 </div>
 {% endblock %}
