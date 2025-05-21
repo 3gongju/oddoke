@@ -27,5 +27,6 @@ urlpatterns = [
     path('ddokfarm/', include('ddokfarm.urls')),
     path('ddokdam/', include('ddokdam.urls')),
     path('accounts/', include('accounts.urls')),
+    path('artist/', include('artist.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
