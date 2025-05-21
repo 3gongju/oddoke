@@ -33,6 +33,7 @@ class DdokdamComment(models.Model):
     content = models.CharField(max_length=200)
     post = models.ForeignKey(DdokdamPost, on_delete=models.CASCADE, related_name='ddokdamcomment')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')  # ✅ 대댓글
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
