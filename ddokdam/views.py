@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.db.models import Count
 from django.http import JsonResponse
 
@@ -65,7 +66,7 @@ def create(request):
 
 def detail(request, post_id):
     post = get_object_or_404(DdokdamPost, id=post_id)
-    comments = DdokdamComment.objects.filter(post=post).order_by('-created_at')
+    comments = DdokdamComment.objects.filter(post=post).select_related('user').prefetch_related('replies')
     comment_form = DdokdamCommentForm()
 
     return render(request, 'ddokdam/detail.html', {
@@ -137,15 +138,18 @@ def delete(request, post_id):
 
 
 @login_required
+@require_POST
 def comment_create(request, post_id):
     post = get_object_or_404(DdokdamPost, id=post_id)
-    if request.method == 'POST':
-        form = DdokdamCommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.user = request.user
-            comment.post = post
-            comment.save()
+    form = DdokdamCommentForm(request.POST)
+
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.user = request.user
+        comment.post = post
+        comment.save()
+        return redirect('ddokdam:detail', post_id=post_id)
+
     return redirect('ddokdam:detail', post_id=post_id)
 
 

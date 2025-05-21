@@ -155,8 +155,9 @@ class CafePostForm(forms.ModelForm):
 class DdokdamCommentForm(forms.ModelForm):
     class Meta:
         model = DdokdamComment
-        fields = ('content',)
+        fields = ['content', 'parent']  # ✅ parent 추가
         widgets = {
+            'parent': forms.HiddenInput(),
             'content': forms.Textarea(attrs={
                 'rows': '2',
                 'placeholder': '댓글을 입력하세요...',
