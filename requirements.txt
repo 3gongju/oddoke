@@ -22,7 +22,7 @@ diff-match-patch==20241021
 distro==1.9.0
 Django==5.1.7
 django-browser-reload==1.18.0
-django-import-export @ git+https://github.com/django-import-export/django-import-export.git@78c2d73f3da554c03df8caeb1828349cdc753b7d
+django-import-export==4.3.7
 django-resized==1.0.3
 django-widget-tweaks==1.5.0
 executing==2.2.0
