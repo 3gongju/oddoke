@@ -1,40 +1,73 @@
-<div id="cafe-form" class="category-form hidden">
-  <div class="mb-6">
-    <label>아이돌 선택</label>
-    <select name="idol" required class="w-full border rounded-md p-2">
-      <option value="">선택</option>
-      <option value="bts">BTS</option>
-      <!-- 기타 -->
-    </select>
+<!-- community / food / cafe 각각의 UI 템플릿에서 -->
+<div class="space-y-4">
+  {% if form.non_field_errors %}
+    <p class="text-red-500 text-sm">{{ form.non_field_errors.0 }}</p>
+  {% endif %}
+
+
+<div class="space-y-4">
+  <div>
+    <label for="id_title" class="block text-sm font-medium text-gray-700">제목</label>
+    {{ form.title }}
+    {% if form.title.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+    {% endif %}
   </div>
-  <div class="mb-6">
-    <label for="id_cafe_title">제목</label>
-    <input type="text" name="title" id="id_cafe_title" required class="w-full border rounded-md p-2" />
+
+  <div>
+    <label for="id_image" class="block text-sm font-medium text-gray-700">이미지</label>
+    {{ form.image }}
+    {% if form.image.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.image.errors.0 }}</p>
+    {% endif %}
   </div>
-  <div class="mb-6">
-    <label for="id_cafe_name">카페명</label>
-    <input type="text" name="cafe_name" id="id_cafe_name" required class="w-full border rounded-md p-2" />
+
+  <div>
+    <label for="id_content" class="block text-sm font-medium text-gray-700">내용</label>
+    {{ form.content }}
+    {% if form.content.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.content.errors.0 }}</p>
+    {% endif %}
   </div>
-  <div class="mb-6">
-    <label for="id_cafe_location">위치</label>
-    <input type="text" name="cafe_location" id="id_cafe_location" required class="w-full border rounded-md p-2" />
+
+  <div>
+    <label for="id_idol" class="block text-sm font-medium text-gray-700">아이돌 선택</label>
+    {{ form.idol }}
+    {% if form.idol.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.idol.errors.0 }}</p>
+    {% endif %}
   </div>
-  <div class="grid grid-cols-2 gap-4 mb-6">
-    <div>
-      <label for="id_start_date">시작 날짜</label>
-      <input type="date" name="start_date" id="id_start_date" class="w-full border rounded-md p-2" />
+
+  <div>
+    <label for="id_cafe_name" class="block text-sm font-medium text-gray-700">카페 이름</label>
+    {{ form.cafe_name }}
+    {% if form.cafe_name.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.cafe_name.errors.0 }}</p>
+    {% endif %}
+  </div>
+
+  <div>
+    <label for="id_cafe_location" class="block text-sm font-medium text-gray-700">카페 위치</label>
+    {{ form.cafe_location }}
+    {% if form.cafe_location.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.cafe_location.errors.0 }}</p>
+    {% endif %}
+  </div>
+
+  <div class="flex gap-4">
+    <div class="w-1/2">
+      <label for="id_start_date" class="block text-sm font-medium text-gray-700">시작일</label>
+      {{ form.start_date }}
+      {% if form.start_date.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>
+      {% endif %}
     </div>
-    <div>
-    <label for="id_end_date">종료 날짜</label>
-      <input type="date" name="end_date" id="id_end_date" class="w-full border rounded-md p-2" />
+    <div class="w-1/2">
+      <label for="id_end_date" class="block text-sm font-medium text-gray-700">종료일</label>
+      {{ form.end_date }}
+      {% if form.end_date.errors %}
+        <p class="text-red-500 text-sm mt-1">{{ form.end_date.errors.0 }}</p>
+      {% endif %}
     </div>
-  </div>
-  <div class="mb-6">
-    <label for="id_cafe_image">이미지</label>
-    <input type="file" name="image" id="id_cafe_image" required class="block w-full" />
-  </div>
-  <div class="mb-6">
-    <label for="id_cafe_content">리뷰</label>
-    <textarea name="content" id="id_cafe_content" rows="6" required class="w-full border rounded-md p-2"></textarea>
   </div>
 </div>

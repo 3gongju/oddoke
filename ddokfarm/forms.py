@@ -1,9 +1,9 @@
 from django import forms
-from .models import Post, Comment
+from .models import DdokfarmPost, DdokfarmComment
 
-class PostForm(forms.ModelForm):
+class DdokfarmPostForm(forms.ModelForm):
     class Meta:
-        model = Post
+        model = DdokfarmPost
         fields = ('image', 'title', 'price', 'category', 'condition', 'exchange', 
                   'direct_deal', 'preferred_location', 'shipping', 'content')
         
@@ -24,9 +24,9 @@ class PostForm(forms.ModelForm):
             }),
         }
 
-class CommentForm(forms.ModelForm):
+class DdokfarmCommentForm(forms.ModelForm):
     class Meta:
-        model = Comment
+        model = DdokfarmComment
         fields = ['content', 'parent']
         widgets = {
             'content': forms.Textarea(attrs={

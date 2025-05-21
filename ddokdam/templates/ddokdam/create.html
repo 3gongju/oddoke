@@ -1,4 +1,3 @@
-{# templates/ddokdam/create.html #}
 {% extends 'base.html' %}
 {% load static %}
 
@@ -22,49 +21,88 @@
       <div class="mb-8">
         <h2 class="text-lg font-semibold mb-3">카테고리 선택</h2>
         <div class="grid grid-cols-3 gap-3">
-          <label><input type="radio" name="category" value="community" checked> 커뮤니티</label>
-          <label><input type="radio" name="category" value="food"> 예절샷</label>
-          <label><input type="radio" name="category" value="cafe"> 생일카페</label>
+          <label class="category-radio">
+            <input type="radio" name="category" value="community" class="absolute opacity-0" checked>
+            <div class="text-center">
+              <div class="font-medium">커뮤니티</div>
+              <p class="text-xs text-gray-500 mt-1">자유로운 덕질 이야기</p>
+            </div>
+          </label>
+          <label class="category-radio">
+            <input type="radio" name="category" value="food" class="absolute opacity-0">
+            <div class="text-center">
+              <div class="font-medium">예절샷</div>
+              <p class="text-xs text-gray-500 mt-1">인형과 함께하는 식사</p>
+            </div>
+          </label>
+          <label class="category-radio">
+            <input type="radio" name="category" value="cafe" class="absolute opacity-0">
+            <div class="text-center">
+              <div class="font-medium">생일카페</div>
+              <p class="text-xs text-gray-500 mt-1">생일카페 리뷰 및 정보</p>
+            </div>
+          </label>
         </div>
       </div>
 
       <!-- 커뮤니티 폼 -->
       <div id="community-form" class="category-form">
-        <input type="text" name="title_community" placeholder="제목" required>
-        <textarea name="content_community" placeholder="내용" required></textarea>
-        <input type="file" name="image_community">
-        <select name="idol_community">
-          <option value="">선택하세요</option>
+        <select name="idol" class="w-full mb-6 border rounded-md">
+          <option value="">아이돌 선택</option>
           <option value="bts">BTS</option>
-          <!-- 생략 -->
+          <option value="blackpink">BLACKPINK</option>
+          <option value="twice">TWICE</option>
+          <option value="exo">EXO</option>
+          <option value="itzy">ITZY</option>
+          <option value="seventeen">SEVENTEEN</option>
+          <option value="nct">NCT</option>
+          <option value="ive">IVE</option>
+          <option value="aespa">aespa</option>
+          <option value="newjeans">NewJeans</option>
         </select>
+        <input type="text" name="title" placeholder="제목" class="w-full border rounded-md p-2 mb-4" required>
+        <textarea name="content" placeholder="내용" rows="5" class="w-full border rounded-md p-2 mb-4" required></textarea>
+        <input type="file" name="image" class="block w-full">
       </div>
 
       <!-- 예절샷 폼 -->
       <div id="food-form" class="category-form hidden">
-        <input type="text" name="title_food" placeholder="제목" required>
-        <textarea name="content_food" required></textarea>
-        <input type="file" name="image_food" required>
-        <input type="text" name="location_food" placeholder="장소" required>
-        <select name="doll_food">
-          <option value="">선택하세요</option>
+        <input type="text" name="title" placeholder="제목" class="w-full border rounded-md p-2 mb-4">
+        <input type="file" name="image" class="block w-full mb-4">
+        <input type="text" name="location" placeholder="장소" class="w-full border rounded-md p-2 mb-4">
+        <textarea name="content" placeholder="내용" rows="4" class="w-full border rounded-md p-2 mb-4"></textarea>
+        <select name="doll" class="w-full border rounded-md">
+          <option value="">인형 선택</option>
           <option value="bts">BTS 인형</option>
+          <option value="blackpink">BLACKPINK 인형</option>
+          <option value="twice">TWICE 인형</option>
+          <option value="exo">EXO 인형</option>
+          <option value="etc">기타</option>
         </select>
       </div>
 
       <!-- 생일카페 폼 -->
       <div id="cafe-form" class="category-form hidden">
-        <input type="text" name="title_cafe" placeholder="제목" required>
-        <textarea name="content_cafe" required></textarea>
-        <input type="file" name="image_cafe" required>
-        <select name="idol_cafe">
-          <option value="">선택하세요</option>
+        <select name="idol" class="w-full mb-6 border rounded-md">
+          <option value="">아이돌 선택</option>
           <option value="bts">BTS</option>
+          <option value="blackpink">BLACKPINK</option>
+          <option value="twice">TWICE</option>
+          <option value="exo">EXO</option>
+          <option value="itzy">ITZY</option>
+          <option value="seventeen">SEVENTEEN</option>
+          <option value="nct">NCT</option>
+          <option value="ive">IVE</option>
+          <option value="aespa">aespa</option>
+          <option value="newjeans">NewJeans</option>
         </select>
-        <input type="text" name="cafe_name" placeholder="카페명">
-        <input type="text" name="cafe_location" placeholder="위치">
-        <input type="date" name="start_date">
-        <input type="date" name="end_date">
+        <input type="text" name="title" placeholder="제목" class="w-full border rounded-md p-2 mb-4">
+        <input type="text" name="cafe_name" placeholder="카페명" class="w-full border rounded-md p-2 mb-4">
+        <input type="text" name="cafe_location" placeholder="위치" class="w-full border rounded-md p-2 mb-4">
+        <input type="date" name="start_date" class="w-full border rounded-md p-2 mb-4">
+        <input type="date" name="end_date" class="w-full border rounded-md p-2 mb-4">
+        <input type="file" name="image" class="block w-full mb-4">
+        <textarea name="content" placeholder="리뷰" rows="6" class="w-full border rounded-md p-2"></textarea>
       </div>
 
       <div class="flex justify-end mt-8">
@@ -73,5 +111,72 @@
     </form>
   </div>
 </div>
-{% include 'components/create_form_script.html' %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const categoryRadios = document.querySelectorAll('input[name="category"]');
+    const categoryForms = document.querySelectorAll('.category-form');
+
+    function toggleRequiredFields(formElement, enable) {
+      formElement.querySelectorAll('input, textarea, select').forEach(el => {
+        if (enable) {
+          if (el.dataset.wasRequired === 'true') {
+            el.setAttribute('required', 'required');
+          }
+        } else {
+          el.dataset.wasRequired = el.hasAttribute('required') ? 'true' : 'false';
+          el.removeAttribute('required');
+        }
+      });
+    }
+
+    function toggleDisabledFields(formElement, enable) {
+      formElement.querySelectorAll('input, textarea, select').forEach(el => {
+        if (enable) {
+          el.removeAttribute('disabled');
+        } else {
+          el.setAttribute('disabled', 'disabled');
+        }
+      });
+    }
+
+    function showCategoryForm(category) {
+      categoryForms.forEach(form => {
+        form.classList.add('hidden');
+        toggleRequiredFields(form, false);
+        toggleDisabledFields(form, false);
+      });
+
+      const selectedForm = document.getElementById(`${category}-form`);
+      if (selectedForm) {
+        selectedForm.classList.remove('hidden');
+        toggleRequiredFields(selectedForm, true);
+        toggleDisabledFields(selectedForm, true);
+      }
+    }
+
+    categoryRadios.forEach(radio => {
+      radio.addEventListener('change', () => showCategoryForm(radio.value));
+    });
+
+    const defaultChecked = document.querySelector('input[name="category"]:checked');
+    if (defaultChecked) {
+      showCategoryForm(defaultChecked.value);
+    }
+
+    const form = document.querySelector('form');
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        categoryForms.forEach(form => {
+          if (form.classList.contains('hidden')) {
+            toggleRequiredFields(form, false);
+            toggleDisabledFields(form, false);
+          } else {
+            toggleDisabledFields(form, true);
+          }
+        });
+      });
+    }
+  });
+</script>
 {% endblock %}

@@ -96,7 +96,7 @@
 
 
             <div class="grid grid-cols-3 gap-4 auto-rows-[1fr]">
-                {% for post in user_profile.post_set.all %}
+                {% for post in user_profile.ddokfarmpost_set.all %}
                     <div class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center overflow-hidden space-y-2">
                         <h4 class="font-semibold">{{ post.title }}</h4>
                         <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-40 object-cover rounded-lg mb-2">
