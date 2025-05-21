@@ -127,7 +127,7 @@ def toggle_like(request, post_id):
     if not request.user.is_authenticated:
         return JsonResponse({'error': '로그인 필요'}, status=403)
 
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(DdokfarmPost, id=post_id)
     user = request.user
 
     if user in post.liked_users.all():
