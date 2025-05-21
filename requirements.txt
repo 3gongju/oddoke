@@ -18,9 +18,11 @@ comm==0.2.2
 debugpy==1.8.12
 decorator==5.1.1
 defusedxml==0.7.1
+diff-match-patch==20241021
 distro==1.9.0
 Django==5.1.7
 django-browser-reload==1.18.0
+django-import-export @ git+https://github.com/django-import-export/django-import-export.git@78c2d73f3da554c03df8caeb1828349cdc753b7d
 django-resized==1.0.3
 django-widget-tweaks==1.5.0
 executing==2.2.0
@@ -93,6 +95,7 @@ snscrape==0.7.0.20230622
 soupsieve==2.6
 sqlparse==0.5.3
 stack-data==0.6.3
+tablib==3.8.0
 terminado==0.18.1
 tinycss2==1.4.0
 tornado==6.4.2
