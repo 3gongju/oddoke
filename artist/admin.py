@@ -38,7 +38,7 @@ from django.core.files import File
 
 
 from django.contrib import admin
-from .models import Artist
+from .models import Artist, Member
 from import_export.admin import ImportExportModelAdmin
 
 class ArtistResource(resources.ModelResource):
