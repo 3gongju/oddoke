@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto mt-10 px-4">
+    <h1 class="text-2xl font-bold mb-6">아티스트 목록</h1>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {% for artist in artists %}
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <img src="{% static artist.logo %}" alt="{{ artist.display_name }}" class="w-40 h-40 object-cover rounded-full mx-auto mb-2">
+                <h2 class="text-lg font-semibold">{{ artist.display_name }}</h2>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
