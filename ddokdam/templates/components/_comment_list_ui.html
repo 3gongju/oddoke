@@ -20,11 +20,7 @@
               <span class="text-sm font-semibold">{{ comment.user.username }}</span>
             </div>
 
-            {% if user == comment.user %}
-              <a href="{% url 'ddokdam:comment_delete' post_id=post.id comment_id=comment.id %}"
-                 class="text-xs text-red-500 hover:underline"
-                 onclick="return confirm('댓글을 삭제하시겠습니까?')">삭제</a>
-            {% endif %}
+            
           </div>
 
           <p class="mt-1 text-gray-700">{{ comment.content }}</p>
@@ -37,7 +33,7 @@
 
           <!-- ✅ 대댓글 입력 폼 -->
           <div id="reply-form-{{ comment.id }}" class="hidden mt-2">
-            <form method="post" action="{% url 'ddokdam:comment_create' post.id %}">
+            <form method="post" action="{% url 'ddokdam:comment_create' category post.id %}">
               {% csrf_token %}
               <textarea name="content" placeholder="답글을 입력하세요" required
                         class="w-full text-sm border rounded p-2 mt-2"></textarea>

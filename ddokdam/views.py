@@ -6,14 +6,23 @@ from django.http import JsonResponse
 from itertools import chain
 from operator import attrgetter
 from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
-# from .forms import DdokdamCommentForm, CommunityPostForm, FoodPostForm, CafePostForm
+from .forms import DamCommunityPostForm, DamMannerPostForm, DamBdaycafePostForm, DamCommentForm
+from django.http import Http404
 
+# 전체 게시글 보기
 def index(request):
     category = request.GET.get('category')
 
     community_posts = DamCommunityPost.objects.all()
     manner_posts = DamMannerPost.objects.all()
     bdaycafe_posts = DamBdaycafePost.objects.all()
+
+    for post in community_posts:
+        post.category = 'community'
+    for post in manner_posts:
+        post.category = 'manner'
+    for post in bdaycafe_posts:
+        post.category = 'bdaycafe'
 
     # 카테고리 필터링
     if category == 'community':
@@ -47,6 +56,111 @@ def manner_index(request):
 def bdaycafe_index(request):
     return redirect('/ddokdam/?category=bdaycafe')
 
+# 세부 게시글 보기
+def post_detail(request, category, post_id):
+    model_map = {
+        'community': DamCommunityPost,
+        'manner': DamMannerPost,
+        'bdaycafe': DamBdaycafePost,
+    }
+
+    post_model = model_map.get(category)
+    if not post_model:
+        raise Http404("존재하지 않는 카테고리입니다.")
+
+    post = get_object_or_404(post_model, id=post_id)
+
+    if category == 'community':
+        comments = DamComment.objects.filter(community_post=post)
+    elif category == 'manner':
+        comments = DamComment.objects.filter(manner_post=post)
+    elif category == 'bdaycafe':
+        comments = DamComment.objects.filter(bdaycafe_post=post)
+    else:
+        comments = []
+
+    comments = comments.select_related('user').prefetch_related('replies')
+    comment_form = DamCommentForm()
+
+    context = {
+        'post': post,
+        'category': category,
+        'comments': comments,
+        'comment_form': comment_form,
+    }
+
+    return render(request, 'ddokdam/post_detail.html', context)
+
+
+
+@login_required
+def post_create(request):
+    category = request.POST.get('category', 'community')  # 기본값: 커뮤니티
+
+    if request.method == 'POST':
+        if category == 'community':
+            form = DamCommunityPostForm(request.POST, request.FILES)
+        elif category == 'manner':
+            form = DamMannerPostForm(request.POST, request.FILES)
+        elif category == 'bdaycafe':
+            form = DamBdaycafePostForm(request.POST, request.FILES)
+        else:
+            form = None
+
+        if form and form.is_valid():
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
+            return redirect('ddokdam:index')
+    else:
+        # GET 요청: 초기 폼 준비
+        form = DamCommunityPostForm()
+    
+    context = {
+        'form': form,
+        'category': category,
+    }
+
+    return render(request, 'ddokdam/post_create.html', context)
+
+# 댓글 쓰기
+@login_required
+@require_POST
+def comment_create(request, category, post_id):
+    model_map = {
+        'community': DamCommunityPost,
+        'manner': DamMannerPost,
+        'bdaycafe': DamBdaycafePost,
+    }
+
+    post_model = model_map.get(category)
+    if not post_model:
+        raise Http404("존재하지 않는 카테고리입니다.")
+
+    post = get_object_or_404(post_model, id=post_id)
+
+    form = DamCommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.user = request.user
+        parent_id = request.POST.get("parent")
+
+        # 연결된 게시글 설정
+        if category == 'community':
+            comment.community_post = post
+        elif category == 'manner':
+            comment.manner_post = post
+        elif category == 'bdaycafe':
+            comment.bdaycafe_post = post
+
+        # 대댓글인 경우
+        if parent_id:
+            comment.parent = get_object_or_404(DamComment, id=parent_id)
+
+        comment.save()
+
+    return redirect('ddokdam:post_detail', category=category, post_id=post_id)
+
 # def index(request):
 #     sort = request.GET.get('sort', 'latest')
 #     posts = DdokdamPost.objects.all()
@@ -67,52 +181,40 @@ def bdaycafe_index(request):
 #     return render(request, 'ddokdam/category_list.html', context)
 
 
-@login_required
-def create(request):
-    if request.method == 'POST':
-        category = request.POST.get('category')
-        form = None
+# @login_required
+# def create(request):
+#     if request.method == 'POST':
+#         category = request.POST.get('category')
+#         form = None
 
-        if category == 'community':
-            form = CommunityPostForm(request.POST, request.FILES)
-        elif category == 'food':
-            form = FoodPostForm(request.POST, request.FILES)
-        elif category == 'cafe':
-            form = CafePostForm(request.POST, request.FILES)
+#         if category == 'community':
+#             form = CommunityPostForm(request.POST, request.FILES)
+#         elif category == 'food':
+#             form = FoodPostForm(request.POST, request.FILES)
+#         elif category == 'cafe':
+#             form = CafePostForm(request.POST, request.FILES)
 
-        if form and form.is_valid():
-            post = form.save(commit=False)
-            post.user = request.user
-            post.category = category
-            post.save()
-            return redirect('ddokdam:detail', post_id=post.id)
+#         if form and form.is_valid():
+#             post = form.save(commit=False)
+#             post.user = request.user
+#             post.category = category
+#             post.save()
+#             return redirect('ddokdam:detail', post_id=post.id)
 
-        # ✅ 유효성 검사 실패 시 에러 확인을 위해 출력
-        print("폼 오류:", form.errors)
+#         # ✅ 유효성 검사 실패 시 에러 확인을 위해 출력
+#         print("폼 오류:", form.errors)
 
-        return render(request, 'ddokdam/create.html', {
-            'community_form': form if category == 'community' else CommunityPostForm(),
-            'food_form': form if category == 'food' else FoodPostForm(),
-            'cafe_form': form if category == 'cafe' else CafePostForm(),
-        })
+#         return render(request, 'ddokdam/create.html', {
+#             'community_form': form if category == 'community' else CommunityPostForm(),
+#             'food_form': form if category == 'food' else FoodPostForm(),
+#             'cafe_form': form if category == 'cafe' else CafePostForm(),
+#         })
 
-    return render(request, 'ddokdam/create.html', {
-        'community_form': CommunityPostForm(),
-        'food_form': FoodPostForm(),
-        'cafe_form': CafePostForm(),
-    })
-
-
-def detail(request, post_id):
-    post = get_object_or_404(DdokdamPost, id=post_id)
-    comments = DdokdamComment.objects.filter(post=post).select_related('user').prefetch_related('replies')
-    comment_form = DdokdamCommentForm()
-
-    return render(request, 'ddokdam/detail.html', {
-        'post': post,
-        'comments': comments,
-        'comment_form': comment_form,
-    })
+#     return render(request, 'ddokdam/create.html', {
+#         'community_form': CommunityPostForm(),
+#         'food_form': FoodPostForm(),
+#         'cafe_form': CafePostForm(),
+#     })
 
 
 def category_list(request, category):
@@ -176,20 +278,20 @@ def delete(request, post_id):
     return redirect('ddokdam:index')
 
 
-@login_required
-@require_POST
-def comment_create(request, post_id):
-    post = get_object_or_404(DdokdamPost, id=post_id)
-    form = DdokdamCommentForm(request.POST)
+# @login_required
+# @require_POST
+# def comment_create(request, post_id):
+#     post = get_object_or_404(DdokdamPost, id=post_id)
+#     form = DdokdamCommentForm(request.POST)
 
-    if form.is_valid():
-        comment = form.save(commit=False)
-        comment.user = request.user
-        comment.post = post
-        comment.save()
-        return redirect('ddokdam:detail', post_id=post_id)
+#     if form.is_valid():
+#         comment = form.save(commit=False)
+#         comment.user = request.user
+#         comment.post = post
+#         comment.save()
+#         return redirect('ddokdam:detail', post_id=post_id)
 
-    return redirect('ddokdam:detail', post_id=post_id)
+#     return redirect('ddokdam:detail', post_id=post_id)
 
 
 @login_required

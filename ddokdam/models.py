@@ -32,6 +32,6 @@ class DamComment(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')  # ✅ 대댓글
     created_at = models.DateTimeField(auto_now_add=True)
 
-    community_post = models.ForeignKey(DamCommunityPost, on_delete=models.CASCADE)
-    manner_post = models.ForeignKey(DamMannerPost, on_delete=models.CASCADE)
-    bdaycafe_post = models.ForeignKey(DamBdaycafePost, on_delete=models.CASCADE)
+    community_post = models.ForeignKey(DamCommunityPost, on_delete=models.CASCADE, null=True, blank=True)
+    manner_post = models.ForeignKey(DamMannerPost, on_delete=models.CASCADE, null=True, blank=True)
+    bdaycafe_post = models.ForeignKey(DamBdaycafePost, on_delete=models.CASCADE, null=True, blank=True)

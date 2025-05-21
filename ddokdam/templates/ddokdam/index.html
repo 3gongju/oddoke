@@ -4,60 +4,71 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <h2 class="text-2xl font-bold mb-6">덕담 - 아이돌 팬 커뮤니티</h2>
 
-<div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
-  <a href="{% url 'ddokdam:index' %}"
-     class="px-3 py-1 rounded-full border
-            {% if not category %}
-              bg-yellow-400 text-white
-            {% else %}
-              bg-white text-gray-700 hover:bg-yellow-100
-            {% endif %}">
-    전체
-  </a>
+  <!-- 카테고리 필터 -->
+  <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
+    <a href="{% url 'ddokdam:index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if not category %}
+                bg-yellow-400 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-yellow-100
+              {% endif %}">
+      전체
+    </a>
 
-  <a href="{% url 'ddokdam:community_index' %}"
-     class="px-3 py-1 rounded-full border
-            {% if category == 'community' %}
-              bg-yellow-400 text-white
-            {% else %}
-              bg-white text-gray-700 hover:bg-yellow-100
-            {% endif %}">
-    덕담 한마디
-  </a>
+    <a href="{% url 'ddokdam:community_index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if category == 'community' %}
+                bg-yellow-400 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-yellow-100
+              {% endif %}">
+      덕담 한마디
+    </a>
 
-  <a href="{% url 'ddokdam:manner_index' %}"
-     class="px-3 py-1 rounded-full border
-            {% if category == 'manner' %}
-              bg-yellow-400 text-white
-            {% else %}
-              bg-white text-gray-700 hover:bg-yellow-100
-            {% endif %}">
-    예절 차리기
-  </a>
+    <a href="{% url 'ddokdam:manner_index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if category == 'manner' %}
+                bg-yellow-400 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-yellow-100
+              {% endif %}">
+      예절 차리기
+    </a>
+    
+    <!-- 글 목록 -->
+    <a href="{% url 'ddokdam:bdaycafe_index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if category == 'bdaycafe' %}
+                bg-yellow-400 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-yellow-100
+              {% endif %}">
+      생카 후기
+    </a>
+  </div>
 
-  <a href="{% url 'ddokdam:bdaycafe_index' %}"
-     class="px-3 py-1 rounded-full border
-            {% if category == 'bdaycafe' %}
-              bg-yellow-400 text-white
-            {% else %}
-              bg-white text-gray-700 hover:bg-yellow-100
-            {% endif %}">
-    생카 후기
-  </a>
-</div>
-
+  <!-- 게시글 작성 버튼 -->
+  <div class="flex justify-end mb-6">
+    <a href="{% url 'ddokdam:post_create' %}" 
+      class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-full shadow font-medium">
+      + 게시글 작성
+    </a>
+  </div>
 
   {% if posts %}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for post in posts %}
-        <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-60 object-cover">
-
-          <div class="p-3">
-            <h3 class="text-sm font-semibold truncate">{{ post.title }}</h3>
-            <p class="text-xs text-gray-400">{{ post.created_at|date:"Y-m-d" }}</p>
+        <a href="{% url 'ddokdam:post_detail' post.category post.id %}">
+          <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-60 object-cover">
+  
+            <div class="p-3">
+              <h3 class="text-sm font-semibold truncate">{{ post.title }}</h3>
+              <p class="text-xs text-gray-400">{{ post.created_at|date:"Y-m-d" }}</p>
+            </div>
           </div>
-        </div>
+        </a>
       {% endfor %}
     </div>
   {% else %}
