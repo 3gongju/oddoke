@@ -1,5 +1,4 @@
 from django.db import models
-from django_resized import ResizedImageField
 
 # Create your models here.
 class Artist(models.Model):
@@ -20,10 +19,12 @@ class Artist(models.Model):
 
 #     def __str__(self):
 #         return f"{self.name} ({self.group.display_name})"
+
+# artist_display_name,member_name,member_bday
 class Member(models.Model):
-    groups = models.ManyToManyField(Artist, related_name='members', help_text="소속 그룹/유닛")
-    name = models.CharField(max_length=100, help_text="멤버 이름")
-    bday = models.DateField(blank=True, null=True, help_text="생년월일")
-    
+    artist_name = models.ManyToManyField(Artist, related_name='members')
+    member_name = models.CharField(max_length=100)
+    member_bday = models.CharField(max_length=10, blank=True, null=True)  # "MM-DD" 포맷 허용
+
     def __str__(self):
-        return self.name
+        return self.member_name
