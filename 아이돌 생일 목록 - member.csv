@@ -1,24 +1,28 @@
-﻿artist_display_name,member_name,member_bday
-GOT7,JAY B,
+﻿artist_name,member_name,member_bday
+GOT7,JAY B,01-06
 GOT7,마크,09-04
 GOT7,잭슨,03-28
-GOT7,박진영,
+GOT7,박진영,09-22
 GOT7,영재,09-17
 GOT7,뱀뱀,05-02
 GOT7,유겸,11-17
+강다니엘,강다니엘,12-10
+권은비,권은비,09-27
+김우석,김우석,10-27
+김재환,김재환,05-27
 NEXZ,토모야,01-19
 NEXZ,유우,04-27
 NEXZ,하루,01-23
-NEXZ,소,
-NEXZ,건,
+NEXZ,소건,09-13
+NEXZ,건,09-13
 NEXZ,세이타,11-28
 NEXZ,휴이,05-11
 NEXZ,유키,09-20
-뉴이스트,JR,
-뉴이스트,아론,
-뉴이스트,백호,
-뉴이스트,민현,
-뉴이스트,렌,
+뉴이스트,JR,06-08
+뉴이스트,아론,05-21
+뉴이스트,백호,07-09
+뉴이스트,민현,08-09
+뉴이스트,렌,11-03
 NewJeans,민지,03-31
 NewJeans,하니,10-06
 NewJeans,다니엘,04-11
@@ -36,7 +40,7 @@ NewJeans,혜인,04-21
 더보이즈,선우,04-12
 더보이즈,에릭,02-16
 DAY6,성진,01-16
-DAY6,Young K,
+DAY6,Young K,12-19
 DAY6,원필,04-28
 DAY6,도운,08-25
 드림캐쳐,지유,05-17
@@ -49,7 +53,7 @@ DAY6,도운,08-25
 RIIZE,쇼타로,11-25
 RIIZE,은석,03-19
 RIIZE,성찬,09-13
-RIIZE,원빈,
+RIIZE,원빈,01-02
 RIIZE,소희,11-21
 RIIZE,앤톤,03-21
 Red Velvet,웬디,02-21
@@ -61,10 +65,10 @@ LUN8,진수,02-05
 LUN8,카엘,01-01
 LUN8,타쿠마,08-05
 LUN8,준우,09-21
-LUN8,도현,
-LUN8,이안,
+LUN8,도현,01-08
+LUN8,이안,04-03
 LUN8,지은호,05-21
-LUN8,유우마,
+LUN8,유우마,02-28
 LE SSERAFIM,김채원,05-02
 LE SSERAFIM,사쿠라,03-19
 LE SSERAFIM,허윤진,10-08
@@ -132,7 +136,7 @@ Billlie,하루나,01-30
 SHINee,온유,12-14
 SHINee,종현,04-08
 SHINee,Key,09-23
-SHINee,민호,
+SHINee,민호,12-09
 SHINee,태민,07-01
 세븐틴,에스쿱스,08-08
 세븐틴,정한,10-04
@@ -147,16 +151,16 @@ SHINee,태민,07-01
 세븐틴,승관,01-16
 세븐틴,버논,02-18
 세븐틴,디노,02-11
-SAY MY NAME,히토미,
+SAY MY NAME,히토미,03-05
 SAY MY NAME,메이,08-19
 SAY MY NAME,카니,12-26
 SAY MY NAME,도희,08-01
-SAY MY NAME,준희,
-SAY MY NAME,소하,
-SAY MY NAME,승주,
+SAY MY NAME,준희,06-15
+SAY MY NAME,소하,11-22
+SAY MY NAME,승주,04-09
 소녀시대,태연,03-09
 소녀시대,써니,05-15
-소녀시대,티파니,
+소녀시대,티파니,08-01
 소녀시대,효연,09-22
 소녀시대,유리,12-05
 소녀시대,수영,02-08
@@ -171,7 +175,7 @@ SUPER JUNIOR,동해,10-15
 SUPER JUNIOR,시원,02-08
 SUPER JUNIOR,려욱,06-21
 SUPER JUNIOR,규현,02-01
-SUPER JUNIOR,성민,
+SUPER JUNIOR,성민,01-01
 STAYC,수민,03-13
 STAYC,시은,08-01
 STAYC,아이사,01-23
@@ -189,12 +193,12 @@ Stray Kids,아이엔,02-08
 xikers,민재,04-10
 xikers,준민,05-24
 xikers,수민,04-07
-xikers,진식,
-xikers,현우,
+xikers,진식,08-29
+xikers,현우,01-09
 xikers,정훈,02-14
-xikers,세은,
+xikers,세은,06-07
 xikers,유준,12-22
-xikers,헌터,
+xikers,헌터,11-21
 xikers,예찬,05-14
 CIX,BX,03-05
 CIX,승훈,02-26
@@ -216,33 +220,34 @@ IVE,레이,02-01
 IVE,장원영,08-31
 IVE,리즈,11-21
 IVE,이서,02-21
+아이유,아이유,05-16
 iKON,김진환,02-07
 iKON,BOBBY,12-21
 iKON,송윤형,02-08
 iKON,구준회,03-31
-iKON,DK,
+iKON,DK,06-05
 iKON,정찬우,01-26
 아일릿,윤아,01-15
 아일릿,민주,05-11
 아일릿,모카,10-08
 아일릿,원희,06-26
-아일릿,이로하,
+아일릿,이로하,02-04
 &TEAM,의주,09-07
 &TEAM,후마,06-29
 &TEAM,케이,10-21
 &TEAM,니콜라스,07-01
 &TEAM,유마,02-07
-&TEAM,조,
+&TEAM,조,05-13
 &TEAM,하루아,05-01
 &TEAM,타키,05-04
 &TEAM,마키,02-17
-앰퍼샌드원,나캠든,
-앰퍼샌드원,브라이언,
-앰퍼샌드원,최지호,
-앰퍼샌드원,윤시윤,
-앰퍼샌드원,카이렐,
-앰퍼샌드원,마카야,
-앰퍼샌드원,김승모,
+앰퍼샌드원,나캠든,06-09
+앰퍼샌드원,브라이언,08-27
+앰퍼샌드원,최지호,06-10
+앰퍼샌드원,윤시윤,01-08
+앰퍼샌드원,카이렐,07-03
+앰퍼샌드원,마카야,01-21
+앰퍼샌드원,김승모,07-03
 SF9,영빈,11-23
 SF9,인성,07-01
 SF9,재윤,08-09
@@ -259,12 +264,12 @@ AB6IX,전웅,10-15
 AB6IX,김동현,02-23
 AB6IX,박우진,11-02
 AB6IX,이대휘,01-29
-ATBO,오준석,
-ATBO,류준민,
-ATBO,배현준,
+ATBO,오준석,03-03
+ATBO,류준민,04-05
+ATBO,배현준,06-06
 ATBO,정승환,01-27
-ATBO,김연규,
-ATBO,원빈,
+ATBO,김연규,05-03
+ATBO,원빈,07-01
 ATEEZ,홍중,11-07
 ATEEZ,성화,04-03
 ATEEZ,윤호,03-23
@@ -274,24 +279,24 @@ ATEEZ,민기,08-09
 ATEEZ,우영,11-26
 ATEEZ,종호,10-12
 82MAJOR,남성모,04-19
-82MAJOR,박석준,
+82MAJOR,박석준,12-15
 82MAJOR,윤예찬,04-16
-82MAJOR,조성일,
-82MAJOR,황성빈,
-82MAJOR,김도균,
+82MAJOR,조성일,03-29
+82MAJOR,황성빈,06-22
+82MAJOR,김도균,09-14
 Apink,박초롱,03-03
 Apink,윤보미,08-13
 Apink,정은지,08-18
 Apink,김남주,04-15
 Apink,오하영,07-01
-8TURN,재윤,
-8TURN,명호,
-8TURN,민호,
+8TURN,재윤,07-02
+8TURN,명호,10-12
+8TURN,민호,10-14
 8TURN,윤성,11-13
-8TURN,혜민,
-8TURN,경민,
-8TURN,윤규,
-8TURN,승헌,
+8TURN,혜민,03-16
+8TURN,경민,10-28
+8TURN,윤규,09-07
+8TURN,승헌,05-15
 EXO,수호,05-22
 EXO,찬열,11-27
 EXO,카이,01-14
@@ -305,8 +310,8 @@ Xdinary Heroses,건일,07-01
 Xdinary Heroses,정수,06-26
 Xdinary Heroses,가온,01-14
 Xdinary Heroses,O.de,06-11
-Xdinary Heroses,Jun Han,
-Xdinary Heroses,주연,
+Xdinary Heroses,Jun Han,08-18
+Xdinary Heroses,주연,09-12
 NMIXX,릴리,10-17
 NMIXX,해원,02-25
 NMIXX,설윤,01-26
@@ -338,57 +343,57 @@ NCT,리쿠,06-28
 NCT,사쿠야,11-18
 NCT,료,08-04
 NCT,재희,06-21
-NCT 127,쟈니,
-NCT 127,태용,
-NCT 127,유타,
-NCT 127,도영,
-NCT 127,재현,
-NCT 127,윈윈,
-NCT 127,마크,
-NCT 127,해찬,
-NCT 127,정우,
-NCT DREAM,마크,
-NCT DREAM,런쥔,
-NCT DREAM,제노,
-NCT DREAM,해찬,
-NCT DREAM,재민,
-NCT DREAM,천러,
-NCT DREAM,지성,
-NCT WISH,시온,
-NCT WISH,유우시,
-NCT WISH,리쿠,
-NCT WISH,사쿠야,
-NCT WISH,료,
-NCT WISH,재희,
-엔플라잉,이승협,
-엔플라잉,차훈,
-엔플라잉,김재현,
-엔플라잉,유회승,
-엔플라잉,서동성,
+NCT 127,쟈니,02-09
+NCT 127,태용,07-01
+NCT 127,유타,10-26
+NCT 127,도영,02-01
+NCT 127,재현,02-14
+NCT 127,윈윈,10-28
+NCT 127,마크,08-02
+NCT 127,해찬,06-06
+NCT 127,정우,02-19
+NCT DREAM,마크,08-02
+NCT DREAM,런쥔,03-23
+NCT DREAM,제노,04-23
+NCT DREAM,해찬,06-06
+NCT DREAM,재민,08-13
+NCT DREAM,천러,11-22
+NCT DREAM,지성,02-05
+NCT WISH,시온,05-11
+NCT WISH,유우시,04-05
+NCT WISH,리쿠,06-28
+NCT WISH,사쿠야,11-18
+NCT WISH,료,08-04
+NCT WISH,재희,06-21
+엔플라잉,이승협,10-31
+엔플라잉,차훈,07-12
+엔플라잉,김재현,07-15
+엔플라잉,유회승,02-28
+엔플라잉,서동성,04-09
 엔하이픈,정원,02-08
 엔하이픈,희승,10-15
 엔하이픈,제이,04-20
 엔하이픈,제이크,11-15
 엔하이픈,성훈,12-08
-엔하이픈,선우,
+엔하이픈,선우,06-24
 엔하이픈,니키,12-09
-여자친구,소원,
-여자친구,예린,
+여자친구,소원,12-07
+여자친구,예린,08-19
 여자친구,은하,05-30
 여자친구,유주,03-05
-여자친구,신비,
-여자친구,엄지,
+여자친구,신비,06-03
+여자친구,엄지,08-19
 오마이걸,효정,07-01
 오마이걸,미미,05-01
 오마이걸,유아,09-17
 오마이걸,승희,01-25
 오마이걸,유빈,09-09
 오마이걸,아린,06-18
-OnlyOneOf,나인,
-OnlyOneOf,Mill,
-OnlyOneOf,리에,
+OnlyOneOf,나인,05-19
+OnlyOneOf,Mill,12-15
+OnlyOneOf,리에,08-31
 OnlyOneOf,준지,04-06
-OnlyOneOf,유정,
+OnlyOneOf,유정,09-09
 OnlyOneOf,규빈,04-23
 온앤오프,효진,04-22
 온앤오프,이션,12-24
@@ -396,35 +401,35 @@ OnlyOneOf,규빈,04-23
 온앤오프,와이엇,01-23
 온앤오프,민균,11-16
 온앤오프,유,03-16
-WOOAH,나나,
-WOOAH,우연,
-WOOAH,소라,
-WOOAH,루시,
-WOOAH,민서,
-우주소녀,엑시,
-우주소녀,설아,
-우주소녀,보나,
-우주소녀,수빈,
+WOOAH,나나,06-18
+WOOAH,우연,04-09
+WOOAH,소라,12-30
+WOOAH,루시,08-31
+WOOAH,민서,02-14
+우주소녀,엑시,08-05
+우주소녀,설아,01-26
+우주소녀,보나,08-05
+우주소녀,수빈,09-14
 우주소녀,은서,05-27
 우주소녀,여름,01-01
 우주소녀,다영,05-14
-우주소녀,연정,
-우주소녀,루다,
-우주소녀,다원,
+우주소녀,연정,11-12
+우주소녀,루다,04-06
+우주소녀,다원,11-21
 원어스,서호,06-07
 원어스,이도,07-01
 원어스,건희,06-27
 원어스,환웅,08-26
 원어스,시온,01-10
-ONE PACT,종우,
-ONE PACT,성민,
-ONE PACT,태그,
-ONE PACT,예담,
+ONE PACT,종우,06-12
+ONE PACT,성민,08-25
+ONE PACT,태그,09-30
+ONE PACT,예담,01-19
 ONE PACT,제이창,03-08
-WINNER,강승윤,
-WINNER,김진우,
-WINNER,송민호,
-WINNER,이승훈,
+WINNER,강승윤,01-21
+WINNER,김진우,09-26
+WINNER,송민호,03-30
+WINNER,이승훈,01-11
 위아이,장대현,02-11
 위아이,김동한,07-01
 위아이,유용하,01-11
@@ -433,17 +438,17 @@ WINNER,이승훈,
 위아이,김준서,11-20
 YOUNITE,은호,03-25
 YOUNITE,스티브,03-09
-YOUNITE,은상,
+YOUNITE,은상,01-19
 YOUNITE,형석,11-06
 YOUNITE,우노,04-05
 YOUNITE,DEY,06-11
 YOUNITE,경문,06-29
 YOUNITE,시온,10-19
 UNIS,진현주,11-03
-UNIS,나나,
-UNIS,젤리당카,
+UNIS,나나,10-02
+UNIS,젤리당카,07-22
 UNIS,코토코,10-28
-UNIS,방윤하,
+UNIS,방윤하,05-27
 UNIS,엘리시아,04-18
 UNIS,오윤아,10-07
 UNIS,임서원,01-27
@@ -456,11 +461,12 @@ EVNNE,문정현,03-31
 EVNNE,박지후,07-01
 izna,마이,10-28
 izna,방지민,05-08
-izna,윤지윤,
+izna,윤지윤,11-06
 izna,코코,11-14
 izna,유사랑,04-18
 izna,최정은,08-04
 izna,정세비,01-22
+이채연,이채연,01-11
 EPEX,위시,06-11
 EPEX,금동현,05-14
 EPEX,뮤,09-14
@@ -470,7 +476,7 @@ EPEX,에이든,01-24
 EPEX,예왕,03-12
 EPEX,제프,04-21
 인피니트,김성규,04-28
-인피니트,남우현,
+인피니트,남우현,02-08
 인피니트,이성열,08-27
 인피니트,엘,03-13
 인피니트,이성종,09-03
@@ -488,6 +494,8 @@ ZEROBASEONE,리키,05-20
 ZEROBASEONE,김규빈,08-30
 ZEROBASEONE,박건욱,01-10
 ZEROBASEONE,한유진,03-20
+조유리,조유리,10-22
+G-DRAGON,지드래곤,08-18
 Kep1er,최유진,08-12
 Kep1er,샤오팅,11-12
 Kep1er,김채현,04-26
@@ -504,28 +512,28 @@ CRAVITY,민희,09-17
 CRAVITY,형준,11-30
 CRAVITY,태영,01-27
 CRAVITY,성민,08-01
-CLASS:y,지민,
-CLASS:y,선유,
-CLASS:y,형서,
-CLASS:y,혜주,11-13
-CLASS:y,리원,
-CLASS:y,보은,
-CLASS:y,채원,
+CLASS:y,지민,11-25
+CLASS:y,선유,03-20
+CLASS:y,형서,06-25
+CLASS:y,혜주,12-09
+CLASS:y,리원,01-11
+CLASS:y,보은,02-11
+CLASS:y,채원,06-04
 KISS OF LIFE,쥴리,03-29
 KISS OF LIFE,나띠,05-30
 KISS OF LIFE,벨,03-20
 KISS OF LIFE,하늘,05-25
 KiiiKiii,지유,05-14
-KiiiKiii,이솔,
+KiiiKiii,이솔,09-18
 KiiiKiii,수이,04-10
-KiiiKiii,하음,
-KiiiKiii,키야,
-KickFlip,계훈,
-KickFlip,아마루,
+KiiiKiii,하음,11-14
+KiiiKiii,키야,12-18
+KickFlip,계훈,09-16
+KickFlip,아마루,10-21
 KickFlip,동화,03-11
 KickFlip,주왕,05-02
 KickFlip,민제,05-12
-KickFlip,케이주,
+KickFlip,케이주,10-04
 KickFlip,동현,03-13
 TEMPEST,한빈,01-19
 TEMPEST,형섭,08-09
@@ -563,12 +571,11 @@ TWICE,미나,03-24
 TWICE,다현,05-28
 TWICE,채영,04-23
 TWICE,쯔위,06-14
-FANTASY BOYS,소울,
 FANTASY BOYS,강민서,07-01
 FANTASY BOYS,이한빈,11-20
 FANTASY BOYS,히카리,01-21
 FANTASY BOYS,링치,06-04
-FANTASY BOYS,히카루,
+FANTASY BOYS,히카루,07-14
 FANTASY BOYS,김우석,03-12
 FANTASY BOYS,홍성민,09-17
 FANTASY BOYS,오현태,08-13
@@ -590,7 +597,7 @@ FANTASY BOYS,케이단,03-24
 프로미스나인,백지헌,04-17
 PLAVE,하민,11-01
 PLAVE,밤비,07-01
-PLAVE,은호,
+PLAVE,은호,09-04
 PLAVE,예준,09-12
 PLAVE,노아,02-08
 P1Harmony,기호,09-27
@@ -599,19 +606,20 @@ P1Harmony,지웅,10-07
 P1Harmony,인탁,08-31
 P1Harmony,소울,02-01
 P1Harmony,종섭,11-19
-하이라이트,윤두준,
-하이라이트,양요섭,
-하이라이트,이기광,
-하이라이트,손동운,
-H1-KEY,서이,
-H1-KEY,리이나,
-H1-KEY,휘서,
-H1-KEY,옐,
+하성운,하성운,03-22
+하이라이트,윤두준,07-04
+하이라이트,양요섭,01-05
+하이라이트,이기광,03-30
+하이라이트,손동운,06-06
+H1-KEY,서이,02-12
+H1-KEY,리이나,02-21
+H1-KEY,휘서,07-31
+H1-KEY,옐,12-25
 Hearts2Hearts,카르멘,03-28
-Hearts2Hearts,지우,
+Hearts2Hearts,지우,09-07
 Hearts2Hearts,유하,04-12
-Hearts2Hearts,스텔라,
-Hearts2Hearts,주은,
-Hearts2Hearts,에이나,
-Hearts2Hearts,이안,
+Hearts2Hearts,스텔라,06-18
+Hearts2Hearts,주은,12-03
+Hearts2Hearts,에이나,12-20
+Hearts2Hearts,이안,10-09
 Hearts2Hearts,예온,04-19
