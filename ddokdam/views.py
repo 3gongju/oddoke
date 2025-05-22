@@ -46,7 +46,7 @@ def post_detail(request, category, post_id):
         comments = comments.select_related('user').prefetch_related('replies')
     comment_form = DamCommentForm()
 
-    is_liked = request.user.is_authenticated and post.like_users.filter(id=request.user.id).exists()
+    is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
 
 
     context = {
@@ -203,14 +203,14 @@ def like_post(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    if request.user in post.like_users.all():
-        post.like_users.remove(request.user)
+    if request.user in post.like.all():
+        post.like.remove(request.user)
         liked = False
     else:
-        post.like_users.add(request.user)
+        post.like.add(request.user)
         liked = True
 
-    return JsonResponse({'liked': liked, 'like_count': post.like_users.count()})
+    return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
 # def index(request):
 #     sort = request.GET.get('sort', 'latest')

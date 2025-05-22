@@ -1,29 +1,27 @@
 from django.db import models
 from django.conf import settings
 
-class DamPost(models.Model):
+class DamBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     image = models.ImageField(upload_to='ddokdam/image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s_posts", blank=True)
     # artist 모델과 연결 필요
 
     class Meta:
         abstract = True
 
-class DamCommunityPost(DamPost):
-    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_community_posts', blank=True)
-    pass    
+class DamCommunityPost(DamBasePost):
+    pass
 
-class DamMannerPost(DamPost):
-    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_manner_posts', blank=True)
+class DamMannerPost(DamBasePost):
     location = models.CharField(max_length=255, blank=True, null=True)
     item = models.CharField(max_length=255, blank=True, null=True)
 
-class DamBdaycafePost(DamPost):
-    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_bdaycafe_posts', blank=True)
+class DamBdaycafePost(DamBasePost):
     cafe_name = models.CharField(max_length=255, blank=True, null=True)
 
 class DamComment(models.Model):

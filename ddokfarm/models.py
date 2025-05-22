@@ -1,15 +1,11 @@
 from django.db import models
-from django_resized import ResizedImageField
 from django.conf import settings
-from django.utils.text import slugify
 
-# 카테고리 모델
-class Category(models.Model):
-    name = models.CharField(max_length=20)
-    slug = models.SlugField(max_length=50, unique=True)  # URL 노출용: junggogeorae 등
+class FarmBasePost():
+    pass
 
-    def __str__(self):
-        return self.name
+
+
 
 # 상품 모델 (기존 Post 모델 확장)
 class DdokfarmPost(models.Model):
@@ -47,11 +43,11 @@ class DdokfarmPost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)  # 수정일
     
     # 대표 이미지
-    image = ResizedImageField(
-        size=[500, 500],
-        crop=['middle', 'center'],
-        upload_to='image'
-    )
+    # image = ResizedImageField(
+    #     size=[500, 500],
+    #     crop=['middle', 'center'],
+    #     upload_to='image'
+    # )
     
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # 작성자
 
@@ -66,7 +62,7 @@ class DdokfarmPost(models.Model):
     
     # 이커머스 필드
     price = models.IntegerField(default=0)  # 가격
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)  # 카테고리
+    # category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)  # 카테고리
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='new')  # 상태
     exchange = models.CharField(max_length=20, choices=EXCHANGE_CHOICES, default='impossible')  # 교환여부
     direct_deal = models.CharField(max_length=20, choices=DIRECT_DEAL_CHOICES, default='impossible')  # 직거래 여부
