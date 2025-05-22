@@ -2,27 +2,156 @@
 {% load static %}
 
 {% block body %}
-<div class="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold mb-10 text-center text-gray-900">아티스트 목록</h1>
+<div class="max-w-screen-xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 min-h-screen">
+  <!-- 헤더 -->
+  <div class="text-center mb-10">
+    <a href="{% url 'artist:index' %}">
+      <img src="{% static 'image/ddok_black.png' %}" alt="덕 아이콘"
+        class="mx-auto mb-4 w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 object-contain hover:scale-105 transition" />
+    </a>
+    <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">내 덕</h1>
+    <p class="text-xs sm:text-sm mt-2 text-gray-600">🔍 내 덕을 찾아보세요</p>
+  </div>
 
-    <!-- 깔끔한 아티스트 로고 그리드 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-10 gap-x-6 place-items-center">
-        {% for artist in artists %}
-            <div class="flex flex-col items-center space-y-3">
-                <!-- 원형 로고 -->
-                <div class="w-44 h-44 rounded-full overflow-hidden">
-                    <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
-                </div>
+  <!-- 검색창 -->
+  <form method="get" action="{% url 'artist:index' %}" class="max-w-xl mx-auto mb-14 flex relative z-10">
+    <input id="artist-search" type="text" name="q" value="{{ query }}"
+      placeholder="최애 덕을 알려주세요"
+      class="flex-1 px-4 py-3 border border-black rounded-l-md shadow-sm text-base focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-center"
+      autocomplete="off" />
+    <button type="submit"
+      class="px-5 py-3 border border-black border-l-0 bg-[#feec64] rounded-r-md text-sm font-medium hover:bg-yellow-100 transition">
+      검색
+    </button>
+    <ul id="autocomplete-list"
+      class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg z-20 hidden max-h-60 overflow-y-auto text-left mt-1">
+    </ul>
+  </form>
 
-                <!-- display_name만 출력 -->
-                <p class="text-base font-semibold text-gray-800 text-center">{{ artist.display_name }}</p>
-            </div>
-        {% empty %}
-            <div class="col-span-full text-center py-12 text-gray-500">
-                <p>아직 등록된 아티스트가 없습니다.</p>
-            </div>
-        {% endfor %}
+  <!-- 아티스트 목록 -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-12 gap-x-6 place-items-center">
+    {% for artist in artists %}
+    <div class="flex flex-col items-center space-y-3">
+      <form method="POST" action="{% url 'artist:toggle_favourite' artist.id %}">
+        {% csrf_token %}
+        <button type="submit" class="focus:outline-none">
+          <div class="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full overflow-hidden shadow-lg transition-all duration-300
+            {% if request.user in artist.followers.all %}
+              border-[6px] sm:border-[8px]
+            {% else %}
+              border border-gray-300
+            {% endif %}"
+            {% if request.user in artist.followers.all %}
+              style="border-color: #feec64;"
+            {% endif %}>
+            <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+              class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+          </div>
+        </button>
+      </form>
+      <div class="flex items-center justify-center space-x-2">
+        <p class="text-sm font-semibold text-gray-800">{{ artist.display_name }}</p>
+        <form method="POST" action="{% url 'artist:toggle_favourite' artist.id %}">
+          {% csrf_token %}
+          <button type="submit"
+            class="text-2xl sm:text-3xl transition-all duration-300 hover:scale-110 
+              {% if request.user in artist.followers.all %}
+                text-red-500
+              {% else %}
+                text-black hover:text-red-400
+              {% endif %}">
+            {% if request.user in artist.followers.all %}
+              ♥
+            {% else %}
+              ♡
+            {% endif %}
+          </button>
+        </form>
+      </div>
     </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 text-gray-500">
+      <p>😥 등록된 덕이 없습니다.</p>
+    </div>
+    {% endfor %}
+  </div>
 </div>
+
+<!-- 🔽 자동완성 스크립트 -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('artist-search');
+    const list = document.getElementById('autocomplete-list');
+    let selectedIndex = -1;
+
+    input.addEventListener('input', function () {
+      const keyword = this.value.trim();
+      selectedIndex = -1;
+      if (!keyword) {
+        list.classList.add('hidden');
+        list.innerHTML = '';
+        return;
+      }
+
+      fetch(`/artist/autocomplete/?q=${encodeURIComponent(keyword)}`)
+        .then(res => res.json())
+        .then(data => {
+          list.innerHTML = '';
+          if (!data.results.length) {
+            list.classList.add('hidden');
+            return;
+          }
+
+          data.results.forEach((artist, index) => {
+            const item = document.createElement('li');
+            item.textContent = artist;
+            item.className = 'px-4 py-2 hover:bg-yellow-100 cursor-pointer text-sm';
+            item.setAttribute('data-index', index);
+
+            item.onclick = () => {
+              input.value = artist;
+              list.classList.add('hidden');
+              input.form.submit();
+            };
+
+            list.appendChild(item);
+          });
+
+          list.classList.remove('hidden');
+        });
+    });
+
+    input.addEventListener('keydown', function (e) {
+      const items = list.querySelectorAll('li');
+      if (!items.length) return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % items.length;
+        updateHighlight(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+        updateHighlight(items);
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        e.preventDefault();
+        items[selectedIndex].click();
+      }
+    });
+
+    document.addEventListener('click', e => {
+      if (!list.contains(e.target) && e.target !== input) {
+        list.classList.add('hidden');
+      }
+    });
+
+    function updateHighlight(items) {
+      items.forEach(item => item.classList.remove('bg-yellow-100'));
+      if (selectedIndex >= 0) {
+        items[selectedIndex].classList.add('bg-yellow-100');
+        input.value = items[selectedIndex].textContent;
+      }
+    }
+  });
+</script>
 {% endblock %}

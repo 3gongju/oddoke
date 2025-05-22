@@ -25,8 +25,8 @@ class User(AbstractUser):
     # user_set(반대쪽) => followers(user_set 이름 변경)
     # symmetrical=False : 비대칭구조 (1-> 2 팔로우 / 2 ->1 팔로우는 다르기 때문)
 
-    favorite_artists = models.ManyToManyField(
-        Artist,
-        related_name='followers',
-        blank=True
-    )
+    # favorite_artists = models.ManyToManyField(
+    #     Artist,
+    #     related_name='followers',
+    #     blank=True
+    # )
