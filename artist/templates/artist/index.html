@@ -2,32 +2,21 @@
 {% load static %}
 
 {% block body %}
-<div class="max-w-6xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
-    <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">아티스트 목록</h1>
-    
-    <!-- 아티스트 그리드 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+<div class="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
+    <h1 class="text-3xl font-bold mb-10 text-center text-gray-900">아티스트 목록</h1>
+
+    <!-- 깔끔한 아티스트 로고 그리드 -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-y-10 gap-x-6 place-items-center">
         {% for artist in artists %}
-            <div class="group">
-                <div class="bg-white rounded-lg shadow-md p-4 text-center transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg">
-                    <!-- 로고 이미지: 원형 또는 사각형 디자인 선택 가능 -->
-                    <div class="w-36 h-36 mx-auto mb-4 overflow-hidden rounded-lg">
-                        <img src="{% static artist.logo %}" alt="{{ artist.display_name }}" 
-                             class="w-full h-full object-contain hover:scale-105 transition-transform duration-300">
-                    </div>
-                    
-                    <!-- 아티스트 이름 -->
-                    <h2 class="text-lg font-semibold text-gray-800 mb-1">{{ artist.display_name }}</h2>
-                    
-                    {% if artist.korean_name %}
-                        <p class="text-sm text-gray-500">{{ artist.korean_name }}</p>
-                    {% endif %}
-                    
-                    <!-- 솔로 아티스트 표시 (있는 경우) -->
-                    {% if artist.is_solo %}
-                        <span class="inline-block mt-2 px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full">솔로</span>
-                    {% endif %}
+            <div class="flex flex-col items-center space-y-3">
+                <!-- 원형 로고 -->
+                <div class="w-44 h-44 rounded-full overflow-hidden">
+                    <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                 </div>
+
+                <!-- display_name만 출력 -->
+                <p class="text-base font-semibold text-gray-800 text-center">{{ artist.display_name }}</p>
             </div>
         {% empty %}
             <div class="col-span-full text-center py-12 text-gray-500">
