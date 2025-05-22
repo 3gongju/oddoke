@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 # Create your models here.
@@ -10,17 +11,21 @@ class Artist(models.Model):
     # 솔로 아티스트일 경우 True, 그룹일 경우 False (생략 가능한데 일단 넣어둠)
     is_solo = models.BooleanField(default=False, help_text="솔로 아티스트인지 여부")
     
+        # 찜한 유저들 (favourite_artists 기능)
+    followers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='favourite_artists',  # User 모델에서 user.favorite_artists 로 접근
+        blank=True
+    )
+
     def __str__(self):
         return self.display_name
 
-# class Member(models.Model):
-#     group = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='members')
-#     name = models.CharField(max_length=100)
+    @property
+    def followers_count(self):
+        return self.followers.count()
 
-#     def __str__(self):
-#         return f"{self.name} ({self.group.display_name})"
 
-# artist_name,member_name,member_bday
 class Member(models.Model):
     artist_name = models.ManyToManyField(Artist, related_name='members')
     member_name = models.CharField(max_length=100)
