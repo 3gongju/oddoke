@@ -20,7 +20,7 @@ class Artist(models.Model):
 #     def __str__(self):
 #         return f"{self.name} ({self.group.display_name})"
 
-# artist_display_name,member_name,member_bday
+# artist_name,member_name,member_bday
 class Member(models.Model):
     artist_name = models.ManyToManyField(Artist, related_name='members')
     member_name = models.CharField(max_length=100)
