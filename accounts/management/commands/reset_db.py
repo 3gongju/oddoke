@@ -10,9 +10,10 @@ import shutil
 from accounts.models import User
 # from ddokfarm.models import Category  # 카테고리만 유지
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from django.core.files.images import ImageFile
 import random
-from datetime import timedelta
+from datetime import timedelta, date
 
 class Command(BaseCommand):
     help = '데이터베이스를 초기화하고 기본 데이터를 자동으로 로드합니다'
@@ -85,8 +86,9 @@ class Command(BaseCommand):
             profile_dest = os.path.join('media', 'profile', 'sample_profile.jpg')
             shutil.copy(self.default_image_path, profile_dest)
             
-            # 상품 이미지로 복사 (ddokfarm용 - 나중에 사용할 수 있음)
-            item_dest = os.path.join('media', 'image', 'sample_item.jpg')
+            # 상품 이미지로 복사 (ddokfarm용)
+            item_dest = os.path.join('media', 'ddokfarm', 'image', 'sample_item.jpg')
+            os.makedirs(os.path.join('media', 'ddokfarm', 'image'), exist_ok=True)
             shutil.copy(self.default_image_path, item_dest)
             
             # 덕담 이미지로 복사
@@ -111,6 +113,9 @@ class Command(BaseCommand):
         
         # 샘플 덕담 게시글 생성
         self.create_sample_ddokdam_posts()
+        
+        # 샘플 덕팜 게시글 생성
+        self.create_sample_ddokfarm_posts()
         
         # 샘플 댓글 생성
         self.create_sample_comments()
@@ -286,6 +291,148 @@ class Command(BaseCommand):
         
         total_posts = len(community_posts) + len(manner_posts) + len(bdaycafe_posts)
         self.stdout.write(self.style.SUCCESS(f'덕담 샘플 게시글 {total_posts}개 생성이 완료되었습니다.'))
+
+    def create_sample_ddokfarm_posts(self):
+        """덕팜 샘플 게시글 생성"""
+        # 유저 가져오기
+        admin_user = User.objects.get(username='admin')
+        test_user = User.objects.get(username='testuser')
+        fan_user = User.objects.get(username='btsfan')
+        seller_user = User.objects.get(username='seller')
+        
+        # 이미지 경로 설정
+        image_path = 'ddokfarm/image/sample_item.jpg' if os.path.exists('media/ddokfarm/image/sample_item.jpg') else ''
+        
+        # 판매 게시글
+        sell_posts = [
+            {
+                'title': "BTS 지민 포토카드 판매합니다",
+                'content': "페이스 더 선 앨범 포토카드입니다. 상태 좋고 보관 잘 했어요.\n직거래 가능하시면 더 저렴하게 드릴게요!",
+                'user': seller_user,
+                'price': 15000,
+                'condition': 'almost_new',
+                'shipping': 'both',
+                'location': '강남역',
+                'want_to': 'sell',
+                'is_sold': False,
+            },
+            {
+                'title': "뉴진스 응원봉 급처합니다",
+                'content': "뉴진스 공식 응원봉 판매해요. 한 번만 사용했습니다.\n박스, 설명서 모두 있어요.",
+                'user': test_user,
+                'price': 35000,
+                'condition': 'almost_new',
+                'shipping': 'delivery',
+                'want_to': 'sell',
+                'is_sold': False,
+            },
+            {
+                'title': "에스파 윈터 포카 구합니다",
+                'content': "마이월드 앨범 윈터 포토카드 찾고 있어요.\n상태 좋은 것으로 부탁드립니다!",
+                'user': fan_user,
+                'price': 20000,
+                'condition': 'new',
+                'shipping': 'both',
+                'location': '홍대입구',
+                'want_to': 'buy',
+                'is_sold': False,
+            }
+        ]
+        
+        # 대여 게시글
+        rental_posts = [
+            {
+                'title': "세븐틴 응원봉 대여해드려요",
+                'content': "세븐틴 콘서트 응원봉 대여 가능합니다.\n콘서트 당일 대여해드려요. 깨끗하게 관리하고 있어요!",
+                'user': seller_user,
+                'price': 5000,
+                'condition': 'used',
+                'shipping': 'direct',
+                'location': '잠실 종합운동장',
+                'want_to': 'sell',
+                'start_date': date.today(),
+                'end_date': date.today() + timedelta(days=3),
+                'is_sold': False,
+            },
+            {
+                'title': "스트레이키즈 콘서트 응원봉 빌려주세요",
+                'content': "스트레이키즈 콘서트 가는데 응원봉이 필요해요.\n당일 대여 가능하신 분 연락 주세요!",
+                'user': fan_user,
+                'price': 3000,
+                'condition': 'new',
+                'shipping': 'direct',
+                'location': 'KSPO돔',
+                'want_to': 'buy',
+                'start_date': date.today() + timedelta(days=7),
+                'end_date': date.today() + timedelta(days=8),
+                'is_sold': False,
+            }
+        ]
+        
+        # 분철 게시글
+        split_posts = [
+            {
+                'title': "투모로우바이투게더 신앨범 분철팟",
+                'content': "투바투 새 앨범 분철팟 모집합니다!\n각 버전별 포토카드 나눠서 가져가요. 총 5명 모집해요.",
+                'user': admin_user,
+                'album': 'include',
+                'opened': 'unopened',
+                'shipping_fee': 3000,
+                'where': '강남역 스타벅스',
+                'when': '발매일 당일 오후 3시',
+                'failure': 'split',
+            },
+            {
+                'title': "아이브 I AM 앨범 분철팟 (마감임박)",
+                'content': "아이브 아이엠 앨범 분철팟입니다. 1자리 남았어요!\n안유진 위주로 모으시는 분 우선이에요.",
+                'user': test_user,
+                'album': 'not_include',
+                'opened': 'opende',
+                'shipping_fee': 2500,
+                'where': '홍대 CGV 앞',
+                'when': '이번 주 토요일 저녁 7시',
+                'failure': 'not_failure',
+            }
+        ]
+        
+        # 판매 게시글 생성
+        for i, post_data in enumerate(sell_posts):
+            post = FarmSellPost.objects.create(**post_data)
+            
+            # 이미지 설정
+            if image_path:
+                try:
+                    with open(f'media/{image_path}', 'rb') as img_file:
+                        post.image.save(f'sell_post_{i+1}.jpg', ImageFile(img_file), save=True)
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
+        
+        # 대여 게시글 생성
+        for i, post_data in enumerate(rental_posts):
+            post = FarmRentalPost.objects.create(**post_data)
+            
+            # 이미지 설정
+            if image_path:
+                try:
+                    with open(f'media/{image_path}', 'rb') as img_file:
+                        post.image.save(f'rental_post_{i+1}.jpg', ImageFile(img_file), save=True)
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
+        
+        # 분철 게시글 생성
+        for i, post_data in enumerate(split_posts):
+            post = FarmSplitPost.objects.create(**post_data)
+            
+            # 이미지 설정
+            if image_path:
+                try:
+                    with open(f'media/{image_path}', 'rb') as img_file:
+                        post.image.save(f'split_post_{i+1}.jpg', ImageFile(img_file), save=True)
+                except Exception as e:
+                    self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
+        
+        total_posts = len(sell_posts) + len(rental_posts) + len(split_posts)
+        self.stdout.write(self.style.SUCCESS(f'덕팜 샘플 게시글 {total_posts}개 생성이 완료되었습니다.'))
     
     def create_sample_comments(self):
         # 유저 가져오기
@@ -308,9 +455,24 @@ class Command(BaseCommand):
             "운영 시간이 어떻게 되나요?"
         ]
         
+        # 덕팜 댓글 내용
+        ddokfarm_comments = [
+            "네고 가능한가요?",
+            "상태 더 자세히 알 수 있을까요?",
+            "직거래 가능한 시간이 언제인가요?",
+            "아직 판매 중이신가요?",
+            "분철팟 참여하고 싶어요!",
+            "택배비는 얼마인가요?",
+            "사진 더 보여주실 수 있나요?",
+            "언제까지 모집하시나요?",
+            "구매 의사 있습니다!",
+            "대여 날짜 조정 가능한가요?"
+        ]
+        
         # 각 카테고리별 게시글에 댓글 추가
         all_users = [admin_user, test_user, fan_user, seller_user]
         
+        # 덕담 댓글 생성
         # 커뮤니티 게시글에 댓글
         for post in DamCommunityPost.objects.all():
             num_comments = random.randint(1, 3)
@@ -350,7 +512,47 @@ class Command(BaseCommand):
                     content=content
                 )
         
-        # 대댓글 추가
+        # 덕팜 댓글 생성
+        # 판매 게시글에 댓글
+        for post in FarmSellPost.objects.all():
+            num_comments = random.randint(1, 4)
+            for _ in range(num_comments):
+                user = random.choice(all_users)
+                content = random.choice(ddokfarm_comments)
+                
+                FarmComment.objects.create(
+                    sell_post=post,
+                    user=user,
+                    content=content
+                )
+        
+        # 대여 게시글에 댓글
+        for post in FarmRentalPost.objects.all():
+            num_comments = random.randint(1, 4)
+            for _ in range(num_comments):
+                user = random.choice(all_users)
+                content = random.choice(ddokfarm_comments)
+                
+                FarmComment.objects.create(
+                    rental_post=post,
+                    user=user,
+                    content=content
+                )
+        
+        # 분철 게시글에 댓글
+        for post in FarmSplitPost.objects.all():
+            num_comments = random.randint(1, 4)
+            for _ in range(num_comments):
+                user = random.choice(all_users)
+                content = random.choice(ddokfarm_comments)
+                
+                FarmComment.objects.create(
+                    split_post=post,
+                    user=user,
+                    content=content
+                )
+        
+        # 대댓글 추가 (덕담)
         for comment in DamComment.objects.all():
             # 20% 확률로 대댓글 추가
             if random.random() < 0.2:
@@ -389,6 +591,45 @@ class Command(BaseCommand):
                             parent=comment
                         )
         
+        # 대댓글 추가 (덕팜)
+        for comment in FarmComment.objects.all():
+            # 20% 확률로 대댓글 추가
+            if random.random() < 0.2:
+                user = random.choice(all_users)
+                if user != comment.user:  # 원 댓글 작성자가 아닌 경우만
+                    farm_replies = [
+                        "네, 연락 주세요!",
+                        "DM으로 연락 드릴게요.",
+                        "감사합니다!",
+                        "자세한 사항은 개인 메시지로요~"
+                    ]
+                    
+                    # 원 게시글 작성자가 답변
+                    if comment.sell_post:
+                        original_author = comment.sell_post.user
+                        FarmComment.objects.create(
+                            sell_post=comment.sell_post,
+                            user=original_author,
+                            content=random.choice(farm_replies),
+                            parent=comment
+                        )
+                    elif comment.rental_post:
+                        original_author = comment.rental_post.user
+                        FarmComment.objects.create(
+                            rental_post=comment.rental_post,
+                            user=original_author,
+                            content=random.choice(farm_replies),
+                            parent=comment
+                        )
+                    elif comment.split_post:
+                        original_author = comment.split_post.user
+                        FarmComment.objects.create(
+                            split_post=comment.split_post,
+                            user=original_author,
+                            content=random.choice(farm_replies),
+                            parent=comment
+                        )
+        
         self.stdout.write(self.style.SUCCESS('샘플 댓글 생성이 완료되었습니다.'))
     
     def create_media_directories(self):
@@ -396,7 +637,7 @@ class Command(BaseCommand):
         media_dirs = [
             'media/profile',
             'media/ddokdam/image',
-            'media/image'  # ddokfarm용 - 나중에 사용할 수 있음
+            'media/ddokfarm/image'  # ddokfarm용 디렉토리 추가
         ]
         
         for d in media_dirs:
