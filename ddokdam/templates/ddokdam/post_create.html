@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="max-w-3xl mx-auto py-10">
+
+  <h2 class="text-2xl font-bold mb-6">덕담 작성하기</h2>
+
+  <!-- 카테고리 선택 버튼 -->
+  <div class="flex gap-4 mb-6">
+    <button type="button" class="category-btn px-4 py-2 rounded 
+      {% if category == 'community' %}bg-yellow-400 text-white{% else %}bg-gray-100{% endif %}" 
+      data-category="community">덕담 한마디</button>
+
+    <button type="button" class="category-btn px-4 py-2 rounded 
+      {% if category == 'manner' %}bg-yellow-400 text-white{% else %}bg-gray-100{% endif %}" 
+      data-category="manner">예절 차리기</button>
+
+    <button type="button" class="category-btn px-4 py-2 rounded 
+      {% if category == 'bdaycafe' %}bg-yellow-400 text-white{% else %}bg-gray-100{% endif %}" 
+      data-category="bdaycafe">생카 후기</button>
+  </div>
+
+  <!-- 작성 폼 -->
+  <form method="post" enctype="multipart/form-data" id="create-form">
+    {% csrf_token %}
+    <input type="hidden" name="category" id="selected-category" value="{{ category|default:'community' }}">
+
+    <div id="form-wrapper">
+      {{ form.as_p }}
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <a href="{% url 'ddokdam:index' %}" class="px-4 py-2 rounded border text-gray-700">취소</a>
+      <button type="submit" class="px-4 py-2 rounded bg-yellow-500 text-white">작성 완료</button>
+    </div>
+  </form>
+
+</div>
+
+<!-- JS: 버튼 클릭 시 폼 갱신 요청 -->
+<script>
+  const buttons = document.querySelectorAll('.category-btn');
+  const form = document.getElementById('create-form');
+  const categoryInput = document.getElementById('selected-category');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.category;
+      categoryInput.value = category;
+      form.submit();  // 카테고리 바뀌면 폼 다시 불러옴
+    });
+  });
+</script>
+{% endblock %}
