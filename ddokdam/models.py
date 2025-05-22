@@ -14,13 +14,16 @@ class DamPost(models.Model):
         abstract = True
 
 class DamCommunityPost(DamPost):
+    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_community_posts', blank=True)
     pass    
 
 class DamMannerPost(DamPost):
+    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_manner_posts', blank=True)
     location = models.CharField(max_length=255, blank=True, null=True)
     item = models.CharField(max_length=255, blank=True, null=True)
 
 class DamBdaycafePost(DamPost):
+    like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_bdaycafe_posts', blank=True)
     cafe_name = models.CharField(max_length=255, blank=True, null=True)
     cafe_location = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateField(blank=True, null=True)
