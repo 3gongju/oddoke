@@ -13,6 +13,21 @@ urlpatterns = [
     # 게시글 상세보기
     path('<str:category>/<int:post_id>/', views.post_detail, name='post_detail'),
 
+    # 게시글 수정
+    path('<str:category>/<int:post_id>/edit/', views.post_edit, name='post_edit'),
+
+    # 게시글 삭제
+    path('<str:category>/<int:post_id>/delete/', views.post_delete, name='post_delete'),
+
+    # 댓글 작성
+    path('<str:category>/<int:post_id>/comments/create/', views.comment_create, name='comment_create'),
+
+    # 댓글 삭제
+    path('<str:category>/<int:post_id>/comments/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
+
+    # 좋아요(찜하기)
+    path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 

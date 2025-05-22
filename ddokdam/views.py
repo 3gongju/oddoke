@@ -63,13 +63,13 @@ def post_detail(request, category, post_id):
 # 게시글 작성
 @login_required
 def post_create(request):
-    category = request.POST.get('category', 'community')
-    form_class = get_post_form(category)
-
-    if not form_class:
-        raise Http404("존재하지 않는 카테고리입니다.")
-
     if request.method == 'POST':
+        category = request.POST.get('category')
+        form_class = get_post_form(category)
+
+        if not form_class:
+            raise Http404("존재하지 않는 카테고리입니다.")
+
         form = form_class(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
@@ -77,6 +77,12 @@ def post_create(request):
             post.save()
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
+        category = request.GET.get('category', 'community')  # 기본 카테고리: community
+        form_class = get_post_form(category)
+
+        if not form_class:
+            raise Http404("존재하지 않는 카테고리입니다.")
+
         form = form_class()
 
     context = {
@@ -85,7 +91,7 @@ def post_create(request):
     }
 
     return render(request, 'ddokdam/post_create.html', context)
-
+    
 # 게시글 수정
 @login_required
 def post_edit(request, category, post_id):

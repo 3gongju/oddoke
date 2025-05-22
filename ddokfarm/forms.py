@@ -34,7 +34,7 @@ class FarmSplitPostForm(forms.ModelForm):
 class FarmCommentForm(forms.ModelForm):
     class Meta:
         model = FarmComment
-        fields = ['content', 'parent']
+        fields = ['content']
 
 
 # class DdokfarmPostForm(forms.ModelForm):
