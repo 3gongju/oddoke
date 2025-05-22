@@ -9,6 +9,7 @@
 
 # CSV_FILE_PATH = '아이돌 목록 - 멤버.csv'
 
+
 # # 블로그 URL 목록 (1~12월)
 # BLOG_URLS = {
 #     "01": "https://blog.naver.com/myloveidolactor/223299501904",
