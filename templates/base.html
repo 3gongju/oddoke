@@ -1,100 +1,94 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oddoke</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- 채널톡 기본 스크립트 -->
-    <script>
-      (function() {
-        var w = window;
-        if (w.ChannelIO) {
-          return (window.console.error || window.console.log || function(){})('ChannelIO script included twice.');
-        }
-        var ch = function() {
-          ch.c(arguments);
-        };
-        ch.q = [];
-        ch.c = function(args) {
-          ch.q.push(args);
-        };
-        w.ChannelIO = ch;
-        function l() {
-          if (w.ChannelIOInitialized) {
-            return;
-          }
-          w.ChannelIOInitialized = true;
-          var s = document.createElement('script');
-          s.type = 'text/javascript';
-          s.async = true;
-          s.src = 'https://cdn.channel.io/plugin/ch-plugin-web.js';
-          var x = document.getElementsByTagName('script')[0];
-          if (x.parentNode) {
-            x.parentNode.insertBefore(s, x);
-          }
-        }
-        if (document.readyState === 'complete') {
-          l();
-        } else if (window.attachEvent) {
-          window.attachEvent('onload', l);
-        } else {
-          window.addEventListener('DOMContentLoaded', l, false);
-          window.addEventListener('load', l, false);
-        }
-      })();
-    </script>
-
-    <script>
-      ChannelIO('boot', {
-        "pluginKey": "df2d0776-9b3e-4abc-ba6c-1aa38065b9a7"
-      });
-    </script>
-    
-    <!-- ✅ 추가: 서브 템플릿에서 head 영역 확장 가능하게 -->
-    {% block head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oddoke</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  {% block head %}{% endblock %}
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
 
-<!-- Navbar -->
-<nav class="bg-white shadow sticky top-0 z-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-16 items-center">
-      <!-- 로고 + 메뉴 -->
-      <div class="flex items-center space-x-4">
-        <a href="/" class="text-xl font-bold text-primary">어덕해</a>
-        <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
-        <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
-        <a href="#" class="hover:text-primary text-sm font-medium">덕생</a>
-      </div>
+<!-- ✅ 1. FAQ 버튼 -->
+<button id="faqButton" class="fixed bottom-6 right-6 bg-pink-500 text-white px-4 py-2 rounded-full shadow-lg z-50">
+  문의하기
+</button>
 
-      <!-- 로그인 상태별 버튼 -->
-      <div class="flex items-center space-x-2">
-        {% if request.user.is_authenticated %}
-          <span class="text-sm text-gray-700">👤 {{ request.user.username }}님</span>
-          <a href="{% url 'accounts:profile' user.username %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
-          <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
-        {% else %}
-          <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary">로그인</a>
-        {% endif %}
-      </div>
-    </div>
+<!-- ✅ 2. FAQ 모달 (채널톡 스타일) -->
+<div id="faqModal" class="fixed bottom-20 right-6 w-80 bg-white border border-gray-300 rounded-xl shadow-lg hidden flex-col z-50">
+  <!-- 채팅 헤더 -->
+  <div class="bg-pink-500 text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
+    <span class="font-semibold">어덕해</span>
+    <button id="closeModal" class="text-white text-lg">&times;</button>
   </div>
-</nav>
+
+  <!-- 채팅 메시지 영역 -->
+  <div class="px-4 py-3 space-y-2 max-h-80 overflow-y-auto text-sm">
+    <div class="bg-gray-100 p-2 rounded-lg w-fit max-w-[90%]">무엇이 궁금하신가요?</div>
+    <div class="bg-gray-100 p-2 rounded-lg w-fit max-w-[90%]">어덕해 소개, 회원가입 안내, 탈퇴 안내, 용어 설명 중 선택해주세요!</div>
+
+    <!-- 질문 선택 버튼 -->
+    <div id="questionSection" class="space-y-2">
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-pink-100 hover:bg-pink-200" data-target="about">📌 어덕해 소개</button>
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-pink-100 hover:bg-pink-200" data-target="signup">🙋‍♀️ 회원가입 안내</button>
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-pink-100 hover:bg-pink-200" data-target="withdraw">🚪 탈퇴 안내</button>
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-pink-100 hover:bg-pink-200" data-target="terms">📚 용어 설명</button>
+    </div>
+
+    <!-- ✅ 답변 영역 -->
+<div id="answerSection" class="hidden space-y-2">
+
+  <div id="about" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
+    <p>
+      <strong>"어덕해"</strong>는 “어디서 덕질해? 어디서든 덕질해”의 줄임말로,<br>
+      아이돌 팬들을 위한 굿즈 거래, 생일카페 정보, 덕질 일상 기록을 도와주는 플랫폼입니다.
+    </p>
+  </div>
+
+  <div id="signup" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
+    <p>
+      회원가입 없이도 게시글 열람은 가능하지만,<br>
+      댓글, 좋아요, 작성 기능은 <strong>로그인 후</strong> 이용 가능합니다.<br>
+      이메일 / 카카오 / 구글 계정으로 가입할 수 있습니다.
+    </p>
+  </div>
+
+  <div id="withdraw" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
+    <p>
+      마이페이지 &gt; 프로필 관리 &gt; 회원탈퇴에서 가능합니다.<br>
+      <strong>탈퇴 후 동일 이메일은 30일간 재가입이 제한됩니다.</strong>
+    </p>
+  </div>
+
+  <div id="terms" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
+    <ul class="list-disc list-inside text-sm space-y-1">
+      <li><strong>포카</strong> = 포토카드</li>
+      <li><strong>앨포</strong> = 앨범포토카드</li>
+      <li><strong>덕팜</strong> = 중고 굿즈 거래 (총대: 덕장)</li>
+      <li><strong>덕담</strong> = 자유 커뮤니티</li>
+      <li><strong>덕생</strong> = 생일카페 정보 게시판</li>
+      <li><strong>덕 쌓기</strong> = 출석 포인트 쌓기를 의미</li>
+    </ul>
+  </div>
+
+  <button id="backBtn" class="text-sm text-blue-500 underline">
+    ← 질문 목록으로 돌아가기
+  </button>
+  
+</div>
+  </div>
+</div>
 
 <!-- ✅ 본문 블록 -->
-{% block body %}
-{% endblock %}
+{% block body %}{% endblock %}
 
-<!-- 좋아요 하트 비동기 처리 -->
+<!-- ✅ 좋아요 하트 비동기 처리 -->
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".like-toggle").forEach(btn => {
-      btn.addEventListener("click", function() {
+      btn.addEventListener("click", function () {
         const postId = this.dataset.postId;
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
         fetch(`/ddokfarm/${postId}/like/`, {
           method: "POST",
           headers: {
@@ -102,13 +96,47 @@
             "Content-Type": "application/json"
           }
         })
-        .then(response => response.json())
-        .then(data => {
-          const heartSpan = this.querySelector(".heart-icon");
-          heartSpan.textContent = data.liked ? "❤️" : "🤍";
-        })
-        .catch(error => console.error("에러:", error));
+          .then(response => response.json())
+          .then(data => {
+            this.querySelector(".heart-icon").textContent = data.liked ? "❤️" : "🤍";
+          })
+          .catch(error => console.error("에러:", error));
       });
+    });
+  });
+</script>
+
+<!-- ✅ FAQ 동작 스크립트 (맨 아래 위치) -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const faqButton = document.getElementById('faqButton');
+    const faqModal = document.getElementById('faqModal');
+    const closeModal = document.getElementById('closeModal');
+    const questionSection = document.getElementById('questionSection');
+    const answerSection = document.getElementById('answerSection');
+    const backBtn = document.getElementById('backBtn');
+
+    closeModal.onclick = () => faqModal.classList.add('hidden');
+    faqButton.onclick = () => faqModal.classList.toggle('hidden');
+
+    backBtn.onclick = () => {
+      answerSection.classList.add('hidden');
+      questionSection.classList.remove('hidden');
+      document.querySelectorAll('.faq-answer').forEach(el => el.classList.add('hidden'));
+    };
+
+    document.querySelectorAll('.faq-option').forEach(btn => {
+      btn.onclick = () => {
+        const target = btn.dataset.target;
+        console.log("선택된 target 값:", target);
+        const targetElement = document.getElementById(target);
+        console.log("선택된 id 존재 여부:", targetElement);
+        if (!targetElement) return; // ❗ 방어 코드 추가
+        questionSection.classList.add('hidden');
+        answerSection.classList.remove('hidden');
+        document.querySelectorAll('.faq-answer').forEach(el => el.classList.add('hidden'));
+        targetElement.classList.remove('hidden');
+      };
     });
   });
 </script>
