@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto p-4 md:p-6 bg-white shadow-md rounded-lg my-8">
+    <!-- 게시물 헤더 -->
+    <div class="border-b pb-4 mb-4">
+        <div class="flex justify-between items-start">
+            <div>
+                <div class="{% if category == 'community' %}bg-purple-100 text-purple-800{% elif category == 'manner' %}bg-pink-100 text-pink-800{% else %}bg-blue-100 text-blue-800{% endif %} text-xs px-2 py-1 rounded inline-block mb-2">
+                    {{ category|title }}
+                </div>
+                <h1 class="text-2xl font-bold mb-2">{{ post.title }}</h1>
+                <div class="flex items-center text-sm text-gray-500">
+                    {% include 'components/_user_profile_mini.html' with user=post.user %}
+                    <span class="ml-4">{{ post.created_at|date:"Y.m.d H:i" }}</span>
+                </div>
+            </div>
+            
+            <!-- 수정/삭제 버튼 (본인 게시물만) -->
+            {% if user == post.user %}
+                <div class="flex space-x-2">
+                    <a href="{% url 'ddokdam:post_edit' category=category post_id=post.id %}"
+                    class="text-sm px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600">수정</a>
+
+                    <form method="post"
+                        action="{% url 'ddokdam:post_delete' category=category post_id=post.id %}"
+                        onsubmit="return confirm('정말 삭제하시겠습니까?')"
+                        class="inline">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                            삭제
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 게시물 내용 -->
+    {% include 'components/_post_content_ui.html' with post=post %}
+    
+    <!-- 좋아요 버튼 -->
+    <form id="like-form" class="inline-block" data-post-id="{{ post.id }}" data-category="{{ category }}">
+        {% csrf_token %}
+        <button type="button" id="like-btn"
+            class="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition"
+            data-liked="{{ is_liked|yesno:'true,false' }}">
+            {% if is_liked %}
+                ❤️ {{ post.like_users.count }}
+            {% else %}
+                🤍 {{ post.like_users.count }}
+            {% endif %}
+        </button>
+    </form>
+
+    <!-- 댓글 작성 폼 -->
+    {% include 'components/_comment_form_ui.html' with post=post comment_form=comment_form %}
+    
+    <!-- 댓글 목록 -->
+    {% include 'components/_comment_list_ui.html' with comments=comments post=post %}
+</div>
+<script>
+    const likeForm = document.getElementById('like-form');
+    const likeBtn = document.getElementById('like-btn');
+    const postId = likeForm.dataset.postId;
+    const category = likeForm.dataset.category;
+    let liked = likeBtn.dataset.liked === "true";
+
+    likeBtn.addEventListener('click', function () {
+        fetch(`/ddokdam/${category}/${postId}/like/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            liked = data.liked;
+            likeBtn.dataset.liked = liked;
+            likeBtn.innerHTML = liked ? `❤️ ${data.like_count}` : `🤍 ${data.like_count}`;
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
