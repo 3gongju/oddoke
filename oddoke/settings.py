@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'import_export',
     'artist',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

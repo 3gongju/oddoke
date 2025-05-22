@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load model_filters %}  {# model_name 필터 등록 필요 #}
+
+{% block body %}
+<div class="max-w-3xl mx-auto py-10 px-4">
+
+  <!-- 제목 -->
+  <h1 class="text-2xl font-bold mb-4">{{ post.title }}</h1>
+
+  <!-- 작성자 및 작성일 -->
+  <p class="text-sm text-gray-500 mb-2">
+    작성자: {{ post.user.username }} | {{ post.created_at|date:"Y-m-d H:i" }}
+  </p>
+
+  <!-- 이미지 -->
+  {% if post.image %}
+    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover rounded-lg mb-4">
+  {% endif %}
+
+  <!-- 본문 -->
+  <div class="prose max-w-none mb-6">
+    {{ post.content|linebreaks }}
+  </div>
+
+  <!-- 공통 필드 -->
+  <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+    {% if post.price %}<p><strong>가격:</strong> {{ post.price|intcomma }}원</p>{% endif %}
+    {% if post.location %}<p><strong>직거래 장소:</strong> {{ post.location }}</p>{% endif %}
+    {% if post.get_shipping_display %}<p><strong>배송:</strong> {{ post.get_shipping_display }}</p>{% endif %}
+    {% if post.get_condition_display %}<p><strong>상태:</strong> {{ post.get_condition_display }}</p>{% endif %}
+    {% if post.is_sold %}<p><strong>판매 완료:</strong> {{ post.is_sold|yesno:"완료,미완료" }}</p>{% endif %}
+    {% if post.get_want_to_display %}<p><strong>거래 방식:</strong> {{ post.get_want_to_display }}</p>{% endif %}
+  </div>
+
+  <!-- 타입별 상세 정보 -->
+  {% if post|model_name == 'farmrentalpost' %}
+    <div class="mb-6 text-sm text-gray-700">
+      <p><strong>대여 기간:</strong> {{ post.start_date }} ~ {{ post.end_date }}</p>
+    </div>
+
+  {% elif post|model_name == 'farmsplitpost' %}
+    <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+      <p><strong>앨범 포함:</strong> {{ post.get_album_display }}</p>
+      <p><strong>개봉 여부:</strong> {{ post.get_opened_display }}</p>
+      <p><strong>배송비:</strong> {{ post.shipping_fee|intcomma }}원</p>
+      <p><strong>거래 시기:</strong> {{ post.when }}</p>
+      <p><strong>거래 장소:</strong> {{ post.where }}</p>
+      <p><strong>무산 시:</strong> {{ post.get_failure_display }}</p>
+    </div>
+  {% endif %}
+
+
+
+  <!-- 댓글 -->
+  <div class="mb-6">
+    <h2 class="text-lg font-semibold mb-2">댓글</h2>
+    {% for comment in comments %}
+      <div class="border rounded p-3 mb-2">
+        <p class="text-sm text-gray-800">{{ comment.user.username }} | {{ comment.created_at|date:"Y-m-d H:i" }}</p>
+        <p class="text-gray-700 mt-1">{{ comment.content }}</p>
+        {% for reply in comment.replies.all %}
+          <div class="ml-4 mt-2 border-l pl-2 text-sm text-gray-600">
+            ↳ {{ reply.user.username }}: {{ reply.content }}
+          </div>
+        {% endfor %}
+      </div>
+    {% empty %}
+      <p class="text-gray-500">댓글이 없습니다.</p>
+    {% endfor %}
+  </div>
+
+
+
+</div>
+{% endblock %}

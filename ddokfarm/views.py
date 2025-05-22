@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-# from .forms import DdokfarmPostForm, DdokfarmCommentForm
-# from .models import DdokfarmPost, DdokfarmComment
 from django.urls import reverse
-
-
+from operator import attrgetter
+from .models import FarmComment
+from .forms import FarmCommentForm
+from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id
 
 
 # ✅ 홈 화면 (루트 URL)
@@ -14,74 +15,157 @@ def main(request):
     return render(request, 'main/home.html')
 
 
-# ✅ 게시글 목록 (카테고리, 정렬 포함)
+# 전체 게시글 보기
 def index(request):
-    posts = DdokfarmPost.objects.all().order_by('-created_at')
-
-    category_slug = request.GET.get('category')
-    current_category = None
-
-    if category_slug:
-        category = Category.objects.filter(slug=category_slug).first()
-        if category:
-            posts = posts.filter(category=category)
-            current_category = category.slug
-
-    # 정렬 조건
-    sort = request.GET.get('sort', 'latest')
-    if sort == 'price_low':
-        posts = posts.order_by('price')
-    elif sort == 'price_high':
-        posts = posts.order_by('-price')
-    else:
-        posts = posts.order_by('-created_at')
-
-    categories = Category.objects.all()
+    category = request.GET.get('category')
+    posts = get_post_queryset(category)
+    posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
     context = {
         'posts': posts,
-        'categories': Category.objects.all(),
-        'current_category': current_category,
-        'current_sort': sort,
+        'category': category,
     }
-
     return render(request, 'ddokfarm/index.html', context)
 
+# 판매 게시글 보기
+def sell_index(request):
+    return redirect('/ddokfarm/?category=sell')
 
-# ✅ 게시글 작성
+# 대여 게시글 보기
+def rental_index(request):
+    return redirect('/ddokfarm/?category=rental')
+
+# 분철 게시글 보기
+def split_index(request):
+    return redirect('/ddokfarm/?category=split')
+
+# 게시글 상세보기
+def post_detail(request, category, post_id):
+    model = get_post_model(category)
+    if not model:
+        raise Http404("존재하지 않는 카테고리입니다.")
+
+    post = get_object_or_404(model, id=post_id)
+
+    comments = get_post_comments(category, post)
+    if comments.exists():
+        comments = comments.select_related('user').prefetch_related('replies')
+    comment_form = FarmCommentForm()
+
+    is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
+
+
+    context = {
+        'post': post,
+        'category': category,
+        'comments': comments,
+        'comment_form': comment_form,
+        'is_liked': is_liked,
+    }
+
+    return render(request, 'ddokfarm/post_detail.html', context)
+
+# 게시글 작성
 @login_required
-def create(request):
+def post_create(request):
     if request.method == 'POST':
-        form = DdokfarmPostForm(request.POST, request.FILES)
+        category = request.POST.get('category')
+        form_class = get_post_form(category)
+
+        if not form_class:
+            raise Http404("존재하지 않는 카테고리입니다.")
+
+        form = form_class(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
-            post.category = form.cleaned_data['category'] 
             post.save()
-            return redirect('ddokfarm:detail', post_id=post.id)
+            return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
     else:
-        form = DdokfarmPostForm()
+        # GET 요청 시 기본 카테고리 선택 (예: 'sell')
+        category = request.GET.get('category', 'sell')
+        form_class = get_post_form(category)
 
-    categories = Category.objects.all()
-    return render(request, 'ddokfarm/create.html', {
-        'form': form, 
-        'categories': categories,
-    })
+        if not form_class:
+            raise Http404("존재하지 않는 카테고리입니다.")
 
+        form = form_class()
 
-# ✅ 게시글 상세 보기
-def detail(request, post_id):
-    post = get_object_or_404(DdokfarmPost, id=post_id)
-
-    comments = DdokfarmComment.objects.filter(post=post).select_related('user').prefetch_related('replies')
-
-    form = DdokfarmCommentForm()
     context = {
-        'post': post,
-        'comments': comments,
         'form': form,
+        'category': category,
     }
-    return render(request, 'ddokfarm/detail.html', context)
+
+    return render(request, 'ddokfarm/post_create.html', context)
+
+# # ✅ 게시글 목록 (카테고리, 정렬 포함)
+# def index(request):
+#     posts = DdokfarmPost.objects.all().order_by('-created_at')
+
+#     category_slug = request.GET.get('category')
+#     current_category = None
+
+#     if category_slug:
+#         category = Category.objects.filter(slug=category_slug).first()
+#         if category:
+#             posts = posts.filter(category=category)
+#             current_category = category.slug
+
+#     # 정렬 조건
+#     sort = request.GET.get('sort', 'latest')
+#     if sort == 'price_low':
+#         posts = posts.order_by('price')
+#     elif sort == 'price_high':
+#         posts = posts.order_by('-price')
+#     else:
+#         posts = posts.order_by('-created_at')
+
+#     categories = Category.objects.all()
+
+#     context = {
+#         'posts': posts,
+#         'categories': Category.objects.all(),
+#         'current_category': current_category,
+#         'current_sort': sort,
+#     }
+
+#     return render(request, 'ddokfarm/index.html', context)
+
+
+# # ✅ 게시글 작성
+# @login_required
+# def create(request):
+#     if request.method == 'POST':
+#         form = DdokfarmPostForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             post = form.save(commit=False)
+#             post.user = request.user
+#             post.category = form.cleaned_data['category'] 
+#             post.save()
+#             return redirect('ddokfarm:detail', post_id=post.id)
+#     else:
+#         form = DdokfarmPostForm()
+
+#     categories = Category.objects.all()
+#     return render(request, 'ddokfarm/create.html', {
+#         'form': form, 
+#         'categories': categories,
+#     })
+
+
+# # ✅ 게시글 상세 보기
+# def detail(request, post_id):
+#     post = get_object_or_404(DdokfarmPost, id=post_id)
+
+#     comments = DdokfarmComment.objects.filter(post=post).select_related('user').prefetch_related('replies')
+
+#     form = DdokfarmCommentForm()
+#     context = {
+#         'post': post,
+#         'comments': comments,
+#         'form': form,
+#     }
+#     return render(request, 'ddokfarm/detail.html', context)
 
 # ✅ 게시글 수정
 @login_required

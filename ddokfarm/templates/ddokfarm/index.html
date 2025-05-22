@@ -1,35 +1,84 @@
 {% extends 'base.html' %}
+{% load humanize %}
 
-{% block head %}
-<style>
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-    justify-items: center;
-    padding-bottom: 4rem;
-  }
-
-  @media (min-width: 1024px) {
-    .product-grid {
-      padding-left: 2rem;
-      padding-right: 2rem;
-    }
-  }
-</style>
-{% endblock %}
 
 {% block body %}
-<!-- 검색/정렬 필터 UI -->
-{% include 'components/shared/_index_header_ui.html' %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <h2 class="text-2xl font-bold mb-6">덕팜 - 아이돌 굿즈 마켓</h2>
 
-<!-- 게시글 카드 그리드 -->
-<div class="max-w-7xl mx-auto px-4 py-6">
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-    {% for post in posts %}
-      {% include 'components/post/_post_card_ui.html' %}
-    {% endfor %}
+  <!-- 카테고리 필터 -->
+  <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
+    <a href="{% url 'ddokfarm:index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if not category %}
+                bg-green-500 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-green-100
+              {% endif %}">
+      전체
+    </a>
+
+    <a href="{% url 'ddokfarm:sell_index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if category == 'sell' %}
+                bg-green-500 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-green-100
+              {% endif %}">
+      판매 / 구매
+    </a>
+
+    <a href="{% url 'ddokfarm:rental_index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if category == 'rental' %}
+                bg-green-500 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-green-100
+              {% endif %}">
+      대여
+    </a>
+
+    <a href="{% url 'ddokfarm:split_index' %}"
+      class="px-3 py-1 rounded-full border
+              {% if category == 'split' %}
+                bg-green-500 text-white
+              {% else %}
+                bg-white text-gray-700 hover:bg-green-100
+              {% endif %}">
+      분철
+    </a>
   </div>
-</div>
 
+  <!-- 게시글 작성 버튼 -->
+  <div class="flex justify-end mb-6">
+    <a href="{% url 'ddokfarm:post_create' %}" 
+      class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow font-medium">
+      + 게시글 작성
+    </a>
+  </div>
+
+  {% if posts %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {% for post in posts %}
+        <a href="{% url 'ddokfarm:post_detail' post.category post.id %}">
+          <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-60 object-cover">
+
+            <div class="p-3">
+              <h3 class="text-sm font-semibold truncate">{{ post.title }}</h3>
+              <p class="text-xs text-gray-400">{{ post.created_at|date:"Y-m-d" }}</p>
+              
+              {% if post.price %}
+                <p class="text-sm font-semibold text-green-600 mt-1">{{ post.price|intcomma }}원</p>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500">게시글이 없습니다.</p>
+  {% endif %}
+</div>
 {% endblock %}
+

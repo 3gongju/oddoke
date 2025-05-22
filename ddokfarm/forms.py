@@ -5,21 +5,36 @@ class FarmSellPostForm(forms.ModelForm):
     class Meta:
         model = FarmSellPost
         fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to']
-
+        widgets = {
+            'condition': forms.RadioSelect(),
+            'shipping': forms.RadioSelect(),
+            'want_to': forms.RadioSelect(),
+        }
+        
 class FarmRentalPostForm(forms.ModelForm):
     class Meta:
         model = FarmRentalPost
         fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date']
+        widgets = {
+            'condition': forms.RadioSelect(),
+            'shipping': forms.RadioSelect(),
+            'want_to': forms.RadioSelect(),
+        }
 
 class FarmSplitPostForm(forms.ModelForm):
     class Meta:
         model = FarmSplitPost
         fields = ['title', 'content', 'image', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure']
+        widgets = {
+            'album': forms.RadioSelect(),
+            'opened': forms.RadioSelect(),
+            'failure': forms.RadioSelect(),
+        }
 
 class FarmCommentForm(forms.ModelForm):
     class Meta:
         model = FarmComment
-        fields = ['content']
+        fields = ['content', 'parent']
 
 
 # class DdokfarmPostForm(forms.ModelForm):

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse  # ← 안 쓰면 제거
+from django.http import JsonResponse
 from django.urls import reverse
 from operator import attrgetter
 from .models import DamComment
