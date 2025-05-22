@@ -40,10 +40,61 @@
     <!-- 게시물 내용 -->
     {% include 'components/_post_content_ui.html' with post=post %}
     
+    <!-- 좋아요 버튼 -->
+    <form id="like-form" class="inline-block" data-post-id="{{ post.id }}" data-category="{{ category }}">
+        {% csrf_token %}
+        <button type="button" id="like-btn"
+            class="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-100 transition"
+            data-liked="{{ is_liked|yesno:'true,false' }}">
+            {% if is_liked %}
+                ❤️ {{ post.like_users.count }}
+            {% else %}
+                🤍 {{ post.like_users.count }}
+            {% endif %}
+        </button>
+    </form>
+
     <!-- 댓글 작성 폼 -->
     {% include 'components/_comment_form_ui.html' with post=post comment_form=comment_form %}
     
     <!-- 댓글 목록 -->
     {% include 'components/_comment_list_ui.html' with comments=comments post=post %}
 </div>
+<script>
+    const likeForm = document.getElementById('like-form');
+    const likeBtn = document.getElementById('like-btn');
+    const postId = likeForm.dataset.postId;
+    const category = likeForm.dataset.category;
+    let liked = likeBtn.dataset.liked === "true";
+
+    likeBtn.addEventListener('click', function () {
+        fetch(`/ddokdam/${category}/${postId}/like/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            liked = data.liked;
+            likeBtn.dataset.liked = liked;
+            likeBtn.innerHTML = liked ? `❤️ ${data.like_count}` : `🤍 ${data.like_count}`;
+        });
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}

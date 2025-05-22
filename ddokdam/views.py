@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse  # ← 안 쓰면 제거
-from django.db.models import Count  # ← 안 쓰면 제거
 from django.urls import reverse
 from operator import attrgetter
 from .models import DamComment
@@ -47,11 +46,15 @@ def post_detail(request, category, post_id):
         comments = comments.select_related('user').prefetch_related('replies')
     comment_form = DamCommentForm()
 
+    is_liked = request.user.is_authenticated and post.like_users.filter(id=request.user.id).exists()
+
+
     context = {
         'post': post,
         'category': category,
         'comments': comments,
         'comment_form': comment_form,
+        'is_liked': is_liked,
     }
 
     return render(request, 'ddokdam/post_detail.html', context)
@@ -192,6 +195,7 @@ def comment_delete(request, category, post_id, comment_id):
 
 # 좋아요
 @login_required
+@require_POST
 def like_post(request, category, post_id):
     model = get_post_model(category)
     if not model:
