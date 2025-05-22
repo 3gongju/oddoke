@@ -4,15 +4,37 @@ from . import views
 app_name = 'ddokdam'
 
 urlpatterns = [
+    # 덕담 메인 페이지
     path('', views.index, name='index'),
-    path('category/<str:category>/', views.category_list, name='category_list'),
-    path('create/', views.create, name='create'),
-    path('post/<int:post_id>/', views.detail, name='detail'),  # ddokfarm의 detail과 구분하기 위해 'post'를 추가
-    path('<int:post_id>/update/', views.update, name='update'),
-    path('<int:post_id>/delete/', views.delete, name='delete'),
-    path('<int:post_id>/comments/create/', views.comment_create, name='comment_create'),
-    path('<int:post_id>/comments/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
-    path('<int:post_id>/like/', views.like, name='like'),
-    path('update/<int:post_id>/', views.update, name='update'),
-    path('<int:post_id>/', views.detail, name='detail'), 
+
+    # 게시글 작성
+    path('create/', views.post_create, name='post_create'),
+
+    # 게시글 상세보기
+    path('<str:category>/<int:post_id>/', views.post_detail, name='post_detail'),
+    
+    # 게시글 수정
+    path('<str:category>/<int:post_id>/edit/', views.post_edit, name='post_edit'),
+
+    # 게시글 삭제
+    path('<str:category>/<int:post_id>/delete/', views.post_delete, name='post_delete'),
+
+    # 댓글 작성
+    path('<str:category>/<int:post_id>/comments/create/', views.comment_create, name='comment_create'),
+
+    # 댓글 삭제
+    path('<str:category>/<int:post_id>/comments/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
+
+    # community
+    path('community/', views.community_index, name='community_index'),
+
+    # manner
+    path('manner/', views.manner_index, name='manner_index'),
+
+    # bdaycafe
+    path('bdaycafe/', views.bdaycafe_index, name='bdaycafe_index'),
+
+    # 좋아요
+    path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
+
 ]

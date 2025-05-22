@@ -21,7 +21,7 @@
             </div>
 
             {% if user == comment.user %}
-              <a href="{% url 'ddokdam:comment_delete' post_id=post.id comment_id=comment.id %}"
+              <a href="{% url 'ddokdam:comment_delete' category=category post_id=post.id comment_id=comment.id %}"
                  class="text-xs text-red-500 hover:underline"
                  onclick="return confirm('댓글을 삭제하시겠습니까?')">삭제</a>
             {% endif %}
@@ -37,7 +37,7 @@
 
           <!-- ✅ 대댓글 입력 폼 -->
           <div id="reply-form-{{ comment.id }}" class="hidden mt-2">
-            <form method="post" action="{% url 'ddokdam:comment_create' post.id %}">
+            <form method="post" action="{% url 'ddokdam:comment_create' category post.id %}">
               {% csrf_token %}
               <textarea name="content" placeholder="답글을 입력하세요" required
                         class="w-full text-sm border rounded p-2 mt-2"></textarea>
@@ -52,7 +52,15 @@
           <!-- ✅ 대댓글 출력 -->
           {% for reply in comment.replies.all %}
             <div class="ml-4 mt-2 border-l pl-4">
-              <p class="text-sm"><strong>{{ reply.user.username }}</strong> {{ reply.content }}</p>
+              <p class="text-sm">
+                <strong>{{ reply.user.username }}</strong> {{ reply.content }}
+
+                {% if user == reply.user %}
+                  <a href="{% url 'ddokdam:comment_delete' category=category post_id=post.id comment_id=reply.id %}"
+                     class="text-xs text-red-500 hover:underline ml-2"
+                     onclick="return confirm('댓글을 삭제하시겠습니까?')">삭제</a>
+                {% endif %}
+              </p>
               <p class="text-xs text-gray-500">{{ reply.created_at|date:"Y.m.d H:i" }}</p>
             </div>
           {% endfor %}

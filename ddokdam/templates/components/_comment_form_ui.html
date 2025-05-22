@@ -1,7 +1,7 @@
 <!-- ddokdam/templates/ddokdam/components/_comment_form_ui.html -->
 <div class="border-t pt-4 mb-4">
     <h3 class="text-lg font-semibold mb-3">댓글 작성</h3>
-    <form action="{% url 'ddokdam:comment_create' post_id=post.id %}" method="POST" class="space-y-3">
+    <form action="{% url 'ddokdam:comment_create' category post.id %}" method="POST" class="space-y-3">
         {% csrf_token %}
         <div>
             <textarea name="content" id="id_content" rows="2"
