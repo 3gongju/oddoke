@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="max-w-3xl mx-auto py-10">
+
+  <h2 class="text-2xl font-bold mb-6">덕담 작성하기</h2>
+
+  <!-- 카테고리 선택 버튼 -->
+  <div class="flex gap-4 mb-6">
+    <button type="button" class="category-btn px-4 py-2 rounded 
+      {% if category == 'sell' %}bg-green-500 text-white{% else %}bg-gray-100{% endif %}" 
+      data-category="sell">판매/구매</button>
+
+    <button type="button" class="category-btn px-4 py-2 rounded 
+      {% if category == 'rental' %}bg-green-500 text-white{% else %}bg-gray-100{% endif %}" 
+      data-category="rental">대여</button>
+
+    <button type="button" class="category-btn px-4 py-2 rounded 
+      {% if category == 'split' %}bg-green-500 text-white{% else %}bg-gray-100{% endif %}" 
+      data-category="split">분철팟</button>
+  </div>
+
+  <!-- 작성 폼 -->
+  <form method="post" enctype="multipart/form-data" id="create-form">
+    {% csrf_token %}
+    <input type="hidden" name="category" id="selected-category" value="{{ category|default:'sell' }}">
+
+    <div id="form-wrapper">
+      {{ form.as_p }}
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2">
+      <a href="{% url 'ddokfarm:index' %}?category={{ category }}" class="px-4 py-2 rounded border text-gray-700">취소</a>
+      <button type="submit" class="px-4 py-2 rounded bg-green-600 text-white">작성 완료</button>
+    </div>
+  </form>
+
+</div>
+
+<!-- JS: 버튼 클릭 시 폼 갱신 요청 -->
+<script>
+  const buttons = document.querySelectorAll('.category-btn');
+  const form = document.getElementById('create-form');
+  const categoryInput = document.getElementById('selected-category');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const category = btn.dataset.category;
+      categoryInput.value = category;
+      form.submit();  // 카테고리 변경 시 폼 새로 제출
+    });
+  });
+</script>
+{% endblock %}

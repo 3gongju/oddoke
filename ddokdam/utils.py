@@ -1,3 +1,4 @@
+from itertools import chain
 from django.http import Http404
 from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from .forms import DamCommunityPostForm, DamMannerPostForm, DamBdaycafePostForm
@@ -33,8 +34,6 @@ def get_post_comments(category, post):
 
 # 카테고리별 게시글 목록 반환 (전체일 경우 모두 병합)
 def get_post_queryset(category=None):
-    from itertools import chain
-
     model_map = {
         'community': (DamCommunityPost, 'community'),
         'manner': (DamMannerPost, 'manner'),

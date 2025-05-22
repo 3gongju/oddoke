@@ -14,7 +14,7 @@ class DamMannerPostForm(forms.ModelForm):
 class DamBdaycafePostForm(forms.ModelForm):
     class Meta:
         model = DamBdaycafePost
-        fields = ['title', 'content', 'image', 'cafe_name', 'cafe_location', 'start_date', 'end_date']
+        fields = ['title', 'content', 'image', 'cafe_name']
 
 
 # ✅ 댓글 작성 폼

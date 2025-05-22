@@ -25,6 +25,9 @@ urlpatterns = [
     # 댓글 삭제
     path('<str:category>/<int:post_id>/comments/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
 
+    # 좋아요
+    path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
+    
     # community
     path('community/', views.community_index, name='community_index'),
 
@@ -34,7 +37,5 @@ urlpatterns = [
     # bdaycafe
     path('bdaycafe/', views.bdaycafe_index, name='bdaycafe_index'),
 
-    # 좋아요
-    path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
 
 ]
