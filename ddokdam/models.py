@@ -8,7 +8,7 @@ class DamBasePost(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s_posts", blank=True)
+    like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
     # artist 모델과 연결 필요
 
     class Meta:

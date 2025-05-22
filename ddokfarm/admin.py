@@ -1,7 +1,9 @@
 from django.contrib import admin
-from .models import DdokfarmPost, DdokfarmComment
+from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 
 # Register your models here.
-admin.site.register(DdokfarmPost)
-admin.site.register(DdokfarmComment)
+admin.site.register(FarmSellPost)
+admin.site.register(FarmRentalPost)
+admin.site.register(FarmSplitPost)
+admin.site.register(FarmComment)
 

@@ -1,5 +1,26 @@
 from django import forms
-from .models import DdokfarmPost, DdokfarmComment
+from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
+
+class FarmSellPostForm(forms.ModelForm):
+    class Meta:
+        model = FarmSellPost
+        fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to']
+
+class FarmRentalPostForm(forms.ModelForm):
+    class Meta:
+        model = FarmRentalPost
+        fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date']
+
+class FarmSplitPostForm(forms.ModelForm):
+    class Meta:
+        model = FarmSplitPost
+        fields = ['title', 'content', 'image', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure']
+
+class FarmCommentForm(forms.ModelForm):
+    class Meta:
+        model = FarmComment
+        fields = ['content']
+
 
 # class DdokfarmPostForm(forms.ModelForm):
 #     class Meta:

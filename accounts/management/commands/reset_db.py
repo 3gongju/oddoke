@@ -8,7 +8,7 @@ from django.utils import timezone
 import os
 import shutil
 from accounts.models import User
-from ddokfarm.models import Category  # 카테고리만 유지
+# from ddokfarm.models import Category  # 카테고리만 유지
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from django.core.files.images import ImageFile
 import random
@@ -107,7 +107,7 @@ class Command(BaseCommand):
         self.create_default_users()
         
         # 카테고리 생성 (ddokfarm용 - 나중에 사용할 수 있음)
-        self.create_default_categories()
+        # self.create_default_categories()
         
         # 샘플 덕담 게시글 생성
         self.create_sample_ddokdam_posts()
@@ -166,18 +166,18 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS('기본 사용자 계정이 생성되었습니다.'))
     
-    def create_default_categories(self):
-        # 덕팜 카테고리 (나중에 사용할 수 있도록 유지)
-        categories = [
-            {'name': '중고거래', 'slug': 'junggogeorae'},
-            {'name': '응원봉 대여', 'slug': 'eungwonbongdaeyeo'},
-            {'name': '분철팟', 'slug': 'split'}
-        ]
+    # def create_default_categories(self):
+    #     # 덕팜 카테고리 (나중에 사용할 수 있도록 유지)
+    #     categories = [
+    #         {'name': '중고거래', 'slug': 'junggogeorae'},
+    #         {'name': '응원봉 대여', 'slug': 'eungwonbongdaeyeo'},
+    #         {'name': '분철팟', 'slug': 'split'}
+    #     ]
         
-        for cat_data in categories:
-            Category.objects.create(**cat_data)
+    #     for cat_data in categories:
+    #         Category.objects.create(**cat_data)
         
-        self.stdout.write(self.style.SUCCESS('기본 카테고리가 생성되었습니다.'))
+    #     self.stdout.write(self.style.SUCCESS('기본 카테고리가 생성되었습니다.'))
     
     def create_sample_ddokdam_posts(self):
         # 유저 가져오기
@@ -233,18 +233,18 @@ class Command(BaseCommand):
                 'content': "정국 생일 기념 카페가 오픈했습니다! 9월 1일부터 9월 10일까지 운영해요.\n굿즈도 다양하고 포토존도 잘 꾸며져 있어요.",
                 'user': fan_user,
                 'cafe_name': "정국이의 꿀잼 카페",
-                'cafe_location': "서울 강남구 테헤란로 123",
-                'start_date': timezone.now().date(),
-                'end_date': (timezone.now() + timedelta(days=10)).date()
+                # 'cafe_location': "서울 강남구 테헤란로 123",
+                # 'start_date': timezone.now().date(),
+                # 'end_date': (timezone.now() + timedelta(days=10)).date()
             },
             {
                 'title': "윈터 생일 팝업 스토어",
                 'content': "윈터 생일 기념 팝업 스토어입니다. 1월 1일부터 1월 15일까지 운영합니다.\n특별 포토카드 증정 이벤트도 있어요!",
                 'user': admin_user,
                 'cafe_name': "윈터 원더랜드",
-                'cafe_location': "서울 마포구 와우산로 111",
-                'start_date': timezone.now().date(),
-                'end_date': (timezone.now() + timedelta(days=15)).date()
+                # 'cafe_location': "서울 마포구 와우산로 111",
+                # 'start_date': timezone.now().date(),
+                # 'end_date': (timezone.now() + timedelta(days=15)).date()
             }
         ]
         
