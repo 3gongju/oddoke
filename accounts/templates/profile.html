@@ -3,26 +3,28 @@
 {% block body %}
     <div class="min-h-screen bg-gray-100 p-6">
         
-        <!-- Profile Section -->
-        <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6 flex items-center">
+        <!-- ✅ Profile Section (위) -->
+        <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6">
+        <div class="flex items-center">
             <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-                <img src="{{user_profile.profile_image.url}}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
+            <img src="{{user_profile.profile_image.url}}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
             </div>
             <div class="ml-4 flex-1">
-                <h2 class="text-lg font-semibold">{{user_profile.username}}</h2>
-                <p class="text-gray-600">{{user_profile.email}}</p>
+            <h2 class="text-lg font-semibold">{{user_profile.username}}</h2>
+            <p class="text-gray-600">{{user_profile.email}}</p>
+            <div class="flex space-x-6 mt-2 text-sm text-gray-600">
+                <button id="followerBtn" class="hover:underline">팔로워 {{ user_profile.followers.all|length }}</button>
+                <button id="followingBtn" class="hover:underline">팔로잉 {{ user_profile.followings.all|length }}</button>
             </div>
-            <div class="flex space-x-4">
-                <a href="#" class="bg-blue-500 text-white py-2 px-4 rounded-lg">팔로우 관리</a>
-                <a href="#" class="bg-blue-500 text-white py-2 px-4 rounded-lg">프로필 관리</a>
             </div>
         </div>
+        </div>
 
-        <!-- Buttons Section -->
-        <div class="container bg-white shadow mx-auto mb-6 flex space-x-4 justify-center bg-gray-100 p-4 rounded-lg">
-            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">베몬</div>
-            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">보넥도</div>
-            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">에스파</div>
+        <!-- ✅ Buttons Section (아래로 분리) -->
+        <div class="container mx-auto bg-white shadow mb-6 flex justify-center space-x-4 bg-gray-100 p-4 rounded-lg">
+        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">베몬</div>
+        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">보넥도</div>
+        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">에스파</div>
         </div>
 
         <!-- Tabs Section -->
@@ -106,4 +108,48 @@
             </div>
         </div>
     </div>
+
+<!-- 모달 배경 -->
+<div id="followModal" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50">
+    <div class="bg-white rounded-lg p-6 w-80 shadow-xl">
+        <h3 id="followModalTitle" class="text-lg font-bold mb-4">팔로워</h3>
+        <ul id="followModalList" class="space-y-3 text-sm">
+        <!-- JS로 목록 추가 -->
+        </ul>
+        <button onclick="closeFollowModal()" class="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">닫기</button>
+    </div>
+</div>
+
+<!-- ✅ JavaScript는 여기에 -->
+<script>
+  const followModal = document.getElementById("followModal");
+  const followModalTitle = document.getElementById("followModalTitle");
+  const followModalList = document.getElementById("followModalList");
+
+  document.getElementById("followerBtn").addEventListener("click", () => {
+    fetchFollowList("followers");
+  });
+
+  document.getElementById("followingBtn").addEventListener("click", () => {
+    fetchFollowList("followings");
+  });
+
+  function fetchFollowList(type) {
+    followModalTitle.textContent = type === "followers" ? "팔로워 목록" : "팔로잉 목록";
+    fetch(`/accounts/{{ user_profile.username }}/follow-list/?type=${type}`)
+      .then(response => response.json())
+      .then(data => {
+        followModalList.innerHTML = "";
+        data.users.forEach(user => {
+          followModalList.innerHTML += `<li>${user.username}</li>`;
+        });
+        followModal.classList.remove("hidden");
+      });
+  }
+
+  function closeFollowModal() {
+    followModal.classList.add("hidden");
+  }
+</script>
+
 {% endblock %}

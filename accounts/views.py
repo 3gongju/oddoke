@@ -79,3 +79,21 @@ def follow(request, username):
 #        you.followers.add(me)
         me.followings.add(you)
     return redirect('accounts:profile', username)
+
+
+from django.http import JsonResponse
+
+@login_required
+def follow_list(request, username):
+    user_profile = get_object_or_404(User, username=username)
+    type_ = request.GET.get('type')
+
+    if type_ == 'followers':
+        users = user_profile.followers.all()
+    elif type_ == 'followings':
+        users = user_profile.followings.all()
+    else:
+        return JsonResponse({'users': []})
+
+    user_data = [{'username': u.username} for u in users]
+    return JsonResponse({'users': user_data})
