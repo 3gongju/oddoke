@@ -7,8 +7,34 @@
   <script src="https://cdn.tailwindcss.com"></script>
   {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen">
 
+
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<!-- Navbar -->
+<nav class="bg-white shadow sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-16 items-center">
+      <!-- 로고 + 메뉴 -->
+      <div class="flex items-center space-x-4">
+        <a href="/" class="text-xl font-bold text-primary">어덕해</a>
+        <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
+        <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
+        <a href="#" class="hover:text-primary text-sm font-medium">덕생</a>
+      </div>
+
+      <!-- 로그인 상태별 버튼 -->
+      <div class="flex items-center space-x-2">
+        {% if request.user.is_authenticated %}
+          <span class="text-sm text-gray-700">👤 {{ request.user.username }}님</span>
+          <a href="{% url 'accounts:profile' user.username %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
+          <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
+        {% else %}
+          <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary">로그인</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
 <!-- ✅ 1. FAQ 버튼 -->
 <button id="faqButton" class="fixed bottom-6 right-6 bg-pink-500 text-white px-4 py-2 rounded-full shadow-lg z-50">
   문의하기
