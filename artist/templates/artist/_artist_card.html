@@ -1,0 +1,42 @@
+{% load static %}
+
+<div class="flex flex-col items-center space-y-1">
+    <form method="POST" action="{% url 'artist:toggle_favourite' artist.id %}" class="relative">
+        {% csrf_token %}
+        <button type="submit" class="focus:outline-none group relative">
+            <!-- 아티스트 로고 -->
+            <div class="relative w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full overflow-hidden shadow-lg
+        {% if request.user in artist.followers.all %}
+          border-[5px] sm:border-[6px]
+        {% else %}
+          border border-gray-300
+        {% endif %}" {% if request.user in artist.followers.all %} style="border-color: #ffa0c6;" {% endif %}>
+                <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            </div>
+
+            <!-- ♥ 플랫한 기본 하트 문자 + 배경 원형 -->
+            <div class="absolute bottom-0.5 right-0.5 z-50">
+                <div class="bg-white rounded-full w-7 h-7 flex items-center justify-center shadow">
+                    <span class="text-2xl font-bold leading-none select-none
+            {% if request.user in artist.followers.all %}
+              text-red-500
+            {% else %}
+              text-gray-400
+            {% endif %}">
+                        {% if request.user in artist.followers.all %}
+                        ♥
+                        {% else %}
+                        ♡
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </button>
+    </form>
+
+    <!-- 아티스트 이름 -->
+    <p class="text-xs sm:text-sm font-semibold text-gray-800 text-center mt-1">
+        {{ artist.display_name }}
+    </p>
+</div>
