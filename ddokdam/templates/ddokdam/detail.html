@@ -27,6 +27,9 @@
         </div>
     </div>
     
+    {% if post.image %}
+        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full object-cover rounded mb-4">
+    {% endif %}
     <!-- 게시물 내용 -->
     {% include 'components/_post_content_ui.html' with post=post %}
     
