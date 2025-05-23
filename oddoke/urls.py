@@ -1,32 +1,14 @@
-"""
-URL configuration for oddoke project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from oddoke import views  # ✅ oddoke/views.py
+from oddoke import views  # oddoke/views.py
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.main, name='home'),  # ✅ 메인페이지
-    # 이름 충돌이 있어 매개변수를 명시적으로 지정할수도
-    path('ddokfarm/', include('ddokfarm.urls')),
-    path('ddokdam/', include('ddokdam.urls')),
-    path('accounts/', include('accounts.urls')),
-    path('artist/', include('artist.urls')),
+    path('admin/', admin.site.urls),                   # 관리자 페이지
+    path('', views.main, name='home'),                 # 메인 페이지 (home.html)
+    path('artist/', include('artist.urls')),           # 아티스트 관련 (찜, 목록 등)
+    path('ddokfarm/', include('ddokfarm.urls')),       # 중고 굿즈 거래 기능
+    path('ddokdam/', include('ddokdam.urls')),         # 덕질 공유 & 예절샷
+    path('accounts/', include('accounts.urls')),       # 로그인/회원가입 등
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
