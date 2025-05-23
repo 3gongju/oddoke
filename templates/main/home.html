@@ -17,58 +17,37 @@
   </div>
 </section>
 
-
-<!-- ✅ 찜한 아티스트 캐러셀 -->
+<!-- ✅ 찜한 아티스트 캐러셀 (빈 로고로 5개까지 채우기) -->
 <section class="mt-12 relative">
   <div class="flex justify-between items-center px-6 mb-4 max-w-6xl mx-auto">
     <h3 class="text-lg font-bold text-gray-800">♥ 내가 찜한 덕</h3>
     <a href="/artist/" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
   </div>
 
-  <div class="relative max-w-6xl mx-auto flex items-center justify-center px-4">
-    <!-- 왼쪽 화살표 -->
-    <button onclick="moveSlide(-1)" class="absolute left-0 z-10 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 flex items-center justify-center -translate-x-1/2">
-      &#8592;
+  <div class="relative max-w-6xl mx-auto px-4">
+    <button onclick="moveArtistSlide(-1)" class="absolute left-0 z-10 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 flex items-center justify-center -translate-x-1/2 top-1/2 -translate-y-1/2">
+      ←
     </button>
 
-    <!-- 캐러셀 뷰포트 -->
-    <div class="overflow-hidden" style="width: calc((112px + 16px) * 6);">
-      <div id="carousel-inner" class="flex transition-transform duration-300 ease-in-out">
-        {% for artist in favourite_artists %}
-        <a href="/artist/" class="flex flex-col items-center w-[112px] mx-2 shrink-0">
-          <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-               class="w-24 h-24 object-contain aspect-square rounded-full shadow">
-          <p class="mt-1 text-xs sm:text-sm font-medium text-gray-700 text-center truncate w-full">
-            {{ artist.display_name }}
-          </p>
-        </a>
+    <div class="overflow-hidden flex justify-center" style="width: 100%;">
+      <div id="artist-carousel-inner"
+          class="flex transition-transform duration-300 ease-in-out justify-center"
+          style="min-width: calc((112px + 16px) * 5);">
+        {% for artist in padded_artists %}
+          <div class="flex flex-col items-center w-[112px] mx-2 shrink-0">
+            <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+                class="w-24 h-24 object-contain aspect-square rounded-full shadow" />
+            <p class="mt-1 text-xs sm:text-sm font-medium text-gray-700 text-center truncate w-full">
+              {{ artist.display_name }}
+            </p>
+          </div>
         {% endfor %}
       </div>
     </div>
 
-    <!-- 오른쪽 화살표 -->
-    <button onclick="moveSlide(1)" class="absolute right-0 z-10 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 flex items-center justify-center translate-x-1/2">
-      &#8594;
+    <button onclick="moveArtistSlide(1)" class="absolute right-0 z-10 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 flex items-center justify-center translate-x-1/2 top-1/2 -translate-y-1/2">
+      →
     </button>
-  </div>
-</section>
-
-<!-- ✅ 주요 서비스 -->
-<section class="mt-12 px-4 md:px-8 max-w-6xl mx-auto text-center">
-  <h2 class="text-xl font-bold mb-6">어덕한다고?</h2>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <a href="/ddokfarm/" class="p-6 bg-black rounded-lg shadow hover:bg-gray-900 text-white">
-      <p class="text-lg font-semibold">덕팜</p>
-      <p class="text-sm mt-1">굿즈 중고 거래, 대여, 분철</p>
-    </a>
-    <a href="/ddokdam/" class="p-6 bg-black rounded-lg shadow hover:bg-gray-900 text-white">
-      <p class="text-lg font-semibold">덕담</p>
-      <p class="text-sm mt-1">덕질템 자랑, 예절샷</p>
-    </a>
-    <a href="#" class="p-6 bg-black rounded-lg shadow hover:bg-gray-900 text-white">
-      <p class="text-lg font-semibold">덕생</p>
-      <p class="text-sm mt-1">생일카페, 지도 기반 정보</p>
-    </a>
   </div>
 </section>
 
@@ -102,47 +81,40 @@
   </div>
 </section>
 
-<!-- ✅ 캐러셀 스크립트: 아티스트 -->
-<script>
-  const inner = document.getElementById('carousel-inner');
-  const cards = inner.querySelectorAll('a');
-  let visibleCount = window.innerWidth < 768 ? 5 : 6;
-  const cardWidth = 112.5 + 15.5;
-
-  let currentIndex = 0;
-
-  function updateVisibleCount() {
-    visibleCount = window.innerWidth < 768 ? 5 : 6;
-    moveSlide(0);
-  }
-
-  function moveSlide(direction) {
-    const totalCards = cards.length;
-    const maxIndex = Math.ceil(totalCards / visibleCount) - 1;
-    currentIndex = Math.max(0, Math.min(currentIndex + direction, maxIndex));
-    const offset = currentIndex * visibleCount * cardWidth;
-    inner.style.transform = `translateX(-${offset}px)`;
-  }
-
-  window.addEventListener('resize', updateVisibleCount);
-  document.addEventListener('DOMContentLoaded', updateVisibleCount);
-</script>
-
 <!-- ✅ 캐러셀 스크립트: 배너 -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const slides = document.querySelectorAll("#bannerCarousel img");
     let current = 0;
-
     setInterval(() => {
       slides[current].classList.remove("opacity-100");
       slides[current].classList.add("opacity-0");
-
       current = (current + 1) % slides.length;
-
       slides[current].classList.remove("opacity-0");
       slides[current].classList.add("opacity-100");
-    }, 5000); // 5초마다 전환
+    }, 5000);
   });
 </script>
+
+<!-- ✅ 캐러셀 스크립트: 아티스트 -->
+<script>
+  const artistInner = document.getElementById('artist-carousel-inner');
+  const artistCards = artistInner.querySelectorAll('div');
+  const maxPerSlide = 5;
+  const cardWidth = 112 + 16;
+  let artistIndex = 0;
+
+  function moveArtistSlide(direction) {
+    const maxIndex = Math.ceil(artistCards.length / maxPerSlide) - 1;
+    artistIndex = Math.max(0, Math.min(artistIndex + direction, maxIndex));
+    const offset = artistIndex * maxPerSlide * cardWidth;
+    artistInner.style.transform = `translateX(-${offset}px)`;
+  }
+
+  window.addEventListener('resize', () => {
+    artistIndex = 0;
+    artistInner.style.transform = `translateX(0px)`;
+  });
+</script>
+
 {% endblock %}
