@@ -5,22 +5,32 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.db.models import Q
 
-# 아티스트 목록 + 검색 필터
+# 아티스트 목록 + 검색 필터 + 찜 여부 분리
 def index(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
+
+    # 전체 필터 조건
+    base_queryset = Artist.objects.all()
     if query:
-        artists = Artist.objects.filter(
+        base_queryset = base_queryset.filter(
             Q(display_name__icontains=query) |
             Q(korean_name__icontains=query) |
             Q(english_name__icontains=query) |
             Q(alias__icontains=query)
-        ).order_by('id')
+        )
+
+    # 찜한 아티스트와 그 외 아티스트 구분
+    if request.user.is_authenticated:
+        favourite_artists = base_queryset.filter(followers=request.user).order_by('id')
+        other_artists = base_queryset.exclude(followers=request.user).order_by('id')
     else:
-        artists = Artist.objects.all().order_by('id')
+        favourite_artists = []
+        other_artists = base_queryset.order_by('id')
 
     return render(request, 'artist/index.html', {
-        'artists': artists,
         'query': query,
+        'favourite_artists': favourite_artists,
+        'other_artists': other_artists,
     })
 
 # 찜 토글
