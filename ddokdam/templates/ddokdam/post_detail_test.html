@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block body %}
+<style>
+    html {
+        overflow-y: scroll;
+    }
+
+</style>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  {% include 'components/_header.html' %}
+    <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- 이미지 (2/3) -->
+            <div class="md:col-span-2 bg-gray-100 aspect-square rounded-lg flex items-center justify-center">
+                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-full w-full object-contain">
+            </div>
+
+            <!-- 글 영역 (1/3) -->
+            <div class="flex flex-col justify-start">
+                <!-- 제목 -->
+                <h2 class="text-lg font-bold mb-2">{{ post.title }}</h2>
+
+                <!-- 유저명 + 시간 -->
+                <div class="flex items-center text-sm text-gray-600 mb-2 space-x-2">
+                    <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-8 h-8 rounded-full object-cover" />
+                    <span class="font-semibold">{{ post.user.username }}</span>
+                    <span class="text-gray-500">· {{ post.created_at|naturaltime }}</span>
+                </div>
+
+                <!-- 구분선 -->
+                <hr class="border-gray-300">
+
+                <!-- 수정 / 삭제 버튼 - 로그인한 유저가 글쓴이일 때만 표시 -->
+                {% if request.user == post.user %}
+                    <div class="flex justify-end space-x-2 mt-2">
+                        <a href="{% url 'ddokdam:post_edit' category=category post_id=post.id %}"
+                        class="text-sm text-blue-600 hover:underline">수정</a>
+                        <a href="{% url 'ddokdam:post_delete' category=category post_id=post.id %}"
+                        class="text-sm text-red-600 hover:underline"
+                        onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a>
+                    </div>
+                {% endif %}
+
+                <!-- 본문 -->
+                <div class="text-sm text-gray-800 whitespace-pre-line mb-4">
+                    {{ post.content }}
+                </div>
+
+                <!-- 게시글 추가 정보 표 -->                  
+                <div class="mt-auto text-sm text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
+                    <table class="w-full text-sm">
+                        <tbody>
+                            {% if category == 'manner' %}
+                            <tr>
+                                <th class="text-left py-2 text-gray-700">예절템</th>
+                                <td class="text-right py-2 text-gray-800">{{ post.item|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-left py-2 text-gray-700">위치</th>
+                                <td class="text-right py-2 text-gray-800">{{ post.location|default:"-" }}</td>
+                            </tr>
+                            {% elif category == 'bdaycafe' %}
+                            <tr>
+                                <th class="text-left py-2 text-gray-700">카페 이름</th>
+                                <td class="text-right py-2 text-gray-800">{{ post.cafe_name|default:"-" }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 좋아요 & 댓글 수 -->
+        <div class="flex items-center space-x-4 text-sm my-4">
+            <!-- 하트 + 숫자 묶음 -->
+            <div class="flex items-center space-x-1">
+                <a href="javascript:void(0);" id="like-button" data-liked="{{ is_liked|yesno:'true,false' }}">
+                {% if is_liked %}
+                    ❤️
+                {% else %}
+                    🤍
+                {% endif %}
+                </a>
+                <span id="like-count">{{ post.like.count }}</span>
+            </div>
+
+            <!-- 댓글 아이콘 + 숫자 -->
+            <div class="flex items-center space-x-1">
+                <span>💬</span>
+                <span>{{ comments.count }}</span>
+            </div>
+        </div>
+        <hr>
+
+        <!-- 댓글 목록 -->
+        <div class="space-y-3 mb-4">
+            {% for comment in comments %}
+                <div class="text-sm mt-4">
+                    <div class="flex items-center space-x-2">
+                        <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-8 h-8 rounded-full object-cover" />
+                        <span class="font-semibold">{{ comment.user.username }}</span>
+                    </div>
+                    <p class="text-gray-700">{{ comment.content }}</p>
+                </div>
+            {% empty %}
+                <p class="text-sm text-gray-400 mt-4">등록된 댓글이 없습니다.</p>
+            {% endfor %}
+        </div>
+
+        <!-- 댓글 작성 폼 -->
+        <form method="POST" action="{% url 'ddokdam:comment_create' category=category post_id=post.id %}" class="flex items-center space-x-2">
+            {% csrf_token %}
+            <input type="text" name="content" placeholder="댓글을 작성해주세요..." required
+                    class="flex-grow border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none">
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">등록</button>
+        </form>
+    </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const likeButton = document.getElementById('like-button');
+    const likeCount = document.getElementById('like-count');
+
+    likeButton.addEventListener('click', function () {
+      const url = "{% url 'ddokdam:like_post' category=category post_id=post.id %}";
+
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        likeButton.dataset.liked = data.liked;
+        likeButton.textContent = data.liked ? '❤️' : '🤍';
+        likeCount.textContent = data.like_count;
+      });
+    });
+  });
+</script>
+{% endblock %}

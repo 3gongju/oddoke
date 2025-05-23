@@ -57,7 +57,7 @@ def post_detail(request, category, post_id):
         'is_liked': is_liked,
     }
 
-    return render(request, 'ddokdam/post_detail.html', context)
+    return render(request, 'ddokdam/post_detail_test.html', context)
 
 
 # 게시글 작성
