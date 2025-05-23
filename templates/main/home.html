@@ -3,13 +3,20 @@
 {% block header %}{% endblock %}
 
 {% block body %}
-<!-- ✅ 배너 -->
-<section class="w-full h-64 bg-yellow-100 flex items-center justify-center text-center">
-  <div>
-    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800">어떻게 덕질해? 어덕해!</h1>
-    <p class="text-lg text-gray-600 mt-2">중고 굿즈 거래부터 대여, 생일카페까지</p>
+<!-- ✅ 자동 캐러셀 배너 영역 -->
+<section class="w-full bg-white py-6">
+  <div class="max-w-screen-xl mx-auto h-[220px] overflow-hidden">
+    <div id="bannerCarousel" class="w-full h-full relative">
+      {% for path in banner_images %}
+        <img src="{% static path %}"
+             class="absolute top-0 left-0 w-full h-full object-cover 
+             transition-opacity duration-1000 
+             {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}" />
+      {% endfor %}
+    </div>
   </div>
 </section>
+
 
 <!-- ✅ 찜한 아티스트 캐러셀 -->
 <section class="mt-12 relative">
@@ -48,59 +55,59 @@
 
 <!-- ✅ 주요 서비스 -->
 <section class="mt-12 px-4 md:px-8 max-w-6xl mx-auto text-center">
-  <h2 class="text-xl font-bold mb-6">주요 서비스</h2>
+  <h2 class="text-xl font-bold mb-6">어덕한다고?</h2>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <a href="/ddokfarm/" class="p-6 bg-blue-100 rounded-lg shadow hover:bg-blue-200">
+    <a href="/ddokfarm/" class="p-6 bg-black rounded-lg shadow hover:bg-gray-900 text-white">
       <p class="text-lg font-semibold">덕팜</p>
-      <p class="text-sm text-gray-600 mt-1">굿즈 중고 거래, 대여, 분철</p>
+      <p class="text-sm mt-1">굿즈 중고 거래, 대여, 분철</p>
     </a>
-    <a href="/ddokdam/" class="p-6 bg-pink-100 rounded-lg shadow hover:bg-pink-200">
+    <a href="/ddokdam/" class="p-6 bg-black rounded-lg shadow hover:bg-gray-900 text-white">
       <p class="text-lg font-semibold">덕담</p>
-      <p class="text-sm text-gray-600 mt-1">덕질템 자랑, 예절샷</p>
+      <p class="text-sm mt-1">덕질템 자랑, 예절샷</p>
     </a>
-    <a href="#" class="p-6 bg-green-100 rounded-lg shadow hover:bg-green-200">
+    <a href="#" class="p-6 bg-black rounded-lg shadow hover:bg-gray-900 text-white">
       <p class="text-lg font-semibold">덕생</p>
-      <p class="text-sm text-gray-600 mt-1">생일카페, 지도 기반 정보</p>
+      <p class="text-sm mt-1">생일카페, 지도 기반 정보</p>
     </a>
   </div>
 </section>
 
-<!-- ✅ 실시간 인기 굿즈 -->
+<!-- ✅ 실시간 인기 만두 -->
 <section class="mt-16 px-4 md:px-8 max-w-6xl mx-auto">
   <div class="flex items-center justify-between mb-6">
-    <h3 class="text-xl font-bold">실시간 인기 굿즈</h3>
+    <h3 class="text-xl font-bold">실시간 인기 만두</h3>
     <a href="/ddokfarm/" class="text-sm text-blue-600 hover:underline">전체보기 →</a>
   </div>
   <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
     <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'sample/lightstick.png' %}" alt="응원봉" class="h-32 mx-auto" />
-      <p class="mt-2 font-semibold">NCT 공식 응원봉</p>
-      <p class="text-sm text-gray-500">KRW 35,000</p>
+      <img src="{% static 'image/mandoo1.jpg' %}" alt="만두 굿즈" class="h-32 mx-auto object-contain" />
+      <p class="mt-2 font-semibold">만두 키링</p>
+      <p class="text-sm text-gray-500">KRW 8,000</p>
     </div>
     <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'sample/photocard.png' %}" alt="포카" class="h-32 mx-auto" />
+      <img src="{% static 'image/mandoo1.jpg' %}" alt="포카" class="h-32 mx-auto" />
       <p class="mt-2 font-semibold">지민 포토카드</p>
       <p class="text-sm text-gray-500">KRW 12,000</p>
     </div>
     <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'sample/season.png' %}" alt="시즌그리팅" class="h-32 mx-auto" />
+      <img src="{% static 'image/mandoo1.jpg' %}" alt="시즌그리팅" class="h-32 mx-auto" />
       <p class="mt-2 font-semibold">SEVENTEEN 시즌그리팅</p>
       <p class="text-sm text-gray-500">KRW 25,000</p>
     </div>
     <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'sample/lightstick2.png' %}" alt="응원봉" class="h-32 mx-auto" />
+      <img src="{% static 'image/mandoo1.jpg' %}" alt="응원봉" class="h-32 mx-auto" />
       <p class="mt-2 font-semibold">ENHYPEN 응원봉</p>
       <p class="text-sm text-gray-500">KRW 40,000</p>
     </div>
   </div>
 </section>
 
-<!-- ✅ 캐러셀 JS -->
+<!-- ✅ 캐러셀 스크립트: 아티스트 -->
 <script>
   const inner = document.getElementById('carousel-inner');
   const cards = inner.querySelectorAll('a');
   let visibleCount = window.innerWidth < 768 ? 5 : 6;
-  const cardWidth = 112.3 + 15.5; // 112px + mx-2
+  const cardWidth = 112.5 + 15.5;
 
   let currentIndex = 0;
 
@@ -119,5 +126,23 @@
 
   window.addEventListener('resize', updateVisibleCount);
   document.addEventListener('DOMContentLoaded', updateVisibleCount);
+</script>
+
+<!-- ✅ 캐러셀 스크립트: 배너 -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const slides = document.querySelectorAll("#bannerCarousel img");
+    let current = 0;
+
+    setInterval(() => {
+      slides[current].classList.remove("opacity-100");
+      slides[current].classList.add("opacity-0");
+
+      current = (current + 1) % slides.length;
+
+      slides[current].classList.remove("opacity-0");
+      slides[current].classList.add("opacity-100");
+    }, 5000); // 5초마다 전환
+  });
 </script>
 {% endblock %}
