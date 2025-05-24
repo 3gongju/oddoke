@@ -39,21 +39,19 @@
           <div class="flex justify-center space-x-4 px-6 min-w-full">
             {% for artist in group %}
               <div class="flex flex-col items-center w-[112px] shrink-0">
-                {% if artist.id %}
-                  <a href="{% url 'artist:index' %}">
+                <a href="{% url 'artist:index' %}">
+                  {% if artist.id %}
                     <div class="w-24 h-24 rounded-full overflow-hidden shadow">
                       <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
                            class="w-full h-full object-cover" />
                     </div>
-                  </a>
-                {% else %}
-                      <div class="w-24 h-24 rounded-full overflow-hidden shadow bg-white flex items-center justify-center">
-
-                         <img src="{% static artist.logo %}" alt="빈 슬롯"
-                              class="w-[88px] h-[88px] object-contain opacity-100" />
-                       </div>
-
-                {% endif %}
+                  {% else %}
+                    <div class="w-24 h-24 rounded-full overflow-hidden shadow bg-white flex items-center justify-center">
+                      <img src="{% static artist.logo %}" alt="빈 슬롯"
+                           class="w-[88px] h-[88px] object-contain opacity-100" />
+                    </div>
+                  {% endif %}
+                </a>
                 <p class="mt-1 text-xs sm:text-sm font-medium text-gray-700 text-center truncate w-full">
                   {{ artist.display_name }}
                 </p>
