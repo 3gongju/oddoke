@@ -9,6 +9,8 @@ class FarmBasePost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
+    is_sold = models.BooleanField(default=False) # 판매 완료 여부
+
     # 아티스트 모델과 연결 필요
 
     class Meta:
@@ -34,7 +36,6 @@ class FarmMarketPost(FarmBasePost):
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='new') # 상태
     shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES, default='both')  # 배송방법
     location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
-    is_sold = models.BooleanField(default=False) # 판매 완료 여부
 
     class Meta:
         abstract = True
@@ -47,6 +48,10 @@ class FarmSellPost(FarmMarketPost):
     ]
 
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES, default='new')
+    
+    @property
+    def category_type(self):
+        return 'sell'
 
 class FarmRentalPost(FarmMarketPost):
     WANTTO_CHOICES = [
@@ -57,6 +62,10 @@ class FarmRentalPost(FarmMarketPost):
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES, default='new')
     start_date = models.DateField()
     end_date = models.DateField()
+    
+    @property
+    def category_type(self):
+        return 'rental'
 
 
 
@@ -85,6 +94,10 @@ class FarmSplitPost(FarmBasePost):
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES, default='failure')
     # 멤버별 가격 설정 필드 연결 필요
 
+    @property
+    def category_type(self):
+        return 'split'
+        
 # 대댓글 기능 수정 
 class FarmComment(models.Model):
     content = models.CharField(max_length=200)

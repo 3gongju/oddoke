@@ -23,10 +23,5 @@ class DamCommentForm(forms.ModelForm):
         model = DamComment
         fields = ['content', 'parent']  # ✅ parent 추가
         widgets = {
-            'parent': forms.HiddenInput(),
-            'content': forms.Textarea(attrs={
-                'rows': '2',
-                'placeholder': '댓글을 입력하세요...',
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md',
-            })
+            'parent': forms.HiddenInput()
         }

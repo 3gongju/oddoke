@@ -1,0 +1,31 @@
+<!-- mainpage (home.html) 에서 최신글 보여주기 위해 반복되는 내용을 여기에 분리해서 작성 -->
+ <!-- 카드 디자인 공통 템플릿. 덕팜/덕담 모든 섹션에서 재사용. posts, category, app_label을 받아 카드 반복 렌더링 -->
+
+<!-- heading, icon, posts 변수를 넘겨 받아 카드 형식으로 출력 -->
+{# templates/main/components/_post_cards.html #}
+<!-- ✅ 카테고리별 카드 반복 출력 컴포넌트 -->
+<section class="mb-12">
+  <h3 class="text-xl font-semibold mb-4">{{ icon }} {{ heading }}</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    {% if posts %}
+      {% for post in posts %}
+        <a
+          href="{% if post.category in 'sell rental split' %}
+                    {% url 'ddokfarm:post_detail' category=post.category post_id=post.id %}
+                {% else %}
+                    {% url 'ddokdam:post_detail' category=post.category post_id=post.id %}
+                {% endif %}"
+          class="block border rounded shadow-sm p-4 hover:bg-gray-50"
+        >
+          {% if post.image %}
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-32 w-full object-cover rounded mb-2" />
+          {% endif %}
+          <h4 class="font-semibold text-gray-800 truncate">{{ post.title }}</h4>
+          <p class="text-sm text-gray-500">{{ post.created_at|date:"Y년 n월 j일" }}</p>
+        </a>
+      {% endfor %}
+    {% else %}
+      <p class="text-gray-400 col-span-3">비어있습니다. 첫 게시물을 작성하세요.</p>
+    {% endif %}
+  </div>
+</section>

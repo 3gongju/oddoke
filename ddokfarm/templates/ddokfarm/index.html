@@ -4,8 +4,7 @@
 
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <h2 class="text-2xl font-bold mb-6">덕팜 - 아이돌 굿즈 마켓</h2>
-
+  {% include 'components/_header.html' %}
   <!-- 카테고리 필터 -->
   <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
     <a href="{% url 'ddokfarm:index' %}"
@@ -62,14 +61,25 @@
       {% for post in posts %}
         <a href="{% url 'ddokfarm:post_detail' post.category post.id %}">
           <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-60 object-cover">
 
+            <!-- 이미지 영역: relative 설정 -->
+            <div class="relative w-full h-60">
+              <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover">
+
+              {% if post.is_sold %}
+              <div class="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
+                <span class="text-white text-sm font-semibold">거래 완료</span>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- 텍스트 영역 -->
             <div class="p-3">
               <h3 class="text-sm font-semibold truncate">{{ post.title }}</h3>
               <p class="text-xs text-gray-400">{{ post.created_at|date:"Y-m-d" }}</p>
-              
+
               {% if post.price %}
-                <p class="text-sm font-semibold text-green-600 mt-1">{{ post.price|intcomma }}원</p>
+              <p class="text-sm font-semibold text-green-600 mt-1">{{ post.price|intcomma }}원</p>
               {% endif %}
             </div>
           </div>
