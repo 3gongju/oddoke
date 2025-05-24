@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -5,8 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Oddoke</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!--  커스텀 스크롤 제거용 CSS 연결 -->
+<link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
+
   {% block head %}{% endblock %}
 </head>
+
+
 
 
 <body class="bg-gray-50 text-gray-900 min-h-screen">
@@ -35,6 +42,7 @@
     </div>
   </div>
 </nav>
+<!-- cs -->
 <!-- ✅ 1. FAQ 버튼 -->
 <button id="faqButton" class="fixed bottom-6 right-6 bg-pink-500 text-white px-4 py-2 rounded-full shadow-lg z-50">
   문의하기
@@ -107,6 +115,10 @@
 
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}
+
+<!-- ✅ 모든 페이지에 적용되는 하단 여유 공간 -->
+<div class="h-48"></div>
+
 
 <!-- ✅ 좋아요 하트 비동기 처리 -->
 <script>
