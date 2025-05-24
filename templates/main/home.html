@@ -1,145 +1,156 @@
+{# templates/main/home.html #}
 {% extends 'base.html' %}
 {% load static %}
 
 {% block body %}
 
-<!-- ✅ 배너 -->
-<section class="w-full bg-white py-6">
-  <div class="max-w-screen-xl mx-auto h-[220px] overflow-hidden">
-    <div id="bannerCarousel" class="w-full h-full relative">
-      {% for path in banner_images %}
-        <img src="{% static path %}"
-             class="absolute top-0 left-0 w-full h-full object-cover 
-             transition-opacity duration-1000 
-             {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}" />
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
-<!-- ✅ 찜한 아티스트 캐러셀 -->
-<section class="mt-12 relative">
-  <div class="flex justify-between items-center px-6 mb-4 max-w-6xl mx-auto">
-    <h3 class="text-lg font-bold text-red-500">♥ 내가 찜한 덕</h3>
-    <a href="{% url 'artist:index' %}" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
-  </div>
-
-  <div class="relative max-w-6xl mx-auto px-4">
-    <button onclick="moveArtistSlide(-1)" class="absolute left-2 z-10 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 flex items-center justify-center top-1/2 -translate-y-1/2">←</button>
-
-    <div class="overflow-hidden">
-      <div id="artist-carousel-wrapper" class="flex transition-transform duration-300 ease-in-out w-full">
-        {% for group in grouped_artists %}
-          <div class="flex justify-center space-x-4 px-6 min-w-full">
-            {% for artist in group %}
-              <div class="flex flex-col items-center w-[112px] shrink-0">
-                <a href="{% url 'artist:index' %}">
-                  {% if artist.id %}
-                    <div class="w-24 h-24 rounded-full overflow-hidden shadow">
-                      <img src="{% static artist.logo %}" alt="{{ artist.display_name }}" class="w-full h-full object-cover" />
-                    </div>
-                  {% else %}
-                    <div class="w-24 h-24 rounded-full overflow-hidden shadow bg-white flex items-center justify-center">
-                      <img src="{% static artist.logo %}" alt="빈 슬롯" class="w-[88px] h-[88px] object-contain" />
-                    </div>
-                  {% endif %}
-                </a>
-                <p class="mt-1 text-xs sm:text-sm font-medium text-gray-700 text-center truncate w-full">
-                  {{ artist.display_name }}
-                </p>
-              </div>
-            {% endfor %}
-          </div>
+  <!-- 배너 -->
+  <section class="w-full bg-white py-6">
+    <div class="max-w-screen-xl mx-auto h-[220px] overflow-hidden">
+      <div id="bannerCarousel" class="w-full h-full relative">
+        {% for path in banner_images %}
+          <img src="{% static path %}"
+               class="absolute top-0 left-0 w-full h-full object-cover
+                      transition-opacity duration-1000
+                      {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}" />
         {% endfor %}
       </div>
     </div>
+  </section>
 
-    <button onclick="moveArtistSlide(1)" class="absolute right-2 z-10 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 flex items-center justify-center top-1/2 -translate-y-1/2">→</button>
-  </div>
-</section>
-
-<!-- ✅ 덕질 카테고리 네비게이션 -->
-<section class="mt-28 mb-20 max-w-6xl mx-auto px-4">
-  <h2 class="text-center text-xl font-bold mb-10">어덕한다고?</h2>
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-    <a href="{% url 'ddokfarm:index' %}" class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
-      <h3 class="text-lg font-bold mb-2">덕팜</h3>
-      <p class="text-sm opacity-80">굿즈 중고 거래 · 대여 · 분철</p>
-    </a>
-    <a href="{% url 'ddokdam:index' %}" class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
-      <h3 class="text-lg font-bold mb-2">덕담</h3>
-      <p class="text-sm opacity-80">덕질팁 · 자랑 · 예절샷</p>
-    </a>
-    <a href="#" class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
-      <h3 class="text-lg font-bold mb-2">덕생</h3>
-      <p class="text-sm opacity-80">생일카페 지도 · 기념 정보</p>
-    </a>
-  </div>
-</section>
-
-<!-- ✅ 실시간 인기 만두 -->
-<section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">
-  <div class="flex items-center justify-between mb-6">
-    <h3 class="text-xl font-bold">실시간 인기 만두</h3>
-    <a href="/ddokfarm/" class="text-sm text-blue-600 hover:underline">전체보기 →</a>
-  </div>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-    <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'image/mandoo1.jpg' %}" alt="만두 굿즈" class="h-32 mx-auto object-contain" />
-      <p class="mt-2 font-semibold">만두 키링</p>
-      <p class="text-sm text-gray-500">KRW 8,000</p>
+  <!-- 찜한 아티스트 섹션 -->
+  <section class="mt-12">
+    <div class="flex justify-between items-center px-6 mb-4 max-w-6xl mx-auto">
+      <h3 class="text-lg font-bold text-red-500">♥ 내가 찜한 덕</h3>
+      <a href="{% url 'artist:index' %}" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
     </div>
-    <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'image/mandoo1.jpg' %}" alt="포카" class="h-32 mx-auto" />
-      <p class="mt-2 font-semibold">지민 포토카드</p>
-      <p class="text-sm text-gray-500">KRW 12,000</p>
+    <div class="max-w-6xl mx-auto px-4">
+      {% if raw_favs %}
+        <!-- 1명 이상: 페이징 캐러셀 -->
+        <div class="relative">
+          <!-- 왼쪽 화살표 -->
+          <button onclick="moveArtistSlide(-1)"
+                  class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 z-10">
+            ←
+          </button>
+          <div class="overflow-hidden">
+            <div id="artist-carousel-wrapper"
+                 class="flex transition-transform duration-300 ease-in-out w-full">
+              {% for group in grouped_artists %}
+                <div class="flex justify-center space-x-4 px-6 min-w-full">
+                  {% for artist in group %}
+                    <div class="flex flex-col items-center w-[112px] shrink-0">
+                      <a href="{% url 'artist:index' %}">
+                        <div class="w-24 h-24 rounded-full overflow-hidden shadow">
+                          <img src="{% static artist.logo %}"
+                               alt="{{ artist.display_name }}"
+                               class="w-full h-full object-cover" />
+                        </div>
+                      </a>
+                      <p class="mt-1 text-xs sm:text-sm font-medium text-gray-700 text-center truncate w-full">
+                        {{ artist.display_name }}
+                      </p>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          <!-- 오른쪽 화살표 -->
+          <button onclick="moveArtistSlide(1)"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border rounded-full shadow hover:bg-gray-100 z-10">
+            →
+          </button>
+        </div>
+      {% else %}
+        <!-- 0명: 기본 로고 + 안내 문구 -->
+        <div class="flex flex-col items-center py-12 space-y-4">
+          <img src="{% static 'image/ddok_black.png' %}"
+               alt="찜한 아티스트 없음"
+               class="w-24 h-24 object-contain" />
+          <p class="text-gray-600 text-center">
+            아직 찜한 덕이 없어요!<br>
+            <a href="{% url 'artist:index' %}"
+               class="text-blue-600 hover:underline">
+              찜덕하러 가기~
+            </a>
+          </p>
+        </div>
+      {% endif %}
     </div>
-    <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'image/mandoo1.jpg' %}" alt="시즌그리팅" class="h-32 mx-auto" />
-      <p class="mt-2 font-semibold">SEVENTEEN 시즌그리팅</p>
-      <p class="text-sm text-gray-500">KRW 25,000</p>
+  </section>
+
+  <!-- 덕질 카테고리 네비 -->
+  <section class="mt-28 mb-20 max-w-6xl mx-auto px-4">
+    <h2 class="text-center text-xl font-bold mb-10">어덕한다고?</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <a href="{% url 'ddokfarm:index' %}"
+         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
+        <h3 class="text-lg font-bold mb-2">덕팜</h3>
+        <p class="text-sm opacity-80">굿즈 중고 거래 · 대여 · 분철</p>
+      </a>
+      <a href="{% url 'ddokdam:index' %}"
+         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
+        <h3 class="text-lg font-bold mb-2">덕담</h3>
+        <p class="text-sm opacity-80">덕질팁 · 자랑 · 예절샷</p>
+      </a>
+      <a href="#"
+         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
+        <h3 class="text-lg font-bold mb-2">덕생</h3>
+        <p class="text-sm opacity-80">생일카페 지도 · 기념 정보</p>
+      </a>
     </div>
-    <div class="border rounded shadow-sm p-3 text-center">
-      <img src="{% static 'image/mandoo1.jpg' %}" alt="응원봉" class="h-32 mx-auto" />
-      <p class="mt-2 font-semibold">ENHYPEN 응원봉</p>
-      <p class="text-sm text-gray-500">KRW 40,000</p>
+  </section>
+
+  <!-- 실시간 인기 만두 -->
+  <section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-bold">실시간 인기 만두</h3>
+      <a href="/ddokfarm/" class="text-sm text-blue-600 hover:underline">전체보기 →</a>
     </div>
-  </div>
-</section>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {% for post in latest_sell_posts %}
+        <div class="border rounded shadow-sm p-3 text-center">
+          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-32 mx-auto object-contain" />
+          <p class="mt-2 font-semibold">{{ post.title }}</p>
+          <p class="text-sm text-gray-500">{{ post.price|default:"KRW 0" }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
 
-<!-- ✅ 덕팜 + 덕담 전체 게시글 블록 -->
-<section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">
-  {% include 'main/components/all_sections.html' %}
-</section>
+  <!-- 덕팜 + 덕담 전체 게시글 -->
+  <section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">
+    {% include 'main/components/all_sections.html' %}
+  </section>
 
-<!-- ✅ 슬라이드 스크립트 -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const slides = document.querySelectorAll("#bannerCarousel img");
-    let current = 0;
-    setInterval(() => {
-      slides[current].classList.remove("opacity-100");
-      slides[current].classList.add("opacity-0");
-      current = (current + 1) % slides.length;
-      slides[current].classList.remove("opacity-0");
-      slides[current].classList.add("opacity-100");
-    }, 5000);
-  });
+  <!-- 스크립트 -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // 배너 슬라이드
+      const slides = document.querySelectorAll("#bannerCarousel img");
+      let idx = 0;
+      setInterval(() => {
+        slides[idx].classList.replace("opacity-100","opacity-0");
+        idx = (idx + 1) % slides.length;
+        slides[idx].classList.replace("opacity-0","opacity-100");
+      }, 5000);
+    });
 
-  const wrapper = document.getElementById('artist-carousel-wrapper');
-  const totalGroups = wrapper.children.length;
-  let groupIndex = 0;
+    // 찜한 아티스트 페이징
+    const wrapper     = document.getElementById('artist-carousel-wrapper');
+    const totalGroups = wrapper?.children.length || 0;
+    let groupIndex    = 0;
 
-  function moveArtistSlide(direction) {
-    groupIndex = Math.max(0, Math.min(groupIndex + direction, totalGroups - 1));
-    const offset = groupIndex * 100;
-    wrapper.style.transform = `translateX(-${offset}%)`;
-  }
+    function moveArtistSlide(direction) {
+      groupIndex = Math.max(0, Math.min(groupIndex + direction, totalGroups - 1));
+      wrapper.style.transform = `translateX(-${groupIndex * 100}%)`;
+    }
 
-  window.addEventListener('resize', () => {
-    groupIndex = 0;
-    wrapper.style.transform = 'translateX(0%)';
-  });
-</script>
+    window.addEventListener('resize', () => {
+      groupIndex = 0;
+      wrapper.style.transform = 'translateX(0%)';
+    });
+  </script>
 
 {% endblock %}
