@@ -47,6 +47,10 @@ class FarmSellPost(FarmMarketPost):
     ]
 
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES, default='new')
+    
+    @property
+    def category_type(self):
+        return 'sell'
 
 class FarmRentalPost(FarmMarketPost):
     WANTTO_CHOICES = [
@@ -57,6 +61,10 @@ class FarmRentalPost(FarmMarketPost):
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES, default='new')
     start_date = models.DateField()
     end_date = models.DateField()
+    
+    @property
+    def category_type(self):
+        return 'rental'
 
 
 
@@ -85,6 +93,10 @@ class FarmSplitPost(FarmBasePost):
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES, default='failure')
     # 멤버별 가격 설정 필드 연결 필요
 
+    @property
+    def category_type(self):
+        return 'split'
+        
 # 대댓글 기능 수정 
 class FarmComment(models.Model):
     content = models.CharField(max_length=200)
