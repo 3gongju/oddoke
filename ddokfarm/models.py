@@ -9,6 +9,8 @@ class FarmBasePost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
+    is_sold = models.BooleanField(default=False) # 판매 완료 여부
+
     # 아티스트 모델과 연결 필요
 
     class Meta:
@@ -34,7 +36,6 @@ class FarmMarketPost(FarmBasePost):
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='new') # 상태
     shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES, default='both')  # 배송방법
     location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
-    is_sold = models.BooleanField(default=False) # 판매 완료 여부
 
     class Meta:
         abstract = True
