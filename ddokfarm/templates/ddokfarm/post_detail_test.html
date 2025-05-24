@@ -47,13 +47,48 @@
 
                 <!-- 유저명 + 시간 -->
                 <div class="flex items-center text-sm mb-2 space-x-2">
-                    <a href="{% url 'accounts:profile' post.user.username %}">
+                    <!-- <a href="{% url 'accounts:profile' post.user.username %}">
                         <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-8 h-8 rounded-full object-cover" />
                     </a>
                     <a href="{% url 'accounts:profile' post.user.username %}" class="font-semibold">
                         {{ post.user.username }}
                     </a>
-                    <span class="text-gray-400 text-xs">· {{ post.created_at|naturaltime }}</span>
+
+                    <span class="text-gray-400 text-xs">· {{ post.created_at|naturaltime }}</span> -->
+                    <!-- 프로필 이미지 -->
+                    <a href="{% url 'accounts:profile' post.user.username %}">
+                        <img src="{{ post.user.profile_image.url }}"
+                            alt="{{ post.user.username }}"
+                            class="w-8 h-8 rounded-full object-cover" />
+                    </a>
+
+                    <!-- 닉네임 + 팔로우 버튼 묶음 -->
+                    <div class="flex items-center">
+                        <a href="{% url 'accounts:profile' post.user.username %}" class="font-semibold">
+                            {{ post.user.username }}
+                        </a>
+
+                        {% if user.is_authenticated and user != post.user %}
+                            <form method="POST" action="{% url 'accounts:follow' post.user.username %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="ml-2 px-3 py-1 rounded border text-sm font-medium
+                                            {% if is_following %}
+                                                bg-white text-gray-700 border-gray-300
+                                            {% else %}
+                                                bg-blue-500 text-white border-blue-500
+                                            {% endif %}">
+                                {% if is_following %}팔로잉{% else %}+ 팔로우{% endif %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 작성일시 -->
+            <span class="text-gray-400 text-xs">
+            · {{ post.created_at|naturaltime }}
+            </span>
                 </div>
 
                 <!-- 구분선 -->

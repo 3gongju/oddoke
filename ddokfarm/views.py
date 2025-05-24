@@ -54,6 +54,10 @@ def post_detail(request, category, post_id):
 
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
 
+    # ✅ 팔로우 여부 판단
+    is_following = False
+    if request.user.is_authenticated and request.user != post.user:
+        is_following = post.user.followers.filter(id=request.user.id).exists()
 
     context = {
         'post': post,
@@ -61,6 +65,7 @@ def post_detail(request, category, post_id):
         'comments': comments,
         'comment_form': comment_form,
         'is_liked': is_liked,
+        'is_following': is_following,
     }
 
     return render(request, 'ddokfarm/post_detail_test.html', context)
