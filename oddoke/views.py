@@ -1,3 +1,4 @@
+# grouped_artists, 배너 이미지, 그리고 6개 카테고리별 게시글 리스트를 전달
 # main/views.py
 from itertools import zip_longest
 from django.shortcuts import render
