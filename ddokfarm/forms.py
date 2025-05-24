@@ -1,14 +1,42 @@
 from django import forms
 from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 
+common_widgets = {
+    'title': forms.TextInput(attrs={
+        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+        'placeholder': '제목을 입력하세요',
+    }),
+    'content': forms.Textarea(attrs={
+        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+        'placeholder': '내용을 입력하세요',
+        'rows': 6,
+    }),
+    'image': forms.ClearableFileInput(attrs={
+        'class': 'block w-full text-sm text-gray-500 mt-1',
+    }),
+}
+
+market_widgets = {
+    'price': forms.NumberInput(attrs={
+        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+        'placeholder': '가격을 입력하세요',
+    }),
+    'location': forms.TextInput(attrs={
+        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+        'placeholder': '거래 장소를 입력하세요',
+    }),
+    'condition': forms.RadioSelect(attrs={'class': 'space-y-2'}),
+    'shipping': forms.RadioSelect(attrs={'class': 'space-y-2'}),
+    'want_to': forms.RadioSelect(attrs={'class': 'space-y-2'}),
+}
+
 class FarmSellPostForm(forms.ModelForm):
     class Meta:
         model = FarmSellPost
         fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to']
         widgets = {
-            'condition': forms.RadioSelect(),
-            'shipping': forms.RadioSelect(),
-            'want_to': forms.RadioSelect(),
+            **common_widgets,
+            **market_widgets,
         }
         
 class FarmRentalPostForm(forms.ModelForm):
@@ -16,9 +44,16 @@ class FarmRentalPostForm(forms.ModelForm):
         model = FarmRentalPost
         fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date']
         widgets = {
-            'condition': forms.RadioSelect(),
-            'shipping': forms.RadioSelect(),
-            'want_to': forms.RadioSelect(),
+            **common_widgets,
+            **market_widgets,
+            'start_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400'
+            }),
         }
 
 class FarmSplitPostForm(forms.ModelForm):
@@ -26,9 +61,22 @@ class FarmSplitPostForm(forms.ModelForm):
         model = FarmSplitPost
         fields = ['title', 'content', 'image', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure']
         widgets = {
-            'album': forms.RadioSelect(),
-            'opened': forms.RadioSelect(),
-            'failure': forms.RadioSelect(),
+            **common_widgets,
+            'shipping_fee': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+                'placeholder': '배송비를 입력하세요',
+            }),
+            'where': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+                'placeholder': '분배 장소를 입력하세요',
+            }),
+            'when': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400',
+                'placeholder': '분배 일시를 입력하세요',
+            }),
+            'album': forms.RadioSelect(attrs={'class': 'space-y-2'}),
+            'opened': forms.RadioSelect(attrs={'class': 'space-y-2'}),
+            'failure': forms.RadioSelect(attrs={'class': 'space-y-2'}),
         }
 
 class FarmCommentForm(forms.ModelForm):
