@@ -5,6 +5,11 @@ from django.contrib.auth import logout as auth_logout
 from .models import User
 from django.contrib.auth.decorators import login_required
 
+from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
+from artist.models import Artist
+from itertools import chain
+from django.utils.timezone import now
 
 
 # Create your views here.
@@ -58,10 +63,35 @@ def logout(request):
 def profile(request, username):
     user_profile = User.objects.get(username=username)
 
-    context = {
+    # ✅ 덕담 게시글 모두 가져오기
+    community_posts = DamCommunityPost.objects.filter(user=user_profile)
+    manner_posts = DamMannerPost.objects.filter(user=user_profile)
+    bdaycafe_posts = DamBdaycafePost.objects.filter(user=user_profile)
+    ddokdam_posts = sorted(
+        chain(community_posts, manner_posts, bdaycafe_posts),
+        key=lambda post: post.created_at,
+        reverse=True
+    )
+
+    # ✅ 덕팜 게시글 모두 가져오기 
+    sell_posts = FarmSellPost.objects.filter(user=user_profile)
+    rental_posts = FarmRentalPost.objects.filter(user=user_profile)
+    split_posts = FarmSplitPost.objects.filter(user=user_profile)
+    ddokfarm_posts = sorted(
+        chain(sell_posts, rental_posts, split_posts),
+        key=lambda post: post.created_at,
+        reverse=True
+    )
+
+    # ✅ 찜한 아티스트 가져오기
+    favourite_artists = Artist.objects.filter(followers=user_profile)
+
+    return render(request, 'profile.html', {
         'user_profile': user_profile,
-    }
-    return render(request, 'profile.html', context)
+        'ddokdam_posts': ddokdam_posts,  # 덕담
+        'ddokfarm_posts': ddokfarm_posts,  # 덕팜 
+        'favourite_artists': favourite_artists # 아티스트
+    })
 
 @login_required
 def follow(request, username):
