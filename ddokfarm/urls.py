@@ -28,6 +28,9 @@ urlpatterns = [
     # 좋아요(찜하기)
     path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
 
+    # 판매 완료 표시
+    path('<str:category>/<int:post_id>/mark-as-sold/', views.mark_as_sold, name='mark_as_sold'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 

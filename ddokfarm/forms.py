@@ -34,7 +34,10 @@ class FarmSplitPostForm(forms.ModelForm):
 class FarmCommentForm(forms.ModelForm):
     class Meta:
         model = FarmComment
-        fields = ['content']
+        fields = ['content', 'parent']  # ✅ parent 추가
+        widgets = {
+            'parent': forms.HiddenInput()
+        }
 
 
 # class DdokfarmPostForm(forms.ModelForm):
