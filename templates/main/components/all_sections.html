@@ -1,25 +1,25 @@
-<!-- 덕팜 + 덕담 통합 블록 -->
+{% load static %}
 
-<!-- ✅ 덕팜 블록 -->
+<!-- ✅ 덕팜 전체 박스 -->
 <section class="bg-gray-100 mt-20 px-4 py-10 rounded-xl max-w-6xl mx-auto">
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold">🛍️ 덕팜 게시글</h2>
     <a href="{% url 'ddokfarm:index' %}" class="text-sm text-blue-600 hover:underline">전체 보기 →</a>
   </div>
 
-  {% include 'main/components/_post_cards.html' with posts=latest_sell_posts heading='판매글' icon='📣' %}
-  {% include 'main/components/_post_cards.html' with posts=latest_rental_posts heading='대여글' icon='📥' %}
-  {% include 'main/components/_post_cards.html' with posts=latest_split_posts heading='분철글' icon='📦' %}
+  {% include 'main/components/_post_cards.html' with posts=latest_sell_posts heading='판매글' icon='📣' app_label='ddokfarm' %}
+  {% include 'main/components/_post_cards.html' with posts=latest_rental_posts heading='대여글' icon='📥' app_label='ddokfarm' %}
+  {% include 'main/components/_post_cards.html' with posts=latest_split_posts heading='분철글' icon='📦' app_label='ddokfarm' %}
 </section>
 
-<!-- ✅ 덕담 블록 -->
+<!-- ✅ 덕담 전체 박스 -->
 <section class="bg-gray-100 mt-20 px-4 py-10 rounded-xl max-w-6xl mx-auto">
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold">💌 덕담 게시글</h2>
     <a href="{% url 'ddokdam:index' %}" class="text-sm text-blue-600 hover:underline">전체 보기 →</a>
   </div>
 
-  {% include 'main/components/_post_cards.html' with posts=latest_community_posts heading='커뮤니티' icon='💬' %}
-  {% include 'main/components/_post_cards.html' with posts=latest_manner_posts heading='예절샷' icon='🤝' %}
-  {% include 'main/components/_post_cards.html' with posts=latest_bdaycafe_posts heading='생일카페' icon='🎂' %}
+  {% include 'main/components/_post_cards.html' with posts=latest_community_posts heading='커뮤니티' icon='💬' app_label='ddokdam' %}
+  {% include 'main/components/_post_cards.html' with posts=latest_manner_posts heading='예절샷' icon='🤝' app_label='ddokdam' %}
+  {% include 'main/components/_post_cards.html' with posts=latest_bdaycafe_posts heading='생일카페' icon='🎂' app_label='ddokdam' %}
 </section>
