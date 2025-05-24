@@ -13,8 +13,9 @@
     <p class="text-xs sm:text-sm mt-1 text-gray-600">🔍 내 덕을 찾아보세요</p>
   </div>
 
-  <!-- 검색창 -->
-  <form method="get" action="{% url 'artist:index' %}" class="max-w-md mx-auto mb-10 flex relative z-10">
+<!-- 검색창 + 드롭다운 wrapper -->
+<div class="relative z-30 mb-24">  <!-- 여기에 충분한 margin-bottom을 줘야 아래 카드와 겹치지 않음 -->
+  <form method="get" action="{% url 'artist:index' %}" class="max-w-md mx-auto flex relative">
     <input id="artist-search" type="text" name="q" value="{{ query }}"
       placeholder="최애 덕을 알려주세요"
       class="flex-1 px-3 py-2 border border-black rounded-l-md text-sm focus:outline-none focus:ring-1 focus:ring-black text-center"
@@ -23,19 +24,22 @@
       class="px-4 py-2 border border-black border-l-0 bg-[#feec64] rounded-r-md text-sm font-medium hover:bg-yellow-100 transition">
       검색
     </button>
+
+    <!-- 드롭다운 -->
     <ul id="autocomplete-list"
-      class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg z-20 hidden max-h-60 overflow-y-auto text-left mt-1">
+      class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg z-30 hidden max-h-48 overflow-y-auto text-left mt-1">
     </ul>
   </form>
+</div>
 
   <!-- 찜한 덕 -->
   {% if favourite_artists %}
-  <h2 class="text-base font-bold mb-4 border-b border-gray-300 pb-1 text-red-500">♥ 내가 찜한 덕</h2>
-  <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-y-10 gap-x-4 place-items-center mb-10">
-    {% for artist in favourite_artists %}
-      {% include 'artist/_artist_card.html' with artist=artist %}
-    {% endfor %}
-  </div>
+    <h2 class="text-base font-bold mb-4 border-b border-gray-300 pb-1 text-red-500">♥ 내가 찜한 덕</h2>
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-y-10 gap-x-4 place-items-center mb-10">
+      {% for artist in favourite_artists %}
+        {% include 'artist/_artist_card.html' with artist=artist %}
+      {% endfor %}
+    </div>
   {% endif %}
 
   <!-- 전체 덕 -->
