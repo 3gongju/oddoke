@@ -18,6 +18,28 @@
     </div>
   </section>
 
+    <!-- 덕질 카테고리 네비 -->
+  <section class="mt-28 mb-20 max-w-6xl mx-auto px-4">
+    <h2 class="text-center text-xl font-bold mb-10">어덕한다고?</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <a href="{% url 'ddokfarm:index' %}"
+         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
+        <h3 class="text-lg font-bold mb-2">덕팜</h3>
+        <p class="text-sm opacity-80">굿즈 중고 거래 · 대여 · 분철</p>
+      </a>
+      <a href="{% url 'ddokdam:index' %}"
+         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
+        <h3 class="text-lg font-bold mb-2">덕담</h3>
+        <p class="text-sm opacity-80">덕질팁 · 자랑 · 예절샷</p>
+      </a>
+      <a href="#"
+         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
+        <h3 class="text-lg font-bold mb-2">덕생</h3>
+        <p class="text-sm opacity-80">생일카페 지도 · 기념 정보</p>
+      </a>
+    </div>
+  </section>
+
   <!-- 찜한 아티스트 섹션 -->
   <section class="mt-12">
     <div class="flex justify-between items-center px-6 mb-4 max-w-6xl mx-auto">
@@ -80,27 +102,28 @@
     </div>
   </section>
 
-  <!-- 덕질 카테고리 네비 -->
-  <section class="mt-28 mb-20 max-w-6xl mx-auto px-4">
-    <h2 class="text-center text-xl font-bold mb-10">어덕한다고?</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <a href="{% url 'ddokfarm:index' %}"
-         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
-        <h3 class="text-lg font-bold mb-2">덕팜</h3>
-        <p class="text-sm opacity-80">굿즈 중고 거래 · 대여 · 분철</p>
-      </a>
-      <a href="{% url 'ddokdam:index' %}"
-         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
-        <h3 class="text-lg font-bold mb-2">덕담</h3>
-        <p class="text-sm opacity-80">덕질팁 · 자랑 · 예절샷</p>
-      </a>
-      <a href="#"
-         class="bg-black text-white rounded-2xl px-6 py-8 text-center hover:brightness-110 transition">
-        <h3 class="text-lg font-bold mb-2">덕생</h3>
-        <p class="text-sm opacity-80">생일카페 지도 · 기념 정보</p>
-      </a>
-    </div>
-  </section>
+<!-- ✅ 이번 주 생일 멤버 -->
+<section class="mt-16 mb-20 max-w-6xl mx-auto px-4">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-bold text-pink-500">🎂 이번 주 생일 멤버</h3>
+    <a href="{% url 'bday_calendar:calendar' %}" class="text-sm text-blue-600 hover:underline">전체 보기 →</a>
+  </div>
+  
+  {% if weekly_birthdays %}
+    <ul class="bg-pink-50 p-4 rounded-lg shadow space-y-2 text-sm">
+      {% for item in weekly_birthdays %}
+        <li class="flex items-center justify-between border-b last:border-0 pb-1">
+          <span>{{ item.member_name }} <span class="text-gray-500">({{ item.artist_name }})</span></span>
+          <span class="text-gray-600">{{ item.bday }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-sm text-gray-500">이번 주에는 생일인 멤버가 없습니다.</p>
+  {% endif %}
+</section>
+
+
 
   <!-- 실시간 인기 만두 -->
   <section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">

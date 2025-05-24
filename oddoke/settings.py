@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'import_export',
     'artist',
     'django.contrib.humanize',
+    'bday_calendar',
 ]
 
 MIDDLEWARE = [
