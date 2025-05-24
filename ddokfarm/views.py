@@ -63,7 +63,7 @@ def post_detail(request, category, post_id):
         'is_liked': is_liked,
     }
 
-    return render(request, 'ddokfarm/post_detail.html', context)
+    return render(request, 'ddokfarm/post_detail_test.html', context)
 
 # 게시글 작성
 @login_required
@@ -219,6 +219,31 @@ def like_post(request, category, post_id):
         liked = True
 
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
+
+# 판매 완료 표시
+@login_required
+@require_POST
+def mark_as_sold(request, category, post_id):
+    model = get_post_model(category)
+    if not model:
+        raise Http404("존재하지 않는 카테고리입니다.")
+
+    post = get_object_or_404(model, id=post_id)
+
+    # 작성자 권한 확인
+    if request.user != post.user:
+        context = {
+            'title': '접근 권한 없음',
+            'message': '판매 완료 처리를 할 권한이 없습니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
+
+    # 판매 상태 토글
+    post.is_sold = not post.is_sold
+    post.save()
+
+    return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
 # # ✅ 게시글 목록 (카테고리, 정렬 포함)
 # def index(request):
