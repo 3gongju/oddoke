@@ -3,7 +3,7 @@
 
 {% block body %}
 
-<!-- ✅ 자동 캐러셀 배너 -->
+<!-- ✅ 자동 배너 캐러셀 -->
 <section class="w-full bg-white py-6">
   <div class="max-w-screen-xl mx-auto h-[220px] overflow-hidden">
     <div id="bannerCarousel" class="w-full h-full relative">
@@ -39,12 +39,21 @@
           <div class="flex justify-center space-x-4 px-6 min-w-full">
             {% for artist in group %}
               <div class="flex flex-col items-center w-[112px] shrink-0">
-                <a href="{% url 'artist:index' %}">
-                  <div class="w-24 h-24 rounded-full overflow-hidden shadow">
-                    <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-                         class="w-full h-full object-cover" />
-                  </div>
-                </a>
+                {% if artist.id %}
+                  <a href="{% url 'artist:index' %}">
+                    <div class="w-24 h-24 rounded-full overflow-hidden shadow">
+                      <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+                           class="w-full h-full object-cover" />
+                    </div>
+                  </a>
+                {% else %}
+                      <div class="w-24 h-24 rounded-full overflow-hidden shadow bg-white flex items-center justify-center">
+
+                         <img src="{% static artist.logo %}" alt="빈 슬롯"
+                              class="w-[88px] h-[88px] object-contain opacity-100" />
+                       </div>
+
+                {% endif %}
                 <p class="mt-1 text-xs sm:text-sm font-medium text-gray-700 text-center truncate w-full">
                   {{ artist.display_name }}
                 </p>
