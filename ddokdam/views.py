@@ -41,9 +41,8 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    comments = get_post_comments(category, post)
-    if comments.exists():
-        comments = comments.select_related('user').prefetch_related('replies')
+    comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+
     comment_form = DamCommentForm()
 
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
@@ -57,7 +56,7 @@ def post_detail(request, category, post_id):
         'is_liked': is_liked,
     }
 
-    return render(request, 'ddokdam/post_detail.html', context)
+    return render(request, 'ddokdam/post_detail_test.html', context)
 
 
 # 게시글 작성
