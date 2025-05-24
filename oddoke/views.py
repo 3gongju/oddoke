@@ -8,17 +8,23 @@ def group_artists(artists, group_size=5):
 
 def main(request):
     favourite_artists = []
-
     if request.user.is_authenticated:
         favourite_artists = list(Artist.objects.filter(followers=request.user))
 
-    # ✅ 5개 미만이면 dummy 아티스트 추가 (id=None 포함)
+    # ✅ 전체 아티스트 목록 가져오기
+    all_artists = Artist.objects.all()
+
+    # ✅ 찜한 아티스트 제외한 나머지
+    favourite_ids = [artist.id for artist in favourite_artists if hasattr(artist, 'id')]
+    other_artists = all_artists.exclude(id__in=favourite_ids)
+
+    # ✅ 5개 미만이면 dummy 추가
     max_count = 5
     if len(favourite_artists) < max_count:
         empty_slots = max_count - len(favourite_artists)
         for _ in range(empty_slots):
             favourite_artists.append({
-                'id': None,  # 반드시 필요
+                'id': None,
                 'logo': 'image/ddok_black.png',
                 'display_name': ''
             })
@@ -36,4 +42,5 @@ def main(request):
     return render(request, 'main/home.html', {
         'banner_images': banner_images,
         'grouped_artists': grouped_artists,
+        'other_artists': other_artists,  # ✅ 여기를 꼭 추가!
     })
