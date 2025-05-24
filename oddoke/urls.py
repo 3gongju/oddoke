@@ -10,5 +10,6 @@ urlpatterns = [
     path('artist/', include('artist.urls')),           # 아티스트 관련 (찜, 목록 등)
     path('ddokfarm/', include('ddokfarm.urls')),       # 중고 굿즈 거래 기능
     path('ddokdam/', include('ddokdam.urls')),         # 덕질 공유 & 예절샷
-    path('accounts/', include('accounts.urls')),       # 로그인/회원가입 등
+    path('accounts/', include('accounts.urls')),      # 로그인/회원가입 등
+    path('calendar/', include('bday_calendar.urls', namespace='bday_calendar')), # 생일 달력
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

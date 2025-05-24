@@ -1,14 +1,39 @@
-# grouped_artists, 배너 이미지, 그리고 6개 카테고리별 게시글 리스트를 전달
-# main/views.py
 from itertools import zip_longest
+from datetime import datetime, timedelta
 from django.shortcuts import render
-from artist.models import Artist
+from artist.models import Artist, Member
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 
+
 def group_artists(artists, group_size=5):
-    # None 은 제외하고 실제 artist 인스턴스만 모아 5개씩 그룹으로 반환
     return [list(filter(None, group)) for group in zip_longest(*[iter(artists)] * group_size)]
+
+
+def get_weekly_birthdays():
+    today = datetime.today()
+    start_of_week = today - timedelta(days=today.weekday())  # 이번 주 월요일
+    end_of_week = start_of_week + timedelta(days=6)          # 이번 주 일요일
+
+    def to_date(mmdd_str):
+        try:
+            return datetime.strptime(f"{today.year}-{mmdd_str}", "%Y-%m-%d")
+        except:
+            return None
+
+    members = Member.objects.exclude(member_bday__isnull=True).exclude(member_bday__exact='')
+    birthday_list = []
+    for m in members:
+        bday_date = to_date(m.member_bday)
+        if bday_date and start_of_week <= bday_date <= end_of_week:
+            artist_names = ', '.join([a.display_name for a in m.artist_name.all()])
+            birthday_list.append({
+                'member_name': m.member_name,
+                'artist_name': artist_names,
+                'bday': bday_date.strftime('%m월 %d일'),
+            })
+    return birthday_list
+
 
 def main(request):
     # 1) 찜한 아티스트 원본 목록
@@ -52,7 +77,9 @@ def main(request):
     for post in latest_bdaycafe_posts:
         post.category = 'bdaycafe'
 
-    # 6) 렌더링
+    # 6) 주간 생일 멤버
+    weekly_birthdays = get_weekly_birthdays()
+
     return render(request, 'main/home.html', {
         'raw_favs': raw_favs,
         'grouped_artists': grouped_artists,
@@ -65,4 +92,6 @@ def main(request):
         'latest_community_posts': latest_community_posts,
         'latest_manner_posts': latest_manner_posts,
         'latest_bdaycafe_posts': latest_bdaycafe_posts,
+
+        'weekly_birthdays': weekly_birthdays,  # ✅ 추가된 컨텍스트
     })
