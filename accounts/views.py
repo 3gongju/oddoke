@@ -4,13 +4,12 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
-
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from artist.models import Artist, Member
 from itertools import chain
 from django.utils.timezone import now
-
+import json
 
 # Create your views here.
 def signup(request):
@@ -154,15 +153,25 @@ def review_home(request, username):
         'form': form,
         'reviews': reviews
     })
+
 def mypage(request):
-    user_profile = request.user  # 현재 로그인된 유저
+    user_profile = request.user
     favorite_artists = Artist.objects.filter(followers=user_profile)
     favorite_members = Member.objects.filter(followers=user_profile)
-    related_artists = Artist.objects.filter(members__in=favorite_members).distinct()
-  
+    followed_artist_ids = list(favorite_artists.values_list('id', flat=True))
+
+    # 각 멤버별로 유저가 팔로우한 아티스트 중 하나를 연결
+    for member in favorite_members:
+        matched = next(
+            (artist for artist in member.artist_name.all() if artist.id in followed_artist_ids),
+            None
+        )
+        member.matched_artist = matched  # 템플릿에서 접근할 수 있음
+
     context = {
         'user_profile': user_profile,
         'favorite_artists': favorite_artists,
-        'favorite_members': favorite_members
+        'favorite_members': favorite_members,
+        'followed_artist_ids': json.dumps(followed_artist_ids),
     }
     return render(request, 'mypage.html', context)
