@@ -2,36 +2,32 @@
  <!-- 카드 디자인 공통 템플릿. 덕팜/덕담 모든 섹션에서 재사용. posts, category, app_label을 받아 카드 반복 렌더링 -->
 
 <!-- heading, icon, posts 변수를 넘겨 받아 카드 형식으로 출력 -->
-{% load static %}
-
+{# templates/main/components/_post_cards.html #}
 <section class="mb-12">
   <h3 class="text-xl font-semibold mb-4">{{ icon }} {{ heading }}</h3>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
     {% for post in posts %}
-      {% if app_label == 'ddokdam' %}
-        {% url 'ddokdam:post_detail' category=post.category post_id=post.id as detail_url %}
-      {% elif app_label == 'ddokfarm' %}
-        {% url 'ddokfarm:detail' post.id as detail_url %}
+      {% if app_label == 'ddokfarm' %}
+        <a href="{% url 'ddokfarm:post_detail' category=post.category post_id=post.id %}"
+           class="block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition">
+      {% elif app_label == 'ddokdam' %}
+        <a href="{% url 'ddokdam:post_detail' category=post.category post_id=post.id %}"
+           class="block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition">
       {% else %}
-        {% url 'artist:index' as detail_url %}
+        <a href="#" class="block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition">
       {% endif %}
 
-      <a href="{{ detail_url }}"
-         class="block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition">
         {% if post.image %}
           <div class="w-full h-48 overflow-hidden">
-            <img src="{{ post.image.url }}"
-                 alt="{{ post.title }}"
+            <img src="{{ post.image.url }}" alt="{{ post.title }}"
                  class="w-full h-full object-cover" />
           </div>
         {% endif %}
+
         <div class="p-4">
-          <h4 class="text-sm font-medium text-gray-800 mb-1 truncate">
-            {{ post.title }}
-          </h4>
-          <p class="text-xs text-gray-500">
-            {{ post.created_at|date:"Y.n.j A g:i" }}
-          </p>
+          <h4 class="text-sm font-medium text-gray-800 mb-1 truncate">{{ post.title }}</h4>
+          <p class="text-xs text-gray-500">{{ post.created_at|date:"Y년 n월 j일 A g:i" }}</p>
         </div>
       </a>
     {% endfor %}
