@@ -2,7 +2,7 @@
 
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  {% include 'components/_header.html' %}
+  {% include 'components/_dam_header.html' %}
 
   <!-- 카테고리 필터 -->
   <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
@@ -50,7 +50,7 @@
 
   <!-- 게시글 작성 버튼 -->
   <div class="flex justify-end mb-6">
-    <a href="{% url 'ddokdam:post_create' %}" 
+    <a href="{% url 'ddokdam:post_create' %}?category={{ category|default:'community' }}"
       class="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-full shadow font-medium">
       + 게시글 작성
     </a>

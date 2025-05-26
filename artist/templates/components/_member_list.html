@@ -1,0 +1,15 @@
+<ul class="divide-y">
+  {% for member in members %}
+    <li class="flex justify-between items-center py-2">
+      <span>{{ member.member_name }}</span>
+      <button class="follow-btn px-2 py-1 text-sm border rounded"
+              data-member-id="{{ member.id }}">
+        {% if user.is_authenticated and user in member.followers.all %}
+          💔 언팔로우
+        {% else %}
+          ❤️ 팔로우
+        {% endif %}
+      </button>
+    </li>
+  {% endfor %}
+</ul>

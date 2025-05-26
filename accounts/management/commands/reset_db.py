@@ -379,7 +379,7 @@ class Command(BaseCommand):
                 'opened': 'unopened',
                 'shipping_fee': 3000,
                 'where': '강남역 스타벅스',
-                'when': '발매일 당일 오후 3시',
+                'when': date.today(),
                 'failure': 'split',
             },
             {
@@ -390,7 +390,7 @@ class Command(BaseCommand):
                 'opened': 'opende',
                 'shipping_fee': 2500,
                 'where': '홍대 CGV 앞',
-                'when': '이번 주 토요일 저녁 7시',
+                'when': date.today(),
                 'failure': 'not_failure',
             }
         ]

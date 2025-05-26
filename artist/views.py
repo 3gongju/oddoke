@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Artist
+from .models import Artist, Member
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
@@ -58,3 +58,33 @@ def autocomplete(request):
         artists = []
 
     return JsonResponse({'results': list(artists)})
+
+# 1. 아티스트 멤버 리스트 Ajax로 렌더링
+def artist_members_ajax(request, artist_id):
+    artist = get_object_or_404(Artist, id=artist_id)
+    
+    # 디버깅용 출력
+    print(f"Artist: {artist.display_name}")
+    print(f"관련 멤버 수: {artist.members.count()}")
+
+    members = artist.members.all()
+    html = render_to_string('components/_member_list.html', {
+        'members': members,
+        'user': request.user,
+    })
+    return JsonResponse({'html': html})
+
+# 2. 멤버 팔로우/언팔로우 Ajax 처리
+@login_required
+def follow_member_ajax(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    user = request.user
+    followed = False
+
+    if user in member.followers.all():
+        member.followers.remove(user)
+    else:
+        member.followers.add(user)
+        followed = True
+
+    return JsonResponse({'followed': followed})

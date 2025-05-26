@@ -81,7 +81,7 @@ def profile(request, username):
         reverse=True
     )
     # ✅ 찜한 아티스트 가져오기
-    favourite_artists = Artist.objects.filter(followers=user_profile)
+    favorite_artists = Artist.objects.filter(followers=user_profile)
 
     # ✅ 팔로우 여부 판단
     is_following = False
@@ -92,7 +92,7 @@ def profile(request, username):
         'user_profile': user_profile,
         'ddokdam_posts': ddokdam_posts,  # 덕담
         'ddokfarm_posts': ddokfarm_posts,  # 덕팜 
-        'favourite_artists': favourite_artists, # 아티스트
+        'favorite_artists': favorite_artists, # 아티스트
         'is_following': is_following, # 팔로잉
     })
 
@@ -154,3 +154,13 @@ def review_home(request, username):
         'form': form,
         'reviews': reviews
     })
+def mypage(request):
+    user_profile = request.user  # 현재 로그인된 유저
+    favorite_artists = Artist.objects.filter(followers=user_profile)
+
+
+    context = {
+        'user_profile': user_profile,
+        'favorite_artists': favorite_artists
+    }
+    return render(request, 'mypage.html', context)

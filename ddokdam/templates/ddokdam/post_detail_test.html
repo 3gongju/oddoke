@@ -9,7 +9,7 @@
 
 </style>
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  {% include 'components/_header.html' %}
+  {% include 'components/_dam_header.html' %}
     <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- 이미지 (2/3) -->
@@ -54,29 +54,29 @@
 
                 <!-- 게시글 추가 정보 표 --> 
                 {% if category == 'manner' or category == 'bdaycafe' %}
-                <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <tbody>
-                                {% if category == 'manner' %}
-                                <tr class="">
-                                    <th class="text-left py-2 text-gray-700">예절템</th>
-                                    <td class="text-right py-2 text-gray-800">{{ post.item|default:"-" }}</td>
-                                </tr>
-                                <tr class="">
-                                    <th class="text-left py-2 text-gray-700">위치</th>
-                                    <td class="text-right py-2 text-gray-800">{{ post.location|default:"-" }}</td>
-                                </tr>
-                                {% elif category == 'bdaycafe' %}
-                                <tr class="">
-                                    <th class="text-left py-2 text-gray-700">카페 이름</th>
-                                    <td class="text-right py-2 text-gray-800">{{ post.cafe_name|default:"-" }}</td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
+                    <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <tbody>
+                                    {% if category == 'manner' %}
+                                    <tr class="">
+                                        <th class="text-left py-2 text-gray-700">예절템</th>
+                                        <td class="text-right py-2 text-gray-800">{{ post.item|default:"-" }}</td>
+                                    </tr>
+                                    <tr class="">
+                                        <th class="text-left py-2 text-gray-700">위치</th>
+                                        <td class="text-right py-2 text-gray-800">{{ post.location|default:"-" }}</td>
+                                    </tr>
+                                    {% elif category == 'bdaycafe' %}
+                                    <tr class="">
+                                        <th class="text-left py-2 text-gray-700">카페 이름</th>
+                                        <td class="text-right py-2 text-gray-800">{{ post.cafe_name|default:"-" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 {% endif %}                 
             </div>
         </div>
@@ -86,7 +86,7 @@
             <!-- 댓글 아이콘 + 숫자 -->
             <div class="flex items-center space-x-1">
                 <span>💬</span>
-                <span>{{ comments.count }}</span>
+                <span>{{ total_comment_count }}</span>
             </div>
 
             <!-- 하트 + 숫자 묶음 -->
@@ -159,9 +159,6 @@
                                 {% endif %}
                             </div>
                             <p class="text-gray-700 mt-1">{{ reply.content }}</p>
-
-                            <!-- 대댓글은 답글 버튼 제거됨 -->
-
                         </div>
                     {% endfor %}
                 </div>

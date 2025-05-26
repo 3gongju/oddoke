@@ -47,9 +47,10 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    comments = get_post_comments(category, post)
-    if comments.exists():
-        comments = comments.select_related('user').prefetch_related('replies')
+    comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+
+    total_comment_count = get_post_comments(category, post).count()
+
     comment_form = FarmCommentForm()
 
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
@@ -58,6 +59,7 @@ def post_detail(request, category, post_id):
         'post': post,
         'category': category,
         'comments': comments,
+        'total_comment_count': total_comment_count,
         'comment_form': comment_form,
         'is_liked': is_liked,
     }
@@ -82,7 +84,7 @@ def post_create(request):
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
     else:
         # GET 요청 시 기본 카테고리 선택 (예: 'sell')
-        category = request.GET.get('category', 'sell')
+        category = request.GET.get('category') or 'sell'
         form_class = get_post_form(category)
 
         if not form_class:
