@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="max-w-2xl mx-auto p-6 bg-white rounded shadow">
+  <h2 class="text-2xl font-bold mb-6">프로필 관리</h2>
+
+  <!-- ✅ 프로필 이미지 + 닉네임 -->
+  <div class="flex items-center space-x-4 mb-6">
+    <img src="{{ user_profile.profile_image.url }}" alt="프로필"
+         class="w-20 h-20 rounded-full object-cover border">
+    <div>
+      <p class="text-xl font-semibold">{{ user_profile.username }}</p>
+
+      <div class="mt-2 space-x-2">
+        <a href="{% url 'accounts:edit_profile_image' user_profile.username %}"
+           class="bg-red-400 text-white text-sm px-3 py-1 border rounded hover:bg-red-500">
+          이미지 변경
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 프로필 정보 수정 -->
+  <div class="space-y-4">
+    <!-- ✅ 기본 표시 영역 -->
+    <div id="username-display" class="flex justify-between items-center">
+      <div>
+        <p class="text-sm text-gray-500">프로필 이름</p>
+        <p class="font-medium" id="current-username">{{ user_profile.username }}</p>
+      </div>
+      <button id="edit-username-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+    </div>
+
+    <!-- ✅ 수정 input 영역 -->
+    <form method="POST" id="username-edit-form"
+          action="{% url 'accounts:edit_profile' user_profile.username %}"
+          style="display: none;">
+      {% csrf_token %}
+      <input type="text" id="new-username" name="username" value="{{ user.username }}"
+             class="border rounded p-1 w-full">
+      <p class="text-xs text-gray-500 mt-1">변경 후 30일이 지나야 다시 변경 가능하므로 신중히 변경해주세요.</p>
+      <div class="flex space-x-2 mt-2">
+        <button type="button" id="cancel-edit-btn"
+                class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
+        <button type="submit" id="save-username-btn"
+                class="bg-black text-white rounded px-3 py-1">저장</button>
+      </div>
+    </form>
+
+    <!-- ✅ 소개 -->
+    <div class="flex justify-between items-center">
+      <div>
+        <p class="text-sm text-gray-500">소개</p>
+        <p class="font-medium">
+          {% if user_profile.bio %}{{ user_profile.bio }}{% else %}안녕하세요!{% endif %}
+        </p>
+      </div>
+      <button class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ JS는 반드시 block body 안에 위치해야 작동 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const displayDiv = document.getElementById("username-display");
+    const form = document.getElementById("username-edit-form");
+    const editBtn = document.getElementById("edit-username-btn");
+    const cancelBtn = document.getElementById("cancel-edit-btn");
+
+    if (editBtn && cancelBtn && form && displayDiv) {
+      editBtn.addEventListener("click", function () {
+        displayDiv.style.display = "none";
+        form.style.display = "block";
+      });
+
+      cancelBtn.addEventListener("click", function () {
+        form.style.display = "none";
+        displayDiv.style.display = "flex";
+      });
+    } else {
+      console.warn("❗ Some elements not found in DOM");
+    }
+  });
+</script>
+{% endblock %}

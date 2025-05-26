@@ -1,9 +1,10 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, MannerReviewForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, MannerReviewForm, ProfileImageForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
@@ -164,3 +165,44 @@ def mypage(request):
         'favorite_artists': favorite_artists
     }
     return render(request, 'mypage.html', context)
+
+@login_required
+def edit_profile(request, username):
+    user_profile = get_object_or_404(User, username=username)
+
+    # POST 요청 처리 (프로필 이름 변경)
+    if request.method == "POST":
+        new_username = request.POST.get("username")
+        if new_username and new_username != request.user.username:
+            # 중복 유저네임 체크
+            if User.objects.filter(username=new_username).exists():
+                messages.error(request, "이미 존재하는 사용자 이름입니다.")
+            else:
+                request.user.username = new_username
+                request.user.save()
+                messages.success(request, "프로필 이름이 수정되었습니다.")
+                return redirect('accounts:edit_profile', username=request.user.username)
+
+    context = {
+        'user_profile': user_profile,
+    }
+    return render(request, 'accounts/edit_profile.html', context)
+
+@login_required
+def edit_profile_image(request, username):
+    user = get_object_or_404(User, username=username)
+    if request.user != user:
+        return redirect('accounts:profile', username=username)
+
+    if request.method == 'POST':
+        form = ProfileImageForm(request.POST, request.FILES, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('accounts:edit_profile', username=username)
+    else:
+        form = ProfileImageForm(instance=user)
+
+    return render(request, 'accounts/edit_profile_image.html', {
+        'form': form,
+        'user_profile': user,
+    })
