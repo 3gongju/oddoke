@@ -54,7 +54,6 @@ def post_detail(request, category, post_id):
 
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
 
-
     context = {
         'post': post,
         'category': category,
