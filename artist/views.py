@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.db.models import Q
+from django.template.loader import render_to_string
 
 # 아티스트 목록 + 검색 필터 + 찜 여부 분리
 def index(request):
