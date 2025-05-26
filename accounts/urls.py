@@ -17,4 +17,6 @@ urlpatterns = [
     # follow
     path('<username>/follow/', views.follow, name='follow'),
     path('<str:username>/follow-list/', views.follow_list, name='follow_list'),
+    # 리뷰 페이지
+    path('<username>/reviews/', views.review_home, name='review_home'),
 ]

@@ -1,5 +1,5 @@
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User
+from .models import User, MannerReview
 from django import forms
 
 class CustomUserCreationForm(UserCreationForm):
@@ -30,3 +30,34 @@ class CustomUserCreationForm(UserCreationForm):
 
 class CustomAuthenticationForm(AuthenticationForm):
     pass
+
+class MannerReviewForm(forms.ModelForm):
+    class Meta:
+        model = MannerReview
+        fields = ['rating', 'punctuality', 'description_match', 'response_speed', 'politeness', 'deal_again']
+        widgets = {
+            'rating': forms.RadioSelect(choices=MannerReview.RATING_CHOICES),
+            'punctuality': forms.RadioSelect(choices=[
+                ('빠름', '약속 시간보다 빨리 나옴'),
+                ('정확', '정확하게 지킴'),
+                ('늦음', '약속보다 늦음'),
+                ('무통보', '연락 없이 늦거나 안 나옴')
+            ]),
+            'description_match': forms.RadioSelect(choices=[
+                ('동일', '설명과 동일함'),
+                ('미세 차이', '미세한 차이가 있었음'),
+                ('많이 다름', '많이 달랐음')
+            ]),
+            'response_speed': forms.RadioSelect(choices=[
+                ('빠름', '빠르게 답장해줌'),
+                ('보통', '평균적이었음'),
+                ('느림', '느렸음'),
+                ('무응답', '거의 답장이 없었음')
+            ]),
+            'politeness': forms.RadioSelect(choices=[
+                ('친절', '친절하고 예의 바름'),
+                ('보통', '보통'),
+                ('불친절', '불친절하거나 무례했음')
+            ]),
+            'deal_again': forms.RadioSelect(choices=[('O', '예'), ('X', '아니오')]),
+        }
