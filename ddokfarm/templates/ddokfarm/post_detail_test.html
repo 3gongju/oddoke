@@ -190,10 +190,10 @@
                 <div class="text-sm py-2 border-t">
                     <div class="flex justify-between items-center">
                         <div class="flex items-center space-x-2">
-                            <a href="{% url 'accounts:profile' comment.user.username %}"></a>
+                            <a href="{% url 'accounts:profile' comment.user.username %}">
                                 <img src="{{ comment.user.profile_image.url }}" alt="{{ comment.user.username }}" class="w-8 h-8 rounded-full object-cover" />
                             </a>
-                            <a href="{% url 'accounts:profile' post.user.username %}" class="font-semibold">
+                            <a href="{% url 'accounts:profile' comment.user.username %}" class="font-semibold">
                                 {{ comment.user.username }}
                             </a>
                             <span class="text-gray-400">· {{ comment.created_at|naturaltime }}</span>
@@ -205,8 +205,8 @@
                     </div>
                     <p class="text-gray-700 mt-1">{{ comment.content }}</p>
 
+                    <!-- 최상위 댓글일 경우에만 답글 기능 노출 -->
                     {% if not comment.parent %}
-                    <!-- 최상위 댓글일 경우에만 답글 링크 + 폼 출력 -->
                     <div class="text-sm text-gray-500 mt-1">
                         <a href="javascript:void(0);" class="hover:underline" onclick="showReplyForm({{ comment.id }})">댓글</a>
                     </div>
@@ -240,9 +240,6 @@
                                 {% endif %}
                             </div>
                             <p class="text-gray-700 mt-1">{{ reply.content }}</p>
-
-                            <!-- 대댓글은 답글 버튼 제거됨 -->
-
                         </div>
                     {% endfor %}
                 </div>
@@ -250,6 +247,7 @@
                 <p class="text-sm text-gray-400 mt-4">등록된 댓글이 없습니다.</p>
             {% endfor %}
         </div>
+
         <!-- 댓글 작성 폼 -->
         <form method="POST" action="{% url 'ddokfarm:comment_create' category=category post_id=post.id %}" class="flex items-center space-x-2">
             {% csrf_token %}
@@ -258,7 +256,6 @@
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">등록</button>
         </form>
     </div>
-</div>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const likeButtons = [document.getElementById("like-button"), document.getElementById("like-button-top")];

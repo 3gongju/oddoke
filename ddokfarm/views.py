@@ -47,13 +47,12 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    comments = get_post_comments(category, post)
-    if comments.exists():
-        comments = comments.select_related('user').prefetch_related('replies')
+    # ✅ 최상위 댓글만 가져오고 대댓글은 prefetch_related로 처리
+    comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+
     comment_form = FarmCommentForm()
 
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
-
 
     context = {
         'post': post,
