@@ -8,7 +8,7 @@ from django.contrib import messages
 
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
-from artist.models import Artist
+from artist.models import Artist, Member
 from itertools import chain
 from django.utils.timezone import now
 
@@ -158,11 +158,13 @@ def review_home(request, username):
 def mypage(request):
     user_profile = request.user  # 현재 로그인된 유저
     favorite_artists = Artist.objects.filter(followers=user_profile)
-
-
+    favorite_members = Member.objects.filter(followers=user_profile)
+    related_artists = Artist.objects.filter(members__in=favorite_members).distinct()
+  
     context = {
         'user_profile': user_profile,
-        'favorite_artists': favorite_artists
+        'favorite_artists': favorite_artists,
+        'favorite_members': favorite_members
     }
     return render(request, 'mypage.html', context)
 
