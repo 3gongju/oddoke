@@ -24,7 +24,7 @@
           <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
                data-artist-id="{{ artist.id }}"
                data-artist-name="{{ artist.display_name }}"
-               class="artist-logo w-24 h-24 cursor-pointer inline-block m-2 rounded shadow">
+               class="artist-logo w-24 h-24 cursor-pointer inline-block m-2 rounded-full shadow">
           <p class="text-sm font-medium">{{ artist.display_name }}</p>
         </div>
         {% empty %}
@@ -43,7 +43,7 @@
 
     <!-- ✅ 팔로우한 멤버 목록 -->
     <div class="max-w-3xl mx-auto mt-10 px-4">
-      <h2 class="text-2xl font-bold mb-6">내가 팔로우한 멤버들</h2>
+      <h2 class="text-xl font-bold mb-6">최애 ❤</h2>
 
       {% if favorite_members %}
         <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -63,6 +63,26 @@
                 {% endif %}
             {% endfor %}
         </ul>
+        <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {% for member in favorite_members %}
+                {% if member.matched_artist %}
+                    <li class="cursor-pointer bg-white p-4 rounded shadow text-center"
+                        data-member-name="{{ member.member_name }}"
+                        data-artist-id="{{ member.matched_artist.id }}"
+                        onclick="openArtistModalFromMember(this)">
+                        <div class="text-lg font-semibold">{{ member.member_name }}</div>
+                        <div class="flex justify-center items-center gap-2 mt-2">
+                            {% for artist in member.artist_name.all %}
+                                <img src="{% static artist.logo %}" 
+                                    alt="{{ artist.display_name }}" 
+                                    class="w-10 h-10 object-contain rounded-full shadow">
+                            {% endfor %}
+                        </div>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+
       {% else %}
         <p class="text-gray-500">팔로우한 멤버가 없습니다.</p>
       {% endif %}
