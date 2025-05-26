@@ -11,10 +11,10 @@ class Artist(models.Model):
     # 솔로 아티스트일 경우 True, 그룹일 경우 False (생략 가능한데 일단 넣어둠)
     is_solo = models.BooleanField(default=False, help_text="솔로 아티스트인지 여부")
     
-        # 찜한 유저들 (favourite_artists 기능)
+    # 찜한 유저들 (favorite_artists 기능)
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        related_name='favourite_artists',  # User 모델에서 user.favorite_artists 로 접근
+        related_name='favorite_artists',  # User 모델에서 user.favorite_artists 로 접근
         blank=True
     )
 
@@ -30,6 +30,12 @@ class Member(models.Model):
     artist_name = models.ManyToManyField(Artist, related_name='members')
     member_name = models.CharField(max_length=100)
     member_bday = models.CharField(max_length=10, blank=True, null=True)  # "MM-DD" 포맷 허용
+
+    followers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='favorite_members',
+        blank=True
+    )
 
     def __str__(self):
         return self.member_name

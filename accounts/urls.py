@@ -8,8 +8,12 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
 
+    # mypage
+    path('my/', views.mypage, name='mypage'),
+
     # profile
-    path('<username>/', views.profile, name='profile'),
+    path('profile/<username>/', views.profile, name='profile'),
+
     # follow
     path('<username>/follow/', views.follow, name='follow'),
     path('<str:username>/follow-list/', views.follow_list, name='follow_list'),

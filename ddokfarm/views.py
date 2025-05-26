@@ -84,7 +84,7 @@ def post_create(request):
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
     else:
         # GET 요청 시 기본 카테고리 선택 (예: 'sell')
-        category = request.GET.get('category', 'sell')
+        category = request.GET.get('category') or 'sell'
         form_class = get_post_form(category)
 
         if not form_class:
