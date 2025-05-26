@@ -90,7 +90,7 @@ class FarmSplitPost(FarmBasePost):
     opened = models.CharField(max_length=20, choices=OPENED_CHOICES)
     shipping_fee = models.PositiveIntegerField()
     where = models.CharField(max_length=100)
-    when = models.CharField(max_length=100)
+    when = models.DateField()
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
     # 멤버별 가격 설정 필드 연결 필요
 

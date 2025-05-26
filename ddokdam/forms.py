@@ -1,13 +1,15 @@
 from django import forms
 from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 
+COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400'
+
 common_widgets = {
     'title': forms.TextInput(attrs={
-        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400',
+        'class': COMMON_INPUT_CLASS,
         'placeholder': '제목을 입력하세요',
     }),
     'content': forms.Textarea(attrs={
-        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400',
+        'class': COMMON_INPUT_CLASS,
         'placeholder': '내용을 입력하세요',
         'rows': 6,
     }),
@@ -29,11 +31,11 @@ class DamMannerPostForm(forms.ModelForm):
         widgets = {
             **common_widgets,
             'location': forms.TextInput(attrs={
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400',
+                'class': COMMON_INPUT_CLASS,
                 'placeholder': '장소를 입력하세요',
             }),
             'item': forms.TextInput(attrs={
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400',
+                'class': COMMON_INPUT_CLASS,
                 'placeholder': '예절템을 입력하세요',
             }),
         }
@@ -45,7 +47,7 @@ class DamBdaycafePostForm(forms.ModelForm):
         widgets = {
             **common_widgets,
             'cafe_name': forms.TextInput(attrs={
-                'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400',
+                'class': COMMON_INPUT_CLASS,
                 'placeholder': '카페 이름을 입력하세요',
             }),
         }
