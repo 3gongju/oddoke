@@ -61,3 +61,8 @@ class MannerReviewForm(forms.ModelForm):
             ]),
             'deal_again': forms.RadioSelect(choices=[('O', '예'), ('X', '아니오')]),
         }
+
+class ProfileImageForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['profile_image']

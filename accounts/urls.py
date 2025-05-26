@@ -10,6 +10,9 @@ urlpatterns = [
 
     # mypage
     path('my/', views.mypage, name='mypage'),
+    # my -> 프로필 관리
+    path('<str:username>/edit/', views.edit_profile, name='edit_profile'),
+    path('<str:username>/edit/image/', views.edit_profile_image, name='edit_profile_image'),
 
     # profile
     path('profile/<username>/', views.profile, name='profile'),
