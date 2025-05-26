@@ -9,7 +9,7 @@
 
 </style>
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  {% include 'components/_header.html' %}
+  {% include 'components/_farm_header.html' %}
   <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- 이미지 (2/3) -->
@@ -62,9 +62,9 @@
                 <!-- 수정 / 삭제 버튼 - 로그인한 유저가 글쓴이일 때만 표시 -->
                 {% if request.user == post.user %}
                     <div class="flex justify-end space-x-2 mt-2">
-                        <a href="{% url 'ddokdam:post_edit' category=category post_id=post.id %}"
+                        <a href="{% url 'ddokfarm:post_edit' category=category post_id=post.id %}"
                         class="text-sm text-blue-600 hover:underline">수정</a>
-                        <a href="{% url 'ddokdam:post_delete' category=category post_id=post.id %}"
+                        <a href="{% url 'ddokfarm:post_delete' category=category post_id=post.id %}"
                         class="text-sm text-red-600 hover:underline"
                         onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a>
                     </div>
