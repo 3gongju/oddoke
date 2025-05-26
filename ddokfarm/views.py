@@ -47,8 +47,9 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    # ✅ 최상위 댓글만 가져오고 대댓글은 prefetch_related로 처리
     comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+
+    total_comment_count = get_post_comments(category, post).count()
 
     comment_form = FarmCommentForm()
 
@@ -58,6 +59,7 @@ def post_detail(request, category, post_id):
         'post': post,
         'category': category,
         'comments': comments,
+        'total_comment_count': total_comment_count,
         'comment_form': comment_form,
         'is_liked': is_liked,
     }
