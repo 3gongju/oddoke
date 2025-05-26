@@ -11,7 +11,7 @@ class Artist(models.Model):
     # 솔로 아티스트일 경우 True, 그룹일 경우 False (생략 가능한데 일단 넣어둠)
     is_solo = models.BooleanField(default=False, help_text="솔로 아티스트인지 여부")
     
-        # 찜한 유저들 (favourite_artists 기능)
+    # 찜한 유저들 (favourite_artists 기능)
     followers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='favourite_artists',  # User 모델에서 user.favorite_artists 로 접근
