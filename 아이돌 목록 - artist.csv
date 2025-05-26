@@ -1,104 +1,104 @@
-id,display_name,english_name,korean_name,alias,logo
-1,GOT7,GOT7,갓세븐,,image/artist_logo/got7.jpg
-2,강다니엘,KANG DANIEL,강다니엘,,image/artist_logo/kangdaniel.jpg
-3,권은비,KWON EUNBI,권은비,,image/artist_logo/kwoneunbi.jpg
-4,김우석,Kim Woo Seok,김우석,,image/artist_logo/kimwooseok.jpg
-5,김재환,KIM JAEHWAN,김재환,,image/artist_logo/kimjaehwan.jpg
-6,NEXZ,NEXZ,넥스지,,image/artist_logo/nexz.jpg
-7,뉴이스트,NU'EST,뉴이스트,NUEST,image/artist_logo/nuest.jpg
-8,NewJeans,NewJeans,뉴진스,,image/artist_logo/newjeans.jpg
-9,더보이즈,THE BOYZ,더보이즈,덥즈,image/artist_logo/theboyz.jpg
-10,DAY6,DAY6,데이식스,데식,image/artist_logo/day6.jpg
-11,드림캐쳐,Dreamcatcher,드림캐쳐,드캐,image/artist_logo/dreamcatcher.jpg
-12,RIIZE,RIIZE,라이즈,,image/artist_logo/riize.jpg
-13,Red Velvet,Red Velvet,레드벨벳,레벨,image/artist_logo/redvelvet.jpg
-14,LUN8,LUN8,루네이트,,image/artist_logo/lun8.jpg
-15,LE SSERAFIM,LE SSERAFIM,르세라핌,,image/artist_logo/lesserafim.jpg
-16,마마무,Mamamoo,마마무,,image/artist_logo/mamamoo.png
-17,몬스타엑스,MONSTA X,몬스타엑스,몬엑,image/artist_logo/monstax.jpg
-18,방탄소년단,BTS,방탄소년단,,image/artist_logo/bts.jpg
-19,VERIVERY,VERIVERY,베리베리,,image/artist_logo/verivery.jpg
-20,BABYMONSTER,BABYMONSTER,베이비몬스터,베몬,image/artist_logo/babymonster.jpg
-21,BOYNEXTDOOR,BOYNEXTDOOR,보이넥스트도어,보넥도,image/artist_logo/boynextdoor.jpg
-22,BLACKPINK,BLACKPINK,블랙핑크,블핑,image/artist_logo/blackpink.jpg
-23,VIVIZ,VIVIZ,비비지,,image/artist_logo/viviz.jpg
-24,B1A4,B1A4,비원에이포,비포,image/artist_logo/b1a4.jpg
-25,비투비,BTOB,비투비,,image/artist_logo/btob.jpg
-26,Billlie,Billlie,빌리,,image/artist_logo/billlie.jpg
-27,SHINee,SHINee,샤이니,,image/artist_logo/shinee.jpg
-28,세븐틴,SEVENTEEN,세븐틴,셉,image/artist_logo/seventeen.jpg
-29,SAY MY NAME,SAY MY NAME,세이마이네임,세마넴,image/artist_logo/saymyname.jpg
-30,소녀시대,GIRLS' GENERATION,소녀시대,소시,image/artist_logo/girlsgeneration.png
-31,SUPER JUNIOR,SUPER JUNIOR,슈퍼주니어,슈주,image/artist_logo/superjunior.png
-32,STAYC,STAYC,스테이씨,,image/artist_logo/stayc.jpg
-33,Stray Kids,Stray Kids,스트레이키즈,스키즈,image/artist_logo/straykids.jpg
-34,xikers,xikers,싸이커스,,image/artist_logo/xikers.jpg
-35,CIX,CIX,씨아이엑스,씨아엑,image/artist_logo/cix.jpg
-36,ASTRO,ASTRO,아스트로,,image/artist_logo/astro.jpg
-37,i-dle,i-dle,아이들,,image/artist_logo/idle.jpg
-38,IVE,IVE,아이브,,image/artist_logo/ive.jpg
-39,아이유,IU,아이유,,image/artist_logo/iu.png
-40,iKON,iKON,아이콘,,image/artist_logo/ikon.jpg
-41,아일릿,ILLIT,아일릿,,image/artist_logo/illit.jpg
-42,&TEAM,&TEAM,앤팀,,image/artist_logo/&team.jpg
-43,앰퍼샌드원,AMPERS&ONE,앰퍼샌드원,,image/artist_logo/ampers&one.jpg
-44,SF9,SF9,에스에프나인,,image/artist_logo/sf9.jpg
-45,aespa,aespa,에스파,,image/artist_logo/aespa.jpg
-46,AB6IX,AB6IX,에이비식스,,image/artist_logo/ab6ix.jpg
-47,ATBO,ATBO,에이티비오,,image/artist_logo/atbo.jpg
-48,ATEEZ,ATEEZ,에이티즈,,image/artist_logo/ateez.jpg
-49,82MAJOR,82MAJOR,에이티투메이저,에투메,image/artist_logo/82major.jpg
-50,Apink,Apink,에이핑크,에핑,image/artist_logo/apink.png
-51,8TURN,8TURN,에잇턴,,image/artist_logo/8turn.jpg
-52,EXO,EXO,엑소,,image/artist_logo/exo.jpg
-53,Xdinary Heroses,Xdinary Heroses,엑스디너리히어로즈,,image/artist_logo/xdinaryheroes.jpg
-54,NMIXX,NMIXX,엔믹스,,image/artist_logo/nmixx.jpg
-55,NCT,NCT,엔시티,,image/artist_logo/nct.jpg
-56,NCT 127,NCT 127,엔시티 127,127,image/artist_logo/nct127.jpg
-57,NCT DREAM,NCT DREAM,엔시티 드림,엔드림,image/artist_logo/nctdream.jpg
-58,NCT WISH,NCT WISH,엔시티 위시,엔위시,image/artist_logo/nctwish.jpg
-59,엔플라잉,N.Flying,엔플라잉,NFlying,image/artist_logo/nflying.jpg
-60,엔하이픈,ENHYPEN,엔하이픈,,image/artist_logo/enhypen.jpg
-61,여자친구,GFRIEND,여자친구,여친,image/artist_logo/gfriend.jpg
-62,오마이걸,OH MY GIRL,오마이걸,옴걸,image/artist_logo/ohmygirl.jpg
-63,OnlyOneOf,OnlyOneOf,온리원오브,,image/artist_logo/onlyoneof.jpg
-64,온앤오프,ONF,온앤오프,온옾,image/artist_logo/onf.jpg
-65,WOOAH,WOOAH,우아,,image/artist_logo/wooah.jpg
-66,우주소녀,WJSN,우주소녀,우소,image/artist_logo/wjsn.jpg
-67,WOODZ,WOODZ,우즈,,image/artist_logo/woodz.jpg
-68,원어스,ONEUS,원어스,,image/artist_logo/oneus.jpg
-69,ONE PACT,ONE PACT,원팩트,,image/artist_logo/onepact.jpg
-70,WINNER,WINNER,위너,,image/artist_logo/winner.jpg
-71,위아이,WEi,위아이,,image/artist_logo/wei.jpg
-72,YOUNITE,YOUNITE,유나이트,,image/artist_logo/younite.jpg
-73,UNIS,UNIS,유니스,,image/artist_logo/unis.jpg
-74,EVNNE,EVNNE,이븐,,image/artist_logo/evnne.jpg
-75,izna,izna,이즈나,,image/artist_logo/izna.jpg
-76,이채연,Lee Chae Yeon,이채연,,image/artist_logo/leechaeyeon.jpg
-77,EPEX,EPEX,이펙스,,image/artist_logo/epex.jpg
-78,인피니트,INFINITE,인피니트,,image/artist_logo/infinite.jpg
-79,ITZY,ITZY,있지,,image/artist_logo/itzy.jpg
-80,ZEROBASEONE,ZEROBASEONE,제로베이스원,제베원,image/artist_logo/zerobaseone.jpg
-81,조유리,JO YURI,조유리,,image/artist_logo/joyuri.png
-82,G-DRAGON,G-DRAGON,지드래곤,지디,image/artist_logo/gd.png
-83,YENA,YENA,최예나,,image/artist_logo/yena.jpg
-84,Kep1er,Kep1er,케플러,,image/artist_logo/kep1er.jpg
-85,CRAVITY,CRAVITY,크래비티,,image/artist_logo/cravity.png
-86,CLASS:y,CLASS:y,클라씨,,image/artist_logo/classy.jpg
-87,KISS OF LIFE,KISS OF LIFE,키스오브라이프,키오라,image/artist_logo/kissoflife.jpg
-88,KiiiKiii,KiiiKiii,키키,,image/artist_logo/kiiikiii.jpg
-89,KickFlip,KickFlip,킥플립,,image/artist_logo/kickflip.jpg
-90,TEMPEST,TEMPEST,템페스트,,image/artist_logo/tempest.jpg
-91,투모로우바이투게더,TXT,투모로우바이투게더,투바투,image/artist_logo/txt.jpg
-92,TWS,TWS,투어스,,image/artist_logo/tws.jpg
-93,TREASURE,TREASURE,트레저,,image/artist_logo/treasure.jpg
-94,TWICE,TWICE,트와이스,,image/artist_logo/twice.jpg
-95,FANTASY BOYS,FANTASY BOYS,판타지보이즈,,image/artist_logo/fantasyboys.jpg
-96,펜타곤,PENTAGON,펜타곤,,image/artist_logo/pentagon.jpg
-97,프로미스나인,fromis_9,프로미스나인,프미나,image/artist_logo/fromis9.jpg
-98,PLAVE,PLAVE,플레이브,,image/artist_logo/plave.jpg
-99,P1Harmony,P1Harmony,피원하모니,,image/artist_logo/p1harmony.jpg
-100,하성운,HA SUNG WOON,하성운,,image/artist_logo/hasungwoon.jpg
-101,하이라이트,HIGHLIGHT,하이라이트,,image/artist_logo/highlight.jpg
-102,H1-KEY,H1-KEY,하이키,,image/artist_logo/h1key.jpg
-103,Hearts2Hearts,Hearts2Hearts,하츠투하츠,하투하,image/artist_logo/hearts2hearts.jpg
+﻿id,display_name,english_name,korean_name,alias,logo,fandom
+1,GOT7,GOT7,갓세븐,,image/artist_logo/got7.jpg,아가새
+2,강다니엘,KANG DANIEL,강다니엘,,image/artist_logo/kangdaniel.jpg,Danity
+3,권은비,KWON EUNBI,권은비,,image/artist_logo/kwoneunbi.jpg,Rubi
+4,김우석,Kim Woo Seok,김우석,,image/artist_logo/kimwooseok.jpg,Nia
+5,김재환,KIM JAEHWAN,김재환,,image/artist_logo/kimjaehwan.jpg,WIN
+6,NEXZ,NEXZ,넥스지,,image/artist_logo/nexz.jpg,NEX2Y
+7,뉴이스트,NU'EST,뉴이스트,NUEST,image/artist_logo/nuest.jpg,L.O.Λ.E
+8,NewJeans,NewJeans,뉴진스,,image/artist_logo/newjeans.jpg,Bunnies
+9,더보이즈,THE BOYZ,더보이즈,덥즈,image/artist_logo/theboyz.jpg,THE B
+10,DAY6,DAY6,데이식스,데식,image/artist_logo/day6.jpg,My Day
+11,드림캐쳐,Dreamcatcher,드림캐쳐,드캐,image/artist_logo/dreamcatcher.jpg,InSomnia
+12,RIIZE,RIIZE,라이즈,,image/artist_logo/riize.jpg,BRIIZE
+13,Red Velvet,Red Velvet,레드벨벳,레벨,image/artist_logo/redvelvet.jpg,Reveluv
+14,LUN8,LUN8,루네이트,,image/artist_logo/lun8.jpg,LUV8
+15,LE SSERAFIM,LE SSERAFIM,르세라핌,,image/artist_logo/lesserafim.jpg,FEARNOT
+16,마마무,Mamamoo,마마무,,image/artist_logo/mamamoo.png,MooMoo
+17,몬스타엑스,MONSTA X,몬스타엑스,몬엑,image/artist_logo/monstax.jpg,Monbebe
+18,방탄소년단,BTS,방탄소년단,,image/artist_logo/bts.jpg,ARMY
+19,VERIVERY,VERIVERY,베리베리,,image/artist_logo/verivery.jpg,VERRER
+20,BABYMONSTER,BABYMONSTER,베이비몬스터,베몬,image/artist_logo/babymonster.jpg,MONSTIEZ
+21,BOYNEXTDOOR,BOYNEXTDOOR,보이넥스트도어,보넥도,image/artist_logo/boynextdoor.jpg,ONEDOOR
+22,BLACKPINK,BLACKPINK,블랙핑크,블핑,image/artist_logo/blackpink.jpg,BLINK
+23,VIVIZ,VIVIZ,비비지,,image/artist_logo/viviz.jpg,Na.V
+24,B1A4,B1A4,비원에이포,비포,image/artist_logo/b1a4.jpg,BANA
+25,비투비,BTOB,비투비,,image/artist_logo/btob.jpg,Melody
+26,Billlie,Billlie,빌리,,image/artist_logo/billlie.jpg,Belllie've
+27,SHINee,SHINee,샤이니,,image/artist_logo/shinee.jpg,Shawol
+28,세븐틴,SEVENTEEN,세븐틴,셉,image/artist_logo/seventeen.jpg,Carat
+29,SAY MY NAME,SAY MY NAME,세이마이네임,세마넴,image/artist_logo/saymyname.jpg,LOVvmE
+30,소녀시대,GIRLS' GENERATION,소녀시대,소시,image/artist_logo/girlsgeneration.png,S♡NE
+31,SUPER JUNIOR,SUPER JUNIOR,슈퍼주니어,슈주,image/artist_logo/superjunior.png,E.L.F
+32,STAYC,STAYC,스테이씨,,image/artist_logo/stayc.jpg,SWITH
+33,Stray Kids,Stray Kids,스트레이키즈,스키즈,image/artist_logo/straykids.jpg,STAY
+34,xikers,xikers,싸이커스,,image/artist_logo/xikers.jpg,ROOKIES
+35,CIX,CIX,씨아이엑스,씨아엑,image/artist_logo/cix.jpg,FIX
+36,ASTRO,ASTRO,아스트로,,image/artist_logo/astro.jpg,AROHA
+37,i-dle,i-dle,아이들,,image/artist_logo/idle.jpg,Neverland
+38,IVE,IVE,아이브,,image/artist_logo/ive.jpg,DIVE
+39,아이유,IU,아이유,,image/artist_logo/iu.png,Uaena
+40,iKON,iKON,아이콘,,image/artist_logo/ikon.jpg,iKONIC
+41,아일릿,ILLIT,아일릿,,image/artist_logo/illit.jpg,GLLIT
+42,&TEAM,&TEAM,앤팀,,image/artist_logo/&team.jpg,LUNÉ
+43,앰퍼샌드원,AMPERS&ONE,앰퍼샌드원,,image/artist_logo/ampers&one.jpg,Andear
+44,SF9,SF9,에스에프나인,,image/artist_logo/sf9.jpg,Fantasy
+45,aespa,aespa,에스파,,image/artist_logo/aespa.jpg,MY
+46,AB6IX,AB6IX,에이비식스,,image/artist_logo/ab6ix.jpg,ABNEW
+47,ATBO,ATBO,에이티비오,,image/artist_logo/atbo.jpg,BOAT
+48,ATEEZ,ATEEZ,에이티즈,,image/artist_logo/ateez.jpg,ATINY
+49,82MAJOR,82MAJOR,에이티투메이저,에투메,image/artist_logo/82major.jpg,82DE
+50,Apink,Apink,에이핑크,에핑,image/artist_logo/apink.png,Panda
+51,8TURN,8TURN,에잇턴,,image/artist_logo/8turn.jpg,TURNING
+52,EXO,EXO,엑소,,image/artist_logo/exo.jpg,EXO-L
+53,Xdinary Heroses,Xdinary Heroses,엑스디너리히어로즈,,image/artist_logo/xdinaryheroes.jpg,Villains
+54,NMIXX,NMIXX,엔믹스,,image/artist_logo/nmixx.jpg,NSWER
+55,NCT,NCT,엔시티,,image/artist_logo/nct.jpg,NCTzen
+56,NCT 127,NCT 127,엔시티 127,127,image/artist_logo/nct127.jpg,NCTzen
+57,NCT DREAM,NCT DREAM,엔시티 드림,엔드림,image/artist_logo/nctdream.jpg,NCTzen
+58,NCT WISH,NCT WISH,엔시티 위시,엔위시,image/artist_logo/nctwish.jpg,NCTzen
+59,엔플라잉,N.Flying,엔플라잉,NFlying,image/artist_logo/nflying.jpg,N.Fia
+60,엔하이픈,ENHYPEN,엔하이픈,,image/artist_logo/enhypen.jpg,ENGENE
+61,여자친구,GFRIEND,여자친구,여친,image/artist_logo/gfriend.jpg,Buddy
+62,오마이걸,OH MY GIRL,오마이걸,옴걸,image/artist_logo/ohmygirl.jpg,Miracle
+63,OnlyOneOf,OnlyOneOf,온리원오브,,image/artist_logo/onlyoneof.jpg,lyOn
+64,온앤오프,ONF,온앤오프,온옾,image/artist_logo/onf.jpg,Fuse
+65,WOOAH,WOOAH,우아,,image/artist_logo/wooah.jpg,WOW
+66,우주소녀,WJSN,우주소녀,우소,image/artist_logo/wjsn.jpg,Ujung
+67,WOODZ,WOODZ,우즈,,image/artist_logo/woodz.jpg,Moodz
+68,원어스,ONEUS,원어스,,image/artist_logo/oneus.jpg,TO MOON
+69,ONE PACT,ONE PACT,원팩트,,image/artist_logo/onepact.jpg,&♥
+70,WINNER,WINNER,위너,,image/artist_logo/winner.jpg,Inner Circle
+71,위아이,WEi,위아이,,image/artist_logo/wei.jpg,RUi
+72,YOUNITE,YOUNITE,유나이트,,image/artist_logo/younite.jpg,YOUNIZ
+73,UNIS,UNIS,유니스,,image/artist_logo/unis.jpg,EverAfter
+74,EVNNE,EVNNE,이븐,,image/artist_logo/evnne.jpg,ENNVE
+75,izna,izna,이즈나,,image/artist_logo/izna.jpg,Naya
+76,이채연,Lee Chae Yeon,이채연,,image/artist_logo/leechaeyeon.jpg,Chaerish
+77,EPEX,EPEX,이펙스,,image/artist_logo/epex.jpg,ZENITH
+78,인피니트,INFINITE,인피니트,,image/artist_logo/infinite.jpg,Inspirit
+79,ITZY,ITZY,있지,,image/artist_logo/itzy.jpg,MIDZY
+80,ZEROBASEONE,ZEROBASEONE,제로베이스원,제베원,image/artist_logo/zerobaseone.jpg,ZEROSE
+81,조유리,JO YURI,조유리,,image/artist_logo/joyuri.png,GLASSY
+82,G-DRAGON,G-DRAGON,지드래곤,지디,image/artist_logo/gd.png,VIP
+83,YENA,YENA,최예나,,image/artist_logo/yena.jpg,JIGUMI
+84,Kep1er,Kep1er,케플러,,image/artist_logo/kep1er.jpg,Kep1ian
+85,CRAVITY,CRAVITY,크래비티,,image/artist_logo/cravity.png,LUVITY
+86,CLASS:y,CLASS:y,클라씨,,image/artist_logo/classy.jpg,CLIKE
+87,KISS OF LIFE,KISS OF LIFE,키스오브라이프,키오라,image/artist_logo/kissoflife.jpg,KISSY
+88,KiiiKiii,KiiiKiii,키키,,image/artist_logo/kiiikiii.jpg,TiiiKiii
+89,KickFlip,KickFlip,킥플립,,image/artist_logo/kickflip.jpg,-
+90,TEMPEST,TEMPEST,템페스트,,image/artist_logo/tempest.jpg,iE
+91,투모로우바이투게더,TXT,투모로우바이투게더,투바투,image/artist_logo/txt.jpg,MOA
+92,TWS,TWS,투어스,,image/artist_logo/tws.jpg,42
+93,TREASURE,TREASURE,트레저,,image/artist_logo/treasure.jpg,Treasure Maker
+94,TWICE,TWICE,트와이스,,image/artist_logo/twice.jpg,ONCE
+95,FANTASY BOYS,FANTASY BOYS,판타지보이즈,,image/artist_logo/fantasyboys.jpg,Bandi
+96,펜타곤,PENTAGON,펜타곤,,image/artist_logo/pentagon.jpg,UNIVERSE
+97,프로미스나인,fromis_9,프로미스나인,프미나,image/artist_logo/fromis9.jpg,Flover
+98,PLAVE,PLAVE,플레이브,,image/artist_logo/plave.jpg,PLLI
+99,P1Harmony,P1Harmony,피원하모니,,image/artist_logo/p1harmony.jpg,P1ece
+100,하성운,HA SUNG WOON,하성운,,image/artist_logo/hasungwoon.jpg,HA
+101,하이라이트,HIGHLIGHT,하이라이트,,image/artist_logo/highlight.jpg,Light
+102,H1-KEY,H1-KEY,하이키,,image/artist_logo/h1key.jpg,M1-KEY
+103,Hearts2Hearts,Hearts2Hearts,하츠투하츠,하투하,image/artist_logo/hearts2hearts.jpg,S2U

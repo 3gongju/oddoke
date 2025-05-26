@@ -10,29 +10,29 @@ def group_artists(artists, group_size=5):
     return [list(filter(None, group)) for group in zip_longest(*[iter(artists)] * group_size)]
 
 
-def get_weekly_birthdays():
-    today = datetime.today()
-    start_of_week = today - timedelta(days=today.weekday())  # 이번 주 월요일
-    end_of_week = start_of_week + timedelta(days=6)          # 이번 주 일요일
+# def get_weekly_birthdays():
+#     today = datetime.today()
+#     start_of_week = today - timedelta(days=today.weekday())  # 이번 주 월요일
+#     end_of_week = start_of_week + timedelta(days=6)          # 이번 주 일요일
 
-    def to_date(mmdd_str):
-        try:
-            return datetime.strptime(f"{today.year}-{mmdd_str}", "%Y-%m-%d")
-        except:
-            return None
+#     def to_date(mmdd_str):
+#         try:
+#             return datetime.strptime(f"{today.year}-{mmdd_str}", "%Y-%m-%d")
+#         except:
+#             return None
 
-    members = Member.objects.exclude(member_bday__isnull=True).exclude(member_bday__exact='')
-    birthday_list = []
-    for m in members:
-        bday_date = to_date(m.member_bday)
-        if bday_date and start_of_week <= bday_date <= end_of_week:
-            artist_names = ', '.join([a.display_name for a in m.artist_name.all()])
-            birthday_list.append({
-                'member_name': m.member_name,
-                'artist_name': artist_names,
-                'bday': bday_date.strftime('%m월 %d일'),
-            })
-    return birthday_list
+#     members = Member.objects.exclude(member_bday__isnull=True).exclude(member_bday__exact='')
+#     birthday_list = []
+#     for m in members:
+#         bday_date = to_date(m.member_bday)
+#         if bday_date and start_of_week <= bday_date <= end_of_week:
+#             artist_names = ', '.join([a.display_name for a in m.artist_name.all()])
+#             birthday_list.append({
+#                 'member_name': m.member_name,
+#                 'artist_name': artist_names,
+#                 'bday': bday_date.strftime('%m월 %d일'),
+#             })
+#     return birthday_list
 
 
 def main(request):
@@ -78,7 +78,6 @@ def main(request):
         post.category = 'bdaycafe'
 
     # 6) 주간 생일 멤버
-    weekly_birthdays = get_weekly_birthdays()
 
     return render(request, 'main/home.html', {
         'raw_favs': raw_favs,
@@ -93,5 +92,4 @@ def main(request):
         'latest_manner_posts': latest_manner_posts,
         'latest_bdaycafe_posts': latest_bdaycafe_posts,
 
-        'weekly_birthdays': weekly_birthdays,  # ✅ 추가된 컨텍스트
     })

@@ -102,31 +102,23 @@
     </div>
   </section>
 
-<!-- ✅ 이번 주 생일 멤버 -->
-<section class="mt-16 mb-20 max-w-6xl mx-auto px-4">
-  <div class="flex items-center justify-between mb-4">
-    <h3 class="text-lg font-bold text-pink-500">🎂 이번 주 생일 멤버</h3>
+<!-- ✅ 이번 주 생일 멤버: FullCalendar 주간 뷰 -->
+<section class="mt-28 mb-28 max-w-6xl mx-auto px-4">
+  <div class="flex items-center justify-between mb-3">
+    <h3 class="text-lg font-bold text-pink-500">🎂 이번 주 생일 덕</h3>
     <a href="{% url 'bday_calendar:calendar' %}" class="text-sm text-blue-600 hover:underline">전체 보기 →</a>
   </div>
-  
-  {% if weekly_birthdays %}
-    <ul class="bg-pink-50 p-4 rounded-lg shadow space-y-2 text-sm">
-      {% for item in weekly_birthdays %}
-        <li class="flex items-center justify-between border-b last:border-0 pb-1">
-          <span>{{ item.member_name }} <span class="text-gray-500">({{ item.artist_name }})</span></span>
-          <span class="text-gray-600">{{ item.bday }}</span>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-sm text-gray-500">이번 주에는 생일인 멤버가 없습니다.</p>
-  {% endif %}
+
+  <div id="home-calendar" class="overflow-x-auto"></div>
+
+  <p id="no-events-message" class="text-sm text-gray-500 text-center mt-4 hidden">
+    😢 이번 주에 생일인 멤버가 없어요.
+  </p>
 </section>
 
 
-
   <!-- 실시간 인기 만두 -->
-  <section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">
+  <section class="mt-28 mb-28 px-4 md:px-8 max-w-6xl mx-auto">
     <div class="flex items-center justify-between mb-6">
       <h3 class="text-xl font-bold">실시간 인기 만두</h3>
       <a href="/ddokfarm/" class="text-sm text-blue-600 hover:underline">전체보기 →</a>
@@ -143,7 +135,7 @@
   </section>
 
   <!-- 덕팜 + 덕담 전체 게시글 -->
-  <section class="mt-16 mb-20 px-4 md:px-8 max-w-6xl mx-auto">
+  <section class="mt-28 mb-28 px-4 md:px-8 max-w-6xl mx-auto">
     {% include 'main/components/all_sections.html' %}
   </section>
 
@@ -175,5 +167,29 @@
       wrapper.style.transform = 'translateX(0%)';
     });
   </script>
+
+  <!-- ✅ FullCalendar CSS & JS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('home-calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridWeek',  // ✅ 주간 뷰
+      locale: 'ko',
+      headerToolbar: false,
+      events: '{% url "bday_calendar:weekly_events_api" %}',  // 주간 생일 API
+      eventColor: '#f472b6',
+      nowIndicator: true,
+      height: 'auto'
+    });
+
+    calendar.render();
+  });
+</script>
+
+
 
 {% endblock %}
