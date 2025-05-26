@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django_resized import ResizedImageField
 from artist.models import Artist
+from django.conf import settings
 
 # Create your models here.
 class User(AbstractUser):
@@ -17,16 +18,20 @@ class User(AbstractUser):
         crop=['middle', 'center'],
         upload_to='profile',
     )
-
-    # post_set
-    # comment_set
-    # post_set => like_posts(MMF)
     followings = models.ManyToManyField('self', related_name ='followers', symmetrical=False) # 반대쪽에서 어떻게 부를지
-    # user_set(반대쪽) => followers(user_set 이름 변경)
-    # symmetrical=False : 비대칭구조 (1-> 2 팔로우 / 2 ->1 팔로우는 다르기 때문)
 
-    # favorite_artists = models.ManyToManyField(
-    #     Artist,
-    #     related_name='followers',
-    #     blank=True
-    # )
+class MannerReview(models.Model):
+    RATING_CHOICES = [(i, f'{i}점') for i in range(1, 6)]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='manner_reviews')
+    target_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_received')
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    punctuality = models.CharField(max_length=50)
+    description_match = models.CharField(max_length=50)
+    response_speed = models.CharField(max_length=50)
+    politeness = models.CharField(max_length=50)
+    deal_again = models.CharField(max_length=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} → {self.target_user} ({self.rating}점)"

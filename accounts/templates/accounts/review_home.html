@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+  <!-- 🔁 프로필 상단 유지 -->
+  <div class="bg-white p-6 rounded-lg shadow mb-8">
+    <div class="flex items-center">
+      <img src="{{ user_profile.profile_image.url }}" alt="프로필" class="w-16 h-16 rounded-full object-cover mr-4">
+      <div>
+        <h2 class="text-xl font-bold">{{ user_profile.username }}</h2>
+        <p class="text-sm text-gray-500">{{ user_profile.email }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ 리뷰 탭 영역 -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex space-x-6 mb-4 border-b pb-2">
+      <button class="tab-btn text-blue-600 font-semibold border-b-2 border-blue-500" onclick="showTab('write')">리뷰 쓰기</button>
+      <button class="tab-btn text-gray-500 hover:text-blue-500" onclick="showTab('written')">내 리뷰</button>
+    </div>
+
+    <!-- 리뷰 쓰기 영역 -->
+    <div id="tab-write" class="tab-content">
+      {% include 'accounts/review_form.html' %}
+    </div>
+
+
+    <!-- 내 리뷰 보기 영역 -->
+    <div id="tab-written" class="tab-content hidden space-y-6">
+      {% for r in reviews %}
+      <div class="p-4 border rounded shadow">
+        <p class="text-yellow-500 font-semibold">
+          {% for i in ""|ljust:r.rating %}★{% endfor %}
+          ({{ r.rating }}점)
+        </p>
+        <div class="mt-2 flex flex-wrap gap-2 text-sm text-gray-700">
+          <span class="bg-gray-100 px-2 py-1 rounded">약속 지킴 정도: {{ r.punctuality }}</span>
+          <span class="bg-gray-100 px-2 py-1 rounded">상품 상태: {{ r.description_match }}</span>
+          <span class="bg-gray-100 px-2 py-1 rounded">응답 속도: {{ r.response_speed }}</span>
+          <span class="bg-gray-100 px-2 py-1 rounded">메세지 말투: {{ r.politeness }}</span>
+          <span class="bg-gray-100 px-2 py-1 rounded">재거래: {{ r.deal_again }}</span>
+        </div>
+        <p class="text-xs text-right text-gray-400 mt-2">{{ r.created_at|date:"y/m/d" }}</p>
+      </div>
+      {% empty %}
+      <p class="text-sm text-gray-500">아직 작성된 리뷰가 없습니다.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+  function showTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+
+    // 탭 버튼 스타일
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-500');
+      btn.classList.add('text-gray-500');
+    });
+    event.target.classList.add('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-500');
+  }
+</script>
+{% endblock %}

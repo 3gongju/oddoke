@@ -13,7 +13,6 @@
 
       <!-- 닉네임 + 팔로우 버튼 + 이메일 + 팔로워 수 -->
       <div class="ml-4 flex-1">
-
         <!-- ✅ 닉네임 + 팔로우 버튼 수평 정렬 -->
         <div class="flex items-center space-x-4">
           <h2 class="text-lg font-semibold">{{ user_profile.username }}</h2>
@@ -33,6 +32,14 @@
           {% endif %}
         </div>
 
+        <!-- ✅ 매너 리뷰 작성 버튼 -->
+        <div class="mt-3">
+          <a href="{% url 'accounts:review_home' user_profile.username %}" 
+            class="inline-block bg-yellow-400 text-white text-sm px-4 py-1 rounded hover:bg-yellow-500 transition">
+            📝 매너 리뷰 작성
+          </a>
+        </div>  
+        
         <p class="text-gray-600 mt-1">{{ user_profile.email }}</p>
 
         <div class="flex space-x-6 mt-2 text-sm text-gray-600">

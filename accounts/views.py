@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, MannerReviewForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
-from .models import User
+from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
 
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
@@ -62,7 +62,6 @@ def logout(request):
 @login_required
 def profile(request, username):
     user_profile = User.objects.get(username=username)
-
     # ✅ 덕담 게시글 모두 가져오기
     community_posts = DamCommunityPost.objects.filter(user=user_profile)
     manner_posts = DamMannerPost.objects.filter(user=user_profile)
@@ -72,7 +71,6 @@ def profile(request, username):
         key=lambda post: post.created_at,
         reverse=True
     )
-
     # ✅ 덕팜 게시글 모두 가져오기 
     sell_posts = FarmSellPost.objects.filter(user=user_profile)
     rental_posts = FarmRentalPost.objects.filter(user=user_profile)
@@ -82,7 +80,6 @@ def profile(request, username):
         key=lambda post: post.created_at,
         reverse=True
     )
-
     # ✅ 찜한 아티스트 가져오기
     favourite_artists = Artist.objects.filter(followers=user_profile)
 
@@ -133,3 +130,27 @@ def follow_list(request, username):
 
     user_data = [{'username': u.username} for u in users]
     return JsonResponse({'users': user_data})
+
+@login_required
+def review_home(request, username):
+    user_profile = get_object_or_404(User, username=username)
+
+    # 리뷰 작성
+    if request.method == 'POST':
+        form = MannerReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.user = request.user
+            review.target_user = user_profile
+            review.save()
+            return redirect('accounts:review_home', username=username)
+    else:
+        form = MannerReviewForm()
+
+    reviews = MannerReview.objects.filter(target_user=user_profile).order_by('-created_at')
+
+    return render(request, 'accounts/review_home.html', {
+        'user_profile': user_profile,
+        'form': form,
+        'reviews': reviews
+    })
