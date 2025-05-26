@@ -26,7 +26,7 @@ class MemberResource(resources.ModelResource):
 
     class Meta:
         model = Member
-        fields = ('artist_name', 'member_name', 'member_bday')
+        fields = ('id', 'artist_name', 'member_name', 'member_bday')
         import_id_fields = ()
 
     def get_instance(self, instance_loader, row):
@@ -51,7 +51,7 @@ class MemberResource(resources.ModelResource):
 @admin.register(Member)
 class MemberAdmin(ImportExportModelAdmin):
     resource_class = MemberResource
-    list_display = ('member_name', 'member_bday', 'get_artist_names')  # ✅ 여기에 표시 컬럼 추가
+    list_display = ('id', 'member_name', 'member_bday', 'get_artist_names')  # ✅ 여기에 표시 컬럼 추가
     filter_horizontal = ('artist_name',)
 
     def get_artist_names(self, obj):
