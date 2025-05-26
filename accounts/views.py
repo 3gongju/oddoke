@@ -86,11 +86,17 @@ def profile(request, username):
     # ✅ 찜한 아티스트 가져오기
     favourite_artists = Artist.objects.filter(followers=user_profile)
 
+    # ✅ 팔로우 여부 판단
+    is_following = False
+    if request.user.is_authenticated and request.user != user_profile:
+        is_following = user_profile.followers.filter(id=request.user.id).exists()
+
     return render(request, 'profile.html', {
         'user_profile': user_profile,
         'ddokdam_posts': ddokdam_posts,  # 덕담
         'ddokfarm_posts': ddokfarm_posts,  # 덕팜 
-        'favourite_artists': favourite_artists # 아티스트
+        'favourite_artists': favourite_artists, # 아티스트
+        'is_following': is_following, # 팔로잉
     })
 
 @login_required

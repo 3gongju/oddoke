@@ -67,21 +67,6 @@
                         <a href="{% url 'accounts:profile' post.user.username %}" class="font-semibold">
                             {{ post.user.username }}
                         </a>
-
-                        {% if user.is_authenticated and user != post.user %}
-                            <form method="POST" action="{% url 'accounts:follow' post.user.username %}" class="inline">
-                                {% csrf_token %}
-                                <button type="submit"
-                                        class="ml-2 px-3 py-1 rounded border text-sm font-medium
-                                            {% if is_following %}
-                                                bg-white text-gray-700 border-gray-300
-                                            {% else %}
-                                                bg-blue-500 text-white border-blue-500
-                                            {% endif %}">
-                                {% if is_following %}팔로잉{% else %}+ 팔로우{% endif %}
-                            </button>
-                        </form>
-                    {% endif %}
                 </div>
             </div>
 
