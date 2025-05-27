@@ -63,13 +63,9 @@ def autocomplete(request):
 # 1. 아티스트 멤버 리스트 Ajax로 렌더링
 def artist_members_ajax(request, artist_id):
     artist = get_object_or_404(Artist, id=artist_id)
-    
-    # 디버깅용 출력
-    print(f"Artist: {artist.display_name}")
-    print(f"관련 멤버 수: {artist.members.count()}")
-
     members = artist.members.all()
     html = render_to_string('components/_member_list.html', {
+        'artist': artist,
         'members': members,
         'user': request.user,
     })
@@ -89,3 +85,16 @@ def follow_member_ajax(request, member_id):
         followed = True
 
     return JsonResponse({'followed': followed})
+
+# 모달 멤버 출력용
+def get_artist_members(request, artist_id):
+    artist = get_object_or_404(Artist, id=artist_id)
+    members = artist.members.all()
+
+    html = render_to_string('components/_member_list.html', {
+        'artist': artist,
+        'members': members,
+        'user': request.user,
+    })
+
+    return JsonResponse({'html': html})

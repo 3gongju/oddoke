@@ -1,106 +1,171 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-  <!-- ✅ Profile Section -->
-  <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6">
+  <!-- 프로필 정보 -->
+  <div class="bg-white p-6 shadow rounded-lg mb-6">
     <div class="flex items-center">
-      <!-- 프로필 이미지 -->
       <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-        <img src="{{user_profile.profile_image.url}}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
+        <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
       </div>
-
-      <!-- 닉네임 + 이메일 -->
       <div class="ml-4 flex-1">
-        <!-- ✅ 닉네임 + 팔로우 버튼 수평 정렬 -->
         <div class="flex items-center space-x-4">
           <h2 class="text-lg font-semibold">{{ user_profile.username }}</h2>
         </div>
-
-        <!-- ✅ 프로필 관리 버튼 -->
         <div class="mt-3">
-          <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
-            class="inline-block bg-yellow-400 text-white text-sm px-4 py-1 rounded hover:bg-yellow-500 transition">
+          <a href="{% url 'accounts:edit_profile' user_profile.username %}" class="inline-block bg-yellow-400 text-white text-sm px-4 py-1 rounded hover:bg-yellow-500 transition">
             📎 프로필 관리
           </a>
-
         </div>  
-        
         <p class="text-gray-600 mt-1">{{ user_profile.email }}</p>
-
+        {% if user.is_authenticated %}
+          <a href="{% url 'accounts:profile' request.user.username %}" class="text-sm text-blue-600 hover:underline mt-4 inline-block">
+            → 내 공개 프로필 보기
+          </a>
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- ✅ 찜한 덕 캐러셀 -->
-  <div class="container mx-auto bg-white shadow rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4">찜한 덕</h2>
-    <div class="relative flex justify-center">
-      <div id="favArtistSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
-        {% for artist in favorite_artists %}
+  <!-- 찜한 아티스트 -->
+    <div class="flex justify-between items-center px-6 mb-4 max-w-6xl mx-auto">
+        <h3 class="text-xl font-bold text-red-500">♥ 내가 찜한 덕</h3>
+        <a href="{% url 'artist:index' %}" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
+    </div>
+  <div class="relative flex justify-center">
+    <div id="favArtistSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
+      {% for artist in favorite_artists %}
         <div class="min-w-[120px] snap-start text-center">
           <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-               class="w-24 h-24 object-cover rounded-full mx-auto mb-2 shadow-md">
+               data-artist-id="{{ artist.id }}" data-artist-name="{{ artist.display_name }}"
+               class="artist-logo w-24 h-24 cursor-pointer inline-block m-2 rounded-full shadow">
           <p class="text-sm font-medium">{{ artist.display_name }}</p>
         </div>
-        {% empty %}
-        <!-- 0명: 기본 로고 + 안내 문구 -->
+      {% empty %}
         <div class="flex flex-col items-center py-12 space-y-4">
-          <img src="{% static 'image/ddok_black.png' %}"
-               alt="찜한 아티스트 없음"
-               class="w-24 h-24 object-contain" />
-          <p class="text-gray-600 text-center">
-            아직 찜한 덕이 없어요!<br>
-        {% endfor %}
-      </div>
-      <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
-      <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
+          <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-24 h-24 object-contain" />
+          <p class="text-gray-600 text-center">아직 찜한 덕이 없어요!</p>
+        </div>
+      {% endfor %}
     </div>
+    <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
+    <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
   </div>
 
-  
+  <!-- 팔로우한 멤버 -->
+  <div class="max-w-3xl mx-auto mt-10 px-4">
+    <h2 class="text-xl font-bold mb-6">최애 ❤</h2>
+    {% if favorite_members %}
+      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {% for member in favorite_members %}
+          {% if member.matched_artist %}
+            <li class="cursor-pointer bg-white p-4 rounded shadow text-center"
+                data-member-name="{{ member.member_name }}"
+                data-artist-id="{{ member.matched_artist.id }}"
+                onclick="openArtistModalFromMember(this)">
+              
+              <!-- ✅ 멤버 이름 + 그룹 로고 수평 정렬 -->
+              <div class="flex justify-center items-center gap-2 mb-1">
+                {% for artist in member.filtered_artists %}
+                  <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+                  class="w-6 h-6 object-contain rounded-full shadow">
+                {% endfor %}
+                <div class="text-lg font-semibold">{{ member.member_name }}</div>
+              </div>
+
+              <!-- ✅ 그룹 이름 한 줄에 모두 표시 -->
+              <div class="text-sm text-gray-500 truncate">
+                {% for artist in member.filtered_artists %}
+                  {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </div>
+
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-gray-500">팔로우한 멤버가 없습니다.</p>
+    {% endif %}
+  </div>
 </div>
 
-<!-- ✅ 스크립트 -->
+<!-- 모달 -->
+<div id="memberModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white p-6 rounded max-w-md w-full">
+    <div id="memberListArea" class="max-h-96 overflow-y-auto"></div>
+    <button onclick="closeModal()" class="mt-4 px-4 py-2 bg-gray-300 rounded">닫기</button>
+  </div>
+</div>
+
+<!-- 스크립트 -->
 <script>
+  const followedArtistIds = {{ followed_artist_ids|safe }};
+
+  function closeModal() {
+    location.reload();
+  }
+
   function scrollSlider(id, direction) {
     const slider = document.getElementById(id);
     const scrollAmount = 300;
     slider.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
   }
 
-  const followModal = document.getElementById("followModal");
-  const followModalTitle = document.getElementById("followModalTitle");
-  const followModalList = document.getElementById("followModalList");
-
-  document.getElementById("followerBtn").addEventListener("click", () => {
-    fetchFollowList("followers");
-  });
-  document.getElementById("followingBtn").addEventListener("click", () => {
-    fetchFollowList("followings");
-  });
-
-  function fetchFollowList(type) {
-    followModalTitle.textContent = type === "followers" ? "팔로워 목록" : "팔로잉 목록";
-    fetch(`/accounts/{{ user_profile.username }}/follow-list/?type=${type}`)
-      .then(response => response.json())
-      .then(data => {
-        followModalList.innerHTML = "";
-        data.users.forEach(user => {
-          followModalList.innerHTML += `<li>${user.username}</li>`;
+  function bindFollowButtons(container) {
+    container.querySelectorAll('.follow-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const memberId = this.dataset.memberId;
+        fetch(`/artist/member/${memberId}/follow-toggle/`, {
+          method: 'GET',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          this.innerText = data.followed ? '❤️ 팔로잉' : '🤍 팔로우';
+        })
+        .catch(err => {
+          console.error('팔로우 오류:', err);
+          alert('팔로우 요청 실패');
         });
-        followModal.classList.remove("hidden");
       });
+    });
   }
 
-  function closeFollowModal() {
-    followModal.classList.add("hidden");
+  // 아티스트 클릭 → 모달 오픈
+  document.querySelectorAll('.artist-logo').forEach(img => {
+    img.addEventListener('click', function () {
+      const artistId = this.dataset.artistId;
+      fetch(`/artist/${artistId}/members/`)
+        .then(response => response.json())
+        .then(data => {
+          const modal = document.getElementById('memberModal');
+          const listArea = document.getElementById('memberListArea');
+          listArea.innerHTML = data.html;
+          modal.classList.remove('hidden');
+          bindFollowButtons(listArea);
+        });
+    });
+  });
+
+  // 멤버 클릭 → 해당 아티스트의 멤버 리스트 모달
+  function openArtistModalFromMember(element) {
+    const artistId = element.dataset.artistId;
+    if (followedArtistIds.includes(parseInt(artistId))) {
+      fetch(`/artist/${artistId}/members/`)
+        .then(res => res.json())
+        .then(data => {
+          const modal = document.getElementById('memberModal');
+          const listArea = document.getElementById('memberListArea');
+          listArea.innerHTML = data.html;
+          modal.classList.remove('hidden');
+          bindFollowButtons(listArea);
+        });
+    } else {
+      alert('찜한 아티스트에 포함되지 않은 멤버입니다.');
+    }
   }
 </script>
-<<<<<<< HEAD
 {% endblock %}
-=======
-
-{% endblock %}
->>>>>>> 403db30eae52092ab8b7c75a8d52769453a71d5b
