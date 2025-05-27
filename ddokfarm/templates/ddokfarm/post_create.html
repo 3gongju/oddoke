@@ -26,21 +26,20 @@
       {% csrf_token %}
       <input type="hidden" name="category" id="selected-category" value="{{ category|default:'sell' }}">
 
-      <!-- 아티스트 선택 -->
+      <!-- 아티스트 목록 -->
       <div class="mb-6">
         <label for="artist" class="block mb-1 text-sm font-medium">아티스트 선택</label>
-          <select name="artist" id="artist" class="w-full px-3 py-2 border rounded">
-            {% if not default_artist_id %}
-              <!-- 선택되지 않은 초기 상태 -->
-              <option value="" {% if not default_artist_id %}selected{% endif %} hidden>아티스트를 선택하세요</option>
-            {% endif %}
-            {% for artist in sorted_artists %}
-              <option value="{{ artist.id }}"
-                {% if artist.id == default_artist_id %}selected{% endif %}>
-                {{ artist.display_name }}
-              </option>
-            {% endfor %}
-          </select>
+        <select name="artist" id="artist" class="w-full px-3 py-2 border rounded">
+          {% if not default_artist_id %}
+            <option value="" selected hidden>아티스트를 선택하세요</option>
+          {% endif %}
+          {% for artist in sorted_artists %}
+            <option value="{{ artist.id }}"
+              {% if artist.id == default_artist_id %}selected{% endif %}>
+              {{ artist.display_name }}{% if artist in favorite_artist %} ❤️{% endif %}
+            </option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- 멤버 선택 (항상 렌더링, 처음엔 숨김) -->

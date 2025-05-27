@@ -104,7 +104,7 @@ def post_create(request):
     all_artists = Artist.objects.all()
     sorted_artists = list(favorite_artists) + list(all_artists.exclude(id__in=favorite_artists))
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
-        favorite_artists.first().id if favorite_artists.exists() else None
+        sorted_artists[0].id if sorted_artists else None
     )
 
     # 선택된 아티스트의 멤버 목록
