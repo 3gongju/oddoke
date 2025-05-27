@@ -26,6 +26,32 @@
       {% csrf_token %}
       <input type="hidden" name="category" id="selected-category" value="{{ category|default:'sell' }}">
 
+      <!-- 아티스트 선택 -->
+      <div class="mb-6">
+        <label for="artist" class="block mb-1 text-sm font-medium">아티스트 선택</label>
+          <select name="artist" id="artist" class="w-full px-3 py-2 border rounded">
+            {% if not default_artist_id %}
+              <!-- 선택되지 않은 초기 상태 -->
+              <option value="" {% if not default_artist_id %}selected{% endif %} hidden>아티스트를 선택하세요</option>
+            {% endif %}
+            {% for artist in sorted_artists %}
+              <option value="{{ artist.id }}"
+                {% if artist.id == default_artist_id %}selected{% endif %}>
+                {{ artist.display_name }}
+              </option>
+            {% endfor %}
+          </select>
+      </div>
+
+      <!-- 멤버 선택 (항상 렌더링, 처음엔 숨김) -->
+      <div id="member-wrapper" class="mb-6 hidden">
+        <label class="block text-sm font-medium text-gray-700 mb-2">멤버 선택</label>
+        <div id="member-checkboxes"></div>
+        {% if form.members.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ form.members.errors.0 }}</p>
+        {% endif %}
+      </div>
+
       <!-- 제목 -->
       <div class="mb-6">
         <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">제목</label>
@@ -52,67 +78,110 @@
           <p class="text-red-500 text-sm mt-1">{{ form.image.errors.0 }}</p>
         {% endif %}
 
+        <!-- 미리보기 -->
         <div id="image-preview-container" class="mt-4">
           <img id="image-preview" src="#" alt="이미지 미리보기" class="hidden max-h-64 rounded border" />
         </div>
       </div>
 
       <!-- 카테고리별 필드 -->
-      {% if category in 'sell,rental' %}
+      {% if category == 'sell' or category == 'rental' %}
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">가격</label>
+          <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">가격</label>
           {{ form.price }}
+          {% if form.price.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">거래 방식</label>
+          <label for="{{ form.want_to.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">거래 방식</label>
           {{ form.want_to }}
+          {% if form.want_to.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.want_to.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">상품 상태</label>
+          <label for="{{ form.condition.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">상품 상태</label>
           {{ form.condition }}
+          {% if form.condition.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.condition.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">배송 방법</label>
+          <label for="{{ form.shipping.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">배송 방법</label>
           {{ form.shipping }}
+          {% if form.shipping.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.shipping.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">직거래 희망 장소</label>
+          <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">직거래 희망 장소</label>
           {{ form.location }}
+          {% if form.location.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.location.errors.0 }}</p>
+          {% endif %}
         </div>
+
         {% if category == 'rental' %}
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">대여 시작일</label>
+            <label for="{{ form.start_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">대여 시작일</label>
             {{ form.start_date }}
+            {% if form.start_date.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>
+            {% endif %}
           </div>
+
           <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-1">대여 종료일</label>
+            <label for="{{ form.end_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">대여 종료일</label>
             {{ form.end_date }}
+            {% if form.end_date.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.end_date.errors.0 }}</p>
+            {% endif %}
           </div>
         {% endif %}
+
       {% elif category == 'split' %}
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">앨범 포함 여부</label>
+          <label for="{{ form.album.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">앨범 포함 여부</label>
           {{ form.album }}
+          {% if form.album.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.album.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">개봉 여부</label>
+          <label for="{{ form.opened.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">개봉 여부</label>
           {{ form.opened }}
+          {% if form.opened.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.opened.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">재배송비</label>
+          <label for="{{ form.shipping_fee.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">재배송비</label>
           {{ form.shipping_fee }}
+          {% if form.shipping_fee.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.shipping_fee.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">구매처</label>
+          <label for="{{ form.where.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">구매처</label>
           {{ form.where }}
+          {% if form.where.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.where.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">구매예정일</label>
+          <label for="{{ form.when.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">구매예정일</label>
           {{ form.when }}
+          {% if form.when.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.when.errors.0 }}</p>
+          {% endif %}
         </div>
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">무산 여부</label>
+          <label for="{{ form.failure.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">무산 여부</label>
           {{ form.failure }}
+          {% if form.failure.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ form.failure.errors.0 }}</p>
+          {% endif %}
         </div>
       {% endif %}
 
@@ -127,29 +196,30 @@
   </div>
 </div>
 
-<!-- 스크립트 -->
 <script>
-  const buttons = document.querySelectorAll('.category-btn');
-  const form = document.getElementById('create-form');
+  const selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
+
+document.addEventListener("DOMContentLoaded", function () {
+  const buttons       = document.querySelectorAll('.category-btn');
+  const form          = document.getElementById('create-form');
   const categoryInput = document.getElementById('selected-category');
 
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const category = btn.dataset.category;
-      categoryInput.value = category;
+      categoryInput.value = btn.dataset.category;
       form.submit();
     });
   });
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const fileInput = document.querySelector('input[type="file"][name="image"]');
-    const preview = document.getElementById('image-preview');
+  const fileInput = document.querySelector('input[type="file"][name="image"]');
+  const preview   = document.getElementById('image-preview');
 
+  if (fileInput) {
     fileInput.addEventListener('change', function () {
       const file = this.files[0];
       if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = function (e) {
+        reader.onload = e => {
           preview.src = e.target.result;
           preview.classList.remove('hidden');
         };
@@ -159,6 +229,81 @@
         preview.classList.add('hidden');
       }
     });
-  });
+  }
+
+  const artistSelect     = document.getElementById('artist');
+  const memberWrapper    = document.getElementById('member-wrapper');
+  const memberContainer  = document.getElementById('member-checkboxes');
+
+  function loadMembers(artistId) {
+    memberContainer.innerHTML = '';
+    memberWrapper.classList.add('hidden');
+    if (!artistId) return;
+
+    fetch(`/ddokfarm/ajax/members/${artistId}/`)
+      .then(resp => resp.json())
+      .then(data => {
+        const members = data.members;
+        if (!members.length) return;
+
+        memberWrapper.classList.remove('hidden');
+
+        const selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.classList.add('mr-2');
+
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.classList.add('block', 'mb-2', 'font-semibold');
+        selectAllLabel.appendChild(selectAllCheckbox);
+        selectAllLabel.appendChild(document.createTextNode('전체 선택'));
+        memberContainer.appendChild(selectAllLabel);
+
+        members.forEach(member => {
+          const checkbox = document.createElement('input');
+          checkbox.type  = 'checkbox';
+          checkbox.name  = 'members';
+          checkbox.id    = `member_${member.id}`;
+          checkbox.value = member.id;
+          checkbox.classList.add('mr-2', 'member-checkbox');
+
+          // ✅ 체크 유지
+          if (selectedMemberIds.map(Number).includes(member.id)) {
+            checkbox.checked = true;
+          }
+
+          const label = document.createElement('label');
+          label.htmlFor = checkbox.id;
+          label.classList.add('block', 'mb-2');
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(member.name));
+
+          memberContainer.appendChild(label);
+        });
+
+        const memberCheckboxes = memberContainer.querySelectorAll('.member-checkbox');
+        selectAllCheckbox.addEventListener('change', function () {
+          memberCheckboxes.forEach(cb => (cb.checked = this.checked));
+        });
+        memberCheckboxes.forEach(cb => {
+          cb.addEventListener('change', () => {
+            selectAllCheckbox.checked = Array.from(memberCheckboxes).every(cb => cb.checked);
+          });
+        });
+
+        // ✅ 전체 선택 초기 체크 반영
+        const allCheckedInit = Array.from(memberCheckboxes).every(cb => cb.checked);
+        selectAllCheckbox.checked = allCheckedInit;
+      })
+      .catch(err => {
+        console.error('멤버 불러오기 실패:', err);
+        alert('멤버 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+      });
+  }
+
+  if (artistSelect) {
+    artistSelect.addEventListener('change', () => loadMembers(artistSelect.value));
+    if (artistSelect.value) loadMembers(artistSelect.value);
+  }
+});
 </script>
 {% endblock %}

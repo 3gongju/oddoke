@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from artist.models import Artist, Member
 
 class DamBasePost(models.Model):
     title = models.CharField(max_length=100)
@@ -10,7 +11,8 @@ class DamBasePost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
-    # artist 모델과 연결 필요
+    artist = models.ForeignKey(Artist, on_delete=models.SET_NULL, null=True, blank=True)
+    members = models.ManyToManyField(Member, blank=True)
 
     class Meta:
         abstract = True

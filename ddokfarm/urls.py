@@ -31,6 +31,9 @@ urlpatterns = [
     # 판매 완료 표시
     path('<str:category>/<int:post_id>/mark-as-sold/', views.mark_as_sold, name='mark_as_sold'),
 
+    # 멤버 목록 불러오기
+    path('ajax/members/<int:artist_id>/', views.get_members_by_artist, name='get_members_by_artist'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 

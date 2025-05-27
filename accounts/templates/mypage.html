@@ -46,7 +46,12 @@
       {% empty %}
         <div class="flex flex-col items-center py-12 space-y-4">
           <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-24 h-24 object-contain" />
-          <p class="text-gray-600 text-center">아직 찜한 덕이 없어요!</p>
+          <p class="text-gray-600 text-center">아직 찜한 덕이 없어요!</br>
+            <a href="{% url 'artist:index' %}"
+               class="text-blue-600 hover:underline">
+              찜덕하러 가기~
+            </a>
+          </p>
         </div>
       {% endfor %}
     </div>

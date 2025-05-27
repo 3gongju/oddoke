@@ -11,6 +11,23 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   {% include 'components/_farm_header.html' %}
     <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
+        {% if artist or members %}
+            <div class="mb-4 flex items-center flex-wrap gap-2 text-sm">
+                {% if artist %}
+                <span class="border px-3 py-1 rounded-full">
+                    #{{ artist.display_name }}
+                </span>
+                {% endif %}
+                {% if members %}
+                    {% for member in members %}
+                        <span class="border px-3 py-1 rounded-full">
+                        #{{ member.member_name }}
+                        </span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endif %}
+        
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- 이미지 (2/3) -->
             <div class="relative md:col-span-2 bg-gray-100 aspect-square rounded-lg flex items-center justify-center">
