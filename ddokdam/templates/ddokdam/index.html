@@ -36,7 +36,6 @@
       예절 차리기
     </a>
     
-    <!-- 글 목록 -->
     <a href="{% url 'ddokdam:bdaycafe_index' %}"
       class="px-3 py-1 rounded-full border
               {% if category == 'bdaycafe' %}
@@ -56,6 +55,7 @@
     </a>
   </div>
 
+  <!-- 글 목록 -->
   {% if posts %}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for post in posts %}

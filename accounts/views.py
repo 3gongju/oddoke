@@ -5,7 +5,6 @@ from django.contrib.auth import logout as auth_logout
 from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from artist.models import Artist, Member
@@ -166,15 +165,28 @@ def review_home(request, username):
     })
 
 def mypage(request):
-    user_profile = request.user  # 현재 로그인된 유저
+    user_profile = request.user
     favorite_artists = Artist.objects.filter(followers=user_profile)
     favorite_members = Member.objects.filter(followers=user_profile)
-    related_artists = Artist.objects.filter(members__in=favorite_members).distinct()
-  
+    followed_artist_ids = list(favorite_artists.values_list('id', flat=True))
+
+    # 각 멤버별로 유저가 팔로우한 아티스트 중 하나를 연결
+    for member in favorite_members:
+        matched = next(
+            (artist for artist in member.artist_name.all() if artist.id in followed_artist_ids),
+            None
+        )
+        member.matched_artist = matched  # 템플릿에서 접근할 수 있음
+
+        member.filtered_artists = [
+        artist for artist in member.artist_name.all() if artist.id in followed_artist_ids
+        ]
+
     context = {
         'user_profile': user_profile,
         'favorite_artists': favorite_artists,
-        'favorite_members': favorite_members
+        'favorite_members': favorite_members,
+        'followed_artist_ids': json.dumps(followed_artist_ids),
     }
     return render(request, 'mypage.html', context)
 
@@ -182,11 +194,20 @@ def mypage(request):
 def edit_profile(request, username):
     user_profile = get_object_or_404(User, username=username)
 
-    # POST 요청 처리 (프로필 이름 변경)
     if request.method == "POST":
         new_username = request.POST.get("username")
+        new_bio = request.POST.get("bio")
+        new_first_name = request.POST.get("first_name")  # 닉네임 추가
+
+        # 닉네임 수정
+        if new_first_name and new_first_name != request.user.first_name:
+            request.user.first_name = new_first_name
+            request.user.save()
+            messages.success(request, "닉네임이 수정되었습니다.")
+            return redirect('accounts:edit_profile', username=request.user.username)
+
+        # 기존 프로필 이름 수정
         if new_username and new_username != request.user.username:
-            # 중복 유저네임 체크
             if User.objects.filter(username=new_username).exists():
                 messages.error(request, "이미 존재하는 사용자 이름입니다.")
             else:
@@ -195,10 +216,18 @@ def edit_profile(request, username):
                 messages.success(request, "프로필 이름이 수정되었습니다.")
                 return redirect('accounts:edit_profile', username=request.user.username)
 
+        # 소개 수정
+        if new_bio is not None and new_bio != request.user.bio:
+            request.user.bio = new_bio
+            request.user.save()
+            messages.success(request, "소개가 수정되었습니다.")
+            return redirect('accounts:edit_profile', username=request.user.username)
+
     context = {
         'user_profile': user_profile,
     }
     return render(request, 'accounts/edit_profile.html', context)
+
 
 @login_required
 def edit_profile_image(request, username):

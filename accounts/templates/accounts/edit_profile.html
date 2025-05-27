@@ -5,99 +5,103 @@
 <div class="max-w-2xl mx-auto p-6 bg-white rounded shadow">
   <h2 class="text-2xl font-bold mb-6">프로필 관리</h2>
 
-  <!-- ✅ 프로필 이미지 + 닉네임 - 수정됨 -->
+  <!-- ✅ 프로필 이미지 + 닉네임 (이름) 표시 -->
   <div class="flex items-center space-x-4 mb-6">
-    <!-- 프로필 이미지 조건부 표시 -->
-    {% if user_profile.profile_image %}
-      <img src="{{ user_profile.profile_image.url }}" alt="프로필"
-           class="w-20 h-20 rounded-full object-cover border">
+    {% if user_profile.profile_image and user_profile.profile_image.name %}
+      <img src="{{ user_profile.profile_image.url }}" alt="프로필" class="w-20 h-20 rounded-full object-cover border">
     {% else %}
-      <!-- 기본 프로필 이미지 표시 -->
       <div class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center border text-2xl">
-        {% if user_profile.username|slice:":6" == "kakao_" %}
-          🍯
-        {% elif user_profile.username|slice:":6" == "naver_" %}
-          🟢
-        {% else %}
-          👤
-        {% endif %}
+        {% if user_profile.username|slice:":6" == "kakao_" %}🍯{% elif user_profile.username|slice:":6" == "naver_" %}🟢{% else %}👤{% endif %}
       </div>
     {% endif %}
-    
     <div>
-      <!-- 사용자 이름 표시 개선 -->
-      <p class="text-xl font-semibold">{{ user_profile.first_name|default:user_profile.username }}</p>
-
+      <p class="text-xl font-semibold">{{ user_profile.nickname|default:user_profile.username }}</p>
       <div class="mt-2 space-x-2">
         <a href="{% url 'accounts:edit_profile_image' user_profile.username %}"
-           class="bg-red-400 text-white text-sm px-3 py-1 border rounded hover:bg-red-500">
-          이미지 변경
-        </a>
+           class="bg-red-400 text-white text-sm px-3 py-1 border rounded hover:bg-red-500">이미지 변경</a>
       </div>
     </div>
   </div>
 
-  <!-- ✅ 프로필 정보 수정 -->
+  <!-- ✅ 프로필 정보 수정 영역 -->
   <div class="space-y-4">
-    <!-- ✅ 기본 표시 영역 -->
-    <div id="username-display" class="flex justify-between items-center">
+
+    <!-- 닉네임(nickname) 변경 -->
+    <div id="nickname-display" class="flex justify-between items-center">
       <div>
-        <p class="text-sm text-gray-500">프로필 이름</p>
-        <p class="font-medium" id="current-username">{{ user_profile.first_name|default:user_profile.username }}</p>
+        <p class="text-sm text-gray-500">닉네임 (로그인 후 표시 이름)</p>
+        <p class="font-medium" id="current-nickname">{{ user_profile.nickname|default:user_profile.username }}</p>
       </div>
-      <button id="edit-username-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+      <button id="edit-nickname-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
     </div>
 
-    <!-- ✅ 수정 input 영역 -->
-    <form method="POST" id="username-edit-form"
+    <form method="POST" id="nickname-edit-form"
           action="{% url 'accounts:edit_profile' user_profile.username %}"
           style="display: none;">
       {% csrf_token %}
-      <input type="text" id="new-username" name="username" value="{{ user.username }}"
-             class="border rounded p-1 w-full">
-      <p class="text-xs text-gray-500 mt-1">변경 후 30일이 지나야 다시 변경 가능하므로 신중히 변경해주세요.</p>
+      <input type="text" name="nickname" value="{{ user_profile.nickname }}" class="border rounded p-1 w-full">
       <div class="flex space-x-2 mt-2">
-        <button type="button" id="cancel-edit-btn"
-                class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
-        <button type="submit" id="save-username-btn"
-                class="bg-black text-white rounded px-3 py-1">저장</button>
+        <button type="button" id="cancel-nickname-btn" class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
+        <button type="submit" class="bg-black text-white rounded px-3 py-1">저장</button>
       </div>
     </form>
 
-    <!-- ✅ 소개 -->
-    <div class="flex justify-between items-center">
+    <!-- 소개(bio) 변경 -->
+    <div id="bio-display" class="flex justify-between items-center">
       <div>
         <p class="text-sm text-gray-500">소개</p>
-        <p class="font-medium">
-          {% if user_profile.bio %}{{ user_profile.bio }}{% else %}안녕하세요!{% endif %}
-        </p>
+        <p class="font-medium" id="current-bio">{% if user_profile.bio %}{{ user_profile.bio }}{% else %}안녕하세요!{% endif %}</p>
       </div>
-      <button class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+      <button id="edit-bio-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
     </div>
+
+    <form method="POST" id="bio-edit-form"
+          action="{% url 'accounts:edit_profile' user_profile.username %}"
+          style="display: none;">
+      {% csrf_token %}
+      <textarea name="bio" class="border rounded p-2 w-full h-24 resize-none">{{ user_profile.bio }}</textarea>
+      <div class="flex space-x-2 mt-2">
+        <button type="button" id="cancel-bio-btn" class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
+        <button type="submit" class="bg-black text-white rounded px-3 py-1">저장</button>
+      </div>
+    </form>
+
   </div>
 </div>
 
-<!-- ✅ JS는 반드시 block body 안에 위치해야 작동 -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const displayDiv = document.getElementById("username-display");
-    const form = document.getElementById("username-edit-form");
-    const editBtn = document.getElementById("edit-username-btn");
-    const cancelBtn = document.getElementById("cancel-edit-btn");
+    // 닉네임 수정 토글
+    const nicknameDisplay = document.getElementById("nickname-display");
+    const nicknameForm = document.getElementById("nickname-edit-form");
+    const nicknameBtn = document.getElementById("edit-nickname-btn");
+    const cancelNicknameBtn = document.getElementById("cancel-nickname-btn");
 
-    if (editBtn && cancelBtn && form && displayDiv) {
-      editBtn.addEventListener("click", function () {
-        displayDiv.style.display = "none";
-        form.style.display = "block";
-      });
+    nicknameBtn?.addEventListener("click", () => {
+      nicknameDisplay.style.display = "none";
+      nicknameForm.style.display = "block";
+    });
 
-      cancelBtn.addEventListener("click", function () {
-        form.style.display = "none";
-        displayDiv.style.display = "flex";
-      });
-    } else {
-      console.warn("❗ Some elements not found in DOM");
-    }
+    cancelNicknameBtn?.addEventListener("click", () => {
+      nicknameForm.style.display = "none";
+      nicknameDisplay.style.display = "flex";
+    });
+
+    // 소개 수정 토글
+    const bioDisplay = document.getElementById("bio-display");
+    const bioForm = document.getElementById("bio-edit-form");
+    const bioBtn = document.getElementById("edit-bio-btn");
+    const cancelBioBtn = document.getElementById("cancel-bio-btn");
+
+    bioBtn?.addEventListener("click", () => {
+      bioDisplay.style.display = "none";
+      bioForm.style.display = "block";
+    });
+
+    cancelBioBtn?.addEventListener("click", () => {
+      bioForm.style.display = "none";
+      bioDisplay.style.display = "flex";
+    });
   });
 </script>
 {% endblock %}
