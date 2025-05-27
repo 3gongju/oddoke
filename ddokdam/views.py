@@ -87,24 +87,19 @@ def post_create(request):
             form.save_m2m()
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
-        # GET 요청 시 기본 카테고리 선택
         category = request.GET.get('category') or 'community'
         selected_artist_id = None
         selected_member_ids = []
         form_class = get_post_form(category)
-
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
-    # 아티스트 정렬 (팔로우한 아티스트 우선)
-    all_artists = Artist.objects.all()
-    sorted_artists = list(favorite_artists) + list(all_artists.exclude(id__in=favorite_artists))
+    # 드롭다운에는 팔로우 아티스트만
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
-        sorted_artists[0].id if sorted_artists else None
+        favorite_artists[0].id if favorite_artists.exists() else None
     )
 
-    # 선택된 아티스트의 멤버 목록
     selected_members = []
     if default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
@@ -112,14 +107,35 @@ def post_create(request):
     context = {
         'form': form,
         'category': category,
-        'sorted_artists': sorted_artists,
+        'sorted_artists': favorite_artists,
         'default_artist_id': default_artist_id,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
-        'favorite_artist': favorite_artist,
     }
 
-    return render(request, 'ddokdam/post_create.html', context)    
+    return render(request, 'ddokdam/post_create.html', context)
+
+# 아티스트 검색
+@login_required
+def search_artists(request):
+    query = request.GET.get('q', '')
+    if query:
+        results = Artist.objects.filter(
+            Q(display_name__icontains=query) |
+            Q(korean_name__icontains=query) |
+            Q(english_name__icontains=query) |
+            Q(alias__icontains=query)
+        )[:10]
+    else:
+        results = []
+
+    data = {
+        "results": [
+            {"id": artist.id, "name": artist.display_name}
+            for artist in results
+        ]
+    }
+    return JsonResponse(data)
 
 # 게시글 수정
 @login_required

@@ -34,6 +34,9 @@ urlpatterns = [
     # 멤버 목록 불러오기
     path('ajax/members/<int:artist_id>/', views.get_members_by_artist, name='get_members_by_artist'),
 
+    # 아티스트 검색
+    path('ajax/search_artists/', views.search_artists, name='search_artists'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 
