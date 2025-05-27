@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.db.models import Q
 from operator import attrgetter
-from .models import DamComment
+from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost
 from .forms import DamCommentForm
 from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id
 from artist.models import Member, Artist
@@ -101,7 +101,7 @@ def post_create(request):
     all_artists = Artist.objects.all()
     sorted_artists = list(favorite_artists) + list(all_artists.exclude(id__in=favorite_artists))
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
-        favorite_artists.first().id if favorite_artists.exists() else None
+        sorted_artists[0].id if sorted_artists else None
     )
 
     # 선택된 아티스트의 멤버 목록
@@ -116,6 +116,7 @@ def post_create(request):
         'default_artist_id': default_artist_id,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'favorite_artist': favorite_artist,
     }
 
     return render(request, 'ddokdam/post_create.html', context)    
