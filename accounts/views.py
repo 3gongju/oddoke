@@ -172,23 +172,32 @@ def mypage(request):
 def edit_profile(request, username):
     user_profile = get_object_or_404(User, username=username)
 
-    # POST 요청 처리 (프로필 이름 변경)
     if request.method == "POST":
+        # ✅ 1. 사용자 이름 변경 처리
         new_username = request.POST.get("username")
         if new_username and new_username != request.user.username:
-            # 중복 유저네임 체크
             if User.objects.filter(username=new_username).exists():
                 messages.error(request, "이미 존재하는 사용자 이름입니다.")
+                return redirect('accounts:edit_profile', username=username)
             else:
                 request.user.username = new_username
                 request.user.save()
                 messages.success(request, "프로필 이름이 수정되었습니다.")
                 return redirect('accounts:edit_profile', username=request.user.username)
 
+        # ✅ 2. 소개(bio) 수정 처리
+        new_bio = request.POST.get("bio")
+        if new_bio is not None and new_bio != request.user.bio:
+            request.user.bio = new_bio
+            request.user.save()
+            messages.success(request, "소개가 수정되었습니다.")
+            return redirect('accounts:edit_profile', username=request.user.username)
+
     context = {
         'user_profile': user_profile,
     }
     return render(request, 'accounts/edit_profile.html', context)
+
 
 @login_required
 def edit_profile_image(request, username):
