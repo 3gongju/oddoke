@@ -6,6 +6,7 @@
 
   <form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded-xl shadow-lg space-y-6">
     {% csrf_token %}
+    <input type="hidden" name="category" value="{{ category }}">
 
     <!-- 아티스트 선택 -->
     <div>
@@ -76,7 +77,7 @@
       </div>
     </div>
 
-    <!-- 카테고리별 추가 필드 -->
+    <!-- 카테고리별 필드 -->
     {% if category == 'manner' %}
       <div>
         <label for="{{ form.location.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">위치</label>
@@ -85,7 +86,6 @@
           <p class="text-red-500 text-sm mt-1">{{ form.location.errors.0 }}</p>
         {% endif %}
       </div>
-
       <div>
         <label for="{{ form.item.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">예절템</label>
         {{ form.item }}
@@ -118,7 +118,11 @@
 </div>
 
 <script>
+  // ✅ 기존에 선택된 멤버 ID들을 템플릿에서 전달 (장고 템플릿 상단에 삽입 필요)
+  const selectedMemberIds = {{ selected_member_ids|safe }};
+
   document.addEventListener("DOMContentLoaded", function () {
+    // ✅ 이미지 미리보기
     const fileInput = document.querySelector('input[type="file"][name="image"]');
     const preview = document.getElementById('image-preview');
     const original = document.getElementById('original-image');
@@ -131,26 +135,18 @@
           reader.onload = function (e) {
             preview.src = e.target.result;
             preview.classList.remove('hidden');
-
-            // 기존 이미지 숨기기
-            if (original) {
-              original.classList.add('hidden');
-            }
+            if (original) original.classList.add('hidden');
           };
           reader.readAsDataURL(file);
         } else {
           preview.src = '#';
           preview.classList.add('hidden');
-
-          // 기존 이미지 다시 보여주기 (선택 취소 등)
-          if (original) {
-            original.classList.remove('hidden');
-          }
+          if (original) original.classList.remove('hidden');
         }
       });
     }
-  });
-    document.addEventListener("DOMContentLoaded", function () {
+
+    // ✅ 아티스트 선택 시 멤버 목록 동적 로딩
     const artistSelect = document.getElementById('artist');
     const memberWrapper = document.getElementById('member-wrapper');
     const memberContainer = document.getElementById('member-checkboxes');
@@ -158,17 +154,16 @@
     function loadMembers(artistId) {
       memberContainer.innerHTML = '';
       memberWrapper.classList.add('hidden');
-
       if (!artistId) return;
 
-      fetch(`/ddokdam/ajax/members/${artistId}/`)
+      fetch(`/ddokfarm/ajax/members/${artistId}/`)
         .then(response => response.json())
         .then(data => {
           const members = data.members;
           if (members.length > 0) {
             memberWrapper.classList.remove('hidden');
 
-            // 전체 선택 추가
+            // ✅ 전체 선택 추가
             const selectAllId = 'select-all-members';
             const selectAllCheckbox = document.createElement('input');
             selectAllCheckbox.type = 'checkbox';
@@ -179,10 +174,9 @@
             selectAllLabel.classList.add('block', 'mb-2', 'font-semibold');
             selectAllLabel.appendChild(selectAllCheckbox);
             selectAllLabel.appendChild(document.createTextNode('전체 선택'));
-
             memberContainer.appendChild(selectAllLabel);
 
-            // 멤버들 추가
+            // ✅ 멤버 체크박스 렌더링
             members.forEach(member => {
               const id = `member_${member.id}`;
               const checkbox = document.createElement('input');
@@ -192,22 +186,24 @@
               checkbox.value = member.id;
               checkbox.classList.add('mr-2', 'member-checkbox');
 
+              // 🔥 선택된 멤버는 체크 처리
+              if (selectedMemberIds.map(Number).includes(member.id)) {
+                checkbox.checked = true;
+              }
+
               const label = document.createElement('label');
               label.htmlFor = id;
               label.classList.add('block', 'mb-2');
               label.appendChild(checkbox);
               label.appendChild(document.createTextNode(member.name));
-
               memberContainer.appendChild(label);
             });
 
-            // 전체 선택 로직
+            // ✅ 전체 선택 제어 로직
             const memberCheckboxes = document.querySelectorAll('.member-checkbox');
-
             selectAllCheckbox.addEventListener('change', function () {
               memberCheckboxes.forEach(cb => cb.checked = this.checked);
             });
-
             memberCheckboxes.forEach(cb => {
               cb.addEventListener('change', function () {
                 if (!this.checked) {
@@ -218,6 +214,10 @@
                 }
               });
             });
+
+            // ✅ 초기 상태에서 전체 체크인지 확인
+            const allCheckedInit = Array.from(memberCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.checked = allCheckedInit;
           }
         });
     }

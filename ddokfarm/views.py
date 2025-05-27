@@ -8,7 +8,7 @@ from operator import attrgetter
 from .models import FarmComment
 from .forms import FarmCommentForm
 from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id
-
+from artist.models import Member, Artist
 
 # ✅ 홈 화면 (루트 URL)
 def main(request):
@@ -62,6 +62,8 @@ def post_detail(request, category, post_id):
         'total_comment_count': total_comment_count,
         'comment_form': comment_form,
         'is_liked': is_liked,
+        'artist': post.artist,
+        'members': post.members.all(),
     }
 
     return render(request, 'ddokfarm/post_detail_test.html', context)
@@ -69,10 +71,14 @@ def post_detail(request, category, post_id):
 # 게시글 작성
 @login_required
 def post_create(request):
+    favorite_artists = Artist.objects.filter(followers=request.user)
+
     if request.method == 'POST':
         category = request.POST.get('category')
-        form_class = get_post_form(category)
+        selected_artist_id = request.POST.get('artist')
+        selected_member_ids = list(map(int, request.POST.getlist('members')))
 
+        form_class = get_post_form(category)
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
 
@@ -81,20 +87,38 @@ def post_create(request):
             post = form.save(commit=False)
             post.user = request.user
             post.save()
+            form.save_m2m()
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
     else:
-        # GET 요청 시 기본 카테고리 선택 (예: 'sell')
+        # GET 요청 시 기본 카테고리 선택
         category = request.GET.get('category') or 'sell'
+        selected_artist_id = None
+        selected_member_ids = []
         form_class = get_post_form(category)
 
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
-
         form = form_class()
+
+    # 아티스트 정렬 (팔로우한 아티스트 우선)
+    all_artists = Artist.objects.all()
+    sorted_artists = list(favorite_artists) + list(all_artists.exclude(id__in=favorite_artists))
+    default_artist_id = int(selected_artist_id) if selected_artist_id else (
+        favorite_artists.first().id if favorite_artists.exists() else None
+    )
+
+    # 선택된 아티스트의 멤버 목록
+    selected_members = []
+    if default_artist_id:
+        selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
 
     context = {
         'form': form,
         'category': category,
+        'sorted_artists': sorted_artists,
+        'default_artist_id': default_artist_id,
+        'selected_members': selected_members,
+        'selected_member_ids': selected_member_ids,
     }
 
     return render(request, 'ddokfarm/post_create.html', context)
@@ -121,15 +145,35 @@ def post_edit(request, category, post_id):
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
         if form.is_valid():
-            form.save()
+            post = form.save(commit=False)
+
+            artist_id = request.POST.get('artist')
+            member_ids = request.POST.getlist('members')
+
+            if artist_id:
+                post.artist_id = artist_id
+
+            post.save()
+
+            post.members.set(member_ids)
+
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
+
     else:
         form = form_class(instance=post)
+
+    # GET/POST 공통 context 설정
+    sorted_artists = Artist.objects.order_by('display_name')
+    selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+    selected_member_ids = list(post.members.values_list('id', flat=True))
 
     context = {
         'form': form,
         'post': post,
         'category': category,
+        'sorted_artists': sorted_artists,
+        'selected_members': selected_members,
+        'selected_member_ids': selected_member_ids,
     }
     return render(request, 'ddokfarm/post_edit.html', context)
 
@@ -245,6 +289,15 @@ def mark_as_sold(request, category, post_id):
     post.save()
 
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
+
+# 아티스트 선택시 멤버 목록 출력
+def get_members_by_artist(request, artist_id):
+    members = Member.objects.filter(artist_name__id=artist_id).distinct()
+    member_data = [
+        {"id": member.id, "name": member.member_name}
+        for member in members
+    ]
+    return JsonResponse({"members": member_data})
 
 # # ✅ 게시글 목록 (카테고리, 정렬 포함)
 # def index(request):

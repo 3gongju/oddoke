@@ -1,22 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 from django.urls import reverse
+from django.db.models import Q
 from operator import attrgetter
 from .models import DamComment
 from .forms import DamCommentForm
 from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id
 from artist.models import Member, Artist
-
-def get_members_by_artist(request, artist_id):
-    members = Member.objects.filter(artist_name__id=artist_id).distinct()
-    member_data = [
-        {"id": member.id, "name": member.member_name}
-        for member in members
-    ]
-    return JsonResponse({"members": member_data})
 
 # 전체 게시글 보기
 def index(request):
@@ -58,7 +51,6 @@ def post_detail(request, category, post_id):
 
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
 
-
     context = {
         'post': post,
         'category': category,
@@ -81,7 +73,7 @@ def post_create(request):
     if request.method == 'POST':
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
-        selected_member_ids = request.POST.getlist('members')  # ✅ 체크된 멤버 리스트
+        selected_member_ids = list(map(int, request.POST.getlist('members')))
 
         form_class = get_post_form(category)
         if not form_class:
@@ -95,24 +87,24 @@ def post_create(request):
             form.save_m2m()
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
-        category = request.GET.get('category', 'community')
+        # GET 요청 시 기본 카테고리 선택
+        category = request.GET.get('category') or 'community'
         selected_artist_id = None
         selected_member_ids = []
         form_class = get_post_form(category)
 
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
-
         form = form_class()
 
-    # 아티스트 리스트 구성
+    # 아티스트 정렬 (팔로우한 아티스트 우선)
     all_artists = Artist.objects.all()
     sorted_artists = list(favorite_artists) + list(all_artists.exclude(id__in=favorite_artists))
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
         favorite_artists.first().id if favorite_artists.exists() else None
     )
 
-    # ✅ 선택된 아티스트의 멤버 목록 (POST 후 렌더링 위해)
+    # 선택된 아티스트의 멤버 목록
     selected_members = []
     if default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
@@ -123,11 +115,11 @@ def post_create(request):
         'sorted_artists': sorted_artists,
         'default_artist_id': default_artist_id,
         'selected_members': selected_members,
-        'selected_member_ids': list(map(int, selected_member_ids)),  # 체크 유지를 위해 int 변환
+        'selected_member_ids': selected_member_ids,
     }
 
-    return render(request, 'ddokdam/post_create.html', context)
-    
+    return render(request, 'ddokdam/post_create.html', context)    
+
 # 게시글 수정
 @login_required
 def post_edit(request, category, post_id):
@@ -150,25 +142,26 @@ def post_edit(request, category, post_id):
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
         if form.is_valid():
+            post = form.save(commit=False)
+
             artist_id = request.POST.get('artist')
             member_ids = request.POST.getlist('members')
 
             if artist_id:
                 post.artist_id = artist_id
 
-            form.save()
+            post.save()
 
-            if member_ids:
-                post.members.set(member_ids)
-            else:
-                post.members.clear()
+            post.members.set(member_ids)
+
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
         form = form_class(instance=post)
 
-        sorted_artists = Artist.objects.all().order_by('display_name')
-        selected_members = Member.objects.filter(artist_name=post.artist).distinct()
-        selected_member_ids = post.members.values_list('id', flat=True)
+    # GET/POST 공통 context 설정
+    sorted_artists = Artist.objects.order_by('display_name')
+    selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+    selected_member_ids = list(post.members.values_list('id', flat=True))
 
     context = {
         'form': form,
