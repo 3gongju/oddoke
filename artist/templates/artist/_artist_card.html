@@ -1,7 +1,7 @@
 {% load static %}
 
 <div class="flex flex-col items-center space-y-1 relative z-0">
-  <form method="POST" action="{% url 'artist:toggle_favourite' artist.id %}" class="relative z-0">
+  <form method="POST" action="{% url 'artist:toggle_favorite' artist.id %}" class="relative z-0">
     {% csrf_token %}
     <button type="submit" class="focus:outline-none group relative">
       <!-- 아티스트 로고 -->

@@ -36,10 +36,18 @@ def index(request):
 
 # 찜 토글
 @login_required
-def toggle_favourite(request, artist_id):
+def toggle_favorite(request, artist_id):
     artist = get_object_or_404(Artist, id=artist_id)
     if request.user in artist.followers.all():
         artist.followers.remove(request.user)
+
+        # 아티스트 팔로우 취소 시 팔로우한 멤버도 취소됨
+        related_members = artist.members.all() 
+        for member in related_members:
+            other_followed_artists = member.artist_name.exclude(id=artist.id).filter(followers=request.user)
+
+            if not other_followed_artists.exists():
+                member.followers.remove(request.user)
     else:
         artist.followers.add(request.user)
     return redirect(request.META.get('HTTP_REFERER', '/'))
