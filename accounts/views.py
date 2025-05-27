@@ -169,6 +169,10 @@ def mypage(request):
         )
         member.matched_artist = matched  # 템플릿에서 접근할 수 있음
 
+        member.filtered_artists = [
+        artist for artist in member.artist_name.all() if artist.id in followed_artist_ids
+        ]
+
     context = {
         'user_profile': user_profile,
         'favorite_artists': favorite_artists,

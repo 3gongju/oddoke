@@ -65,33 +65,27 @@
                 data-member-name="{{ member.member_name }}"
                 data-artist-id="{{ member.matched_artist.id }}"
                 onclick="openArtistModalFromMember(this)">
-              <div class="text-lg font-semibold">{{ member.member_name }}</div>
-              <div class="flex justify-center items-center gap-2 mt-2">
-                {% for artist in member.artist_name.all %}
-                  <img src="{% static artist.logo %}" alt="{{ artist.display_name }}" class="w-10 h-10 object-contain rounded-full shadow">
+              
+              <!-- ✅ 멤버 이름 + 그룹 로고 수평 정렬 -->
+              <div class="flex justify-center items-center gap-2 mb-1">
+                {% for artist in member.filtered_artists %}
+                  <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
+                  class="w-6 h-6 object-contain rounded-full shadow">
+                {% endfor %}
+                <div class="text-lg font-semibold">{{ member.member_name }}</div>
+              </div>
+
+              <!-- ✅ 그룹 이름 한 줄에 모두 표시 -->
+              <div class="text-sm text-gray-500 truncate">
+                {% for artist in member.filtered_artists %}
+                  {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
               </div>
+
             </li>
           {% endif %}
         {% endfor %}
       </ul>
-      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {% for member in favorite_members %}
-                {% if member.matched_artist %}
-                    <li class="cursor-pointer bg-white p-4 rounded shadow text-center"
-                        data-member-name="{{ member.member_name }}"
-                        data-artist-id="{{ member.matched_artist.id }}"
-                        onclick="openArtistModalFromMember(this)">
-                    <div class="text-lg font-semibold">{{ member.member_name }}</div>
-                    <div class="text-sm text-gray-500">
-                        {% for artist in member.artist_name.all %}
-                            {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                    </div>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
     {% else %}
       <p class="text-gray-500">팔로우한 멤버가 없습니다.</p>
     {% endif %}
