@@ -48,39 +48,68 @@
       </div>
     </form>
 
-    <!-- ✅ 소개 -->
-    <div class="flex justify-between items-center">
+    <!-- ✅ 소개 기본 영역 -->
+    <div id="bio-display" class="flex justify-between items-center">
       <div>
         <p class="text-sm text-gray-500">소개</p>
-        <p class="font-medium">
+        <p class="font-medium" id="current-bio">
           {% if user_profile.bio %}{{ user_profile.bio }}{% else %}안녕하세요!{% endif %}
         </p>
       </div>
-      <button class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+      <button id="edit-bio-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
     </div>
+
+    <!-- ✅ 소개 수정 영역 -->
+    <form method="POST" id="bio-edit-form"
+          action="{% url 'accounts:edit_profile' user_profile.username %}"
+          style="display: none;">
+      {% csrf_token %}
+      <textarea id="new-bio" name="bio"
+                class="border rounded p-2 w-full h-24 resize-none">{{ user_profile.bio }}</textarea>
+      <div class="flex space-x-2 mt-2">
+        <button type="button" id="cancel-bio-btn"
+                class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
+        <button type="submit" class="bg-black text-white rounded px-3 py-1">저장</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <!-- ✅ JS는 반드시 block body 안에 위치해야 작동 -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const displayDiv = document.getElementById("username-display");
-    const form = document.getElementById("username-edit-form");
-    const editBtn = document.getElementById("edit-username-btn");
-    const cancelBtn = document.getElementById("cancel-edit-btn");
+    const usernameDisplay = document.getElementById("username-display");
+    const usernameForm = document.getElementById("username-edit-form");
+    const usernameEditBtn = document.getElementById("edit-username-btn");
+    const usernameCancelBtn = document.getElementById("cancel-edit-btn");
 
-    if (editBtn && cancelBtn && form && displayDiv) {
-      editBtn.addEventListener("click", function () {
-        displayDiv.style.display = "none";
-        form.style.display = "block";
+    const bioDisplay = document.getElementById("bio-display");
+    const bioForm = document.getElementById("bio-edit-form");
+    const bioEditBtn = document.getElementById("edit-bio-btn");
+    const bioCancelBtn = document.getElementById("cancel-bio-btn");
+
+    if (usernameEditBtn && usernameCancelBtn && usernameForm && usernameDisplay) {
+      usernameEditBtn.addEventListener("click", function () {
+        usernameDisplay.style.display = "none";
+        usernameForm.style.display = "block";
       });
 
-      cancelBtn.addEventListener("click", function () {
-        form.style.display = "none";
-        displayDiv.style.display = "flex";
+      usernameCancelBtn.addEventListener("click", function () {
+        usernameForm.style.display = "none";
+        usernameDisplay.style.display = "flex";
       });
-    } else {
-      console.warn("❗ Some elements not found in DOM");
+    }
+
+    if (bioEditBtn && bioCancelBtn && bioForm && bioDisplay) {
+      bioEditBtn.addEventListener("click", function () {
+        bioDisplay.style.display = "none";
+        bioForm.style.display = "block";
+      });
+
+      bioCancelBtn.addEventListener("click", function () {
+        bioForm.style.display = "none";
+        bioDisplay.style.display = "flex";
+      });
     }
   });
 </script>

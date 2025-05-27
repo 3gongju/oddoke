@@ -40,7 +40,12 @@
           </a>
         </div>  
         
-        <p class="text-gray-600 mt-1">{{ user_profile.email }}</p>
+        <!-- <p class="text-gray-600 mt-1">{{ user_profile.email }}</p> -->
+
+        <!-- ✅ 소개 출력 -->
+        {% if user_profile.bio %}
+          <p class="text-sm text-gray-700 mt-2">{{ user_profile.bio }}</p>
+        {% endif %}
 
         <div class="flex space-x-6 mt-2 text-sm text-gray-600">
           <button id="followerBtn" class="hover:underline">팔로워 {{ user_profile.followers.all|length }}</button>
