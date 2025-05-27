@@ -5,12 +5,28 @@
 <div class="max-w-2xl mx-auto p-6 bg-white rounded shadow">
   <h2 class="text-2xl font-bold mb-6">프로필 관리</h2>
 
-  <!-- ✅ 프로필 이미지 + 닉네임 -->
+  <!-- ✅ 프로필 이미지 + 닉네임 - 수정됨 -->
   <div class="flex items-center space-x-4 mb-6">
-    <img src="{{ user_profile.profile_image.url }}" alt="프로필"
-         class="w-20 h-20 rounded-full object-cover border">
+    <!-- 프로필 이미지 조건부 표시 -->
+    {% if user_profile.profile_image %}
+      <img src="{{ user_profile.profile_image.url }}" alt="프로필"
+           class="w-20 h-20 rounded-full object-cover border">
+    {% else %}
+      <!-- 기본 프로필 이미지 표시 -->
+      <div class="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center border text-2xl">
+        {% if user_profile.username|slice:":6" == "kakao_" %}
+          🍯
+        {% elif user_profile.username|slice:":6" == "naver_" %}
+          🟢
+        {% else %}
+          👤
+        {% endif %}
+      </div>
+    {% endif %}
+    
     <div>
-      <p class="text-xl font-semibold">{{ user_profile.username }}</p>
+      <!-- 사용자 이름 표시 개선 -->
+      <p class="text-xl font-semibold">{{ user_profile.first_name|default:user_profile.username }}</p>
 
       <div class="mt-2 space-x-2">
         <a href="{% url 'accounts:edit_profile_image' user_profile.username %}"
@@ -27,7 +43,7 @@
     <div id="username-display" class="flex justify-between items-center">
       <div>
         <p class="text-sm text-gray-500">프로필 이름</p>
-        <p class="font-medium" id="current-username">{{ user_profile.username }}</p>
+        <p class="font-medium" id="current-username">{{ user_profile.first_name|default:user_profile.username }}</p>
       </div>
       <button id="edit-username-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
     </div>

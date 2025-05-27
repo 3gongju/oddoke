@@ -14,6 +14,11 @@ urlpatterns = [
     # 카카오 로그인 추가
     path('kakao/login/', views.kakao_login, name='kakao_login'),
     path('kakao/callback/', views.kakao_callback, name='kakao_callback'),
+    
+    # 네이버 로그인 추가
+    path('naver/login/', views.naver_login, name='naver_login'),
+    path('naver/callback/', views.naver_callback, name='naver_callback'),
+    path('naver/logout/', views.naver_logout, name='naver_logout'),  # 선택사항
 
 
     # mypage

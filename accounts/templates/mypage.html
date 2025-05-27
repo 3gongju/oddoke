@@ -6,16 +6,29 @@
   <!-- ✅ Profile Section -->
   <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6">
     <div class="flex items-center">
-      <!-- 프로필 이미지 -->
+      <!-- 프로필 이미지 수정 -->
       <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-        <img src="{{user_profile.profile_image.url}}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
+        {% if user_profile.profile_image %}
+          <img src="{{user_profile.profile_image.url}}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
+        {% else %}
+          <!-- 기본 프로필 이미지 표시 -->
+          <div class="rounded-full w-full h-full bg-gray-300 flex items-center justify-center text-gray-600 text-2xl">
+            {% if user_profile.username|slice:":6" == "kakao_" %}
+              🍯
+            {% elif user_profile.username|slice:":6" == "naver_" %}
+              🟢
+            {% else %}
+              👤
+            {% endif %}
+          </div>
+        {% endif %}
       </div>
 
       <!-- 닉네임 + 이메일 -->
       <div class="ml-4 flex-1">
-        <!-- ✅ 닉네임 + 팔로우 버튼 수평 정렬 -->
+        <!-- ✅ 닉네임 + 팔로우 버튼 수평 정렬 - 수정 -->
         <div class="flex items-center space-x-4">
-          <h2 class="text-lg font-semibold">{{ user_profile.username }}</h2>
+          <h2 class="text-lg font-semibold">{{ user_profile.first_name|default:user_profile.username }}</h2>
         </div>
 
         <!-- ✅ 프로필 관리 버튼 -->
@@ -52,10 +65,14 @@
                class="w-24 h-24 object-contain" />
           <p class="text-gray-600 text-center">
             아직 찜한 덕이 없어요!<br>
+          </p>
+        </div>
         {% endfor %}
       </div>
+      {% if favorite_artists %}
       <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
       <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
+      {% endif %}
     </div>
   </div>
 
