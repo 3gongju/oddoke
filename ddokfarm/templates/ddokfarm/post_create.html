@@ -26,20 +26,23 @@
       {% csrf_token %}
       <input type="hidden" name="category" id="selected-category" value="{{ category|default:'sell' }}">
 
-      <!-- 아티스트 목록 -->
-      <div class="mb-6">
+      <!-- 아티스트 선택 -->
+      <div class="mb-6 relative">
         <label for="artist" class="block mb-1 text-sm font-medium">아티스트 선택</label>
         <select name="artist" id="artist" class="w-full px-3 py-2 border rounded">
-          {% if not default_artist_id %}
-            <option value="" selected hidden>아티스트를 선택하세요</option>
-          {% endif %}
+          <option value="" {% if not default_artist_id %}selected{% endif %} hidden>아티스트를 선택하세요</option>
           {% for artist in sorted_artists %}
             <option value="{{ artist.id }}"
               {% if artist.id == default_artist_id %}selected{% endif %}>
-              {{ artist.display_name }}{% if artist in favorite_artist %} ❤️{% endif %}
+              {{ artist.display_name }} ❤️
             </option>
           {% endfor %}
         </select>
+
+        <!-- 검색용 input -->
+        <input type="text" id="artist-search" placeholder="검색으로 아티스트 추가"
+              class="mt-2 w-full px-3 py-2 border rounded" autocomplete="off" />
+        <div id="artist-search-results" class="absolute w-full bg-white border mt-1 rounded shadow hidden z-10"></div>
       </div>
 
       <!-- 멤버 선택 (항상 렌더링, 처음엔 숨김) -->
@@ -198,111 +201,189 @@
 <script>
   const selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
 
-document.addEventListener("DOMContentLoaded", function () {
-  const buttons       = document.querySelectorAll('.category-btn');
-  const form          = document.getElementById('create-form');
-  const categoryInput = document.getElementById('selected-category');
+  document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("artist-search");
+    const resultBox = document.getElementById("artist-search-results");
+    const selectBox = document.getElementById("artist");
+    let currentFocus = -1;
 
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      categoryInput.value = btn.dataset.category;
-      form.submit();
-    });
-  });
+    function highlightItem(index) {
+      const items = resultBox.querySelectorAll("div");
+      items.forEach((el, i) => {
+        el.classList.toggle("bg-gray-200", i === index);
+      });
+    }
 
-  const fileInput = document.querySelector('input[type="file"][name="image"]');
-  const preview   = document.getElementById('image-preview');
-
-  if (fileInput) {
-    fileInput.addEventListener('change', function () {
-      const file = this.files[0];
-      if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          preview.src = e.target.result;
-          preview.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
+    function selectArtist(id, name) {
+      if (![...selectBox.options].some(o => o.value == id)) {
+        const newOption = new Option(name, id, true, true);
+        selectBox.add(newOption);
       } else {
-        preview.src = '#';
-        preview.classList.add('hidden');
+        selectBox.value = id;
+      }
+      resultBox.classList.add("hidden");
+      searchInput.value = "";
+      selectBox.dispatchEvent(new Event('change'));
+    }
+
+    searchInput.addEventListener("input", function () {
+      const query = this.value.trim();
+      if (!query) {
+        resultBox.classList.add("hidden");
+        resultBox.innerHTML = "";
+        return;
+      }
+
+      fetch(`/ddokfarm/ajax/search_artists/?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          resultBox.innerHTML = "";
+          data.results.forEach(artist => {
+            const option = document.createElement("div");
+            option.className = "px-3 py-2 hover:bg-gray-100 cursor-pointer";
+            option.textContent = artist.name;
+            option.dataset.artistId = artist.id;
+            option.addEventListener("click", () => {
+              selectArtist(artist.id, artist.name);
+            });
+            resultBox.appendChild(option);
+          });
+          currentFocus = -1;
+          resultBox.classList.remove("hidden");
+        });
+    });
+
+    searchInput.addEventListener("keydown", function (e) {
+      const items = resultBox.querySelectorAll("div");
+      if (!items.length) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        currentFocus = (currentFocus + 1) % items.length;
+        highlightItem(currentFocus);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        currentFocus = (currentFocus - 1 + items.length) % items.length;
+        highlightItem(currentFocus);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (currentFocus > -1 && items[currentFocus]) {
+          const selected = items[currentFocus];
+          selectArtist(selected.dataset.artistId, selected.textContent);
+        }
       }
     });
-  }
 
-  const artistSelect     = document.getElementById('artist');
-  const memberWrapper    = document.getElementById('member-wrapper');
-  const memberContainer  = document.getElementById('member-checkboxes');
+    document.addEventListener("click", function (e) {
+      if (!resultBox.contains(e.target) && e.target !== searchInput) {
+        resultBox.classList.add("hidden");
+      }
+    });
 
-  function loadMembers(artistId) {
-    memberContainer.innerHTML = '';
-    memberWrapper.classList.add('hidden');
-    if (!artistId) return;
+    // ✅ 카테고리 버튼 자동 제출
+    const buttons = document.querySelectorAll('.category-btn');
+    const form = document.getElementById('create-form');
+    const categoryInput = document.getElementById('selected-category');
 
-    fetch(`/ddokfarm/ajax/members/${artistId}/`)
-      .then(resp => resp.json())
-      .then(data => {
-        const members = data.members;
-        if (!members.length) return;
-
-        memberWrapper.classList.remove('hidden');
-
-        const selectAllCheckbox = document.createElement('input');
-        selectAllCheckbox.type = 'checkbox';
-        selectAllCheckbox.classList.add('mr-2');
-
-        const selectAllLabel = document.createElement('label');
-        selectAllLabel.classList.add('block', 'mb-2', 'font-semibold');
-        selectAllLabel.appendChild(selectAllCheckbox);
-        selectAllLabel.appendChild(document.createTextNode('전체 선택'));
-        memberContainer.appendChild(selectAllLabel);
-
-        members.forEach(member => {
-          const checkbox = document.createElement('input');
-          checkbox.type  = 'checkbox';
-          checkbox.name  = 'members';
-          checkbox.id    = `member_${member.id}`;
-          checkbox.value = member.id;
-          checkbox.classList.add('mr-2', 'member-checkbox');
-
-          // ✅ 체크 유지
-          if (selectedMemberIds.map(Number).includes(member.id)) {
-            checkbox.checked = true;
-          }
-
-          const label = document.createElement('label');
-          label.htmlFor = checkbox.id;
-          label.classList.add('block', 'mb-2');
-          label.appendChild(checkbox);
-          label.appendChild(document.createTextNode(member.name));
-
-          memberContainer.appendChild(label);
-        });
-
-        const memberCheckboxes = memberContainer.querySelectorAll('.member-checkbox');
-        selectAllCheckbox.addEventListener('change', function () {
-          memberCheckboxes.forEach(cb => (cb.checked = this.checked));
-        });
-        memberCheckboxes.forEach(cb => {
-          cb.addEventListener('change', () => {
-            selectAllCheckbox.checked = Array.from(memberCheckboxes).every(cb => cb.checked);
-          });
-        });
-
-        // ✅ 전체 선택 초기 체크 반영
-        const allCheckedInit = Array.from(memberCheckboxes).every(cb => cb.checked);
-        selectAllCheckbox.checked = allCheckedInit;
-      })
-      .catch(err => {
-        console.error('멤버 불러오기 실패:', err);
-        alert('멤버 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        categoryInput.value = btn.dataset.category;
+        form.submit();
       });
-  }
+    });
 
-  if (artistSelect) {
-    artistSelect.addEventListener('change', () => loadMembers(artistSelect.value));
-    if (artistSelect.value) loadMembers(artistSelect.value);
-  }
-});
+    // ✅ 이미지 미리보기
+    const fileInput = document.querySelector('input[type="file"][name="image"]');
+    const preview = document.getElementById('image-preview');
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = e => {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
+        } else {
+          preview.src = '#';
+          preview.classList.add('hidden');
+        }
+      });
+    }
+
+    // ✅ 아티스트 변경 시 멤버 불러오기
+    const artistSelect = document.getElementById('artist');
+    const memberWrapper = document.getElementById('member-wrapper');
+    const memberContainer = document.getElementById('member-checkboxes');
+
+    function loadMembers(artistId) {
+      memberContainer.innerHTML = '';
+      memberWrapper.classList.add('hidden');
+      if (!artistId) return;
+
+      fetch(`/ddokfarm/ajax/members/${artistId}/`)
+        .then(resp => resp.json())
+        .then(data => {
+          const members = data.members;
+          if (!members.length) return;
+
+          memberWrapper.classList.remove('hidden');
+
+          const selectAllCheckbox = document.createElement('input');
+          selectAllCheckbox.type = 'checkbox';
+          selectAllCheckbox.classList.add('mr-2');
+
+          const selectAllLabel = document.createElement('label');
+          selectAllLabel.classList.add('block', 'mb-2', 'font-semibold');
+          selectAllLabel.appendChild(selectAllCheckbox);
+          selectAllLabel.appendChild(document.createTextNode('전체 선택'));
+          memberContainer.appendChild(selectAllLabel);
+
+          members.forEach(member => {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'members';
+            checkbox.id = `member_${member.id}`;
+            checkbox.value = member.id;
+            checkbox.classList.add('mr-2', 'member-checkbox');
+            if (selectedMemberIds.map(Number).includes(member.id)) {
+              checkbox.checked = true;
+            }
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.classList.add('block', 'mb-2');
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(member.name));
+            memberContainer.appendChild(label);
+          });
+
+          const memberCheckboxes = memberContainer.querySelectorAll('.member-checkbox');
+          selectAllCheckbox.addEventListener('change', function () {
+            memberCheckboxes.forEach(cb => (cb.checked = this.checked));
+          });
+          memberCheckboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+              selectAllCheckbox.checked = Array.from(memberCheckboxes).every(cb => cb.checked);
+            });
+          });
+
+          // ✅ 전체 선택 초기 체크 반영
+          const allCheckedInit = Array.from(memberCheckboxes).every(cb => cb.checked);
+          selectAllCheckbox.checked = allCheckedInit;
+        })
+        .catch(err => {
+          console.error('멤버 불러오기 실패:', err);
+          alert('멤버 목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+        });
+    }
+
+    if (artistSelect) {
+      artistSelect.addEventListener('change', () => loadMembers(artistSelect.value));
+      if (artistSelect.value) loadMembers(artistSelect.value);
+    }
+  });
 </script>
 {% endblock %}
