@@ -27,6 +27,9 @@ urlpatterns = [
 
     # 좋아요
     path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
+
+    # 멤버 목록 불러오기
+    path('ajax/members/<int:artist_id>/', views.get_members_by_artist, name='get_members_by_artist'),
     
     # community
     path('community/', views.community_index, name='community_index'),

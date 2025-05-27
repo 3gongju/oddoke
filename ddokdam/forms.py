@@ -16,18 +16,25 @@ common_widgets = {
     'image': forms.ClearableFileInput(attrs={
         'class': 'block w-full text-sm text-gray-500 mt-1',
     }),
+    'artist': forms.Select(attrs={
+        'id': 'id_artist',
+        'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-400'
+    }),
+    'members': forms.CheckboxSelectMultiple(attrs={
+        'class': 'space-y-2'
+    }),
 }
 
 class DamCommunityPostForm(forms.ModelForm):
     class Meta:
         model = DamCommunityPost
-        fields = ['title', 'content', 'image']
+        fields = ['title', 'content', 'image', 'artist', 'members']
         widgets = common_widgets
 
 class DamMannerPostForm(forms.ModelForm):
     class Meta:
         model = DamMannerPost
-        fields = ['title', 'content', 'image', 'item', 'location']
+        fields = ['title', 'content', 'image', 'item', 'location', 'artist', 'members']
         widgets = {
             **common_widgets,
             'location': forms.TextInput(attrs={
@@ -43,7 +50,7 @@ class DamMannerPostForm(forms.ModelForm):
 class DamBdaycafePostForm(forms.ModelForm):
     class Meta:
         model = DamBdaycafePost
-        fields = ['title', 'content', 'image', 'cafe_name']
+        fields = ['title', 'content', 'image', 'cafe_name', 'artist', 'members']
         widgets = {
             **common_widgets,
             'cafe_name': forms.TextInput(attrs={
