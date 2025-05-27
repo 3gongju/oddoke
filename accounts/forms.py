@@ -28,8 +28,18 @@ class CustomUserCreationForm(UserCreationForm):
         if password1 and password2 and password1 != password2:
             self.add_error('password2', "비밀번호가 일치하지 않습니다.")
 
+# 추가 로그인폼폼
 class CustomAuthenticationForm(AuthenticationForm):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].widget.attrs.update({
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': '아이디 또는 이메일을 입력하세요'
+        })
+        self.fields['password'].widget.attrs.update({
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'placeholder': '비밀번호를 입력하세요'
+        })
 
 class MannerReviewForm(forms.ModelForm):
     class Meta:

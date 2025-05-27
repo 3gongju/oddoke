@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block body %}
 <div class="min-h-screen bg-white flex items-center justify-center px-4">
@@ -10,48 +11,63 @@
       <p class="text-xs text-gray-400">어디서든 어덕해 에서 덕질해</p>
     </div>
 
-    <!-- 로그인 폼 -->
-    <form method="POST" class="space-y-5">
+    <!-- 에러 메시지 -->
+    {% if form.errors %}
+      <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}
+            <p class="text-sm">{{ error }}</p>
+          {% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- 일반 로그인 폼 -->
+    <form method="POST" class="space-y-4 mb-6">
       {% csrf_token %}
 
       <!-- 아이디 입력 -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">이메일 주소(가 아니라 현재는 아이디임)</label>
-        <input type="text" name="username" placeholder="예) 3gongju@git.com"
-               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black" />
+        <label class="block text-sm font-semibold text-gray-700 mb-1">아이디 (이메일)</label>
+        {{ form.username }}
       </div>
 
       <!-- 비밀번호 입력 -->
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-1">비밀번호</label>
-        <input type="password" name="password"
-               class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black" />
+        {{ form.password }}
       </div>
 
       <!-- 로그인 버튼 -->
       <button type="submit"
-              class="w-full bg-gray-200 text-gray-600 font-bold py-2 rounded cursor-pointer hover:bg-gray-300">
+              class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">
         로그인
       </button>
 
       <!-- 하단 링크 -->
-      <div class="flex justify-between text-xs text-gray-400 mt-2">
-        <a href="{% url 'accounts:signup' %}" class="hover:underline">이메일 가입</a>
-        <a href="#" class="hover:underline">이메일 찾기</a>
+      <div class="flex justify-between text-xs text-gray-400 mt-4">
+        <a href="{% url 'accounts:signup' %}" class="hover:underline">회원가입</a>
         <a href="#" class="hover:underline">비밀번호 찾기</a>
       </div>
     </form>
 
-    <!-- 소셜 로그인 -->
-    <div class="mt-6 space-y-2">
-      <button class="w-full border border-gray-300 flex items-center justify-center py-2 rounded">
-        <span class="text-green-600 font-semibold">N</span>
-        <span class="ml-2">네이버로 로그인</span>
-      </button>
-      <button class="w-full border border-gray-300 flex items-center justify-center py-2 rounded">
-        <span class="text-black text-xl font-bold"></span>
-        <span class="ml-2">Apple로 로그인</span>
-      </button>
+    <!-- 구분선 -->
+    <div class="relative my-6">
+      <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-gray-300"></div>
+      </div>
+      <div class="relative flex justify-center text-sm">
+        <span class="px-2 bg-white text-gray-500">또는</span>
+      </div>
+    </div>
+
+    <!-- 카카오 로그인 -->
+    <div class="mb-6">
+      <a href="/accounts/kakao/login/">
+        <img src="{% static 'image/kakao_login_medium_wide.png' %}" 
+             alt="카카오로 로그인" 
+             class="w-full hover:opacity-90 transition">
+      </a>
     </div>
   </div>
 </div>
