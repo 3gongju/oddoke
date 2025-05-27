@@ -150,15 +150,33 @@ def post_edit(request, category, post_id):
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
         if form.is_valid():
+            artist_id = request.POST.get('artist')
+            member_ids = request.POST.getlist('members')
+
+            if artist_id:
+                post.artist_id = artist_id
+
             form.save()
+
+            if member_ids:
+                post.members.set(member_ids)
+            else:
+                post.members.clear()
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
         form = form_class(instance=post)
+
+        sorted_artists = Artist.objects.all().order_by('display_name')
+        selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+        selected_member_ids = post.members.values_list('id', flat=True)
 
     context = {
         'form': form,
         'post': post,
         'category': category,
+        'sorted_artists': sorted_artists,
+        'selected_members': selected_members,
+        'selected_member_ids': selected_member_ids,
     }
     return render(request, 'ddokdam/post_edit.html', context)
 
