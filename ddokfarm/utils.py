@@ -2,6 +2,32 @@ from itertools import chain
 from django.http import Http404
 from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from .forms import FarmSellPostForm, FarmRentalPostForm, FarmSplitPostForm
+from types import SimpleNamespace
+from django.urls import reverse
+
+# url 넘기기
+def get_ddokfarm_category_urls():
+    return [
+        ("전체", "", reverse("ddokfarm:index")),
+        ("판매/구매", "sell", reverse("ddokfarm:sell_index")),
+        ("대여", "rental", reverse("ddokfarm:rental_index")),
+        ("분철", "split", reverse("ddokfarm:split_index")),
+    ]
+
+# 카테고리 버튼
+def get_ddokfarm_categories():
+    return [
+        SimpleNamespace(label='구매/판매', value='sell'),
+        SimpleNamespace(label='대여', value='rental'),
+        SimpleNamespace(label='분철', value='split'),
+    ]
+
+# 공통 js를 위한 유틸
+def get_ajax_base_context(request):
+    app_name = request.resolver_match.app_name
+    return {
+        "ajax_base_url": f"/{app_name}/ajax"
+    }
 
 # 카테고리 문자열에 맞는 게시글 모델 반환
 def get_post_model(category):

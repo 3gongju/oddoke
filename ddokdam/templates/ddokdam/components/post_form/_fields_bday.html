@@ -1,0 +1,6 @@
+<!-- 카페 이름 -->
+<div class="mb-6">
+  <label for="{{ form.cafe_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">카페 이름</label>
+  {{ form.cafe_name }}
+  {% if form.cafe_name.errors %}<p class="text-red-500 text-sm mt-1">{{ form.cafe_name.errors.0 }}</p>{% endif %}
+</div>

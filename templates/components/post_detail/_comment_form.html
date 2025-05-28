@@ -1,0 +1,12 @@
+{# components/post_detail/_comment_form.html #}
+<form method="POST"
+      action="{% url comment_create_url category=category post_id=post.id %}"
+      class="flex items-center space-x-2">
+  {% csrf_token %}
+  <input type="text" name="content" placeholder="댓글을 작성해주세요..." required
+         class="flex-grow border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none">
+  <button type="submit"
+          class="bg-black text-white px-4 py-2 rounded text-sm hover:bg-gray-800">
+    등록
+  </button>
+</form>

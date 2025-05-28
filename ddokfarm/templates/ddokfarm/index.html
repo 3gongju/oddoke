@@ -1,89 +1,16 @@
 {% extends 'base.html' %}
-{% load humanize %}
-
-
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  {% include 'components/_farm_header.html' %}
-  <!-- 카테고리 필터 -->
-  <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
-    <a href="{% url 'ddokfarm:index' %}"
-      class="px-3 py-1 rounded-full border
-              {% if not category %}
-                bg-green-500 text-white
-              {% else %}
-                bg-white text-gray-700 hover:bg-green-100
-              {% endif %}">
-      전체
-    </a>
+  {% include 'ddokfarm/components/_header.html' %}
 
-    <a href="{% url 'ddokfarm:sell_index' %}"
-      class="px-3 py-1 rounded-full border
-              {% if category == 'sell' %}
-                bg-green-500 text-white
-              {% else %}
-                bg-white text-gray-700 hover:bg-green-100
-              {% endif %}">
-      판매 / 구매
-    </a>
+  {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
 
-    <a href="{% url 'ddokfarm:rental_index' %}"
-      class="px-3 py-1 rounded-full border
-              {% if category == 'rental' %}
-                bg-green-500 text-white
-              {% else %}
-                bg-white text-gray-700 hover:bg-green-100
-              {% endif %}">
-      대여
-    </a>
-
-    <a href="{% url 'ddokfarm:split_index' %}"
-      class="px-3 py-1 rounded-full border
-              {% if category == 'split' %}
-                bg-green-500 text-white
-              {% else %}
-                bg-white text-gray-700 hover:bg-green-100
-              {% endif %}">
-      분철
-    </a>
-  </div>
-
-  <!-- 게시글 작성 버튼 -->
-  <div class="flex justify-end mb-6">
-    <a href="{% url 'ddokfarm:post_create' %}?category={{ category|default:'sell' }}"
-      class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full shadow font-medium">
-      + 게시글 작성
-    </a>
-  </div>
+  {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
   {% if posts %}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for post in posts %}
-        <a href="{% url 'ddokfarm:post_detail' post.category post.id %}">
-          <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-
-            <!-- 이미지 영역: relative 설정 -->
-            <div class="relative w-full h-60">
-              <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover">
-
-              {% if post.is_sold %}
-              <div class="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
-                <span class="text-white text-sm font-semibold">거래 완료</span>
-              </div>
-              {% endif %}
-            </div>
-
-            <!-- 텍스트 영역 -->
-            <div class="p-3">
-              <h3 class="text-sm font-semibold truncate">{{ post.title }}</h3>
-              <p class="text-xs text-gray-400">{{ post.created_at|date:"Y-m-d" }}</p>
-
-              {% if post.price %}
-              <p class="text-sm font-semibold text-green-600 mt-1">{{ post.price|intcomma }}원</p>
-              {% endif %}
-            </div>
-          </div>
-        </a>
+        {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url %}
       {% endfor %}
     </div>
   {% else %}
@@ -91,4 +18,3 @@
   {% endif %}
 </div>
 {% endblock %}
-

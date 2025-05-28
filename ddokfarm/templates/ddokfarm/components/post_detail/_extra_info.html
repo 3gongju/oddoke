@@ -1,0 +1,69 @@
+{# 덕팜 전용 - 판매, 대여, 분철 카테고리별 정보 #}
+{% load humanize %}
+{% if category == 'sell' or category == 'rental' or category == 'split' %}
+  <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <tbody>
+          {% if category == 'sell' or category == 'rental' %}
+            <tr>
+              <th class="text-left py-2 text-gray-700">가격</th>
+              <td class="text-right py-2 text-gray-800">{{ post.price|intcomma }}원</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">거래 방식</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_want_to_display }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">상품 상태</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_condition_display }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">배송 방법</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_shipping_display }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">직거래 희망 장소</th>
+              <td class="text-right py-2 text-gray-800">{{ post.location|default:"-" }}</td>
+            </tr>
+            {% if category == 'rental' %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">대여 시작일</th>
+                <td class="text-right py-2 text-gray-800">{{ post.start_date }}</td>
+              </tr>
+              <tr>
+                <th class="text-left py-2 text-gray-700">대여 종료일</th>
+                <td class="text-right py-2 text-gray-800">{{ post.end_date }}</td>
+              </tr>
+            {% endif %}
+          {% elif category == 'split' %}
+            <tr>
+              <th class="text-left py-2 text-gray-700">앨범 포함 여부</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_album_display }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">개봉 여부</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_opened_display }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">배송비</th>
+              <td class="text-right py-2 text-gray-800">{{ post.shipping_fee|intcomma }}원</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">구매처</th>
+              <td class="text-right py-2 text-gray-800">{{ post.where }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">구매 예정일</th>
+              <td class="text-right py-2 text-gray-800">{{ post.when }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">무산 여부</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_failure_display }}</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}

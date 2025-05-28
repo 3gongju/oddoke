@@ -1,0 +1,37 @@
+<div class="flex justify-center gap-4 mb-8">
+  {% if mode == 'edit' %}
+    <!-- 덕담 한마디 -->
+    <span class="px-4 py-2 rounded-lg 
+      {% if category == 'community' %}bg-yellow-400 text-white shadow{% else %}bg-gray-100 text-gray-400{% endif %}">
+      덕담 한마디
+    </span>
+
+    <!-- 예절 차리기 -->
+    <span class="px-4 py-2 rounded-lg 
+      {% if category == 'manner' %}bg-yellow-400 text-white shadow{% else %}bg-gray-100 text-gray-400{% endif %}">
+      예절 차리기
+    </span>
+
+    <!-- 생카 후기 -->
+    <span class="px-4 py-2 rounded-lg 
+      {% if category == 'bdaycafe' %}bg-yellow-400 text-white shadow{% else %}bg-gray-100 text-gray-400{% endif %}">
+      생카 후기
+    </span>
+
+  {% else %}
+    <!-- 덕담 한마디 -->
+    <button type="button" class="category-btn px-4 py-2 rounded-lg transition
+      {% if category == 'community' %}bg-yellow-400 text-white shadow{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+      data-category="community">덕담 한마디</button>
+
+    <!-- 예절 차리기 -->
+    <button type="button" class="category-btn px-4 py-2 rounded-lg transition
+      {% if category == 'manner' %}bg-yellow-400 text-white shadow{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+      data-category="manner">예절 차리기</button>
+
+    <!-- 생카 후기 -->
+    <button type="button" class="category-btn px-4 py-2 rounded-lg transition
+      {% if category == 'bdaycafe' %}bg-yellow-400 text-white shadow{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}"
+      data-category="bdaycafe">생카 후기</button>
+  {% endif %}
+</div>
