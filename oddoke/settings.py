@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +51,7 @@ INSTALLED_APPS = [
     'artist',
     'django.contrib.humanize',
     'bday_calendar',
+    'ddoksang',
 ]
 
 MIDDLEWARE = [
@@ -146,3 +150,7 @@ MEDIA_URL = '/media/'
 AUTH_USER_MODEL = 'accounts.User'
 
 # TAILWIND_APP_NAME = 'theme'
+
+# 카카오맵 API 키 설정
+KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
+KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 

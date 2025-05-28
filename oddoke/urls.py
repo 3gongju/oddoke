@@ -13,4 +13,6 @@ urlpatterns = [
     path('ddokdam/', include('ddokdam.urls')),         # 덕질 공유 & 예절샷
     path('accounts/', include('accounts.urls')),      # 로그인/회원가입 등
     path('calendar/', include('bday_calendar.urls', namespace='bday_calendar')), # 생일 달력
+    path('ddoksang/', include('ddoksang.urls')),       # 생일 카페, 투어 플랜 등
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

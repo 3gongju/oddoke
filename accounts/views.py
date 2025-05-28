@@ -250,7 +250,7 @@ def edit_profile_image(request, username):
     
 # 카카오 로그인 관련 뷰
 def kakao_login(request):
-    client_id = os.getenv('KAKAO_OAUTH_CLIENT_ID')
+    client_id = os.getenv('KAKAO_REST_API_KEY')
     redirect_uri = os.getenv('KAKAO_OAUTH_REDIRECT_URI')
     
     kakao_auth_url = (
@@ -266,7 +266,7 @@ def kakao_login(request):
 
 def kakao_logout(request):
     """카카오 로그아웃 + 일반 로그아웃"""
-    client_id = os.getenv('KAKAO_OAUTH_CLIENT_ID')
+    client_id = os.getenv('KAKAO_REST_API_KEY')
     logout_redirect_uri = os.getenv('KAKAO_OAUTH_LOGOUT_REDIRECT_URI')
     
     auth_logout(request)
@@ -289,7 +289,7 @@ def kakao_callback(request):
         messages.error(request, '카카오 로그인에 실패했습니다.')
         return redirect('accounts:login')
     
-    client_id = os.getenv('KAKAO_OAUTH_CLIENT_ID')
+    client_id = os.getenv('KAKAO_REST_API_KEY')
     client_secret = os.getenv('KAKAO_OAUTH_SECRET_ID')
     redirect_uri = os.getenv('KAKAO_OAUTH_REDIRECT_URI')
     
