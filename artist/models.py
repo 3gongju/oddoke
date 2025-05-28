@@ -8,6 +8,7 @@ class Artist(models.Model):
     english_name = models.CharField(max_length=100, blank=True, null=True, help_text="영문명")
     alias = models.CharField(max_length=100, blank=True, null=True, help_text="줄임말 또는 별칭")
     logo = models.CharField(max_length=255, blank=True, null=True, help_text='static/image 경로 기준')
+    fandom = models.CharField(max_length=100, blank=True, null=True)  # ✅ 공식 팬덤 인증 연결
     # 솔로 아티스트일 경우 True, 그룹일 경우 False (생략 가능한데 일단 넣어둠)
     is_solo = models.BooleanField(default=False, help_text="솔로 아티스트인지 여부")
     
