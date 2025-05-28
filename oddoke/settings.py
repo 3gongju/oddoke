@@ -48,15 +48,6 @@ INSTALLED_APPS = [
     'artist',
     'django.contrib.humanize',
     'bday_calendar',
-    'django.contrib.sites',
-    
-        # OAuth 관련
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.naver',
-    'allauth.socialaccount.providers.kakao',
 ]
 
 MIDDLEWARE = [
@@ -67,8 +58,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware', 
-
 ]
 
 ROOT_URLCONF = 'oddoke.urls'
@@ -157,57 +146,3 @@ MEDIA_URL = '/media/'
 AUTH_USER_MODEL = 'accounts.User'
 
 # TAILWIND_APP_NAME = 'theme'
-
-
-# Sites framework 설정 (django.contrib.sites 때문에 필요)
-SITE_ID = 1
-
-# Authentication backends (OAuth 로그인을 위해 필요)
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',  # 기본 Django 로그인
-    'allauth.account.auth_backends.AuthenticationBackend',  # OAuth 로그인
-]
-
-# Allauth 기본 설정
-
-# 새로운 설정 (추가)
-ACCOUNT_LOGIN_METHODS = {'email'}  # 이메일로 로그인
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # 필수 회원가입 필드
-ACCOUNT_EMAIL_VERIFICATION = 'none' # 이메일 인증 생략
-ACCOUNT_LOGOUT_ON_GET = True
-
-# 소셜 계정 설정
-SOCIALACCOUNT_EMAIL_REQUIRED = True
-SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_AUTO_SIGNUP = True  # 자동 회원가입
-
-# 이것도 추가
-SOCIALACCOUNT_LOGIN_ON_GET = True
-
-# 소셜 로그인 제공자별 설정
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'OAUTH_PKCE_ENABLED': True,
-    },
-    'naver': {
-        'SCOPE': [
-            'profile',
-        ],
-    },
-   'kakao': {
-        'SCOPE': ['profile_nickname', 'account_email'],
-        'AUTH_PARAMS': {'access_type': 'online'},
-    }
-    
-}
-
-# 로그인 관련
-LOGIN_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
