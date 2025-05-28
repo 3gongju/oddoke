@@ -36,3 +36,8 @@ class MannerReview(models.Model):
 
     def __str__(self):
         return f"{self.user} → {self.target_user} ({self.rating}점)"
+
+def default_profile_image():
+    return 'profile/default.png'  # media/profile/default.png 경로
+
+profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
