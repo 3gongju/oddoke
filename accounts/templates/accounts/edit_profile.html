@@ -2,108 +2,299 @@
 {% load static %}
 
 {% block body %}
-<div class="max-w-2xl mx-auto p-6 bg-white rounded shadow">
+<div class="max-w-2xl mx-auto p-6 bg-white rounded shadow mt-10">
   <h2 class="text-2xl font-bold mb-6">프로필 관리</h2>
 
-  <!-- ✅ 프로필 이미지 + 닉네임 -->
-  <div class="flex items-center space-x-4 mb-6">
-    <img src="{{ user_profile.profile_image.url }}" alt="프로필"
-         class="w-20 h-20 rounded-full object-cover border">
-    <div>
-      <p class="text-xl font-semibold">{{ user_profile.username }}</p>
-
-      <div class="mt-2 space-x-2">
-        <a href="{% url 'accounts:edit_profile_image' user_profile.username %}"
-           class="bg-red-400 text-white text-sm px-3 py-1 border rounded hover:bg-red-500">
-          이미지 변경
-        </a>
+  <!-- 성공/에러 메시지 -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-4 p-3 rounded {% if message.tags == 'success' %}bg-green-100 text-green-700 border border-green-200{% else %}bg-red-100 text-red-700 border border-red-200{% endif %}">
+        {{ message }}
       </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ✅ 프로필 헤더 -->
+  <div class="flex items-center space-x-4 mb-8 p-4 bg-gray-50 rounded-lg">
+    <img src="{{ user_profile.profile_image.url }}" alt="프로필"
+         class="w-16 h-16 rounded-full object-cover border-2 border-white shadow">
+    <div class="flex-1">
+      <h3 class="text-lg font-bold text-gray-800">
+        {% if user_profile.first_name %}
+          {{ user_profile.first_name }}
+        {% elif user_profile.username|slice:":6" == "kakao_" %}
+          카카오 사용자
+        {% elif user_profile.username|slice:":6" == "naver_" %}
+          네이버 사용자
+        {% else %}
+          {{ user_profile.username }}
+        {% endif %}
+      </h3>
+      
+      <!-- 소셜 로그인 뱃지 -->
+      {% if user_profile.username|slice:":6" == "kakao_" %}
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200 mt-1">
+          <span class="mr-1">💬</span> 카카오 연결됨
+        </span>
+      {% elif user_profile.username|slice:":6" == "naver_" %}
+        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 border border-green-200 mt-1">
+          <span class="mr-1">N</span> 네이버 연결됨
+        </span>
+      {% endif %}
+      
+      <p class="text-sm text-gray-500 mt-1">{{ user_profile.date_joined|date:"Y년 m월 d일 가입" }}</p>
     </div>
+    
+    <a href="{% url 'accounts:edit_profile_image' user_profile.username %}"
+       class="bg-blue-500 text-white text-sm px-4 py-2 rounded-lg hover:bg-pink-600 transition">
+      📷 프로필 이미지 변경
+    </a>
   </div>
 
-  <!-- ✅ 프로필 정보 수정 -->
-  <div class="space-y-4">
-    <!-- ✅ 기본 표시 영역 -->
-    <div id="username-display" class="flex justify-between items-center">
-      <div>
-        <p class="text-sm text-gray-500">프로필 이름</p>
-        <p class="font-medium" id="current-username">{{ user_profile.username }}</p>
+  <!-- ✅ 수정 가능한 정보들 -->
+  <div class="space-y-6">
+    
+    <!-- ✅ 닉네임 수정 -->
+    <div class="border border-gray-200 rounded-lg p-4">
+      <div id="nickname-display" class="flex justify-between items-start">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">닉네임</label>
+          <p class="text-lg font-medium text-gray-900" id="current-nickname">
+            {% if user_profile.first_name %}
+              {{ user_profile.first_name }}
+            {% else %}
+              {% if user_profile.username|slice:":6" == "kakao_" %}카카오 사용자{% elif user_profile.username|slice:":6" == "naver_" %}네이버 사용자{% else %}{{ user_profile.username }}{% endif %}
+            {% endif %}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            다른 사용자들에게 표시되는 이름입니다
+          </p>
+        </div>
+        <button id="edit-nickname-btn" class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+          수정
+        </button>
       </div>
-      <button id="edit-username-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+
+      <!-- ✅ 닉네임 수정 폼 -->
+      <form method="POST" id="nickname-edit-form"
+            action="{% url 'accounts:edit_profile' user_profile.username %}"
+            style="display: none;">
+        {% csrf_token %}
+        <div class="mt-3 space-y-3">
+          <input type="text" id="new-nickname" name="first_name" 
+                 value="{{ user.first_name }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                 placeholder="새 닉네임을 입력하세요">
+          
+          <div class="bg-blue-50 p-3 rounded-lg">
+            <p class="text-xs text-blue-700">
+              💡 <strong>닉네임 설정 팁</strong><br>
+              • 2-20자의 한글, 영문, 숫자 사용 가능<br>
+              • 언제든 변경할 수 있습니다<br>
+              • 다른 사용자들이 쉽게 기억할 수 있는 이름을 추천해요
+            </p>
+          </div>
+          
+          <div class="flex space-x-2">
+            <button type="button" id="cancel-nickname-btn"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+              취소
+            </button>
+            <button type="submit" id="save-nickname-btn"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+              저장
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
 
-    <!-- ✅ 수정 input 영역 -->
-    <form method="POST" id="username-edit-form"
-          action="{% url 'accounts:edit_profile' user_profile.username %}"
-          style="display: none;">
-      {% csrf_token %}
-      <input type="text" id="new-username" name="username" value="{{ user.username }}"
-             class="border rounded p-1 w-full">
-      <p class="text-xs text-gray-500 mt-1">변경 후 30일이 지나야 다시 변경 가능하므로 신중히 변경해주세요.</p>
-      <div class="flex space-x-2 mt-2">
-        <button type="button" id="cancel-edit-btn"
-                class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
-        <button type="submit" id="save-username-btn"
-                class="bg-black text-white rounded px-3 py-1">저장</button>
+    <!-- ✅ 소개글 수정 -->
+    <div class="border border-gray-200 rounded-lg p-4">
+      <div id="bio-display" class="flex justify-between items-start">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">소개</label>
+          <p class="text-gray-900" id="current-bio">
+            {% if user_profile.bio %}
+              {{ user_profile.bio }}
+            {% else %}
+              <span class="text-gray-400 italic">소개글을 작성해보세요!</span>
+            {% endif %}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            자신을 간단히 소개해보세요
+          </p>
+        </div>
+        <button id="edit-bio-btn" class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+          수정
+        </button>
       </div>
-    </form>
 
-    <!-- ✅ 소개 기본 영역 -->
-    <div id="bio-display" class="flex justify-between items-center">
-      <div>
-        <p class="text-sm text-gray-500">소개</p>
-        <p class="font-medium" id="current-bio">
-          {% if user_profile.bio %}{{ user_profile.bio }}{% else %}안녕하세요!{% endif %}
-        </p>
-      </div>
-      <button id="edit-bio-btn" class="text-sm px-3 py-1 border rounded hover:bg-gray-100">변경</button>
+      <!-- ✅ 소개글 수정 폼 -->
+      <form method="POST" id="bio-edit-form"
+            action="{% url 'accounts:edit_profile' user_profile.username %}"
+            style="display: none;">
+        {% csrf_token %}
+        <div class="mt-3 space-y-3">
+          <textarea id="new-bio" name="bio" class="w-full px-3 py-2 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="자신을 소개해보세요! (최대 150자)">{% if user_profile.bio %}{{ user_profile.bio }}{% endif %}</textarea>
+          
+          <div class="flex justify-between items-center">
+            <p class="text-xs text-gray-500">최대 150자까지 입력 가능합니다</p>
+            <span id="bio-count" class="text-xs text-gray-400 font-mono">0/150</span>
+          </div>
+          
+          <div class="flex space-x-2">
+            <button type="button" id="cancel-bio-btn"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+              취소
+            </button>
+            <button type="submit" 
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+              저장
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
 
-    <!-- ✅ 소개 수정 영역 -->
-    <form method="POST" id="bio-edit-form"
-          action="{% url 'accounts:edit_profile' user_profile.username %}"
-          style="display: none;">
-      {% csrf_token %}
-      <textarea id="new-bio" name="bio"
-                class="border rounded p-2 w-full h-24 resize-none">{{ user_profile.bio }}</textarea>
-      <div class="flex space-x-2 mt-2">
-        <button type="button" id="cancel-bio-btn"
-                class="border rounded px-3 py-1 hover:bg-gray-100">취소</button>
-        <button type="submit" class="bg-black text-white rounded px-3 py-1">저장</button>
+    <!-- ✅ 계정 정보 (읽기 전용) -->
+    <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+      <h4 class="text-sm font-semibold text-gray-700 mb-3">계정 정보</h4>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-600">로그인 방식</span>
+          <span class="font-medium">
+            {% if user_profile.username|slice:":6" == "kakao_" %}
+              카카오 소셜 로그인
+            {% elif user_profile.username|slice:":6" == "naver_" %}
+              네이버 소셜 로그인
+            {% else %}
+              이메일 로그인
+            {% endif %}
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">가입일</span>
+          <span class="font-medium">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
+        </div>
       </div>
-    </form>
+    </div>
+
+    <!-- ✅ 공식 팬덤 인증 업로드 폼 -->
+    <div class="border border-blue-200 bg-blue-50 rounded-lg p-4 mt-6" id="fandom-auth">
+      <h3 class="text-sm font-bold text-blue-700 mb-2">🎫 공식 팬덤 인증</h3>
+
+      {% if user_profile.is_verified_fandom %}
+        <p class="text-green-600 font-semibold mb-2">✅ 인증 완료된 팬덤: {{ user_profile.fandom_artist.fandom }}</p>
+      {% elif user_profile.is_pending_verification %}
+        <p class="text-yellow-600 mb-2">⏳ 인증 요청 접수 완료 (3일 이내 승인 예정)</p>
+      {% elif user_profile.verification_failed %}
+        <p class="text-red-600 mb-2">❌ 인증에 실패했습니다. 다시 시도해주세요.</p>
+      {% else %}
+        <p class="text-gray-600 text-sm mb-4">예시 이미지를 참고해 팬클럽 카드를 업로드해 주세요. </p>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data"
+            action="{% url 'accounts:upload_fandom_card' user_profile.username %}"
+            class="space-y-4">
+        {% csrf_token %}
+
+        <!-- 예시 이미지 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">예시 이미지</label>
+          <img src="{% static 'image/fandom_example.png' %}"
+                alt="예시 이미지"
+                class="max-w-full h-auto rounded border shadow"
+                style="max-height: 250px;" />
+        </div>
+
+        <!-- 팬덤 선택 -->
+        <div>
+          <label for="artist_id" class="block text-sm font-medium text-gray-700">팬덤 선택</label>
+          <select name="artist_id" required class="w-full border rounded px-3 py-2 mt-1">
+            {% for artist in artist_list %}
+              <option value="{{ artist.id }}">{{ artist.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!--이미지 업로드 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">회원카드 스크린샷 업로드</label>
+          <input type="file" name="fandom_card" id="fandom-card-input" accept="image/*"
+                class="block w-full mt-1 border border-gray-300 rounded" required />
+        </div>
+
+        <!-- 미리보기 -->
+        <div id="fandom-card-preview-container" class="hidden mt-2">
+          <label class="block text-xs text-gray-600">미리보기</label>
+          <img id="fandom-card-preview"
+                src="#"
+                class="max-w-full h-auto rounded border shadow"
+                style="max-height: 250px;" />
+
+        </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            인증 요청
+      </button>      
+      </form>
+    </div>
+
+
+  </div>
+
+  <!-- ✅ 하단 버튼들 -->
+  <div class="mt-8 pt-6 border-t border-gray-200">
+    <div class="flex space-x-3">
+      <a href="{% url 'accounts:mypage' %}" 
+         class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-center">
+        ← 마이페이지로 돌아가기
+      </a>
+      <a href="{% url 'accounts:profile' user_profile.username %}" 
+         class="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition text-center">
+         내 공개 프로필 보기 →
+      </a>
+    </div>
   </div>
 </div>
 
-<!-- ✅ JS는 반드시 block body 안에 위치해야 작동 -->
+<!-- ✅ JavaScript -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const usernameDisplay = document.getElementById("username-display");
-    const usernameForm = document.getElementById("username-edit-form");
-    const usernameEditBtn = document.getElementById("edit-username-btn");
-    const usernameCancelBtn = document.getElementById("cancel-edit-btn");
+    // ✅ 닉네임 수정
+    const nicknameDisplay = document.getElementById("nickname-display");
+    const nicknameForm = document.getElementById("nickname-edit-form");
+    const nicknameEditBtn = document.getElementById("edit-nickname-btn");
+    const nicknameCancelBtn = document.getElementById("cancel-nickname-btn");
 
+    // ✅ 소개글 수정
     const bioDisplay = document.getElementById("bio-display");
     const bioForm = document.getElementById("bio-edit-form");
     const bioEditBtn = document.getElementById("edit-bio-btn");
     const bioCancelBtn = document.getElementById("cancel-bio-btn");
+    const bioTextarea = document.getElementById("new-bio");
+    const bioCount = document.getElementById("bio-count");
 
-    if (usernameEditBtn && usernameCancelBtn && usernameForm && usernameDisplay) {
-      usernameEditBtn.addEventListener("click", function () {
-        usernameDisplay.style.display = "none";
-        usernameForm.style.display = "block";
+    if (nicknameEditBtn && nicknameCancelBtn) {
+      nicknameEditBtn.addEventListener("click", function () {
+        nicknameDisplay.style.display = "none";
+        nicknameForm.style.display = "block";
+        document.getElementById("new-nickname").focus();
       });
 
-      usernameCancelBtn.addEventListener("click", function () {
-        usernameForm.style.display = "none";
-        usernameDisplay.style.display = "flex";
+      nicknameCancelBtn.addEventListener("click", function () {
+        nicknameForm.style.display = "none";
+        nicknameDisplay.style.display = "flex";
       });
     }
 
-    if (bioEditBtn && bioCancelBtn && bioForm && bioDisplay) {
+    if (bioEditBtn && bioCancelBtn) {
       bioEditBtn.addEventListener("click", function () {
         bioDisplay.style.display = "none";
         bioForm.style.display = "block";
+        updateBioCount();
+        bioTextarea.focus();
       });
 
       bioCancelBtn.addEventListener("click", function () {
@@ -111,6 +302,53 @@
         bioDisplay.style.display = "flex";
       });
     }
+
+    function updateBioCount() {
+      if (!bioTextarea || !bioCount) return;
+
+      const currentLength = bioTextarea.value.length;
+      bioCount.textContent = `${currentLength}/150`;
+
+      if (currentLength > 150) {
+        bioCount.classList.add('text-red-500');
+        bioCount.classList.remove('text-gray-400');
+        bioTextarea.value = bioTextarea.value.substring(0, 150);
+        bioCount.textContent = '150/150';
+      } else if (currentLength > 120) {
+        bioCount.classList.add('text-yellow-600');
+        bioCount.classList.remove('text-gray-400', 'text-red-500');
+      } else {
+        bioCount.classList.add('text-gray-400');
+        bioCount.classList.remove('text-red-500', 'text-yellow-600');
+      }
+    }
+
+    if (bioTextarea) {
+      bioTextarea.addEventListener('input', updateBioCount);
+      updateBioCount(); // 초기값
+    }
+
+    // ✅ 공식 팬덤 인증 이미지 업로드 미리보기
+    const input = document.getElementById("fandom-card-input");
+    const preview = document.getElementById("fandom-card-preview");
+    const container = document.getElementById("fandom-card-preview-container");
+
+    if (input) {
+      input.addEventListener("change", function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            preview.src = e.target.result;
+            container.classList.remove("hidden");
+          };
+          reader.readAsDataURL(file);
+        } else {
+          container.classList.add("hidden");
+        }
+      });
+    }
   });
 </script>
+
 {% endblock %}

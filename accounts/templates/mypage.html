@@ -4,36 +4,79 @@
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-  <!-- 프로필 정보 -->
-  <div class="bg-white p-6 shadow rounded-lg mb-6">
-    <div class="flex items-center">
-      <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-        <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
-      </div>
-      <div class="ml-4 flex-1">
-        <div class="flex items-center space-x-4">
-          <h2 class="text-lg font-semibold">{{ user_profile.username }}</h2>
+  <!-- ✅ 프로필 정보 - 버튼 위치 개선 -->
+  <div class="bg-white p-6 shadow rounded-lg mb-10">
+    <!-- 전체를 flex로 만들어서 버튼들을 오른쪽 끝으로 -->
+    <div class="flex items-start justify-between">
+      
+      <!-- 왼쪽: 프로필 정보 -->
+      <div class="flex items-center flex-1">
+        <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
+          {% if user_profile.profile_image and user_profile.profile_image.name %}
+            <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
+          {% else %}
+            <img src="{% static 'image/ddok_logo.png' %}" alt="기본 프로필 이미지" class="rounded-full w-full h-full object-cover">
+          {% endif %}
         </div>
-        <div class="mt-3">
-          <a href="{% url 'accounts:edit_profile' user_profile.username %}" class="inline-block bg-yellow-400 text-white text-sm px-4 py-1 rounded hover:bg-yellow-500 transition">
-            📎 프로필 관리
-          </a>
-        </div>  
-        <p class="text-gray-600 mt-1">{{ user_profile.email }}</p>
+        
+        <div class="ml-4 flex-1">
+          <!-- 닉네임과 뱃지 -->
+          <div class="flex items-center space-x-3 mb-2">
+            <h2 class="text-2xl font-bold">
+              {% if user_profile.first_name %}
+                {{ user_profile.first_name }}
+              {% elif user_profile.username|slice:":6" == "kakao_" %}
+                카카오 사용자
+              {% elif user_profile.username|slice:":6" == "naver_" %}
+                네이버 사용자
+              {% else %}
+                {{ user_profile.username }}
+              {% endif %}
+            </h2>
+            
+            <!-- 소셜 로그인 뱃지 -->
+            {% if user_profile.username|slice:":6" == "kakao_" %}
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
+                <span class="mr-1">💬</span> 카카오
+              </span>
+            {% elif user_profile.username|slice:":6" == "naver_" %}
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 border border-green-200">
+                <span class="mr-1">N</span> 네이버
+              </span>
+            {% endif %}
+          </div>
+          
+          <!-- 소개글 -->
+          {% if user_profile.bio %}
+            <p class="text-gray-600 text-base">{{ user_profile.bio }}</p>
+          {% else %}
+            <p class="text-gray-400 text-sm">소개글을 작성해보세요!</p>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- ✅ 오른쪽: 버튼들 (세로 배치) -->
+      <div class="flex flex-col space-y-2 ml-6">
+        <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+           class="px-4 py-2 bg-gray-200 text-black text-sm font-medium rounded-lg hover:bg-yellow-500 transition whitespace-nowrap text-center min-w-[120px]">
+          📎 프로필 관리
+        </a>
+        
         {% if user.is_authenticated %}
-          <a href="{% url 'accounts:profile' request.user.username %}" class="text-sm text-blue-600 hover:underline mt-4 inline-block">
-            → 내 공개 프로필 보기
+          <a href="{% url 'accounts:profile' request.user.username %}" 
+             class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition whitespace-nowrap text-center min-w-[120px]">
+            🔗 내 공개 프로필 보기
           </a>
         {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- 찜한 아티스트 -->
-    <div class="flex justify-between items-center px-6 mb-4 max-w-6xl mx-auto">
-        <h3 class="text-xl font-bold text-red-500">♥ 내가 찜한 덕</h3>
-        <a href="{% url 'artist:index' %}" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
-    </div>
+  <!-- ✅ 찜한 아티스트 -->
+  <div class="w-full flex justify-between items-center px-6 mb-6 max-w-6xl mx-auto">
+    <h3 class="text-xl font-bold text-red-500">♥ 내가 찜한 덕</h3>
+    <a href="{% url 'artist:index' %}" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
+  </div>
   <div class="relative flex justify-center">
     <div id="favArtistSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
       {% for artist in favorite_artists %}
@@ -46,77 +89,151 @@
       {% empty %}
         <div class="flex flex-col items-center py-12 space-y-4">
           <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-24 h-24 object-contain" />
-          <p class="text-gray-600 text-center">아직 찜한 덕이 없어요!</br>
-            <a href="{% url 'artist:index' %}"
-               class="text-blue-600 hover:underline">
+          <p class="text-gray-600 text-center">
+            아직 찜한 덕이 없어요!<br>
+            <a href="{% url 'artist:index' %}" class="text-blue-600 hover:underline">
               찜덕하러 가기~
             </a>
           </p>
         </div>
       {% endfor %}
     </div>
-    <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
-    <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
+    {% if favorite_artists %}
+      <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
+      <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
+    {% endif %}
   </div>
 
-  <!-- 팔로우한 멤버 -->
+  <!-- ✅ 최애 멤버 -->
   <div class="max-w-3xl mx-auto mt-10 px-4">
     <h2 class="text-xl font-bold mb-6">최애 ❤</h2>
     {% if favorite_members %}
       <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {% for member in favorite_members %}
           {% if member.matched_artist %}
-            <li class="cursor-pointer bg-white p-4 rounded shadow text-center"
+            <li class="cursor-pointer bg-white p-4 rounded shadow text-center hover:shadow-md transition group"
                 data-member-name="{{ member.member_name }}"
                 data-artist-id="{{ member.matched_artist.id }}"
                 onclick="openArtistModalFromMember(this)">
-              
-              <!-- ✅ 멤버 이름 + 그룹 로고 수평 정렬 -->
               <div class="flex justify-center items-center gap-2 mb-1">
                 {% for artist in member.filtered_artists %}
                   <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
                   class="w-6 h-6 object-contain rounded-full shadow">
                 {% endfor %}
-                <div class="text-lg font-semibold">{{ member.member_name }}</div>
+                <div class="text-lg font-semibold group-hover:text-pink-600 transition">{{ member.member_name }}</div>
               </div>
-
-              <!-- ✅ 그룹 이름 한 줄에 모두 표시 -->
               <div class="text-sm text-gray-500 truncate">
                 {% for artist in member.filtered_artists %}
                   {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
                 {% endfor %}
               </div>
-
             </li>
           {% endif %}
         {% endfor %}
       </ul>
     {% else %}
-      <p class="text-gray-500">아티스트를 눌러서 최애 멤버를 선택해보세요!</p>
+      <div class="text-center py-12">
+        <img src="{% static 'image/ddok_black.png' %}" alt="최애 없음" class="w-16 h-16 mx-auto mb-4 opacity-50" />
+        <p class="text-gray-500">아티스트를 눌러서 최애 멤버를 선택해보세요!</p>
+      </div>
     {% endif %}
   </div>
+
+  <!-- ✅ 계정 정보 -->
+  <div class="max-w-3xl mx-auto mt-16 px-4">
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-bold mb-4">계정 정보</h3>
+      <div class="space-y-4 text-sm">
+        
+        <div class="flex justify-between items-center py-3 border-b border-gray-100">
+          <span class="text-gray-600 font-medium">닉네임</span>
+          <span class="font-semibold text-gray-800">
+            {% if user_profile.first_name %}
+              {{ user_profile.first_name }}
+            {% elif user_profile.username|slice:":6" == "kakao_" %}
+              카카오 사용자
+            {% elif user_profile.username|slice:":6" == "naver_" %}
+              네이버 사용자
+            {% else %}
+              {{ user_profile.username }}
+            {% endif %}
+          </span>
+        </div>
+        
+        <div class="flex justify-between items-center py-3 border-b border-gray-100">
+          <span class="text-gray-600 font-medium">가입일</span>
+          <span class="font-semibold text-gray-800">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
+        </div>
+        
+        <div class="flex justify-between items-center py-3 border-b border-gray-100">
+          <span class="text-gray-600 font-medium">로그인 방식</span>
+          <span class="font-semibold text-gray-800">
+            {% if user_profile.username|slice:":6" == "kakao_" %}
+              카카오 소셜 로그인
+            {% elif user_profile.username|slice:":6" == "naver_" %}
+              네이버 소셜 로그인
+            {% else %}
+              이메일 로그인
+            {% endif %}
+          </span>
+        </div>
+        
+        <!-- 이메일은 관리자만 표시 -->
+        {% if user.is_superuser %}
+        <div class="flex justify-between items-center py-3 border-b border-gray-100">
+          <span class="text-gray-600 font-medium">이메일 (관리자만 표시)</span>
+          <span class="font-mono text-xs text-gray-500 break-all">{{ user_profile.email }}</span>
+        </div>
+        {% endif %}
+        
+        <div class="pt-4 bg-gray-50 p-4 rounded-lg">
+          <p class="text-xs text-gray-600 leading-relaxed">
+            💡 <strong>안내사항</strong><br>
+            • 닉네임은 프로필 관리에서 언제든 변경할 수 있습니다<br>
+            • 소셜 로그인 계정은 비밀번호 변경이 불가능합니다<br>
+            • 계정 관련 문의사항은 고객센터를 이용해주세요
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 공식 팬덤 인증 상태 표시 -->
+  {% if user_profile.is_verified_fandom %}
+    <div class="text-green-600 text-sm mt-2 font-semibold">✅ 인증된 팬덤: {{ user_profile.fandom_artist.fandom }}</div>
+  {% elif user_profile.is_pending_verification %}
+    <div class="text-yellow-600 text-sm mt-2">⏳ 팬덤 인증 확인 중입니다. (3일 소요)</div>
+  {% elif user_profile.verification_failed %}
+    <div class="text-red-600 text-sm mt-2">❌ 인증에 실패했습니다. 다시 업로드해주세요.</div>
+  {% else %}
+    <!-- 인증이 안된 경우 인증하러 가기 버튼 -->
+    <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
+      class="mt-3 inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600 transition">
+      🎫 공식 팬덤 인증하기
+    </a>
+  {% endif %}
 </div>
 
-<!-- 모달 -->
+<!-- ✅ 모달 -->
 <div id="memberModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-  <div class="bg-white p-6 rounded max-w-md w-full">
+  <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
     <div id="memberListArea" class="max-h-96 overflow-y-auto"></div>
-    <button onclick="closeModal()" class="mt-4 px-4 py-2 bg-gray-300 rounded">닫기</button>
+    <button onclick="closeModal()" class="mt-4 w-full px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">닫기</button>
   </div>
 </div>
 
-<!-- 스크립트 -->
+<!-- ✅ 스크립트 -->
 <script>
   const followedArtistIds = {{ followed_artist_ids|safe }};
-
-  function closeModal() {
-    location.reload();
-  }
 
   function scrollSlider(id, direction) {
     const slider = document.getElementById(id);
     const scrollAmount = 300;
     slider.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+  }
+
+  function closeModal() {
+    location.reload();
   }
 
   function bindFollowButtons(container) {
@@ -139,7 +256,6 @@
     });
   }
 
-  // 아티스트 클릭 → 모달 오픈
   document.querySelectorAll('.artist-logo').forEach(img => {
     img.addEventListener('click', function () {
       const artistId = this.dataset.artistId;
@@ -155,7 +271,6 @@
     });
   });
 
-  // 멤버 클릭 → 해당 아티스트의 멤버 리스트 모달
   function openArtistModalFromMember(element) {
     const artistId = element.dataset.artistId;
     if (followedArtistIds.includes(parseInt(artistId))) {

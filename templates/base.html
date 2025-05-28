@@ -27,13 +27,26 @@
         <a href="/" class="text-xl font-bold text-primary">어덕해</a>
         <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
         <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
-        <a href="#" class="hover:text-primary text-sm font-medium">덕생</a>
+        <a href="/ddoksang/" class="hover:text-primary text-sm font-medium">덕생</a>
       </div>
 
       <!-- 로그인 상태별 버튼 -->
       <div class="flex items-center space-x-2">
         {% if request.user.is_authenticated %}
-          <span class="text-sm text-gray-700">👤 {{ request.user.username }}님</span>
+          <!-- 수집한 닉네임을 유저 네임으로 표시 (소셜 로그인 구분) -->
+          <span class="text-sm text-gray-700">
+            👤 
+            {% if request.user.first_name %}
+              {{ request.user.first_name }}
+            {% elif request.user.username|slice:":10" == "naver_" %}
+              네이버 사용자
+            {% elif request.user.username|slice:":10" == "kakao_" %}
+              카카오 사용자
+            {% else %}
+              {{ request.user.username }}
+            {% endif %}
+            님
+          </span>
           <a href="{% url 'accounts:mypage' %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
           <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
         {% else %}

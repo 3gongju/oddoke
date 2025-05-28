@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +29,8 @@ SECRET_KEY = 'django-insecure-2*cvgp4g-ut870+fv-u#9v*#lr$#$7ip&h=4yjc-k&)g3s(5g2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -47,6 +51,7 @@ INSTALLED_APPS = [
     'artist',
     'django.contrib.humanize',
     'bday_calendar',
+    'ddoksang',
 ]
 
 MIDDLEWARE = [
@@ -146,3 +151,6 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # TAILWIND_APP_NAME = 'theme'
 
+# 카카오맵 API 키 설정
+KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
+KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 
