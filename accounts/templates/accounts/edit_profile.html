@@ -180,6 +180,68 @@
       </div>
     </div>
 
+    <!-- ✅ 공식 팬덤 인증 업로드 폼 -->
+    <div class="border border-blue-200 bg-blue-50 rounded-lg p-4 mt-6" id="fandom-auth">
+      <h3 class="text-sm font-bold text-blue-700 mb-2">🎫 공식 팬덤 인증</h3>
+
+      {% if user_profile.is_verified_fandom %}
+        <p class="text-green-600 font-semibold mb-2">✅ 인증 완료된 팬덤: {{ user_profile.fandom_artist.fandom }}</p>
+      {% elif user_profile.is_pending_verification %}
+        <p class="text-yellow-600 mb-2">⏳ 인증 요청 접수 완료 (3일 이내 승인 예정)</p>
+      {% elif user_profile.verification_failed %}
+        <p class="text-red-600 mb-2">❌ 인증에 실패했습니다. 다시 시도해주세요.</p>
+      {% else %}
+        <p class="text-gray-600 text-sm mb-4">예시 이미지를 참고해 팬클럽 카드를 업로드해 주세요. </p>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data"
+            action="{% url 'accounts:upload_fandom_card' user_profile.username %}"
+            class="space-y-4">
+        {% csrf_token %}
+
+        <!-- 예시 이미지 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">예시 이미지</label>
+          <img src="{% static 'image/fandom_example.png' %}"
+                alt="예시 이미지"
+                class="max-w-full h-auto rounded border shadow"
+                style="max-height: 250px;" />
+        </div>
+
+        <!-- 팬덤 선택 -->
+        <div>
+          <label for="artist_id" class="block text-sm font-medium text-gray-700">팬덤 선택</label>
+          <select name="artist_id" required class="w-full border rounded px-3 py-2 mt-1">
+            {% for artist in artist_list %}
+              <option value="{{ artist.id }}">{{ artist.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!--이미지 업로드 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">회원카드 스크린샷 업로드</label>
+          <input type="file" name="fandom_card" id="fandom-card-input" accept="image/*"
+                class="block w-full mt-1 border border-gray-300 rounded" required />
+        </div>
+
+        <!-- 미리보기 -->
+        <div id="fandom-card-preview-container" class="hidden mt-2">
+          <label class="block text-xs text-gray-600">미리보기</label>
+          <img id="fandom-card-preview"
+                src="#"
+                class="max-w-full h-auto rounded border shadow"
+                style="max-height: 250px;" />
+
+        </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+            인증 요청
+      </button>      
+      </form>
+    </div>
+
+
   </div>
 
   <!-- ✅ 하단 버튼들 -->
@@ -200,13 +262,13 @@
 <!-- ✅ JavaScript -->
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // 닉네임 수정
+    // ✅ 닉네임 수정
     const nicknameDisplay = document.getElementById("nickname-display");
     const nicknameForm = document.getElementById("nickname-edit-form");
     const nicknameEditBtn = document.getElementById("edit-nickname-btn");
     const nicknameCancelBtn = document.getElementById("cancel-nickname-btn");
 
-    // 소개글 수정
+    // ✅ 소개글 수정
     const bioDisplay = document.getElementById("bio-display");
     const bioForm = document.getElementById("bio-edit-form");
     const bioEditBtn = document.getElementById("edit-bio-btn");
@@ -214,7 +276,6 @@
     const bioTextarea = document.getElementById("new-bio");
     const bioCount = document.getElementById("bio-count");
 
-    // 닉네임 수정 토글
     if (nicknameEditBtn && nicknameCancelBtn) {
       nicknameEditBtn.addEventListener("click", function () {
         nicknameDisplay.style.display = "none";
@@ -228,7 +289,6 @@
       });
     }
 
-    // 소개글 수정 토글
     if (bioEditBtn && bioCancelBtn) {
       bioEditBtn.addEventListener("click", function () {
         bioDisplay.style.display = "none";
@@ -243,13 +303,12 @@
       });
     }
 
-    // 소개글 글자 수 카운트
     function updateBioCount() {
       if (!bioTextarea || !bioCount) return;
-      
+
       const currentLength = bioTextarea.value.length;
       bioCount.textContent = `${currentLength}/150`;
-      
+
       if (currentLength > 150) {
         bioCount.classList.add('text-red-500');
         bioCount.classList.remove('text-gray-400');
@@ -266,8 +325,30 @@
 
     if (bioTextarea) {
       bioTextarea.addEventListener('input', updateBioCount);
-      updateBioCount(); // 초기 카운트 설정
+      updateBioCount(); // 초기값
+    }
+
+    // ✅ 공식 팬덤 인증 이미지 업로드 미리보기
+    const input = document.getElementById("fandom-card-input");
+    const preview = document.getElementById("fandom-card-preview");
+    const container = document.getElementById("fandom-card-preview-container");
+
+    if (input) {
+      input.addEventListener("change", function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            preview.src = e.target.result;
+            container.classList.remove("hidden");
+          };
+          reader.readAsDataURL(file);
+        } else {
+          container.classList.add("hidden");
+        }
+      });
     }
   });
 </script>
+
 {% endblock %}

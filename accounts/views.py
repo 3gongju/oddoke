@@ -21,7 +21,7 @@ import time
 load_dotenv()
 
 from django.http import JsonResponse
-
+from PIL import Image, ExifTags
 
 # Create your views here.
 def signup(request):
@@ -224,6 +224,7 @@ def edit_profile(request, username):
 
     context = {
         'user_profile': user_profile,
+        'artist_list': Artist.objects.all(),  # 🔹 아티스트 목록 전달
     }
     return render(request, 'accounts/edit_profile.html', context)
 
@@ -246,8 +247,72 @@ def edit_profile_image(request, username):
         'form': form,
         'user_profile': user,
     })
-    
-    
+
+@login_required
+def upload_fandom_card(request, username):
+    user = get_object_or_404(User, username=username)
+
+    if request.method == 'POST':
+        image = request.FILES.get('fandom_card')
+        artist_id = request.POST.get('artist_id')
+
+        if not image:
+            messages.error(request, '이미지를 업로드해주세요.')
+            return redirect('accounts:edit_profile', username=username)
+
+        try:
+            img = Image.open(image)
+
+            # ✅ EXIF 자동 회전 제거
+            try:
+                for orientation in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[orientation] == 'Orientation':
+                        break
+                exif = img._getexif()
+                if exif is not None:
+                    orientation_value = exif.get(orientation)
+                    if orientation_value == 3:
+                        img = img.rotate(180, expand=True)
+                    elif orientation_value == 6:
+                        img = img.rotate(270, expand=True)
+                    elif orientation_value == 8:
+                        img = img.rotate(90, expand=True)
+            except Exception as e:
+                print(f"EXIF 처리 오류: {e}")
+
+            width, height = img.size
+            uploaded_ratio = height / width  # 세로형 기준
+            print(f"📏 업로드 이미지 실제 크기: {width}x{height}, 비율: {uploaded_ratio:.3f}:1, 포맷: {img.format}")
+
+        except Exception:
+            messages.error(request, '이미지를 처리할 수 없습니다.')
+            return redirect('accounts:edit_profile', username=username)
+
+        # ✅ 비율 체크 (예시 이미지: 590 x 1278 ≈ 2.165)
+        expected_ratio = 1278 / 590
+        tolerance = 0.2  # ±20%
+        lower_bound = expected_ratio * (1 - tolerance)
+        upper_bound = expected_ratio * (1 + tolerance)
+
+        if not (lower_bound <= uploaded_ratio <= upper_bound):
+            messages.error(
+                request,
+                f'⚠️ 이미지 비율이 예시와 다릅니다. 세로 기준 약 2.17:1 (±20%) 이내로 맞춰주세요. '
+                f'→ 현재: {uploaded_ratio:.3f}:1'
+            )
+            return redirect('accounts:edit_profile', username=username)
+
+        # ✅ 저장
+        user.fandom_card = image
+        user.fandom_artist = get_object_or_404(Artist, id=artist_id)
+        user.is_verified_fandom = False
+        user.is_pending_verification = True
+        user.verification_failed = False
+        user.save()
+
+        messages.success(request, '🎫 공식 팬덤 인증 확인 중입니다. (3일 소요)')
+        return redirect('accounts:edit_profile', username=username)
+
 # 카카오 로그인 관련 뷰
 def kakao_login(request):
     client_id = os.getenv('KAKAO_OAUTH_CLIENT_ID')
