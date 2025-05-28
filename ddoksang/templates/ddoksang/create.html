@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생일카페 등록 - 덕생</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .benefit-btn.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        
+        .step-indicator {
+            position: relative;
+        }
+        
+        .step-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e5e7eb;
+            transform: translateY(-50%);
+        }
+        
+        .step-indicator.completed::after {
+            background: #10b981;
+        }
+        
+        .step-indicator:last-child::after {
+            display: none;
+        }
+        
+        .form-step {
+            transition: all 0.3s ease;
+        }
+        
+        .form-step.hidden {
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 20%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Progress Bar -->
+    <div class="bg-white shadow-sm">
+        <div class="max-w-4xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <span>생일카페 등록</span>
+                <span id="progressText">1/5 단계</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">🎂 생일카페 등록하기</h1>
+            <p class="text-gray-600">좋아하는 아티스트의 생일카페 정보를 등록해주세요!</p>
+        </div>
+
+        <form id="bdayCafeForm" class="space-y-6">
+            <!-- Step 1: Artist/Member Search -->
+            <div class="form-step bg-white rounded-lg shadow-sm p-6" data-step="1">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
+                    아티스트/멤버 검색
+                </h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">아티스트/멤버명 검색</label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="memberSearch" 
+                            placeholder="예: 해린, aespa, 뉴진스..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <div id="searchResults" class="absolute w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto hidden z-10 shadow-lg">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Member Display -->
+                <div id="selectedMember" class="hidden p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span class="text-blue-600 font-bold text-lg">👤</span>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-gray-900" id="selectedMemberName"></div>
+                                <div class="text-sm text-gray-600" id="selectedArtistName"></div>
+                                <div class="text-xs text-gray-500" id="selectedMemberBirthday"></div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="clearSelection()" class="text-red-500 hover:text-red-700 p-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" onclick="nextStep()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        다음 단계
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Cafe Information -->
+            <div class="form-step bg-white rounded-lg shadow-sm p-6 hidden" data-step="2">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
+                    카페 정보
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">카페명 *</label>
+                        <input 
+                            type="text" 
+                            id="cafeName" 
+                            placeholder="예: 스타벅스 강남점"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">이벤트 유형</label>
+                        <select id="cafeType" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="bday">🎂 생일</option>
+                            <option value="debut">🎉 데뷔일</option>
+                            <option value="comeback">🎵 컴백</option>
+                            <option value="concert">🎤 콘서트</option>
+                            <option value="other">📝 기타</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Address Search -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">주소 검색 *</label>
+                    <div class="flex space-x-2">
+                        <input 
+                            type="text" 
+                            id="addressSearch" 
+                            placeholder="카페 주소나 이름을 검색하세요"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <button 
+                            type="button" 
+                            onclick="searchAddress()" 
+                            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            🔍 검색
+                        </button>
+                    </div>
+                    <div id="addressResults" class="mt-2 space-y-2"></div>
+                </div>
+
+                <!-- Selected Address Display -->
+                <div id="selectedAddress" class="hidden p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="font-semibold text-gray-900" id="selectedCafeName"></div>
+                            <div class="text-sm text-gray-600" id="selectedAddressText"></div>
+                        </div>
+                        <button type="button" onclick="clearAddressSelection()" class="text-red-500 hover:text-red-700 p-1">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        이전 단계
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        다음 단계
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Event Period -->
+            <div class="form-step bg-white rounded-lg shadow-sm p-6 hidden" data-step="3">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
+                    이벤트 기간
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">시작일 *</label>
+                        <input 
+                            type="date" 
+                            id="startDate" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">종료일 *</label>
+                        <input 
+                            type="date" 
+                            id="endDate" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            required
+                        />
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        이전 단계
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        다음 단계
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Benefits and Events -->
+            <div class="form-step bg-white rounded-lg shadow-sm p-6 hidden" data-step="4">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">4</span>
+                    특전 및 이벤트 정보
+                </h2>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">특전 정보</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="포토카드">
+                            🃏 포토카드
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="스티커">
+                            ✨ 스티커
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="컵홀더">
+                            ☕ 컵홀더
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="포스터">
+                            📋 포스터
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="엽서">
+                            💌 엽서
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="뱃지">
+                            🏷️ 뱃지
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="키링">
+                            🔑 키링
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="아크릴">
+                            🖼️ 아크릴
+                        </button>
+                        <button type="button" class="benefit-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors" data-benefit="토퍼">
+                            🧁 토퍼
+                        </button>
+                    </div>
+                    <textarea 
+                        id="specialBenefits" 
+                        placeholder="선택한 특전이 여기에 표시됩니다. 추가 설명이 필요하면 직접 수정해주세요."
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-20 resize-none"
+                    ></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">이벤트 설명</label>
+                    <textarea 
+                        id="eventDescription" 
+                        placeholder="생일카페 이벤트에 대한 자세한 설명을 적어주세요"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-32 resize-none"
+                    ></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">해시태그</label>
+                    <input 
+                        type="text" 
+                        id="hashtags" 
+                        placeholder="#생일카페 #해린생카 #뉴진스"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        이전 단계
+                    </button>
+                    <button type="button" onclick="nextStep()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        다음 단계
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 5: Source Information -->
+            <div class="form-step bg-white rounded-lg shadow-sm p-6 hidden" data-step="5">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">5</span>
+                    출처 정보 (선택)
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">트위터 링크</label>
+                        <input 
+                            type="url" 
+                            id="twitterSource" 
+                            placeholder="https://twitter.com/..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">인스타그램 링크</label>
+                        <input 
+                            type="url" 
+                            id="instagramSource" 
+                            placeholder="https://instagram.com/..."
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <button type="button" onclick="prevStep()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        이전 단계
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    >
+                        🎂 생일카페 등록하기
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        let selectedMemberData = null;
+        let selectedAddressData = null;
+
+        // Mock data for demonstration
+        const mockMembers = [
+            { id: 1, name: "해린", artist: "뉴진스", artist_id: 1, birthday: "2006-05-15", type: "member" },
+            { id: 2, name: "민지", artist: "뉴진스", artist_id: 1, birthday: "2004-05-07", type: "member" },
+            { id: 3, name: "윈터", artist: "aespa", artist_id: 2, birthday: "2001-01-01", type: "member" },
+            { id: 4, name: "카리나", artist: "aespa", artist_id: 2, birthday: "2000-04-11", type: "member" }
+        ];
+
+        // Navigation functions
+        function nextStep() {
+            if (validateCurrentStep()) {
+                if (currentStep < totalSteps) {
+                    document.querySelector(`[data-step="${currentStep}"]`).classList.add('hidden');
+                    currentStep++;
+                    document.querySelector(`[data-step="${currentStep}"]`).classList.remove('hidden');
+                    updateProgress();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.querySelector(`[data-step="${currentStep}"]`).classList.add('hidden');
+                currentStep--;
+                document.querySelector(`[data-step="${currentStep}"]`).classList.remove('hidden');
+                updateProgress();
+            }
+        }
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `${currentStep}/${totalSteps} 단계`;
+        }
+
+        function validateCurrentStep() {
+            switch (currentStep) {
+                case 1:
+                    if (!selectedMemberData) {
+                        alert('아티스트/멤버를 선택해주세요.');
+                        return false;
+                    }
+                    break;
+                case 2:
+                    if (!document.getElementById('cafeName').value.trim()) {
+                        alert('카페명을 입력해주세요.');
+                        return false;
+                    }
+                    if (!selectedAddressData) {
+                        alert('카페 주소를 검색하여 선택해주세요.');
+                        return false;
+                    }
+                    break;
+                case 3:
+                    if (!document.getElementById('startDate').value || !document.getElementById('endDate').value) {
+                        alert('이벤트 시작일과 종료일을 모두 입력해주세요.');
+                        return false;
+                    }
+                    if (new Date(document.getElementById('startDate').value) > new Date(document.getElementById('endDate').value)) {
+                        alert('시작일이 종료일보다 늦을 수 없습니다.');
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+
+        // Member search functionality
+        document.getElementById('memberSearch').addEventListener('input', function(e) {
+            const query = e.target.value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (query.length < 1) {
+                resultsDiv.classList.add('hidden');
+                return;
+            }
+
+            // Filter mock data
+            const filteredResults = mockMembers.filter(member => 
+                member.name.toLowerCase().includes(query) || 
+                member.artist.toLowerCase().includes(query)
+            );
+
+            if (filteredResults.length > 0) {
+                resultsDiv.innerHTML = filteredResults.map(member => `
+                    <div class="search-result-item p-3 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50" 
+                         onclick="selectMember(${JSON.stringify(member).replace(/"/g, '&quot;')})">
+                        <div class="font-semibold text-gray-900">${member.name}</div>
+                        <div class="text-sm text-gray-600">${member.artist}${member.birthday ? ' • 생일: ' + member.birthday : ''}</div>
+                        <div class="text-xs text-blue-500">${member.type === 'member' ? '멤버' : '아티스트'}</div>
+                    </div>
+                `).join('');
+                resultsDiv.classList.remove('hidden');
+            } else {
+                resultsDiv.innerHTML = '<div class="p-3 text-gray-500 text-center">검색 결과가 없습니다</div>';
+                resultsDiv.classList.remove('hidden');
+            }
+        });
+
+        // Member selection functions
+        function selectMember(memberData) {
+            selectedMemberData = memberData;
+            document.getElementById('selectedMemberName').textContent = memberData.name;
+            document.getElementById('selectedArtistName').textContent = memberData.artist;
+            document.getElementById('selectedMemberBirthday').textContent = memberData.birthday ? `생일: ${memberData.birthday}` : '';
+            document.getElementById('selectedMember').classList.remove('hidden');
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('memberSearch').value = `${memberData.name} (${memberData.artist})`;
+        }
+
+        function clearSelection() {
+            selectedMemberData = null;
+            document.getElementById('selectedMember').classList.add('hidden');
+            document.getElementById('memberSearch').value = '';
+        }
+
+        // Address search (mock functionality)
+        function searchAddress() {
+            const query = document.getElementById('addressSearch').value.trim();
+            if (!query) {
+                alert('검색할 주소나 장소명을 입력해주세요.');
+                return;
+            }
+
+            // Mock address results
+            const mockPlaces = [
+                {
+                    place_name: "스타벅스 강남점",
+                    road_address_name: "서울 강남구 강남대로 390",
+                    address_name: "서울 강남구 역삼동 825-22",
+                    category_name: "음식점 > 카페",
+                    id: "1",
+                    x: "127.027621",
+                    y: "37.500721",
+                    phone: "02-567-1234"
+                },
+                {
+                    place_name: "투썸플레이스 홍대점",
+                    road_address_name: "서울 마포구 양화로 160",
+                    address_name: "서울 마포구 서교동 354-27",
+                    category_name: "음식점 > 카페",
+                    id: "2",
+                    x: "126.924621",
+                    y: "37.555721",
+                    phone: "02-324-5678"
+                }
+            ];
+
+            displayAddressResults(mockPlaces);
+        }
+
+        function displayAddressResults(places) {
+            const resultsDiv = document.getElementById('addressResults');
+            
+            if (places.length === 0) {
+                resultsDiv.innerHTML = '<div class="p-3 text-gray-500 bg-gray-50 rounded border">검색 결과가 없습니다.</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = places.slice(0, 5).map((place, index) => `
+                <div class="search-result-item p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50" onclick="selectAddress(${index})">
+                    <div class="font-semibold text-gray-900">${place.place_name}</div>
+                    <div class="text-sm text-gray-600">${place.road_address_name || place.address_name}</div>
+                    <div class="text-xs text-gray-500">${place.category_name}</div>
+                </div>
+            `).join('');
+
+            window.searchResultPlaces = places;
+        }
+
+        function selectAddress(index) {
+            const place = window.searchResultPlaces[index];
+            selectedAddressData = place;
+            
+            document.getElementById('selectedCafeName').textContent = place.place_name;
+            document.getElementById('selectedAddressText').textContent = place.road_address_name || place.address_name;
+            document.getElementById('selectedAddress').classList.remove('hidden');
+            document.getElementById('addressResults').innerHTML = '';
+            document.getElementById('cafeName').value = place.place_name;
+        }
+
+        function clearAddressSelection() {
+            selectedAddressData = null;
+            document.getElementById('selectedAddress').classList.add('hidden');
+            document.getElementById('cafeName').value = '';
+        }
+
+        // Form submission
+        document.getElementById('bdayCafeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateCurrentStep()) {
+                return;
+            }
+
+            const formData = {
+                member_id: selectedMemberData.id,
+                artist_id: selectedMemberData.artist_id,
+                cafe_name: document.getElementById('cafeName').value,
+                cafe_type: document.getElementById('cafeType').value,
+                address: selectedAddressData.road_address_name || selectedAddressData.address_name,
+                road_address: selectedAddressData.road_address_name || '',
+                latitude: parseFloat(selectedAddressData.y),
+                longitude: parseFloat(selectedAddressData.x),
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value,
+                special_benefits: document.getElementById('specialBenefits').value,
+                event_description: document.getElementById('eventDescription').value,
+                hashtags: document.getElementById('hashtags').value,
+                twitter_source: document.getElementById('twitterSource').value,
+                instagram_source: document.getElementById('instagramSource').value,
+            };
+
+            // Mock form submission
+            console.log('Form data:', formData);
+            alert('생일카페가 성공적으로 등록되었습니다! 🎉');
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            document.getElementById('endDate').value = nextWeek.toISOString().split('T')[0];
+            
+            // Benefit button event listeners
+            document.querySelectorAll('.benefit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const benefit = this.dataset.benefit;
+                    const textarea = document.getElementById('specialBenefits');
+                    
+                    // Toggle button state
+                    this.classList.toggle('selected');
+                    
+                    // Get selected benefits
+                    const selectedBenefits = [];
+                    document.querySelectorAll('.benefit-btn.selected').forEach(selectedBtn => {
+                        selectedBenefits.push(selectedBtn.dataset.benefit);
+                    });
+                    
+                    // Update textarea
+                    textarea.value = selectedBenefits.join(', ');
+                });
+            });
+
+            // Initialize progress
+            updateProgress();
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#memberSearch') && !e.target.closest('#searchResults')) {
+                document.getElementById('searchResults').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

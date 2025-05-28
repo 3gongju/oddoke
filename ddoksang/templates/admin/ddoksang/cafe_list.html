@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="max-w-6xl mx-auto px-4 py-10">
+    <h1 class="text-2xl font-bold mb-6">🎂 등록된 생일 카페 목록 (관리자 승인용)</h1>
+
+    <!-- 필터 및 검색 -->
+    <form method="get" class="mb-6 flex flex-wrap items-center gap-4">
+        <input type="text" name="search" placeholder="멤버 이름 검색" value="{{ search_query }}"
+            class="w-full sm:w-auto flex-1 border rounded px-4 py-2">
+
+        <select name="member_id" class="border rounded px-3 py-2">
+            <option value="">전체 멤버</option>
+            {% for member in members %}
+                <option value="{{ member.id }}" {% if member.id|stringformat:'s' == member_id %}selected{% endif %}>
+                    {% for artist in member.artist_name.all %}{{ artist.display_name }}{% if not forloop.last %}, {% endif %}{% endfor %} - {{ member.member_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="sort" class="border rounded px-3 py-2">
+            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>최신순</option>
+            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>오래된순</option>
+            <option value="start_date" {% if sort_by == 'start_date' %}selected{% endif %}>시작일순</option>
+        </select>
+
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">필터 적용</button>
+    </form>
+
+    <!-- 카페 목록 -->
+    <div class="space-y-4">
+        {% for cafe in page_obj %}
+            <div class="border p-4 rounded shadow-sm">
+                <h2 class="text-lg font-bold">
+                    {% if cafe.member %}
+                        {% for artist in cafe.member.artist_name.all %}<span class="text-sm text-gray-800 font-semibold">{{ artist.display_name }}</span>{% if not forloop.last %}, {% endif %}{% endfor %} - {{ cafe.member.member_name }}
+                    {% else %}
+                        {{ cafe.artist.display_name }}
+                    {% endif %}
+                </h2>
+                <p class="text-gray-700">{{ cafe.cafe_name }}</p>
+                <p class="text-sm text-gray-600">{{ cafe.address }}</p>
+                <p class="text-xs text-gray-500">등록일: {{ cafe.created_at|date:"Y년 m월 d일 H:i" }}</p>
+                <p class="text-xs">
+                    상태: 
+                    {% if cafe.status == 'pending' %}
+                        <span class="text-yellow-600">대기중</span>
+                    {% elif cafe.status == 'approved' %}
+                        <span class="text-green-600">승인됨</span>
+                    {% elif cafe.status == 'rejected' %}
+                        <span class="text-red-600">거절됨</span>
+                    {% endif %}
+                </p>
+            </div>
+        {% empty %}
+            <p class="text-gray-500">해당 조건에 맞는 생일카페가 없습니다.</p>
+        {% endfor %}
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="mt-8">
+        <div class="inline-flex space-x-1">
+            {% if page_obj.has_previous %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if member_id %}member_id={{ member_id }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                   class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">이전</a>
+            {% endif %}
+
+            <span class="px-3 py-1 bg-gray-100 rounded">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if member_id %}member_id={{ member_id }}&{% endif %}page={{ page_obj.next_page_number }}"
+                   class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded">다음</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

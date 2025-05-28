@@ -1,0 +1,203 @@
+<!-- templates/admin/ddoksang/dashboard.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생일카페 관리자 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-900">🛠️ 생일카페 관리자</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">{{ user.username }}님</span>
+                    <a href="{% url 'ddoksang:map' %}" class="text-blue-600 hover:text-blue-800">사용자 페이지</a>
+                    <a href="{% url 'admin:index' %}" class="text-blue-600 hover:text-blue-800">Django Admin</a>
+                    <a href="{% url 'admin:logout' %}" class="text-red-600 hover:text-red-800">로그아웃</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 통계 카드 -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-full">
+                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">승인 대기</p>
+                        <p class="text-3xl font-bold text-yellow-600">{{ stats.pending }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">승인됨</p>
+                        <p class="text-3xl font-bold text-green-600">{{ stats.approved }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-red-100 rounded-full">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">거절됨</p>
+                        <p class="text-3xl font-bold text-red-600">{{ stats.rejected }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">총 등록</p>
+                        <p class="text-3xl font-bold text-blue-600">{{ stats.total }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">이번 달</p>
+                        <p class="text-3xl font-bold text-purple-600">{{ stats.this_month }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 빠른 액션 버튼 -->
+        <div class="mb-8">
+            <div class="flex space-x-4">
+                <a href="{% url 'ddoksang:admin_cafe_list' %}?status=pending" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    승인 대기 목록 ({{ stats.pending }})
+                </a>
+                <a href="{% url 'ddoksang:admin_cafe_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    전체 목록
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- 승인 대기 중인 생카들 -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">🔔 승인 대기 중</h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    {% for cafe in pending_cafes %}
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ cafe.cafe_name }}</h4>
+                                <p class="text-sm text-gray-600">{{ cafe.artist.name }}{% if cafe.member %} - {{ cafe.member.name }}{% endif %}</p>
+                                <p class="text-xs text-gray-500">{{ cafe.submitted_by.username }} • {{ cafe.created_at|date:"m/d H:i" }}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'ddoksang:approve_cafe' cafe.id %}" 
+                                   class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700"
+                                   onclick="return confirm('승인하시겠습니까?')">
+                                    승인
+                                </a>
+                                <a href="{% url 'ddoksang:reject_cafe' cafe.id %}" 
+                                   class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700"
+                                   onclick="return confirm('거절하시겠습니까?')">
+                                    거절
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-6 text-center text-gray-500">
+                        승인 대기 중인 생일카페가 없습니다.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 최근 등록된 생카들 -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">📋 최근 등록</h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    {% for cafe in recent_cafes %}
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h4 class="text-sm font-medium text-gray-900">{{ cafe.cafe_name }}</h4>
+                                <p class="text-sm text-gray-600">{{ cafe.artist.name }}{% if cafe.member %} - {{ cafe.member.name }}{% endif %}</p>
+                                <p class="text-xs text-gray-500">{{ cafe.start_date }} ~ {{ cafe.end_date }}</p>
+                                <p class="text-xs text-gray-500">{{ cafe.submitted_by.username }} • {{ cafe.created_at|date:"m/d H:i" }}</p>
+                            </div>
+                            <div class="flex items-center">
+                                {% if cafe.status == 'pending' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        대기중
+                                    </span>
+                                {% elif cafe.status == 'approved' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        승인됨
+                                    </span>
+                                {% elif cafe.status == 'rejected' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        거절됨
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-6 text-center text-gray-500">
+                        등록된 생일카페가 없습니다.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>500">{{ cafe.start_date }} ~ {{ cafe.end_date }}</p>
+                                <p class="text-xs text-gray-
+                                
