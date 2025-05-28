@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="max-w-3xl mx-auto py-10 px-4">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   {% include 'components/_dam_header.html' %}
 
-  <form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded-xl shadow-lg space-y-6">
+  <form method="post" enctype="multipart/form-data" class="w-full max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-lg space-y-6" id="edit-form">
     {% csrf_token %}
-    <input type="hidden" name="category" value="{{ category }}">
+    <input type="hidden" name="category" id="selected-category" value="{{ category }}">
 
     <!-- 아티스트 선택 -->
     <div>
