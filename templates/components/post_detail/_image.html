@@ -1,0 +1,10 @@
+{# components/post_detail/_image.html #}
+<div class="relative md:col-span-2 bg-gray-100 aspect-square rounded-lg flex items-center justify-center">
+  <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-full w-full object-contain rounded-lg">
+
+  {% if is_sold|default:False %}
+    <div class="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center rounded-lg">
+      <span class="text-white text-xl font-semibold">거래 완료</span>
+    </div>
+  {% endif %}
+</div>

@@ -1,0 +1,13 @@
+<div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
+  {% for label, value, url in category_urls %}
+    <a href="{{ url }}"
+        class="px-3 py-1 rounded-full border
+                {% if category == value or not category and value == '' %}
+                bg-black text-white
+                {% else %}
+                bg-white text-gray-700 hover:bg-gray-100
+                {% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>

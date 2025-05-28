@@ -1,0 +1,95 @@
+{# components/post/_form_base.html #}
+<input type="hidden" name="category" id="selected-category" value="{{ category }}">
+
+<!-- 아티스트 선택 -->
+<div class="mb-6 relative">
+  <label for="artist" class="block mb-1 text-sm font-medium">아티스트 선택</label>
+  <select name="artist" id="artist" class="w-full px-3 py-2 border rounded">
+    <option value="" {% if not default_artist_id %}selected{% endif %} hidden>아티스트를 선택하세요</option>
+    {% for artist in sorted_artists %}
+      <option value="{{ artist.id }}" {% if artist.id == default_artist_id or post and post.artist.id == artist.id %}selected{% endif %}>
+        {{ artist.display_name }}
+      </option>
+    {% endfor %}
+  </select>
+  <input type="text" id="artist-search" placeholder="검색으로 아티스트 추가"
+         class="mt-2 w-full px-3 py-2 border rounded" autocomplete="off" />
+  <div id="artist-search-results" class="absolute w-full bg-white border mt-1 rounded shadow hidden z-10"></div>
+</div>
+
+<!-- 멤버 선택 -->
+<div id="member-wrapper" class="mb-6 hidden">
+  <label class="block text-sm font-medium text-gray-700 mb-2">멤버 선택</label>
+  <div id="member-checkboxes">
+    {% for member in selected_members %}
+      <label class="block mb-2">
+        <input type="checkbox" name="members" value="{{ member.id }}"
+               class="mr-2 member-checkbox"
+               {% if member.id in selected_member_ids %}checked{% endif %}>
+        {{ member.member_name }}
+      </label>
+    {% endfor %}
+  </div>
+  {% if form.members.errors %}
+    <p class="text-red-500 text-sm mt-1">{{ form.members.errors.0 }}</p>
+  {% endif %}
+</div>
+
+<!-- 제목 -->
+<div class="mb-6">
+  <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+  {{ form.title }}
+  {% if form.title.errors %}
+    <p class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</p>
+  {% endif %}
+</div>
+
+<!-- 내용 -->
+<div class="mb-6">
+  <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">내용</label>
+  {{ form.content }}
+  {% if form.content.errors %}
+    <p class="text-red-500 text-sm mt-1">{{ form.content.errors.0 }}</p>
+  {% endif %}
+</div>
+
+<!-- 이미지 -->
+<div class="mb-6">
+  <label for="{{ form.image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">이미지 업로드</label>
+  {{ form.image }}
+  {% if form.image.errors %}
+    <p class="text-red-500 text-sm mt-1">{{ form.image.errors.0 }}</p>
+  {% endif %}
+
+  {% if post and post.image %}
+    <div id="original-image" class="mt-4">
+      <p class="text-sm text-gray-500 mb-2">현재 이미지:</p>
+      <img id="original-image" src="{{ post.image.url }}" alt="기존 이미지" class="max-h-64 rounded border" />
+    </div>
+  {% endif %}
+
+  <div id="image-preview-container" class="mt-4">
+    <img id="image-preview" src="#" alt="이미지 미리보기" class="hidden max-h-64 rounded border" />
+  </div>
+</div>
+
+{% block extra_fields %}
+  {% if category == 'sell' or category == 'rental' %}
+    {% include "ddokfarm/components/post_form/_fields_sell_rental.html" %}
+  {% elif category == 'split' %}
+    {% include "ddokfarm/components/post_form/_fields_split.html" %}
+  {% elif category == 'manner' %}
+    {% include "ddokdam/components/post_form/_fields_manner.html" %}
+  {% elif category == 'bdaycafe' %}
+    {% include "ddokdam/components/post_form/_fields_bday.html" %}
+  {% endif %}
+{% endblock %}
+
+<div class="mt-8 flex justify-end gap-2">
+  <a href="{{ cancel_url }}" class="px-4 py-2 rounded border text-gray-700 hover:bg-gray-100">
+    취소
+  </a>
+  <button type="submit" class="px-5 py-2 rounded bg-black hover:bg-gray-800 text-white font-semibold shadow">
+    {{ submit_label }}
+  </button>
+</div>

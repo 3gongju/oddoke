@@ -1,0 +1,17 @@
+{# components/post_detail/_artist_tags.html #}
+{% if artist or members %}
+  <div class="mb-4 flex items-center flex-wrap gap-2 text-sm">
+    {% if artist %}
+      <span class="border px-3 py-1 rounded-full">
+        #{{ artist.display_name }}
+      </span>
+    {% endif %}
+    {% if members %}
+      {% for member in members %}
+        <span class="border px-3 py-1 rounded-full">
+          #{{ member.member_name }}
+        </span>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endif %}

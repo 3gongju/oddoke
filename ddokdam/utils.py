@@ -2,6 +2,32 @@ from itertools import chain
 from django.http import Http404
 from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from .forms import DamCommunityPostForm, DamMannerPostForm, DamBdaycafePostForm
+from types import SimpleNamespace
+from django.urls import reverse
+
+# url 넘기기
+def get_ddokdam_category_urls():
+    return [
+        ("전체", "", reverse("ddokdam:index")),
+        ("덕담 한마디", "community", reverse("ddokdam:community_index")),
+        ("예절 차리기", "manner", reverse("ddokdam:manner_index")),
+        ("생카 후기", "bdaycafe", reverse("ddokdam:bdaycafe_index")),
+    ]
+
+# 카테고리 버튼
+def get_ddokdam_categories():
+    return [
+        SimpleNamespace(label='덕담 한마디', value='community'),
+        SimpleNamespace(label='예절 차리기', value='manner'),
+        SimpleNamespace(label='생카 후기', value='bdaycafe'),
+    ]
+
+# 공통 js를 위한 유틸
+def get_ajax_base_context(request):
+    app_name = request.resolver_match.app_name
+    return {
+        "ajax_base_url": f"/{app_name}/ajax"
+    }
 
 # 카테고리 문자열에 맞는 게시글 모델 반환
 def get_post_model(category):

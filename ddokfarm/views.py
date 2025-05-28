@@ -8,7 +8,7 @@ from django.db.models import Q
 from operator import attrgetter
 from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost
 from .forms import FarmCommentForm
-from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id
+from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id, get_ajax_base_context, get_ddokfarm_categories, get_ddokfarm_category_urls
 from artist.models import Member, Artist
 
 # ✅ 홈 화면 (루트 URL)
@@ -22,10 +22,17 @@ def index(request):
     posts = get_post_queryset(category)
     posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
+    for post in posts:
+        post.detail_url = reverse('ddokfarm:post_detail', args=[post.category, post.id])
+
     context = {
         'posts': posts,
         'category': category,
+        'create_url': reverse('ddokfarm:post_create'),
+        'category_urls': get_ddokfarm_category_urls(),
+        'default_category': 'sell',
     }
+
     return render(request, 'ddokfarm/index.html', context)
 
 # 판매 게시글 보기
@@ -47,13 +54,9 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
-
     comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
-
     total_comment_count = get_post_comments(category, post).count()
-
     comment_form = FarmCommentForm()
-
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
 
     context = {
@@ -65,9 +68,12 @@ def post_detail(request, category, post_id):
         'is_liked': is_liked,
         'artist': post.artist,
         'members': post.members.all(),
+        'app_name': 'ddokfarm',
+        'comment_create_url': 'ddokfarm:comment_create',
+        'comment_delete_url': 'ddokfarm:comment_delete',
     }
 
-    return render(request, 'ddokfarm/post_detail_test.html', context)
+    return render(request, 'ddokfarm/detail.html', context)
 
 # 게시글 작성
 @login_required
@@ -115,9 +121,15 @@ def post_create(request):
         'default_artist_id': default_artist_id,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'post': None,
+        'submit_label': '작성 완료',
+        'cancel_url': reverse('ddokfarm:index'),
+        **get_ajax_base_context(request),
+        'mode': 'create',
+        'categories': get_ddokfarm_categories(),
     }
 
-    return render(request, 'ddokfarm/post_create.html', context)
+    return render(request, 'ddokfarm/create.html', context)
 
 # 아티스트 검색
 @login_required
@@ -139,6 +151,7 @@ def search_artists(request):
             for artist in results
         ]
     }
+
     return JsonResponse(data)
 
 # 게시글 수정
@@ -158,6 +171,7 @@ def post_edit(request, category, post_id):
             'message': '이 게시글을 수정할 권한이 없습니다.',
             'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         }
+
         return render(request, 'ddokfarm/error_message.html', context)
 
     if request.method == 'POST':
@@ -172,7 +186,6 @@ def post_edit(request, category, post_id):
                 post.artist_id = artist_id
 
             post.save()
-
             post.members.set(member_ids)
 
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
@@ -192,8 +205,14 @@ def post_edit(request, category, post_id):
         'sorted_artists': sorted_artists,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'submit_label': '수정 완료',
+        'cancel_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        **get_ajax_base_context(request),
+        'mode': 'edit',
+        'categories': get_ddokfarm_categories(),
     }
-    return render(request, 'ddokfarm/post_edit.html', context)
+
+    return render(request, 'ddokfarm/edit.html', context)
 
 # 게시글 삭제
 @login_required
@@ -210,10 +229,12 @@ def post_delete(request, category, post_id):
             'message': '이 게시글을 삭제할 권한이 없습니다.',
             'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         }
+
         return render(request, 'ddokfarm/error_message.html', context)
 
     if request.method == 'POST':
         post.delete()
+
         return redirect(f"{reverse('ddokfarm:index')}?category={category}")
 
     context = {
@@ -221,6 +242,7 @@ def post_delete(request, category, post_id):
         'message': '게시글 삭제는 버튼을 통해서만 가능합니다.',
         'back_url': reverse('ddokfarm:post_detail', args=[category, post.id])
     }
+
     return render(request, 'ddokfarm/error_message.html', context)
 
 # 댓글 작성
@@ -228,6 +250,8 @@ def post_delete(request, category, post_id):
 @require_POST
 def comment_create(request, category, post_id):
     post_model = get_post_model(category)
+    if not post_model:
+        raise Http404("존재하지 않는 카테고리입니다.")
     post = get_object_or_404(post_model, id=post_id)
 
     form = FarmCommentForm(request.POST)
@@ -262,6 +286,7 @@ def comment_delete(request, category, post_id, comment_id):
         return HttpResponseForbidden()
 
     comment.delete()
+
     return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
 
 # 좋아요(찜하기)
@@ -315,172 +340,5 @@ def get_members_by_artist(request, artist_id):
         {"id": member.id, "name": member.member_name}
         for member in members
     ]
+    
     return JsonResponse({"members": member_data})
-
-# # ✅ 게시글 목록 (카테고리, 정렬 포함)
-# def index(request):
-#     posts = DdokfarmPost.objects.all().order_by('-created_at')
-
-#     category_slug = request.GET.get('category')
-#     current_category = None
-
-#     if category_slug:
-#         category = Category.objects.filter(slug=category_slug).first()
-#         if category:
-#             posts = posts.filter(category=category)
-#             current_category = category.slug
-
-#     # 정렬 조건
-#     sort = request.GET.get('sort', 'latest')
-#     if sort == 'price_low':
-#         posts = posts.order_by('price')
-#     elif sort == 'price_high':
-#         posts = posts.order_by('-price')
-#     else:
-#         posts = posts.order_by('-created_at')
-
-#     categories = Category.objects.all()
-
-#     context = {
-#         'posts': posts,
-#         'categories': Category.objects.all(),
-#         'current_category': current_category,
-#         'current_sort': sort,
-#     }
-
-#     return render(request, 'ddokfarm/index.html', context)
-
-
-# # ✅ 게시글 작성
-# @login_required
-# def create(request):
-#     if request.method == 'POST':
-#         form = DdokfarmPostForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             post = form.save(commit=False)
-#             post.user = request.user
-#             post.category = form.cleaned_data['category'] 
-#             post.save()
-#             return redirect('ddokfarm:detail', post_id=post.id)
-#     else:
-#         form = DdokfarmPostForm()
-
-#     categories = Category.objects.all()
-#     return render(request, 'ddokfarm/create.html', {
-#         'form': form, 
-#         'categories': categories,
-#     })
-
-
-# # ✅ 게시글 상세 보기
-# def detail(request, post_id):
-#     post = get_object_or_404(DdokfarmPost, id=post_id)
-
-#     comments = DdokfarmComment.objects.filter(post=post).select_related('user').prefetch_related('replies')
-
-#     form = DdokfarmCommentForm()
-#     context = {
-#         'post': post,
-#         'comments': comments,
-#         'form': form,
-#     }
-#     return render(request, 'ddokfarm/detail.html', context)
-
-# ✅ 게시글 수정
-# @login_required
-# def update(request, post_id):
-#     post = get_object_or_404(DdokfarmPost, id=post_id)
-
-#     if request.user != post.user:
-#         return redirect('ddokfarm:detail', post_id=post.id)
-
-#     if request.method == 'POST':
-#         form = DdokfarmPostForm(request.POST, request.FILES, instance=post)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('ddokfarm:detail', post_id=post.id)
-#     else:
-#         form = DdokfarmPostForm(instance=post)
-
-#     categories = Category.objects.all()
-#     context = {
-#         'form': form,
-#         'post': post,
-#         'categories': categories,
-#     }
-#     return render(request, 'ddokfarm/update.html', context)
-
-
-# # ✅ 게시글 삭제
-# @login_required
-# @require_POST
-# def delete(request, post_id):
-#     post = get_object_or_404(DdokfarmPost, id=post_id)
-
-#     if request.user != post.user:
-#         return redirect('ddokfarm:detail', post_id=post.id)
-
-#     post.delete()
-#     return redirect('ddokfarm:index')
-
-# # 찜하기 추가 
-# @require_POST
-# @login_required
-# def toggle_like(request, post_id):
-#     if not request.user.is_authenticated:
-#         return JsonResponse({'error': '로그인 필요'}, status=403)
-
-#     post = get_object_or_404(DdokfarmPost, id=post_id)
-#     user = request.user
-
-#     if user in post.liked_users.all():
-#         post.liked_users.remove(user)
-#         liked = False
-#     else:
-#         post.liked_users.add(user)
-#         liked = True
-
-#     return JsonResponse({'liked': liked, 'likes_count': post.liked_users.count()})
-
-# # 판매 완료 표시시
-# @require_POST
-# @login_required
-# def mark_as_sold(request, post_id):
-#     post = get_object_or_404(DdokfarmPost, id=post_id)
-
-#     if request.user != post.user:
-#         return redirect('ddokfarm:detail', post_id=post.id)
-
-#     post.is_sold = not post.is_sold
-#     post.save()
-#     return redirect('ddokfarm:detail', post_id=post.id)
-
-# # ✅ 댓글 생성
-# @require_POST
-# @login_required
-# def comment_create(request, post_id):
-#     post = get_object_or_404(DdokfarmPost, id=post_id)
-#     form = DdokfarmCommentForm(request.POST)
-
-#     if form.is_valid():
-#         comment = form.save(commit=False)
-#         comment.user = request.user
-#         comment.post = post
-#         comment.save()
-#         return redirect(f'{reverse("ddokfarm:detail", args=[post_id])}#comment-{comment.id}')
-
-#     return redirect('ddokfarm:detail', post_id=post_id)
-
-
-
-# # ✅ 댓글 삭제
-# @login_required
-# @require_POST
-# def comment_delete(request, post_id, id):
-#     comment = get_object_or_404(DdokfarmComment, id=id)
-
-#     if request.user != comment.user:
-#         return redirect('ddokfarm:detail', post_id=post_id)
-
-#     comment.delete()
-#     return redirect('ddokfarm:detail', post_id=post_id)
