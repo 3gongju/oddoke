@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,6 +53,9 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'bday_calendar',
     'ddoksang',
+    'ddokchat',
+    'channels',
+
 ]
 
 MIDDLEWARE = [
@@ -154,3 +158,14 @@ AUTH_USER_MODEL = 'accounts.User'
 # 카카오맵 API 키 설정
 KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
 KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 
+
+# 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
+ASGI_APPLICATION = 'oddoke.asgi.application'
+
+
+# 채널 레이어 설정
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # 개발용: 메모리 기반
+    },
+}
