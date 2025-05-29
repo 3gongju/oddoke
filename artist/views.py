@@ -53,20 +53,86 @@ def toggle_favorite(request, artist_id):
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 # 자동완성용 JSON 응답
+# @require_GET
+# def autocomplete(request):
+#     q = request.GET.get('q', '').strip()
+#     if q:
+#         artists = Artist.objects.filter(
+#             Q(display_name__icontains=q) |
+#             Q(korean_name__icontains=q) |
+#             Q(english_name__icontains=q) |
+#             Q(alias__icontains=q)
+#         ).values_list('display_name', flat=True)[:10]
+#     else:
+#         artists = []
+
+#     return JsonResponse({'results': list(artists)})
+# artist/views.py - 솔로 아티스트 중복 제거
+
 @require_GET
 def autocomplete(request):
+    """아티스트 + 멤버 통합 자동완성 (솔로 아티스트 중복 제거)"""
     q = request.GET.get('q', '').strip()
+    results = []
+    seen_names = set()  # 이름 기반 중복 제거
+    
     if q:
+        # 🎵 Artist 검색 (솔로 아티스트 포함)
         artists = Artist.objects.filter(
             Q(display_name__icontains=q) |
             Q(korean_name__icontains=q) |
             Q(english_name__icontains=q) |
             Q(alias__icontains=q)
-        ).values_list('display_name', flat=True)[:10]
-    else:
-        artists = []
-
-    return JsonResponse({'results': list(artists)})
+        )[:8]
+        
+        for artist in artists:
+            name_key = artist.display_name.lower()
+            if name_key not in seen_names:
+                results.append({
+                    'type': 'artist',
+                    'name': artist.display_name,
+                    'artist': artist.display_name,
+                    'artist_id': artist.id,
+                    'member_id': None,
+                    'birthday': None,
+                    'is_solo': artist.is_solo
+                })
+                seen_names.add(name_key)
+        
+        # 👤 Member 검색 (솔로 아티스트와 중복되지 않도록)
+        members = Member.objects.filter(
+            member_name__icontains=q
+        ).prefetch_related('artist_name')[:8]
+        
+        for member in members:
+            member_name_key = member.member_name.lower()
+            
+            # 이미 Artist로 추가된 이름이면 건너뛰기
+            if member_name_key in seen_names:
+                continue
+                
+            artist_groups = member.artist_name.all()
+            
+            if artist_groups:
+                # 첫 번째 그룹 사용
+                artist = artist_groups[0]
+                
+                # 모든 소속 그룹명 표시
+                all_groups = [a.display_name for a in artist_groups]
+                artist_display = ' / '.join(all_groups)
+                
+                results.append({
+                    'type': 'member',
+                    'name': member.member_name,
+                    'artist': artist_display,
+                    'artist_id': artist.id,
+                    'member_id': member.id,
+                    'birthday': member.member_bday,
+                    'is_solo': False
+                })
+                seen_names.add(member_name_key)
+    
+    return JsonResponse({'results': results})
 
 # 1. 아티스트 멤버 리스트 Ajax로 렌더링
 def artist_members_ajax(request, artist_id):
@@ -106,3 +172,29 @@ def get_artist_members(request, artist_id):
     })
 
     return JsonResponse({'html': html})
+
+@require_GET
+def member_autocomplete(request):
+    q = request.GET.get('q', '').strip()
+    results = []
+
+    if q:
+        members = Member.objects.filter(
+            Q(member_name__icontains=q)
+        ).prefetch_related('artist_name')[:10]
+
+        for member in members:
+            artist_names = member.artist_name.all()
+            if artist_names:
+                artist = artist_names[0]  # 대표 아티스트 1개만
+                artist_display = ' / '.join([a.display_name for a in artist_names])
+
+                results.append({
+                    'member_id': member.id,
+                    'artist_id': artist.id,
+                    'member_name': member.member_name,
+                    'artist_display': artist_display,
+                    'bday': member.member_bday,
+                })
+
+    return JsonResponse({'results': results})

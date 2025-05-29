@@ -1,0 +1,39 @@
+{# templates/admin/ddoksang/cafe_list.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="max-w-5xl mx-auto py-10 px-4">
+  <h2 class="text-2xl font-bold mb-6">📋 승인 대기 생일카페 목록</h2>
+
+  {% if cafes %}
+  <table class="w-full border text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="py-2 px-3 text-left">카페명</th>
+        <th class="py-2 px-3 text-left">아티스트</th>
+        <th class="py-2 px-3 text-left">기간</th>
+        <th class="py-2 px-3 text-left">작성자</th>
+        <th class="py-2 px-3 text-left">관리</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cafe in cafes %}
+      <tr class="border-t">
+        <td class="py-2 px-3">{{ cafe.cafe_name }}</td>
+        <td class="py-2 px-3">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</td>
+        <td class="py-2 px-3">{{ cafe.start_date }} ~ {{ cafe.end_date }}</td>
+        <td class="py-2 px-3">{{ cafe.submitted_by.username }}</td>
+        <td class="py-2 px-3 space-x-2">
+          <a href="{% url 'approve_cafe' cafe.id %}" class="text-green-600 hover:underline">승인</a>
+          <a href="{% url 'reject_cafe' cafe.id %}" class="text-red-600 hover:underline">거절</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="text-gray-600">승인 대기 중인 생일카페가 없습니다.</p>
+  {% endif %}
+</div>
+{% endblock %}

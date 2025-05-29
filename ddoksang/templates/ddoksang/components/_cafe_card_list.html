@@ -1,0 +1,14 @@
+<!-- ✅ 생일카페 카드 리스트 -->
+<section class="max-w-6xl mx-auto px-4 py-8">
+  <h2 class="text-xl font-bold mb-6">🎂 이번 주 생일카페</h2>
+
+  {% if cafes %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {% for cafe in cafes %}
+        {% include "ddoksang/components/_cafe_card.html" with cafe=cafe %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 text-sm">등록된 생일카페가 없습니다.</p>
+  {% endif %}
+</section>

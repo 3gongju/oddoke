@@ -1,0 +1,27 @@
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
+
+{% block body %}
+  <!-- ✅ 생일 아티스트 캐러셀 -->
+  {% include 'ddoksang/components/_artist_carousel.html' %}
+
+  <!-- ✅ 생일카페 카드 리스트 -->
+  <section class="max-w-6xl mx-auto mt-10 px-4">
+    <h2 class="text-xl font-bold mb-4">🎉 최신 생일카페</h2>
+    {% if cafes %}
+      {% include 'ddoksang/components/_cafe_card_list.html' with cafes=cafes %}
+    {% else %}
+      {% include 'ddoksang/components/_empty_message.html' with message='등록된 생일카페가 없습니다.' %}
+    {% endif %}
+  </section>
+
+  <!-- ✅ 생카 투어 맵 이동 버튼 -->
+  <div class="mt-12 text-center">
+    <a href="{% url 'ddoksang:tour_map' %}" class="inline-block bg-blue-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-600 transition">
+      생카 투어 맵 보기 →
+    </a>
+  </div>
+
+  <!-- ✅ 검색 모달 (선택적: 자동완성, HOT20) -->
+  {% include "ddoksang/components/_search_modal.html" %}
+{% endblock %}

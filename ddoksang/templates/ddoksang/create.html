@@ -1,0 +1,186 @@
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
+
+{% block body %}
+<section class="max-w-4xl mx-auto px-4 py-10">
+  <h1 class="text-2xl font-bold mb-6">🎁 생일카페 등록하기</h1>
+  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생일카페 정보를 등록해주세요!</p>
+
+  <form method="POST" id="multiStepForm">
+    {% csrf_token %}
+
+    <!-- STEP 1: 아티스트/멤버 검색 -->
+    <div id="step-1" class="step">
+      <label class="block text-sm font-medium mb-2">아티스트/멤버명 검색</label>
+      <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력">
+      <ul id="artist-member-results" class="border mt-2 rounded overflow-hidden hidden"></ul>
+      <input type="hidden" name="artist_id" id="artist_id">
+      <input type="hidden" name="member_id" id="member_id">
+    </div>
+
+    <!-- STEP 2: 장소 -->
+    <div id="step-2" class="step hidden">
+      <label class="block text-sm font-medium mb-2">카페 위치 검색</label>
+      <input type="text" id="place-search" class="w-full border rounded px-4 py-2" placeholder="장소명을 입력하세요">
+      <div id="map" class="w-full h-64 bg-gray-100 my-4 rounded"></div>
+      <input type="hidden" name="address" id="address">
+      <input type="hidden" name="road_address" id="road_address">
+      <input type="hidden" name="latitude" id="latitude">
+      <input type="hidden" name="longitude" id="longitude">
+      <input type="hidden" name="kakao_place_id" id="kakao_place_id">
+    </div>
+
+    <!-- STEP 3: 일정 -->
+    <div id="step-3" class="step hidden">
+      <label class="block text-sm font-medium mb-1">시작일</label>
+      <input type="date" name="start_date" class="w-full border rounded p-2">
+      <label class="block text-sm font-medium mb-1 mt-4">종료일</label>
+      <input type="date" name="end_date" class="w-full border rounded p-2">
+    </div>
+
+    <!-- STEP 4: 설명 -->
+    <div id="step-4" class="step hidden">
+      <label class="block text-sm font-medium mb-2">이벤트 설명</label>
+      <textarea name="event_description" class="w-full border rounded p-2" rows="4"></textarea>
+      <input type="text" name="hashtags" class="w-full border rounded p-2 mt-2" placeholder="#태그1 #태그2">
+      <input type="url" name="twitter_source" class="w-full border rounded p-2 mt-2" placeholder="Twitter 링크">
+      <input type="url" name="instagram_source" class="w-full border rounded p-2 mt-2" placeholder="Instagram 링크">
+    </div>
+
+    <!-- STEP 5: 확인 및 제출 -->
+    <div id="step-5" class="step hidden">
+      <h3 class="font-semibold mb-4">입력하신 내용을 확인하고 제출해주세요.</h3>
+      <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">🎉 등록 완료하기</button>
+    </div>
+
+    <div class="mt-6 flex justify-between">
+      <button type="button" id="prevBtn" class="bg-gray-300 px-4 py-2 rounded">이전</button>
+      <button type="button" id="nextBtn" class="bg-blue-500 text-white px-4 py-2 rounded">다음</button>
+    </div>
+  </form>
+</section>
+
+<!-- ✅ 멤버 자동완성 스크립트 -->
+<script>
+document.getElementById("artist-member-search").addEventListener("input", function () {
+  const keyword = this.value.trim();
+  const resultsBox = document.getElementById("artist-member-results");
+  resultsBox.innerHTML = "";
+
+  if (!keyword) {
+    resultsBox.classList.add("hidden");
+    return;
+  }
+
+  fetch(`/ddoksang/autocomplete/members/?q=` + encodeURIComponent(keyword))
+    .then(res => res.json())
+    .then(data => {
+      const results = data.results;
+      if (results.length === 0) {
+        resultsBox.classList.add("hidden");
+        return;
+      }
+
+      results.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "hover:bg-gray-100 px-4 py-2 cursor-pointer text-sm border-b";
+        li.innerHTML = `
+          <div class="flex justify-between">
+            <span>${item.member_name} <span class="text-gray-500 text-xs">(${item.artist_display})</span></span>
+            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${item.bday}</span>
+          </div>
+        `;
+        li.onclick = () => {
+          document.getElementById("artist-member-search").value = `${item.member_name} (${item.artist_display})`;
+          document.getElementById("artist_id").value = item.artist_id;
+          document.getElementById("member_id").value = item.member_id;
+          resultsBox.classList.add("hidden");
+        };
+        resultsBox.appendChild(li);
+      });
+      resultsBox.classList.remove("hidden");
+    });
+});
+</script>
+
+<!-- ✅ 카카오맵 연동 스크립트 -->
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+<script>
+let map = new kakao.maps.Map(document.getElementById('map'), {
+  center: new kakao.maps.LatLng(37.5665, 126.9780),
+  level: 3
+});
+let ps = new kakao.maps.services.Places();
+let marker = new kakao.maps.Marker({ map: map });
+
+const placeInput = document.getElementById("place-search");
+placeInput.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    searchPlace();
+  }
+});
+
+function searchPlace() {
+  let keyword = placeInput.value;
+  if (!keyword.trim()) return;
+  ps.keywordSearch(keyword, function (data, status) {
+    if (status === kakao.maps.services.Status.OK) {
+      const place = data[0];
+      const latlng = new kakao.maps.LatLng(place.y, place.x);
+      map.setCenter(latlng);
+      marker.setPosition(latlng);
+
+      document.getElementById("address").value = place.address_name;
+      document.getElementById("road_address").value = place.road_address_name;
+      document.getElementById("latitude").value = place.y;
+      document.getElementById("longitude").value = place.x;
+      document.getElementById("kakao_place_id").value = place.id;
+    }
+  });
+}
+</script>
+<script>
+document.getElementById("artist-member-search").addEventListener("input", function () {
+  const keyword = this.value.trim();
+  const resultsBox = document.getElementById("artist-member-results");
+  resultsBox.innerHTML = "";
+
+  if (!keyword) {
+    resultsBox.classList.add("hidden");
+    return;
+  }
+
+  fetch(`/ddoksang/autocomplete/members/?q=` + encodeURIComponent(keyword))
+    .then(res => res.json())
+    .then(data => {
+      const results = data.results;
+      if (results.length === 0) {
+        resultsBox.classList.add("hidden");
+        return;
+      }
+
+      results.forEach(item => {
+        const li = document.createElement("li");
+        li.className = "hover:bg-gray-100 px-4 py-2 cursor-pointer text-sm border-b";
+        li.innerHTML = `
+          <div class="flex justify-between">
+            <span>${item.member_name} <span class="text-gray-500 text-xs">(${item.artist_display})</span></span>
+            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${item.bday}</span>
+          </div>
+        `;
+        li.onclick = () => {
+          document.getElementById("artist-member-search").value = `${item.member_name} (${item.artist_display})`;
+          document.getElementById("artist_id").value = item.artist_id;
+          document.getElementById("member_id").value = item.member_id;
+          resultsBox.classList.add("hidden");
+        };
+        resultsBox.appendChild(li);
+      });
+      resultsBox.classList.remove("hidden");
+    });
+});
+</script>
+
+
+{% endblock %}

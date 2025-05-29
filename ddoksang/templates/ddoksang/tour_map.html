@@ -1,0 +1,21 @@
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
+
+{% block title %}생카 투어맵{% endblock %}
+
+{% block body %}
+<section class="max-w-6xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold mb-6 text-center">🗺️ 생카 투어맵</h2>
+
+  <!-- 지도 영역 -->
+  <div id="mapContainer" class="w-full h-[600px] bg-gray-100 rounded shadow"></div>
+
+  <!-- 등록된 생일카페 수 -->
+  <div class="mt-6 text-center text-sm text-gray-600">
+    현재 <strong>{{ total_bday_cafes }}</strong>개의 생일카페가 등록되어 있습니다.
+  </div>
+</section>
+
+<!-- ✅ Kakao 지도 API + 마커 출력 스크립트 -->
+{% include "ddoksang/components/_map_script.html" %}
+{% endblock %}

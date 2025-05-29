@@ -1,0 +1,22 @@
+<section class="bg-white py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-xl font-bold mb-4">🎂 이번 주 생일 아티스트</h2>
+
+    {% if artists %}
+      <div class="relative">
+        <!-- 슬라이드 컨테이너 -->
+        <div id="artistCarousel" class="flex gap-4 overflow-x-auto scrollbar-hide">
+          {% for artist in artists %}
+            <div class="min-w-[80px] flex-shrink-0 text-center">
+              <img src="{{ artist.logo.url }}" alt="{{ artist.name }}"
+                   class="w-16 h-16 rounded-full object-cover mx-auto border">
+              <p class="text-sm mt-1 truncate">{{ artist.name }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      {% include "ddoksang/components/_empty_message.html" with message="이번 주 생일 아티스트가 없습니다." %}
+    {% endif %}
+  </div>
+</section>

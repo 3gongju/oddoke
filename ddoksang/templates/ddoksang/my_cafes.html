@@ -1,0 +1,18 @@
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
+
+{% block body %}
+<section class="max-w-6xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold mb-6">📋 내가 등록한 생일카페</h2>
+
+  {% if cafes %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for cafe in cafes %}
+        {% include "ddoksang/components/_cafe_card.html" with cafe=cafe %}
+      {% endfor %}
+    </div>
+  {% else %}
+    {% include 'ddoksang/components/_empty_message.html' with message='등록한 생일카페가 없습니다. 첫 생카를 등록해보세요!' %}
+  {% endif %}
+</section>
+{% endblock %}
