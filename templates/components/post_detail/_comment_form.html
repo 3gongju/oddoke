@@ -1,8 +1,11 @@
-{# components/post_detail/_comment_form.html #}
+{# 댓글/대댓글 작성 공통 폼 #}
 <form method="POST"
-      action="{% url comment_create_url category=category post_id=post.id %}"
-      class="flex items-center space-x-2">
+      action="{{ action_url }}"
+      class="flex items-center space-x-2 {{ extra_class|default:'' }}">
   {% csrf_token %}
+  {% if parent_id %}
+    <input type="hidden" name="parent" value="{{ parent_id }}">
+  {% endif %}
   <input type="text" name="content" placeholder="댓글을 작성해주세요..." required
          class="flex-grow border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none">
   <button type="submit"

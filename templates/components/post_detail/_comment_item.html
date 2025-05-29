@@ -1,0 +1,30 @@
+{# 댓글/대댓글 하나를 출력하는 컴포넌트 #}
+{% load humanize %}
+
+<div class="{% if is_reply %}mt-2 ml-6{% endif %} py-2 border-t text-sm">
+  <div class="flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      {% include 'components/post_detail/_user_profile.html' with user=comment.user %}
+      <span class="text-gray-400 text-xs">· {{ comment.created_at|naturaltime }}</span>
+    </div>
+    {% if comment.user == request.user %}
+      <a href="{% url 'ddokfarm:comment_delete' category=category post_id=post.id comment_id=comment.id %}"
+         class="text-red-500 text-sm hover:underline">삭제</a>
+    {% endif %}
+  </div>
+
+  <p class="text-gray-700 mt-1">{{ comment.content }}</p>
+
+  {% if not is_reply %}
+    <div class="text-sm text-gray-500 mt-1">
+      <a href="javascript:void(0);" class="hover:underline" onclick="showReplyForm({{ comment.id }})">댓글</a>
+    </div>
+    <div id="reply-form-{{ comment.id }}" class="hidden mt-2 ml-10">
+      {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=comment.id %}
+    </div>
+
+    {% for reply in comment.replies.all %}
+      {% include "components/post_detail/_comment_item.html" with comment=reply is_reply=True %}
+    {% endfor %}
+  {% endif %}
+</div>
