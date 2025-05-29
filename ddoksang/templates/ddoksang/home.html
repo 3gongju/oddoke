@@ -1,27 +1,310 @@
-{% extends "ddoksang/base/ddoksang_base.html" %}
+{% extends "base.html" %}
 {% load static %}
+{% load utils %}
+
+{% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block body %}
-  <!-- ✅ 생일 아티스트 캐러셀 -->
-  {% include 'ddoksang/components/_artist_carousel.html' %}
+<!-- 상단 검색 헤더 -->
+<section class="bg-gradient-to-r from-pink-50 to-purple-50 border-b border-pink-200 py-6">
+  <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    
+    <!-- 🔍 검색창 -->
+    <form method="get" action="{% url 'ddoksang:search' %}" class="w-full sm:w-2/3 relative">
+      <input type="text" name="q" placeholder="아티스트명, 카페명, 지역을 검색하세요" 
+             class="w-full py-3 px-6 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400 text-lg"
+             value="{{ request.GET.q }}">
+      <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2">
+        <svg class="w-6 h-6 text-gray-400 hover:text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+        </svg>
+      </button>
+    </form>
 
-  <!-- ✅ 생일카페 카드 리스트 -->
-  <section class="max-w-6xl mx-auto mt-10 px-4">
-    <h2 class="text-xl font-bold mb-4">🎉 최신 생일카페</h2>
-    {% if cafes %}
-      {% include 'ddoksang/components/_cafe_card_list.html' with cafes=cafes %}
+    <!-- 🗺️ 투어맵 바로가기 버튼 -->
+    <a href="{% url 'ddoksang:tour_map' %}" 
+       class="inline-flex items-center bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      생카 투어맵
+    </a>
+  </div>
+</section>
+
+<!-- 메인 컨텐츠 -->
+<div class="max-w-7xl mx-auto px-4">
+
+  <!-- 🗺️ 카카오맵 섹션 -->
+  <section class="py-8">
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+          <span class="text-3xl mr-3">🗺️</span>
+          전국 생일카페 지도
+          <span class="ml-3 text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">{{ total_cafes }}개 운영중</span>
+        </h2>
+        <p class="text-gray-600 mt-2">마커를 클릭하면 생일카페 정보를 확인할 수 있어요!</p>
+      </div>
+      
+      <!-- 지도 컨테이너 -->
+      <div id="mapContainer" class="w-full h-[500px] bg-gray-100"></div>
+    </div>
+  </section>
+
+  <!-- 🎂 이번 주 생일 아티스트 -->
+  <section class="py-8">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">🎂 이번 주 생일 아티스트</h2>
+      <p class="text-gray-600">생일을 맞은 아티스트들의 특별한 순간을 함께 축하해요!</p>
+    </div>
+
+    {% if birthday_artists %}
+      <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6">
+        {% for artist in birthday_artists %}
+          <div class="text-center group cursor-pointer" onclick="searchArtist('{{ artist.member_name }}')">
+            <div class="relative">
+              {% if artist.profile_image %}
+                <img src="{{ artist.profile_image.url }}" alt="{{ artist.member_name }}" 
+                     class="w-20 h-20 rounded-full object-cover mx-auto border-4 border-pink-200 group-hover:border-pink-400 transition-all duration-200 shadow-lg group-hover:shadow-xl">
+              {% else %}
+                <div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-300 to-purple-400 mx-auto border-4 border-pink-200 group-hover:border-pink-400 transition-all duration-200 shadow-lg group-hover:shadow-xl flex items-center justify-center">
+                  <span class="text-white text-xl font-bold">{{ artist.member_name|first }}</span>
+                </div>
+              {% endif %}
+              
+              <div class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold animate-pulse">
+                🎂
+              </div>
+            </div>
+            <h3 class="font-semibold text-gray-800 mt-3 group-hover:text-pink-600 transition-colors">{{ artist.member_name }}</h3>
+            <p class="text-sm text-gray-500">{{ artist.artist_name }}</p>
+            <p class="text-xs text-pink-600 font-medium">{{ artist.birthday_display }}</p>
+          </div>
+        {% endfor %}
+      </div>
     {% else %}
-      {% include 'ddoksang/components/_empty_message.html' with message='등록된 생일카페가 없습니다.' %}
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">🎭</div>
+        <p class="text-gray-500 text-lg">이번 주 생일인 아티스트가 없어요</p>
+        <p class="text-gray-400 text-sm mt-2">다음 주를 기대해주세요!</p>
+      </div>
     {% endif %}
   </section>
 
-  <!-- ✅ 생카 투어 맵 이동 버튼 -->
-  <div class="mt-12 text-center">
-    <a href="{% url 'ddoksang:tour_map' %}" class="inline-block bg-blue-500 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-600 transition">
-      생카 투어 맵 보기 →
-    </a>
-  </div>
+  <!-- 📍 생일 추천합니다 -->
+  <section class="py-8">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-bold text-gray-800 mb-2">📍 생일 추천합니다</h2>
+      <p class="text-gray-600">팬들이 직접 추천하는 특별한 생일카페들을 만나보세요</p>
+    </div>
 
-  <!-- ✅ 검색 모달 (선택적: 자동완성, HOT20) -->
-  {% include "ddoksang/components/_search_modal.html" %}
+    {% if featured_cafes %}
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {% for cafe in featured_cafes %}
+          <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden group">
+            {% if cafe.main_image %}
+              <img src="{{ cafe.main_image.url }}" alt="{{ cafe.cafe_name }}" 
+                   class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
+            {% else %}
+              <div class="w-full h-48 bg-gradient-to-br from-purple-300 to-pink-300 flex items-center justify-center">
+                <span class="text-white text-4xl">🏪</span>
+              </div>
+            {% endif %}
+
+            <div class="p-6">
+              <h3 class="font-bold text-lg text-gray-800 mb-2 line-clamp-1">{{ cafe.cafe_name }}</h3>
+              <p class="text-pink-600 font-semibold mb-1">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
+              <p class="text-sm text-gray-600 mb-3">📅 {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}</p>
+              <p class="text-sm text-gray-500 mb-4 line-clamp-2">📍 {{ cafe.address|truncatechars:40 }}</p>
+
+              {% if cafe.hashtags %}
+                <div class="flex flex-wrap gap-1 mb-4">
+                  {% for tag in cafe.hashtags|slice:":30"|split:"#" %}
+                    {% if tag.strip %}
+                      <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">#{{ tag.strip }}</span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <div class="flex justify-between items-center">
+                <a href="{% url 'ddoksang:detail' cafe.id %}" 
+                   class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:shadow-lg transition-all duration-200">
+                  자세히 보기
+                </a>
+
+                {% if user.is_authenticated %}
+                  <button data-favorite-btn data-cafe-id="{{ cafe.id }}" 
+                          class="text-2xl hover:scale-125 transition-transform duration-200">
+                    {% if cafe.id in user_favorites %}❤️{% else %}🤍{% endif %}
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-12">
+        <div class="text-6xl mb-4">☕</div>
+        <p class="text-gray-500 text-lg">추천 생일카페가 준비 중이에요</p>
+        <a href="{% url 'ddoksang:create' %}" class="inline-block mt-4 bg-pink-500 text-white px-6 py-2 rounded-full hover:bg-pink-600 transition-colors">
+          첫 생일카페 등록하기
+        </a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- 🎉 최신 생일카페 -->
+  <section class="py-8">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">🎉 최신 생일카페</h2>
+        <p class="text-gray-600">새롭게 등록된 생일카페들을 확인해보세요</p>
+      </div>
+      <a href="{% url 'ddoksang:create' %}" 
+         class="bg-gradient-to-r from-green-500 to-teal-600 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg transition-all duration-200">
+        + 생카 등록하기
+      </a>
+    </div>
+
+    {% if recent_cafes %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for cafe in recent_cafes %}
+          <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+            {% if cafe.main_image %}
+              <img src="{{ cafe.main_image.url }}" alt="{{ cafe.cafe_name }}" class="w-full h-40 object-cover">
+            {% else %}
+              <div class="w-full h-40 bg-gray-100 flex items-center justify-center">
+                <span class="text-gray-400 text-3xl">🏪</span>
+              </div>
+            {% endif %}
+
+            <div class="p-4">
+              <h3 class="font-bold text-lg text-gray-800 mb-1 line-clamp-1">{{ cafe.cafe_name }}</h3>
+              <p class="text-pink-600 font-medium mb-2">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
+              <p class="text-sm text-gray-600 mb-2">📅 {{ cafe.start_date|date:"m월 d일" }} ~ {{ cafe.end_date|date:"m월 d일" }}</p>
+              <p class="text-sm text-gray-500 line-clamp-1">📍 {{ cafe.address }}</p>
+
+              <div class="mt-3 flex justify-between items-center">
+                <span class="text-xs px-2 py-1 rounded-full
+                  {% if cafe.status == 'approved' %}bg-green-100 text-green-700
+                  {% elif cafe.status == 'pending' %}bg-yellow-100 text-yellow-700
+                  {% else %}bg-gray-100 text-gray-700{% endif %}">
+                  {{ cafe.get_status_display }}
+                </span>
+                <a href="{% url 'ddoksang:detail' cafe.id %}" class="text-blue-600 text-sm hover:underline">자세히 보기</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center py-12 bg-gray-50 rounded-2xl">
+        <div class="text-6xl mb-4">📝</div>
+        <p class="text-gray-500 text-lg mb-4">아직 등록된 생일카페가 없어요</p>
+        <a href="{% url 'ddoksang:create' %}" 
+           class="bg-pink-500 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-600 transition-colors">
+          첫 번째 생일카페 등록하기
+        </a>
+      </div>
+    {% endif %}
+  </section>
+
+</div>
+
+<!-- 📱 플로팅 액션 버튼 -->
+<div class="fixed bottom-6 right-6 z-50">
+  <a href="{% url 'ddoksang:create' %}" 
+     class="bg-gradient-to-r from-pink-500 to-purple-600 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-200 flex items-center justify-center">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+    </svg>
+  </a>
+</div>
+
+<!-- 카카오맵 스크립트 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+
+<script>
+// 카카오맵 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('mapContainer');
+    if (!container || !window.kakao) return;
+
+    const mapOption = {
+        center: new kakao.maps.LatLng(37.5665, 126.9780),
+        level: 8
+    };
+
+    const map = new kakao.maps.Map(container, mapOption);
+    
+    // 생일카페 데이터
+    const cafes = {{ cafes_json|safe }};
+    
+    if (cafes && cafes.length > 0) {
+        cafes.forEach(cafe => {
+            const position = new kakao.maps.LatLng(cafe.latitude, cafe.longitude);
+            
+            const marker = new kakao.maps.Marker({
+                position: position,
+                map: map
+            });
+            
+            const infoContent = `
+                <div style="padding:15px;min-width:200px;font-family:'Pretendard',sans-serif;">
+                    <h4 style="margin:0 0 8px 0;font-size:16px;font-weight:600;">${cafe.name}</h4>
+                    <p style="margin:0 0 5px 0;color:#e91e63;font-weight:500;">${cafe.artist}${cafe.member ? ' - ' + cafe.member : ''}</p>
+                    <p style="margin:0 0 5px 0;color:#666;font-size:13px;">📅 ${cafe.start_date} ~ ${cafe.end_date}</p>
+                    <p style="margin:0 0 10px 0;color:#666;font-size:12px;">📍 ${cafe.address}</p>
+                    <a href="/ddoksang/detail/${cafe.id}/" style="display:inline-block;background:#e91e63;color:white;padding:6px 12px;border-radius:20px;text-decoration:none;font-size:12px;">자세히 보기</a>
+                </div>
+            `;
+            
+            const infoWindow = new kakao.maps.InfoWindow({
+                content: infoContent
+            });
+            
+            kakao.maps.event.addListener(marker, 'click', function() {
+                infoWindow.open(map, marker);
+            });
+        }); // 닫는 중괄호, 세미콜론 꼭 추가
+
+        // 첫 번째 카페를 중심으로 설정
+        if (cafes[0]) {
+            map.setCenter(new kakao.maps.LatLng(cafes[0].latitude, cafes[0].longitude));
+        }
+    }
+});
+
+// 아티스트 검색 함수
+function searchArtist(artistName) {
+    window.location.href = `{% url 'ddoksang:search' %}?q=${encodeURIComponent(artistName)}`;
+}
+
+// 찜하기 기능
+document.addEventListener('click', function(e) {
+    if (e.target.matches('[data-favorite-btn]')) {
+        const cafeId = e.target.dataset.cafeId;
+        
+        fetch(`/ddoksang/favorite/${cafeId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            e.target.textContent = data.is_favorited ? '❤️' : '🤍';
+        })
+        .catch(error => console.error('Error:', error));
+    }
+});
+</script>
+
+<!-- JavaScript 모듈 로드 -->
+{% include "ddoksang/components/_javascript_modules.html" %}
 {% endblock %}

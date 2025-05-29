@@ -1,23 +1,28 @@
-<!-- ✅ 덕생 전용 상단 헤더: 검색창 + 투어맵 버튼 -->
-<section class="bg-pink-50 border-b border-pink-200 py-6">
-  <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+{% load static %}
+<!-- 상단 검색 헤더 -->
+<section class="bg-gradient-to-r from-pink-50 to-purple-50 border-b border-pink-200 py-6">
+  <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     
     <!-- 🔍 검색창 -->
     <form method="get" action="{% url 'ddoksang:search' %}" class="w-full sm:w-2/3 relative">
-      <input type="text" name="q" placeholder="아티스트명 또는 장소를 입력하세요"
-             class="w-full py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+      <input type="text" name="q" placeholder="아티스트명, 카페명, 지역을 검색하세요" 
+             class="w-full py-3 px-6 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400 text-lg"
              value="{{ request.GET.q }}">
-      <!-- (선택) 자동완성 아이콘 -->
-      <svg class="w-5 h-5 absolute top-1/2 right-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
-      </svg>
+      <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2">
+        <svg class="w-6 h-6 text-gray-400 hover:text-pink-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+        </svg>
+      </button>
     </form>
 
     <!-- 🗺️ 투어맵 바로가기 버튼 -->
     <a href="{% url 'ddoksang:tour_map' %}" 
-       class="inline-block bg-pink-500 text-white font-semibold px-6 py-2 rounded-full shadow hover:bg-pink-600 text-sm text-center">
-      생카 투어 보기
+       class="inline-flex items-center bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      생카 투어맵
     </a>
-
   </div>
 </section>

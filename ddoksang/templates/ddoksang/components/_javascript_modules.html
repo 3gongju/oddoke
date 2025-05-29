@@ -1,0 +1,1615 @@
+<!-- ddoksang/templates/ddoksang/components/_javascript_modules.html -->
+
+<!-- 베이스 유틸리티 모듈 -->
+<script>
+// 전역 네임스페이스
+window.Ddoksang = window.Ddoksang || {};
+
+// 유틸리티 함수들
+Ddoksang.Utils = {
+    // CSRF 토큰 가져오기
+    getCsrfToken: () => {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+               document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+    },
+    
+    // API 요청 래퍼
+    async apiRequest(url, options = {}) {
+        const defaultOptions = {
+            headers: {
+                'X-CSRFToken': this.getCsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+        };
+        
+        const config = { ...defaultOptions, ...options };
+        
+        if (config.body && typeof config.body === 'object') {
+            config.body = JSON.stringify(config.body);
+        }
+        
+        try {
+            const response = await fetch(url, config);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || '요청 처리 중 오류가 발생했습니다.');
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('API 요청 오류:', error);
+            throw error;
+        }
+    },
+    
+    // 토스트 알림
+    showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 translate-x-full`;
+        
+        const bgColors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            warning: 'bg-yellow-500',
+            info: 'bg-blue-500'
+        };
+        
+        toast.classList.add(bgColors[type] || bgColors.info);
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        // 애니메이션
+        setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+        
+        // 자동 제거
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => document.body.removeChild(toast), 300);
+        }, 3000);
+    },
+    
+    // 로딩 스피너
+    showLoading(element) {
+        if (!element) return;
+        
+        const originalContent = element.innerHTML;
+        element.innerHTML = `
+            <div class="flex items-center justify-center">
+                <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
+                    <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                처리 중...
+            </div>
+        `;
+        element.disabled = true;
+        
+        return () => {
+            element.innerHTML = originalContent;
+            element.disabled = false;
+        };
+    },
+    
+    // 디바운스
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+    
+    // 이미지 로드 체크
+    async loadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+        });
+    },
+    
+    // 파일 크기 포맷팅
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    },
+    
+    // 날짜 포맷팅
+    formatDate(date, format = 'YYYY-MM-DD') {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        
+        return format
+            .replace('YYYY', year)
+            .replace('MM', month)
+            .replace('DD', day)
+            .replace('HH', hours)
+            .replace('mm', minutes);
+    },
+    
+    // 쿠키 관리
+    setCookie(name, value, days = 7) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    },
+    
+    getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+};
+
+// 이벤트 시스템
+Ddoksang.EventEmitter = class {
+    constructor() {
+        this.events = {};
+    }
+    
+    on(event, callback) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(callback);
+    }
+    
+    emit(event, data) {
+        if (this.events[event]) {
+            this.events[event].forEach(callback => callback(data));
+        }
+    }
+    
+    off(event, callback) {
+        if (this.events[event]) {
+            this.events[event] = this.events[event].filter(cb => cb !== callback);
+        }
+    }
+};
+
+// 글로벌 이벤트 에미터
+Ddoksang.events = new Ddoksang.EventEmitter();
+</script>
+
+<!-- 아티스트/멤버 자동완성 모듈 -->
+<script>
+Ddoksang.MemberAutocomplete = class {
+    constructor(inputSelector, resultSelector, options = {}) {
+        this.input = document.querySelector(inputSelector);
+        this.results = document.querySelector(resultSelector);
+        this.options = {
+            minLength: 2,
+            delay: 300,
+            maxResults: 10,
+            ...options
+        };
+        
+        this.selectedData = null;
+        this.currentRequest = null;
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.input || !this.results) return;
+        
+        // 검색 이벤트 (디바운스 적용)
+        this.input.addEventListener('input', 
+            Ddoksang.Utils.debounce(this.handleSearch.bind(this), this.options.delay)
+        );
+        
+        // 외부 클릭 시 결과 숨기기
+        document.addEventListener('click', (e) => {
+            if (!this.input.contains(e.target) && !this.results.contains(e.target)) {
+                this.hideResults();
+            }
+        });
+        
+        // 키보드 네비게이션
+        this.input.addEventListener('keydown', this.handleKeyboard.bind(this));
+    }
+    
+    async handleSearch() {
+        const query = this.input.value.trim();
+        
+        if (query.length < this.options.minLength) {
+            this.hideResults();
+            return;
+        }
+        
+        // 이전 요청 취소
+        if (this.currentRequest) {
+            this.currentRequest.abort();
+        }
+        
+        try {
+            this.showLoading();
+            
+            const controller = new AbortController();
+            this.currentRequest = controller;
+            
+            const response = await fetch(
+                `/ddoksang/autocomplete/members/?q=${encodeURIComponent(query)}`,
+                { signal: controller.signal }
+            );
+            
+            const data = await response.json();
+            this.displayResults(data.results);
+            
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('검색 오류:', error);
+                this.hideResults();
+            }
+        } finally {
+            this.currentRequest = null;
+        }
+    }
+    
+    showLoading() {
+        this.results.innerHTML = `
+            <div class="px-4 py-3 text-center text-gray-500">
+                <div class="flex items-center justify-center">
+                    <svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
+                        <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    검색 중...
+                </div>
+            </div>
+        `;
+        this.results.classList.remove('hidden');
+    }
+    
+    displayResults(results) {
+        if (!results || results.length === 0) {
+            this.results.innerHTML = `
+                <div class="px-4 py-3 text-center text-gray-500">
+                    검색 결과가 없습니다.
+                </div>
+            `;
+            this.results.classList.remove('hidden');
+            return;
+        }
+        
+        const html = results.map((item, index) => `
+            <div class="autocomplete-item px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 ${index === 0 ? 'bg-gray-50' : ''}" 
+                 data-index="${index}" data-item='${JSON.stringify(item)}'>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="font-medium text-gray-900">${item.member_name}</span>
+                        <span class="text-sm text-gray-600 ml-2">(${item.artist_display})</span>
+                    </div>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${item.bday}</span>
+                </div>
+            </div>
+        `).join('');
+        
+        this.results.innerHTML = html;
+        this.results.classList.remove('hidden');
+        
+        // 클릭 이벤트 등록
+        this.results.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const data = JSON.parse(item.dataset.item);
+                this.selectItem(data);
+            });
+        });
+    }
+    
+    selectItem(data) {
+        this.selectedData = data;
+        this.input.value = `${data.member_name} (${data.artist_display})`;
+        this.hideResults();
+        
+        // 폼 필드 업데이트
+        const artistField = document.querySelector('select[name="artist"], input[name="artist"]');
+        const memberField = document.querySelector('select[name="member"], input[name="member"]');
+        
+        if (artistField) artistField.value = data.artist_id;
+        if (memberField) memberField.value = data.member_id;
+        
+        // 커스텀 이벤트 발생
+        Ddoksang.events.emit('memberSelected', data);
+    }
+    
+    handleKeyboard(e) {
+        const items = this.results.querySelectorAll('.autocomplete-item');
+        const current = this.results.querySelector('.bg-blue-100');
+        
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (current) {
+                    current.classList.remove('bg-blue-100');
+                    const next = current.nextElementSibling || items[0];
+                    next.classList.add('bg-blue-100');
+                } else if (items.length > 0) {
+                    items[0].classList.add('bg-blue-100');
+                }
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                if (current) {
+                    current.classList.remove('bg-blue-100');
+                    const prev = current.previousElementSibling || items[items.length - 1];
+                    prev.classList.add('bg-blue-100');
+                }
+                break;
+                
+            case 'Enter':
+                e.preventDefault();
+                if (current) {
+                    const data = JSON.parse(current.dataset.item);
+                    this.selectItem(data);
+                }
+                break;
+                
+            case 'Escape':
+                this.hideResults();
+                break;
+        }
+    }
+    
+    hideResults() {
+        this.results.classList.add('hidden');
+        this.results.innerHTML = '';
+    }
+    
+    reset() {
+        this.input.value = '';
+        this.selectedData = null;
+        this.hideResults();
+    }
+};
+</script>
+
+<!-- 카카오맵 모듈 -->
+<script>
+Ddoksang.KakaoMap = class {
+    constructor(containerId, options = {}) {
+        this.container = document.getElementById(containerId);
+        this.options = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780),
+            level: 3,
+            ...options
+        };
+        
+        this.map = null;
+        this.markers = [];
+        this.infoWindows = [];
+        this.currentInfoWindow = null;
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.container || !window.kakao) {
+            console.error('카카오맵 초기화 실패: 컨테이너 또는 kakao 객체가 없습니다.');
+            return;
+        }
+        
+        this.map = new kakao.maps.Map(this.container, this.options);
+        this.placesService = new kakao.maps.services.Places();
+        this.geocoder = new kakao.maps.services.Geocoder();
+        
+        // 컨트롤 추가
+        this.addControls();
+        
+        // 맵 클릭 이벤트
+        kakao.maps.event.addListener(this.map, 'click', () => {
+            this.closeInfoWindow();
+        });
+    }
+    
+    // 지도 컨트롤 추가
+    addControls() {
+        // 확대/축소 컨트롤
+        const zoomControl = new kakao.maps.ZoomControl();
+        this.map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+        
+        // 지도 타입 컨트롤
+        const mapTypeControl = new kakao.maps.MapTypeControl();
+        this.map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+    }
+    
+    // 정보창 닫기
+    closeInfoWindow() {
+        if (this.currentInfoWindow) {
+            this.currentInfoWindow.close();
+            this.currentInfoWindow = null;
+        }
+    }
+    
+    // 마커 추가
+    addMarker(position, options = {}) {
+        const marker = new kakao.maps.Marker({
+            position: position,
+            map: this.map,
+            ...options
+        });
+        
+        this.markers.push(marker);
+        return marker;
+    }
+    
+    // 생일카페 마커 추가 (전용)
+    addCafeMarker(cafeData) {
+        const position = new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude);
+        
+        // 커스텀 마커 이미지 (선택사항)
+        const imageSrc = '/static/images/cafe-marker.png';
+        const imageSize = new kakao.maps.Size(40, 42);
+        const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+        
+        const marker = new kakao.maps.Marker({
+            position: position,
+            map: this.map,
+            image: markerImage
+        });
+        
+        // 정보창 내용 생성
+        const infoContent = this.createCafeInfoContent(cafeData);
+        const infoWindow = new kakao.maps.InfoWindow({
+            content: infoContent,
+            removable: true
+        });
+        
+        // 마커 클릭 이벤트
+        kakao.maps.event.addListener(marker, 'click', () => {
+            this.closeInfoWindow();
+            infoWindow.open(this.map, marker);
+            this.currentInfoWindow = infoWindow;
+        });
+        
+        // 마커 호버 이벤트
+        kakao.maps.event.addListener(marker, 'mouseover', () => {
+            if (this.currentInfoWindow !== infoWindow) {
+                const simpleInfo = new kakao.maps.InfoWindow({
+                    content: `<div style="padding:5px;font-size:12px;">${cafeData.name}</div>`
+                });
+                simpleInfo.open(this.map, marker);
+                setTimeout(() => simpleInfo.close(), 2000);
+            }
+        });
+        
+        this.markers.push(marker);
+        this.infoWindows.push(infoWindow);
+        
+        return { marker, infoWindow };
+    }
+    
+    // 생일카페 정보창 내용 생성
+    createCafeInfoContent(cafeData) {
+        const statusBadge = cafeData.is_active ? 
+            '<span style="background:#10b981;color:white;padding:2px 6px;border-radius:12px;font-size:10px;">진행중</span>' :
+            '<span style="background:#ef4444;color:white;padding:2px 6px;border-radius:12px;font-size:10px;">종료</span>';
+            
+        return `
+            <div style="padding:15px;min-width:250px;font-family:'Pretendard',sans-serif;">
+                <div style="margin-bottom:8px;">
+                    <h4 style="margin:0;font-size:16px;font-weight:600;color:#1f2937;">${cafeData.name}</h4>
+                    ${statusBadge}
+                </div>
+                <div style="margin-bottom:6px;color:#6b7280;font-size:13px;">
+                    🎭 ${cafeData.artist}${cafeData.member ? ` - ${cafeData.member}` : ''}
+                </div>
+                <div style="margin-bottom:6px;color:#6b7280;font-size:13px;">
+                    📅 ${cafeData.start_date} ~ ${cafeData.end_date}
+                </div>
+                <div style="margin-bottom:10px;color:#6b7280;font-size:12px;">
+                    📍 ${cafeData.address}
+                </div>
+                ${cafeData.main_image ? `<img src="${cafeData.main_image}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px;" alt="${cafeData.name}">` : ''}
+                <div style="text-align:center;">
+                    <a href="/ddoksang/detail/${cafeData.id}/" 
+                       style="display:inline-block;background:#3b82f6;color:white;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;">
+                        자세히 보기
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+    
+    // 장소 검색
+    searchPlaces(keyword, callback) {
+        if (!keyword.trim()) return;
+        
+        this.placesService.keywordSearch(keyword, (data, status) => {
+            if (status === kakao.maps.services.Status.OK) {
+                callback(data);
+            } else {
+                console.error('장소 검색 실패:', status);
+                callback([]);
+            }
+        });
+    }
+    
+    // 주소로 좌표 검색
+    geocodeAddress(address, callback) {
+        this.geocoder.addressSearch(address, (result, status) => {
+            if (status === kakao.maps.services.Status.OK) {
+                const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                callback(coords, result[0]);
+            } else {
+                console.error('주소 검색 실패:', status);
+                callback(null);
+            }
+        });
+    }
+    
+    // 좌표로 주소 검색
+    geocodeCoord(lat, lng, callback) {
+        this.geocoder.coord2Address(lng, lat, (result, status) => {
+            if (status === kakao.maps.services.Status.OK) {
+                callback(result[0]);
+            } else {
+                console.error('좌표 변환 실패:', status);
+                callback(null);
+            }
+        });
+    }
+    
+    // 지도 중심 이동
+    panTo(lat, lng) {
+        const moveLatLon = new kakao.maps.LatLng(lat, lng);
+        this.map.panTo(moveLatLon);
+    }
+    
+    // 지도 레벨 설정
+    setLevel(level) {
+        this.map.setLevel(level);
+    }
+    
+    // 모든 마커 제거
+    clearMarkers() {
+        this.markers.forEach(marker => marker.setMap(null));
+        this.markers = [];
+        this.infoWindows.forEach(infoWindow => infoWindow.close());
+        this.infoWindows = [];
+        this.currentInfoWindow = null;
+    }
+    
+    // 마커들이 모두 보이도록 지도 범위 조정
+    setBounds(markers = null) {
+        const bounds = new kakao.maps.LatLngBounds();
+        const targetMarkers = markers || this.markers;
+        
+        targetMarkers.forEach(marker => {
+            bounds.extend(marker.getPosition());
+        });
+        
+        this.map.setBounds(bounds);
+    }
+    
+    // 현재 위치 가져오기
+    getCurrentLocation(callback) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const coords = new kakao.maps.LatLng(lat, lng);
+                    callback(coords);
+                },
+                (error) => {
+                    console.error('위치 정보 가져오기 실패:', error);
+                    callback(null);
+                }
+            );
+        } else {
+            console.error('Geolocation이 지원되지 않습니다.');
+            callback(null);
+        }
+    }
+    
+    // 거리 계산 (두 좌표 간)
+    calculateDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371; // 지구 반지름 (km)
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+};
+</script>
+
+<!-- 이미지 업loader 모듈 -->
+<script>
+Ddoksang.ImageUploader = class {
+    constructor(containerSelector, options = {}) {
+        this.container = document.querySelector(containerSelector);
+        this.options = {
+            maxFiles: 5,
+            maxFileSize: 5 * 1024 * 1024, // 5MB
+            allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'],
+            ...options
+        };
+        
+        this.files = [];
+        this.previewContainer = null;
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.container) return;
+        
+        this.createUploadInterface();
+        this.bindEvents();
+    }
+    
+    createUploadInterface() {
+        this.container.innerHTML = `
+            <div class="image-upload-wrapper">
+                <div class="upload-area border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="mt-4">
+                        <label class="cursor-pointer">
+                            <span class="mt-2 block text-sm font-medium text-gray-900">
+                                클릭하여 이미지 업로드 또는 드래그 & 드롭
+                            </span>
+                            <input type="file" class="sr-only" multiple accept="image/*" id="file-input">
+                        </label>
+                        <p class="mt-1 text-xs text-gray-500">
+                            PNG, JPG, GIF 최대 ${this.options.maxFiles}개 (파일당 ${this.formatFileSize(this.options.maxFileSize)})
+                        </p>
+                    </div>
+                </div>
+                <div class="image-preview-container mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+            </div>
+        `;
+        
+        this.uploadArea = this.container.querySelector('.upload-area');
+        this.fileInput = this.container.querySelector('#file-input');
+        this.previewContainer = this.container.querySelector('.image-preview-container');
+    }
+    
+    bindEvents() {
+        // 파일 선택 이벤트
+        this.fileInput.addEventListener('change', (e) => {
+            this.handleFiles(Array.from(e.target.files));
+        });
+        
+        // 드래그 앤 드롭 이벤트
+        this.uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.add('border-blue-400', 'bg-blue-50');
+        });
+        
+        this.uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+        
+        this.uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            this.handleFiles(files);
+        });
+    }
+    
+    handleFiles(newFiles) {
+        // 파일 수 제한 체크
+        if (this.files.length + newFiles.length > this.options.maxFiles) {
+            Ddoksang.Utils.showToast(`최대 ${this.options.maxFiles}개까지만 업로드할 수 있습니다.`, 'warning');
+            return;
+        }
+        
+        newFiles.forEach(file => {
+            // 파일 타입 체크
+            if (!this.options.allowedTypes.includes(file.type)) {
+                Ddoksang.Utils.showToast(`지원하지 않는 파일 형식입니다: ${file.name}`, 'error');
+                return;
+            }
+            
+            // 파일 크기 체크
+            if (file.size > this.options.maxFileSize) {
+                Ddoksang.Utils.showToast(`파일 크기가 너무 큽니다: ${file.name}`, 'error');
+                return;
+            }
+            
+            this.addFile(file);
+        });
+        
+        this.updatePreview();
+    }
+    
+    addFile(file) {
+        const fileData = {
+            file: file,
+            id: Date.now() + Math.random(),
+            name: file.name,
+            size: file.size,
+            preview: null
+        };
+        
+        this.files.push(fileData);
+        
+        // 미리보기 이미지 생성
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            fileData.preview = e.target.result;
+            this.updatePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    removeFile(fileId) {
+        this.files = this.files.filter(f => f.id !== fileId);
+        this.updatePreview();
+        Ddoksang.events.emit('filesChanged', this.files);
+    }
+    
+    updatePreview() {
+        this.previewContainer.innerHTML = '';
+        
+        this.files.forEach(fileData => {
+            if (fileData.preview) {
+                const previewElement = this.createPreviewElement(fileData);
+                this.previewContainer.appendChild(previewElement);
+            }
+        });
+        
+        // 파일이 있으면 업로드 영역 축소
+        if (this.files.length > 0) {
+            this.uploadArea.classList.add('compact');
+        } else {
+            this.uploadArea.classList.remove('compact');
+        }
+        
+        Ddoksang.events.emit('filesChanged', this.files);
+    }
+    
+    createPreviewElement(fileData) {
+        const div = document.createElement('div');
+        div.className = 'relative group';
+        div.innerHTML = `
+            <img src="${fileData.preview}" 
+                 alt="${fileData.name}" 
+                 class="w-full h-32 object-cover rounded-lg border border-gray-200">
+            <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                <button type="button" 
+                        class="remove-btn bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                        data-file-id="${fileData.id}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white p-2 rounded-b-lg">
+                <p class="text-xs truncate">${fileData.name}</p>
+                <p class="text-xs text-gray-300">${this.formatFileSize(fileData.size)}</p>
+            </div>
+        `;
+        
+        // 삭제 버튼 이벤트
+        div.querySelector('.remove-btn').addEventListener('click', () => {
+            this.removeFile(fileData.id);
+        });
+        
+        return div;
+    }
+    
+    formatFileSize(bytes) {
+        return Ddoksang.Utils.formatFileSize(bytes);
+    }
+    
+    getFiles() {
+        return this.files.map(f => f.file);
+    }
+    
+    clear() {
+        this.files = [];
+        this.updatePreview();
+    }
+};
+</script>
+
+<!-- 다단계 폼 모듈 -->
+<script>
+Ddoksang.MultiStepForm = class {
+    constructor(formSelector, options = {}) {
+        this.form = document.querySelector(formSelector);
+        this.options = {
+            showProgress: true,
+            validateOnNext: true,
+            ...options
+        };
+        
+        this.currentStep = 0;
+        this.steps = [];
+        this.totalSteps = 0;
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.form) return;
+        
+        this.steps = Array.from(this.form.querySelectorAll('.step'));
+        this.totalSteps = this.steps.length;
+        
+        if (this.totalSteps === 0) return;
+        
+        this.createNavigation();
+        this.createProgressBar();
+        this.bindEvents();
+        this.showStep(0);
+    }
+    
+    createNavigation() {
+        const nav = document.createElement('div');
+        nav.className = 'form-navigation flex justify-between mt-6';
+        nav.innerHTML = `
+            <button type="button" id="prevBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                이전
+            </button>
+            <button type="button" id="nextBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors">
+                다음
+            </button>
+        `;
+        
+        this.form.appendChild(nav);
+        
+        this.prevBtn = this.form.querySelector('#prevBtn');
+        this.nextBtn = this.form.querySelector('#nextBtn');
+    }
+    
+    createProgressBar() {
+        if (!this.options.showProgress) return;
+        
+        const progress = document.createElement('div');
+        progress.className = 'form-progress mb-6';
+        progress.innerHTML = `
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">단계 <span id="current-step">1</span> / ${this.totalSteps}</span>
+                <span class="text-sm text-gray-500"><span id="progress-percent">0</span>%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        `;
+        
+        this.form.insertBefore(progress, this.form.firstChild);
+        
+        this.progressBar = this.form.querySelector('#progress-bar');
+        this.currentStepSpan = this.form.querySelector('#current-step');
+        this.progressPercent = this.form.querySelector('#progress-percent');
+    }
+    
+    bindEvents() {
+        this.prevBtn.addEventListener('click', () => this.previousStep());
+        this.nextBtn.addEventListener('click', () => this.nextStep());
+        
+        // 폼 제출 이벤트
+        this.form.addEventListener('submit', (e) => {
+            if (this.currentStep < this.totalSteps - 1) {
+                e.preventDefault();
+                this.nextStep();
+            }
+        });
+    }
+    
+    showStep(stepIndex) {
+        // 모든 스텝 숨기기
+        this.steps.forEach((step, index) => {
+            if (index === stepIndex) {
+                step.classList.remove('hidden');
+            } else {
+                step.classList.add('hidden');
+            }
+        });
+        
+        this.currentStep = stepIndex;
+        this.updateNavigation();
+        this.updateProgress();
+        
+        // 커스텀 이벤트 발생
+        Ddoksang.events.emit('stepChanged', {
+            current: this.currentStep,
+            total: this.totalSteps,
+            step: this.steps[this.currentStep]
+        });
+    }
+    
+    updateNavigation() {
+        // 이전 버튼
+        this.prevBtn.disabled = this.currentStep === 0;
+        
+        // 다음/제출 버튼
+        if (this.currentStep === this.totalSteps - 1) {
+            this.nextBtn.textContent = '제출';
+            this.nextBtn.type = 'submit';
+            this.nextBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            this.nextBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        } else {
+            this.nextBtn.textContent = '다음';
+            this.nextBtn.type = 'button';
+            this.nextBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            this.nextBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        }
+    }
+    
+    updateProgress() {
+        if (!this.options.showProgress) return;
+        
+        const progress = Math.round((this.currentStep / (this.totalSteps - 1)) * 100);
+        
+        this.currentStepSpan.textContent = this.currentStep + 1;
+        this.progressPercent.textContent = progress;
+        this.progressBar.style.width = `${progress}%`;
+    }
+    
+    nextStep() {
+        if (this.currentStep >= this.totalSteps - 1) return;
+        
+        // 유효성 검사
+        if (this.options.validateOnNext && !this.validateCurrentStep()) {
+            return;
+        }
+        
+        this.showStep(this.currentStep + 1);
+    }
+    
+    previousStep() {
+        if (this.currentStep <= 0) return;
+        this.showStep(this.currentStep - 1);
+    }
+    
+    validateCurrentStep() {
+        const currentStepElement = this.steps[this.currentStep];
+        const requiredFields = currentStepElement.querySelectorAll('[required]');
+        
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('border-red-500');
+                
+                // 에러 메시지 표시
+                let errorMsg = field.nextElementSibling;
+                if (!errorMsg || !errorMsg.classList.contains('error-message')) {
+                    errorMsg = document.createElement('div');
+                    errorMsg.className = 'error-message text-red-500 text-sm mt-1';
+                    errorMsg.textContent = '이 필드는 필수입니다.';
+                    field.parentNode.insertBefore(errorMsg, field.nextSibling);
+                }
+            } else {
+                field.classList.remove('border-red-500');
+                const errorMsg = field.nextElementSibling;
+                if (errorMsg && errorMsg.classList.contains('error-message')) {
+                    errorMsg.remove();
+                }
+            }
+        });
+        
+        if (!isValid) {
+            Ddoksang.Utils.showToast('필수 항목을 모두 입력해주세요.', 'error');
+        }
+        
+        return isValid;
+    }
+    
+    goToStep(stepIndex) {
+        if (stepIndex >= 0 && stepIndex < this.totalSteps) {
+            this.showStep(stepIndex);
+        }
+    }
+    
+    getCurrentStep() {
+        return this.currentStep;
+    }
+    
+    getTotalSteps() {
+        return this.totalSteps;
+    }
+};
+</script>
+
+<!-- 장소 검색 모듈 -->
+<script>
+Ddoksang.PlaceSearch = class {
+    constructor(inputSelector, mapSelector, options = {}) {
+        this.input = document.querySelector(inputSelector);
+        this.mapContainer = document.querySelector(mapSelector);
+        this.options = {
+            defaultLocation: { lat: 37.5665, lng: 126.9780 },
+            zoom: 3,
+            ...options
+        };
+        
+        this.map = null;
+        this.marker = null;
+        this.placesService = null;
+        this.selectedPlace = null;
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.input || !this.mapContainer || !window.kakao) {
+            console.error('PlaceSearch 초기화 실패: 필수 요소가 없습니다.');
+            return;
+        }
+        
+        this.initMap();
+        this.bindEvents();
+    }
+    
+    initMap() {
+        const { lat, lng } = this.options.defaultLocation;
+        const center = new kakao.maps.LatLng(lat, lng);
+        
+        this.map = new kakao.maps.Map(this.mapContainer, {
+            center: center,
+            level: this.options.zoom
+        });
+        
+        this.placesService = new kakao.maps.services.Places();
+        
+        // 마커 생성
+        this.marker = new kakao.maps.Marker({
+            position: center,
+            map: this.map
+        });
+    }
+    
+    bindEvents() {
+        // 엔터키 검색
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.searchPlace();
+            }
+        });
+        
+        // 지도 클릭 이벤트
+        kakao.maps.event.addListener(this.map, 'click', (mouseEvent) => {
+            const latlng = mouseEvent.latLng;
+            this.setMarkerPosition(latlng);
+            this.reverseGeocode(latlng.getLat(), latlng.getLng());
+        });
+    }
+    
+    searchPlace() {
+        const keyword = this.input.value.trim();
+        if (!keyword) return;
+        
+        this.placesService.keywordSearch(keyword, (data, status) => {
+            if (status === kakao.maps.services.Status.OK) {
+                const place = data[0]; // 첫 번째 결과 사용
+                const coords = new kakao.maps.LatLng(place.y, place.x);
+                
+                this.setMarkerPosition(coords);
+                this.map.setCenter(coords);
+                this.map.setLevel(3);
+                
+                this.selectedPlace = {
+                    id: place.id,
+                    name: place.place_name,
+                    address: place.address_name,
+                    roadAddress: place.road_address_name,
+                    phone: place.phone,
+                    categoryName: place.category_name,
+                    placeUrl: place.place_url,
+                    latitude: parseFloat(place.y),
+                    longitude: parseFloat(place.x)
+                };
+                
+                this.updateFormFields();
+                Ddoksang.events.emit('placeSelected', this.selectedPlace);
+                
+            } else {
+                Ddoksang.Utils.showToast('검색 결과가 없습니다.', 'warning');
+            }
+        });
+    }
+    
+    setMarkerPosition(position) {
+        this.marker.setPosition(position);
+    }
+    
+    reverseGeocode(lat, lng) {
+        const geocoder = new kakao.maps.services.Geocoder();
+        
+        geocoder.coord2Address(lng, lat, (result, status) => {
+            if (status === kakao.maps.services.Status.OK) {
+                const addr = result[0];
+                
+                this.selectedPlace = {
+                    name: '',
+                    address: addr.address.address_name,
+                    roadAddress: addr.road_address ? addr.road_address.address_name : '',
+                    latitude: lat,
+                    longitude: lng
+                };
+                
+                this.input.value = this.selectedPlace.address;
+                this.updateFormFields();
+                Ddoksang.events.emit('placeSelected', this.selectedPlace);
+            }
+        });
+    }
+    
+    updateFormFields() {
+        if (!this.selectedPlace) return;
+        
+        // 숨겨진 필드들 업데이트
+        const fields = {
+            'kakao_place_id': this.selectedPlace.id || '',
+            'address': this.selectedPlace.address || '',
+            'road_address': this.selectedPlace.roadAddress || '',
+            'latitude': this.selectedPlace.latitude || '',
+            'longitude': this.selectedPlace.longitude || '',
+            'phone': this.selectedPlace.phone || '',
+            'category_name': this.selectedPlace.categoryName || '',
+            'place_url': this.selectedPlace.placeUrl || ''
+        };
+        
+        Object.entries(fields).forEach(([name, value]) => {
+            const field = document.querySelector(`input[name="${name}"], select[name="${name}"]`);
+            if (field) {
+                field.value = value;
+            }
+        });
+    }
+    
+    getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const coords = new kakao.maps.LatLng(lat, lng);
+                    
+                    this.setMarkerPosition(coords);
+                    this.map.setCenter(coords);
+                    this.reverseGeocode(lat, lng);
+                },
+                (error) => {
+                    console.error('위치 정보 가져오기 실패:', error);
+                    Ddoksang.Utils.showToast('위치 정보를 가져올 수 없습니다.', 'error');
+                }
+            );
+        }
+    }
+    
+    reset() {
+        this.input.value = '';
+        this.selectedPlace = null;
+        this.setMarkerPosition(new kakao.maps.LatLng(this.options.defaultLocation.lat, this.options.defaultLocation.lng));
+        this.map.setCenter(new kakao.maps.LatLng(this.options.defaultLocation.lat, this.options.defaultLocation.lng));
+    }
+};
+</script>
+
+<!-- 모달 관리 모듈 -->
+<script>
+Ddoksang.Modal = class {
+    constructor(modalSelector, options = {}) {
+        this.modal = document.querySelector(modalSelector);
+        this.options = {
+            closeOnOverlay: true,
+            closeOnEsc: true,
+            showCloseButton: true,
+            ...options
+        };
+        
+        this.isOpen = false;
+        this.focusableElements = [];
+        this.previousFocus = null;
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.modal) return;
+        
+        this.createOverlay();
+        this.bindEvents();
+        
+        // 포커스 가능한 요소들 찾기
+        this.updateFocusableElements();
+    }
+    
+    createOverlay() {
+        if (!this.modal.querySelector('.modal-overlay')) {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay fixed inset-0 bg-black bg-opacity-50 z-40';
+            this.modal.appendChild(overlay);
+        }
+    }
+    
+    bindEvents() {
+        // 오버레이 클릭으로 닫기
+        if (this.options.closeOnOverlay) {
+            const overlay = this.modal.querySelector('.modal-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', () => this.close());
+            }
+        }
+        
+        // ESC 키로 닫기
+        if (this.options.closeOnEsc) {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && this.isOpen) {
+                    this.close();
+                }
+            });
+        }
+        
+        // 닫기 버튼
+        const closeButtons = this.modal.querySelectorAll('[data-modal-close]');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => this.close());
+        });
+    }
+    
+    open() {
+        if (this.isOpen) return;
+        
+        this.previousFocus = document.activeElement;
+        this.modal.classList.remove('hidden');
+        this.modal.classList.add('flex');
+        
+        // 포커스 관리
+        this.updateFocusableElements();
+        if (this.focusableElements.length > 0) {
+            this.focusableElements[0].focus();
+        }
+        
+        // 스크롤 방지
+        document.body.style.overflow = 'hidden';
+        
+        this.isOpen = true;
+        Ddoksang.events.emit('modalOpened', this);
+    }
+    
+    close() {
+        if (!this.isOpen) return;
+        
+        this.modal.classList.add('hidden');
+        this.modal.classList.remove('flex');
+        
+        // 이전 포커스 복원
+        if (this.previousFocus) {
+            this.previousFocus.focus();
+        }
+        
+        // 스크롤 복원
+        document.body.style.overflow = '';
+        
+        this.isOpen = false;
+        Ddoksang.events.emit('modalClosed', this);
+    }
+    
+    toggle() {
+        if (this.isOpen) {
+            this.close();
+        } else {
+            this.open();
+        }
+    }
+    
+    updateFocusableElements() {
+        const focusableSelectors = [
+            'button:not([disabled])',
+            'input:not([disabled])',
+            'select:not([disabled])',
+            'textarea:not([disabled])',
+            'a[href]',
+            '[tabindex]:not([tabindex="-1"])'
+        ];
+        
+        this.focusableElements = Array.from(
+            this.modal.querySelectorAll(focusableSelectors.join(','))
+        );
+    }
+};
+</script>
+
+<!-- 폼 유효성 검사 모듈 -->
+<script>
+Ddoksang.FormValidator = class {
+    constructor(formSelector, rules = {}) {
+        this.form = document.querySelector(formSelector);
+        this.rules = rules;
+        this.errors = {};
+        
+        this.init();
+    }
+    
+    init() {
+        if (!this.form) return;
+        
+        this.bindEvents();
+    }
+    
+    bindEvents() {
+        // 실시간 유효성 검사
+        this.form.addEventListener('input', (e) => {
+            if (this.rules[e.target.name]) {
+                this.validateField(e.target);
+            }
+        });
+        
+        // 폼 제출 시 전체 검사
+        this.form.addEventListener('submit', (e) => {
+            if (!this.validateAll()) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    validateField(field) {
+        const fieldName = field.name;
+        const fieldRules = this.rules[fieldName];
+        const value = field.value.trim();
+        
+        if (!fieldRules) return true;
+        
+        // 기존 에러 제거
+        this.clearFieldError(field);
+        
+        // 규칙 검사
+        for (const rule of fieldRules) {
+            if (!this.checkRule(value, rule, field)) {
+                this.showFieldError(field, rule.message);
+                this.errors[fieldName] = rule.message;
+                return false;
+            }
+        }
+        
+        delete this.errors[fieldName];
+        return true;
+    }
+    
+    checkRule(value, rule, field) {
+        switch (rule.type) {
+            case 'required':
+                return value.length > 0;
+                
+            case 'minLength':
+                return value.length >= rule.value;
+                
+            case 'maxLength':
+                return value.length <= rule.value;
+                
+            case 'email':
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(value);
+                
+            case 'phone':
+                const phoneRegex = /^[0-9-+\s()]+$/;
+                return phoneRegex.test(value);
+                
+            case 'url':
+                try {
+                    new URL(value);
+                    return true;
+                } catch {
+                    return false;
+                }
+                
+            case 'date':
+                return !isNaN(Date.parse(value));
+                
+            case 'custom':
+                return rule.validator(value, field);
+                
+            default:
+                return true;
+        }
+    }
+    
+    showFieldError(field, message) {
+        field.classList.add('border-red-500', 'bg-red-50');
+        
+        const errorElement = document.createElement('div');
+        errorElement.className = 'field-error text-red-500 text-sm mt-1';
+        errorElement.textContent = message;
+        
+        field.parentNode.insertBefore(errorElement, field.nextSibling);
+    }
+    
+    clearFieldError(field) {
+        field.classList.remove('border-red-500', 'bg-red-50');
+        
+        const errorElement = field.parentNode.querySelector('.field-error');
+        if (errorElement) {
+            errorElement.remove();
+        }
+    }
+    
+    validateAll() {
+        this.errors = {};
+        let isValid = true;
+        
+        Object.keys(this.rules).forEach(fieldName => {
+            const field = this.form.querySelector(`[name="${fieldName}"]`);
+            if (field && !this.validateField(field)) {
+                isValid = false;
+            }
+        });
+        
+        return isValid;
+    }
+    
+    getErrors() {
+        return this.errors;
+    }
+    
+    hasErrors() {
+        return Object.keys(this.errors).length > 0;
+    }
+};
+</script>
+
+<!-- 좋아요/찜하기 모듈 -->
+<script>
+Ddoksang.FavoriteManager = class {
+    constructor() {
+        this.init();
+    }
+    
+    init() {
+        this.bindEvents();
+    }
+    
+    bindEvents() {
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('[data-favorite-btn]') || e.target.closest('[data-favorite-btn]')) {
+                const btn = e.target.matches('[data-favorite-btn]') ? e.target : e.target.closest('[data-favorite-btn]');
+                this.handleFavoriteClick(btn);
+            }
+        });
+    }
+    
+    async handleFavoriteClick(button) {
+        const cafeId = button.dataset.cafeId;
+        if (!cafeId) return;
+        
+        try {
+            const response = await Ddoksang.Utils.apiRequest(`/ddoksang/favorite/${cafeId}/toggle/`, {
+                method: 'POST'
+            });
+            
+            if (response.is_favorited) {
+                button.textContent = '❤️';
+                button.classList.add('favorited');
+                Ddoksang.Utils.showToast('찜 목록에 추가되었습니다.', 'success');
+            } else {
+                button.textContent = '🤍';
+                button.classList.remove('favorited');
+                Ddoksang.Utils.showToast('찜 목록에서 제거되었습니다.', 'info');
+            }
+            
+            Ddoksang.events.emit('favoriteChanged', {
+                cafeId: cafeId,
+                isFavorited: response.is_favorited
+            });
+            
+        } catch (error) {
+            console.error('찜하기 처리 중 오류:', error);
+            Ddoksang.Utils.showToast('처리 중 오류가 발생했습니다.', 'error');
+        }
+    }
+};
+</script>
+
+<!-- 초기화 스크립트 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 전역 인스턴스 생성
+    
+    // 찜하기 매니저 초기화
+    if (document.querySelector('[data-favorite-btn]')) {
+        Ddoksang.favoriteManager = new Ddoksang.FavoriteManager();
+    }
+    
+    // 멤버 자동완성 초기화
+    const memberInput = document.querySelector('#artist-member-search');
+    const memberResults = document.querySelector('#artist-member-results');
+    if (memberInput && memberResults) {
+        Ddoksang.memberAutocomplete = new Ddoksang.MemberAutocomplete(
+            '#artist-member-search',
+            '#artist-member-results'
+        );
+    }
+    
+    // 이미지 업로더 초기화
+    const imageUploadContainer = document.querySelector('#image-upload-container');
+    if (imageUploadContainer) {
+        Ddoksang.imageUploader = new Ddoksang.ImageUploader('#image-upload-container', {
+            maxFiles: 5,
+            maxFileSize: 5 * 1024 * 1024 // 5MB
+        });
+    }
+    
+    // 다단계 폼 초기화
+    const multiStepForm = document.querySelector('#multiStepForm');
+    if (multiStepForm) {
+        Ddoksang.multiStepForm = new Ddoksang.MultiStepForm('#multiStepForm');
+    }
+    
+    // 장소 검색 초기화
+    const placeSearchInput = document.querySelector('#place-search');
+    const mapContainer = document.querySelector('#map');
+    if (placeSearchInput && mapContainer && window.kakao) {
+        Ddoksang.placeSearch = new Ddoksang.PlaceSearch('#place-search', '#map');
+    }
+    
+    // 카카오맵 초기화 (지도 페이지용)
+    const mapContainerMain = document.querySelector('#mapContainer');
+    if (mapContainerMain && window.kakao) {
+        Ddoksang.kakaoMap = new Ddoksang.KakaoMap('mapContainer', {
+            level: 5
+        });
+        
+        // 생일카페 데이터가 있다면 마커 추가
+        if (window.bdayCafesData) {
+            window.bdayCafesData.forEach(cafe => {
+                Ddoksang.kakaoMap.addCafeMarker(cafe);
+            });
+            
+            // 마커들이 모두 보이도록 지도 범위 조정
+            if (window.bdayCafesData.length > 0) {
+                Ddoksang.kakaoMap.setBounds();
+            }
+        }
+    }
+    
+    // 전역 이벤트 리스너
+    Ddoksang.events.on('memberSelected', (data) => {
+        console.log('멤버 선택됨:', data);
+    });
+    
+    Ddoksang.events.on('placeSelected', (data) => {
+        console.log('장소 선택됨:', data);
+    });
+    
+    Ddoksang.events.on('filesChanged', (files) => {
+        console.log('파일 변경됨:', files);
+    });
+});
+
+// 유틸리티 함수들을 전역으로 노출
+window.showToast = Ddoksang.Utils.showToast;
+window.showLoading = Ddoksang.Utils.showLoading;
+
+// 개발용 콘솔 로그
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('🎂 Ddoksang JavaScript 모듈이 로드되었습니다!');
+    console.log('사용 가능한 모듈:', Object.keys(Ddoksang));
+}
+</script>

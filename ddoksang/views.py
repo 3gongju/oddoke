@@ -5,22 +5,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
-from .models import BdayCafe, CafeFavorite
-from artist.models import Artist, Member
-from django.db.models import Q
-from .models import BdayCafe
-from django.views.decorators.http import require_GET
-
-
-import json
+from django.db.models import Q, F
+from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth.decorators import user_passes_test
+from django.db import transaction
+from django.forms import formset_factory
+
+from .models import BdayCafe, BdayCafeImage, CafeFavorite, TourPlan, TourStop, UserSearchHistory
+from .forms import BdayCafeForm, BdayCafeImageForm
+from artist.models import Artist, Member
+import json
 
 def admin_required(view_func):
     return user_passes_test(lambda u: u.is_superuser or u.is_staff)(view_func)
-
-
-def is_admin_user(user):
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
 
 @require_GET
 def member_autocomplete(request):
@@ -28,18 +25,19 @@ def member_autocomplete(request):
     results = []
 
     if q:
+        # distinct() 추가로 중복 제거 시도
         members = Member.objects.filter(
             Q(member_name__icontains=q)
-        ).prefetch_related('artist_name')[:10]
+        ).distinct().prefetch_related('artist_name')[:10]
 
+        # 멤버마다 첫번째 아티스트 정보만 가져오기
         for member in members:
             artist_names = member.artist_name.all()
             if artist_names:
-                artist = artist_names[0]
-                artist_display = ' / '.join([a.display_name for a in artist_names])
+                artist_display = ' / '.join([a.display_name for a in artist_names.distinct()])
                 results.append({
                     'member_id': member.id,
-                    'artist_id': artist.id,
+                    'artist_id': artist_names.first().id,
                     'member_name': member.member_name,
                     'artist_display': artist_display,
                     'bday': member.member_bday,
@@ -47,25 +45,75 @@ def member_autocomplete(request):
 
     return JsonResponse({'results': results})
 
-
 def home_view(request):
+    """개선된 홈 뷰 - 더 풍성한 데이터 제공"""
     today = timezone.now().date()
+    
+    # 이번 주 생일 아티스트들
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
     week_bdays = [(start_of_week + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
-
-    artists = Artist.objects.filter(
-        members__member_bday__in=week_bdays
-    ).distinct()
-
-    cafes = BdayCafe.objects.filter(status="approved").order_by('-created_at')[:6]
+    
+    # 생일인 멤버들과 그들의 아티스트 정보
+    birthday_members = Member.objects.filter(
+        member_bday__in=week_bdays
+    ).select_related().prefetch_related('artist_name')
+    
+    birthday_artists = []
+    for member in birthday_members:
+        artists = member.artist_name.all()
+        if artists:
+            artist = artists[0]  # 첫 번째 아티스트
+            birthday_artists.append({
+                'member_name': member.member_name,
+                'artist_name': artist.display_name,
+                'birthday_display': member.member_bday,
+                'profile_image': member.profile_image if hasattr(member, 'profile_image') else None,
+            })
+    
+    # 추천 생일카페들 (featured)
+    featured_cafes = BdayCafe.objects.filter(
+        status='approved',
+        is_featured=True
+    ).select_related('artist', 'member').order_by('-created_at')[:8]
+    
+    # 최신 생일카페들
+    recent_cafes = BdayCafe.objects.filter(
+        status='approved'
+    ).select_related('artist', 'member').order_by('-created_at')[:6]
+    
+    # 지도용 생일카페 데이터
+    active_cafes = BdayCafe.objects.filter(
+        status='approved',
+        start_date__lte=today,
+        end_date__gte=today
+    ).select_related('artist', 'member')
+    
+    cafes_json = json.dumps([cafe.get_kakao_map_data() for cafe in active_cafes])
+    
+    # 사용자 찜 목록 (로그인한 경우)
+    user_favorites = []
+    if request.user.is_authenticated:
+        user_favorites = list(CafeFavorite.objects.filter(
+            user=request.user
+        ).values_list('cafe_id', flat=True))
 
     context = {
-        'artists': artists,
-        'cafes': cafes,
+        'birthday_artists': birthday_artists,
+        'featured_cafes': featured_cafes,
+        'recent_cafes': recent_cafes,
+        'cafes_json': cafes_json,
+        'total_cafes': active_cafes.count(),
+        'user_favorites': user_favorites,
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
     }
     return render(request, 'ddoksang/home.html', context)
 
+def bday_cafe_create(request):
+    context = {
+        "kakao_api_key": settings.KAKAO_MAP_API_KEY,  # settings.py에 정의된 변수명과 맞추세요
+    }
+    return render(request, "ddoksang/create.html", context)
 
 def map_view(request):
     active_bday_cafes = BdayCafe.objects.filter(
@@ -83,53 +131,68 @@ def map_view(request):
     }
     return render(request, 'ddoksang/tour_map.html', context)
 
-
 @login_required
 def create_cafe(request):
-    if request.method == "POST":
-        artist_id = request.POST.get("artist_id")
-        member_id = request.POST.get("member_id")
-        cafe_name = request.POST.get("cafe_name")
-        address = request.POST.get("address")
-        start_date = request.POST.get("start_date")
-        end_date = request.POST.get("end_date")
+    if request.method == 'POST':
+        post_data = request.POST.copy()
 
-        if not (artist_id and cafe_name and address and start_date and end_date):
-            messages.error(request, "필수 항목을 모두 입력해주세요.")
-            return redirect("ddoksang:create")
+        # artist_id → artist 객체 pk 변경
+        artist_id = post_data.get('artist_id')
+        try:
+            artist = Artist.objects.get(id=artist_id)
+            post_data['artist'] = artist.id
+        except Artist.DoesNotExist:
+            messages.error(request, "유효하지 않은 아티스트입니다.")
+            return redirect('ddoksang:create')
 
-        artist = Artist.objects.get(id=artist_id)
-        member = Member.objects.get(id=member_id) if member_id else None
+        # member_id → member 객체 pk 변경 (선택적)
+        member_id = post_data.get('member_id')
+        if member_id:
+            try:
+                member = Member.objects.get(id=member_id)
+                post_data['member'] = member.id
+            except Member.DoesNotExist:
+                post_data['member'] = None
+        else:
+            post_data['member'] = None
 
-        BdayCafe.objects.create(
-            submitted_by=request.user,
-            artist=artist,
-            member=member,
-            cafe_name=cafe_name,
-            address=address,
-            road_address=request.POST.get("road_address", ""),
-            latitude=request.POST.get("latitude", 0),
-            longitude=request.POST.get("longitude", 0),
-            kakao_place_id=request.POST.get("kakao_place_id", ""),
-            start_date=start_date,
-            end_date=end_date,
-            event_description=request.POST.get("event_description", ""),
-            special_benefits=request.POST.get("special_benefits", ""),
-            hashtags=request.POST.get("hashtags", ""),
-            twitter_source=request.POST.get("twitter_source", ""),
-            instagram_source=request.POST.get("instagram_source", ""),
-            status="pending"
-        )
-        messages.success(request, "생일 카페가 성공적으로 등록되었습니다.")
-        return redirect("ddoksang:my_cafes")
+        form = BdayCafeForm(post_data, request.FILES)
+        image_form = BdayCafeImageForm(request.POST, request.FILES)
+
+        if form.is_valid() and image_form.is_valid():
+            try:
+                with transaction.atomic():
+                    cafe = form.save(commit=False)
+                    cafe.submitted_by = request.user
+                    cafe.status = 'pending'
+                    cafe.save()
+
+                    # 다중 이미지 저장
+                    images = request.FILES.getlist('images')
+                    for idx, image_file in enumerate(images):
+                        BdayCafeImage.objects.create(
+                            cafe=cafe,
+                            image=image_file,
+                            order=idx,
+                        )
+
+                    messages.success(request, "생일카페가 성공적으로 등록되었습니다.")
+                    return redirect('ddoksang:my_cafes')
+
+            except Exception as e:
+                messages.error(request, f"등록 중 오류가 발생했습니다: {str(e)}")
+        else:
+            messages.error(request, f"폼 오류: {form.errors} {image_form.errors}")
+    else:
+        form = BdayCafeForm()
+        image_form = BdayCafeImageForm()
 
     context = {
-        "kakao_api_key": settings.KAKAO_MAP_API_KEY,
-        "artists": Artist.objects.all(),
-        "members": Member.objects.select_related().all()
+        'form': form,
+        'image_form': image_form,
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
     }
-    return render(request, "ddoksang/create.html", context)
-
+    return render(request, 'ddoksang/create.html', context)
 
 @login_required
 def my_cafes(request):
@@ -138,13 +201,20 @@ def my_cafes(request):
     ).select_related('artist', 'member').order_by('-created_at')
     return render(request, 'ddoksang/my_cafes.html', {'cafes': cafes})
 
-
-@login_required
 def bday_cafe_detail(request, cafe_id):
     cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
-    is_favorited = CafeFavorite.objects.filter(user=request.user, cafe=cafe).exists()
-    return render(request, 'ddoksang/detail.html', {'cafe': cafe, 'is_favorited': is_favorited})
-
+    is_favorited = False
+    
+    if request.user.is_authenticated:
+        is_favorited = CafeFavorite.objects.filter(user=request.user, cafe=cafe).exists()
+        # 조회수 증가
+        BdayCafe.objects.filter(id=cafe_id).update(view_count=F('view_count') + 1)
+    
+    context = {
+        'cafe': cafe,
+        'is_favorited': is_favorited,
+    }
+    return render(request, 'ddoksang/detail.html', context)
 
 def bday_cafe_list_api(request):
     cafes = BdayCafe.objects.filter(
@@ -167,9 +237,8 @@ def bday_cafe_list_api(request):
 
     return JsonResponse({'success': True, 'bday_cafes': data, 'total': len(data)})
 
-
-# ✅ 찜 토글 뷰
 @login_required
+@require_POST
 def toggle_favorite(request, cafe_id):
     cafe = get_object_or_404(BdayCafe, id=cafe_id)
     favorite, created = CafeFavorite.objects.get_or_create(user=request.user, cafe=cafe)
@@ -182,60 +251,38 @@ def toggle_favorite(request, cafe_id):
 
     return JsonResponse({'is_favorited': is_favorited})
 
-@admin_required
-def admin_cafe_list(request):
-    pending_cafes = BdayCafe.objects.filter(status='pending').select_related('artist', 'member')
-    return render(request, 'admin/ddoksang/cafe_list.html', {'cafes': pending_cafes})
-
-@admin_required
-def reject_cafe(request, cafe_id):
-    cafe = get_object_or_404(BdayCafe, id=cafe_id)
-    cafe.status = 'rejected'
-    cafe.verified_by = request.user
-    cafe.verified_at = timezone.now()
-    cafe.save()
-    messages.error(request, "생일카페가 거절되었습니다.")
-    return redirect('ddoksang:admin_cafe_list')
-
-@admin_required
-def approve_cafe(request, cafe_id):
-    cafe = get_object_or_404(BdayCafe, id=cafe_id)
-    cafe.status = 'approved'
-    cafe.verified_at = timezone.now()
-    cafe.verified_by = request.user
-    cafe.save()
-    messages.success(request, "해당 생카가 승인되었습니다.")
-    return redirect('ddoksang:admin_dashboard')
-
-@admin_required
-def reject_cafe(request, cafe_id):
-    cafe = get_object_or_404(BdayCafe, id=cafe_id)
-    cafe.status = 'rejected'
-    cafe.verified_at = timezone.now()
-    cafe.verified_by = request.user
-    cafe.save()
-    messages.success(request, "해당 생카가 거절되었습니다.")
-    return redirect('ddoksang:admin_dashboard')
-
-# 검색뷰
 def search_view(request):
-    query = request.GET.get("q", "")
+    query = request.GET.get("q", "").strip()
     results = []
+    
+    # 검색 기록 저장 (로그인한 사용자만)
+    if request.user.is_authenticated and query:
+        UserSearchHistory.objects.create(
+            user=request.user,
+            search_query=query,
+            search_type='keyword'
+        )
 
     if query:
+        # 더 정확한 검색을 위한 다양한 필터링
         results = BdayCafe.objects.filter(
             Q(cafe_name__icontains=query) |
-            Q(artist__name__icontains=query) |
-            Q(member__name__icontains=query) |
-            Q(address__icontains=query)
-        ).distinct()
+            Q(artist__display_name__icontains=query) |
+            Q(member__member_name__icontains=query) |
+            Q(address__icontains=query) |
+            Q(hashtags__icontains=query),
+            status='approved'
+        ).select_related('artist', 'member').distinct().order_by('-created_at')
 
     context = {
         "query": query,
-        "results": results
+        "results": results,
+        "total_count": results.count() if results else 0,
     }
     return render(request, "ddoksang/search_results.html", context)
 
+
+# 관리자 뷰들
 @admin_required
 def admin_dashboard(request):
     # 승인 상태별 카운트
@@ -245,7 +292,8 @@ def admin_dashboard(request):
         'rejected': BdayCafe.objects.filter(status='rejected').count(),
         'total': BdayCafe.objects.all().count(),
         'this_month': BdayCafe.objects.filter(
-            created_at__month=timezone.now().month
+            created_at__month=timezone.now().month,
+            created_at__year=timezone.now().year
         ).count(),
     }
 
@@ -260,4 +308,41 @@ def admin_dashboard(request):
         'recent_cafes': recent_cafes,
         'pending_cafes': pending_cafes,
     })
+@admin_required
+def admin_cafe_list(request):
+    status_filter = request.GET.get('status', '')
     
+    cafes = BdayCafe.objects.select_related('artist', 'member', 'submitted_by').order_by('-created_at')
+    
+    if status_filter:
+        cafes = cafes.filter(status=status_filter)
+    
+    context = {
+        'cafes': cafes,
+        'status_filter': status_filter,
+        'status_choices': BdayCafe.STATUS_CHOICES,
+    }
+    return render(request, 'admin/ddoksang/cafe_list.html', context)
+
+
+@admin_required
+@require_POST
+def approve_cafe(request, cafe_id):
+    cafe = get_object_or_404(BdayCafe, id=cafe_id)
+    cafe.status = 'approved'
+    cafe.verified_at = timezone.now()
+    cafe.verified_by = request.user
+    cafe.save()
+    messages.success(request, f"'{cafe.cafe_name}' 생카가 승인되었습니다.")
+    return redirect('ddoksang:admin_dashboard')
+
+@admin_required
+@require_POST
+def reject_cafe(request, cafe_id):
+    cafe = get_object_or_404(BdayCafe, id=cafe_id)
+    cafe.status = 'rejected'
+    cafe.verified_at = timezone.now()
+    cafe.verified_by = request.user
+    cafe.save()
+    messages.success(request, f"'{cafe.cafe_name}' 생카가 거절되었습니다.")
+    return redirect('ddoksang:admin_dashboard')
