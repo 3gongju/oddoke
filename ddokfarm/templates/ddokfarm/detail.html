@@ -19,9 +19,10 @@
       </div>
     </div>
     {% include 'components/post_detail/_like_comment_info.html' %}
-    {% include 'components/post_detail/_comments.html' %}
-    {% include 'components/post_detail/_comment_form.html' %}
-    
+
+    {% include "components/post_detail/_comment_list.html" %}
+    {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=None %}
+
   </div>
 </div>
 

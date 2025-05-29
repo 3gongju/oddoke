@@ -8,8 +8,19 @@ from django.db.models import Q
 from operator import attrgetter
 from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost
 from .forms import DamCommentForm
-from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id, get_ajax_base_context, get_ddokdam_categories, get_ddokdam_category_urls
 from artist.models import Member, Artist
+from .utils import (
+    get_post_model,
+    get_post_form,
+    get_post_comments,
+    get_post_queryset,
+    assign_post_to_comment,
+    get_comment_post_field_and_id,
+    get_ajax_base_context,
+    get_ddokdam_categories,
+    get_ddokdam_category_urls,
+)
+
 
 # 전체 게시글 보기
 def index(request):
@@ -49,10 +60,12 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
-    comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
-    total_comment_count = get_post_comments(category, post).count()
+    comment_qs = get_post_comments(category, post)
+    comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+    total_comment_count = comment_qs.count()
     comment_form = DamCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
+    comment_create_url = reverse('ddokdam:comment_create', kwargs={'category': category, 'post_id': post_id})
 
     context = {
         'post': post,
@@ -64,8 +77,7 @@ def post_detail(request, category, post_id):
         'artist': post.artist,
         'members': post.members.all(),
         'app_name': 'ddokdam',
-        'comment_create_url': 'ddokdam:comment_create',
-        'comment_delete_url': 'ddokdam:comment_delete',
+        'comment_create_url': comment_create_url,
     }
 
     return render(request, 'ddokdam/detail.html', context)

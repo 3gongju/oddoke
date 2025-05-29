@@ -6,10 +6,20 @@ from django.http import JsonResponse
 from django.urls import reverse
 from django.db.models import Q
 from operator import attrgetter
+from artist.models import Member, Artist
 from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost
 from .forms import FarmCommentForm
-from .utils import get_post_model, get_post_form, get_post_comments, get_post_queryset, assign_post_to_comment, get_comment_post_field_and_id, get_ajax_base_context, get_ddokfarm_categories, get_ddokfarm_category_urls
-from artist.models import Member, Artist
+from .utils import (
+    get_post_model,
+    get_post_form,
+    get_post_comments,
+    get_post_queryset,
+    assign_post_to_comment,
+    get_comment_post_field_and_id,
+    get_ajax_base_context,
+    get_ddokfarm_categories,
+    get_ddokfarm_category_urls,
+)
 
 # ✅ 홈 화면 (루트 URL)
 def main(request):
@@ -54,10 +64,12 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
-    comments = get_post_comments(category, post).filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
-    total_comment_count = get_post_comments(category, post).count()
+    comment_qs = get_post_comments(category, post)
+    comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+    total_comment_count = comment_qs.count()
     comment_form = FarmCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
+    comment_create_url = reverse('ddokfarm:comment_create', kwargs={'category': category, 'post_id': post_id})
 
     context = {
         'post': post,
@@ -69,8 +81,7 @@ def post_detail(request, category, post_id):
         'artist': post.artist,
         'members': post.members.all(),
         'app_name': 'ddokfarm',
-        'comment_create_url': 'ddokfarm:comment_create',
-        'comment_delete_url': 'ddokfarm:comment_delete',
+        'comment_create_url': comment_create_url,
     }
 
     return render(request, 'ddokfarm/detail.html', context)
