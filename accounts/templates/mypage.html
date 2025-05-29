@@ -33,6 +33,21 @@
                 {{ user_profile.username }}
               {% endif %}
             </h2>
+
+            <!-- 공식 팬덤 인증 상태 표시 -->
+            {% if user_profile.is_verified_fandom %}
+              <div class="text-green-600 text-sm mt-2 font-semibold">🎖 {{ user_profile.fandom_artist.fandom }}</div>
+            {% elif user_profile.is_pending_verification %}
+              <div class="text-yellow-600 text-sm mt-2">⏳ 팬덤 인증 확인 중입니다. (3일 소요)</div>
+            {% elif user_profile.verification_failed %}
+              <div class="text-red-600 text-sm mt-2"></div>
+            {% else %}
+              <!-- 인증이 안된 경우 인증하러 가기 버튼 -->
+              <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
+                class="mt-3 inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600 transition">
+                🎫 공식 팬덤 인증하기
+              </a>
+            {% endif %}
             
             <!-- 소셜 로그인 뱃지 -->
             {% if user_profile.username|slice:":6" == "kakao_" %}
@@ -197,21 +212,6 @@
       </div>
     </div>
   </div>
-
-  <!-- 공식 팬덤 인증 상태 표시 -->
-  {% if user_profile.is_verified_fandom %}
-    <div class="text-green-600 text-sm mt-2 font-semibold">✅ 인증된 팬덤: {{ user_profile.fandom_artist.fandom }}</div>
-  {% elif user_profile.is_pending_verification %}
-    <div class="text-yellow-600 text-sm mt-2">⏳ 팬덤 인증 확인 중입니다. (3일 소요)</div>
-  {% elif user_profile.verification_failed %}
-    <div class="text-red-600 text-sm mt-2">❌ 인증에 실패했습니다. 다시 업로드해주세요.</div>
-  {% else %}
-    <!-- 인증이 안된 경우 인증하러 가기 버튼 -->
-    <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
-      class="mt-3 inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600 transition">
-      🎫 공식 팬덤 인증하기
-    </a>
-  {% endif %}
 </div>
 
 <!-- ✅ 모달 -->

@@ -6,12 +6,7 @@
       <!-- 댓글 작성자 & 시간 -->
       <div class="flex justify-between items-center">
         <div class="flex items-center space-x-2">
-          <a href="{% url 'accounts:profile' comment.user.username %}">
-            <img src="{{ comment.user.profile_image.url }}" alt="{{ comment.user.username }}" class="w-8 h-8 rounded-full object-cover" />
-          </a>
-          <a href="{% url 'accounts:profile' comment.user.username %}" class="font-semibold">
-            {{ comment.user.username }}
-          </a>
+          {% include 'components/post_detail/_user_profile.html' with user=comment.user %}
           <span class="text-gray-400">· {{ comment.created_at|naturaltime }}</span>
         </div>
         {% if comment.user == request.user %}
@@ -48,10 +43,7 @@
         <div class="mt-2 ml-6 py-2 border-t">
           <div class="flex justify-between items-center">
             <div class="flex items-center space-x-2">
-              <a href="{% url 'accounts:profile' reply.user.username %}">
-                <img src="{{ reply.user.profile_image.url }}" alt="{{ reply.user.username }}" class="w-8 h-8 rounded-full object-cover" />
-              </a>
-              <a href="{% url 'accounts:profile' reply.user.username %}" class="font-semibold">{{ reply.user.username }}</a>
+              {% include 'components/post_detail/_user_profile.html' with user=reply.user %}
               <span class="text-gray-400">· {{ reply.created_at|naturaltime }}</span>
             </div>
             {% if reply.user == request.user %}
