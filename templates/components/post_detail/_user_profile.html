@@ -1,0 +1,17 @@
+{# templates/components/_user_link.html #}
+<a href="{% url 'accounts:profile' user.username %}">
+  <img src="{{ user.profile_image.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover" />
+</a>
+
+<a href="{% url 'accounts:profile' user.username %}" class="font-semibold inline-flex items-center space-x-1 relative group">
+  <span>{{ user.username }}</span>
+
+  {% if user.is_verified_fandom %}
+    <span class="ml-1 text-pink-500 text-sm cursor-pointer relative">
+      ⭐
+      <div class="absolute left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs bg-black text-white rounded shadow-lg opacity-0 group-hover:opacity-100 transition duration-300 z-10 whitespace-nowrap">
+        {{ user.fandom_artist.fandom }}
+      </div>
+    </span>
+  {% endif %}
+</a>

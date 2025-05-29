@@ -19,8 +19,9 @@
       <div class="ml-4 flex-1">
         <!-- ✅ 닉네임과 팔로우 버튼 -->
         <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-2xl font-bold">
+          <!-- 👇 왼쪽: 닉네임 + 뱃지 -->
+          <div class="flex items-center space-x-2">
+            <h2 class="text-2xl font-bold m-0">
               {% if user_profile.first_name %}
                 {{ user_profile.first_name }}
               {% elif user_profile.username|slice:":6" == "kakao_" %}
@@ -31,25 +32,31 @@
                 {{ user_profile.username }}
               {% endif %}
             </h2>
+
+            <!-- ✅ 공식 팬덤 인증 상태 뱃지 (같은 줄) -->
+            {% if user_profile.is_verified_fandom %}
+              <span class="text-green-700 text-sm font-semibold bg-green-50 border border-green-200 px-2 py-1 rounded inline-block">
+                🏆 {{ user_profile.fandom_artist.fandom }}
+              </span>
+            {% endif %}
           </div>
-          
+
           <!-- ✅ 팔로우 버튼 (본인이 아닐 때만 표시) -->
           {% if user != user_profile %}
             <form method="POST" action="{% url 'accounts:follow' user_profile.username %}">
               {% csrf_token %}
               <button type="submit"
                       class="px-4 py-2 rounded-lg text-sm font-medium transition
-                             {% if is_following %}
-                               bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200
-                             {% else %}
-                               bg-blue-500 text-white border border-blue-500 hover:bg-blue-600
-                             {% endif %}">
+                            {% if is_following %}
+                              bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200
+                            {% else %}
+                              bg-blue-500 text-white border border-blue-500 hover:bg-blue-600
+                            {% endif %}">
                 {% if is_following %}팔로잉{% else %}+ 팔로우{% endif %}
               </button>
             </form>
           {% endif %}
         </div>
-
         <!-- ✅ 소개글 -->
         {% if user_profile.bio %}
           <p class="text-gray-700 mt-3 text-base">{{ user_profile.bio }}</p>
