@@ -6,51 +6,115 @@
   <h1 class="text-2xl font-bold mb-6">🎁 생일카페 등록하기</h1>
   <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생일카페 정보를 등록해주세요!</p>
 
-  <form method="POST" id="multiStepForm">
+  <!-- Progress Bar -->
+  <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
+    <div id="progressBar" class="bg-blue-600 h-2 w-0 transition-width duration-300"></div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" id="multiStepForm" action="{% url 'ddoksang:create_submit' %}">
     {% csrf_token %}
 
     <!-- STEP 1: 아티스트/멤버 검색 -->
     <div id="step-1" class="step">
       <label class="block text-sm font-medium mb-2">아티스트/멤버명 검색</label>
-      <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력">
-      <ul id="artist-member-results" class="border mt-2 rounded overflow-hidden hidden"></ul>
-      <input type="hidden" name="artist_id" id="artist_id">
-      <input type="hidden" name="member_id" id="member_id">
+      <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
+      <ul id="artist-member-results" class="border mt-2 rounded overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
+      <input type="hidden" name="artist_id" id="artist_id" required>
+      <input type="hidden" name="member_id" id="member_id" required>
     </div>
 
-    <!-- STEP 2: 장소 -->
+    <!-- STEP 2: 카페 정보 -->
     <div id="step-2" class="step hidden">
-      <label class="block text-sm font-medium mb-2">카페 위치 검색</label>
-      <input type="text" id="place-search" class="w-full border rounded px-4 py-2" placeholder="장소명을 입력하세요">
-      <div id="map" class="w-full h-64 bg-gray-100 my-4 rounded"></div>
-      <input type="hidden" name="address" id="address">
-      <input type="hidden" name="road_address" id="road_address">
-      <input type="hidden" name="latitude" id="latitude">
-      <input type="hidden" name="longitude" id="longitude">
-      <input type="hidden" name="kakao_place_id" id="kakao_place_id">
+      <label class="block text-sm font-medium mb-2">카페명</label>
+      <input type="text" name="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="카페명 입력" required>
+
+      <label class="block text-sm font-medium mb-2">이벤트 유형</label>
+      <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
+        <option value="birthday">🎂 생일</option>
+        <option value="debut">데뷔</option>
+        <option value="comeback">컴백</option>
+        <option value="concert">콘서트</option>
+        <option value="other">기타</option>
+      </select>
+
+      <label class="block text-sm font-medium mb-2">주소 검색</label>
+      <div class="flex gap-2 mb-2">
+        <input type="text" id="place-search" class="flex-grow border rounded px-4 py-2" placeholder="주소명을 입력하세요" autocomplete="off" required>
+        <button type="button" id="searchBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">검색</button>
+      </div>
+
+      <div id="map" class="w-full h-64 bg-gray-100 rounded"></div>
+
+      <ul id="place-results" class="mt-2 max-h-40 overflow-y-auto border rounded hidden"></ul>
+
+      <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
+
+      <input type="hidden" name="address" id="address" required>
+      <input type="hidden" name="road_address" id="road_address" required>
+      <input type="hidden" name="latitude" id="latitude" required>
+      <input type="hidden" name="longitude" id="longitude" required>
+      <input type="hidden" name="kakao_place_id" id="kakao_place_id" required>
     </div>
 
     <!-- STEP 3: 일정 -->
     <div id="step-3" class="step hidden">
       <label class="block text-sm font-medium mb-1">시작일</label>
-      <input type="date" name="start_date" class="w-full border rounded p-2">
-      <label class="block text-sm font-medium mb-1 mt-4">종료일</label>
-      <input type="date" name="end_date" class="w-full border rounded p-2">
+      <input type="date" name="start_date" class="w-full border rounded p-2 mb-4" required>
+      <label class="block text-sm font-medium mb-1">종료일</label>
+      <input type="date" name="end_date" class="w-full border rounded p-2" required>
     </div>
 
-    <!-- STEP 4: 설명 -->
+    <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
+      <label class="block text-sm font-medium mb-2">특전 정보 (중복 선택 가능)</label>
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <label class="inline-flex items-center space-x-2">
+          <input type="checkbox" name="perks" value="포토카드" class="rounded">
+          <span>포토카드</span>
+        </label>
+        <label class="inline-flex items-center space-x-2">
+          <input type="checkbox" name="perks" value="스티커" class="rounded">
+          <span>스티커</span>
+        </label>
+        <label class="inline-flex items-center space-x-2">
+          <input type="checkbox" name="perks" value="첩보대" class="rounded">
+          <span>첩보대</span>
+        </label>
+        <!-- 추가 항목 더 넣으세요 -->
+      </div>
+
       <label class="block text-sm font-medium mb-2">이벤트 설명</label>
-      <textarea name="event_description" class="w-full border rounded p-2" rows="4"></textarea>
+      <textarea name="event_description" class="w-full border rounded p-2" rows="4" required></textarea>
+
       <input type="text" name="hashtags" class="w-full border rounded p-2 mt-2" placeholder="#태그1 #태그2">
-      <input type="url" name="twitter_source" class="w-full border rounded p-2 mt-2" placeholder="Twitter 링크">
-      <input type="url" name="instagram_source" class="w-full border rounded p-2 mt-2" placeholder="Instagram 링크">
     </div>
 
-    <!-- STEP 5: 확인 및 제출 -->
+    <!-- STEP 5: 출처 정보 -->
     <div id="step-5" class="step hidden">
-      <h3 class="font-semibold mb-4">입력하신 내용을 확인하고 제출해주세요.</h3>
-      <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">🎉 등록 완료하기</button>
+      <label class="block text-sm font-medium mb-2">트위터 링크</label>
+      <input type="url" name="twitter_source" class="w-full border rounded p-2" placeholder="https://twitter.com/">
+
+      <label class="block text-sm font-medium mb-2 mt-4">인스타그램 링크</label>
+      <input type="url" name="instagram_source" class="w-full border rounded p-2" placeholder="https://instagram.com/">
+    </div>
+
+    <!-- STEP 6: 이미지 업로드 및 최종 확인 -->
+    <div id="step-6" class="step hidden">
+      <label class="block text-sm font-medium mb-2">이미지 업로드</label>
+      <input type="file" name="images" id="images" multiple accept="image/*" class="w-full border rounded p-2 mb-4">
+
+      <div id="image-preview" class="mt-2 flex flex-wrap gap-2"></div>
+
+      <h3 class="font-semibold mt-6 mb-4">입력 내용을 확인하고 제출해주세요.</h3>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li><strong>아티스트/멤버:</strong> <span id="summary-name"></span></li>
+        <li><strong>카페 주소:</strong> <span id="summary-address"></span></li>
+        <li><strong>일정:</strong> <span id="summary-dates"></span></li>
+        <li><strong>특전 정보:</strong> <span id="summary-perks"></span></li>
+        <li><strong>설명:</strong> <span id="summary-desc"></span></li>
+        <li><strong>트위터:</strong> <span id="summary-twitter"></span></li>
+        <li><strong>인스타그램:</strong> <span id="summary-instagram"></span></li>
+      </ul>
     </div>
 
     <div class="mt-6 flex justify-between">
@@ -60,18 +124,122 @@
   </form>
 </section>
 
-<!-- ✅ 멤버 자동완성 스크립트 -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+
 <script>
+const steps = 6;
+let currentStep = 1;
+
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+const progressBar = document.getElementById("progressBar");
+
+function updateStepVisibility() {
+  for (let i = 1; i <= steps; i++) {
+    const stepDiv = document.getElementById(`step-${i}`);
+    const inputs = stepDiv.querySelectorAll("input, textarea, select");
+    if (i === currentStep) {
+      stepDiv.classList.remove("hidden");
+      inputs.forEach(el => el.disabled = false);
+    } else {
+      stepDiv.classList.add("hidden");
+      inputs.forEach(el => el.disabled = true);
+    }
+  }
+  // 프로그레스바 너비 조정
+  progressBar.style.width = `${(currentStep / steps) * 100}%`;
+
+  // 버튼 상태 조정
+  prevBtn.disabled = currentStep === 1;
+  if (currentStep === steps) {
+    nextBtn.textContent = "제출";
+    nextBtn.type = "submit";
+  } else {
+    nextBtn.textContent = "다음";
+    nextBtn.type = "button";
+  }
+}
+
+function validateStep() {
+  const currentStepDiv = document.getElementById(`step-${currentStep}`);
+  const requiredFields = currentStepDiv.querySelectorAll("[required]");
+  for (const field of requiredFields) {
+    if (!field.value.trim()) {
+      field.focus();
+      alert("필수 입력란을 모두 채워주세요.");
+      return false;
+    }
+  }
+  return true;
+}
+
+function updateSummary() {
+  document.getElementById("summary-name").textContent = document.getElementById("artist-member-search").value;
+  document.getElementById("summary-address").textContent = document.getElementById("address").value;
+  const start = document.querySelector('[name="start_date"]').value;
+  const end = document.querySelector('[name="end_date"]').value;
+  document.getElementById("summary-dates").textContent = `${start} ~ ${end}`;
+
+  const perks = [...document.querySelectorAll('input[name="perks"]:checked')].map(el => el.value);
+  document.getElementById("summary-perks").textContent = perks.length > 0 ? perks.join(", ") : "(없음)";
+
+  document.getElementById("summary-desc").textContent = document.querySelector('[name="event_description"]').value || "(설명 없음)";
+  document.getElementById("summary-twitter").textContent = document.querySelector('[name="twitter_source"]').value || "(없음)";
+  document.getElementById("summary-instagram").textContent = document.querySelector('[name="instagram_source"]').value || "(없음)";
+}
+
+nextBtn.addEventListener("click", () => {
+  if (!validateStep()) return;
+
+  if (currentStep < steps) {
+    currentStep++;
+    updateStepVisibility();
+
+    if (currentStep === steps) {
+      updateSummary();
+    }
+  }
+});
+
+prevBtn.addEventListener("click", () => {
+  if (currentStep > 1) {
+    currentStep--;
+    updateStepVisibility();
+  }
+});
+
+// 초기 상태 세팅
+updateStepVisibility();
+</script>
+
+<script>
+// 이미지 미리보기 기능
+document.getElementById("images").addEventListener("change", function () {
+  const previewContainer = document.getElementById("image-preview");
+  previewContainer.innerHTML = "";
+  Array.from(this.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = document.createElement("img");
+      img.src = e.target.result;
+      img.className = "w-24 h-24 object-cover rounded border";
+      previewContainer.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+</script>
+
+<script>
+// 아티스트/멤버 자동완성 기능
 document.getElementById("artist-member-search").addEventListener("input", function () {
   const keyword = this.value.trim();
   const resultsBox = document.getElementById("artist-member-results");
   resultsBox.innerHTML = "";
-
   if (!keyword) {
     resultsBox.classList.add("hidden");
     return;
   }
-
   fetch(`/ddoksang/autocomplete/members/?q=` + encodeURIComponent(keyword))
     .then(res => res.json())
     .then(data => {
@@ -80,7 +248,6 @@ document.getElementById("artist-member-search").addEventListener("input", functi
         resultsBox.classList.add("hidden");
         return;
       }
-
       results.forEach(item => {
         const li = document.createElement("li");
         li.className = "hover:bg-gray-100 px-4 py-2 cursor-pointer text-sm border-b";
@@ -103,9 +270,8 @@ document.getElementById("artist-member-search").addEventListener("input", functi
 });
 </script>
 
-<!-- ✅ 카카오맵 연동 스크립트 -->
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 <script>
+// 카카오맵 주소 검색 및 결과 선택 기능
 let map = new kakao.maps.Map(document.getElementById('map'), {
   center: new kakao.maps.LatLng(37.5665, 126.9780),
   level: 3
@@ -114,6 +280,16 @@ let ps = new kakao.maps.services.Places();
 let marker = new kakao.maps.Marker({ map: map });
 
 const placeInput = document.getElementById("place-search");
+const searchBtn = document.getElementById("searchBtn") || null;
+const placeResults = document.getElementById('place-results');
+const selectedPlaceDiv = document.getElementById('selected-place');
+
+if (searchBtn) {
+  searchBtn.addEventListener('click', () => {
+    searchPlace();
+  });
+}
+
 placeInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -126,61 +302,36 @@ function searchPlace() {
   if (!keyword.trim()) return;
   ps.keywordSearch(keyword, function (data, status) {
     if (status === kakao.maps.services.Status.OK) {
-      const place = data[0];
-      const latlng = new kakao.maps.LatLng(place.y, place.x);
-      map.setCenter(latlng);
-      marker.setPosition(latlng);
+      placeResults.innerHTML = '';
+      placeResults.classList.remove('hidden');
+      data.forEach(place => {
+        const li = document.createElement('li');
+        li.textContent = `${place.place_name} (${place.road_address_name || place.address_name})`;
+        li.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200 border-b last:border-none';
+        li.addEventListener('click', () => {
+          const latlng = new kakao.maps.LatLng(place.y, place.x);
+          map.setCenter(latlng);
+          marker.setPosition(latlng);
 
-      document.getElementById("address").value = place.address_name;
-      document.getElementById("road_address").value = place.road_address_name;
-      document.getElementById("latitude").value = place.y;
-      document.getElementById("longitude").value = place.x;
-      document.getElementById("kakao_place_id").value = place.id;
+          selectedPlaceDiv.textContent = `선택된 주소: ${place.place_name} - ${place.road_address_name || place.address_name}`;
+          selectedPlaceDiv.classList.remove('hidden');
+
+          document.getElementById("address").value = place.address_name;
+          document.getElementById("road_address").value = place.road_address_name || '';
+          document.getElementById("latitude").value = place.y;
+          document.getElementById("longitude").value = place.x;
+          document.getElementById("kakao_place_id").value = place.id;
+
+          placeResults.classList.add('hidden');
+        });
+        placeResults.appendChild(li);
+      });
+    } else {
+      placeResults.innerHTML = '<li class="px-4 py-2 text-red-500">검색 결과가 없습니다.</li>';
+      placeResults.classList.remove('hidden');
     }
   });
 }
 </script>
-<script>
-document.getElementById("artist-member-search").addEventListener("input", function () {
-  const keyword = this.value.trim();
-  const resultsBox = document.getElementById("artist-member-results");
-  resultsBox.innerHTML = "";
-
-  if (!keyword) {
-    resultsBox.classList.add("hidden");
-    return;
-  }
-
-  fetch(`/ddoksang/autocomplete/members/?q=` + encodeURIComponent(keyword))
-    .then(res => res.json())
-    .then(data => {
-      const results = data.results;
-      if (results.length === 0) {
-        resultsBox.classList.add("hidden");
-        return;
-      }
-
-      results.forEach(item => {
-        const li = document.createElement("li");
-        li.className = "hover:bg-gray-100 px-4 py-2 cursor-pointer text-sm border-b";
-        li.innerHTML = `
-          <div class="flex justify-between">
-            <span>${item.member_name} <span class="text-gray-500 text-xs">(${item.artist_display})</span></span>
-            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${item.bday}</span>
-          </div>
-        `;
-        li.onclick = () => {
-          document.getElementById("artist-member-search").value = `${item.member_name} (${item.artist_display})`;
-          document.getElementById("artist_id").value = item.artist_id;
-          document.getElementById("member_id").value = item.member_id;
-          resultsBox.classList.add("hidden");
-        };
-        resultsBox.appendChild(li);
-      });
-      resultsBox.classList.remove("hidden");
-    });
-});
-</script>
-
 
 {% endblock %}
