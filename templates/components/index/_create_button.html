@@ -1,0 +1,8 @@
+<div class="flex justify-end mb-6">
+  {% with category_param=category|default:default_category %}
+    <a href="{{ create_url }}?category={{ category_param }}"
+      class="bg-black hover:bg-gray-900 text-white px-4 py-2 rounded-full shadow font-medium">
+      + 게시글 작성
+    </a>
+  {% endwith %}
+</div>

@@ -80,7 +80,8 @@ class BdayCafe(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.artist.name} - {self.cafe_name} ({self.start_date})"
+        # 🔥 수정: self.artist.name → self.artist.display_name
+        return f"{self.artist.display_name} - {self.cafe_name} ({self.start_date})"
     
     @property
     def is_active(self):
@@ -103,8 +104,10 @@ class BdayCafe(models.Model):
         return {
             'id': self.id,
             'name': self.cafe_name,
-            'artist': self.artist.name,
-            'member': self.member.name if self.member else None,
+            # 🔥 수정: self.artist.name → self.artist.display_name
+            'artist': self.artist.display_name,
+            # 🔥 수정: self.member.name → self.member.member_name
+            'member': self.member.member_name if self.member else None,
             'latitude': float(self.latitude),
             'longitude': float(self.longitude),
             'address': self.address,

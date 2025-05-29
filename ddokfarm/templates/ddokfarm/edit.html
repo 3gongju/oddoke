@@ -9,10 +9,9 @@
   <!-- 카테고리 선택 -->
   {% include 'components/post_form/_category_buttons.html' %}
 
-
   <!-- 작성 폼 -->
   <div class="flex justify-center">
-    <form method="post" enctype="multipart/form-data" id="create-form"
+    <form method="post" enctype="multipart/form-data" id="edit-form"
           class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-lg">
       {% csrf_token %}
       {% include 'components/post_form/_form_base.html' %}

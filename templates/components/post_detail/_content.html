@@ -1,0 +1,65 @@
+{# components/post_detail/_content.html #}
+{% load humanize %}
+<div class="flex flex-col justify-start h-full">
+
+  <!-- 덕팜: 거래 완료 토글 버튼 -->
+  {% if is_ddokfarm %}
+    {% if request.user == post.user %}
+      <form action="{% url 'ddokfarm:mark_as_sold' category=category post_id=post.id %}" method="post" class="self-end mb-2">
+        {% csrf_token %}
+        <button type="submit"
+                class="px-3 py-1 text-sm rounded transition
+                      {% if post.is_sold %}
+                        bg-gray-300 hover:bg-gray-400 active:bg-gray-500 text-black
+                      {% else %}
+                        bg-black hover:bg-gray-800 active:bg-gray-700 text-white
+                      {% endif %}">
+          {% if post.is_sold %}거래중으로 변경{% else %}거래 완료로 변경{% endif %}
+        </button>
+      </form>
+    {% endif %}
+  {% endif %}
+
+  <!-- 제목 -->
+  <h2 class="text-lg font-bold mb-2">{{ post.title }}</h2>
+
+  <!-- 유저명 + 시간 -->
+  <div class="flex items-center text-sm mb-2 space-x-2">
+    <a href="{% url 'accounts:profile' post.user.username %}">
+      <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-8 h-8 rounded-full object-cover" />
+    </a>
+    <a href="{% url 'accounts:profile' post.user.username %}" class="font-semibold">
+      {{ post.user.username }}
+    </a>
+    <span class="text-gray-400 text-xs">· {{ post.created_at|naturaltime }}</span>
+  </div>
+
+  <hr class="border-gray-300">
+
+  <!-- 수정 / 삭제 버튼 - 본인일 경우 -->
+  {% if request.user == post.user %}
+    <div class="flex justify-end space-x-2 mt-2">
+      <a href="{% url app_name|add:':post_edit' category=category post_id=post.id %}"
+         class="text-sm text-blue-600 hover:underline">수정</a>
+      <a href="{% url app_name|add:':post_delete' category=category post_id=post.id %}"
+         class="text-sm text-red-600 hover:underline"
+         onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a>
+    </div>
+  {% endif %}
+
+  <!-- 내용 -->
+  <div class="text-sm text-gray-800 whitespace-pre-line mb-4">
+    {{ post.content }}
+  </div>
+
+  <!-- 정보 테이블 + 버튼 묶음 -->
+  <div class="mt-auto space-y-4">
+    {% if extra_partial %}
+      {% include extra_partial %}
+    {% endif %}
+
+    {% if buttons_partial %}
+      {% include buttons_partial %}
+    {% endif %}
+  </div>
+</div>

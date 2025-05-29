@@ -1,19 +1,67 @@
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import user_passes_test, login_required  # ✅ 여기에 login_required 포함
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.csrf import csrf_exempt
 from .models import BdayCafe, CafeFavorite, TourPlan
 from artist.models import Artist, Member
-
-from django.views.decorators.http import require_http_methods
+import json
 
 def is_admin_user(user):
     return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+def bday_cafe_map(request):  
+    """생카 지도 메인 페이지"""
+    # 현재 진행 중인 생카들만 가져오기
+    active_bday_cafes = BdayCafe.objects.filter(
+        status='approved',
+        start_date__lte=timezone.now().date(),
+        end_date__gte=timezone.now().date()
+    ).select_related('artist', 'member')
+    
+    # 지도에 표시할 데이터 준비
+    bday_cafe_data = [bday_cafe.get_kakao_map_data() for bday_cafe in active_bday_cafes]
+    
+    context = {
+        'bday_cafes_json': json.dumps(bday_cafe_data),
+        'total_bday_cafes': len(bday_cafe_data),
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+    }
+    
+    return render(request, 'ddoksang/map.html', context)
+
+def bday_cafe_list_api(request):  
+    """생카 목록 API (테스트용)"""
+    bday_cafes = BdayCafe.objects.filter(
+        status='approved'
+    ).select_related('artist', 'member').order_by('-start_date')
+    
+    bday_cafe_data = []
+    for bday_cafe in bday_cafes:
+        bday_cafe_data.append({
+            'id': bday_cafe.id,
+            'name': bday_cafe.cafe_name,
+            'artist': bday_cafe.artist.display_name,
+            'member': bday_cafe.member.member_name if bday_cafe.member else None,
+            'address': bday_cafe.address,
+            'latitude': float(bday_cafe.latitude),
+            'longitude': float(bday_cafe.longitude),
+            'start_date': bday_cafe.start_date.strftime('%Y-%m-%d'),
+            'end_date': bday_cafe.end_date.strftime('%Y-%m-%d'),
+            'is_active': bday_cafe.is_active,
+            'main_image': bday_cafe.main_image.url if bday_cafe.main_image else None,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'bday_cafes': bday_cafe_data,
+        'total': len(bday_cafe_data)
+    })
 
 def map_view(request):
     return render(request, 'ddoksang/map.html', {})
@@ -67,6 +115,7 @@ def create_cafe(request):
         "members": Member.objects.select_related().all()
     }
     return render(request, "ddoksang/create.html", context)
+
 def my_cafes(request):
     if not request.user.is_authenticated:
         return redirect('account_login')
@@ -166,7 +215,6 @@ def admin_cafe_detail(request, cafe_id):
 
     return render(request, 'admin/ddoksang/cafe_detail.html', {'cafe': cafe})
 
-
 @user_passes_test(is_admin_user)
 @require_http_methods(["POST"])
 def approve_cafe(request, cafe_id):
@@ -195,10 +243,6 @@ def reject_cafe(request, cafe_id):
 
     return JsonResponse({'success': True, 'message': '거절 처리 완료'})
 
-from django.views.decorators.http import require_POST
-from django.http import JsonResponse
-from .models import BdayCafe
-
 @user_passes_test(is_admin_user)
 @require_POST
 def bulk_action(request):
@@ -222,3 +266,73 @@ def bulk_action(request):
         return JsonResponse({'success': False, 'message': '올바르지 않은 액션입니다.'})
 
     return JsonResponse({'success': True, 'message': message})
+
+# 🔥 생일카페 등록 API
+@csrf_exempt
+@login_required
+@require_http_methods(["POST"])
+def create_bday_cafe(request):
+    """생일카페 등록 API"""
+    try:
+        data = json.loads(request.body)
+        
+        # 필수 필드 검증
+        required_fields = ['artist_id', 'cafe_name', 'address', 'latitude', 'longitude', 'start_date', 'end_date']
+        for field in required_fields:
+            if not data.get(field):
+                return JsonResponse({'success': False, 'error': f'{field} 필드가 누락되었습니다.'})
+        
+        # Artist 존재 확인
+        try:
+            artist = Artist.objects.get(id=data['artist_id'])
+        except Artist.DoesNotExist:
+            return JsonResponse({'success': False, 'error': '존재하지 않는 아티스트입니다.'})
+        
+        # Member 존재 확인 (선택사항)
+        member = None
+        if data.get('member_id'):
+            try:
+                member = Member.objects.get(id=data['member_id'])
+            except Member.DoesNotExist:
+                return JsonResponse({'success': False, 'error': '존재하지 않는 멤버입니다.'})
+        
+        # BdayCafe 생성
+        bday_cafe = BdayCafe.objects.create(
+            submitted_by=request.user,
+            artist=artist,
+            member=member,
+            cafe_type=data.get('cafe_type', 'bday'),
+            cafe_name=data['cafe_name'],
+            address=data['address'],
+            road_address=data.get('road_address', ''),
+            latitude=float(data['latitude']),
+            longitude=float(data['longitude']),
+            start_date=data['start_date'],
+            end_date=data['end_date'],
+            special_benefits=data.get('special_benefits', ''),
+            event_description=data.get('event_description', ''),
+            hashtags=data.get('hashtags', ''),
+            twitter_source=data.get('twitter_source', ''),
+            instagram_source=data.get('instagram_source', ''),
+            status='pending'  # 관리자 승인 필요
+        )
+        
+        return JsonResponse({
+            'success': True, 
+            'message': '생일카페가 성공적으로 등록되었습니다!',
+            'cafe_id': bday_cafe.id
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'JSON 형식이 올바르지 않습니다.'})
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': f'데이터 형식 오류: {str(e)}'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'서버 오류: {str(e)}'})
+
+def create_bday_cafe_form(request):
+    """생일카페 등록 폼 페이지"""
+    context = {
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+    }
+    return render(request, 'ddoksang/create.html', context)

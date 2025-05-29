@@ -1,0 +1,20 @@
+{# components/post_detail/_like_comment_info.html #}
+<div class="flex justify-end items-center space-x-4 my-4">
+  <!-- 댓글 아이콘 + 숫자 -->
+  <div class="flex items-center space-x-1">
+    <span>💬</span>
+    <span>{{ total_comment_count }}</span>
+  </div>
+
+  <!-- 하트 + 숫자 묶음 -->
+  <div class="flex items-center space-x-1">
+    <a href="javascript:void(0);" id="like-button" data-liked="{{ is_liked|yesno:'true,false' }}">
+      {% if is_liked %}
+        ❤️
+      {% else %}
+        🤍
+      {% endif %}
+    </a>
+    <span id="like-count">{{ post.like.count }}</span>
+  </div>            
+</div>

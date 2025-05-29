@@ -1,0 +1,16 @@
+<div class="flex gap-2 mt-4">
+  <!-- 찜하기 버튼 -->
+  <button id="like-button-top" data-liked="{{ is_liked|yesno:'true,false' }}"
+          class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-600 font-semibold py-2 rounded-lg">
+    {% if is_liked %}
+      ❤️ 찜하기
+    {% else %}
+      🤍 찜하기
+    {% endif %}
+  </button>
+
+  <!-- 문의하기 버튼 -->
+  <button class="flex-[2] bg-black hover:bg-gray-800 text-white font-semibold py-2 rounded-lg">
+    📩 문의하기
+  </button>
+</div>

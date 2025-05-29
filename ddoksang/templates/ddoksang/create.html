@@ -47,6 +47,58 @@
             width: 20%;
             transition: width 0.3s ease;
         }
+
+        /* 검색 결과 스타일 수정 */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-top: 0.25rem;
+            max-height: 15rem;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none; /* 기본적으로 숨김 */
+        }
+
+        .search-results.show {
+            display: block; /* 표시될 때 */
+        }
+
+        .search-result-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            background: white;
+        }
+
+        .search-result-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .address-result-item {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+            background: white;
+        }
+
+        .address-result-item:hover {
+            background-color: #f3f4f6;
+            border-color: #3b82f6;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -71,6 +123,7 @@
         </div>
 
         <form id="bdayCafeForm" class="space-y-6">
+            {% csrf_token %}
             <!-- Step 1: Artist/Member Search -->
             <div class="form-step bg-white rounded-lg shadow-sm p-6" data-step="1">
                 <h2 class="text-lg font-semibold mb-4 flex items-center">
@@ -84,10 +137,10 @@
                         <input 
                             type="text" 
                             id="memberSearch" 
-                            placeholder="예: 해린, aespa, 뉴진스..."
+                            placeholder="예: 명재현, BOYNEXTDOOR, 뉴진스..."
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <div id="searchResults" class="absolute w-full bg-white border border-gray-200 rounded-lg mt-1 max-h-60 overflow-y-auto hidden z-10 shadow-lg">
+                        <div id="searchResults" class="search-results">
                         </div>
                     </div>
                 </div>
@@ -168,7 +221,7 @@
                             🔍 검색
                         </button>
                     </div>
-                    <div id="addressResults" class="mt-2 space-y-2"></div>
+                    <div id="addressResults" class="mt-4"></div>
                 </div>
 
                 <!-- Selected Address Display -->
@@ -293,7 +346,7 @@
                     <input 
                         type="text" 
                         id="hashtags" 
-                        placeholder="#생일카페 #해린생카 #뉴진스"
+                        placeholder="#생일카페 #명재현생카 #BOYNEXTDOOR"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
@@ -351,19 +404,17 @@
         </form>
     </div>
 
+    <!-- 카카오맵 API 로드 (Django 템플릿 변수 사용) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+    
     <script>
+        // 전역 변수 선언
         let currentStep = 1;
         const totalSteps = 5;
         let selectedMemberData = null;
         let selectedAddressData = null;
-
-        // Mock data for demonstration
-        const mockMembers = [
-            { id: 1, name: "해린", artist: "뉴진스", artist_id: 1, birthday: "2006-05-15", type: "member" },
-            { id: 2, name: "민지", artist: "뉴진스", artist_id: 1, birthday: "2004-05-07", type: "member" },
-            { id: 3, name: "윈터", artist: "aespa", artist_id: 2, birthday: "2001-01-01", type: "member" },
-            { id: 4, name: "카리나", artist: "aespa", artist_id: 2, birthday: "2000-04-11", type: "member" }
-        ];
+        let searchResultsData = [];
+        let searchPlacesData = [];
 
         // Navigation functions
         function nextStep() {
@@ -389,7 +440,7 @@
         function updateProgress() {
             const progress = (currentStep / totalSteps) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
-            document.getElementById('progressText').textContent = `${currentStep}/${totalSteps} 단계`;
+            document.getElementById('progressText').textContent = currentStep + '/' + totalSteps + ' 단계';
         }
 
         function validateCurrentStep() {
@@ -424,56 +475,153 @@
             return true;
         }
 
-        // Member search functionality
-        document.getElementById('memberSearch').addEventListener('input', function(e) {
-            const query = e.target.value.trim().toLowerCase();
+        // 🔥 멤버/아티스트 검색 기능 수정
+        function setupMemberSearch() {
+            const searchInput = document.getElementById('memberSearch');
+            const resultsDiv = document.getElementById('searchResults');
+            let searchTimeout;
+            
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                console.log('검색어 입력:', query);
+                
+                // 검색어가 짧으면 결과 숨김
+                if (query.length < 1) {
+                    resultsDiv.classList.remove('show');
+                    return;
+                }
+                
+                // 디바운싱 (300ms 대기)
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performMemberSearch(query);
+                }, 300);
+            });
+
+            // 엔터 키 처리
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    console.log('엔터 키 검색 방지');
+                }
+            });
+
+            // 검색 결과 외부 클릭 시 숨김
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#memberSearch') && !e.target.closest('#searchResults')) {
+                    resultsDiv.classList.remove('show');
+                }
+            });
+        }
+
+        function performMemberSearch(query) {
+            console.log('🔍 실제 검색 실행:', query);
+            
+            // 실제 서버로 API 호출
+            fetch('/artist/autocomplete/?q=' + encodeURIComponent(query))
+                .then(response => {
+                    console.log('응답 상태:', response.status);
+                    if (!response.ok) {
+                        throw new Error('네트워크 응답이 좋지 않습니다');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('✅ 서버 응답 데이터:', data);
+                    
+                    if (data.results && data.results.length > 0) {
+                        searchResultsData = data.results;
+                        displayMemberSearchResults(data.results);
+                    } else {
+                        displayMemberSearchResults([]);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ 검색 API 오류:', error);
+                    
+                    // API 오류 시 목업 데이터로 폴백
+                    console.log('📝 목업 데이터로 폴백');
+                    const mockResults = generateMockSearchResults(query);
+                    searchResultsData = mockResults;
+                    displayMemberSearchResults(mockResults);
+                });
+        }
+
+        // 목업 검색 결과 생성 (API 실패 시 사용)
+        function generateMockSearchResults(query) {
+            const mockData = [
+                { id: 1, name: '명재현', artist: 'BOYNEXTDOOR', birthday: '2003-12-04', type: 'member', member_id: 1, artist_id: 10 },
+                { id: 2, name: '성한빈', artist: 'ZEROBASEONE', birthday: '2001-06-13', type: 'member', member_id: 2, artist_id: 11 },
+                { id: 3, name: '민지', artist: 'NewJeans', birthday: '2004-05-07', type: 'member', member_id: 3, artist_id: 12 },
+                { id: 4, name: 'BOYNEXTDOOR', artist: null, birthday: null, type: 'artist', member_id: null, artist_id: 10 },
+                { id: 5, name: 'NewJeans', artist: null, birthday: null, type: 'artist', member_id: null, artist_id: 12 },
+                { id: 6, name: '재현', artist: 'NCT', birthday: '1997-02-14', type: 'member', member_id: 6, artist_id: 13 }
+            ];
+            
+            return mockData.filter(item => 
+                item.name.toLowerCase().includes(query.toLowerCase()) ||
+                (item.artist && item.artist.toLowerCase().includes(query.toLowerCase()))
+            ).slice(0, 5);
+        }
+
+        function displayMemberSearchResults(results) {
             const resultsDiv = document.getElementById('searchResults');
             
-            if (query.length < 1) {
-                resultsDiv.classList.add('hidden');
+            if (!results || results.length === 0) {
+                resultsDiv.innerHTML = '<div class="search-result-item text-gray-500">검색 결과가 없습니다</div>';
+                resultsDiv.classList.add('show');
                 return;
             }
 
-            // Filter mock data
-            const filteredResults = mockMembers.filter(member => 
-                member.name.toLowerCase().includes(query) || 
-                member.artist.toLowerCase().includes(query)
-            );
-
-            if (filteredResults.length > 0) {
-                resultsDiv.innerHTML = filteredResults.map(member => `
-                    <div class="search-result-item p-3 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50" 
-                         onclick="selectMember(${JSON.stringify(member).replace(/"/g, '&quot;')})">
-                        <div class="font-semibold text-gray-900">${member.name}</div>
-                        <div class="text-sm text-gray-600">${member.artist}${member.birthday ? ' • 생일: ' + member.birthday : ''}</div>
-                        <div class="text-xs text-blue-500">${member.type === 'member' ? '멤버' : '아티스트'}</div>
+            let html = '';
+            results.forEach((item, index) => {
+                html += `
+                    <div class="search-result-item" onclick="selectMember(${index})">
+                        <div class="font-semibold text-gray-900">${item.name}</div>
+                        ${item.artist ? `<div class="text-sm text-gray-600">${item.artist}</div>` : ''}
+                        <div class="flex items-center space-x-2">
+                            ${item.birthday ? `<span class="text-xs text-gray-500">생일: ${item.birthday}</span>` : ''}
+                            <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">${item.type === 'member' ? '멤버' : '아티스트'}</span>
+                        </div>
                     </div>
-                `).join('');
-                resultsDiv.classList.remove('hidden');
-            } else {
-                resultsDiv.innerHTML = '<div class="p-3 text-gray-500 text-center">검색 결과가 없습니다</div>';
-                resultsDiv.classList.remove('hidden');
-            }
-        });
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.add('show');
+            console.log('✅ 검색 결과 표시 완료:', results.length, '개');
+        }
 
-        // Member selection functions
-        function selectMember(memberData) {
-            selectedMemberData = memberData;
-            document.getElementById('selectedMemberName').textContent = memberData.name;
-            document.getElementById('selectedArtistName').textContent = memberData.artist;
-            document.getElementById('selectedMemberBirthday').textContent = memberData.birthday ? `생일: ${memberData.birthday}` : '';
+        function selectMember(index) {
+            const item = searchResultsData[index];
+            if (!item) return;
+            
+            console.log('👤 멤버 선택:', item);
+            selectedMemberData = item;
+            
+            // 선택된 정보 표시
+            document.getElementById('selectedMemberName').textContent = item.name;
+            document.getElementById('selectedArtistName').textContent = item.artist || '솔로 아티스트';
+            document.getElementById('selectedMemberBirthday').textContent = item.birthday ? `생일: ${item.birthday}` : '';
+            
+            // 선택 박스 표시
             document.getElementById('selectedMember').classList.remove('hidden');
-            document.getElementById('searchResults').classList.add('hidden');
-            document.getElementById('memberSearch').value = `${memberData.name} (${memberData.artist})`;
+            
+            // 검색 결과 숨김
+            document.getElementById('searchResults').classList.remove('show');
+            
+            // 검색창에 선택값 표시
+            document.getElementById('memberSearch').value = `${item.name}${item.artist ? ` (${item.artist})` : ''}`;
         }
 
         function clearSelection() {
             selectedMemberData = null;
             document.getElementById('selectedMember').classList.add('hidden');
             document.getElementById('memberSearch').value = '';
+            console.log('🗑️ 선택 취소됨');
         }
 
-        // Address search (mock functionality)
+        // 🔥 실제 카카오맵 주소 검색 기능
         function searchAddress() {
             const query = document.getElementById('addressSearch').value.trim();
             if (!query) {
@@ -481,54 +629,90 @@
                 return;
             }
 
-            // Mock address results
+            console.log('🔍 주소 검색:', query);
+
+            // 카카오맵 API 사용 가능 여부 확인
+            if (typeof kakao === 'undefined' || !kakao.maps) {
+                console.warn('⚠️ 카카오맵 API가 로드되지 않음. 목업 검색 결과 표시.');
+                displayMockAddressResults(query);
+                return;
+            }
+
+            // 실제 카카오맵 장소 검색
+            const ps = new kakao.maps.services.Places();
+            
+            ps.keywordSearch(query, function(data, status, pagination) {
+                console.log('카카오맵 검색 상태:', status);
+                
+                if (status === kakao.maps.services.Status.OK) {
+                    console.log('✅ 장소 검색 성공:', data.length, '개 결과');
+                    searchPlacesData = data;
+                    displayAddressResults(data);
+                } else if (status === kakao.maps.services.Status.ZERO_RESULT) {
+                    console.log('❌ 검색 결과 없음');
+                    document.getElementById('addressResults').innerHTML = 
+                        '<div class="p-4 text-gray-500 bg-gray-50 rounded-lg border">검색 결과가 없습니다.</div>';
+                } else {
+                    console.error('❌ 장소 검색 오류:', status);
+                    document.getElementById('addressResults').innerHTML = 
+                        '<div class="p-4 text-red-500 bg-red-50 rounded-lg border">검색 중 오류가 발생했습니다.</div>';
+                }
+            }, {
+                category_group_code: 'CE7', // 카페만 검색
+                size: 10 // 최대 10개 결과
+            });
+        }
+
+        // 목업 주소 검색 결과 (카카오맵 API 실패 시)
+        function displayMockAddressResults(query) {
             const mockPlaces = [
                 {
-                    place_name: "스타벅스 강남점",
+                    place_name: "스타벅스 강남역점",
                     road_address_name: "서울 강남구 강남대로 390",
-                    address_name: "서울 강남구 역삼동 825-22",
+                    address_name: "서울 강남구 역삼동 825",
                     category_name: "음식점 > 카페",
-                    id: "1",
                     x: "127.027621",
-                    y: "37.500721",
-                    phone: "02-567-1234"
+                    y: "37.497952"
                 },
                 {
-                    place_name: "투썸플레이스 홍대점",
-                    road_address_name: "서울 마포구 양화로 160",
-                    address_name: "서울 마포구 서교동 354-27",
+                    place_name: "이디야커피 홍대점",
+                    road_address_name: "서울 마포구 와우산로 94",
+                    address_name: "서울 마포구 서교동 364-1",
                     category_name: "음식점 > 카페",
-                    id: "2",
-                    x: "126.924621",
-                    y: "37.555721",
-                    phone: "02-324-5678"
+                    x: "126.922070",
+                    y: "37.556392"
                 }
             ];
-
+            
+            searchPlacesData = mockPlaces;
             displayAddressResults(mockPlaces);
         }
 
         function displayAddressResults(places) {
             const resultsDiv = document.getElementById('addressResults');
             
-            if (places.length === 0) {
-                resultsDiv.innerHTML = '<div class="p-3 text-gray-500 bg-gray-50 rounded border">검색 결과가 없습니다.</div>';
+            if (!places || places.length === 0) {
+                resultsDiv.innerHTML = '<div class="p-4 text-gray-500 bg-gray-50 rounded-lg border">검색 결과가 없습니다.</div>';
                 return;
             }
 
-            resultsDiv.innerHTML = places.slice(0, 5).map((place, index) => `
-                <div class="search-result-item p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50" onclick="selectAddress(${index})">
+            const html = places.slice(0, 5).map((place, index) => `
+                <div class="address-result-item" onclick="selectAddress(${index})">
                     <div class="font-semibold text-gray-900">${place.place_name}</div>
                     <div class="text-sm text-gray-600">${place.road_address_name || place.address_name}</div>
                     <div class="text-xs text-gray-500">${place.category_name}</div>
                 </div>
             `).join('');
 
-            window.searchResultPlaces = places;
+            resultsDiv.innerHTML = html;
+            console.log('✅ 주소 검색 결과 표시:', places.length, '개');
         }
 
         function selectAddress(index) {
-            const place = window.searchResultPlaces[index];
+            const place = searchPlacesData[index];
+            if (!place) return;
+            
+            console.log('📍 주소 선택:', place);
             selectedAddressData = place;
             
             document.getElementById('selectedCafeName').textContent = place.place_name;
@@ -542,27 +726,99 @@
             selectedAddressData = null;
             document.getElementById('selectedAddress').classList.add('hidden');
             document.getElementById('cafeName').value = '';
+            console.log('🗑️ 주소 선택 취소됨');
         }
 
-        // Form submission
+        // 🔥 폼 제출 처리
         document.getElementById('bdayCafeForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log('📝 폼 제출 시도');
             
-            if (!validateCurrentStep()) {
-                return;
+            // 현재 단계가 마지막 단계인지 확인
+            if (currentStep !== 5) {
+                console.log('❌ 마지막 단계가 아님. 현재 단계:', currentStep);
+                alert('모든 단계를 완료한 후 등록해주세요.');
+                return false;
             }
-
+            
+            // 최종 검증
+            if (!selectedMemberData) {
+                alert('❌ 아티스트/멤버를 선택해주세요.');
+                currentStep = 1;
+                document.querySelector('[data-step="5"]').classList.add('hidden');
+                document.querySelector('[data-step="1"]').classList.remove('hidden');
+                updateProgress();
+                return false;
+            }
+            
+            const cafeName = document.getElementById('cafeName').value.trim();
+            if (!cafeName) {
+                alert('❌ 카페명을 입력해주세요.');
+                currentStep = 2;
+                document.querySelector('[data-step="5"]').classList.add('hidden');
+                document.querySelector('[data-step="2"]').classList.remove('hidden');
+                updateProgress();
+                return false;
+            }
+            
+            if (!selectedAddressData) {
+                alert('❌ 카페 주소를 검색하여 선택해주세요.');
+                currentStep = 2;
+                document.querySelector('[data-step="5"]').classList.add('hidden');
+                document.querySelector('[data-step="2"]').classList.remove('hidden');
+                updateProgress();
+                return false;
+            }
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('❌ 이벤트 시작일과 종료일을 모두 입력해주세요.');
+                currentStep = 3;
+                document.querySelector('[data-step="5"]').classList.add('hidden');
+                document.querySelector('[data-step="3"]').classList.remove('hidden');
+                updateProgress();
+                return false;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('❌ 시작일이 종료일보다 늦을 수 없습니다.');
+                currentStep = 3;
+                document.querySelector('[data-step="5"]').classList.add('hidden');
+                document.querySelector('[data-step="3"]').classList.remove('hidden');
+                updateProgress();
+                return false;
+            }
+            
+            // 최종 확인
+            const confirmMessage = `정말로 생일카페를 등록하시겠습니까?\n\n📋 등록 정보:\n• 아티스트/멤버: ${selectedMemberData.name} ${selectedMemberData.artist ? '(' + selectedMemberData.artist + ')' : ''}\n• 카페명: ${cafeName}\n• 주소: ${selectedAddressData.place_name}\n• 기간: ${startDate} ~ ${endDate}\n\n등록 후에는 관리자 승인이 필요합니다.`;
+            
+            if (!confirm(confirmMessage)) {
+                console.log('❌ 사용자가 등록을 취소함');
+                return false;
+            }
+            
+            console.log('✅ 모든 검증 통과, 데이터 전송 시작');
+            
+            // 제출 버튼 비활성화
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '등록 중...';
+            submitBtn.style.opacity = '0.6';
+            
             const formData = {
-                member_id: selectedMemberData.id,
+                member_id: selectedMemberData.member_id || null,
                 artist_id: selectedMemberData.artist_id,
-                cafe_name: document.getElementById('cafeName').value,
+                cafe_name: cafeName,
                 cafe_type: document.getElementById('cafeType').value,
                 address: selectedAddressData.road_address_name || selectedAddressData.address_name,
                 road_address: selectedAddressData.road_address_name || '',
                 latitude: parseFloat(selectedAddressData.y),
                 longitude: parseFloat(selectedAddressData.x),
-                start_date: document.getElementById('startDate').value,
-                end_date: document.getElementById('endDate').value,
+                start_date: startDate,
+                end_date: endDate,
                 special_benefits: document.getElementById('specialBenefits').value,
                 event_description: document.getElementById('eventDescription').value,
                 hashtags: document.getElementById('hashtags').value,
@@ -570,23 +826,101 @@
                 instagram_source: document.getElementById('instagramSource').value,
             };
 
-            // Mock form submission
-            console.log('Form data:', formData);
-            alert('생일카페가 성공적으로 등록되었습니다! 🎉');
+            console.log('📤 전송할 데이터:', formData);
+
+            // 실제 서버로 폼 데이터 전송
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (!csrfToken) {
+                alert('❌ CSRF 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
+                return false;
+            }
+            
+            fetch('/ddoksang/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken.value
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 버튼 복원
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
+                
+                if (data.success) {
+                    alert('🎉 생일카페가 성공적으로 등록되었습니다!\n관리자 승인 후 지도에 표시됩니다.');
+                    window.location.href = '/ddoksang/';
+                } else {
+                    alert('❌ 등록 중 오류가 발생했습니다:\n' + (data.error || '알 수 없는 오류'));
+                }
+            })
+            .catch(error => {
+                // 버튼 복원
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+                submitBtn.style.opacity = '1';
+                
+                console.error('❌ 등록 오류:', error);
+                alert('❌ 등록 중 오류가 발생했습니다.\n네트워크 연결을 확인해주세요.');
+            });
         });
 
-        // Initialize page
+        // 🔥 페이지 초기화
         document.addEventListener('DOMContentLoaded', function() {
-            // Set default dates
+            console.log('🚀 페이지 로드 완료, 초기화 시작...');
+            
+            // 검색 기능 초기화
+            setupMemberSearch();
+            
+            // 카카오맵 SDK 로드 확인
+            if (typeof kakao === 'undefined') {
+                console.warn('⚠️ 카카오맵 SDK가 로드되지 않았습니다. 목업 데이터로 진행됩니다.');
+            } else {
+                console.log('✅ 카카오맵 SDK 로드 완료');
+            }
+            
+            // 엔터 키 제출 방지
+            const formInputs = document.querySelectorAll('#bdayCafeForm input, #bdayCafeForm textarea, #bdayCafeForm select');
+            console.log('🔒 엔터 키 방지 적용 대상:', formInputs.length, '개');
+            
+            formInputs.forEach(input => {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        console.log('🚫 엔터 키 제출 방지:', input.id || input.name);
+                        
+                        // 주소 검색창에서는 엔터 시 검색 실행
+                        if (input.id === 'addressSearch') {
+                            searchAddress();
+                        }
+                    }
+                });
+            });
+            
+            // 기본 날짜 설정
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('startDate').value = today;
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
             
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            document.getElementById('endDate').value = nextWeek.toISOString().split('T')[0];
+            if (startDateEl) startDateEl.value = today;
             
-            // Benefit button event listeners
-            document.querySelectorAll('.benefit-btn').forEach(btn => {
+            if (endDateEl) {
+                const nextWeek = new Date();
+                nextWeek.setDate(nextWeek.getDate() + 7);
+                endDateEl.value = nextWeek.toISOString().split('T')[0];
+            }
+            
+            // 특전 버튼 이벤트 리스너
+            const benefitBtns = document.querySelectorAll('.benefit-btn');
+            console.log('🎁 특전 버튼 설정:', benefitBtns.length, '개');
+            
+            benefitBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const benefit = this.dataset.benefit;
                     const textarea = document.getElementById('specialBenefits');
@@ -601,20 +935,26 @@
                     });
                     
                     // Update textarea
-                    textarea.value = selectedBenefits.join(', ');
+                    if (textarea) {
+                        textarea.value = selectedBenefits.join(', ');
+                    }
                 });
             });
 
-            // Initialize progress
+            // 진행률 초기화
             updateProgress();
+            
+            console.log('🎉 페이지 초기화 완료!');
         });
 
-        // Close search results when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('#memberSearch') && !e.target.closest('#searchResults')) {
-                document.getElementById('searchResults').classList.add('hidden');
-            }
-        });
+        // 전역 함수로 노출 (HTML onclick에서 사용)
+        window.nextStep = nextStep;
+        window.prevStep = prevStep;
+        window.clearSelection = clearSelection;
+        window.searchAddress = searchAddress;
+        window.selectAddress = selectAddress;
+        window.clearAddressSelection = clearAddressSelection;
+        window.selectMember = selectMember;
     </script>
 </body>
 </html>

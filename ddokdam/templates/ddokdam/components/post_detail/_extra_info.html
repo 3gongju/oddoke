@@ -1,0 +1,26 @@
+{# 덕담 전용 - manner, bdaycafe 정보 #}
+{% if category == 'manner' or category == 'bdaycafe' %}
+  <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <tbody>
+          {% if category == 'manner' %}
+            <tr>
+              <th class="text-left py-2 text-gray-700">예절템</th>
+              <td class="text-right py-2 text-gray-800">{{ post.item|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">위치</th>
+              <td class="text-right py-2 text-gray-800">{{ post.location|default:"-" }}</td>
+            </tr>
+          {% elif category == 'bdaycafe' %}
+            <tr>
+              <th class="text-left py-2 text-gray-700">카페 이름</th>
+              <td class="text-right py-2 text-gray-800">{{ post.cafe_name|default:"-" }}</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}

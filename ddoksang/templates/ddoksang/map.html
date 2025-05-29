@@ -159,6 +159,15 @@
             padding: 20px;
         }
         
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             .info-panel {
@@ -180,6 +189,14 @@
         <h3>🗺️ 덕생 - 생일카페 지도</h3>
         <p>현재 <strong>{{ total_bday_cafes }}개</strong>의 생카가 진행 중입니다</p>
         
+        <!-- 🔥 디버깅 정보 추가 -->
+        <div class="debug-info">
+            <strong>디버깅 정보:</strong><br>
+            카카오 API 키: {{ kakao_api_key|default:"❌ 설정되지 않음" }}<br>
+            데이터 개수: {{ total_bday_cafes }}개<br>
+            현재 시간: {% now "Y-m-d H:i:s" %}
+        </div>
+        
         <div id="bday-cafe-list">
             <div class="loading">
                 <div>📍 생카 정보를 불러오는 중...</div>
@@ -191,46 +208,152 @@
 
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
     <script>
+        // 🔥 디버깅 정보 출력
+        console.log('=== 카카오맵 디버깅 정보 ===');
+        console.log('카카오 API 키:', '{{ kakao_api_key }}');
+        console.log('총 생카 개수:', {{ total_bday_cafes }});
+        console.log('JSON 데이터:', `{{ bday_cafes_json|safe }}`);
+        
         // 생일카페 데이터
         const bdayCafesData = {{ bday_cafes_json|safe }};
-        console.log('🎉 로드된 생카 데이터:', bdayCafesData);
+        console.log('🎉 파싱된 생카 데이터:', bdayCafesData);
+        console.log('데이터 타입:', typeof bdayCafesData);
+        console.log('데이터 길이:', Array.isArray(bdayCafesData) ? bdayCafesData.length : '배열이 아님');
         
-        // 지도 생성
-        const container = document.getElementById('map');
-        const options = {
-            center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
-            level: 8
-        };
-        const map = new kakao.maps.Map(container, options);
-        
-        // 마커 배열
-        const markers = [];
-        let currentInfoWindow = null;
-        
-        // 생카 마커 생성 및 표시
-        function createBdayCafeMarkers() {
-            bdayCafesData.forEach(function(bdayCafe) {
-                // 마커 위치
-                const position = new kakao.maps.LatLng(bdayCafe.latitude, bdayCafe.longitude);
+        // 카카오맵 API 로드 확인
+        if (typeof kakao === 'undefined') {
+            console.error('❌ 카카오맵 API가 로드되지 않았습니다!');
+            document.getElementById('bday-cafe-list').innerHTML = `
+                <div class="no-cafes">
+                    <div>❌</div>
+                    <div>카카오맵 API 로드 실패</div>
+                    <div style="font-size: 12px; margin-top: 8px; color: #999;">
+                        API 키를 확인해주세요!
+                    </div>
+                </div>
+            `;
+        } else {
+            console.log('✅ 카카오맵 API 로드 성공!');
+            
+            // 지도 생성
+            const container = document.getElementById('map');
+            const options = {
+                center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
+                level: 8
+            };
+            
+            try {
+                const map = new kakao.maps.Map(container, options);
+                console.log('✅ 지도 생성 성공!');
                 
-                // 마커 생성
-                const marker = new kakao.maps.Marker({
-                    position: position,
-                    title: bdayCafe.name
+                // 마커 배열
+                const markers = [];
+                let currentInfoWindow = null;
+                
+                // 생카 마커 생성 및 표시
+                function createBdayCafeMarkers() {
+                    console.log('마커 생성 시작...');
+                    
+                    if (!Array.isArray(bdayCafesData) || bdayCafesData.length === 0) {
+                        console.log('⚠️ 표시할 생카 데이터가 없습니다.');
+                        return;
+                    }
+                    
+                    bdayCafesData.forEach(function(bdayCafe, index) {
+                        console.log(`마커 ${index + 1} 생성 중:`, bdayCafe);
+                        
+                        // 마커 위치
+                        const position = new kakao.maps.LatLng(bdayCafe.latitude, bdayCafe.longitude);
+                        
+                        // 마커 생성
+                        const marker = new kakao.maps.Marker({
+                            position: position,
+                            title: bdayCafe.name
+                        });
+                        
+                        // 지도에 마커 표시
+                        marker.setMap(map);
+                        markers.push(marker);
+                        console.log(`✅ 마커 ${index + 1} 생성 완료`);
+                        
+                        // 정보창 내용
+                        const infoContent = `
+                            <div class="custom-overlay">
+                                <div class="title">${bdayCafe.name}</div>
+                                <div class="overlay-content">
+                                    <div class="artist-info">${bdayCafe.artist}${bdayCafe.member ? ' - ' + bdayCafe.member : ''}</div>
+                                    <div class="address-info">${bdayCafe.address}</div>
+                                    <div class="status-badges">
+                                        <span class="badge badge-type">${bdayCafe.cafe_type}</span>
+                                        ${bdayCafe.is_active ? 
+                                            `<span class="badge badge-active">${bdayCafe.days_remaining}일 남음</span>` :
+                                            `<span class="badge badge-inactive">종료됨</span>`
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // 정보창 생성
+                        const infowindow = new kakao.maps.CustomOverlay({
+                            content: infoContent,
+                            position: position,
+                            xAnchor: 0.5,
+                            yAnchor: 1.2
+                        });
+                        
+                        // 마커 클릭 이벤트
+                        kakao.maps.event.addListener(marker, 'click', function() {
+                            // 기존 정보창 닫기
+                            if (currentInfoWindow) {
+                                currentInfoWindow.setMap(null);
+                            }
+                            
+                            // 새 정보창 열기
+                            infowindow.setMap(map);
+                            currentInfoWindow = infowindow;
+                            
+                            // 해당 위치를 지도 중심으로 이동
+                            map.setCenter(position);
+                            map.setLevel(4); // 줌 인
+                        });
+                    });
+                    
+                    console.log(`🎯 총 ${markers.length}개 마커 생성 완료!`);
+                }
+                
+                // 지도 클릭 시 정보창 닫기
+                kakao.maps.event.addListener(map, 'click', function() {
+                    if (currentInfoWindow) {
+                        currentInfoWindow.setMap(null);
+                        currentInfoWindow = null;
+                    }
                 });
                 
-                // 지도에 마커 표시
-                marker.setMap(map);
-                markers.push(marker);
-                
-                // 정보창 내용
-                const infoContent = `
-                    <div class="custom-overlay">
-                        <div class="title">${bdayCafe.name}</div>
-                        <div class="overlay-content">
-                            <div class="artist-info">${bdayCafe.artist}${bdayCafe.member ? ' - ' + bdayCafe.member : ''}</div>
-                            <div class="address-info">${bdayCafe.address}</div>
-                            <div class="status-badges">
+                // 사이드 패널에 생카 리스트 표시
+                function displayBdayCafeList() {
+                    const bdayCafeListDiv = document.getElementById('bday-cafe-list');
+                    
+                    if (!Array.isArray(bdayCafesData) || bdayCafesData.length === 0) {
+                        bdayCafeListDiv.innerHTML = `
+                            <div class="no-cafes">
+                                <div>🔍</div>
+                                <div>현재 진행 중인 생카가 없습니다.</div>
+                                <div style="font-size: 12px; margin-top: 8px; color: #999;">
+                                    관리자 페이지에서 테스트 생카를 등록해보세요!<br>
+                                    <strong>Django Admin → BdayCafe 추가</strong>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const listHtml = bdayCafesData.map(bdayCafe => `
+                        <div class="bday-cafe-info" onclick="focusBdayCafe(${bdayCafe.latitude}, ${bdayCafe.longitude})">
+                            <div class="bday-cafe-name">${bdayCafe.name}</div>
+                            <div class="artist-name">${bdayCafe.artist}${bdayCafe.member ? ' - ' + bdayCafe.member : ''}</div>
+                            <div class="bday-cafe-address">${bdayCafe.address}</div>
+                            <div style="margin-top: 6px;">
                                 <span class="badge badge-type">${bdayCafe.cafe_type}</span>
                                 ${bdayCafe.is_active ? 
                                     `<span class="badge badge-active">${bdayCafe.days_remaining}일 남음</span>` :
@@ -238,132 +361,84 @@
                                 }
                             </div>
                         </div>
-                    </div>
-                `;
+                    `).join('');
+                    
+                    bdayCafeListDiv.innerHTML = listHtml;
+                }
                 
-                // 정보창 생성
-                const infowindow = new kakao.maps.CustomOverlay({
-                    content: infoContent,
-                    position: position,
-                    xAnchor: 0.5,
-                    yAnchor: 1.2
-                });
+                // 특정 생카로 지도 이동
+                function focusBdayCafe(lat, lng) {
+                    const position = new kakao.maps.LatLng(lat, lng);
+                    map.setCenter(position);
+                    map.setLevel(3);
+                    
+                    // 해당 마커의 정보창도 열기
+                    const targetMarker = markers.find(marker => {
+                        const markerPos = marker.getPosition();
+                        return Math.abs(markerPos.getLat() - lat) < 0.0001 && 
+                               Math.abs(markerPos.getLng() - lng) < 0.0001;
+                    });
+                    
+                    if (targetMarker) {
+                        // 마커 클릭 이벤트 트리거
+                        kakao.maps.event.trigger(targetMarker, 'click');
+                    }
+                }
                 
-                // 마커 클릭 이벤트
-                kakao.maps.event.addListener(marker, 'click', function() {
-                    // 기존 정보창 닫기
-                    if (currentInfoWindow) {
-                        currentInfoWindow.setMap(null);
+                // 전역으로 함수 등록
+                window.focusBdayCafe = focusBdayCafe;
+                
+                // 페이지 로드 시 실행
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('DOM 로드 완료, 초기화 시작...');
+                    
+                    // 생카 마커 생성
+                    createBdayCafeMarkers();
+                    
+                    // 사이드 패널 리스트 표시
+                    displayBdayCafeList();
+                    
+                    // 모든 마커가 보이도록 지도 범위 조정
+                    if (markers.length > 0) {
+                        const bounds = new kakao.maps.LatLngBounds();
+                        markers.forEach(marker => {
+                            bounds.extend(marker.getPosition());
+                        });
+                        map.setBounds(bounds);
+                        
+                        // 너무 많이 줌인되지 않도록 제한
+                        setTimeout(() => {
+                            if (map.getLevel() < 6) {
+                                map.setLevel(6);
+                            }
+                        }, 100);
                     }
                     
-                    // 새 정보창 열기
-                    infowindow.setMap(map);
-                    currentInfoWindow = infowindow;
-                    
-                    // 해당 위치를 지도 중심으로 이동
-                    map.setCenter(position);
-                    map.setLevel(4); // 줌 인
+                    console.log('🗺️ 지도 초기화 완료!');
+                    console.log(`📍 총 ${markers.length}개의 생카 마커가 표시되었습니다.`);
                 });
-            });
-        }
-        
-        // 지도 클릭 시 정보창 닫기
-        kakao.maps.event.addListener(map, 'click', function() {
-            if (currentInfoWindow) {
-                currentInfoWindow.setMap(null);
-                currentInfoWindow = null;
-            }
-        });
-        
-        // 사이드 패널에 생카 리스트 표시
-        function displayBdayCafeList() {
-            const bdayCafeListDiv = document.getElementById('bday-cafe-list');
-            
-            if (bdayCafesData.length === 0) {
-                bdayCafeListDiv.innerHTML = `
+                
+                // 지도 타입 컨트롤 추가
+                const mapTypeControl = new kakao.maps.MapTypeControl();
+                map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+                
+                // 줌 컨트롤 추가
+                const zoomControl = new kakao.maps.ZoomControl();
+                map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
+                
+            } catch (error) {
+                console.error('❌ 지도 생성 중 오류:', error);
+                document.getElementById('bday-cafe-list').innerHTML = `
                     <div class="no-cafes">
-                        <div>🔍</div>
-                        <div>현재 진행 중인 생카가 없습니다.</div>
+                        <div>❌</div>
+                        <div>지도 초기화 실패</div>
                         <div style="font-size: 12px; margin-top: 8px; color: #999;">
-                            관리자 페이지에서 테스트 생카를 등록해보세요!
+                            ${error.message}
                         </div>
                     </div>
                 `;
-                return;
-            }
-            
-            const listHtml = bdayCafesData.map(bdayCafe => `
-                <div class="bday-cafe-info" onclick="focusBdayCafe(${bdayCafe.latitude}, ${bdayCafe.longitude})">
-                    <div class="bday-cafe-name">${bdayCafe.name}</div>
-                    <div class="artist-name">${bdayCafe.artist}${bdayCafe.member ? ' - ' + bdayCafe.member : ''}</div>
-                    <div class="bday-cafe-address">${bdayCafe.address}</div>
-                    <div style="margin-top: 6px;">
-                        <span class="badge badge-type">${bdayCafe.cafe_type}</span>
-                        ${bdayCafe.is_active ? 
-                            `<span class="badge badge-active">${bdayCafe.days_remaining}일 남음</span>` :
-                            `<span class="badge badge-inactive">종료됨</span>`
-                        }
-                    </div>
-                </div>
-            `).join('');
-            
-            bdayCafeListDiv.innerHTML = listHtml;
-        }
-        
-        // 특정 생카로 지도 이동
-        function focusBdayCafe(lat, lng) {
-            const position = new kakao.maps.LatLng(lat, lng);
-            map.setCenter(position);
-            map.setLevel(3);
-            
-            // 해당 마커의 정보창도 열기
-            const targetMarker = markers.find(marker => {
-                const markerPos = marker.getPosition();
-                return Math.abs(markerPos.getLat() - lat) < 0.0001 && 
-                       Math.abs(markerPos.getLng() - lng) < 0.0001;
-            });
-            
-            if (targetMarker) {
-                // 마커 클릭 이벤트 트리거
-                kakao.maps.event.trigger(targetMarker, 'click');
             }
         }
-        
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            // 생카 마커 생성
-            createBdayCafeMarkers();
-            
-            // 사이드 패널 리스트 표시
-            displayBdayCafeList();
-            
-            // 모든 마커가 보이도록 지도 범위 조정
-            if (markers.length > 0) {
-                const bounds = new kakao.maps.LatLngBounds();
-                markers.forEach(marker => {
-                    bounds.extend(marker.getPosition());
-                });
-                map.setBounds(bounds);
-                
-                // 너무 많이 줌인되지 않도록 제한
-                setTimeout(() => {
-                    if (map.getLevel() < 6) {
-                        map.setLevel(6);
-                    }
-                }, 100);
-            }
-            
-            console.log('🗺️ 지도 초기화 완료!');
-            console.log(`📍 총 ${markers.length}개의 생카 마커가 표시되었습니다.`);
-        });
-        
-        // 지도 타입 컨트롤 추가
-        const mapTypeControl = new kakao.maps.MapTypeControl();
-        map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-        
-        // 줌 컨트롤 추가
-        const zoomControl = new kakao.maps.ZoomControl();
-        map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
     </script>
 </body>
 </html>
