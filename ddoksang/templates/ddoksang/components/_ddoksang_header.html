@@ -1,0 +1,23 @@
+<!-- ✅ 덕생 전용 상단 헤더: 검색창 + 투어맵 버튼 -->
+<section class="bg-pink-50 border-b border-pink-200 py-6">
+  <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    
+    <!-- 🔍 검색창 -->
+    <form method="get" action="{% url 'ddoksang:search' %}" class="w-full sm:w-2/3 relative">
+      <input type="text" name="q" placeholder="아티스트명 또는 장소를 입력하세요"
+             class="w-full py-2 px-4 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-400"
+             value="{{ request.GET.q }}">
+      <!-- (선택) 자동완성 아이콘 -->
+      <svg class="w-5 h-5 absolute top-1/2 right-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+      </svg>
+    </form>
+
+    <!-- 🗺️ 투어맵 바로가기 버튼 -->
+    <a href="{% url 'ddoksang:tour_map' %}" 
+       class="inline-block bg-pink-500 text-white font-semibold px-6 py-2 rounded-full shadow hover:bg-pink-600 text-sm text-center">
+      생카 투어 보기
+    </a>
+
+  </div>
+</section>

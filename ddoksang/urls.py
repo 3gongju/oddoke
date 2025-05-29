@@ -1,29 +1,28 @@
 from django.urls import path
 from . import views
+# 
 
 app_name = 'ddoksang'
 
 urlpatterns = [
-    # 🗺️ 메인 지도 페이지 - 새로운 함수 사용
-    path('', views.bday_cafe_map, name='map'),
+    path('', views.home_view, name='home'),  # 덕생 메인
+    path('map/', views.map_view, name='tour_map'),  # 생카 투어맵
+    path('create/', views.create_cafe, name='create'),  # 생카 등록
+    path('my-cafes/', views.my_cafes, name='my_cafes'),  # 내 생카
+    path('detail/<int:cafe_id>/', views.bday_cafe_detail, name='detail'),  # 상세 뷰
+    path('api/bday-cafes/', views.bday_cafe_list_api, name='cafe_list_api'),  # 생카 JSON API
+
+    path('autocomplete/members/', views.member_autocomplete, name='member_autocomplete'),
     
-    # 📝 생일카페 등록 관련
-    path('create/form/', views.create_bday_cafe_form, name='create_bday_cafe_form'),  # 등록 폼 페이지
-    path('create/', views.create_bday_cafe, name='create_bday_cafe'),                # JSON API 등록
-    path('create/old/', views.create_cafe, name='create_old'),                      # 기존 폼 방식 (백업용)
-    
-    # 👤 사용자 페이지
-    path('my-cafes/', views.my_cafes, name='my_cafes'),
-    path('cafes/', views.cafe_list_view, name='cafe_list'),
-    
-    # 🔗 API URLs
-    path('api/bday_cafes/', views.bday_cafe_list_api, name='bday_cafe_list_api'),
-    
-    # 🛠️ 관리자 URLs
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('admin-cafes/', views.admin_cafe_list, name='admin_cafe_list'),
-    path('admin-cafe/<int:cafe_id>/', views.admin_cafe_detail, name='admin_cafe_detail'),
-    path('admin-approve/<int:cafe_id>/', views.approve_cafe, name='approve_cafe'),
-    path('admin-reject/<int:cafe_id>/', views.reject_cafe, name='reject_cafe'),
-    path('admin-bulk-action/', views.bulk_action, name='bulk_action'),
+    # 찜하기
+    path('favorite/<int:cafe_id>/toggle/', views.toggle_favorite, name='toggle_favorite'),
+
+    # 관리자
+    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin/cafes/', views.admin_cafe_list, name='admin_cafe_list'),
+    path('admin/cafes/<int:cafe_id>/approve/', views.approve_cafe, name='approve_cafe'),
+    path('admin/cafes/<int:cafe_id>/reject/', views.reject_cafe, name='reject_cafe'),
+
+    # (추후 필요 시 추가) 검색 결과 뷰
+    path('search/', views.search_view, name='search'),  # 🔍 검색창과 연결
 ]

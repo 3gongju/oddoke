@@ -172,3 +172,29 @@ def get_artist_members(request, artist_id):
     })
 
     return JsonResponse({'html': html})
+
+@require_GET
+def member_autocomplete(request):
+    q = request.GET.get('q', '').strip()
+    results = []
+
+    if q:
+        members = Member.objects.filter(
+            Q(member_name__icontains=q)
+        ).prefetch_related('artist_name')[:10]
+
+        for member in members:
+            artist_names = member.artist_name.all()
+            if artist_names:
+                artist = artist_names[0]  # 대표 아티스트 1개만
+                artist_display = ' / '.join([a.display_name for a in artist_names])
+
+                results.append({
+                    'member_id': member.id,
+                    'artist_id': artist.id,
+                    'member_name': member.member_name,
+                    'artist_display': artist_display,
+                    'bday': member.member_bday,
+                })
+
+    return JsonResponse({'results': results})

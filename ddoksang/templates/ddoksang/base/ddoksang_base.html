@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+  <!-- ✅ 덕생 헤더 컴포넌트 포함 (검색창 + 투어맵 버튼 등) -->
+  {% include "ddoksang/components/_ddoksang_header.html" %}
+
+  <!-- ✅ 아티스트 캐러셀 컴포넌트 -->
+  {% include "ddoksang/components/_artist_carousel.html" %}
+
+  <!-- ✅ 덕생 본문 콘텐츠 블록 -->
+  <div class="max-w-6xl mx-auto px-4 py-10">
+    {% block ddoksang_content %}
+    <!-- 하위 템플릿에서 이 부분을 덮어씀 -->
+    {% endblock %}
+  </div>
+{% endblock %}

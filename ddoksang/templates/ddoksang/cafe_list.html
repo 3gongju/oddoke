@@ -1,26 +1,36 @@
-{% extends 'base.html' %}
-{% block title %}전체 생일카페 보기{% endblock %}
-{% block body %}
-<div class="max-w-6xl mx-auto p-6">
-  <h1 class="text-2xl font-bold text-gray-900 mb-6">🎂 전체 생일카페</h1>
+{# templates/ddoksang/cafe_list.html #}
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for cafe in cafes %}
-    <div class="bg-white rounded-lg shadow-sm p-4 border">
-      <h2 class="text-lg font-semibold text-gray-900">{{ cafe.cafe_name }}</h2>
-      <p class="text-sm text-gray-600">{{ cafe.artist.name }}{% if cafe.member %} - {{ cafe.member.name }}{% endif %}</p>
-      <p class="text-sm text-gray-500">{{ cafe.start_date }} ~ {{ cafe.end_date }}</p>
-      <p class="text-xs text-gray-500">{{ cafe.address|truncatechars:40 }}</p>
-      {% if cafe.is_active %}
-        <span class="text-xs text-green-600">진행중 • {{ cafe.days_remaining }}일 남음</span>
-      {% else %}
-        <span class="text-xs text-gray-500">종료됨</span>
-      {% endif %}
-      <a href="{% url 'ddoksang:map' %}?focus={{ cafe.id }}" class="block mt-2 text-blue-600 hover:underline text-sm">🗺️ 지도에서 보기</a>
-    </div>
-    {% empty %}
-    <p class="text-gray-500">등록된 생일카페가 없습니다.</p>
-    {% endfor %}
-  </div>
-</div>
+{% block body %}
+<section class="max-w-6xl mx-auto px-4 py-12">
+  <h2 class="text-2xl font-bold mb-6 text-center">🎂 전체 생일카페</h2>
+
+  {% if cafes %}
+    <!-- 리스트 출력 -->
+    {% include 'ddoksang/components/_cafe_card_list.html' with cafes=cafes %}
+
+    <!-- 페이지네이션 -->
+    {% if is_paginated %}
+      <div class="flex justify-center mt-10 space-x-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}"
+             class="px-4 py-2 border rounded hover:bg-gray-100">← 이전</a>
+        {% endif %}
+
+        <span class="px-4 py-2 border bg-gray-200 text-gray-700 rounded">
+          {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}"
+             class="px-4 py-2 border rounded hover:bg-gray-100">다음 →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    {% include "ddoksang/components/_empty_message.html" with message="등록된 생일카페가 없습니다." %}
+  {% endif %}
+</section>
 {% endblock %}
