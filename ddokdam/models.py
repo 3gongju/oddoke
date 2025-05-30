@@ -20,13 +20,25 @@ class DamBasePost(models.Model):
 class DamCommunityPost(DamBasePost):
     pass
 
+    @property
+    def category_type(self):
+        return 'community'
+
 class DamMannerPost(DamBasePost):
     location = models.CharField(max_length=255, blank=True, null=True)
     item = models.CharField(max_length=255, blank=True, null=True)
 
+    @property
+    def category_type(self):
+        return 'manner'
+
 class DamBdaycafePost(DamBasePost):
     cafe_name = models.CharField(max_length=255, blank=True, null=True)
 
+    @property
+    def category_type(self):
+        return 'bdaycafe'
+        
 class DamComment(models.Model):
     content = models.CharField(max_length=200)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
