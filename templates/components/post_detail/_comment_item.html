@@ -8,10 +8,11 @@
       <span class="text-gray-400 text-xs">· {{ comment.created_at|naturaltime }}</span>
     </div>
     {% if comment.user == request.user %}
+      {% url comment_delete_url_name category=category post_id=post.id comment_id=comment.id as delete_url %}
       <a href="javascript:void(0);"
         class="text-red-500 text-sm hover:underline delete-comment-btn"
         data-comment-id="{{ comment.id }}"
-        data-delete-url="{% url 'ddokfarm:comment_delete' category=category post_id=post.id comment_id=comment.id %}">
+        data-delete-url="{{ delete_url }}">
         삭제
       </a>
     {% endif %}

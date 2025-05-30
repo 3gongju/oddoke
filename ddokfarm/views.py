@@ -83,6 +83,7 @@ def post_detail(request, category, post_id):
         'members': post.members.all(),
         'app_name': 'ddokfarm',
         'comment_create_url': comment_create_url,
+        'comment_delete_url_name': 'ddokfarm:comment_delete',
     }
 
     return render(request, 'ddokfarm/detail.html', context)

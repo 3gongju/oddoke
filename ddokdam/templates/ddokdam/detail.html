@@ -20,8 +20,11 @@
     </div>
     {% include 'components/post_detail/_like_comment_info.html' %}
     
-    {% include "components/post_detail/_comment_list.html" %}
-    {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=None %}    
+    <div class="comment-section mt-8">
+      {% include "components/post_detail/_comment_list.html" %}
+      {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=None %}
+    </div>
+
   </div>
 </div>
 
@@ -58,4 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 </script>
+
+<!-- ✅ 댓글 비동기 처리 스크립트 추가 -->
+<script src="{% static 'js/comment.js' %}"></script>
 {% endblock %}
