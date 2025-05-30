@@ -1,8 +1,9 @@
+from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q
 from operator import attrgetter
@@ -110,6 +111,7 @@ def post_detail(request, category, post_id):
         'members': post.members.all(),
         'app_name': 'ddokfarm',
         'comment_create_url': comment_create_url,
+        'comment_delete_url_name': 'ddokfarm:comment_delete',
     }
 
     return render(request, 'ddokfarm/detail.html', context)
@@ -310,10 +312,27 @@ def comment_create(request, category, post_id):
 
         comment.save()
 
-    return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
+        # ✅ AJAX 요청일 경우, HTML 조각 반환
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            html = render_to_string(
+                "components/post_detail/_comment_item.html",
+                {
+                    "comment": comment,
+                    "is_reply": bool(parent_id),
+                    "post": post,
+                    "category": category,
+                    "request": request,
+                    "comment_create_url": reverse("ddokfarm:comment_create", args=[category, post_id]),
+                }
+            )
+            return HttpResponse(html)
+
+    # 일반 요청일 경우 fallback (폼 오류 등)
+    return redirect("ddokfarm:post_detail", category=category, post_id=post_id)
 
 # 댓글 삭제
 @login_required
+@require_POST
 def comment_delete(request, category, post_id, comment_id):
     comment = get_object_or_404(FarmComment, id=comment_id)
 
@@ -328,6 +347,11 @@ def comment_delete(request, category, post_id, comment_id):
 
     comment.delete()
 
+    # ✅ AJAX 요청이면 HTML 반환 대신 204 응답
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return HttpResponse(status=204)
+
+    # ✅ 일반 요청일 경우 페이지 리다이렉트
     return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
 
 # 좋아요(찜하기)
