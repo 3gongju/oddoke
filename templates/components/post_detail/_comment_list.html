@@ -1,4 +1,4 @@
-<div class="space-y-1 mb-4">
+<div class="comment-list space-y-4">
   {% for comment in comments %}
     {% include "components/post_detail/_comment_item.html" with comment=comment is_reply=False %}
   {% empty %}
