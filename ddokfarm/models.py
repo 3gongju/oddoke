@@ -1,8 +1,8 @@
 from django.db import models
 from django.conf import settings
-from artist.models import Artist, Member
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 from django.contrib.contenttypes.models import ContentType
+from artist.models import Artist, Member
 
 class FarmBasePost(models.Model):
     title = models.CharField(max_length=100)

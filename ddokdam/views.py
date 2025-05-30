@@ -5,8 +5,9 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 from django.urls import reverse
 from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
 from operator import attrgetter
-from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost
+from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
 from .forms import DamCommentForm
 from artist.models import Member, Artist
 from .utils import (
@@ -92,6 +93,7 @@ def post_create(request):
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
         selected_member_ids = list(map(int, request.POST.getlist('members')))
+        image_files = request.FILES.getlist('images')  # ✅ 여러 이미지 받기
 
         form_class = get_post_form(category)
         if not form_class:
@@ -99,11 +101,28 @@ def post_create(request):
 
         form = form_class(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.user = request.user
-            post.save()
-            form.save_m2m()
-            return redirect('ddokdam:post_detail', category=category, post_id=post.id)
+            if not image_files:
+                form.add_error(None, "이미지는 최소 1장 이상 업로드해야 합니다.")
+            else:
+                post = form.save(commit=False)
+                post.user = request.user
+                if selected_artist_id:
+                    post.artist_id = selected_artist_id
+                post.save()
+                post.members.set(selected_member_ids)
+                form.save_m2m()
+
+                # ✅ 이미지 저장 & 첫 번째 이미지를 대표 이미지로 설정
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                for idx, image in enumerate(image_files):
+                    DamPostImage.objects.create(
+                        image=image,
+                        content_type=content_type,
+                        object_id=post.id,
+                        is_representative=(idx == 0)
+                    )
+
+                return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
         category = request.GET.get('category') or 'community'
         selected_artist_id = None
@@ -113,7 +132,6 @@ def post_create(request):
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
-    # 드롭다운에는 팔로우 아티스트만
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )
@@ -129,6 +147,7 @@ def post_create(request):
         'default_artist_id': default_artist_id,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'post': None,
         'submit_label': '작성 완료',
         'cancel_url': reverse('ddokdam:index'),
         **get_ajax_base_context(request),
@@ -178,14 +197,14 @@ def post_edit(request, category, post_id):
             'message': '이 게시글을 수정할 권한이 없습니다.',
             'back_url': reverse('ddokdam:post_detail', args=[category, post.id]),
         }
-
         return render(request, 'ddokdam/error_message.html', context)
 
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
+        image_files = request.FILES.getlist('images')  # ✅ 여러 이미지 받기
+
         if form.is_valid():
             post = form.save(commit=False)
-
             artist_id = request.POST.get('artist')
             member_ids = request.POST.getlist('members')
 
@@ -194,6 +213,21 @@ def post_edit(request, category, post_id):
 
             post.save()
             post.members.set(member_ids)
+
+            # ✅ 새 이미지 추가 처리
+            if image_files:
+                # 기존 이미지 삭제 (원한다면)
+                post.images.all().delete()
+
+                from django.contrib.contenttypes.models import ContentType
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                for idx, image in enumerate(image_files):
+                    DamPostImage.objects.create(
+                        image=image,
+                        content_type=content_type,
+                        object_id=post.id,
+                        is_representative=(idx == 0)
+                    )
 
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:

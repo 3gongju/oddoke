@@ -56,6 +56,20 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   });
+
+  // 이미지 캐러셀 초기화 (Swiper)
+  new Swiper('.swiper-container', {
+    loop: true,
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+    },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+  });
 });
+
 </script>
 {% endblock %}
