@@ -1,124 +1,353 @@
 {% extends "ddoksang/base/ddoksang_base.html" %}
 {% load static %}
-{% load utils %}
+{% load ddoksang_extras %} 
+
+
+{% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block body %}
-<section class="max-w-4xl mx-auto px-4 py-10">
-  {% if cafe %}
-  <div class="bg-white rounded-xl shadow p-6">
-
-    <!-- ✅ 제목 + 찜 버튼 -->
-    <div class="mb-4 flex justify-between items-start">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900">{{ cafe.cafe_name }}</h2>
-        <p class="text-sm text-gray-600 mt-1">
-          {{ cafe.artist.display_name }} {% if cafe.member %}- {{ cafe.member.member_name }}{% endif %}
-          | {{ cafe.start_date|date:"Y년 m월 d일" }} ~ {{ cafe.end_date|date:"Y년 m월 d일" }}
-        </p>
-      </div>
-
-      {% if user.is_authenticated %}
-      <button id="favoriteBtn"
-              class="text-2xl hover:scale-110 transition"
-              data-cafe-id="{{ cafe.id }}"
-              title="찜하기">
-        {% if is_favorited %}
-          ❤️
-        {% else %}
-          🤍
-        {% endif %}
-      </button>
-      {% endif %}
-    </div>
-
-    <!-- 메인 이미지 -->
+<div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+  <!-- 헤더 이미지 섹션 -->
+  <div class="relative h-80 overflow-hidden">
     {% if cafe.main_image %}
-    <div class="mb-6">
-      <img src="{{ cafe.main_image.url }}" alt="{{ cafe.cafe_name }}" class="w-full h-auto rounded-lg object-cover">
-    </div>
+      <img src="{{ cafe.main_image }}" alt="{{ cafe.cafe_name }}" 
+           class="w-full h-full object-cover">
+    {% else %}
+      <div class="w-full h-full bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400"></div>
     {% endif %}
-
-    <!-- 주소 -->
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">주소</h3>
-      <p class="text-sm text-gray-700">{{ cafe.address }}</p>
-    </div>
-
-    <!-- 설명 -->
-    {% if cafe.event_description %}
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">이벤트 설명</h3>
-      <p class="text-sm text-gray-700 whitespace-pre-line">{{ cafe.event_description }}</p>
-    </div>
-    {% endif %}
-
-    <!-- 특전 -->
-    {% if cafe.special_benefits %}
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">특전</h3>
-      <p class="text-sm text-gray-700 whitespace-pre-line">{{ cafe.special_benefits }}</p>
-    </div>
-    {% endif %}
-
-    <!-- 해시태그 -->
-    {% if cafe.hashtags %}
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">해시태그</h3>
-      <div class="flex flex-wrap gap-2 mt-2">
-        {% for tag in cafe.hashtags|split:'#' %}
-          {% if tag.strip %}
-          <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">#{{ tag.strip }}</span>
-          {% endif %}
-        {% endfor %}
+    
+    <!-- 오버레이 -->
+    <div class="absolute inset-0 bg-black bg-opacity-30"></div>
+    
+    <!-- 카페 기본 정보 -->
+    <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+      <div class="max-w-4xl mx-auto">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
+            {% if cafe.status == 'ongoing' %}🎉 진행중
+            {% elif cafe.status == 'upcoming' %}🔜 예정
+            {% else %}✅ 종료{% endif %}
+          </span>
+          <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
+            {{ cafe.get_cafe_type_display }}
+          </span>
+        </div>
+        <h1 class="text-3xl font-bold mb-2">{{ cafe.cafe_name }}</h1>
+        <p class="text-xl opacity-90">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
       </div>
     </div>
-    {% endif %}
-
-    <!-- SNS 출처 -->
-    {% if cafe.twitter_source or cafe.instagram_source %}
-    <div class="mb-4">
-      <h3 class="font-semibold text-gray-800">출처</h3>
-      <ul class="text-sm text-blue-600 space-y-1">
-        {% if cafe.twitter_source %}
-        <li><a href="{{ cafe.twitter_source }}" target="_blank" class="hover:underline">Twitter 링크</a></li>
-        {% endif %}
-        {% if cafe.instagram_source %}
-        <li><a href="{{ cafe.instagram_source }}" target="_blank" class="hover:underline">Instagram 링크</a></li>
-        {% endif %}
-      </ul>
+    
+    <!-- 찜하기 버튼 -->
+    <div class="absolute top-6 right-6">
+      <button onclick="toggleFavorite({{ cafe.id }})" 
+              class="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all">
+        <svg class="w-6 h-6 text-white {% if is_favorited %}fill-current{% endif %}" 
+             fill="{% if is_favorited %}currentColor{% else %}none{% endif %}" 
+             stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+      </button>
     </div>
-    {% endif %}
-
-    <!-- 지도 보기 버튼 -->
-    <div class="mt-8 text-center">
-      <a href="{% url 'ddoksang:tour_map' %}?focus={{ cafe.id }}" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-full font-semibold hover:bg-blue-700">
-        🗺️ 지도에서 보기
-      </a>
-    </div>
-
   </div>
-  {% else %}
-    {% include "ddoksang/components/_empty_message.html" with message="해당 생일카페 정보를 찾을 수 없습니다." %}
-  {% endif %}
-</section>
 
-{% if user.is_authenticated %}
+  <!-- 메인 컨텐츠 -->
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 왼쪽: 카페 상세 정보 -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- 기본 정보 카드 -->
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">📍</span> 카페 정보
+          </h2>
+          
+          <div class="space-y-4">
+            <!-- 주소 -->
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">주소</p>
+                <p class="text-gray-600">{{ cafe.address }}</p>
+                {% if cafe.road_address %}
+                  <p class="text-sm text-gray-500">(도로명) {{ cafe.road_address }}</p>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- 운영 기간 -->
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">운영 기간</p>
+                <p class="text-gray-600">{{ cafe.start_date|date:"Y년 m월 d일" }} - {{ cafe.end_date|date:"Y년 m월 d일" }}</p>
+                {% if cafe.days_remaining > 0 %}
+                  <p class="text-sm text-green-600 font-medium">{{ cafe.days_remaining }}일 남음</p>
+                {% elif cafe.days_remaining == 0 %}
+                  <p class="text-sm text-yellow-600 font-medium">오늘 마지막!</p>
+                {% else %}
+                  <p class="text-sm text-gray-500">종료됨</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 특전 정보 -->
+        {% if cafe.special_benefits %}
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">🎁</span> 특전 정보
+          </h2>
+          <div class="flex flex-wrap gap-2">
+            {% for benefit in cafe.special_benefits|split:"," %}
+              <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                {{ benefit|strip }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 이벤트 설명 -->
+        {% if cafe.event_description %}
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">📝</span> 이벤트 설명
+          </h2>
+          <div class="prose prose-sm max-w-none">
+            <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ cafe.event_description }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 출처 정보 -->
+        {% if cafe.twitter_source %}
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">🔗</span> 출처
+          </h2>
+          <div class="space-y-3">
+            {% if cafe.twitter_source %}
+              <a href="{{ cafe.twitter_source }}" target="_blank" 
+                 class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-medium text-gray-900">Twitter</p>
+                  <p class="text-sm text-gray-600">@{{ cafe.twitter_source|slice:"20:" }}</p>
+                </div>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 지도 및 위치 -->
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">🗺️</span> 위치
+          </h2>
+          <div class="rounded-lg overflow-hidden border">
+            <div id="map" class="w-full h-64"></div>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <button onclick="openKakaoMap()" class="flex-1 bg-yellow-400 text-yellow-900 py-2 px-4 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
+              카카오맵에서 보기
+            </button>
+            <button onclick="copyAddress()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+              주소 복사
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 사이드바 -->
+      <div class="space-y-6">
+        <!-- 빠른 정보 -->
+        <div class="bg-white rounded-2xl shadow-sm border p-6 sticky top-4">
+          <h3 class="font-bold text-gray-900 mb-4">📋 빠른 정보</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">상태</span>
+              <span class="px-2 py-1 rounded text-xs font-medium
+                {% if cafe.status == 'ongoing' %}bg-green-100 text-green-800
+                {% elif cafe.status == 'upcoming' %}bg-blue-100 text-blue-800
+                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                {% if cafe.status == 'ongoing' %}진행중
+                {% elif cafe.status == 'upcoming' %}예정
+                {% else %}종료{% endif %}
+              </span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">이벤트 타입</span>
+              <span class="text-gray-900 font-medium">{{ cafe.get_cafe_type_display }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">조회수</span>
+              <span class="text-gray-900 font-medium">{{ cafe.view_count|default:0 }}</span>
+            </div>
+            {% if cafe.hashtags %}
+            <div>
+              <span class="text-gray-600 block mb-2">태그</span>
+              <div class="flex flex-wrap gap-1">
+                {% for tag in cafe.hashtags|split:" " %}
+                  {% if tag %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{{ tag }}</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- 주변 생일카페 -->
+        {% if nearby_cafes %}
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h3 class="font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">📍</span> 주변 생일카페
+          </h3>
+          <div class="space-y-3">
+            {% for nearby in nearby_cafes|slice:":4" %}
+            <a href="{% url 'ddoksang:detail' nearby.id %}" 
+               class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <p class="font-medium text-gray-900 text-sm mb-1">{{ nearby.cafe_name }}</p>
+                  <p class="text-xs text-gray-600">{{ nearby.artist.display_name }}</p>
+                  {% if nearby.member %}
+                    <p class="text-xs text-gray-500">{{ nearby.member.member_name }}</p>
+                  {% endif %}
+                </div>
+                <div class="text-right">
+                  <p class="text-xs text-blue-600 font-medium">{{ nearby.distance|floatformat:1 }}km</p>
+                  <p class="text-xs text-gray-500">도보 {{ nearby.duration }}분</p>
+                </div>
+              </div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 공유하기 -->
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h3 class="font-bold text-gray-900 mb-4">📤 공유하기</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="shareKakao()" class="p-3 bg-yellow-400 text-yellow-900 rounded-lg text-sm font-medium hover:bg-yellow-500 transition-colors">
+              카카오톡
+            </button>
+            <button onclick="copyLink()" class="p-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+              링크 복사
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
 <script>
-document.getElementById('favoriteBtn').addEventListener('click', function() {
-    const cafeId = this.dataset.cafeId;
-    fetch(`/ddoksang/cafes/${cafeId}/favorite-toggle/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'X-Requested-With': 'XMLHttpRequest',
-        }
+// 지도 초기화
+let map;
+let marker;
+
+function initMap() {
+  const container = document.getElementById('map');
+  const options = {
+    center: new kakao.maps.LatLng({{ cafe.latitude|default:"37.5665" }}, {{ cafe.longitude|default:"126.9780" }}),
+    level: 3
+  };
+  
+  map = new kakao.maps.Map(container, options);
+  
+  // 마커 생성
+  const markerPosition = new kakao.maps.LatLng({{ cafe.latitude|default:"37.5665" }}, {{ cafe.longitude|default:"126.9780" }});
+  marker = new kakao.maps.Marker({
+    position: markerPosition,
+    map: map
+  });
+  
+  // 인포윈도우 생성
+  const infowindow = new kakao.maps.InfoWindow({
+    content: `
+      <div style="padding:10px; font-size:12px; width:200px;">
+        <strong>{{ cafe.cafe_name }}</strong><br>
+        {{ cafe.address }}
+      </div>
+    `
+  });
+  
+  infowindow.open(map, marker);
+}
+
+// 페이지 로드 시 지도 초기화
+document.addEventListener('DOMContentLoaded', initMap);
+
+// 찜하기 토글
+function toggleFavorite(cafeId) {
+  {% if user.is_authenticated %}
+    fetch(`/ddoksang/toggle_favorite/${cafeId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'Content-Type': 'application/json',
+      },
     })
     .then(response => response.json())
     .then(data => {
-        this.textContent = data.is_favorited ? '❤️' : '🤍';
-    })
-    .catch(error => console.error('찜 처리 중 오류:', error));
-});
+      if (data.success) {
+        location.reload(); // 간단하게 페이지 새로고침
+      }
+    });
+  {% else %}
+    alert('로그인이 필요합니다.');
+    window.location.href = '/accounts/login/';
+  {% endif %}
+}
+
+// 카카오맵에서 보기
+function openKakaoMap() {
+  const url = `https://map.kakao.com/link/map/{{ cafe.cafe_name }},{{ cafe.latitude|default:"37.5665" }},{{ cafe.longitude|default:"126.9780" }}`;
+  window.open(url, '_blank');
+}
+
+// 주소 복사
+function copyAddress() {
+  navigator.clipboard.writeText('{{ cafe.address }}').then(() => {
+    alert('주소가 복사되었습니다!');
+  });
+}
+
+// 링크 복사
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    alert('링크가 복사되었습니다!');
+  });
+}
+
+// 카카오톡 공유 (카카오 SDK 필요)
+function shareKakao() {
+  // 카카오 SDK가 있다면 구현
+  alert('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.');
+}
 </script>
-{% endif %}
+
+<!-- CSRF 토큰 -->
+{% csrf_token %}
 {% endblock %}

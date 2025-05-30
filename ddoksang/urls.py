@@ -5,8 +5,8 @@ app_name = "ddoksang"
 
 urlpatterns = [
     path('', views.home_view, name='home'),
-    path('create/', views.bday_cafe_create, name='create'),  # 폼 페이지 렌더링(GET)
-    path('create/submit/', views.create_cafe, name='create_submit'),  # 등록 처리(POST)
+    path('create/', views.create_cafe, name='create'),  # GET과 POST 모두 여기서 처리
+    # path('create/submit/', views.create_cafe, name='create_submit'),  # 이 줄 삭제
     path('my_cafes/', views.my_cafes, name='my_cafes'),
     path('detail/<int:cafe_id>/', views.bday_cafe_detail, name='detail'),
     path('api/list/', views.bday_cafe_list_api, name='api_list'),
@@ -14,7 +14,6 @@ urlpatterns = [
     path('search/', views.search_view, name='search'),
 
     path('tour_map/', views.map_view, name='tour_map'),
-
     
     # 관리자 페이지
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),

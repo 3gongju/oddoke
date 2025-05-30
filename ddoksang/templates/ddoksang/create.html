@@ -11,7 +11,7 @@
     <div id="progressBar" class="bg-blue-600 h-2 w-0 transition-width duration-300"></div>
   </div>
 
-  <form method="POST" enctype="multipart/form-data" id="multiStepForm" action="{% url 'ddoksang:create_submit' %}">
+  <form method="POST" enctype="multipart/form-data" id="multiStepForm" action="{% url 'ddoksang:create' %}">
     {% csrf_token %}
 
     <!-- STEP 1: 아티스트/멤버 검색 -->
@@ -19,8 +19,19 @@
       <label class="block text-sm font-medium mb-2">아티스트/멤버명 검색</label>
       <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
       <ul id="artist-member-results" class="border mt-2 rounded overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
-      <input type="hidden" name="artist_id" id="artist_id" required>
-      <input type="hidden" name="member_id" id="member_id" required>
+      
+      <input type="hidden" name="artist_id" id="artist_id">
+      <input type="hidden" name="member_id" id="member_id">
+      
+      <!-- 선택된 아티스트 표시 -->
+      <div id="selected-artist" class="mt-2 p-2 border rounded bg-blue-50 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="font-medium text-blue-800" id="selected-artist-text"></p>
+          </div>
+          <button type="button" onclick="clearSelection()" class="text-blue-600 hover:text-blue-800 text-sm">변경</button>
+        </div>
+      </div>
     </div>
 
     <!-- STEP 2: 카페 정보 -->
@@ -30,7 +41,7 @@
 
       <label class="block text-sm font-medium mb-2">이벤트 유형</label>
       <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
-        <option value="birthday">🎂 생일</option>
+        <option value="bday">🎂 생일</option>
         <option value="debut">데뷔</option>
         <option value="comeback">컴백</option>
         <option value="concert">콘서트</option>
@@ -43,92 +54,319 @@
         <button type="button" id="searchBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">검색</button>
       </div>
 
-      <div id="map" class="w-full h-64 bg-gray-100 rounded"></div>
+      <!-- 지도 컨테이너 -->
+      <div class="relative w-full h-64 bg-gray-100 rounded border overflow-hidden">
+        <div id="map" class="w-full h-full"></div>
+        <div id="mapPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div class="text-center text-gray-500">
+            <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <p class="text-sm">주소를 검색하면 지도가 표시됩니다</p>
+          </div>
+        </div>
+      </div>
 
       <ul id="place-results" class="mt-2 max-h-40 overflow-y-auto border rounded hidden"></ul>
-
       <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
 
       <input type="hidden" name="address" id="address" required>
-      <input type="hidden" name="road_address" id="road_address" required>
+      <input type="hidden" name="road_address" id="road_address">
       <input type="hidden" name="latitude" id="latitude" required>
       <input type="hidden" name="longitude" id="longitude" required>
-      <input type="hidden" name="kakao_place_id" id="kakao_place_id" required>
+      <input type="hidden" name="kakao_place_id" id="kakao_place_id">
     </div>
 
     <!-- STEP 3: 일정 -->
     <div id="step-3" class="step hidden">
-      <label class="block text-sm font-medium mb-1">시작일</label>
-      <input type="date" name="start_date" class="w-full border rounded p-2 mb-4" required>
-      <label class="block text-sm font-medium mb-1">종료일</label>
-      <input type="date" name="end_date" class="w-full border rounded p-2" required>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-2">시작일</label>
+          <div class="relative">
+            <input type="date" name="start_date" class="w-full border rounded px-4 py-3 pr-10" required>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-2">종료일</label>
+          <div class="relative">
+            <input type="date" name="end_date" class="w-full border rounded px-4 py-3 pr-10" required>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
-      <label class="block text-sm font-medium mb-2">특전 정보 (중복 선택 가능)</label>
-      <div class="grid grid-cols-3 gap-2 mb-4">
-        <label class="inline-flex items-center space-x-2">
-          <input type="checkbox" name="perks" value="포토카드" class="rounded">
-          <span>포토카드</span>
-        </label>
-        <label class="inline-flex items-center space-x-2">
-          <input type="checkbox" name="perks" value="스티커" class="rounded">
-          <span>스티커</span>
-        </label>
-        <label class="inline-flex items-center space-x-2">
-          <input type="checkbox" name="perks" value="첩보대" class="rounded">
-          <span>첩보대</span>
-        </label>
-        <!-- 추가 항목 더 넣으세요 -->
+      <label class="block text-sm font-medium mb-4">특전 정보 (중복 선택 가능)</label>
+      
+      <!-- 음식 -->
+      <div class="mb-6">
+        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+          🍰 음식
+        </h4>
+        <div class="grid grid-cols-4 gap-2">
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="홀케이크" class="sr-only">
+            <span class="perk-btn">🎂 홀케이크</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="포토카드" class="sr-only">
+            <span class="perk-btn">🍰 케이크</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="음료수" class="sr-only">
+            <span class="perk-btn">🥤 음료수</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="쿠키" class="sr-only">
+            <span class="perk-btn">🍪 쿠키</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="컵케이크" class="sr-only">
+            <span class="perk-btn">🧁 컵케이크</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="도넛" class="sr-only">
+            <span class="perk-btn">🍩 도넛</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="초콜릿" class="sr-only">
+            <span class="perk-btn">🍫 초콜릿</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="커피" class="sr-only">
+            <span class="perk-btn">☕ 커피</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 굿즈 -->
+      <div class="mb-6">
+        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+          🎁 굿즈
+        </h4>
+        <div class="grid grid-cols-4 gap-2">
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="포토카드" class="sr-only">
+            <span class="perk-btn">📷 포토카드</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="스티커" class="sr-only">
+            <span class="perk-btn">⭐ 스티커</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="키링" class="sr-only">
+            <span class="perk-btn">🔑 키링</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="카드지갑" class="sr-only">
+            <span class="perk-btn">💳 카드지갑</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="티셔츠" class="sr-only">
+            <span class="perk-btn">👕 티셔츠</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="드링크홀더" class="sr-only">
+            <span class="perk-btn">🥤 드링크홀더</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="엽서" class="sr-only">
+            <span class="perk-btn">💌 엽서</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="타투스티커" class="sr-only">
+            <span class="perk-btn">🌟 타투스티커</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 기타 -->
+      <div class="mb-6">
+        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
+          ✨ 기타
+        </h4>
+        <div class="grid grid-cols-4 gap-2">
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="메뉴 특가" class="sr-only">
+            <span class="perk-btn">💰 메뉴 특가</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="선착순 특전" class="sr-only">
+            <span class="perk-btn">🏃 선착순 특전</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="랜덤 특전" class="sr-only">
+            <span class="perk-btn">🎲 랜덤 특전</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="이벤트 할인" class="sr-only">
+            <span class="perk-btn">🎊 이벤트 할인</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="꽃다발" class="sr-only">
+            <span class="perk-btn">💐 꽃다발</span>
+          </label>
+          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <input type="checkbox" name="perks" value="기념품" class="sr-only">
+            <span class="perk-btn">🎁 기념품</span>
+          </label>
+        </div>
       </div>
 
       <label class="block text-sm font-medium mb-2">이벤트 설명</label>
-      <textarea name="event_description" class="w-full border rounded p-2" rows="4" required></textarea>
+      <textarea name="event_description" class="w-full border rounded p-3" rows="4" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
 
-      <input type="text" name="hashtags" class="w-full border rounded p-2 mt-2" placeholder="#태그1 #태그2">
+      <label class="block text-sm font-medium mb-2 mt-4">해시태그</label>
+      <input type="text" name="hashtags" class="w-full border rounded p-3" placeholder="#태그1 #태그2">
     </div>
 
     <!-- STEP 5: 출처 정보 -->
     <div id="step-5" class="step hidden">
-      <label class="block text-sm font-medium mb-2">트위터 링크</label>
-      <input type="url" name="twitter_source" class="w-full border rounded p-2" placeholder="https://twitter.com/">
-
-      <label class="block text-sm font-medium mb-2 mt-4">인스타그램 링크</label>
-      <input type="url" name="instagram_source" class="w-full border rounded p-2" placeholder="https://instagram.com/">
+      <label class="block text-sm font-medium mb-2">X (트위터) 계정</label>
+      <div class="flex items-center mb-4">
+        <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l">@</span>
+        <input type="text" name="twitter_username" class="flex-1 border border-gray-300 rounded-r px-3 py-2" placeholder="twitter_username">
+      </div>
+      <p class="text-xs text-gray-500 mb-4">예: @bts_official → https://twitter.com/bts_official 링크로 연결됩니다</p>
     </div>
 
-    <!-- STEP 6: 이미지 업로드 및 최종 확인 -->
+    <!-- STEP 6: 이미지 업로드 -->
     <div id="step-6" class="step hidden">
-      <label class="block text-sm font-medium mb-2">이미지 업로드</label>
-      <input type="file" name="images" id="images" multiple accept="image/*" class="w-full border rounded p-2 mb-4">
+      <label class="block text-sm font-medium mb-4">생일카페 이미지 업로드</label>
+      
+      <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+        <input type="file" name="images" id="images" multiple accept="image/*" class="hidden">
+        <label for="images" class="cursor-pointer">
+          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="mt-4">
+            <p class="text-sm text-gray-600">
+              <span class="font-medium text-blue-600 hover:text-blue-500">클릭하여 이미지 선택</span> 또는 드래그하여 업로드
+            </p>
+            <p class="text-xs text-gray-500">PNG, JPG, JPEG 파일만 업로드 가능 (최대 5개, 각 5MB 이하)</p>
+          </div>
+        </label>
+      </div>
 
-      <div id="image-preview" class="mt-2 flex flex-wrap gap-2"></div>
-
-      <h3 class="font-semibold mt-6 mb-4">입력 내용을 확인하고 제출해주세요.</h3>
-      <ul class="text-sm text-gray-700 space-y-2">
-        <li><strong>아티스트/멤버:</strong> <span id="summary-name"></span></li>
-        <li><strong>카페 주소:</strong> <span id="summary-address"></span></li>
-        <li><strong>일정:</strong> <span id="summary-dates"></span></li>
-        <li><strong>특전 정보:</strong> <span id="summary-perks"></span></li>
-        <li><strong>설명:</strong> <span id="summary-desc"></span></li>
-        <li><strong>트위터:</strong> <span id="summary-twitter"></span></li>
-        <li><strong>인스타그램:</strong> <span id="summary-instagram"></span></li>
-      </ul>
+      <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </div>
 
-    <div class="mt-6 flex justify-between">
-      <button type="button" id="prevBtn" class="bg-gray-300 px-4 py-2 rounded">이전</button>
-      <button type="button" id="nextBtn" class="bg-blue-500 text-white px-4 py-2 rounded">다음</button>
+    <!-- STEP 7: 최종 확인 -->
+    <div id="step-7" class="step hidden">
+      <h3 class="text-lg font-semibold mb-6">📋 입력 내용 최종 확인</h3>
+      
+      <div class="bg-gray-50 rounded-lg p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">아티스트/멤버</h4>
+            <p id="summary-name" class="text-gray-700"></p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">카페명</h4>
+            <p id="summary-cafe-name" class="text-gray-700"></p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">주소</h4>
+            <p id="summary-address" class="text-gray-700"></p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">일정</h4>
+            <p id="summary-dates" class="text-gray-700"></p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">특전 정보</h4>
+            <p id="summary-perks" class="text-gray-700"></p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-2">SNS 계정</h4>
+            <p id="summary-social" class="text-gray-700"></p>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">이벤트 설명</h4>
+          <p id="summary-desc" class="text-gray-700"></p>
+        </div>
+        
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">업로드된 이미지</h4>
+          <div id="summary-images" class="flex flex-wrap gap-2"></div>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+        <div class="flex">
+          <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+          </svg>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">제출 전 확인사항</h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <p>• 입력한 정보가 정확한지 다시 한 번 확인해주세요.</p>
+              <p>• 제출 후에는 관리자 승인을 거쳐 공개됩니다.</p>
+              <p>• 허위 정보 입력 시 승인이 거절될 수 있습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 네비게이션 버튼 -->
+    <div class="mt-8 flex justify-between">
+      <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">이전</button>
+      <button type="button" id="nextBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">다음</button>
     </div>
   </form>
 </section>
 
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 
+<style>
+.perk-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+input[type="checkbox"]:checked + .perk-btn {
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 4px;
+}
+
+input[type="checkbox"]:checked + .perk-btn {
+  transform: scale(0.95);
+}
+
+label:hover .perk-btn {
+  background-color: #f3f4f6;
+}
+
+input[type="checkbox"]:checked + .perk-btn:hover {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+</style>
+
 <script>
-const steps = 6;
+const steps = 7;
 let currentStep = 1;
+let map = null;
 
 const nextBtn = document.getElementById("nextBtn");
 const prevBtn = document.getElementById("prevBtn");
@@ -137,7 +375,7 @@ const progressBar = document.getElementById("progressBar");
 function updateStepVisibility() {
   for (let i = 1; i <= steps; i++) {
     const stepDiv = document.getElementById(`step-${i}`);
-    const inputs = stepDiv.querySelectorAll("input, textarea, select");
+    const inputs = stepDiv.querySelectorAll("input:not([type='hidden']), textarea, select");
     if (i === currentStep) {
       stepDiv.classList.remove("hidden");
       inputs.forEach(el => el.disabled = false);
@@ -146,23 +384,48 @@ function updateStepVisibility() {
       inputs.forEach(el => el.disabled = true);
     }
   }
-  // 프로그레스바 너비 조정
+  
+  // 프로그레스바 업데이트
   progressBar.style.width = `${(currentStep / steps) * 100}%`;
 
   // 버튼 상태 조정
   prevBtn.disabled = currentStep === 1;
+  
   if (currentStep === steps) {
-    nextBtn.textContent = "제출";
+    nextBtn.textContent = "최종 제출";
     nextBtn.type = "submit";
+    nextBtn.className = "px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600";
   } else {
     nextBtn.textContent = "다음";
     nextBtn.type = "button";
+    nextBtn.className = "px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600";
+  }
+  
+  // Step 2에서 지도 초기화
+  if (currentStep === 2 && !map) {
+    initializeMap();
   }
 }
 
 function validateStep() {
   const currentStepDiv = document.getElementById(`step-${currentStep}`);
+  
+  // Step 1: 아티스트 선택 검증
+  if (currentStep === 1) {
+    const artistId = document.getElementById("artist_id").value;
+    const searchInput = document.getElementById("artist-member-search").value.trim();
+    
+    if (!artistId || !searchInput) {
+      alert("아티스트/멤버를 검색하고 선택해주세요.");
+      document.getElementById("artist-member-search").focus();
+      return false;
+    }
+    return true;
+  }
+  
+  // 다른 단계들의 기본 검증
   const requiredFields = currentStepDiv.querySelectorAll("[required]");
+  
   for (const field of requiredFields) {
     if (!field.value.trim()) {
       field.focus();
@@ -170,22 +433,61 @@ function validateStep() {
       return false;
     }
   }
+  
+  // Step 2: 주소 선택 검증
+  if (currentStep === 2) {
+    const address = document.getElementById("address").value;
+    if (!address) {
+      alert("주소를 검색하고 선택해주세요.");
+      document.getElementById("place-search").focus();
+      return false;
+    }
+  }
+  
   return true;
 }
 
 function updateSummary() {
+  // 아티스트/멤버
   document.getElementById("summary-name").textContent = document.getElementById("artist-member-search").value;
+  
+  // 카페명
+  document.getElementById("summary-cafe-name").textContent = document.querySelector('[name="cafe_name"]').value;
+  
+  // 주소
   document.getElementById("summary-address").textContent = document.getElementById("address").value;
+  
+  // 날짜
   const start = document.querySelector('[name="start_date"]').value;
   const end = document.querySelector('[name="end_date"]').value;
   document.getElementById("summary-dates").textContent = `${start} ~ ${end}`;
 
+  // 특전
   const perks = [...document.querySelectorAll('input[name="perks"]:checked')].map(el => el.value);
-  document.getElementById("summary-perks").textContent = perks.length > 0 ? perks.join(", ") : "(없음)";
+  document.getElementById("summary-perks").textContent = perks.length > 0 ? perks.join(", ") : "(선택 안함)";
 
+  // SNS
+  const twitter = document.querySelector('[name="twitter_username"]').value;
+  let socialText = "";
+  if (twitter) socialText += `X: @${twitter}`;
+  document.getElementById("summary-social").textContent = socialText || "(없음)";
+
+  // 설명
   document.getElementById("summary-desc").textContent = document.querySelector('[name="event_description"]').value || "(설명 없음)";
-  document.getElementById("summary-twitter").textContent = document.querySelector('[name="twitter_source"]').value || "(없음)";
-  document.getElementById("summary-instagram").textContent = document.querySelector('[name="instagram_source"]').value || "(없음)";
+  
+  // 이미지
+  const imageContainer = document.getElementById("summary-images");
+  const images = document.getElementById("images").files;
+  imageContainer.innerHTML = "";
+  for (let i = 0; i < images.length; i++) {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(images[i]);
+    img.className = "w-16 h-16 object-cover rounded border";
+    imageContainer.appendChild(img);
+  }
+  if (images.length === 0) {
+    imageContainer.innerHTML = '<span class="text-gray-500 text-sm">(이미지 없음)</span>';
+  }
 }
 
 nextBtn.addEventListener("click", () => {
@@ -208,46 +510,91 @@ prevBtn.addEventListener("click", () => {
   }
 });
 
-// 초기 상태 세팅
+// 초기 상태 설정
 updateStepVisibility();
-</script>
 
-<script>
-// 이미지 미리보기 기능
+// 지도 초기화
+function initializeMap() {
+  const mapContainer = document.getElementById('map');
+  const mapOption = {
+    center: new kakao.maps.LatLng(37.5665, 126.9780),
+    level: 3
+  };
+  
+  map = new kakao.maps.Map(mapContainer, mapOption);
+  document.getElementById('mapPlaceholder').style.display = 'none';
+}
+
+// 이미지 미리보기
 document.getElementById("images").addEventListener("change", function () {
   const previewContainer = document.getElementById("image-preview");
   previewContainer.innerHTML = "";
-  Array.from(this.files).forEach(file => {
+  
+  if (this.files.length > 5) {
+    alert("최대 5개의 이미지만 업로드할 수 있습니다.");
+    this.value = "";
+    return;
+  }
+  
+  Array.from(this.files).forEach((file, index) => {
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`${file.name}: 파일 크기가 5MB를 초과합니다.`);
+      return;
+    }
+    
     const reader = new FileReader();
     reader.onload = function (e) {
-      const img = document.createElement("img");
-      img.src = e.target.result;
-      img.className = "w-24 h-24 object-cover rounded border";
-      previewContainer.appendChild(img);
+      const div = document.createElement("div");
+      div.className = "relative";
+      div.innerHTML = `
+        <img src="${e.target.result}" alt="Preview ${index + 1}" class="w-full h-32 object-cover rounded border">
+        <div class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+          ${index === 0 ? '대표' : index + 1}
+        </div>
+        <button type="button" onclick="removeImage(${index})" class="absolute top-2 right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full hover:bg-red-600">
+          ×
+        </button>
+      `;
+      previewContainer.appendChild(div);
     };
     reader.readAsDataURL(file);
   });
 });
-</script>
 
-<script>
-// 아티스트/멤버 자동완성 기능
+function removeImage(index) {
+  const input = document.getElementById("images");
+  const dt = new DataTransfer();
+  
+  Array.from(input.files).forEach((file, i) => {
+    if (i !== index) dt.items.add(file);
+  });
+  
+  input.files = dt.files;
+  input.dispatchEvent(new Event('change'));
+}
+
+// 아티스트/멤버 자동완성
 document.getElementById("artist-member-search").addEventListener("input", function () {
   const keyword = this.value.trim();
   const resultsBox = document.getElementById("artist-member-results");
   resultsBox.innerHTML = "";
+  
   if (!keyword) {
     resultsBox.classList.add("hidden");
+    clearSelection();
     return;
   }
-  fetch(`/ddoksang/autocomplete/members/?q=` + encodeURIComponent(keyword))
+  
+  fetch(`/ddoksang/autocomplete/members/?q=${encodeURIComponent(keyword)}`)
     .then(res => res.json())
     .then(data => {
       const results = data.results;
       if (results.length === 0) {
-        resultsBox.classList.add("hidden");
+        resultsBox.innerHTML = '<li class="px-4 py-2 text-gray-500 text-sm">검색 결과가 없습니다.</li>';
+        resultsBox.classList.remove("hidden");
         return;
       }
+      
       results.forEach(item => {
         const li = document.createElement("li");
         li.className = "hover:bg-gray-100 px-4 py-2 cursor-pointer text-sm border-b";
@@ -257,38 +604,64 @@ document.getElementById("artist-member-search").addEventListener("input", functi
             <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${item.bday}</span>
           </div>
         `;
-        li.onclick = () => {
-          document.getElementById("artist-member-search").value = `${item.member_name} (${item.artist_display})`;
-          document.getElementById("artist_id").value = item.artist_id;
-          document.getElementById("member_id").value = item.member_id;
-          resultsBox.classList.add("hidden");
-        };
+        li.onclick = () => selectArtist(item);
         resultsBox.appendChild(li);
       });
       resultsBox.classList.remove("hidden");
+    })
+    .catch(err => {
+      console.error('자동완성 오류:', err);
+      resultsBox.innerHTML = '<li class="px-4 py-2 text-red-500 text-sm">검색 중 오류가 발생했습니다.</li>';
+      resultsBox.classList.remove("hidden");
     });
 });
-</script>
 
-<script>
-// 카카오맵 주소 검색 및 결과 선택 기능
-let map = new kakao.maps.Map(document.getElementById('map'), {
-  center: new kakao.maps.LatLng(37.5665, 126.9780),
-  level: 3
-});
-let ps = new kakao.maps.services.Places();
-let marker = new kakao.maps.Marker({ map: map });
+function selectArtist(item) {
+  // 검색 결과 숨기기
+  document.getElementById("artist-member-results").classList.add("hidden");
+  
+  // 선택된 아티스트 정보 설정
+  document.getElementById("artist-member-search").value = `${item.member_name} (${item.artist_display})`;
+  document.getElementById("artist_id").value = item.artist_id;
+  document.getElementById("member_id").value = item.member_id;
+  
+  // 선택된 아티스트 표시
+  document.getElementById("selected-artist-text").textContent = `✓ ${item.member_name} (${item.artist_display}) 선택됨`;
+  document.getElementById("selected-artist").classList.remove("hidden");
+  
+  console.log('아티스트 선택됨:', {
+    artist_id: item.artist_id,
+    member_id: item.member_id,
+    member_name: item.member_name,
+    artist_display: item.artist_display
+  });
+}
+
+function clearSelection() {
+  document.getElementById("artist_id").value = "";
+  document.getElementById("member_id").value = "";
+  document.getElementById("artist-member-search").value = "";
+  document.getElementById("selected-artist").classList.add("hidden");
+  document.getElementById("artist-member-results").classList.add("hidden");
+}
+
+// 카카오맵 주소 검색
+let ps = null;
+let marker = null;
+
+function initPlaceSearch() {
+  if (!ps) {
+    ps = new kakao.maps.services.Places();
+    marker = new kakao.maps.Marker({ map: map });
+  }
+}
 
 const placeInput = document.getElementById("place-search");
-const searchBtn = document.getElementById("searchBtn") || null;
+const searchBtn = document.getElementById("searchBtn");
 const placeResults = document.getElementById('place-results');
 const selectedPlaceDiv = document.getElementById('selected-place');
 
-if (searchBtn) {
-  searchBtn.addEventListener('click', () => {
-    searchPlace();
-  });
-}
+searchBtn?.addEventListener('click', searchPlace);
 
 placeInput.addEventListener("keydown", function (e) {
   if (e.key === "Enter") {
@@ -298,40 +671,135 @@ placeInput.addEventListener("keydown", function (e) {
 });
 
 function searchPlace() {
-  let keyword = placeInput.value;
-  if (!keyword.trim()) return;
+  if (!map) initializeMap();
+  if (!ps) initPlaceSearch();
+  
+  let keyword = placeInput.value.trim();
+  if (!keyword) return;
+  
   ps.keywordSearch(keyword, function (data, status) {
     if (status === kakao.maps.services.Status.OK) {
       placeResults.innerHTML = '';
       placeResults.classList.remove('hidden');
+      
       data.forEach(place => {
         const li = document.createElement('li');
         li.textContent = `${place.place_name} (${place.road_address_name || place.address_name})`;
-        li.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200 border-b last:border-none';
-        li.addEventListener('click', () => {
-          const latlng = new kakao.maps.LatLng(place.y, place.x);
-          map.setCenter(latlng);
-          marker.setPosition(latlng);
-
-          selectedPlaceDiv.textContent = `선택된 주소: ${place.place_name} - ${place.road_address_name || place.address_name}`;
-          selectedPlaceDiv.classList.remove('hidden');
-
-          document.getElementById("address").value = place.address_name;
-          document.getElementById("road_address").value = place.road_address_name || '';
-          document.getElementById("latitude").value = place.y;
-          document.getElementById("longitude").value = place.x;
-          document.getElementById("kakao_place_id").value = place.id;
-
-          placeResults.classList.add('hidden');
-        });
+        li.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200 border-b last:border-none text-sm';
+        li.addEventListener('click', () => selectPlace(place));
         placeResults.appendChild(li);
       });
     } else {
-      placeResults.innerHTML = '<li class="px-4 py-2 text-red-500">검색 결과가 없습니다.</li>';
+      placeResults.innerHTML = '<li class="px-4 py-2 text-red-500 text-sm">검색 결과가 없습니다.</li>';
       placeResults.classList.remove('hidden');
     }
   });
 }
-</script>
 
+function selectPlace(place) {
+  const latlng = new kakao.maps.LatLng(place.y, place.x);
+  map.setCenter(latlng);
+  marker.setPosition(latlng);
+
+  selectedPlaceDiv.innerHTML = `
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="font-medium text-green-800">${place.place_name}</p>
+        <p class="text-sm text-green-600">${place.road_address_name || place.address_name}</p>
+      </div>
+      <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+      </svg>
+    </div>
+  `;
+  selectedPlaceDiv.classList.remove('hidden');
+
+  // 폼 데이터 설정
+  document.getElementById("address").value = place.address_name;
+  document.getElementById("road_address").value = place.road_address_name || '';
+  document.getElementById("latitude").value = place.y;
+  document.getElementById("longitude").value = place.x;
+  document.getElementById("kakao_place_id").value = place.id;
+
+  placeResults.classList.add('hidden');
+}
+
+// 드래그 앤 드롭 이미지 업로드
+const imageUploadArea = document.querySelector('label[for="images"]').parentElement;
+
+imageUploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  imageUploadArea.classList.add('border-blue-400', 'bg-blue-50');
+});
+
+imageUploadArea.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  imageUploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+});
+
+imageUploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  imageUploadArea.classList.remove('border-blue-400', 'bg-blue-50');
+  
+  const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+  if (files.length > 0) {
+    const input = document.getElementById('images');
+    const dt = new DataTransfer();
+    files.forEach(file => dt.items.add(file));
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change'));
+  }
+});
+
+// 날짜 유효성 검증
+document.querySelector('[name="start_date"]').addEventListener('change', function() {
+  const endDate = document.querySelector('[name="end_date"]');
+  endDate.min = this.value;
+  
+  if (endDate.value && endDate.value < this.value) {
+    endDate.value = this.value;
+  }
+});
+
+document.querySelector('[name="end_date"]').addEventListener('change', function() {
+  const startDate = document.querySelector('[name="start_date"]');
+  startDate.max = this.value;
+  
+  if (startDate.value && startDate.value > this.value) {
+    startDate.value = this.value;
+  }
+});
+
+// 폼 제출 시 데이터 변환
+document.getElementById('multiStepForm').addEventListener('submit', function(e) {
+  console.log("=== 폼 제출 직전 디버깅 ===");
+  
+  // 🔧 모든 input, textarea, select 활성화 (아주 중요!)
+  const allInputs = this.querySelectorAll('input, textarea, select');
+  allInputs.forEach(input => {
+    input.disabled = false;
+  });
+  
+  console.log('artist_id:', document.getElementById('artist_id').value);
+  console.log('member_id:', document.getElementById('member_id').value);
+  console.log('cafe_name:', document.querySelector('[name="cafe_name"]').value);
+  console.log('address:', document.getElementById('address').value);
+  console.log('start_date:', document.querySelector('[name="start_date"]').value);
+  console.log('end_date:', document.querySelector('[name="end_date"]').value);
+  console.log('event_description:', document.querySelector('[name="event_description"]').value);
+  
+  // Twitter username을 URL로 변환
+  const twitterUsername = document.querySelector('[name="twitter_username"]').value.trim();
+  
+  if (twitterUsername) {
+    const twitterInput = document.createElement('input');
+    twitterInput.type = 'hidden';
+    twitterInput.name = 'twitter_source';
+    twitterInput.value = `https://twitter.com/${twitterUsername.replace('@', '')}`;
+    this.appendChild(twitterInput);
+  }
+  
+  console.log("==========================");
+});
+</script>
 {% endblock %}

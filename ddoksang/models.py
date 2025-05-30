@@ -1,5 +1,3 @@
-# ddoksang/models.py - 완전 업데이트 버전
-
 from django.db import models
 from django.conf import settings
 from artist.models import Artist, Member
@@ -87,12 +85,15 @@ class BdayCafe(models.Model):
 
     @property
     def is_active(self):
+        """현재 운영중인지 확인"""
         from datetime import date
         today = date.today()
-        return self.status == 'approved' and self.start_date <= today <= self.end_date
+        return (self.status == 'approved' and 
+                self.start_date <= today <= self.end_date)
 
     @property
     def days_remaining(self):
+        """남은 일수 계산"""
         from datetime import date
         today = date.today()
         if self.end_date > today:
@@ -157,28 +158,49 @@ class BdayCafe(models.Model):
         
         return images_data
 
+
     def get_kakao_map_data(self):
-        """카카오맵용 데이터"""
-        return {
-            'id': self.id,
-            'name': self.cafe_name,
-            'artist': self.artist.display_name,
-            'member': self.member.member_name if self.member else None,
-            'latitude': float(self.latitude),
-            'longitude': float(self.longitude),
-            'address': self.address,
-            'road_address': self.road_address,
-            'phone': self.phone,
-            'place_url': self.place_url,
-            'start_date': self.start_date.strftime('%Y-%m-%d'),
-            'end_date': self.end_date.strftime('%Y-%m-%d'),
-            'cafe_type': self.get_cafe_type_display(),
-            'special_benefits': self.special_benefits,
-            'days_remaining': self.days_remaining,
-            'main_image': self.get_main_image(),
-            'is_active': self.is_active,
-            'images': self.get_all_images(),  # 모든 이미지 정보 포함
-        }
+        """카카오맵용 데이터 (예외 처리 강화)"""
+        try:
+            # latitude, longitude 유효성 검사
+            lat = float(self.latitude) if self.latitude else None
+            lng = float(self.longitude) if self.longitude else None
+            
+            if lat is None or lng is None:
+                return None
+                
+            return {
+                'id': self.id,
+                'name': self.cafe_name,
+                'artist': self.artist.display_name,
+                'member': self.member.member_name if self.member else None,
+                'latitude': lat,
+                'longitude': lng,
+                'address': self.address or '',
+                'road_address': self.road_address or '',
+                'phone': self.phone or '',
+                'place_url': self.place_url or '',
+                'start_date': self.start_date.strftime('%Y-%m-%d'),
+                'end_date': self.end_date.strftime('%Y-%m-%d'),
+                'cafe_type': self.get_cafe_type_display(),
+                'special_benefits': self.special_benefits or '',
+                'days_remaining': self.days_remaining,
+                'main_image': self.get_main_image(),
+                'is_active': self.is_active,
+                'images': self.get_all_images(),
+            }
+        except (ValueError, AttributeError, TypeError) as e:
+            return None
+
+    class Meta:
+        verbose_name = '생일카페'
+        verbose_name_plural = '생일카페 목록'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['latitude', 'longitude']),
+            models.Index(fields=['start_date', 'end_date']),
+            models.Index(fields=['status', 'start_date']),
+        ]
 
 class BdayCafeImage(models.Model):
     """생일카페 다중 이미지"""
@@ -218,40 +240,41 @@ class BdayCafeImage(models.Model):
         ]
     
     def save(self, *args, **kwargs):
-        # 대표 이미지가 설정되면 같은 카페의 다른 이미지들의 is_main을 False로 변경
-        if self.is_main:
-            BdayCafeImage.objects.filter(cafe=self.cafe, is_main=True).exclude(pk=self.pk).update(is_main=False)
-        
-        super().save(*args, **kwargs)
-        
-        # 이미지 최적화 및 메타데이터 저장
-        if self.image and hasattr(self.image, 'path') and os.path.exists(self.image.path):
-            try:
-                with Image.open(self.image.path) as img:
-                    self.width, self.height = img.size
-                    self.file_size = os.path.getsize(self.image.path)
-                    
-                    # 이미지 최적화 (너무 클 경우)
-                    max_size = (1920, 1920)
-                    if img.width > max_size[0] or img.height > max_size[1]:
-                        img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                        img.save(self.image.path, optimize=True, quality=85)
-                        
+            # 대표 이미지가 설정되면 같은 카페의 다른 이미지들의 is_main을 False로 변경
+            if self.is_main:
+                BdayCafeImage.objects.filter(cafe=self.cafe, is_main=True).exclude(pk=self.pk).update(is_main=False)
+            
+            super().save(*args, **kwargs)
+            
+            # 이미지 최적화 및 메타데이터 저장
+            if self.image and hasattr(self.image, 'path') and os.path.exists(self.image.path):
+                try:
+                    with Image.open(self.image.path) as img:
                         self.width, self.height = img.size
                         self.file_size = os.path.getsize(self.image.path)
-                
-                # 메타데이터 업데이트 (무한 루프 방지)
-                if self.pk:
-                    BdayCafeImage.objects.filter(pk=self.pk).update(
-                        width=self.width,
-                        height=self.height,
-                        file_size=self.file_size
-                    )
-            except Exception as e:
-                print(f"이미지 처리 중 오류: {e}")
-    
+                        
+                        # 이미지 최적화 (너무 클 경우)
+                        max_size = (1920, 1920)
+                        if img.width > max_size[0] or img.height > max_size[1]:
+                            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                            img.save(self.image.path, optimize=True, quality=85)
+                            
+                            self.width, self.height = img.size
+                            self.file_size = os.path.getsize(self.image.path)
+                    
+                    # 메타데이터 업데이트 (무한 루프 방지)
+                    if self.pk:
+                        BdayCafeImage.objects.filter(pk=self.pk).update(
+                            width=self.width,
+                            height=self.height,
+                            file_size=self.file_size
+                        )
+                except Exception as e:
+                    print(f"이미지 처리 중 오류: {e}")
+        
     def __str__(self):
         return f"{self.cafe.cafe_name} - {self.get_image_type_display()}"
+    
     
     @property
     def thumbnail_url(self):
@@ -273,6 +296,15 @@ class BdayCafeImage(models.Model):
             'file_size': self.file_size,
         }
 
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name = '생카 이미지'
+        verbose_name_plural = '생카 이미지들'
+        indexes = [
+            models.Index(fields=['cafe', 'is_main']),
+            models.Index(fields=['cafe', 'order']),
+        ]
+        
 class CafeFavorite(models.Model):
     """생카 찜하기"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
