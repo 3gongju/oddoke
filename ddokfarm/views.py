@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 from django.urls import reverse
 from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
 from operator import attrgetter
 from artist.models import Member, Artist
 from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost, FarmPostImage
@@ -114,15 +115,14 @@ def post_create(request):
                 post.members.set(selected_member_ids)
                 form.save_m2m()
 
-                for image in image_files:
-                    kwargs = {'image': image}
-                    if category == 'sell':
-                        kwargs['sell_post'] = post
-                    elif category == 'rental':
-                        kwargs['rental_post'] = post
-                    elif category == 'split':
-                        kwargs['split_post'] = post
-                    FarmPostImage.objects.create(**kwargs)
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                for idx, image in enumerate(image_files):
+                    FarmPostImage.objects.create(
+                        image=image,
+                        content_type=content_type,
+                        object_id=post.id,
+                        is_representative=(idx == 0)  # ✅ 첫 번째 이미지를 대표 이미지로 저장
+                    )
 
                 return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 

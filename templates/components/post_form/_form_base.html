@@ -69,23 +69,13 @@
   <!-- 선택된 파일 개수 표시 -->
   <span id="file-count" class="ml-2 text-sm text-gray-500">선택된 파일 없음</span>
 
-  <!-- 필수 유효성 에러 메시지 -->
-  {% if form.non_field_errors %}
-    <p class="text-red-500 text-sm mt-1">{{ form.non_field_errors.0 }}</p>
-  {% endif %}
-
-  <!-- 기존 업로드된 이미지 보여주기 -->
-  {% if post and post.images.all %}
-    <div id="original-image" class="mt-4 space-y-2">
-      <p class="text-sm text-gray-500 mb-2">현재 이미지:</p>
-      <div class="grid grid-cols-3 gap-2">
-        {% for image in post.images.all %}
-          <img src="{{ image.image.url }}" alt="기존 이미지"
-               class="max-h-40 rounded border object-cover w-full aspect-square">
-        {% endfor %}
-      </div>
+  <!-- 기존 업로드된 이미지 보여주기 (수정 페이지에서만) -->
+  <div id="original-image" class="mt-4 space-y-2 hidden">
+    <p class="text-sm text-gray-500 mb-2">현재 이미지:</p>
+    <div class="grid grid-cols-3 gap-2">
+      <!-- 기존 이미지들이 여기에 렌더링됨 (서버에서) -->
     </div>
-  {% endif %}
+  </div>
 
   <!-- 새로 업로드할 이미지 미리보기 -->
   <div id="image-preview-container" class="mt-4 hidden">
@@ -93,6 +83,7 @@
     <div class="grid grid-cols-3 gap-2" id="image-preview-list"></div>
   </div>
 </div>
+
 
 {% block extra_fields %}
   {% if category == 'sell' or category == 'rental' %}

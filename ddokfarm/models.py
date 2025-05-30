@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from artist.models import Artist, Member
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
+from django.contrib.contenttypes.models import ContentType
 
 class FarmBasePost(models.Model):
     title = models.CharField(max_length=100)
@@ -49,6 +51,7 @@ class FarmSellPost(FarmMarketPost):
     ]
 
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES)
+    images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
     
     @property
     def category_type(self):
@@ -63,6 +66,7 @@ class FarmRentalPost(FarmMarketPost):
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES)
     start_date = models.DateField()
     end_date = models.DateField()
+    images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
     
     @property
     def category_type(self):
@@ -93,6 +97,7 @@ class FarmSplitPost(FarmBasePost):
     where = models.CharField(max_length=100)
     when = models.DateField()
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
+    images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
     # 멤버별 가격 설정 필드 연결 필요
 
     @property
@@ -114,9 +119,7 @@ class FarmComment(models.Model):
 # 이미지 여러장
 class FarmPostImage(models.Model):
     image = models.ImageField(upload_to='ddokfarm/image')
-    sell_post = models.ForeignKey('FarmSellPost', on_delete=models.CASCADE, null=True, blank=True, related_name='images')
-    rental_post = models.ForeignKey('FarmRentalPost', on_delete=models.CASCADE, null=True, blank=True, related_name='images')
-    split_post = models.ForeignKey('FarmSplitPost', on_delete=models.CASCADE, null=True, blank=True, related_name='images')
-
-    def get_post(self):
-        return self.sell_post or self.rental_post or self.split_post
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    is_representative = models.BooleanField(default=False)
