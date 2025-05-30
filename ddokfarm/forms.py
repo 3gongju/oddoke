@@ -53,7 +53,7 @@ class FarmSellPostForm(forms.ModelForm):
 
     class Meta:
         model = FarmSellPost
-        fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'artist', 'members']
+        fields = ['title', 'content', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'artist', 'members']
         widgets = {
             **common_widgets,
             **market_widgets,
@@ -66,7 +66,7 @@ class FarmRentalPostForm(forms.ModelForm):
 
     class Meta:
         model = FarmRentalPost
-        fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date', 'artist', 'members']
+        fields = ['title', 'content', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date', 'artist', 'members']
         widgets = {
             **common_widgets,
             **market_widgets,
@@ -87,7 +87,7 @@ class FarmSplitPostForm(forms.ModelForm):
 
     class Meta:
         model = FarmSplitPost
-        fields = ['title', 'content', 'image', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'members']
+        fields = ['title', 'content', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'members']
         widgets = {
             **common_widgets,
             'shipping_fee': forms.NumberInput(attrs={

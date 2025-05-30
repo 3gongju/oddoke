@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.db.models import Q
 from operator import attrgetter
 from artist.models import Member, Artist
-from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost
+from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost, FarmPostImage
 from .forms import FarmCommentForm
 from .utils import (
     get_post_model,
@@ -95,6 +95,7 @@ def post_create(request):
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
         selected_member_ids = list(map(int, request.POST.getlist('members')))
+        image_files = request.FILES.getlist('images')  # 여러 이미지 받기
 
         form_class = get_post_form(category)
         if not form_class:
@@ -102,13 +103,31 @@ def post_create(request):
 
         form = form_class(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.user = request.user
-            post.save()
-            form.save_m2m()
-            return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
+            if not image_files:
+                form.add_error(None, "이미지는 최소 1장 이상 업로드해야 합니다.")
+            else:
+                post = form.save(commit=False)
+                post.user = request.user
+                if selected_artist_id:
+                    post.artist_id = selected_artist_id
+                post.save()
+                post.members.set(selected_member_ids)
+                form.save_m2m()
+
+                for image in image_files:
+                    kwargs = {'image': image}
+                    if category == 'sell':
+                        kwargs['sell_post'] = post
+                    elif category == 'rental':
+                        kwargs['rental_post'] = post
+                    elif category == 'split':
+                        kwargs['split_post'] = post
+                    FarmPostImage.objects.create(**kwargs)
+
+                return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
+
     else:
-        category = request.GET.get('category') or 'community'
+        category = request.GET.get('category') or 'sell'
         selected_artist_id = None
         selected_member_ids = []
         form_class = get_post_form(category)
@@ -116,7 +135,6 @@ def post_create(request):
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
-    # 드롭다운에는 팔로우 아티스트만
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )

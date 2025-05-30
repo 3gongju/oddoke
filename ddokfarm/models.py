@@ -5,7 +5,7 @@ from artist.models import Artist, Member
 class FarmBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
-    image = models.ImageField(upload_to='ddokfarm/image')
+    # image = models.ImageField(upload_to='ddokfarm/image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -110,3 +110,13 @@ class FarmComment(models.Model):
     sell_post = models.ForeignKey(FarmSellPost, on_delete=models.CASCADE, null=True, blank=True)
     rental_post = models.ForeignKey(FarmRentalPost, on_delete=models.CASCADE, null=True, blank=True)
     split_post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, null=True, blank=True)
+
+# 이미지 여러장
+class FarmPostImage(models.Model):
+    image = models.ImageField(upload_to='ddokfarm/image')
+    sell_post = models.ForeignKey('FarmSellPost', on_delete=models.CASCADE, null=True, blank=True, related_name='images')
+    rental_post = models.ForeignKey('FarmRentalPost', on_delete=models.CASCADE, null=True, blank=True, related_name='images')
+    split_post = models.ForeignKey('FarmSplitPost', on_delete=models.CASCADE, null=True, blank=True, related_name='images')
+
+    def get_post(self):
+        return self.sell_post or self.rental_post or self.split_post

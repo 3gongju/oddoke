@@ -27,52 +27,73 @@
 </div>
 
 <script>
+  // 대댓글 폼 토글
   function showReplyForm(commentId) {
     const form = document.getElementById(`reply-form-${commentId}`);
     if (form) {
       form.classList.toggle('hidden');
     }
   }
-document.addEventListener('DOMContentLoaded', function () {
-  const likeButtons = [
-    document.getElementById('like-button'),
-    document.getElementById('like-button-top')
-  ];
-  const likeCountEl = document.getElementById('like-count');
-  const csrfToken = "{{ csrf_token }}";
 
-  likeButtons.forEach(button => {
-    if (!button) return;
+  document.addEventListener('DOMContentLoaded', function () {
+    // 좋아요 기능
+    const likeButtons = [
+      document.getElementById('like-button'),
+      document.getElementById('like-button-top')
+    ];
+    const likeCountEl = document.getElementById('like-count');
+    const csrfToken = "{{ csrf_token }}";
 
-    button.addEventListener('click', function () {
-      const isLiked = this.dataset.liked === "true";
+    likeButtons.forEach(button => {
+      if (!button) return;
 
-      fetch("{% url 'ddokfarm:like_post' category=category post_id=post.id %}", {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        likeButtons.forEach(btn => {
-          btn.dataset.liked = data.liked ? "true" : "false";
-          btn.innerHTML = data.liked ? "❤️ 찜하기" : "🤍 찜하기";
+      button.addEventListener('click', function () {
+        fetch("{% url 'ddokfarm:like_post' category=category post_id=post.id %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(res => {
+          if (!res.ok) throw new Error('요청 실패');
+          return res.json();
+        })
+        .then(data => {
+          likeButtons.forEach(btn => {
+            btn.dataset.liked = data.liked ? "true" : "false";
+            btn.innerHTML = data.liked ? "❤️ 찜하기" : "🤍 찜하기";
+          });
+
+          const bottomBtn = document.getElementById('like-button');
+          if (bottomBtn) {
+            bottomBtn.innerHTML = data.liked ? "❤️" : "🤍";
+          }
+
+          if (likeCountEl) {
+            likeCountEl.textContent = data.like_count;
+          }
+        })
+        .catch(err => {
+          console.error("찜 실패:", err);
+          alert("찜 처리 중 문제가 발생했습니다.");
         });
-
-        // 하단 하트만 아이콘으로 변경
-        const bottomBtn = document.getElementById('like-button');
-        if (bottomBtn) {
-          bottomBtn.innerHTML = data.liked ? "❤️" : "🤍";
-        }
-
-        if (likeCountEl) {
-          likeCountEl.textContent = data.like_count;
-        }
       });
     });
+
+    // 이미지 캐러셀 초기화 (Swiper)
+    new Swiper('.swiper-container', {
+      loop: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+    });
   });
-});
 </script>
+
 {% endblock %}
