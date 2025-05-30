@@ -120,7 +120,7 @@ LOGOUT_REDIRECT_URL = '/' #로그아웃 시 home.html로 리다이렉트
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'ko-kr'
+LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Seoul'
 
