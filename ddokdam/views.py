@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from operator import attrgetter
 from itertools import chain
 from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
@@ -140,7 +141,6 @@ def post_create(request):
                 post.members.set(selected_member_ids)
                 form.save_m2m()
 
-                # ✅ 이미지 저장 & 첫 번째 이미지를 대표 이미지로 설정
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
                     DamPostImage.objects.create(
@@ -231,7 +231,9 @@ def post_edit(request, category, post_id):
 
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
-        image_files = request.FILES.getlist('images')  # ✅ 여러 이미지 받기
+        image_files = request.FILES.getlist('images')  # 새 이미지 받기
+        removed_ids = request.POST.get('removed_image_ids', '').split(',')
+        removed_ids = [int(id) for id in removed_ids if id.isdigit()]  # 삭제할 ID만 정수로 처리
 
         if form.is_valid():
             post = form.save(commit=False)
@@ -244,12 +246,10 @@ def post_edit(request, category, post_id):
             post.save()
             post.members.set(member_ids)
 
-            # ✅ 새 이미지 추가 처리
-            if image_files:
-                # 기존 이미지 삭제 (원한다면)
-                post.images.all().delete()
+            if removed_ids:
+                post.images.filter(id__in=removed_ids).delete()
 
-                from django.contrib.contenttypes.models import ContentType
+            if image_files:
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
                     DamPostImage.objects.create(
@@ -263,10 +263,17 @@ def post_edit(request, category, post_id):
     else:
         form = form_class(instance=post)
 
-    # GET/POST 공통 context 설정
+    existing_images = []
+    for img in post.images.all():
+        existing_images.append({
+            "id": img.id,
+            "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"
+        })
+
     sorted_artists = Artist.objects.order_by('display_name')
     selected_members = Member.objects.filter(artist_name=post.artist).distinct()
     selected_member_ids = list(post.members.values_list('id', flat=True))
+    selected_artist_id = post.artist.id if post.artist else None
 
     context = {
         'form': form,
@@ -275,11 +282,14 @@ def post_edit(request, category, post_id):
         'sorted_artists': sorted_artists,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'selected_artist_id': selected_artist_id,
+        'existing_images': existing_images,
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokdam:post_detail', args=[category, post.id]),
-        **get_ajax_base_context(request),
         'mode': 'edit',
         'categories': get_ddokdam_categories(),
+        **get_ajax_base_context(request),
+        'existing_images': existing_images,
     }
 
     return render(request, 'ddokdam/edit.html', context)

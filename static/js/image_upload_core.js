@@ -1,16 +1,21 @@
-export function setupImageUploadEdit(existingImages = []) {
+// image_upload_core.js
+export function setupImageUploadCore({
+  existingImages = [],
+  formId = "create-form",
+  removedInputName = "removed_image_ids"
+}) {
   const fileInput = document.getElementById("image-upload");
   const fileCount = document.getElementById("file-count");
   const previewContainer = document.getElementById("image-preview-container");
   const previewList = document.getElementById("image-preview-list");
-  const form = document.getElementById("edit-form");
+  const originalImageSection = document.getElementById("original-image");
+  const form = document.getElementById(formId);
 
   if (!fileInput || !previewContainer || !previewList || !form) return;
 
-  // 기존 이미지 + 새 이미지
-  let selectedFiles = [
-    ...existingImages.map(img => ({ type: "existing", url: img.url, id: img.id }))
-  ];
+  let selectedFiles = existingImages.length
+    ? existingImages.map(img => ({ type: "existing", ...img }))
+    : [];
 
   function updatePreview() {
     previewList.innerHTML = "";
@@ -33,9 +38,8 @@ export function setupImageUploadEdit(existingImages = []) {
       const closeBtn = document.createElement("button");
       closeBtn.innerHTML = "&times;";
       closeBtn.className = `
-        absolute top-1 right-1
-        w-6 h-6 rounded-full bg-black bg-opacity-60
-        flex items-center justify-center
+        absolute top-1 right-1 w-6 h-6 rounded-full
+        bg-black bg-opacity-60 flex items-center justify-center
         text-white text-sm hover:bg-opacity-80
       `;
       closeBtn.addEventListener("click", () => {
@@ -48,45 +52,39 @@ export function setupImageUploadEdit(existingImages = []) {
       previewList.appendChild(wrapper);
     });
 
-    // ➕ 추가 버튼
     if (selectedFiles.length < 10) {
       const addBox = document.createElement("div");
       addBox.className = `
-        flex items-center justify-center
-        bg-gray-100 hover:bg-gray-200
-        rounded border border-gray-300
-        aspect-square w-full relative order-last cursor-pointer
+        flex items-center justify-center bg-gray-100 hover:bg-gray-200
+        rounded border border-gray-300 aspect-square w-full relative
+        order-last cursor-pointer
       `;
       addBox.innerHTML = '<span class="text-3xl text-gray-400">+</span>';
       addBox.addEventListener("click", () => fileInput.click());
       previewList.appendChild(addBox);
     }
 
-    // 파일 개수
     fileCount.textContent = selectedFiles.length > 0
       ? `${selectedFiles.length}개 파일 선택됨 (최대 10장)`
       : "선택된 파일 없음";
 
-    // 미리보기 영역 표시
     previewContainer.classList.toggle("hidden", selectedFiles.length === 0);
+    if (originalImageSection) {
+      originalImageSection.classList.toggle("hidden", selectedFiles.length > 0);
+    }
   }
 
-  // ✅ Sortable.js
   new Sortable(previewList, {
     animation: 150,
     onEnd: () => {
       const newOrder = Array.from(previewList.children)
         .filter(el => el.querySelector("img"))
-        .map(el => {
-          const idx = parseInt(el.dataset.index, 10);
-          return selectedFiles[idx];
-        });
+        .map(el => selectedFiles[parseInt(el.dataset.index, 10)]);
       selectedFiles = newOrder;
       updatePreview();
     }
   });
 
-  // ✅ 새 파일 추가
   fileInput.addEventListener("change", function () {
     const newFiles = Array.from(this.files).map(file => ({ type: "new", file }));
     if (selectedFiles.length + newFiles.length > 10) {
@@ -97,18 +95,19 @@ export function setupImageUploadEdit(existingImages = []) {
     updatePreview();
   });
 
-  // ✅ 제출 시: 기존 이미지 삭제 ID 전달 + 새 파일만 input.files로
   form.addEventListener("submit", function () {
-    const removedIds = existingImages
-      .filter(img => !selectedFiles.find(f => f.type === "existing" && f.id === img.id))
-      .map(img => img.id);
+    if (existingImages.length) {
+      const removedIds = existingImages
+        .filter(img => !selectedFiles.find(f => f.type === "existing" && f.id === img.id))
+        .map(img => img.id);
 
-    if (removedIds.length > 0) {
-      const removedInput = document.createElement("input");
-      removedInput.type = "hidden";
-      removedInput.name = "removed_image_ids";
-      removedInput.value = removedIds.join(",");
-      form.appendChild(removedInput);
+      if (removedIds.length > 0) {
+        const removedInput = document.createElement("input");
+        removedInput.type = "hidden";
+        removedInput.name = removedInputName;
+        removedInput.value = removedIds.join(",");
+        form.appendChild(removedInput);
+      }
     }
 
     const dt = new DataTransfer();
@@ -118,6 +117,5 @@ export function setupImageUploadEdit(existingImages = []) {
     fileInput.files = dt.files;
   });
 
-  // ✅ 첫 렌더링
   updatePreview();
 }

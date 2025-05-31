@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from operator import attrgetter
 from itertools import chain
 from artist.models import Member, Artist
@@ -151,19 +152,15 @@ def post_create(request):
                         image=image,
                         content_type=content_type,
                         object_id=post.id,
-                        is_representative=(idx == 0)  # ✅ 첫 번째 이미지를 대표 이미지로 저장
+                        is_representative=(idx == 0)
                     )
 
                 return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
-<<<<<<< HEAD
-        category = request.GET.get('category') or 'sell'
-=======
         raw_category = request.GET.get('category') or 'sell'
         category = raw_category.split('?')[0]
 
->>>>>>> 63e8327c9f083d32a0bfabb187c12b04bd36b8ea
         selected_artist_id = None
         selected_member_ids = []
         form_class = get_post_form(category)
@@ -236,14 +233,16 @@ def post_edit(request, category, post_id):
             'message': '이 게시글을 수정할 권한이 없습니다.',
             'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         }
-
         return render(request, 'ddokfarm/error_message.html', context)
 
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
+        image_files = request.FILES.getlist('images')  # 새 이미지 받기
+        removed_ids = request.POST.get('removed_image_ids', '').split(',')
+        removed_ids = [int(id) for id in removed_ids if id.isdigit()]  # 삭제할 ID만 정수로 처리
+
         if form.is_valid():
             post = form.save(commit=False)
-
             artist_id = request.POST.get('artist')
             member_ids = request.POST.getlist('members')
 
@@ -253,15 +252,35 @@ def post_edit(request, category, post_id):
             post.save()
             post.members.set(member_ids)
 
+            if removed_ids:
+                post.images.filter(id__in=removed_ids).delete()
+
+            if image_files:
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                for idx, image in enumerate(image_files):
+                    FarmPostImage.objects.create(
+                        image=image,
+                        content_type=content_type,
+                        object_id=post.id,
+                        is_representative=(idx == 0)
+                    )
+
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
         form = form_class(instance=post)
 
-    # GET/POST 공통 context 설정
+    existing_images = []
+    for img in post.images.all():
+        existing_images.append({
+            "id": img.id,
+            "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"
+        })
+
     sorted_artists = Artist.objects.order_by('display_name')
     selected_members = Member.objects.filter(artist_name=post.artist).distinct()
     selected_member_ids = list(post.members.values_list('id', flat=True))
+    selected_artist_id = post.artist.id if post.artist else None
 
     context = {
         'form': form,
@@ -270,11 +289,14 @@ def post_edit(request, category, post_id):
         'sorted_artists': sorted_artists,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'selected_artist_id': selected_artist_id,
+        'existing_images': existing_images,
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
-        **get_ajax_base_context(request),
         'mode': 'edit',
         'categories': get_ddokfarm_categories(),
+        **get_ajax_base_context(request),
+        'existing_images': existing_images,
     }
 
     return render(request, 'ddokfarm/edit.html', context)

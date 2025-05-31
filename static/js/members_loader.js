@@ -9,7 +9,9 @@ export function setupMembersLoader(ajaxBaseUrl, selectedMemberIds) {
     memberContainer.innerHTML = "";
     memberWrapper.classList.add("hidden");
 
-    fetch(`${ajaxBaseUrl}/members/${artistId}/`)
+    const memberApiUrl = `${ajaxBaseUrl}/artist/${artistId}/members/`;
+
+    fetch(memberApiUrl)
       .then(resp => resp.json())
       .then(data => {
         const members = data.members;
@@ -27,6 +29,8 @@ export function setupMembersLoader(ajaxBaseUrl, selectedMemberIds) {
         selectAllLabel.appendChild(document.createTextNode("전체 선택"));
         memberContainer.appendChild(selectAllLabel);
 
+        const selectedMemberIdSet = new Set(selectedMemberIds.map(Number));
+
         members.forEach(member => {
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
@@ -34,7 +38,7 @@ export function setupMembersLoader(ajaxBaseUrl, selectedMemberIds) {
           checkbox.id = `member_${member.id}`;
           checkbox.value = member.id;
           checkbox.classList.add("mr-2", "member-checkbox");
-          if (selectedMemberIds.map(Number).includes(member.id)) {
+          if (selectedMemberIdSet.has(member.id)) {
             checkbox.checked = true;
           }
 
@@ -52,11 +56,10 @@ export function setupMembersLoader(ajaxBaseUrl, selectedMemberIds) {
         });
         memberCheckboxes.forEach(cb => {
           cb.addEventListener("change", () => {
-            selectAllCheckbox.checked = Array.from(memberCheckboxes).every(cb => cb.checked);
+            selectAllCheckbox.checked = [...memberCheckboxes].every(cb => cb.checked);
           });
         });
-
-        selectAllCheckbox.checked = Array.from(memberCheckboxes).every(cb => cb.checked);
+        selectAllCheckbox.checked = [...memberCheckboxes].every(cb => cb.checked);
       })
       .catch(err => {
         console.error("멤버 불러오기 실패:", err);
@@ -65,7 +68,12 @@ export function setupMembersLoader(ajaxBaseUrl, selectedMemberIds) {
   }
 
   if (artistSelect) {
+    const initialArtistId = artistSelect.value || window.selectedArtistId;
+
     artistSelect.addEventListener("change", () => loadMembers(artistSelect.value));
-    if (artistSelect.value) loadMembers(artistSelect.value);
+
+    if (initialArtistId) {
+      loadMembers(initialArtistId);
+    }
   }
 }

@@ -19,13 +19,21 @@
   </div>
 </div>
 
+<script id="existing-images-data" type="application/json">
+  {{ existing_images|json_script:"existing-images-data" }}
+</script>
 <script>
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
-  // 기존 이미지 목록 JSON으로 넘기기 (Django 필터 json_script 사용)
-  window.existingImages = {{ post.images.all|json_script:"existingImages" }};
-</script>
 
+  const dataEl = document.getElementById("existing-images-data");
+  let existingImages = [];
+  if (dataEl && dataEl.textContent.trim()) {
+    existingImages = JSON.parse(dataEl.textContent);
+  }
+  window.existingImages = existingImages;
+  console.log("기존 이미지:", window.existingImages);
+</script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script type="module" src="{% static 'js/post_form_edit.js' %}"></script>
 
