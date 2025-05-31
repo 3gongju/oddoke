@@ -1,12 +1,14 @@
+from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from operator import attrgetter
+from itertools import chain
 from artist.models import Member, Artist
 from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost, FarmPostImage
 from .forms import FarmCommentForm
@@ -30,16 +32,43 @@ def main(request):
 # 전체 게시글 보기
 def index(request):
     category = request.GET.get('category')
-    posts = get_post_queryset(category)
-    posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        artist_filter = (
+            Q(artist__display_name__icontains=query) |
+            Q(artist__korean_name__icontains=query) |
+            Q(artist__english_name__icontains=query) |
+            Q(artist__alias__icontains=query)
+        )
+        member_filter = Q(members__member_name__icontains=query)
+        text_filter = Q(title__icontains=query) | Q(content__icontains=query)
+        common_filter = text_filter | artist_filter | member_filter
+
+        sell_results = FarmSellPost.objects.filter(common_filter).distinct()
+        rental_results = FarmRentalPost.objects.filter(common_filter).distinct()
+        split_results = FarmSplitPost.objects.filter(common_filter).distinct()
+
+        posts = sorted(
+            chain(sell_results, rental_results, split_results),
+            key=attrgetter('created_at'),
+            reverse=True
+        )
+    else:
+        posts = get_post_queryset(category)
+        posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
     for post in posts:
-        post.detail_url = reverse('ddokfarm:post_detail', args=[post.category, post.id])
+        post.detail_url = reverse('ddokfarm:post_detail', args=[post.category_type, post.id])
+
+    clean_category = (request.GET.get('category') or 'sell').split('?')[0]
 
     context = {
         'posts': posts,
         'category': category,
-        'create_url': reverse('ddokfarm:post_create'),
+        'query': query,
+        'search_action': reverse('ddokfarm:index'),
+        'create_url': f"{reverse('ddokfarm:post_create')}?category={clean_category}",
         'category_urls': get_ddokfarm_category_urls(),
         'default_category': 'sell',
     }
@@ -83,6 +112,7 @@ def post_detail(request, category, post_id):
         'members': post.members.all(),
         'app_name': 'ddokfarm',
         'comment_create_url': comment_create_url,
+        'comment_delete_url_name': 'ddokfarm:comment_delete',
     }
 
     return render(request, 'ddokfarm/detail.html', context)
@@ -127,7 +157,13 @@ def post_create(request):
                 return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
+<<<<<<< HEAD
         category = request.GET.get('category') or 'sell'
+=======
+        raw_category = request.GET.get('category') or 'sell'
+        category = raw_category.split('?')[0]
+
+>>>>>>> 63e8327c9f083d32a0bfabb187c12b04bd36b8ea
         selected_artist_id = None
         selected_member_ids = []
         form_class = get_post_form(category)
@@ -298,10 +334,27 @@ def comment_create(request, category, post_id):
 
         comment.save()
 
-    return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
+        # ✅ AJAX 요청일 경우, HTML 조각 반환
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            html = render_to_string(
+                "components/post_detail/_comment_item.html",
+                {
+                    "comment": comment,
+                    "is_reply": bool(parent_id),
+                    "post": post,
+                    "category": category,
+                    "request": request,
+                    "comment_create_url": reverse("ddokfarm:comment_create", args=[category, post_id]),
+                }
+            )
+            return HttpResponse(html)
+
+    # 일반 요청일 경우 fallback (폼 오류 등)
+    return redirect("ddokfarm:post_detail", category=category, post_id=post_id)
 
 # 댓글 삭제
 @login_required
+@require_POST
 def comment_delete(request, category, post_id, comment_id):
     comment = get_object_or_404(FarmComment, id=comment_id)
 
@@ -316,6 +369,11 @@ def comment_delete(request, category, post_id, comment_id):
 
     comment.delete()
 
+    # ✅ AJAX 요청이면 HTML 반환 대신 204 응답
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return HttpResponse(status=204)
+
+    # ✅ 일반 요청일 경우 페이지 리다이렉트
     return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
 
 # 좋아요(찜하기)

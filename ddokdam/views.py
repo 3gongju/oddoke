@@ -1,12 +1,14 @@
+from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from operator import attrgetter
+from itertools import chain
 from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
 from .forms import DamCommentForm
 from artist.models import Member, Artist
@@ -22,20 +24,45 @@ from .utils import (
     get_ddokdam_category_urls,
 )
 
-
-# 전체 게시글 보기
 def index(request):
     category = request.GET.get('category')
-    posts = get_post_queryset(category)
-    posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        artist_filter = (
+            Q(artist__display_name__icontains=query) |
+            Q(artist__korean_name__icontains=query) |
+            Q(artist__english_name__icontains=query) |
+            Q(artist__alias__icontains=query)
+        )
+        member_filter = Q(members__member_name__icontains=query)
+        text_filter = Q(title__icontains=query) | Q(content__icontains=query)
+        common_filter = text_filter | artist_filter | member_filter
+
+        community_results = DamCommunityPost.objects.filter(common_filter).distinct()
+        manner_results = DamMannerPost.objects.filter(common_filter).distinct()
+        bdaycafe_results = DamBdaycafePost.objects.filter(common_filter).distinct()
+
+        posts = sorted(
+            chain(community_results, manner_results, bdaycafe_results),
+            key=attrgetter('created_at'),
+            reverse=True
+        )
+    else:
+        posts = get_post_queryset(category)
+        posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
     for post in posts:
-        post.detail_url = reverse('ddokdam:post_detail', args=[post.category, post.id])
+        post.detail_url = reverse('ddokdam:post_detail', args=[post.category_type, post.id])
+
+    clean_category = (category or 'community').split('?')[0]
 
     context = {
         'posts': posts,
         'category': category,
-        'create_url': reverse('ddokdam:post_create'),
+        'query': query,
+        'search_action': reverse('ddokdam:index'),
+        'create_url': f"{reverse('ddokdam:post_create')}?category={clean_category}",
         'category_urls': get_ddokdam_category_urls(),
         'default_category': 'community',
     }
@@ -79,6 +106,7 @@ def post_detail(request, category, post_id):
         'members': post.members.all(),
         'app_name': 'ddokdam',
         'comment_create_url': comment_create_url,
+        'comment_delete_url_name': 'ddokdam:comment_delete',
     }
 
     return render(request, 'ddokdam/detail.html', context)
@@ -124,7 +152,9 @@ def post_create(request):
 
                 return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
-        category = request.GET.get('category') or 'community'
+        raw_category = request.GET.get('category') or 'community'
+        category = raw_category.split('?')[0]
+
         selected_artist_id = None
         selected_member_ids = []
         form_class = get_post_form(category)
@@ -299,20 +329,35 @@ def comment_create(request, category, post_id):
         comment = form.save(commit=False)
         comment.user = request.user
 
-        # 연결된 게시글 설정
+        # 게시글 연결
         assign_post_to_comment(comment, category, post)
 
-        # 대댓글이면 부모 댓글 설정
+        # 대댓글인 경우
         parent_id = request.POST.get("parent")
         if parent_id:
             comment.parent = get_object_or_404(DamComment, id=parent_id)
 
         comment.save()
 
-    return redirect('ddokdam:post_detail', category=category, post_id=post_id)
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            html = render_to_string(
+                "components/post_detail/_comment_item.html",  # 동일 템플릿 사용
+                {
+                    "comment": comment,
+                    "is_reply": bool(parent_id),
+                    "post": post,
+                    "category": category,
+                    "comment_create_url": reverse("ddokdam:comment_create", args=[category, post_id])
+                },
+                request=request
+            )
+            return HttpResponse(html)
+
+    return redirect("ddokdam:post_detail", category=category, post_id=post_id)
 
 # 댓글 삭제
 @login_required
+@require_POST
 def comment_delete(request, category, post_id, comment_id):
     comment = get_object_or_404(DamComment, id=comment_id)
 
@@ -326,6 +371,9 @@ def comment_delete(request, category, post_id, comment_id):
         return HttpResponseForbidden()
 
     comment.delete()
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return HttpResponse(status=204)
 
     return redirect('ddokdam:post_detail', category=category, post_id=post_id)
 

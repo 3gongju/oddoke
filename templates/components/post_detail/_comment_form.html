@@ -1,5 +1,5 @@
 {# 댓글/대댓글 작성 공통 폼 #}
-<form method="POST"
+<form id="comment-form-{{ parent_id|default:'root' }}" method="POST" 
       action="{{ action_url }}"
       class="flex items-center space-x-2 {{ extra_class|default:'' }}">
   {% csrf_token %}
