@@ -160,3 +160,15 @@ NEARBY_CAFE_RADIUS = 5  # km
 WALKING_SPEED_KMPH = 5  # km/h
 DEFAULT_PAGE_SIZE = 10
 MAX_NEARBY_CAFES = 50
+WALKING_SPEED_KMPH = 5   # 도보 속도 (km/h)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5분
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}

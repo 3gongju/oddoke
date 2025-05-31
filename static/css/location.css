@@ -1,0 +1,154 @@
+/* 위치 모달 애니메이션 */
+#locationModal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+#locationModal .bg-white {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 주변 카페 패널 애니메이션 */
+#nearbyPanel {
+    animation: slideInLeft 0.3s ease-out;
+}
+
+@keyframes slideInLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 카페 모달 애니메이션 */
+#cafeModal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#cafeModal .bg-white {
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+    from {
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* 로딩 스피너 개선 */
+#mapLoading {
+    backdrop-filter: blur(2px);
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 범례 호버 효과 */
+.legend-item {
+    transition: all 0.2s ease;
+}
+
+.legend-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+/* 주변 카페 아이템 호버 효과 */
+.nearby-cafe-item {
+    transition: all 0.2s ease;
+}
+
+.nearby-cafe-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 버튼 호버 효과 개선 */
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    #nearbyPanel {
+        max-width: calc(100vw - 2rem);
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+    }
+    
+    .legend {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        margin: 1rem;
+        margin-bottom: 0;
+    }
+    
+    #cafeModal .bg-white {
+        margin: 1rem;
+        max-height: calc(100vh - 2rem);
+    }
+}
+
+/* 다크 모드 지원 (선택사항) */
+@media (prefers-color-scheme: dark) {
+    #locationModal .bg-white,
+    #nearbyPanel,
+    #cafeModal .bg-white {
+        background-color: #1f2937;
+        color: #f9fafb;
+    }
+    
+    #locationModal .text-gray-600,
+    #nearbyPanel .text-gray-600,
+    #cafeModal .text-gray-600 {
+        color: #d1d5db;
+    }
+}
