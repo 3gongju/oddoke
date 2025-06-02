@@ -5,7 +5,7 @@ from django.contrib.auth import logout as auth_logout
 from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
+from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from artist.models import Artist, Member
 from itertools import chain
@@ -193,12 +193,15 @@ def mypage(request):
     )
 
     # ✅ 내가 쓴 댓글 (Farm, 상위 댓글만)
-    farm_comments = FarmComment.objects.filter(user=user_profile, parent__isnull=True).select_related('user')
+    farm_comments = FarmComment.objects.filter(user=user_profile, parent__isnull=True)
+    dam_comments = DamComment.objects.filter(user=user_profile, parent__isnull=True)
 
     # 댓글에 연결된 게시글 및 카테고리 추출
-    for comment in farm_comments:
-        comment.target_post = comment.sell_post or comment.rental_post or comment.split_post
-        comment.category = getattr(comment.target_post, 'category_type', None)
+    for comment in chain(farm_comments, dam_comments):
+        target_model = comment.content_type.model_class()
+        target_post = target_model.objects.filter(id=comment.object_id).first()
+        comment.target_post = target_post
+        comment.category = getattr(target_post, 'category_type', None)
 
     # ✅ 멤버-아티스트 매핑
     for member in favorite_members:
