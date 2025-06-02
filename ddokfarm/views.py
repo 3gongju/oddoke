@@ -18,8 +18,6 @@ from .utils import (
     get_post_form,
     get_post_comments,
     get_post_queryset,
-    assign_post_to_comment,
-    get_comment_post_field_and_id,
     get_ajax_base_context,
     get_ddokfarm_categories,
     get_ddokfarm_category_urls,
@@ -95,7 +93,7 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
-    comment_qs = get_post_comments(category, post)
+    comment_qs = get_post_comments(post)
     comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
     total_comment_count = comment_qs.count()
     comment_form = FarmCommentForm()
@@ -346,7 +344,8 @@ def comment_create(request, category, post_id):
         comment.user = request.user
 
         # 연결된 게시글 설정
-        assign_post_to_comment(comment, category, post)
+        comment.content_type = ContentType.objects.get_for_model(post.__class__)
+        comment.object_id = post.id
 
         # 대댓글이면 부모 댓글 설정
         parent_id = request.POST.get("parent")
@@ -380,10 +379,8 @@ def comment_delete(request, category, post_id, comment_id):
     comment = get_object_or_404(FarmComment, id=comment_id)
 
     # 연결된 게시글과 ID 확인
-    try:
-        _, _ = get_comment_post_field_and_id(comment, category, post_id)
-    except Http404:
-        raise
+    if not (comment.content_type.model == get_post_model(category)._meta.model_name and comment.object_id == int(post_id)):
+        return HttpResponseForbidden()
 
     if request.user != comment.user:
         return HttpResponseForbidden()

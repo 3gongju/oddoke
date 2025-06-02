@@ -10,16 +10,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from operator import attrgetter
 from itertools import chain
+from artist.models import Member, Artist
 from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
 from .forms import DamCommentForm
-from artist.models import Member, Artist
 from .utils import (
     get_post_model,
     get_post_form,
     get_post_comments,
     get_post_queryset,
-    assign_post_to_comment,
-    get_comment_post_field_and_id,
     get_ajax_base_context,
     get_ddokdam_categories,
     get_ddokdam_category_urls,
@@ -89,7 +87,7 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
-    comment_qs = get_post_comments(category, post)
+    comment_qs = get_post_comments(post)
     comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
     total_comment_count = comment_qs.count()
     comment_form = DamCommentForm()
@@ -338,8 +336,9 @@ def comment_create(request, category, post_id):
         comment = form.save(commit=False)
         comment.user = request.user
 
-        # 게시글 연결
-        assign_post_to_comment(comment, category, post)
+        # 연결된 게시글 설정
+        comment.content_type = ContentType.objects.get_for_model(post.__class__)
+        comment.object_id = post.id
 
         # 대댓글인 경우
         parent_id = request.POST.get("parent")
@@ -371,10 +370,8 @@ def comment_delete(request, category, post_id, comment_id):
     comment = get_object_or_404(DamComment, id=comment_id)
 
     # 연결된 게시글과 ID 확인
-    try:
-        _, _ = get_comment_post_field_and_id(comment, category, post_id)
-    except Http404:
-        raise
+    if not (comment.content_type.model == get_post_model(category)._meta.model_name and comment.object_id == int(post_id)):
+        return HttpResponseForbidden()
 
     if request.user != comment.user:
         return HttpResponseForbidden()
