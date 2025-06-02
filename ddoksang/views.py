@@ -314,7 +314,7 @@ def create_cafe(request):
                     messages.success(request, f"'{cafe.cafe_name}' 생일카페가 성공적으로 등록되었습니다! 관리자 승인 후 공개됩니다.")
 
                     # 승인 대기 상태에서도 볼 수 있는 특별 페이지로 리다이렉트
-                    return redirect('ddoksang:my_cafes_success', cafe_id=cafe.id)
+                    return redirect('ddoksang:create_success', cafe_id=cafe.id)
                                     
 
 
@@ -335,7 +335,7 @@ def create_cafe(request):
         
         return redirect('ddoksang:create')
     
-login_required
+@login_required
 def cafe_create_success(request, cafe_id):
     """생일카페 등록 완료 페이지"""
     try:
@@ -1053,12 +1053,46 @@ def reject_cafe(request, cafe_id):
 
 # 관리자 승인 전 관리자/ 사용자의 덕생 추가 글에 대한 미리보기 기능
 
-def preview_cafe(request, cafe_id):
-    cafe = get_object_or_404(BdayCafe, id=cafe_id)
-    is_admin = request.GET.get("admin") == "1"
+# def preview_cafe(request, cafe_id):
+#     cafe = get_object_or_404(BdayCafe, id=cafe_id)
+#     is_admin = request.GET.get("admin") == "1"
+#     context = {
+#         "cafe": cafe,
+#         "is_admin_preview": is_admin,
+#         "kakao_api_key": getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # 기존과 동일하게 유지
+#     }
+#     return render(request, "ddoksang/cafe_preview.html", context)
+
+@login_required
+def user_preview_cafe(request, cafe_id):
+    """사용자 미리보기 (자신이 등록한 카페만, 상태 무관)"""
+    cafe = get_object_or_404(BdayCafe, id=cafe_id, submitted_by=request.user)
+    
     context = {
-        "cafe": cafe,
-        "is_admin_preview": is_admin,
-        "kakao_api_key": getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # 기존과 동일하게 유지
+        'cafe': cafe,
+        'is_favorited': False,
+        'nearby_cafes': [],
+        'user_favorites': [],
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'is_preview': True,
+        'can_edit': True,
+        'preview_type': 'user',
     }
-    return render(request, "ddoksang/cafe_preview.html", context)
+    return render(request, 'ddoksang/detail.html', context)
+
+@admin_required
+def admin_preview_cafe(request, cafe_id):
+    """관리자 미리보기 (모든 카페, 상태 무관)"""
+    cafe = get_object_or_404(BdayCafe, id=cafe_id)
+    
+    context = {
+        'cafe': cafe,
+        'is_favorited': False,
+        'nearby_cafes': [],
+        'user_favorites': [],
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'is_preview': True,
+        'can_edit': False,
+        'preview_type': 'admin',
+    }
+    return render(request, 'ddoksang/detail.html', context)

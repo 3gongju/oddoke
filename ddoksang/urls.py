@@ -9,12 +9,13 @@ urlpatterns = [
     path('create/success/<int:cafe_id>/', views.cafe_create_success, name='create_success'),
     path('my_cafes/', views.my_cafes, name='my_cafes'),
     
-    # 카페 상세 보기
+    # 카페 상세 보기 (승인된 것과 미승인된 것 모두 처리)
     path('detail/<int:cafe_id>/', views.bday_cafe_detail, name='detail'),
     
-    # 미리보기 (통합된 템플릿 사용)
-    # urls.py
-    path('preview/<int:cafe_id>/', views.preview_cafe, name='preview'),
+    # 미리보기 (기존 함수 재사용)
+   
+    path('user_preview/<int:cafe_id>/', views.user_preview_cafe, name='user_preview'),
+    path('admin_preview/<int:cafe_id>/', views.admin_preview_cafe, name='admin_preview'),
 
     
     # API
