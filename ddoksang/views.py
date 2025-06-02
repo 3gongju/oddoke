@@ -246,6 +246,36 @@ def create_cafe(request):
         else:
             form_data['member'] = ''
 
+        # 🔧 카카오맵 API 데이터 처리 추가
+        kakao_place_data = request.POST.get('kakao_place_data')
+        if kakao_place_data:
+            try:
+                place_info = json.loads(kakao_place_data)
+                # place_name 추가
+                if 'place_name' in place_info:
+                    form_data['place_name'] = place_info['place_name']
+                    print("place_name:", place_info['place_name'])
+                    
+                # 기타 카카오맵 데이터도 업데이트
+                if 'address_name' in place_info:
+                    form_data['address'] = place_info['address_name']
+                if 'road_address_name' in place_info:
+                    form_data['road_address'] = place_info['road_address_name']
+                if 'phone' in place_info:
+                    form_data['phone'] = place_info['phone']
+                if 'place_url' in place_info:
+                    form_data['place_url'] = place_info['place_url']
+                if 'category_name' in place_info:
+                    form_data['category_name'] = place_info['category_name']
+                if 'id' in place_info:
+                    form_data['kakao_place_id'] = place_info['id']
+                if 'x' in place_info:
+                    form_data['longitude'] = place_info['x']
+                if 'y' in place_info:
+                    form_data['latitude'] = place_info['y']
+            except json.JSONDecodeError:
+                messages.warning(request, "카카오맵 정보 처리 중 오류가 발생했습니다.")
+
         # 특전 정보 처리
         perks = request.POST.getlist('perks')
         if perks:
@@ -265,6 +295,9 @@ def create_cafe(request):
                     cafe = form.save(commit=False)
                     cafe.submitted_by = request.user
                     cafe.status = 'pending'
+                    
+                    cafe.place_name = form.cleaned_data.get('place_name')
+                    
                     cafe.save()
 
                     # 다중 이미지 저장
@@ -518,32 +551,42 @@ def nearby_cafes_api(request):
 
 @require_GET
 def member_autocomplete(request):
-    """멤버 자동완성 API"""
     q = request.GET.get('q', '').strip()
+    seen_pairs = set()
     results = []
-    
-    if len(q) >= 1:  # 최소 1글자 이상
+
+    if len(q) >= 1:
         try:
             members = Member.objects.filter(
                 Q(member_name__icontains=q)
-            ).distinct().prefetch_related('artist_name')[:10]
-            
+            ).prefetch_related('artist_name')[:50]
+
             for member in members:
-                artists = member.artist_name.all()
-                if artists:
-                    artist_display = ' / '.join([a.display_name for a in artists.distinct()])
+                for artist in member.artist_name.all():
+                    pair_key = (member.id, artist.id)
+                    if pair_key in seen_pairs:
+                        continue
+                    seen_pairs.add(pair_key)
+
+                    # 정확도 점수 계산: 정확히 일치하면 높은 점수 부여
+                    exact_match = (member.member_name == q)
                     results.append({
                         'member_id': member.id,
-                        'artist_id': artists.first().id,
+                        'artist_id': artist.id,
                         'member_name': member.member_name,
-                        'artist_display': artist_display,
+                        'artist_display': artist.display_name,
                         'bday': member.member_bday,
+                        'priority': 1 if exact_match else 2
                     })
         except Exception as e:
-            # logger.error(f"멤버 자동완성 오류: {e}")
-            pass  # 또는 다른 오류 처리
-    
-    return JsonResponse({'results': results})  # ← 들여쓰기 수정!
+            logger.error(f"[Autocomplete] 멤버 검색 오류: {e}")
+
+    # 🔽 정확한 일치가 위에 오도록 정렬
+    results.sort(key=lambda x: (x['priority'], x['member_name']))
+    return JsonResponse({'results': results})
+
+
+
 
 
 def home_view(request):

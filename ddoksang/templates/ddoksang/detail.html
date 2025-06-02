@@ -126,6 +126,10 @@
               </div>
               <div>
                 <p class="font-medium text-gray-900">주소</p>
+                {% if cafe.place_name %}
+                   <p class="text-sm text-gray-900 font-semibold">{{ cafe.place_name }}</p>
+                {% endif %}
+
                 <p class="text-gray-600">{{ cafe.address }}</p>
                 {% if cafe.road_address %}
                   <p class="text-sm text-gray-500">(도로명) {{ cafe.road_address }}</p>
