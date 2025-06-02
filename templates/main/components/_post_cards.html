@@ -18,10 +18,9 @@
         <a href="#" class="block bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition">
       {% endif %}
 
-        {% if post.image %}
+        {% if post.images.all %}
           <div class="w-full h-48 overflow-hidden">
-            <img src="{{ post.image.url }}" alt="{{ post.title }}"
-                 class="w-full h-full object-cover" />
+            <img src="{{ post.images.first.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover" />
           </div>
         {% endif %}
 
