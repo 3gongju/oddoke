@@ -1,0 +1,90 @@
+<!-- templates/404.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페이지를 찾을 수 없습니다 - 덕생</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 min-h-screen">
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full text-center">
+            <!-- 404 아이콘 -->
+            <div class="mb-8">
+                <div class="text-8xl mb-4">🎂</div>
+                <div class="text-6xl font-bold text-gray-400 mb-2">404</div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">페이지를 찾을 수 없어요</h1>
+            </div>
+
+            <!-- 메시지 -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+                <p class="text-gray-600 mb-4 leading-relaxed">
+                    요청하신 페이지가 존재하지 않거나<br>
+                    접근 권한이 없을 수 있습니다.
+                </p>
+                
+                <div class="text-sm text-gray-500 space-y-1">
+                    <p>• 생일카페가 승인 대기 중일 수 있어요</p>
+                    <p>• URL을 다시 확인해주세요</p>
+                    <p>• 페이지가 삭제되었을 수 있어요</p>
+                </div>
+            </div>
+
+            <!-- 액션 버튼들 -->
+            <div class="space-y-3">
+                <a href="/" 
+                   class="block w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                    🏠 홈으로 돌아가기
+                </a>
+                
+                <div class="flex space-x-3">
+                    <a href="/ddoksang/search/" 
+                       class="flex-1 bg-white text-gray-700 py-2 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+                        🔍 검색하기
+                    </a>
+                    <a href="/ddoksang/create/" 
+                       class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        ➕ 생카 등록
+                    </a>
+                </div>
+                
+                <button onclick="history.back()" 
+                        class="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+                    ← 이전 페이지로
+                </button>
+            </div>
+
+            <!-- 도움말 -->
+            <div class="mt-8 text-xs text-gray-400">
+                <p>문제가 계속되면 관리자에게 문의해주세요</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 배경 애니메이션 -->
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <style>
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+    </style>
+</body>
+</html>
