@@ -283,7 +283,6 @@ def post_edit(request, category, post_id):
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
         'selected_artist_id': selected_artist_id,
-        'existing_images': existing_images,
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokdam:post_detail', args=[category, post.id]),
         'mode': 'edit',

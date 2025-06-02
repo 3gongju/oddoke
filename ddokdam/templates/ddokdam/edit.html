@@ -19,9 +19,8 @@
   </div>
 </div>
 
-<script id="existing-images-data" type="application/json">
-  {{ existing_images|json_script:"existing-images-data" }}
-</script>
+
+{{ existing_images|json_script:"existing-images-data" }}
 <script>
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};

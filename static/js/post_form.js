@@ -1,6 +1,6 @@
 import { setupArtistAutocomplete } from "./artist_autocomplete.js";
 import { setupCategoryButtons } from "./category_buttons.js";
-import { setupImageUploadCore } from "./image_upload_core.js";
+import { setupImageUpload } from "./image_upload.js";
 import { setupMembersLoader } from "./members_loader.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,6 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupArtistAutocomplete(ajaxBaseUrl);
   setupCategoryButtons();
-  setupImageUploadCore({ formId: "create-form" });
+  setupImageUpload({ formId: "create-form" });
   setupMembersLoader(ajaxBaseUrl, selectedMemberIds);
 });

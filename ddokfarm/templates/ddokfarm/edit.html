@@ -19,9 +19,7 @@
   </div>
 </div>
 
-<script id="existing-images-data" type="application/json">
-  {{ existing_images|json_script:"existing-images-data" }}
-</script>
+{{ existing_images|json_script:"existing-images-data" }}
 <script>
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
@@ -29,7 +27,7 @@
   const dataEl = document.getElementById("existing-images-data");
   let existingImages = [];
   if (dataEl && dataEl.textContent.trim()) {
-    existingImages = JSON.parse(dataEl.textContent);
+    existingImages = JSON.parse(dataEl.textContent.trim());
   }
   window.existingImages = existingImages;
   console.log("기존 이미지:", window.existingImages);
