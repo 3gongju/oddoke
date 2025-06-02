@@ -217,39 +217,38 @@
       </div>
     </div>
 
-    <!-- 🎨 나의 활동 섹션 -->
+    <!-- 🎨 덕팜 활동 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
-          📌 나의 활동
+          📌 나의 덕팜 활동
         </h2>
 
-        <!-- 탭 네비게이션 -->
+        <!-- 덕팜 탭 네비게이션 -->
         <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
-          <button class="tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
-                  onclick="showTab('written')">
+          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
+                  onclick="showFarmTab('written')">
             📝 내가 쓴 글
           </button>
-          <button class="tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
-                  onclick="showTab('commented')">
+          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showFarmTab('commented')">
             💬 내가 쓴 댓글
           </button>
-          <button class="tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
-                  onclick="showTab('liked')">
+          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showFarmTab('liked')">
             ❤️ 찜한 글
           </button>
         </div>
 
-        <!-- 탭 콘텐츠 -->
-        <!-- 내가 쓴 글 -->
-        <div id="tab-written" class="tab-content">
+        <!-- 덕팜 탭 콘텐츠 -->
+        <div id="farm-tab-written" class="tab-content">
           {% if farm_posts %}
             <div class="space-y-4">
               {% for post in farm_posts %}
                 <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                     class="text-blue-600 hover:text-blue-800 font-semibold text-lg transition-colors">
-                    [{{ post.get_category_type_display }}] {{ post.title }}
+                    class="text-blue-600 hover:text-blue-800 font-semibold text-lg transition-colors">
+                    [덕팜] {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
@@ -262,16 +261,16 @@
           {% endif %}
         </div>
 
-        <!-- 내가 쓴 댓글 -->
-        <div id="tab-commented" class="tab-content hidden">
+        <div id="farm-tab-commented" class="tab-content hidden">
           {% if farm_comments %}
             <div class="space-y-4">
               {% for comment in farm_comments %}
                 <div class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                     class="text-green-600 hover:text-green-800 font-semibold transition-colors">
-                    💬 {{ comment.content|truncatewords:15 }}
+                    class="text-green-600 hover:text-green-800 font-semibold text-xl transition-colors">
+                    {{ comment.post.title }}
                   </a>
+                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">💬 {{ comment.content|truncatewords:15 }}</p>
                   <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
@@ -283,14 +282,100 @@
           {% endif %}
         </div>
 
-        <!-- 내가 찜한 글 -->
-        <div id="tab-liked" class="tab-content hidden">
-          {% if liked_posts %}
+        <div id="farm-tab-liked" class="tab-content hidden">
+          {% if liked_farm_posts %}
             <div class="space-y-4">
-              {% for post in liked_posts %}
+              {% for post in liked_farm_posts %}
                 <div class="p-5 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-100 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                     class="text-pink-600 hover:text-pink-800 font-semibold transition-colors">
+                    class="text-pink-600 hover:text-pink-800 font-semibold transition-colors">
+                    ❤️ {{ post.title }}
+                  </a>
+                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">찜한 글이 없습니다. ❤️</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎨 덕담 활동 섹션 -->
+    <div class="mb-12">
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
+          📌 나의 덕담 활동
+        </h2>
+
+        <!-- 덕담 탭 네비게이션 -->
+        <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
+          <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
+                  onclick="showDamTab('written')">
+            📝 내가 쓴 글
+          </button>
+          <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showDamTab('commented')">
+            💬 내가 쓴 댓글
+          </button>
+          <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showDamTab('liked')">
+            ❤️ 찜한 글
+          </button>
+        </div>
+
+        <!-- 덕담 탭 콘텐츠 -->
+        <div id="dam-tab-written" class="tab-content">
+          {% if dam_posts %}
+            <div class="space-y-4">
+              {% for post in dam_posts %}
+                <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                  <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
+                    class="text-blue-600 hover:text-blue-800 font-semibold text-lg transition-colors">
+                    [덕담] {{ post.title }}
+                  </a>
+                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">작성한 글이 없습니다. 📝</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div id="dam-tab-commented" class="tab-content hidden">
+          {% if dam_comments %}
+            <div class="space-y-4">
+              {% for comment in dam_comments %}
+                <div class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100 hover:shadow-md transition-shadow">
+                  <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
+                    class="text-green-600 hover:text-green-800 font-semibold transition-colors">
+                    {{ comment.post.title }}
+                  </a>
+                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">💬 {{ comment.content|truncatewords:15 }}</p>
+                  <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다. 💬</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div id="dam-tab-liked" class="tab-content hidden">
+          {% if liked_dam_posts %}
+            <div class="space-y-4">
+              {% for post in liked_dam_posts %}
+                <div class="p-5 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-100 hover:shadow-md transition-shadow">
+                  <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
+                    class="text-pink-600 hover:text-pink-800 font-semibold transition-colors">
                     ❤️ {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
@@ -440,22 +525,26 @@
     setTimeout(() => location.reload(), 100);
   }
 
-  function showTab(tabId) {
-    // 모든 탭 버튼의 active 클래스 제거
-    document.querySelectorAll('.tab-btn').forEach(btn => {
+  function showFarmTab(tabId) {
+    document.querySelectorAll('.farm-tab-btn').forEach(btn => {
       btn.classList.remove('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
       btn.classList.add('text-gray-600');
     });
-    
-    // 클릭된 탭 버튼에 active 클래스 추가
     event.target.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
     event.target.classList.remove('text-gray-600');
-    
-    // 모든 탭 콘텐츠 숨기기
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    
-    // 선택된 탭 콘텐츠 보이기
-    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    document.querySelectorAll('[id^="farm-tab-"]').forEach(tab => tab.classList.add('hidden'));
+    document.getElementById(`farm-tab-${tabId}`).classList.remove('hidden');
+  }
+
+  function showDamTab(tabId) {
+    document.querySelectorAll('.dam-tab-btn').forEach(btn => {
+      btn.classList.remove('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+      btn.classList.add('text-gray-600');
+    });
+    event.target.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+    event.target.classList.remove('text-gray-600');
+    document.querySelectorAll('[id^="dam-tab-"]').forEach(tab => tab.classList.add('hidden'));
+    document.getElementById(`dam-tab-${tabId}`).classList.remove('hidden');
   }
 
   function bindFollowButtons(container) {
@@ -510,12 +599,10 @@
     }
   }
 
-  // 페이지 로드 시 첫 번째 탭 활성화
+  // 페이지 로드 시 각각의 첫 번째 탭 활성화
   document.addEventListener('DOMContentLoaded', function() {
-    const firstTabBtn = document.querySelector('.tab-btn');
-    if (firstTabBtn) {
-      firstTabBtn.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
-    }
-  });
+    document.querySelector('.farm-tab-btn').classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+    document.querySelector('.dam-tab-btn').classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+});
 </script>
 {% endblock %}

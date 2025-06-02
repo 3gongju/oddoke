@@ -173,15 +173,11 @@
             <div class="post-item post-card" data-category="ddokfarm">
               <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" class="block">
                 <div class="relative overflow-hidden rounded-2xl shadow-lg group">
-                  {% if post.image %}
+                  {% with post.images.first as image %}
                     <div class="aspect-square overflow-hidden">
-                      <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                      <img src="{{ image.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                     </div>
-                  {% else %}
-                    <div class="aspect-square bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                      <img src="{% static 'image/ddok_logo.png' %}" alt="기본 이미지" class="w-16 h-16 opacity-40">
-                    </div>
-                  {% endif %}
+                  {% endwith %}
                   
                   <!-- Overlay -->
                   <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -217,15 +213,11 @@
             <div class="post-item post-card" data-category="ddokdam">
               <a href="{% url 'ddokdam:post_detail' 'community' post.id %}" class="block">
                 <div class="relative overflow-hidden rounded-2xl shadow-lg group">
-                  {% if post.image %}
+                  {% with post.images.first as image %}
                     <div class="aspect-square overflow-hidden">
-                      <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                      <img src="{{ image.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                     </div>
-                  {% else %}
-                    <div class="aspect-square bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
-                      <img src="{% static 'image/ddok_logo.png' %}" alt="기본 이미지" class="w-16 h-16 opacity-40">
-                    </div>
-                  {% endif %}
+                  {% endwith %}
                   
                   <!-- Overlay -->
                   <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -360,7 +352,12 @@
 
   /* Modal */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center hidden z-50;
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm justify-center items-center z-50;
+    display: none;
+  }
+
+  .modal-overlay.flex {
+    display: flex;
   }
 
   .modal-content {
@@ -465,6 +462,7 @@
           followModalList.appendChild(li);
         });
         followModal.classList.remove("hidden");
+        followModal.classList.add("flex");
       })
       .catch(error => {
         console.error('팔로우 목록 로드 실패:', error);
@@ -473,6 +471,7 @@
 
   function closeFollowModal() {
     followModal.classList.add("hidden");
+    followModal.classList.remove("flex");
   }
 
   // Category filtering
