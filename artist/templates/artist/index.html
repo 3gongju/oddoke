@@ -57,6 +57,7 @@
     const input = document.getElementById('artist-search');
     const list = document.getElementById('autocomplete-list');
     let selectedIndex = -1;
+    let currentResults = []; // 현재 검색 결과 저장
 
     input.addEventListener('input', function () {
       const keyword = this.value.trim();
@@ -64,6 +65,7 @@
       if (!keyword) {
         list.classList.add('hidden');
         list.innerHTML = '';
+        currentResults = [];
         return;
       }
 
@@ -71,31 +73,60 @@
         .then(res => res.json())
         .then(data => {
           list.innerHTML = '';
-          if (!data.results.length) {
+          currentResults = data.results || [];
+          
+          if (!currentResults.length) {
             list.classList.add('hidden');
             return;
           }
 
-          data.results.forEach((artist, index) => {
+          currentResults.forEach((result, index) => {
             const item = document.createElement('li');
-            item.textContent = artist;
-            item.className = 'px-4 py-2 hover:bg-yellow-100 cursor-pointer text-sm';
+            item.className = 'px-4 py-2 hover:bg-yellow-100 cursor-pointer text-sm border-b border-gray-100 last:border-b-0';
             item.setAttribute('data-index', index);
+            
+            // 결과 타입에 따라 다른 표시
+            if (result.type === 'artist') {
+              item.innerHTML = `
+                <div class="flex items-center">
+                  <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2">아티스트</span>
+                  <span class="font-medium">${result.name}</span>
+                </div>
+              `;
+            } else if (result.type === 'member') {
+              item.innerHTML = `
+                <div class="flex items-center">
+                  <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mr-2">멤버</span>
+                  <div>
+                    <div class="font-medium">${result.name}</div>
+                    <div class="text-xs text-gray-500">${result.artist}</div>
+                  </div>
+                </div>
+              `;
+            }
+            
             item.onclick = () => {
-              input.value = artist;
+              // 선택된 항목의 이름을 입력창에 설정
+              input.value = result.name;
               list.classList.add('hidden');
               input.form.submit();
             };
+            
             list.appendChild(item);
           });
 
           list.classList.remove('hidden');
+        })
+        .catch(error => {
+          console.error('자동완성 오류:', error);
+          list.classList.add('hidden');
         });
     });
 
     input.addEventListener('keydown', function (e) {
       const items = list.querySelectorAll('li');
       if (!items.length) return;
+      
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         selectedIndex = (selectedIndex + 1) % items.length;
@@ -107,20 +138,25 @@
       } else if (e.key === 'Enter' && selectedIndex >= 0) {
         e.preventDefault();
         items[selectedIndex].click();
+      } else if (e.key === 'Escape') {
+        list.classList.add('hidden');
+        selectedIndex = -1;
       }
     });
 
     document.addEventListener('click', e => {
       if (!list.contains(e.target) && e.target !== input) {
         list.classList.add('hidden');
+        selectedIndex = -1;
       }
     });
 
     function updateHighlight(items) {
       items.forEach(item => item.classList.remove('bg-yellow-100'));
-      if (selectedIndex >= 0) {
+      if (selectedIndex >= 0 && currentResults[selectedIndex]) {
         items[selectedIndex].classList.add('bg-yellow-100');
-        input.value = items[selectedIndex].textContent;
+        // 키보드 네비게이션 시에는 이름만 입력창에 표시
+        input.value = currentResults[selectedIndex].name;
       }
     }
   });

@@ -623,10 +623,11 @@ def home_view(request):
             
             birthday_artists.append({
                 'member_name': member.member_name,
-                'artist_name': display_artist_name,  # 🔥 수정된 부분
+                'artist_name': display_artist_name,  
                 'birthday_display': member.member_bday,
                 'profile_image': getattr(member, 'profile_image', None),
                 'is_today_birthday': is_today_birthday,
+                'member': member,
             })
     
     # 오늘이 생일인 사람을 맨 앞으로 정렬
