@@ -200,6 +200,6 @@ class UserSearchHistoryAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at']
 
 # Admin 사이트 커스터마이징
-admin.site.site_header = "덕생 관리자"
+admin.site.site_header = "최고 경영자 및 관리자"
 admin.site.site_title = "덕생 Admin"
 admin.site.index_title = "생일카페 관리 시스템"

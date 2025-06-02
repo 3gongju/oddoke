@@ -264,66 +264,7 @@
       <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </div>
 
-    <!-- STEP 7: 최종 확인 -->
-    <div id="step-7" class="step hidden">
-      <h3 class="text-lg font-semibold mb-6">📋 입력 내용 최종 확인</h3>
-      
-      <div class="bg-gray-50 rounded-lg p-6 space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h4 class="font-medium text-gray-900 mb-2">아티스트/멤버</h4>
-            <p id="summary-name" class="text-gray-700"></p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900 mb-2">카페명</h4>
-            <p id="summary-cafe-name" class="text-gray-700"></p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900 mb-2">주소</h4>
-            <p id="summary-address" class="text-gray-700"></p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900 mb-2">일정</h4>
-            <p id="summary-dates" class="text-gray-700"></p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900 mb-2">특전 정보</h4>
-            <p id="summary-perks" class="text-gray-700"></p>
-          </div>
-          <div>
-            <h4 class="font-medium text-gray-900 mb-2">SNS 계정</h4>
-            <p id="summary-social" class="text-gray-700"></p>
-          </div>
-        </div>
-        
-        <div>
-          <h4 class="font-medium text-gray-900 mb-2">이벤트 설명</h4>
-          <p id="summary-desc" class="text-gray-700"></p>
-        </div>
-        
-        <div>
-          <h4 class="font-medium text-gray-900 mb-2">업로드된 이미지</h4>
-          <div id="summary-images" class="flex flex-wrap gap-2"></div>
-        </div>
-      </div>
-
-      <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-        <div class="flex">
-          <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-          </svg>
-          <div class="ml-3">
-            <h3 class="text-sm font-medium text-blue-800">제출 전 확인사항</h3>
-            <div class="mt-2 text-sm text-blue-700">
-              <p>• 입력한 정보가 정확한지 다시 한 번 확인해주세요.</p>
-              <p>• 제출 후에는 관리자 승인을 거쳐 공개됩니다.</p>
-              <p>• 허위 정보 입력 시 승인이 거절될 수 있습니다.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+  
     <!-- 네비게이션 버튼 -->
     <div class="mt-8 flex justify-between">
       <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">이전</button>
@@ -364,7 +305,8 @@ input[type="checkbox"]:checked + .perk-btn:hover {
 </style>
 
 <script>
-const steps = 7;
+// 🔧 디버깅 및 수정된 스크립트
+const steps = 6;
 let currentStep = 1;
 let map = null;
 
@@ -391,6 +333,7 @@ function updateStepVisibility() {
   // 버튼 상태 조정
   prevBtn.disabled = currentStep === 1;
   
+  // 정확히 마지막 단계(6단계)일 때만 제출 버튼으로 변경
   if (currentStep === steps) {
     nextBtn.textContent = "최종 제출";
     nextBtn.type = "submit";
@@ -447,60 +390,18 @@ function validateStep() {
   return true;
 }
 
-function updateSummary() {
-  // 아티스트/멤버
-  document.getElementById("summary-name").textContent = document.getElementById("artist-member-search").value;
-  
-  // 카페명
-  document.getElementById("summary-cafe-name").textContent = document.querySelector('[name="cafe_name"]').value;
-  
-  // 주소
-  document.getElementById("summary-address").textContent = document.getElementById("address").value;
-  
-  // 날짜
-  const start = document.querySelector('[name="start_date"]').value;
-  const end = document.querySelector('[name="end_date"]').value;
-  document.getElementById("summary-dates").textContent = `${start} ~ ${end}`;
-
-  // 특전
-  const perks = [...document.querySelectorAll('input[name="perks"]:checked')].map(el => el.value);
-  document.getElementById("summary-perks").textContent = perks.length > 0 ? perks.join(", ") : "(선택 안함)";
-
-  // SNS
-  const twitter = document.querySelector('[name="twitter_username"]').value;
-  let socialText = "";
-  if (twitter) socialText += `X: @${twitter}`;
-  document.getElementById("summary-social").textContent = socialText || "(없음)";
-
-  // 설명
-  document.getElementById("summary-desc").textContent = document.querySelector('[name="event_description"]').value || "(설명 없음)";
-  
-  // 이미지
-  const imageContainer = document.getElementById("summary-images");
-  const images = document.getElementById("images").files;
-  imageContainer.innerHTML = "";
-  for (let i = 0; i < images.length; i++) {
-    const img = document.createElement("img");
-    img.src = URL.createObjectURL(images[i]);
-    img.className = "w-16 h-16 object-cover rounded border";
-    imageContainer.appendChild(img);
-  }
-  if (images.length === 0) {
-    imageContainer.innerHTML = '<span class="text-gray-500 text-sm">(이미지 없음)</span>';
-  }
-}
-
-nextBtn.addEventListener("click", () => {
-  if (!validateStep()) return;
-
+// 수정된 nextBtn 이벤트 리스너
+nextBtn.addEventListener("click", (e) => {
+  // 마지막 단계가 아닌 경우에만 단계 이동 처리
   if (currentStep < steps) {
+    e.preventDefault(); // 폼 제출 방지
+    
+    if (!validateStep()) return;
+    
     currentStep++;
     updateStepVisibility();
-
-    if (currentStep === steps) {
-      updateSummary();
-    }
   }
+  // currentStep === steps인 경우 (6단계)에는 자연스럽게 폼 제출됨
 });
 
 prevBtn.addEventListener("click", () => {
@@ -628,13 +529,6 @@ function selectArtist(item) {
   // 선택된 아티스트 표시
   document.getElementById("selected-artist-text").textContent = `✓ ${item.member_name} (${item.artist_display}) 선택됨`;
   document.getElementById("selected-artist").classList.remove("hidden");
-  
-  console.log('아티스트 선택됨:', {
-    artist_id: item.artist_id,
-    member_id: item.member_id,
-    member_name: item.member_name,
-    artist_display: item.artist_display
-  });
 }
 
 function clearSelection() {
@@ -772,21 +666,11 @@ document.querySelector('[name="end_date"]').addEventListener('change', function(
 
 // 폼 제출 시 데이터 변환
 document.getElementById('multiStepForm').addEventListener('submit', function(e) {
-  console.log("=== 폼 제출 직전 디버깅 ===");
-  
-  // 🔧 모든 input, textarea, select 활성화 (아주 중요!)
+  // 모든 input, textarea, select 활성화
   const allInputs = this.querySelectorAll('input, textarea, select');
   allInputs.forEach(input => {
     input.disabled = false;
   });
-  
-  console.log('artist_id:', document.getElementById('artist_id').value);
-  console.log('member_id:', document.getElementById('member_id').value);
-  console.log('cafe_name:', document.querySelector('[name="cafe_name"]').value);
-  console.log('address:', document.getElementById('address').value);
-  console.log('start_date:', document.querySelector('[name="start_date"]').value);
-  console.log('end_date:', document.querySelector('[name="end_date"]').value);
-  console.log('event_description:', document.querySelector('[name="event_description"]').value);
   
   // Twitter username을 URL로 변환
   const twitterUsername = document.querySelector('[name="twitter_username"]').value.trim();
@@ -798,8 +682,6 @@ document.getElementById('multiStepForm').addEventListener('submit', function(e) 
     twitterInput.value = `https://twitter.com/${twitterUsername.replace('@', '')}`;
     this.appendChild(twitterInput);
   }
-  
-  console.log("==========================");
 });
 </script>
 {% endblock %}

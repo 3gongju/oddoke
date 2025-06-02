@@ -34,14 +34,14 @@
               {% endfor %}
             </div>
           {% endif %}
+          
 
-          <div class="mt-3 flex justify-between items-center">
+           <div class="mt-3 flex justify-between items-center">
             {% if cafe.status == 'approved' %}
               <a href="{% url 'ddoksang:detail' cafe.id %}" class="text-sm text-blue-600 hover:underline font-medium">자세히 보기 →</a>
             {% else %}
-              <a href="{% url 'ddoksang:preview' cafe.id %}?admin=0" class="text-sm text-orange-600 hover:underline font-medium">내 카페 보기 →</a>
-
-            {% endif %}
+              <a href="{% url 'ddoksang:user_preview' cafe.id %}" class="text-sm text-orange-600 hover:underline font-medium">내 카페 보기 →</a>
+            {% endif %} 
 
             <span class="text-xs px-2 py-0.5 rounded-full
               {% if cafe.status == 'approved' %}bg-green-100 text-green-700
