@@ -126,7 +126,7 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
       {% for post in latest_sell_posts %}
         <div class="border rounded shadow-sm p-3 text-center">
-          <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-32 mx-auto object-contain" />
+          <img src="{{ post.images.first.image.url }}" alt="{{ post.title }}" class="h-32 mx-auto object-contain" />
           <p class="mt-2 font-semibold">{{ post.title }}</p>
           <p class="text-sm text-gray-500">{{ post.price|default:"KRW 0" }}</p>
         </div>
