@@ -6,9 +6,10 @@ import { setupMembersLoader } from "./members_loader.js";
 document.addEventListener("DOMContentLoaded", () => {
   const ajaxBaseUrl = window.ajaxBaseUrl;
   const selectedMemberIds = window.selectedMemberIds || [];
+  const existingImages = window.existingImages || [];
 
   setupArtistAutocomplete(ajaxBaseUrl);
   setupCategoryButtons();
-  setupImageUpload({ formId: "create-form" });
+  setupImageUpload({ formId: "edit-form", existingImages });
   setupMembersLoader(ajaxBaseUrl, selectedMemberIds);
 });
