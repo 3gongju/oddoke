@@ -33,6 +33,5 @@ urlpatterns = [
     path('admin/approve/<int:cafe_id>/', views.approve_cafe, name='admin_approve_cafe'),
     path('admin/reject/<int:cafe_id>/', views.reject_cafe, name='admin_reject_cafe'),
 
-    # 자동완성 API
-    path('autocomplete/members/', views.member_autocomplete, name='member_autocomplete'),
+
 ]

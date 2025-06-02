@@ -158,6 +158,36 @@ def autocomplete(request):
     
     return JsonResponse({'results': results})
 
+
+
+@require_GET
+def artist_only_autocomplete(request):
+    """아티스트만 검색하는 자동완성 (artist/ 페이지용)"""
+    q = request.GET.get('q', '').strip()
+    results = []
+    
+    if q:
+        # 🎵 Artist만 검색 (alias 포함)
+        artists = Artist.objects.filter(
+            Q(display_name__icontains=q) |
+            Q(korean_name__icontains=q) |
+            Q(english_name__icontains=q) |
+            Q(alias__icontains=q)
+        )[:10]
+        
+        for artist in artists:
+            results.append({
+                'type': 'artist',
+                'name': artist.display_name,
+                'artist': artist.display_name,
+                'artist_id': artist.id,
+                'member_id': None,
+                'birthday': None,
+                'is_solo': getattr(artist, 'is_solo', False)
+            })
+    
+    return JsonResponse({'results': results})
+
 # 1. 아티스트 멤버 리스트 Ajax로 렌더링
 def artist_members_ajax(request, artist_id):
     artist = get_object_or_404(Artist, id=artist_id)
