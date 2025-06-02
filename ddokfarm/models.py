@@ -14,7 +14,6 @@ class FarmBasePost(models.Model):
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
     is_sold = models.BooleanField(default=False) # 판매 완료 여부
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
-    members = models.ManyToManyField(Member, blank=True)
 
     class Meta:
         abstract = True
@@ -49,6 +48,7 @@ class FarmMarketPost(FarmBasePost):
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES) # 상태
     shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES)  # 배송방법
     location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
+    members = models.ManyToManyField(Member, blank=True)
 
     class Meta:
         abstract = True
@@ -113,6 +113,15 @@ class FarmSplitPost(FarmBasePost):
     @property
     def category_type(self):
         return 'split'
+
+# 멤버별 가격 설정 필드
+class SplitPrice(models.Model):
+    post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, related_name='member_prices')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    price = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('post', 'member')
         
 # 대댓글 기능 수정 
 class FarmComment(models.Model):

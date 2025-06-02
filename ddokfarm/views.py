@@ -12,7 +12,7 @@ from operator import attrgetter
 from itertools import chain
 from artist.models import Member, Artist
 from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost, FarmPostImage
-from .forms import FarmCommentForm
+from .forms import FarmCommentForm, SplitPriceFormSet
 from .utils import (
     get_post_model,
     get_post_form,
@@ -125,14 +125,19 @@ def post_create(request):
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
         selected_member_ids = list(map(int, request.POST.getlist('members')))
-        image_files = request.FILES.getlist('images')  # 여러 이미지 받기
+        image_files = request.FILES.getlist('images')
 
         form_class = get_post_form(category)
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
-
         form = form_class(request.POST, request.FILES)
-        if form.is_valid():
+
+        # ✅ split 카테고리인 경우: SplitPriceFormSet 처리
+        formset = None
+        if category == 'split':
+            formset = SplitPriceFormSet(request.POST, prefix='splitprice')
+
+        if form.is_valid() and (formset.is_valid() if formset else True):
             if not image_files:
                 form.add_error(None, "이미지는 최소 1장 이상 업로드해야 합니다.")
             else:
@@ -144,6 +149,12 @@ def post_create(request):
                 post.members.set(selected_member_ids)
                 form.save_m2m()
 
+                # ✅ split 카테고리라면 SplitPrice 저장
+                if category == 'split' and formset:
+                    formset.instance = post
+                    formset.save()
+
+                # 이미지 저장
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
                     FarmPostImage.objects.create(
@@ -156,6 +167,7 @@ def post_create(request):
                 return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
+        # ✅ GET 요청 시
         raw_category = request.GET.get('category') or 'sell'
         category = raw_category.split('?')[0]
 
@@ -166,16 +178,35 @@ def post_create(request):
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
+    # ✅ 아티스트에 따른 멤버 목록 불러오기
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )
-
     selected_members = []
     if default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
 
+    # ✅ split 카테고리인 경우: SplitPriceFormSet 초기화 및 멤버 이름 매핑
+    formset = None
+    member_names = []
+    if category == 'split' and default_artist_id:
+        initial_data = [{'member': m} for m in selected_members]
+        formset = SplitPriceFormSet(prefix='splitprice', initial=initial_data)
+
+        # 🔴 form 순서에 맞게 member 이름만 따로 리스트로 저장
+        for form in formset:
+            member_id = form.initial.get('member') or form.instance.member_id
+            member_name = "알 수 없음"
+            if member_id:
+                member = Member.objects.filter(id=member_id).first()
+                if member:
+                    member_name = member.member_name
+            member_names.append(member_name)
+
     context = {
         'form': form,
+        'formset': formset,
+        'member_names': member_names,
         'category': category,
         'sorted_artists': favorite_artists,
         'default_artist_id': default_artist_id,

@@ -1,3 +1,22 @@
+<!-- 멤버별 가격 설정 -->
+  <div class="mb-6">
+    <label class="block text-sm font-medium text-gray-700 mb-2">멤버별 가격 입력</label>
+    <div class="space-y-2">
+      {% for form in formset %}
+        <div class="flex items-center gap-2">
+          <input type="hidden" name="{{ form.member.name }}" value="{{ form.member.value }}">
+          <span class="w-32">
+            {{ member_names|slice:forloop.counter0 }}
+          </span>
+          {{ form.price }}
+          {% if form.price.errors %}
+            <p class="text-red-500 text-sm">{{ form.price.errors.0 }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
 <!-- 앨범 포함 여부 -->
 <div class="mb-6">
   <label for="{{ form.album.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">앨범 포함 여부</label>

@@ -1,5 +1,6 @@
 from django import forms
-from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
+from django.forms import inlineformset_factory
+from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice
 
 COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400'
 COMMON_RADIO_CLASS = 'space-y-2'
@@ -29,9 +30,6 @@ common_widgets = {
         'id': 'id_artist',
         'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400'
     }),
-    'members': forms.CheckboxSelectMultiple(attrs={
-        'class': 'space-y-2'
-    }),
 }
 
 market_widgets = {
@@ -42,6 +40,9 @@ market_widgets = {
     'location': forms.TextInput(attrs={
         'class': COMMON_INPUT_CLASS,
         'placeholder': '직거래 희망 장소를 입력하세요',
+    }),
+    'members': forms.CheckboxSelectMultiple(attrs={
+        'class': 'space-y-2'
     }),
 }
 
@@ -89,7 +90,7 @@ class FarmSplitPostForm(forms.ModelForm):
 
     class Meta:
         model = FarmSplitPost
-        fields = ['title', 'content', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'members']
+        fields = ['title', 'content', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist']
         widgets = {
             **common_widgets,
             'shipping_fee': forms.NumberInput(attrs={
@@ -113,3 +114,11 @@ class FarmCommentForm(forms.ModelForm):
         widgets = {
             'parent': forms.HiddenInput()
         }
+
+SplitPriceFormSet = inlineformset_factory(
+    FarmSplitPost,
+    SplitPrice,
+    fields=('member', 'price'),
+    extra=0,  # 이미 멤버 목록으로 만들기 때문에, 여유분 row 없음
+    can_delete=False  # row 삭제 불가 (수정만 허용)
+)
