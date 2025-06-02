@@ -9,8 +9,8 @@ import os
 import shutil
 from accounts.models import User
 # from ddokfarm.models import Category  # 카테고리만 유지
-from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
-from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
+from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment, DamPostImage
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, FarmPostImage
 from django.core.files.images import ImageFile
 import random
 from datetime import timedelta, date
@@ -261,7 +261,11 @@ class Command(BaseCommand):
             if image_path:
                 try:
                     with open(f'media/{image_path}', 'rb') as img_file:
-                        post.image.save(f'community_post_{i+1}.jpg', ImageFile(img_file), save=True)
+                        DamPostImage.objects.create(
+                            content_object=post,
+                            image=ImageFile(img_file),
+                            is_representative=True  # 대표 이미지라면 True
+                        )
                 except Exception as e:
                     self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
         
@@ -273,7 +277,11 @@ class Command(BaseCommand):
             if image_path:
                 try:
                     with open(f'media/{image_path}', 'rb') as img_file:
-                        post.image.save(f'manner_post_{i+1}.jpg', ImageFile(img_file), save=True)
+                        DamPostImage.objects.create(
+                            content_object=post,
+                            image=ImageFile(img_file),
+                            is_representative=True
+                        )
                 except Exception as e:
                     self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
         
@@ -285,7 +293,11 @@ class Command(BaseCommand):
             if image_path:
                 try:
                     with open(f'media/{image_path}', 'rb') as img_file:
-                        post.image.save(f'bdaycafe_post_{i+1}.jpg', ImageFile(img_file), save=True)
+                        DamPostImage.objects.create(
+                            content_object=post,
+                            image=ImageFile(img_file),
+                            is_representative=True
+                        )
                 except Exception as e:
                     self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
         
@@ -310,6 +322,7 @@ class Command(BaseCommand):
                 'content': "페이스 더 선 앨범 포토카드입니다. 상태 좋고 보관 잘 했어요.\n직거래 가능하시면 더 저렴하게 드릴게요!",
                 'user': seller_user,
                 'price': 15000,
+                'md': 'poca',
                 'condition': 'almost_new',
                 'shipping': 'both',
                 'location': '강남역',
@@ -321,6 +334,7 @@ class Command(BaseCommand):
                 'content': "뉴진스 공식 응원봉 판매해요. 한 번만 사용했습니다.\n박스, 설명서 모두 있어요.",
                 'user': test_user,
                 'price': 35000,
+                'md': 'light_stick',
                 'condition': 'almost_new',
                 'shipping': 'delivery',
                 'want_to': 'sell',
@@ -331,6 +345,7 @@ class Command(BaseCommand):
                 'content': "마이월드 앨범 윈터 포토카드 찾고 있어요.\n상태 좋은 것으로 부탁드립니다!",
                 'user': fan_user,
                 'price': 20000,
+                'md': 'poca',
                 'condition': 'new',
                 'shipping': 'both',
                 'location': '홍대입구',
@@ -346,6 +361,7 @@ class Command(BaseCommand):
                 'content': "세븐틴 콘서트 응원봉 대여 가능합니다.\n콘서트 당일 대여해드려요. 깨끗하게 관리하고 있어요!",
                 'user': seller_user,
                 'price': 5000,
+                'md': 'light_stick',
                 'condition': 'used',
                 'shipping': 'direct',
                 'location': '잠실 종합운동장',
@@ -359,6 +375,7 @@ class Command(BaseCommand):
                 'content': "스트레이키즈 콘서트 가는데 응원봉이 필요해요.\n당일 대여 가능하신 분 연락 주세요!",
                 'user': fan_user,
                 'price': 3000,
+                'md': 'light_stick',
                 'condition': 'new',
                 'shipping': 'direct',
                 'location': 'KSPO돔',
@@ -400,36 +417,45 @@ class Command(BaseCommand):
             post = FarmSellPost.objects.create(**post_data)
             
             # 이미지 설정
-            if image_path:
-                try:
-                    with open(f'media/{image_path}', 'rb') as img_file:
-                        post.image.save(f'sell_post_{i+1}.jpg', ImageFile(img_file), save=True)
-                except Exception as e:
-                    self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
+            try:
+                with open(f'media/{image_path}', 'rb') as img_file:
+                    FarmPostImage.objects.create(
+                        content_object=post,
+                        image=ImageFile(img_file),
+                        is_representative=True
+                    )
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
         
         # 대여 게시글 생성
         for i, post_data in enumerate(rental_posts):
             post = FarmRentalPost.objects.create(**post_data)
             
             # 이미지 설정
-            if image_path:
-                try:
-                    with open(f'media/{image_path}', 'rb') as img_file:
-                        post.image.save(f'rental_post_{i+1}.jpg', ImageFile(img_file), save=True)
-                except Exception as e:
-                    self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
+            try:
+                with open(f'media/{image_path}', 'rb') as img_file:
+                    FarmPostImage.objects.create(
+                        content_object=post,
+                        image=ImageFile(img_file),
+                        is_representative=True
+                    )
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
         
         # 분철 게시글 생성
         for i, post_data in enumerate(split_posts):
             post = FarmSplitPost.objects.create(**post_data)
             
             # 이미지 설정
-            if image_path:
-                try:
-                    with open(f'media/{image_path}', 'rb') as img_file:
-                        post.image.save(f'split_post_{i+1}.jpg', ImageFile(img_file), save=True)
-                except Exception as e:
-                    self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
+            try:
+                with open(f'media/{image_path}', 'rb') as img_file:
+                    FarmPostImage.objects.create(
+                        content_object=post,
+                        image=ImageFile(img_file),
+                        is_representative=True
+                    )
+            except Exception as e:
+                self.stdout.write(self.style.WARNING(f'이미지 설정 중 오류: {e}'))
         
         total_posts = len(sell_posts) + len(rental_posts) + len(split_posts)
         self.stdout.write(self.style.SUCCESS(f'덕팜 샘플 게시글 {total_posts}개 생성이 완료되었습니다.'))
