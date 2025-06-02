@@ -1,16 +1,18 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, MannerReviewForm, ProfileImageForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
-from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
-from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
-from artist.models import Artist, Member
-from itertools import chain
 from django.utils.timezone import now
+from django.http import JsonResponse
+from itertools import chain
+from PIL import Image, ExifTags
 from dotenv import load_dotenv
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
+from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
+from artist.models import Artist, Member
+from .models import User, MannerReview
+from .forms import CustomUserCreationForm, CustomAuthenticationForm, MannerReviewForm, ProfileImageForm
 
 import uuid
 import requests
@@ -20,8 +22,6 @@ import time
 
 load_dotenv()
 
-from django.http import JsonResponse
-from PIL import Image, ExifTags
 
 # Create your views here.
 def signup(request):
@@ -181,12 +181,34 @@ def mypage(request):
         reverse=True
     )
 
+    # ✅ 내가 쓴 글 (Dam)
+    dam_posts = sorted(
+        chain(
+            DamCommunityPost.objects.filter(user=user_profile),
+            DamMannerPost.objects.filter(user=user_profile),
+            DamBdaycafePost.objects.filter(user=user_profile)
+        ),
+        key=lambda post: post.created_at,
+        reverse=True
+    )
+
     # ✅ 내가 찜한 글 (Farm)
-    liked_posts = sorted(
+    liked_farm_posts = sorted(
         chain(
             FarmSellPost.objects.filter(like=user_profile),
             FarmRentalPost.objects.filter(like=user_profile),
             FarmSplitPost.objects.filter(like=user_profile)
+        ),
+        key=lambda post: post.created_at,
+        reverse=True
+    )
+
+    # ✅ 내가 찜한 글 (Dam)
+    liked_dam_posts = sorted(
+        chain(
+            DamCommunityPost.objects.filter(like=user_profile),
+            DamMannerPost.objects.filter(like=user_profile),
+            DamBdaycafePost.objects.filter(like=user_profile)
         ),
         key=lambda post: post.created_at,
         reverse=True
@@ -220,8 +242,11 @@ def mypage(request):
         'favorite_members': favorite_members,
         'followed_artist_ids': json.dumps(followed_artist_ids),
         'farm_posts': farm_posts,              # 내가 쓴 글
-        'liked_posts': liked_posts,            # 내가 찜한 글
+        'liked_farm_posts': liked_farm_posts,            # 내가 찜한 글
         'farm_comments': farm_comments,        # 내가 쓴 댓글
+        'dam_posts': dam_posts,              # 내가 쓴 글
+        'liked_dam_posts': liked_dam_posts,            # 내가 찜한 글
+        'dam_comments': dam_comments,        # 내가 쓴 댓글
     }
     return render(request, 'mypage.html', context)
     
