@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'bday_calendar',
     'ddoksang',
+    'faq',
 ]
 
 MIDDLEWARE = [
@@ -154,6 +155,9 @@ AUTH_USER_MODEL = 'accounts.User'
 # 카카오맵 API 키 설정
 KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
 KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 
+
+# 오픈 API 키 설정
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # settings.py에 추가
 NEARBY_CAFE_RADIUS = 5  # km

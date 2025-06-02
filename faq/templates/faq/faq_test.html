@@ -1,0 +1,44 @@
+<!-- templates/test/faq_test.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>FAQ GPT 테스트</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    textarea, input, button { margin-top: 1rem; display: block; width: 100%; max-width: 600px; }
+  </style>
+</head>
+<body>
+  <h2>GPT FAQ 테스트</h2>
+  <label for="question">궁금한 점을 입력하세요:</label>
+  <textarea id="question" rows="4" placeholder="예: 회원가입은 어떻게 하나요?"></textarea>
+  <button onclick="sendQuestion()">보내기</button>
+
+  <h3>응답:</h3>
+  <div id="response" style="white-space: pre-wrap; border: 1px solid #ddd; padding: 1rem; margin-top: 1rem;"></div>
+
+  <script>
+    async function sendQuestion() {
+      const question = document.getElementById("question").value;
+      const resBox = document.getElementById("response");
+      resBox.innerText = "GPT 응답을 불러오는 중...";
+
+      const response = await fetch("/faq/api/faq_chat/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: question })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        resBox.innerText = data.reply;
+      } else {
+        resBox.innerText = "[에러] " + (data.error || "요청 실패");
+      }
+    }
+  </script>
+</body>
+</html>
