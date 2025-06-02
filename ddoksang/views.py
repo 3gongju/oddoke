@@ -216,50 +216,31 @@ def create_cafe(request):
         return render(request, 'ddoksang/create.html', context)
     
     elif request.method == 'POST':
-        # 🔧 디버그 출력 추가
-        print("="*50)
-        print("🔧 카페 생성 디버깅 시작")
-        print("="*50)
-        print("📝 POST 데이터:")
-        for key, value in request.POST.items():
-            print(f"  {key}: {value}")
-        print("📁 FILES 데이터:")
-        for key, value in request.FILES.items():
-            print(f"  {key}: {value}")
-        print("="*50)
-        
         # POST 데이터를 폼에 맞게 변환
         form_data = request.POST.copy()
         
         # 아티스트 유효성 검증 및 매핑
         artist_id = form_data.get('artist_id')
-        print(f"🎭 아티스트 ID: {artist_id}")  # 디버그 추가
         
         if not artist_id:
-            print("❌ 아티스트 ID 없음!")  # 디버그 추가
             messages.error(request, "아티스트를 선택해주세요.")
             return redirect('ddoksang:create')
             
         try:
             artist = Artist.objects.get(id=artist_id)
             form_data['artist'] = artist.id
-            print(f"✅ 아티스트 찾음: {artist.display_name}")  # 디버그 추가
         except Artist.DoesNotExist:
-            print("❌ 아티스트 찾을 수 없음!")  # 디버그 추가
             messages.error(request, "유효하지 않은 아티스트입니다.")
             return redirect('ddoksang:create')
 
         # 멤버 유효성 검증 및 매핑 (선택적)
         member_id = form_data.get('member_id')
-        print(f"👤 멤버 ID: {member_id}")  # 디버그 추가
         
         if member_id:
             try:
                 member = Member.objects.get(id=member_id)
                 form_data['member'] = member.id
-                print(f"✅ 멤버 찾음: {member.member_name}")  # 디버그 추가
             except Member.DoesNotExist:
-                print("❌ 멤버 찾을 수 없음!")  # 디버그 추가
                 messages.warning(request, "유효하지 않은 멤버입니다. 멤버 정보를 제외하고 등록합니다.")
                 form_data['member'] = ''
         else:
@@ -269,7 +250,6 @@ def create_cafe(request):
         perks = request.POST.getlist('perks')
         if perks:
             form_data['special_benefits'] = ', '.join(perks)
-            print(f"🎁 특전: {form_data['special_benefits']}")  # 디버그 추가
 
         # artist_id, member_id 제거 (폼에서 인식하지 않는 필드)
         if 'artist_id' in form_data:
@@ -277,24 +257,18 @@ def create_cafe(request):
         if 'member_id' in form_data:
             del form_data['member_id']
         
-        print("📋 최종 form_data:", dict(form_data))  # 디버그 추가
-        
         form = BdayCafeForm(form_data, request.FILES)
-        print(f"✅ 폼 유효성: {form.is_valid()}")  # 디버그 추가
 
         if form.is_valid():
-            print("✅ 폼 유효성 검사 통과!")  # 디버그 추가
             try:
                 with transaction.atomic():
                     cafe = form.save(commit=False)
                     cafe.submitted_by = request.user
                     cafe.status = 'pending'
                     cafe.save()
-                    print(f"✅ 카페 저장 성공: {cafe.id}")  # 디버그 추가
 
                     # 다중 이미지 저장
                     images = request.FILES.getlist('images')
-                    print(f"📸 이미지 개수: {len(images)}")  # 디버그 추가
                         
                     for idx, image_file in enumerate(images):
                         image_type = 'main' if idx == 0 else 'other'
@@ -307,33 +281,32 @@ def create_cafe(request):
                             order=idx,
                             is_main=is_main,
                         )
-                        print(f"📸 이미지 {idx+1} 저장 완료")  # 디버그 추가
                 
-               
-                    print("🎉 모든 처리 완료!")
+                    # 🔧 캐시 무효화 (새로운 카페가 추가되었으므로)
+                    cache.delete_many([
+                        'featured_cafes',
+                        'latest_cafes',
+                        'admin_stats',
+                    ])
+                    
                     messages.success(request, f"'{cafe.cafe_name}' 생일카페가 성공적으로 등록되었습니다! 관리자 승인 후 공개됩니다.")
 
-                    # 승인 대기 상태에서도 볼 수 있는 특별 페이지로 리다이렉트
+                    # 🔧 올바른 URL로 리다이렉트
                     return redirect('ddoksang:create_success', cafe_id=cafe.id)
-                                    
-
-
 
             except Exception as e:
-                print(f"💥 저장 중 오류: {str(e)}")  # 디버그 추가
+                logger.error(f"카페 등록 중 오류: {str(e)}")
                 messages.error(request, f"등록 중 오류가 발생했습니다: {str(e)}")
         else:
             # 폼 검증 실패
-            print("❌ 폼 유효성 검사 실패!")  # 디버그 추가
-            print("오류 내용:", form.errors)  # 디버그 추가
             error_messages = []
             for field, errors in form.errors.items():
                 for error in errors:
                     error_messages.append(f"{field}: {error}")
-                    print(f"  🚫 {field}: {error}")  # 디버그 추가
             messages.error(request, f"입력 정보를 확인해주세요: {', '.join(error_messages)}")
         
         return redirect('ddoksang:create')
+
     
 @login_required
 def cafe_create_success(request, cafe_id):
@@ -598,21 +571,62 @@ def home_view(request):
                 'profile_image': getattr(member, 'profile_image', None),
             })
     
-    # 캐시에서 카페 데이터 조회
+    # 🔧 추천 카페 - 추천이 없으면 최신 카페로 대체
     featured_cafes = cache.get('featured_cafes')
     if not featured_cafes:
+        # 먼저 추천 카페 확인
         featured_cafes = BdayCafe.objects.filter(
             status='approved',
             is_featured=True
-        ).select_related('artist', 'member').order_by('-created_at')[:8]
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:8]
+        
+        # 추천 카페가 없으면 최신 승인된 카페로 대체
+        if not featured_cafes:
+            featured_cafes = BdayCafe.objects.filter(
+                status='approved'
+            ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:8]
+        
         cache.set('featured_cafes', featured_cafes, 300)  # 5분 캐시
     
-    recent_cafes = cache.get('recent_cafes')
-    if not recent_cafes:
-        recent_cafes = BdayCafe.objects.filter(
+    # 🔧 최신 등록된 카페 3개 (별도 섹션)
+    latest_cafes = cache.get('latest_cafes')
+    if not latest_cafes:
+        latest_cafes = BdayCafe.objects.filter(
             status='approved'
-        ).select_related('artist', 'member').order_by('-created_at')[:6]
-        cache.set('recent_cafes', recent_cafes, 300)  # 5분 캐시
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:3]
+        cache.set('latest_cafes', latest_cafes, 300)  # 5분 캐시
+    
+    # 🔧 내가 찜한 아티스트/멤버의 생일카페 (로그인한 사용자만)
+    my_favorite_cafes = []
+    if request.user.is_authenticated:
+        # 사용자가 찜한 카페들의 아티스트/멤버 ID 수집
+        favorited_cafes = CafeFavorite.objects.filter(user=request.user).select_related('cafe__artist', 'cafe__member')
+        
+        favorited_artist_ids = set()
+        favorited_member_ids = set()
+        
+        for fav in favorited_cafes:
+            if fav.cafe.artist_id:
+                favorited_artist_ids.add(fav.cafe.artist_id)
+            if fav.cafe.member_id:
+                favorited_member_ids.add(fav.cafe.member_id)
+        
+        # 찜한 아티스트/멤버의 다른 생일카페들 조회
+        if favorited_artist_ids or favorited_member_ids:
+            my_favorite_cafes_query = BdayCafe.objects.filter(
+                status='approved'
+            ).select_related('artist', 'member').prefetch_related('images')
+            
+            if favorited_artist_ids and favorited_member_ids:
+                my_favorite_cafes_query = my_favorite_cafes_query.filter(
+                    Q(artist_id__in=favorited_artist_ids) | Q(member_id__in=favorited_member_ids)
+                )
+            elif favorited_artist_ids:
+                my_favorite_cafes_query = my_favorite_cafes_query.filter(artist_id__in=favorited_artist_ids)
+            elif favorited_member_ids:
+                my_favorite_cafes_query = my_favorite_cafes_query.filter(member_id__in=favorited_member_ids)
+            
+            my_favorite_cafes = my_favorite_cafes_query.order_by('-created_at')[:10]
     
     # 현재 운영중인 생일카페들 (위치 기반 서비스용)
     active_cafes = BdayCafe.objects.filter(
@@ -664,7 +678,8 @@ def home_view(request):
     context = {
         'birthday_artists': birthday_artists,
         'featured_cafes': featured_cafes,
-        'recent_cafes': recent_cafes,
+        'latest_cafes': latest_cafes,  # 🔧 새로 추가
+        'my_favorite_cafes': my_favorite_cafes,  # 🔧 새로 추가
         'cafes_json': cafes_json,
         'total_cafes': len(cafes_json_data),
         'user_favorites': user_favorites,

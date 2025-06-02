@@ -12,7 +12,7 @@ urlpatterns = [
     # 카페 상세 보기 (승인된 것과 미승인된 것 모두 처리)
     path('detail/<int:cafe_id>/', views.bday_cafe_detail, name='detail'),
     
-    # 미리보기 (기존 함수 재사용)
+    # 미리보기 (사용자/관리자 분리)
    
     path('user_preview/<int:cafe_id>/', views.user_preview_cafe, name='user_preview'),
     path('admin_preview/<int:cafe_id>/', views.admin_preview_cafe, name='admin_preview'),

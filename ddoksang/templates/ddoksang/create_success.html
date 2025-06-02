@@ -73,31 +73,32 @@
             </p>
         </div>
 
-            <!-- 액션 버튼들 -->
+        <!-- 액션 버튼들 -->
         <div class="space-y-4">
-        <div class="flex space-x-4">
-            <!-- 등록한 카페 미리보기 버튼 추가 -->
-            <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
-            class="flex-1 bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
-            👀 내 카페 미리보기
+            <div class="flex space-x-4">
+                <!-- 등록한 카페 미리보기 버튼 -->
+                <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+                   class="flex-1 bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                    👀 내 카페 미리보기
+                </a>
+                
+                <a href="{% url 'ddoksang:my_cafes' %}" 
+                   class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                    📋 내 등록 현황 보기
+                </a>
+            </div>
+            
+            <a href="{% url 'ddoksang:home' %}" 
+               class="block w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
+                🏠 홈으로 가기
             </a>
             
-            <a href="{% url 'ddoksang:my_cafes' %}" 
-            class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
-            📋 내 등록 현황 보기
+            <a href="{% url 'ddoksang:create' %}" 
+               class="block w-full bg-white text-pink-600 py-3 px-6 rounded-lg font-semibold border-2 border-pink-200 hover:bg-pink-50 transition-colors">
+                ➕ 다른 생일카페 등록하기
             </a>
         </div>
         
-        <a href="{% url 'ddoksang:home' %}" 
-            class="block w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
-            🏠 홈으로 가기
-        </a>
-        
-        <a href="{% url 'ddoksang:create' %}" 
-            class="block w-full bg-white text-pink-600 py-3 px-6 rounded-lg font-semibold border-2 border-pink-200 hover:bg-pink-50 transition-colors">
-            ➕ 다른 생일카페 등록하기
-        </a>
-        </div>
         <!-- 추가 안내 -->
         <div class="mt-8 text-xs text-gray-500">
             <p>문의사항이 있으시면 관리자에게 연락해주세요</p>
@@ -105,12 +106,11 @@
     </div>
 </div>
 
-<!-- 축하 효과 (선택사항) -->
+<!-- 축하 효과 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 5초 후 자동으로 confetti 효과 (라이브러리 있다면)
+    // 간단한 축하 애니메이션
     setTimeout(() => {
-        // confetti 효과 코드
         console.log('🎉 등록 완료!');
     }, 1000);
 });
