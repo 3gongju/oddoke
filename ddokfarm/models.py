@@ -35,7 +35,17 @@ class FarmMarketPost(FarmBasePost):
         ('both', '직거래, 택배'),
     ]
 
+    # 굿즈 종류 선택지
+    MD_CHOICES = [
+        ('poca', '포토카드'),
+        ('md', 'MD'),
+        ('light_stick', '응원봉'),
+        ('album', '앨범'),
+        ('etc', '기타'),
+    ]
+
     price = models.PositiveIntegerField() # 가격
+    md = models.CharField(max_length=20, choices=MD_CHOICES) # 굿즈 종류
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES) # 상태
     shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES)  # 배송방법
     location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)

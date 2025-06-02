@@ -5,6 +5,13 @@
   {% if form.price.errors %}<p class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</p>{% endif %}
 </div>
 
+<!-- 종류-->
+<div class="mb-6">
+  <label for="{{ form.md.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">종류</label>
+  {{ form.md }}
+  {% if form.md.errors %}<p class="text-red-500 text-sm mt-1">{{ form.md.errors.0 }}</p>{% endif %}
+</div>
+
 <!-- 거래 방식 -->
 <div class="mb-6">
   <label for="{{ form.want_to.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">거래 방식</label>
