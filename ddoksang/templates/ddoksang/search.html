@@ -7,7 +7,7 @@
 <section class="max-w-6xl mx-auto px-4 py-8">
   <!-- 검색 헤더 -->
   <div class="text-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-4">🎂 생일카페 검색</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-4">덕생 검색</h1>
     {% if query %}
       <p class="text-lg text-gray-600">
         '<span class="font-semibold text-blue-600">{{ query }}</span>' 검색 결과
@@ -113,12 +113,12 @@
               <!-- 상태 배지 -->
               <div class="flex justify-between items-start mb-2">
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                  {% if cafe.status == 'upcoming' %}bg-green-100 text-green-800
-                  {% elif cafe.status == 'ongoing' %}bg-yellow-100 text-yellow-800
-                  {% else %}bg-gray-100 text-gray-600{% endif %}">
-                  {% if cafe.status == 'upcoming' %}🔜 예정
-                  {% elif cafe.status == 'ongoing' %}🎉 진행중
-                  {% else %}✅ 종료{% endif %}
+                  {% if cafe.status == 'upcoming' %}bg-green-300 text-gray-800
+                  {% elif cafe.status == 'ongoing' %}bg-yellow-700 text-gray-800
+                  {% else %}bg-gray-800 text-gray-100{% endif %}">
+                  {% if cafe.status == 'upcoming' %} 예정
+                  {% elif cafe.status == 'ongoing' %} 진행중
+                  {% else %} 종료{% endif %}
                 </span>
                 <span class="text-xs text-gray-500">{{ cafe.cafe_type|default:"생일" }}</span>
               </div>

@@ -545,6 +545,7 @@ def member_autocomplete(request):
     
     return JsonResponse({'results': results})  # ← 들여쓰기 수정!
 
+
 def home_view(request):
     """홈 뷰 - 위치 기반 서비스 포함"""
     today = timezone.now().date()
@@ -553,6 +554,9 @@ def home_view(request):
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
     week_bdays = [(start_of_week + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
+    
+     # 오늘 날짜 문자열
+    today_str = today.strftime('%m-%d')
     
     # 생일인 멤버들과 그들의 아티스트 정보
     birthday_members = Member.objects.filter(
@@ -564,30 +568,27 @@ def home_view(request):
         artists = member.artist_name.all()
         if artists:
             artist = artists[0]
+            
+            # 오늘이 생일인지 확인
+            is_today_birthday = member.member_bday == today_str
+            
+            # 중복 방지: 멤버 이름과 아티스트 이름이 같은 경우 처리
+            display_artist_name = artist.display_name
+            if member.member_name.lower() == artist.display_name.lower():
+                # 멤버 이름과 아티스트 이름이 같으면 아티스트 이름을 비워두거나 다른 표현 사용
+                display_artist_name = ""  # 또는 "솔로 아티스트" 등
+            
             birthday_artists.append({
                 'member_name': member.member_name,
-                'artist_name': artist.display_name,
+                'artist_name': display_artist_name,  # 🔥 수정된 부분
                 'birthday_display': member.member_bday,
                 'profile_image': getattr(member, 'profile_image', None),
+                'is_today_birthday': is_today_birthday,
             })
     
-    # 🔧 추천 카페 - 추천이 없으면 최신 카페로 대체
-    featured_cafes = cache.get('featured_cafes')
-    if not featured_cafes:
-        # 먼저 추천 카페 확인
-        featured_cafes = BdayCafe.objects.filter(
-            status='approved',
-            is_featured=True
-        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:8]
-        
-        # 추천 카페가 없으면 최신 승인된 카페로 대체
-        if not featured_cafes:
-            featured_cafes = BdayCafe.objects.filter(
-                status='approved'
-            ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:8]
-        
-        cache.set('featured_cafes', featured_cafes, 300)  # 5분 캐시
-    
+    # 오늘이 생일인 사람을 맨 앞으로 정렬
+    birthday_artists.sort(key=lambda x: (not x['is_today_birthday'], x['member_name']))
+   
     # 🔧 최신 등록된 카페 3개 (별도 섹션)
     latest_cafes = cache.get('latest_cafes')
     if not latest_cafes:
@@ -677,7 +678,6 @@ def home_view(request):
 
     context = {
         'birthday_artists': birthday_artists,
-        'featured_cafes': featured_cafes,
         'latest_cafes': latest_cafes,  # 🔧 새로 추가
         'my_favorite_cafes': my_favorite_cafes,  # 🔧 새로 추가
         'cafes_json': cafes_json,
