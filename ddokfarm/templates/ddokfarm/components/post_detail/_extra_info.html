@@ -11,6 +11,10 @@
               <td class="text-right py-2 text-gray-800">{{ post.price|intcomma }}원</td>
             </tr>
             <tr>
+              <th class="text-left py-2 text-gray-700">종류</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_md_display }}</td>
+            </tr>
+            <tr>
               <th class="text-left py-2 text-gray-700">거래 방식</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_want_to_display }}</td>
             </tr>

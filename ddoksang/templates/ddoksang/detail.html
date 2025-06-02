@@ -2,11 +2,64 @@
 {% load static %}
 {% load ddoksang_extras %} 
 
-
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+  <!-- 상태 알림 배너 (미리보기/대기중일 때만 표시) -->
+  {% if is_preview %}
+    <div class="bg-yellow-50 border-b border-yellow-200">
+      <div class="max-w-4xl mx-auto px-4 py-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            {% if preview_type == 'user' %}
+              <div class="flex items-center space-x-2">
+                <span class="text-yellow-600">⏳</span>
+                <span class="text-yellow-800 font-medium">승인 대기 중인 글입니다</span>
+                <span class="text-sm text-yellow-600">관리자 승인 후 공개됩니다</span>
+              </div>
+            {% elif preview_type == 'admin' %}
+              <div class="flex items-center space-x-2">
+                <span class="text-orange-600">👤</span>
+                <span class="text-orange-800 font-medium">관리자 검토 중</span>
+                <span class="text-sm text-orange-600">승인/거절을 결정해주세요</span>
+              </div>
+            {% endif %}
+          </div>
+          <div class="flex items-center space-x-2">
+            {% if preview_type == 'user' %}
+              <a href="{% url 'ddoksang:my_cafes' %}" 
+                 class="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full hover:bg-yellow-200">
+                내 등록 목록으로
+              </a>
+            {% elif preview_type == 'admin' %}
+              <div class="space-x-2">
+                <form method="post" action="{% url 'ddoksang:admin_approve_cafe' cafe.id %}" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" onclick="return confirm('승인하시겠습니까?')"
+                          class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full hover:bg-green-200">
+                    ✅ 승인
+                  </button>
+                </form>
+                <form method="post" action="{% url 'ddoksang:admin_reject_cafe' cafe.id %}" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" onclick="return confirm('거절하시겠습니까?')"
+                          class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full hover:bg-red-200">
+                    ❌ 거절
+                  </button>
+                </form>
+                <a href="{% url 'ddoksang:admin_dashboard' %}" 
+                   class="text-sm bg-gray-100 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-200">
+                  대시보드로
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   <!-- 헤더 이미지 섹션 -->
   <div class="relative h-80 overflow-hidden">
     {% if cafe.main_image %}
@@ -41,7 +94,7 @@
     <div class="absolute top-6 right-6">
       <button onclick="toggleFavorite({{ cafe.id }})" 
               class="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all">
-        <svg class="w-6 h-6 text-white {% if is_favorited %}fill-current{% endif %}" 
+        <svg class="w-6 h-6 text-white{% if is_favorited %} fill-current{% endif %}" 
              fill="{% if is_favorited %}currentColor{% else %}none{% endif %}" 
              stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -262,7 +315,24 @@
 
 <!-- JavaScript -->
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+
+<!-- Django 데이터를 JavaScript 변수로 전달 -->
+<script id="cafe-data" type="application/json">
+{
+    "latitude": {{ cafe.latitude|default:"37.5665" }},
+    "longitude": {{ cafe.longitude|default:"126.9780" }},
+    "name": "{{ cafe.cafe_name|escapejs }}",
+    "address": "{{ cafe.address|escapejs }}",
+    "id": {{ cafe.id }},
+    "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %}
+}
+</script>
+
 <script>
+// JSON에서 데이터 가져오기
+const cafeDataElement = document.getElementById('cafe-data');
+const cafeData = JSON.parse(cafeDataElement.textContent);
+
 // 지도 초기화
 let map;
 let marker;
@@ -270,14 +340,14 @@ let marker;
 function initMap() {
   const container = document.getElementById('map');
   const options = {
-    center: new kakao.maps.LatLng({{ cafe.latitude|default:"37.5665" }}, {{ cafe.longitude|default:"126.9780" }}),
+    center: new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude),
     level: 3
   };
   
   map = new kakao.maps.Map(container, options);
   
   // 마커 생성
-  const markerPosition = new kakao.maps.LatLng({{ cafe.latitude|default:"37.5665" }}, {{ cafe.longitude|default:"126.9780" }});
+  const markerPosition = new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude);
   marker = new kakao.maps.Marker({
     position: markerPosition,
     map: map
@@ -287,8 +357,8 @@ function initMap() {
   const infowindow = new kakao.maps.InfoWindow({
     content: `
       <div style="padding:10px; font-size:12px; width:200px;">
-        <strong>{{ cafe.cafe_name }}</strong><br>
-        {{ cafe.address }}
+        <strong>${cafeData.name}</strong><br>
+        ${cafeData.address}
       </div>
     `
   });
@@ -301,7 +371,7 @@ document.addEventListener('DOMContentLoaded', initMap);
 
 // 찜하기 토글
 function toggleFavorite(cafeId) {
-  {% if user.is_authenticated %}
+  if (cafeData.isAuthenticated) {
     fetch(`/ddoksang/toggle_favorite/${cafeId}/`, {
       method: 'POST',
       headers: {
@@ -312,24 +382,24 @@ function toggleFavorite(cafeId) {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        location.reload(); // 간단하게 페이지 새로고침
+        location.reload();
       }
     });
-  {% else %}
+  } else {
     alert('로그인이 필요합니다.');
     window.location.href = '/accounts/login/';
-  {% endif %}
+  }
 }
 
 // 카카오맵에서 보기
 function openKakaoMap() {
-  const url = `https://map.kakao.com/link/map/{{ cafe.cafe_name }},{{ cafe.latitude|default:"37.5665" }},{{ cafe.longitude|default:"126.9780" }}`;
+  const url = `https://map.kakao.com/link/map/${cafeData.name},${cafeData.latitude},${cafeData.longitude}`;
   window.open(url, '_blank');
 }
 
 // 주소 복사
 function copyAddress() {
-  navigator.clipboard.writeText('{{ cafe.address }}').then(() => {
+  navigator.clipboard.writeText(cafeData.address).then(() => {
     alert('주소가 복사되었습니다!');
   });
 }
@@ -341,9 +411,8 @@ function copyLink() {
   });
 }
 
-// 카카오톡 공유 (카카오 SDK 필요)
+// 카카오톡 공유
 function shareKakao() {
-  // 카카오 SDK가 있다면 구현
   alert('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.');
 }
 </script>

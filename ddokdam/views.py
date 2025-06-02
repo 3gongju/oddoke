@@ -6,9 +6,11 @@ from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 from operator import attrgetter
 from itertools import chain
-from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost
+from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
 from .forms import DamCommentForm
 from artist.models import Member, Artist
 from .utils import (
@@ -120,6 +122,7 @@ def post_create(request):
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
         selected_member_ids = list(map(int, request.POST.getlist('members')))
+        image_files = request.FILES.getlist('images')  # ✅ 여러 이미지 받기
 
         form_class = get_post_form(category)
         if not form_class:
@@ -127,11 +130,27 @@ def post_create(request):
 
         form = form_class(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.user = request.user
-            post.save()
-            form.save_m2m()
-            return redirect('ddokdam:post_detail', category=category, post_id=post.id)
+            if not image_files:
+                form.add_error(None, "이미지는 최소 1장 이상 업로드해야 합니다.")
+            else:
+                post = form.save(commit=False)
+                post.user = request.user
+                if selected_artist_id:
+                    post.artist_id = selected_artist_id
+                post.save()
+                post.members.set(selected_member_ids)
+                form.save_m2m()
+
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                for idx, image in enumerate(image_files):
+                    DamPostImage.objects.create(
+                        image=image,
+                        content_type=content_type,
+                        object_id=post.id,
+                        is_representative=(idx == 0)
+                    )
+
+                return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
         raw_category = request.GET.get('category') or 'community'
         category = raw_category.split('?')[0]
@@ -143,7 +162,6 @@ def post_create(request):
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
-    # 드롭다운에는 팔로우 아티스트만
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )
@@ -209,14 +227,16 @@ def post_edit(request, category, post_id):
             'message': '이 게시글을 수정할 권한이 없습니다.',
             'back_url': reverse('ddokdam:post_detail', args=[category, post.id]),
         }
-
         return render(request, 'ddokdam/error_message.html', context)
 
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES, instance=post)
+        image_files = request.FILES.getlist('images')  # 새 이미지 받기
+        removed_ids = request.POST.get('removed_image_ids', '').split(',')
+        removed_ids = [int(id) for id in removed_ids if id.isdigit()]  # 삭제할 ID만 정수로 처리
+
         if form.is_valid():
             post = form.save(commit=False)
-
             artist_id = request.POST.get('artist')
             member_ids = request.POST.getlist('members')
 
@@ -226,14 +246,34 @@ def post_edit(request, category, post_id):
             post.save()
             post.members.set(member_ids)
 
+            if removed_ids:
+                post.images.filter(id__in=removed_ids).delete()
+
+            if image_files:
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                for idx, image in enumerate(image_files):
+                    DamPostImage.objects.create(
+                        image=image,
+                        content_type=content_type,
+                        object_id=post.id,
+                        is_representative=(idx == 0)
+                    )
+
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
     else:
         form = form_class(instance=post)
 
-    # GET/POST 공통 context 설정
+    existing_images = []
+    for img in post.images.all():
+        existing_images.append({
+            "id": img.id,
+            "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"
+        })
+
     sorted_artists = Artist.objects.order_by('display_name')
     selected_members = Member.objects.filter(artist_name=post.artist).distinct()
     selected_member_ids = list(post.members.values_list('id', flat=True))
+    selected_artist_id = post.artist.id if post.artist else None
 
     context = {
         'form': form,
@@ -242,11 +282,13 @@ def post_edit(request, category, post_id):
         'sorted_artists': sorted_artists,
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
+        'selected_artist_id': selected_artist_id,
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokdam:post_detail', args=[category, post.id]),
-        **get_ajax_base_context(request),
         'mode': 'edit',
         'categories': get_ddokdam_categories(),
+        **get_ajax_base_context(request),
+        'existing_images': existing_images,
     }
 
     return render(request, 'ddokdam/edit.html', context)

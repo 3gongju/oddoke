@@ -7,7 +7,14 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Oddoke</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!--  커스텀 스크롤 제거용 CSS 연결 -->
   <link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
+
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+
   {% block head %}{% endblock %}
 </head>
 
@@ -108,7 +115,14 @@
   </div>
 </div>
 
-<!-- ✅ 좋아요 하트 비동기 처리 유지 -->
+
+<!-- ✅ 모든 페이지에 적용되는 하단 여유 공간 -->
+<div class="h-48"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<!-- ✅ 좋아요 하트 비동기 처리 -->
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".like-toggle").forEach(btn => {

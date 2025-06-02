@@ -5,14 +5,26 @@ app_name = "ddoksang"
 
 urlpatterns = [
     path('', views.home_view, name='home'),
-    path('create/', views.create_cafe, name='create'),  # GET과 POST 모두 여기서 처리
-    # path('create/submit/', views.create_cafe, name='create_submit'),  # 이 줄 삭제
+    path('create/', views.create_cafe, name='create'),
+    path('create/success/<int:cafe_id>/', views.cafe_create_success, name='create_success'),
     path('my_cafes/', views.my_cafes, name='my_cafes'),
+    
+    # 카페 상세 보기 (승인된 것과 미승인된 것 모두 처리)
     path('detail/<int:cafe_id>/', views.bday_cafe_detail, name='detail'),
-    path('api/list/', views.bday_cafe_list_api, name='api_list'),
-    path('toggle_favorite/<int:cafe_id>/', views.toggle_favorite, name='toggle_favorite'),
-    path('search/', views.search_view, name='search'),
+    
+    # 미리보기 (사용자/관리자 분리)
+   
+    path('user_preview/<int:cafe_id>/', views.user_preview_cafe, name='user_preview'),
+    path('admin_preview/<int:cafe_id>/', views.admin_preview_cafe, name='admin_preview'),
 
+    
+    # API
+    path('api/list/', views.bday_cafe_list_api, name='api_list'),
+    path('api/nearby/', views.nearby_cafes_api, name='nearby_cafes_api'),
+    path('toggle_favorite/<int:cafe_id>/', views.toggle_favorite, name='toggle_favorite'),
+    
+    # 검색 및 지도
+    path('search/', views.search_view, name='search'),
     path('tour_map/', views.map_view, name='tour_map'),
     
     # 관리자 페이지

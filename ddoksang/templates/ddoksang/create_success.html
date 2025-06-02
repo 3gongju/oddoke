@@ -1,0 +1,118 @@
+<!-- templates/ddoksang/create_success.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}등록 완료 - 덕생{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center px-4">
+    <div class="max-w-2xl w-full text-center">
+        <!-- 성공 아이콘 -->
+        <div class="mb-8">
+            <div class="text-8xl mb-4 animate-bounce">🎉</div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">생일카페 등록 완료!</h1>
+        </div>
+
+        <!-- 등록된 카페 정보 카드 -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-center justify-center mb-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+            </div>
+            
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">{{ cafe.cafe_name }}</h2>
+            <p class="text-lg text-pink-600 font-semibold mb-4">
+                {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-1">📅 운영 기간</h4>
+                    <p class="text-gray-600">{{ cafe.start_date|date:"Y년 m월 d일" }} ~ {{ cafe.end_date|date:"Y년 m월 d일" }}</p>
+                </div>
+                <div>
+                    <h4 class="font-medium text-gray-800 mb-1">📍 위치</h4>
+                    <p class="text-gray-600">{{ cafe.address|truncatechars:30 }}</p>
+                </div>
+                {% if cafe.special_benefits %}
+                <div class="md:col-span-2">
+                    <h4 class="font-medium text-gray-800 mb-1">🎁 특전</h4>
+                    <p class="text-gray-600">{{ cafe.special_benefits }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 업로드된 이미지들 미리보기 -->
+            {% if cafe.images.all %}
+            <div class="mt-6">
+                <h4 class="font-medium text-gray-800 mb-3">📸 업로드된 이미지</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {% for image in cafe.images.all %}
+                        <img src="{{ image.image.url }}" alt="카페 이미지" 
+                             class="w-full h-24 object-cover rounded-lg border">
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 상태 안내 -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 mb-8">
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span class="text-2xl">⏳</span>
+                </div>
+            </div>
+            <h3 class="text-lg font-semibold text-yellow-800 mb-2">관리자 승인 대기 중</h3>
+            <p class="text-yellow-700 text-sm leading-relaxed">
+                등록해주신 생일카페가 관리자 승인을 기다리고 있습니다.<br>
+                보통 1-2일 내에 승인되며, 승인되면 바로 공개됩니다.
+            </p>
+        </div>
+
+        <!-- 액션 버튼들 -->
+        <div class="space-y-4">
+            <div class="flex space-x-4">
+                <!-- 등록한 카페 미리보기 버튼 -->
+                <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+                   class="flex-1 bg-gradient-to-r from-green-500 to-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                    👀 내 카페 미리보기
+                </a>
+                
+                <a href="{% url 'ddoksang:my_cafes' %}" 
+                   class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                    📋 내 등록 현황 보기
+                </a>
+            </div>
+            
+            <a href="{% url 'ddoksang:home' %}" 
+               class="block w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors">
+                🏠 홈으로 가기
+            </a>
+            
+            <a href="{% url 'ddoksang:create' %}" 
+               class="block w-full bg-white text-pink-600 py-3 px-6 rounded-lg font-semibold border-2 border-pink-200 hover:bg-pink-50 transition-colors">
+                ➕ 다른 생일카페 등록하기
+            </a>
+        </div>
+        
+        <!-- 추가 안내 -->
+        <div class="mt-8 text-xs text-gray-500">
+            <p>문의사항이 있으시면 관리자에게 연락해주세요</p>
+        </div>
+    </div>
+</div>
+
+<!-- 축하 효과 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 간단한 축하 애니메이션
+    setTimeout(() => {
+        console.log('🎉 등록 완료!');
+    }, 1000);
+});
+</script>
+{% endblock %}
