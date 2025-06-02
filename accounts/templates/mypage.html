@@ -2,31 +2,321 @@
 {% load static %}
 
 {% block body %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-  <!-- ✅ 프로필 정보 - 버튼 위치 개선 -->
-  <div class="bg-white p-6 shadow rounded-lg mb-10">
-    <!-- 전체를 flex로 만들어서 버튼들을 오른쪽 끝으로 -->
-    <div class="flex items-start justify-between">
-      
-      <!-- 왼쪽: 프로필 정보 -->
-      <div class="flex items-center flex-1">
-        <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-          {% if user_profile.profile_image and user_profile.profile_image.name %}
-            <img src="{{ user_profile.profile_image.url }}"
-                alt="프로필 이미지"
-                class="rounded-full w-full h-full object-cover border" />
-          {% else %}
-            <img src="{% static 'image/ddok_logo.png' %}"
-                alt="기본 이미지"
-                class="rounded-full w-full h-full object-cover border" />
-          {% endif %}
+    <!-- 🎨 프로필 헤더 - 현대적 카드 디자인 -->
+    <div class="relative mb-12">
+      <!-- 배경 그라디언트 -->
+      <div class="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-3xl opacity-90"></div>
+      <div class="relative bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/20">
+        <div class="flex flex-col lg:flex-row items-start gap-8">
+          
+          <!-- 프로필 이미지 섹션 -->
+          <div class="flex flex-col items-center space-y-4">
+            <div class="relative">
+              <div class="w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 p-1 shadow-2xl">
+                <div class="w-full h-full rounded-full overflow-hidden bg-white">
+                  {% if user_profile.profile_image and user_profile.profile_image.name %}
+                    <img src="{{ user_profile.profile_image.url }}"
+                        alt="프로필 이미지"
+                        class="w-full h-full object-cover" />
+                  {% else %}
+                    <img src="{% static 'image/ddok_logo.png' %}"
+                        alt="기본 이미지"
+                        class="w-full h-full object-cover" />
+                  {% endif %}
+                </div>
+              </div>
+              <!-- 온라인 상태 표시 -->
+              <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
+            </div>
+          </div>
+          
+          <!-- 프로필 정보 -->
+          <div class="flex-1 space-y-4">
+            <!-- 닉네임과 뱃지 -->
+            <div class="space-y-3">
+              <div class="flex items-center space-x-4 flex-wrap">
+                <h1 class="text-3xl font-bold text-gray-800">
+                  {% if user_profile.first_name %}
+                    {{ user_profile.first_name }}
+                  {% elif user_profile.username|slice:":6" == "kakao_" %}
+                    카카오 사용자
+                  {% elif user_profile.username|slice:":6" == "naver_" %}
+                    네이버 사용자
+                  {% else %}
+                    {{ user_profile.username }}
+                  {% endif %}
+                </h1>
+
+                <!-- 소셜 로그인 뱃지 -->
+                {% if user_profile.username|slice:":6" == "kakao_" %}
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border-2 border-yellow-200 shadow-sm">
+                    <span class="mr-2 text-lg">💬</span> 카카오
+                  </span>
+                {% elif user_profile.username|slice:":6" == "naver_" %}
+                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 border-2 border-green-200 shadow-sm">
+                    <span class="mr-2 font-bold">N</span> 네이버
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- 팬덤 인증 상태 -->
+              {% if user_profile.is_verified_fandom %}
+                <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold border-2 border-green-200 shadow-sm">
+                  <span class="mr-2">🎖</span> {{ user_profile.fandom_artist.fandom }} 공식 팬
+                </div>
+              {% elif user_profile.is_pending_verification %}
+                <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 font-medium border-2 border-yellow-200 shadow-sm">
+                  <span class="mr-2">⏳</span> 팬덤 인증 확인 중 (3일 소요)
+                </div>
+              {% else %}
+                <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
+                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                  <span class="mr-2">🎫</span> 공식 팬덤 인증하기
+                </a>
+              {% endif %}
+            </div>
+            
+            <!-- 소개글 -->
+            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+              {% if user_profile.bio %}
+                <p class="text-gray-700 text-lg leading-relaxed">{{ user_profile.bio }}</p>
+              {% else %}
+                <p class="text-gray-400 italic">소개글을 작성해보세요! ✨</p>
+              {% endif %}
+            </div>
+          </div>
+          
+          <!-- 액션 버튼들 -->
+          <div class="flex flex-col space-y-3 min-w-[160px]">
+            <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+               class="flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-yellow-400 text-gray-800 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md">
+              <span class="mr-2">⚙️</span> 설정
+            </a>
+            
+            {% if user.is_authenticated %}
+              <a href="{% url 'accounts:profile' request.user.username %}" 
+                 class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-md">
+                <span class="mr-2">🔗</span> 공개 프로필
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎨 찜한 아티스트 섹션 -->
+    <div class="mb-12">
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600">
+            ♥ 내가 찜한 덕
+          </h2>
+          <a href="{% url 'artist:index' %}" 
+             class="flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors group">
+            모든 덕 보기
+            <svg class="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </a>
         </div>
         
-        <div class="ml-4 flex-1">
-          <!-- 닉네임과 뱃지 -->
-          <div class="flex items-center space-x-3 mb-2">
-            <h2 class="text-2xl font-bold">
+        <div class="relative">
+          <div id="favArtistSlider" class="flex overflow-x-auto space-x-6 pb-4 scrollbar-hide">
+            {% for artist in favorite_artists %}
+              <div class="min-w-[140px] text-center transform hover:scale-105 transition-transform duration-200">
+                <div class="bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl p-4 shadow-md hover:shadow-lg transition-shadow">
+                  <img src="{% static artist.logo %}" 
+                       alt="{{ artist.display_name }}"
+                       data-artist-id="{{ artist.id }}" 
+                       data-artist-name="{{ artist.display_name }}"
+                       class="artist-logo w-20 h-20 mx-auto cursor-pointer rounded-full shadow-lg border-4 border-white">
+                  <p class="mt-3 text-sm font-semibold text-gray-700">{{ artist.display_name }}</p>
+                </div>
+              </div>
+            {% empty %}
+              <div class="flex flex-col items-center py-16 w-full">
+                <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6">
+                  <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
+                </div>
+                <p class="text-gray-600 text-center text-lg">
+                  아직 찜한 덕이 없어요! 🥺<br>
+                  <a href="{% url 'artist:index' %}" class="text-blue-600 hover:text-blue-800 font-semibold underline decoration-2 underline-offset-2">
+                    찜덕하러 가기 ✨
+                  </a>
+                </p>
+              </div>
+            {% endfor %}
+          </div>
+          
+          {% if favorite_artists %}
+            <button onclick="scrollSlider('favArtistSlider', -1)" 
+                    class="absolute left-0 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 p-3 shadow-lg rounded-full border border-gray-200 transition-all duration-200 hover:scale-110">
+              <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+            <button onclick="scrollSlider('favArtistSlider', 1)" 
+                    class="absolute right-0 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 p-3 shadow-lg rounded-full border border-gray-200 transition-all duration-200 hover:scale-110">
+              <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎨 최애 멤버 섹션 -->
+    <div class="mb-12">
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-600">
+          최애 ❤
+        </h2>
+        
+        {% if favorite_members %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for member in favorite_members %}
+              {% if member.matched_artist %}
+                <div class="group cursor-pointer bg-gradient-to-br from-pink-50 to-purple-50 p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-pink-100"
+                     data-member-name="{{ member.member_name }}"
+                     data-artist-id="{{ member.matched_artist.id }}"
+                     onclick="openArtistModalFromMember(this)">
+                  
+                  <div class="flex items-center space-x-3 mb-3">
+                    {% for artist in member.filtered_artists %}
+                      <img src="{% static artist.logo %}" 
+                           alt="{{ artist.display_name }}"
+                           class="w-8 h-8 rounded-full shadow-md border-2 border-white">
+                    {% endfor %}
+                  </div>
+                  
+                  <h3 class="text-xl font-bold text-gray-800 group-hover:text-pink-600 transition-colors mb-2">
+                    {{ member.member_name }}
+                  </h3>
+                  
+                  <p class="text-sm text-gray-600">
+                    {% for artist in member.filtered_artists %}
+                      {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </p>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-16">
+            <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+              <img src="{% static 'image/ddok_black.png' %}" alt="최애 없음" class="w-12 h-12 opacity-50" />
+            </div>
+            <p class="text-gray-600 text-lg">아티스트를 눌러서 최애 멤버를 선택해보세요! 💖</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 🎨 나의 활동 섹션 -->
+    <div class="mb-12">
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
+          📌 나의 활동
+        </h2>
+
+        <!-- 탭 네비게이션 -->
+        <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
+          <button class="tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
+                  onclick="showTab('written')">
+            📝 내가 쓴 글
+          </button>
+          <button class="tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showTab('commented')">
+            💬 내가 쓴 댓글
+          </button>
+          <button class="tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showTab('liked')">
+            ❤️ 찜한 글
+          </button>
+        </div>
+
+        <!-- 탭 콘텐츠 -->
+        <!-- 내가 쓴 글 -->
+        <div id="tab-written" class="tab-content">
+          {% if farm_posts %}
+            <div class="space-y-4">
+              {% for post in farm_posts %}
+                <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                  <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
+                     class="text-blue-600 hover:text-blue-800 font-semibold text-lg transition-colors">
+                    [{{ post.get_category_type_display }}] {{ post.title }}
+                  </a>
+                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">작성한 글이 없습니다. 📝</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- 내가 쓴 댓글 -->
+        <div id="tab-commented" class="tab-content hidden">
+          {% if farm_comments %}
+            <div class="space-y-4">
+              {% for comment in farm_comments %}
+                <div class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100 hover:shadow-md transition-shadow">
+                  <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
+                     class="text-green-600 hover:text-green-800 font-semibold transition-colors">
+                    💬 {{ comment.content|truncatewords:15 }}
+                  </a>
+                  <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다. 💬</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- 내가 찜한 글 -->
+        <div id="tab-liked" class="tab-content hidden">
+          {% if liked_posts %}
+            <div class="space-y-4">
+              {% for post in liked_posts %}
+                <div class="p-5 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-100 hover:shadow-md transition-shadow">
+                  <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
+                     class="text-pink-600 hover:text-pink-800 font-semibold transition-colors">
+                    ❤️ {{ post.title }}
+                  </a>
+                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">찜한 글이 없습니다. ❤️</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎨 계정 정보 섹션 -->
+    <div class="mb-12">
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <h3 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-gray-600 to-gray-800">
+          계정 정보
+        </h3>
+        
+        <div class="space-y-6">
+          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border border-gray-200">
+            <span class="text-gray-600 font-semibold">닉네임</span>
+            <span class="font-bold text-gray-800 text-lg">
               {% if user_profile.first_name %}
                 {{ user_profile.first_name }}
               {% elif user_profile.username|slice:":6" == "kakao_" %}
@@ -36,197 +326,106 @@
               {% else %}
                 {{ user_profile.username }}
               {% endif %}
-            </h2>
-
-            <!-- 공식 팬덤 인증 상태 표시 -->
-            {% if user_profile.is_verified_fandom %}
-              <div class="text-green-600 text-sm mt-2 font-semibold">🎖 {{ user_profile.fandom_artist.fandom }}</div>
-            {% elif user_profile.is_pending_verification %}
-              <div class="text-yellow-600 text-sm mt-2">⏳ 팬덤 인증 확인 중입니다. (3일 소요)</div>
-            {% elif user_profile.verification_failed %}
-              <div class="text-red-600 text-sm mt-2"></div>
-            {% else %}
-              <!-- 인증이 안된 경우 인증하러 가기 버튼 -->
-              <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
-                class="mt-3 inline-block bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600 transition">
-                🎫 공식 팬덤 인증하기
-              </a>
-            {% endif %}
-            
-            <!-- 소셜 로그인 뱃지 -->
-            {% if user_profile.username|slice:":6" == "kakao_" %}
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800 border border-yellow-200">
-                <span class="mr-1">💬</span> 카카오
-              </span>
-            {% elif user_profile.username|slice:":6" == "naver_" %}
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 border border-green-200">
-                <span class="mr-1">N</span> 네이버
-              </span>
-            {% endif %}
+            </span>
           </div>
           
-          <!-- 소개글 -->
-          {% if user_profile.bio %}
-            <p class="text-gray-600 text-base">{{ user_profile.bio }}</p>
-          {% else %}
-            <p class="text-gray-400 text-sm">소개글을 작성해보세요!</p>
+          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-50 to-green-50 rounded-2xl border border-gray-200">
+            <span class="text-gray-600 font-semibold">가입일</span>
+            <span class="font-bold text-gray-800">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
+          </div>
+          
+          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-50 to-purple-50 rounded-2xl border border-gray-200">
+            <span class="text-gray-600 font-semibold">로그인 방식</span>
+            <span class="font-bold text-gray-800">
+              {% if user_profile.username|slice:":6" == "kakao_" %}
+                카카오 소셜 로그인
+              {% elif user_profile.username|slice:":6" == "naver_" %}
+                네이버 소셜 로그인
+              {% else %}
+                이메일 로그인
+              {% endif %}
+            </span>
+          </div>
+          
+          {% if user.is_superuser %}
+          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl border border-red-200">
+            <span class="text-gray-600 font-semibold">이메일 (관리자)</span>
+            <span class="font-mono text-sm text-gray-600 break-all">{{ user_profile.email }}</span>
+          </div>
           {% endif %}
-        </div>
-      </div>
-      
-      <!-- ✅ 오른쪽: 버튼들 (세로 배치) -->
-      <div class="flex flex-col space-y-2 ml-6">
-        <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
-           class="px-4 py-2 bg-gray-200 text-black text-sm font-medium rounded-lg hover:bg-yellow-500 transition whitespace-nowrap text-center min-w-[120px]">
-          ⚙️ 설정
-        </a>
-        
-        {% if user.is_authenticated %}
-          <a href="{% url 'accounts:profile' request.user.username %}" 
-             class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition whitespace-nowrap text-center min-w-[120px]">
-            🔗 내 공개 프로필 보기
-          </a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- ✅ 찜한 아티스트 -->
-  <div class="w-full flex justify-between items-center px-6 mb-6 max-w-6xl mx-auto">
-    <h3 class="text-xl font-bold text-red-500">♥ 내가 찜한 덕</h3>
-    <a href="{% url 'artist:index' %}" class="text-sm text-blue-600 hover:underline">모든 덕 →</a>
-  </div>
-  <div class="relative flex justify-center">
-    <div id="favArtistSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
-      {% for artist in favorite_artists %}
-        <div class="min-w-[120px] snap-start text-center">
-          <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-               data-artist-id="{{ artist.id }}" data-artist-name="{{ artist.display_name }}"
-               class="artist-logo w-24 h-24 cursor-pointer inline-block m-2 rounded-full shadow">
-          <p class="text-sm font-medium">{{ artist.display_name }}</p>
-        </div>
-      {% empty %}
-        <div class="flex flex-col items-center py-12 space-y-4">
-          <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-24 h-24 object-contain" />
-          <p class="text-gray-600 text-center">
-            아직 찜한 덕이 없어요!<br>
-            <a href="{% url 'artist:index' %}" class="text-blue-600 hover:underline">
-              찜덕하러 가기~
-            </a>
-          </p>
-        </div>
-      {% endfor %}
-    </div>
-    {% if favorite_artists %}
-      <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
-      <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
-    {% endif %}
-  </div>
-
-  <!-- ✅ 최애 멤버 -->
-  <div class="max-w-3xl mx-auto mt-10 px-4">
-    <h2 class="text-xl font-bold mb-6">최애 ❤</h2>
-    {% if favorite_members %}
-      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {% for member in favorite_members %}
-          {% if member.matched_artist %}
-            <li class="cursor-pointer bg-white p-4 rounded shadow text-center hover:shadow-md transition group"
-                data-member-name="{{ member.member_name }}"
-                data-artist-id="{{ member.matched_artist.id }}"
-                onclick="openArtistModalFromMember(this)">
-              <div class="flex justify-center items-center gap-2 mb-1">
-                {% for artist in member.filtered_artists %}
-                  <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-                  class="w-6 h-6 object-contain rounded-full shadow">
-                {% endfor %}
-                <div class="text-lg font-semibold group-hover:text-pink-600 transition">{{ member.member_name }}</div>
+          
+          <!-- 안내사항 -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-2xl border border-blue-200">
+            <div class="flex items-start space-x-3">
+              <div class="text-2xl">💡</div>
+              <div>
+                <h4 class="font-bold text-gray-800 mb-3">안내사항</h4>
+                <ul class="text-sm text-gray-700 space-y-2 leading-relaxed">
+                  <li class="flex items-start space-x-2">
+                    <span class="text-blue-500 mt-1">•</span>
+                    <span>닉네임은 프로필 관리에서 언제든 변경할 수 있습니다</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <span class="text-blue-500 mt-1">•</span>
+                    <span>소셜 로그인 계정은 비밀번호 변경이 불가능합니다</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <span class="text-blue-500 mt-1">•</span>
+                    <span>계정 관련 문의사항은 고객센터를 이용해주세요</span>
+                  </li>
+                </ul>
               </div>
-              <div class="text-sm text-gray-500 truncate">
-                {% for artist in member.filtered_artists %}
-                  {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
-                {% endfor %}
-              </div>
-            </li>
-          {% endif %}
-        {% endfor %}
-      </ul>
-    {% else %}
-      <div class="text-center py-12">
-        <img src="{% static 'image/ddok_black.png' %}" alt="최애 없음" class="w-16 h-16 mx-auto mb-4 opacity-50" />
-        <p class="text-gray-500">아티스트를 눌러서 최애 멤버를 선택해보세요!</p>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- ✅ 계정 정보 -->
-  <div class="max-w-3xl mx-auto mt-16 px-4">
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-lg font-bold mb-4">계정 정보</h3>
-      <div class="space-y-4 text-sm">
-        
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-          <span class="text-gray-600 font-medium">닉네임</span>
-          <span class="font-semibold text-gray-800">
-            {% if user_profile.first_name %}
-              {{ user_profile.first_name }}
-            {% elif user_profile.username|slice:":6" == "kakao_" %}
-              카카오 사용자
-            {% elif user_profile.username|slice:":6" == "naver_" %}
-              네이버 사용자
-            {% else %}
-              {{ user_profile.username }}
-            {% endif %}
-          </span>
-        </div>
-        
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-          <span class="text-gray-600 font-medium">가입일</span>
-          <span class="font-semibold text-gray-800">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
-        </div>
-        
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-          <span class="text-gray-600 font-medium">로그인 방식</span>
-          <span class="font-semibold text-gray-800">
-            {% if user_profile.username|slice:":6" == "kakao_" %}
-              카카오 소셜 로그인
-            {% elif user_profile.username|slice:":6" == "naver_" %}
-              네이버 소셜 로그인
-            {% else %}
-              이메일 로그인
-            {% endif %}
-          </span>
-        </div>
-        
-        <!-- 이메일은 관리자만 표시 -->
-        {% if user.is_superuser %}
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-          <span class="text-gray-600 font-medium">이메일 (관리자만 표시)</span>
-          <span class="font-mono text-xs text-gray-500 break-all">{{ user_profile.email }}</span>
-        </div>
-        {% endif %}
-        
-        <div class="pt-4 bg-gray-50 p-4 rounded-lg">
-          <p class="text-xs text-gray-600 leading-relaxed">
-            💡 <strong>안내사항</strong><br>
-            • 닉네임은 프로필 관리에서 언제든 변경할 수 있습니다<br>
-            • 소셜 로그인 계정은 비밀번호 변경이 불가능합니다<br>
-            • 계정 관련 문의사항은 고객센터를 이용해주세요
-          </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ✅ 모달 -->
-<div id="memberModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-  <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-    <div id="memberListArea" class="max-h-96 overflow-y-auto"></div>
-    <button onclick="closeModal()" class="mt-4 w-full px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition">닫기</button>
+<!-- 🎨 모달 -->
+<div id="memberModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
+  <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
+    <div class="p-6 border-b border-gray-200">
+      <h3 class="text-xl font-bold text-gray-800">멤버 선택</h3>
+    </div>
+    <div id="memberListArea" class="max-h-96 overflow-y-auto p-6"></div>
+    <div class="p-6 border-t border-gray-200">
+      <button onclick="closeModal()" 
+              class="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-2xl transition-colors">
+        닫기
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- ✅ 스크립트 -->
+<!-- CSS 추가 스타일 -->
+<style>
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .tab-btn.active {
+    background: white;
+    color: #4f46e5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .tab-btn:not(.active) {
+    color: #6b7280;
+  }
+  
+  .tab-btn:not(.active):hover {
+    color: #4f46e5;
+    background: rgba(255,255,255,0.5);
+  }
+</style>
+
+<!-- JavaScript -->
 <script>
   const followedArtistIds = {{ followed_artist_ids|safe }};
 
@@ -237,7 +436,26 @@
   }
 
   function closeModal() {
-    location.reload();
+    document.getElementById('memberModal').classList.add('hidden');
+    setTimeout(() => location.reload(), 100);
+  }
+
+  function showTab(tabId) {
+    // 모든 탭 버튼의 active 클래스 제거
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+      btn.classList.add('text-gray-600');
+    });
+    
+    // 클릭된 탭 버튼에 active 클래스 추가
+    event.target.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+    event.target.classList.remove('text-gray-600');
+    
+    // 모든 탭 콘텐츠 숨기기
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    
+    // 선택된 탭 콘텐츠 보이기
+    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
   }
 
   function bindFollowButtons(container) {
@@ -291,5 +509,13 @@
       alert('찜한 아티스트에 포함되지 않은 멤버입니다.');
     }
   }
+
+  // 페이지 로드 시 첫 번째 탭 활성화
+  document.addEventListener('DOMContentLoaded', function() {
+    const firstTabBtn = document.querySelector('.tab-btn');
+    if (firstTabBtn) {
+      firstTabBtn.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+    }
+  });
 </script>
 {% endblock %}
