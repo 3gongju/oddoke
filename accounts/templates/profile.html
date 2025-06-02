@@ -1,27 +1,34 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block body %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    
+    <!-- Profile Header -->
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-8 backdrop-blur-sm bg-white/80">
+      <div class="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+        
+        <!-- Profile Image -->
+        <div class="relative group">
+          <div class="w-40 h-40 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-500 p-1 shadow-2xl">
+            <div class="w-full h-full rounded-full overflow-hidden bg-white p-1">
+              {% if user_profile.profile_image and user_profile.profile_image.name %}
+                <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
+              {% else %}
+                <img src="{% static 'image/ddok_logo.png' %}" alt="기본 프로필 이미지" class="w-full h-full object-cover rounded-full">
+              {% endif %}
+            </div>
+          </div>
+          <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
+            <span class="text-white text-lg">✨</span>
+          </div>
+        </div>
 
-  <!-- ✅ 프로필 헤더 -->
-  <div class="container mx-auto bg-white p-6 shadow rounded-lg mb-6">
-    <div class="flex items-center">
-      <!-- 프로필 이미지 -->
-      <div class="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center">
-        {% if user_profile.profile_image and user_profile.profile_image.name %}
-          <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="rounded-full w-full h-full object-cover">
-        {% else %}
-          <img src="{% static 'image/ddok_logo.png' %}" alt="기본 프로필 이미지" class="rounded-full w-full h-full object-cover">
-        {% endif %}
-      </div>
-
-      <!-- 닉네임 + 정보 -->
-      <div class="ml-4 flex-1">
-        <!-- ✅ 닉네임과 팔로우 버튼 -->
-        <div class="flex items-center justify-between">
-          <!-- 👇 왼쪽: 닉네임 + 뱃지 -->
-          <div class="flex items-center space-x-2">
-            <h2 class="text-2xl font-bold m-0">
+        <!-- Profile Info -->
+        <div class="flex-1 text-center lg:text-left">
+          <!-- Username and Follow Button -->
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">
               {% if user_profile.first_name %}
                 {{ user_profile.first_name }}
               {% elif user_profile.username|slice:":6" == "kakao_" %}
@@ -31,188 +38,401 @@
               {% else %}
                 {{ user_profile.username }}
               {% endif %}
-            </h2>
+            </h1>
 
-            <!-- ✅ 공식 팬덤 인증 상태 뱃지 (같은 줄) -->
-            {% if user_profile.is_verified_fandom %}
-              <span class="text-green-700 text-sm font-semibold bg-green-50 border border-green-200 px-2 py-1 rounded inline-block">
-                🏆 {{ user_profile.fandom_artist.fandom }}
-              </span>
+            {% if user != user_profile %}
+            <form method="POST" action="{% url 'accounts:follow' user_profile.username %}">
+              {% csrf_token %}
+              <button type="submit" class="follow-btn {% if is_following %}following{% else %}not-following{% endif %}">
+                {% if is_following %}
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    팔로잉
+                  </span>
+                {% else %}
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    팔로우
+                  </span>
+                {% endif %}
+              </button>
+            </form>
             {% endif %}
           </div>
 
-          <!-- ✅ 팔로우 버튼 (본인이 아닐 때만 표시) -->
-          {% if user != user_profile %}
-            <form method="POST" action="{% url 'accounts:follow' user_profile.username %}">
-              {% csrf_token %}
-              <button type="submit"
-                      class="px-4 py-2 rounded-lg text-sm font-medium transition
-                            {% if is_following %}
-                              bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200
-                            {% else %}
-                              bg-blue-500 text-white border border-blue-500 hover:bg-blue-600
-                            {% endif %}">
-                {% if is_following %}팔로잉{% else %}+ 팔로우{% endif %}
-              </button>
-            </form>
+          <!-- Verification Badge -->
+          {% if user_profile.is_verified_fandom %}
+            <div class="mb-4">
+              <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                {{ user_profile.fandom_artist.fandom }} 공식 팬
+              </span>
+            </div>
           {% endif %}
-        </div>
-        <!-- ✅ 소개글 -->
-        {% if user_profile.bio %}
-          <p class="text-gray-700 mt-3 text-base">{{ user_profile.bio }}</p>
-        {% endif %}
 
-        <!-- ✅ 팔로워/팔로잉 수 + 매너 리뷰 버튼 -->
-        <div class="flex items-center justify-between mt-4">
-          <div class="flex space-x-4 text-sm text-gray-600">
-            <button id="followerBtn" class="hover:text-blue-600 transition">
-              <span class="font-semibold">{{ user_profile.followers.all|length }}</span> 팔로워
+          <!-- Bio -->
+          {% if user_profile.bio %}
+            <p class="text-gray-700 mb-6 text-lg leading-relaxed max-w-md mx-auto lg:mx-0">{{ user_profile.bio }}</p>
+          {% endif %}
+
+          <!-- Stats -->
+          <div class="flex justify-center lg:justify-start gap-8 mb-6">
+            <button id="followerBtn" class="stat-button group">
+              <div class="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{{ user_profile.followers.all|length }}</div>
+              <div class="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">팔로워</div>
             </button>
-            <button id="followingBtn" class="hover:text-blue-600 transition">
-              <span class="font-semibold">{{ user_profile.followings.all|length }}</span> 팔로잉
+            <button id="followingBtn" class="stat-button group">
+              <div class="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{{ user_profile.followings.all|length }}</div>
+              <div class="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">팔로잉</div>
             </button>
           </div>
-          
-          <!-- ✅ 매너 리뷰 버튼 (테스트를 위해 본인도 볼 수 있게) -->
-           <!-- 나중에 꼭 수정해야함 -> 본인이 아닌 경우에만 뜨게 -->
+
+          <!-- Action Button -->
           <a href="{% url 'accounts:review_home' user_profile.username %}" 
-             class="inline-flex items-right px-3 py-1 bg-yellow-400 text-white text-sm rounded-lg hover:bg-yellow-500 transition">
-            📝 매너 리뷰 작성
+             class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:from-orange-500 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+            매너 리뷰
           </a>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ✅ 팔로워/팔로잉 모달 -->
-  <div id="followModal" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center hidden z-50">
-    <div class="bg-white rounded-lg p-6 w-80 shadow-xl">
-      <h3 id="followModalTitle" class="text-lg font-bold mb-4">팔로워</h3>
-      <ul id="followModalList" class="space-y-3 text-sm max-h-64 overflow-y-auto">
-        <!-- JS로 추가됨 -->
-      </ul>
-      <button onclick="closeFollowModal()" class="mt-4 w-full bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200 transition">닫기</button>
-    </div>
-  </div>
-
-  <!-- ✅ 찜한 덕 -->
-  <div class="container mx-auto bg-white shadow rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4">찜한 덕</h2>
-    <div class="relative flex justify-center">
-      <div id="favArtistSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
-        {% for artist in favorite_artists %}
-        <div class="min-w-[120px] snap-start text-center">
-          <img src="{% static artist.logo %}" alt="{{ artist.display_name }}"
-               class="w-24 h-24 object-cover rounded-full mx-auto mb-2 shadow-md">
-          <p class="text-sm font-medium">{{ artist.display_name }}</p>
+    <!-- Favorite Artists -->
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-8 backdrop-blur-sm bg-white/80">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <span class="text-2xl">💖</span>
+          찜한 덕
+        </h2>
+        <div class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+          {{ favorite_artists|length }}개
         </div>
-        {% empty %}
-        <div class="flex flex-col items-center py-12 space-y-4">
-          <img src="{% static 'image/ddok_black.png' %}"
-               alt="찜한 아티스트 없음"
-               class="w-24 h-24 object-contain opacity-50" />
-          <p class="text-gray-500 text-center">아직 찜한 덕이 없어요!</p>
-        </div>
-        {% endfor %}
       </div>
+      
       {% if favorite_artists %}
-        <button onclick="scrollSlider('favArtistSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
-        <button onclick="scrollSlider('favArtistSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
+        <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+          {% for artist in favorite_artists %}
+          <div class="artist-card group">
+            <div class="relative">
+              <div class="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-gray-200 group-hover:border-purple-400 transition-all duration-300">
+                <img src="{% static artist.logo %}" alt="{{ artist.display_name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+              </div>
+              <div class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <span class="text-white text-xs">♥</span>
+              </div>
+            </div>
+            <p class="text-xs font-medium text-gray-700 mt-2 text-center truncate group-hover:text-purple-600 transition-colors">{{ artist.display_name }}</p>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-16">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <span class="text-3xl opacity-50">💔</span>
+          </div>
+          <p class="text-gray-400 text-lg">아직 찜한 덕이 없어요!</p>
+          <p class="text-gray-300 text-sm mt-2">좋아하는 아티스트를 찜해보세요</p>
+        </div>
       {% endif %}
     </div>
-  </div>
 
-  <!-- ✅ 덕팜 활동 -->
-  <div class="container mx-auto bg-white shadow rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4">덕팜 활동</h2>
-    {% if ddokfarm_posts %}
-      <div class="relative">
-        <div id="farmSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
-          {% for post in ddokfarm_posts %}
-          <div class="min-w-[280px] flex-shrink-0 snap-center rounded-lg shadow border p-4 bg-white hover:shadow-md transition">
-            <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}">
-              {% if post.image %}
-              <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-40 object-cover rounded mb-3" />
-              {% endif %}
-              <h3 class="font-bold text-gray-800 mb-1 line-clamp-2">{{ post.title }}</h3>
-              <p class="text-sm text-gray-500">{{ post.created_at|date:"m월 d일 A g:i" }}</p>
-            </a>
-          </div>
-          {% endfor %}
+    <!-- Posts Section -->
+    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 backdrop-blur-sm bg-white/80">
+      <!-- Category Tabs -->
+      <div class="flex justify-center mb-8">
+        <div class="bg-gray-100 rounded-2xl p-2 shadow-inner">
+          <button id="tab-all" class="category-tab active">
+            <span class="tab-icon">📱</span>
+            <span>전체</span>
+          </button>
+          <button id="tab-ddokfarm" class="category-tab">
+            <span class="tab-icon">🌱</span>
+            <span>덕팜</span>
+          </button>
+          <button id="tab-ddokdam" class="category-tab">
+            <span class="tab-icon">💬</span>
+            <span>덕담</span>
+          </button>
         </div>
-        <button onclick="scrollSlider('farmSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
-        <button onclick="scrollSlider('farmSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
       </div>
-    {% else %}
-      <div class="text-center py-12">
-        <img src="{% static 'image/ddok_black.png' %}" alt="게시글 없음" class="w-16 h-16 mx-auto mb-4 opacity-50" />
-        <p class="text-gray-500">아직 덕팜 활동이 없어요!</p>
-      </div>
-    {% endif %}
-  </div>
 
-  <!-- ✅ 덕담 활동 -->
-  <div class="container mx-auto bg-white shadow rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4">덕담 활동</h2>
-    {% if ddokdam_posts %}
-      <div class="relative">
-        <div id="postSlider" class="flex overflow-x-auto space-x-4 snap-x pb-4">
-          {% for post in ddokdam_posts %}
-          <div class="min-w-[280px] flex-shrink-0 snap-center rounded-lg shadow border p-4 bg-white hover:shadow-md transition">
-            <a href="{% url 'ddokdam:post_detail' 'community' post.id %}">
-              {% if post.image %}
-              <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-40 object-cover rounded mb-3" />
-              {% endif %}
-              <h3 class="font-bold text-gray-800 mb-1 line-clamp-2">{{ post.title }}</h3>
-              <p class="text-sm text-gray-500">{{ post.created_at|date:"m월 d일 A g:i" }}</p>
-            </a>
+      <!-- Posts Grid -->
+      <div id="posts-container">
+        {% if ddokfarm_posts or ddokdam_posts %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="posts-grid">
+            <!-- 덕팜 게시글들 -->
+            {% for post in ddokfarm_posts %}
+            <div class="post-item post-card" data-category="ddokfarm">
+              <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" class="block">
+                <div class="relative overflow-hidden rounded-2xl shadow-lg group">
+                  {% if post.image %}
+                    <div class="aspect-square overflow-hidden">
+                      <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                  {% else %}
+                    <div class="aspect-square bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                      <img src="{% static 'image/ddok_logo.png' %}" alt="기본 이미지" class="w-16 h-16 opacity-40">
+                    </div>
+                  {% endif %}
+                  
+                  <!-- Overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div class="absolute bottom-4 left-4 right-4">
+                      <div class="flex items-center justify-between text-white">
+                        <span class="bg-blue-500 px-3 py-1 rounded-full text-xs font-semibold">덕팜</span>
+                        <span class="text-xs">{{ post.created_at|date:"m/d" }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Badge -->
+                  <div class="absolute top-3 right-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+                    덕팜
+                  </div>
+                </div>
+                
+                <div class="p-4">
+                  <h3 class="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{{ post.title }}</h3>
+                  <div class="flex items-center text-xs text-gray-500">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ post.created_at|date:"m/d" }}
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+
+            <!-- 덕담 게시글들 -->
+            {% for post in ddokdam_posts %}
+            <div class="post-item post-card" data-category="ddokdam">
+              <a href="{% url 'ddokdam:post_detail' 'community' post.id %}" class="block">
+                <div class="relative overflow-hidden rounded-2xl shadow-lg group">
+                  {% if post.image %}
+                    <div class="aspect-square overflow-hidden">
+                      <img src="{{ post.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                  {% else %}
+                    <div class="aspect-square bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                      <img src="{% static 'image/ddok_logo.png' %}" alt="기본 이미지" class="w-16 h-16 opacity-40">
+                    </div>
+                  {% endif %}
+                  
+                  <!-- Overlay -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div class="absolute bottom-4 left-4 right-4">
+                      <div class="flex items-center justify-between text-white">
+                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs font-semibold">덕담</span>
+                        <span class="text-xs">{{ post.created_at|date:"m/d" }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Badge -->
+                  <div class="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+                    덕담
+                  </div>
+                </div>
+                
+                <div class="p-4">
+                  <h3 class="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">{{ post.title }}</h3>
+                  <div class="flex items-center text-xs text-gray-500">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ post.created_at|date:"m/d" }}
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
           </div>
-          {% endfor %}
-        </div>
-        <button onclick="scrollSlider('postSlider', -1)" class="absolute left-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">←</button>
-        <button onclick="scrollSlider('postSlider', 1)" class="absolute right-0 top-1/2 -translate-y-1/2 bg-white p-2 shadow rounded-full z-10">→</button>
+        {% else %}
+          <div class="text-center py-20" id="no-posts">
+            <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+              <span class="text-4xl opacity-50">📝</span>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">아직 활동이 없어요!</h3>
+            <p class="text-gray-400">첫 번째 게시글을 작성해보세요</p>
+          </div>
+        {% endif %}
       </div>
-    {% else %}
-      <div class="text-center py-12">
-        <img src="{% static 'image/ddok_black.png' %}" alt="게시글 없음" class="w-16 h-16 mx-auto mb-4 opacity-50" />
-        <p class="text-gray-500">아직 덕담 활동이 없어요!</p>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- ✅ 덕생 활동 -->
-  <div class="container mx-auto bg-white shadow rounded-lg p-6 mb-8">
-    <h2 class="text-xl font-bold mb-4">덕생 활동</h2>
-    <div class="flex justify-start space-x-4 mb-6">
-      <button onclick="showTab('liked_posts')" class="tab-btn bg-white text-blue-500 px-4 py-2 border border-blue-500 rounded">내가 찜한 게시글</button>
-    </div>
-    
-    <!-- ✅ 찜한 게시글 또는 댓글 활동 -->
-    <div class="space-y-3">
-      {% for comment in user_profile.comment_set.all %}
-      <div class="border border-gray-200 p-4 rounded-lg bg-gray-50">
-        <p class="text-sm text-gray-700 mb-2">{{ comment.content }}</p>
-        <p class="text-xs text-gray-500">{{ comment.created_at|date:"Y년 m월 d일 A g:i" }}</p>
-      </div>
-      {% empty %}
-      <div class="text-center py-12">
-        <img src="{% static 'image/ddok_black.png' %}" alt="활동 없음" class="w-16 h-16 mx-auto mb-4 opacity-50" />
-        <p class="text-gray-500">아직 덕생 활동이 없어요!</p>
-      </div>
-      {% endfor %}
     </div>
   </div>
-
 </div>
 
-<!-- ✅ 스크립트 -->
-<script>
-  function scrollSlider(id, direction) {
-    const slider = document.getElementById(id);
-    const scrollAmount = 300;
-    slider.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+<!-- Follow Modal -->
+<div id="followModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="followModalTitle" class="modal-title">팔로워</h3>
+      <button onclick="closeFollowModal()" class="modal-close">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <ul id="followModalList" class="follow-list">
+        <!-- JS로 추가됨 -->
+      </ul>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Base Styles */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .aspect-square {
+    aspect-ratio: 1 / 1;
   }
 
+  /* Follow Button */
+  .follow-btn {
+    @apply px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg;
+  }
+  
+  .follow-btn.following {
+    @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+  }
+  
+  .follow-btn.not-following {
+    @apply bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-xl;
+  }
+
+  /* Stat Button */
+  .stat-button {
+    @apply text-center cursor-pointer transition-all duration-200 hover:transform hover:scale-105;
+  }
+
+  /* Artist Card */
+  .artist-card {
+    @apply transition-all duration-300 hover:transform hover:scale-105;
+  }
+
+  /* Category Tabs */
+  .category-tab {
+    @apply flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer;
+    color: #6b7280;
+  }
+
+  .category-tab.active {
+    @apply bg-white text-gray-900 shadow-lg transform scale-105;
+  }
+
+  .category-tab:hover:not(.active) {
+    @apply bg-white/50 text-gray-700;
+  }
+
+  .tab-icon {
+    @apply text-lg;
+  }
+
+  /* Post Card */
+  .post-card {
+    @apply bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:transform hover:scale-105;
+  }
+
+  .post-item {
+    transition: all 0.3s ease;
+  }
+
+  .post-item.hidden {
+    opacity: 0;
+    transform: scale(0.8);
+    pointer-events: none;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center hidden z-50;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-3xl shadow-2xl w-96 max-h-96 overflow-hidden;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between p-6 border-b border-gray-100;
+  }
+
+  .modal-title {
+    @apply text-xl font-bold text-gray-900;
+  }
+
+  .modal-close {
+    @apply text-gray-400 hover:text-gray-600 transition-colors duration-200;
+  }
+
+  .modal-body {
+    @apply p-6 max-h-80 overflow-y-auto;
+  }
+
+  .follow-list {
+    @apply space-y-4;
+  }
+
+  .follow-list li {
+    @apply flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200;
+  }
+
+  .follow-list .user-info {
+    @apply flex items-center gap-3;
+  }
+
+  .follow-list .user-avatar {
+    @apply w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold;
+  }
+
+  .follow-list .user-name {
+    @apply font-semibold text-gray-900;
+  }
+
+  .follow-list .view-profile {
+    @apply text-purple-500 hover:text-purple-700 font-semibold text-sm transition-colors duration-200;
+  }
+
+  /* Animations */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .post-card {
+    animation: fadeInUp 0.3s ease forwards;
+  }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .modal-content {
+      @apply w-11/12 max-w-sm;
+    }
+  }
+</style>
+
+<script>
+  // Modal functionality
   const followModal = document.getElementById("followModal");
   const followModalTitle = document.getElementById("followModalTitle");
   const followModalList = document.getElementById("followModalList");
@@ -220,6 +440,7 @@
   document.getElementById("followerBtn").addEventListener("click", () => {
     fetchFollowList("followers");
   });
+
   document.getElementById("followingBtn").addEventListener("click", () => {
     fetchFollowList("followings");
   });
@@ -232,10 +453,14 @@
         followModalList.innerHTML = "";
         data.users.forEach(user => {
           const li = document.createElement('li');
-          li.className = 'flex items-center justify-between p-2 hover:bg-gray-50 rounded';
           li.innerHTML = `
-            <span class="font-medium">${user.username}</span>
-            <a href="/accounts/profile/${user.username}/" class="text-blue-500 text-xs hover:underline">프로필 보기</a>
+            <div class="user-info">
+              <div class="user-avatar">
+                ${user.username.charAt(0).toUpperCase()}
+              </div>
+              <span class="user-name">${user.username}</span>
+            </div>
+            <a href="/accounts/profile/${user.username}/" class="view-profile">보기</a>
           `;
           followModalList.appendChild(li);
         });
@@ -249,5 +474,90 @@
   function closeFollowModal() {
     followModal.classList.add("hidden");
   }
+
+  // Category filtering
+  const categoryTabs = document.querySelectorAll('.category-tab');
+  const postItems = document.querySelectorAll('.post-item');
+  const postsGrid = document.getElementById('posts-grid');
+  const noPosts = document.getElementById('no-posts');
+
+  categoryTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Update active tab
+      categoryTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      // Filter posts
+      const category = tab.id.split('-')[1];
+      filterPosts(category);
+    });
+  });
+
+  function filterPosts(category) {
+    let visibleCount = 0;
+
+    postItems.forEach((item, index) => {
+      const itemCategory = item.getAttribute('data-category');
+      
+      setTimeout(() => {
+        if (category === 'all' || itemCategory === category) {
+          item.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          item.classList.add('hidden');
+        }
+      }, index * 50); // Staggered animation
+    });
+
+    // Handle no posts state
+    setTimeout(() => {
+      if (visibleCount === 0) {
+        if (postsGrid) postsGrid.style.display = 'none';
+        if (noPosts) {
+          noPosts.style.display = 'block';
+          const noPostsText = noPosts.querySelector('p');
+          if (noPostsText) {
+            if (category === 'ddokfarm') {
+              noPostsText.textContent = '아직 덕팜 활동이 없어요!';
+            } else if (category === 'ddokdam') {
+              noPostsText.textContent = '아직 덕담 활동이 없어요!';
+            } else {
+              noPostsText.textContent = '첫 번째 게시글을 작성해보세요';
+            }
+          }
+        }
+      } else {
+        if (postsGrid) postsGrid.style.display = 'grid';
+        if (noPosts) noPosts.style.display = 'none';
+      }
+    }, 300);
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    filterPosts('all');
+    
+    // Add scroll animation
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.animationDelay = '0.1s';
+          entry.target.style.animationFillMode = 'both';
+        }
+      });
+    });
+
+    document.querySelectorAll('.post-card').forEach(card => {
+      observer.observe(card);
+    });
+  });
+
+  // Close modal when clicking outside
+  followModal.addEventListener('click', (e) => {
+    if (e.target === followModal) {
+      closeFollowModal();
+    }
+  });
 </script>
+
 {% endblock %}

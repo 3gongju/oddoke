@@ -13,7 +13,7 @@ class FarmBasePost(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
     is_sold = models.BooleanField(default=False) # 판매 완료 여부
-    artist = models.ForeignKey(Artist, on_delete=models.SET_NULL, null=True, blank=True)
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
     members = models.ManyToManyField(Member, blank=True)
 
     class Meta:
@@ -122,9 +122,9 @@ class FarmComment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    sell_post = models.ForeignKey(FarmSellPost, on_delete=models.CASCADE, null=True, blank=True)
-    rental_post = models.ForeignKey(FarmRentalPost, on_delete=models.CASCADE, null=True, blank=True)
-    split_post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    post = GenericForeignKey('content_type', 'object_id')
 
 # 이미지 여러장
 class FarmPostImage(models.Model):

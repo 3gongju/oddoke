@@ -4,6 +4,7 @@
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
 from django.contrib.auth.hashers import make_password
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 import os
 import shutil
@@ -14,6 +15,10 @@ from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmCom
 from django.core.files.images import ImageFile
 import random
 from datetime import timedelta, date
+from artist.models import Artist, Member
+import csv
+from django.conf import settings
+import random
 
 class Command(BaseCommand):
     help = '데이터베이스를 초기화하고 기본 데이터를 자동으로 로드합니다'
@@ -62,6 +67,9 @@ class Command(BaseCommand):
         
         # 기본 이미지 복사
         self.copy_default_image()
+
+        # artist, member
+        self.load_artists_and_members_from_csv()
         
         # 기본 데이터 생성
         self.create_default_data()
@@ -120,6 +128,66 @@ class Command(BaseCommand):
         # 샘플 댓글 생성
         self.create_sample_comments()
     
+    def load_artists_and_members_from_csv(self):
+        # CSV 파일 경로
+        artist_csv_path = os.path.join(settings.BASE_DIR, '_artist.csv')
+        member_csv_path = os.path.join(settings.BASE_DIR, '_member.csv')
+
+        # 1️⃣ Artist CSV 읽어서 모든 필드 동적으로 처리
+        if os.path.exists(artist_csv_path):
+            self.stdout.write(self.style.WARNING(f"CSV에서 아티스트 데이터를 로드 중... {artist_csv_path}"))
+            with open(artist_csv_path, newline='', encoding='utf-8-sig') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    # row에서 DB 필드 이름으로만 필터링
+                    artist_fields = {field.name for field in Artist._meta.get_fields()}
+                    artist_data = {key: row[key] for key in row if key in artist_fields}
+
+                    Artist.objects.update_or_create(
+                        id=row['id'],
+                        defaults=artist_data
+                    )
+            self.stdout.write(self.style.SUCCESS("✅ 아티스트 데이터가 성공적으로 로드되었습니다!"))
+        else:
+            self.stdout.write(self.style.WARNING(f"🚨 아티스트 CSV 파일이 존재하지 않습니다: {artist_csv_path}"))
+
+        # 2️⃣ Member CSV 읽어서 모든 필드 동적으로 처리
+        if os.path.exists(member_csv_path):
+            self.stdout.write(self.style.WARNING(f"CSV에서 멤버 데이터를 로드 중... {member_csv_path}"))
+            with open(member_csv_path, newline='', encoding='utf-8-sig') as csvfile:
+                reader = csv.DictReader(csvfile, skipinitialspace=True)
+                for row in reader:
+                    member_fields = {field.name for field in Member._meta.get_fields()}
+                    member_data = {key: row[key] for key in row if key in member_fields}
+
+                    # artist_id 추출
+                    artist_id = row.get('artist_id')
+
+                    # artist_name은 ManyToManyField니까 제외!
+                    member_data.pop('artist_name', None)
+
+                    # Member 생성/업데이트
+                    member, created = Member.objects.update_or_create(
+                        id=row['id'],
+                        defaults=member_data
+                    )
+
+                    # artist 연결은 ManyToManyField라 set()으로 처리
+                    if artist_id:
+                        try:
+                            artist = Artist.objects.get(pk=artist_id)
+                            member.artist_name.set([artist])
+                        except Artist.DoesNotExist:
+                            self.stdout.write(self.style.WARNING(f"🚨 ID {artist_id}에 해당하는 아티스트가 없습니다!"))
+
+                    Member.objects.update_or_create(
+                        id=row['id'],
+                        defaults=member_data
+                    )
+            self.stdout.write(self.style.SUCCESS("✅ 멤버 데이터가 성공적으로 로드되었습니다!"))
+        else:
+            self.stdout.write(self.style.WARNING(f"🚨 멤버 CSV 파일이 존재하지 않습니다: {member_csv_path}"))
+
     def create_default_users(self):
         # 프로필 이미지 경로 설정
         profile_image_path = 'profile/sample_profile.jpg' if os.path.exists('media/profile/sample_profile.jpg') else ''
@@ -200,16 +268,19 @@ class Command(BaseCommand):
                 'title': "오늘 팬미팅 다녀왔어요!",
                 'content': "오늘 팬미팅 다녀왔는데 정말 행복했습니다! 여러분도 다녀오셨나요?\n멤버들이 너무 친절하고 좋았어요. 다음 팬미팅도 꼭 가고 싶어요.",
                 'user': fan_user,
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "뉴진스 새 앨범 언제 나올까요?",
                 'content': "뉴진스 새 앨범이 기다려지네요. 혹시 정보 있으신 분 계신가요?\n티저나 소식이 있으면 알려주세요!",
                 'user': test_user,
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "AESPA 콘서트 후기",
                 'content': "AESPA 콘서트 다녀왔습니다! 정말 최고였어요. 특히 윈터 포커싱 직캠 찍었는데 너무 예뻐요.\n다음 콘서트는 언제일까요?",
                 'user': admin_user,
+                'artist': random.choice(list(Artist.objects.all())),
             }
         ]
         
@@ -220,14 +291,16 @@ class Command(BaseCommand):
                 'content': "홍대에 있는 이 카페 정말 좋았어요! 인형과 함께 예절샷 찍었습니다.\n인스타 감성 가득한 인테리어에 디저트도 정말 맛있어요.",
                 'user': test_user,
                 'location': "서울 마포구 홍대 어쩌구 카페",
-                'item': "BTS 인형"
+                'item': "BTS 인형",
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "강남역 아이돌 카페",
                 'content': "강남역 근처에 있는 아이돌 카페입니다. BTS 테마로 꾸며져 있어요.\n음료도 맛있고 인형과 함께 사진 찍기 좋은 곳입니다!",
                 'user': fan_user,
                 'location': "서울 강남구 강남대로 102",
-                'item': "BTS 인형"
+                'item': "BTS 인형",
+                'artist': random.choice(list(Artist.objects.all())),
             }
         ]
         
@@ -238,6 +311,7 @@ class Command(BaseCommand):
                 'content': "정국 생일 기념 카페가 오픈했습니다! 9월 1일부터 9월 10일까지 운영해요.\n굿즈도 다양하고 포토존도 잘 꾸며져 있어요.",
                 'user': fan_user,
                 'cafe_name': "정국이의 꿀잼 카페",
+                'artist': random.choice(list(Artist.objects.all())),
                 # 'cafe_location': "서울 강남구 테헤란로 123",
                 # 'start_date': timezone.now().date(),
                 # 'end_date': (timezone.now() + timedelta(days=10)).date()
@@ -247,6 +321,7 @@ class Command(BaseCommand):
                 'content': "윈터 생일 기념 팝업 스토어입니다. 1월 1일부터 1월 15일까지 운영합니다.\n특별 포토카드 증정 이벤트도 있어요!",
                 'user': admin_user,
                 'cafe_name': "윈터 원더랜드",
+                'artist': random.choice(list(Artist.objects.all())),
                 # 'cafe_location': "서울 마포구 와우산로 111",
                 # 'start_date': timezone.now().date(),
                 # 'end_date': (timezone.now() + timedelta(days=15)).date()
@@ -328,6 +403,7 @@ class Command(BaseCommand):
                 'location': '강남역',
                 'want_to': 'sell',
                 'is_sold': False,
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "뉴진스 응원봉 급처합니다",
@@ -339,6 +415,7 @@ class Command(BaseCommand):
                 'shipping': 'delivery',
                 'want_to': 'sell',
                 'is_sold': False,
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "에스파 윈터 포카 구합니다",
@@ -351,6 +428,7 @@ class Command(BaseCommand):
                 'location': '홍대입구',
                 'want_to': 'buy',
                 'is_sold': False,
+                'artist': random.choice(list(Artist.objects.all())),
             }
         ]
         
@@ -369,6 +447,7 @@ class Command(BaseCommand):
                 'start_date': date.today(),
                 'end_date': date.today() + timedelta(days=3),
                 'is_sold': False,
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "스트레이키즈 콘서트 응원봉 빌려주세요",
@@ -383,6 +462,7 @@ class Command(BaseCommand):
                 'start_date': date.today() + timedelta(days=7),
                 'end_date': date.today() + timedelta(days=8),
                 'is_sold': False,
+                'artist': random.choice(list(Artist.objects.all())),
             }
         ]
         
@@ -398,6 +478,7 @@ class Command(BaseCommand):
                 'where': '강남역 스타벅스',
                 'when': date.today(),
                 'failure': 'split',
+                'artist': random.choice(list(Artist.objects.all())),
             },
             {
                 'title': "아이브 I AM 앨범 분철팟 (마감임박)",
@@ -409,6 +490,7 @@ class Command(BaseCommand):
                 'where': '홍대 CGV 앞',
                 'when': date.today(),
                 'failure': 'not_failure',
+                'artist': random.choice(list(Artist.objects.all())),
             }
         ]
         
@@ -507,7 +589,8 @@ class Command(BaseCommand):
                 content = random.choice(ddokdam_comments)
                 
                 DamComment.objects.create(
-                    community_post=post,
+                    content_type=ContentType.objects.get_for_model(post),
+                    object_id=post.id,
                     user=user,
                     content=content
                 )
@@ -520,7 +603,8 @@ class Command(BaseCommand):
                 content = random.choice(ddokdam_comments)
                 
                 DamComment.objects.create(
-                    manner_post=post,
+                    content_type=ContentType.objects.get_for_model(post),
+                    object_id=post.id,
                     user=user,
                     content=content
                 )
@@ -533,7 +617,8 @@ class Command(BaseCommand):
                 content = random.choice(ddokdam_comments)
                 
                 DamComment.objects.create(
-                    bdaycafe_post=post,
+                    content_type=ContentType.objects.get_for_model(post),
+                    object_id=post.id,
                     user=user,
                     content=content
                 )
@@ -547,7 +632,8 @@ class Command(BaseCommand):
                 content = random.choice(ddokfarm_comments)
                 
                 FarmComment.objects.create(
-                    sell_post=post,
+                    content_type=ContentType.objects.get_for_model(post),
+                    object_id=post.id,
                     user=user,
                     content=content
                 )
@@ -560,7 +646,8 @@ class Command(BaseCommand):
                 content = random.choice(ddokfarm_comments)
                 
                 FarmComment.objects.create(
-                    rental_post=post,
+                    content_type=ContentType.objects.get_for_model(post),
+                    object_id=post.id,
                     user=user,
                     content=content
                 )
@@ -573,89 +660,76 @@ class Command(BaseCommand):
                 content = random.choice(ddokfarm_comments)
                 
                 FarmComment.objects.create(
-                    split_post=post,
+                    content_type=ContentType.objects.get_for_model(post),
+                    object_id=post.id,
                     user=user,
                     content=content
                 )
         
         # 대댓글 추가 (덕담)
         for comment in DamComment.objects.all():
-            # 20% 확률로 대댓글 추가
             if random.random() < 0.2:
                 user = random.choice(all_users)
-                if user != comment.user:  # 원 댓글 작성자가 아닌 경우만
+                if user != comment.user:
                     replies = [
                         f"네, 가능합니다!",
                         f"안녕하세요 {user.username}님, 답변 드립니다.",
                         f"감사합니다 :)",
                         f"추가 정보 올려드렸어요!"
                     ]
-                    
-                    # 원 게시글 작성자가 답변
-                    if comment.community_post:
-                        original_author = comment.community_post.user
-                        DamComment.objects.create(
-                            community_post=comment.community_post,
-                            user=original_author,
-                            content=random.choice(replies),
-                            parent=comment
-                        )
-                    elif comment.manner_post:
-                        original_author = comment.manner_post.user
-                        DamComment.objects.create(
-                            manner_post=comment.manner_post,
-                            user=original_author,
-                            content=random.choice(replies),
-                            parent=comment
-                        )
-                    elif comment.bdaycafe_post:
-                        original_author = comment.bdaycafe_post.user
-                        DamComment.objects.create(
-                            bdaycafe_post=comment.bdaycafe_post,
-                            user=original_author,
-                            content=random.choice(replies),
-                            parent=comment
-                        )
-        
+
+                    # 원 댓글이 달린 게시글의 content_type과 object_id
+                    content_type = comment.content_type
+                    object_id = comment.object_id
+
+                    # 원 게시글 작성자
+                    post_model = content_type.model_class()
+                    try:
+                        post_instance = post_model.objects.get(pk=object_id)
+                        original_author = post_instance.user
+                    except post_model.DoesNotExist:
+                        original_author = admin_user  # fallback
+
+                    DamComment.objects.create(
+                        content_type=content_type,
+                        object_id=object_id,
+                        user=original_author,
+                        content=random.choice(replies),
+                        parent=comment
+                    )
+
         # 대댓글 추가 (덕팜)
         for comment in FarmComment.objects.all():
-            # 20% 확률로 대댓글 추가
             if random.random() < 0.2:
                 user = random.choice(all_users)
-                if user != comment.user:  # 원 댓글 작성자가 아닌 경우만
+                if user != comment.user:
                     farm_replies = [
                         "네, 연락 주세요!",
                         "DM으로 연락 드릴게요.",
                         "감사합니다!",
                         "자세한 사항은 개인 메시지로요~"
                     ]
-                    
-                    # 원 게시글 작성자가 답변
-                    if comment.sell_post:
-                        original_author = comment.sell_post.user
-                        FarmComment.objects.create(
-                            sell_post=comment.sell_post,
-                            user=original_author,
-                            content=random.choice(farm_replies),
-                            parent=comment
-                        )
-                    elif comment.rental_post:
-                        original_author = comment.rental_post.user
-                        FarmComment.objects.create(
-                            rental_post=comment.rental_post,
-                            user=original_author,
-                            content=random.choice(farm_replies),
-                            parent=comment
-                        )
-                    elif comment.split_post:
-                        original_author = comment.split_post.user
-                        FarmComment.objects.create(
-                            split_post=comment.split_post,
-                            user=original_author,
-                            content=random.choice(farm_replies),
-                            parent=comment
-                        )
-        
+
+                    # 원 댓글이 달린 게시글의 content_type과 object_id
+                    content_type = comment.content_type
+                    object_id = comment.object_id
+
+                    # 원 게시글 작성자
+                    post_model = content_type.model_class()
+                    try:
+                        post_instance = post_model.objects.get(pk=object_id)
+                        original_author = post_instance.user
+                    except post_model.DoesNotExist:
+                        original_author = admin_user  # fallback
+
+                    FarmComment.objects.create(
+                        content_type=content_type,
+                        object_id=object_id,
+                        user=original_author,
+                        content=random.choice(farm_replies),
+                        parent=comment
+                    )
+
         self.stdout.write(self.style.SUCCESS('샘플 댓글 생성이 완료되었습니다.'))
     
     def create_media_directories(self):

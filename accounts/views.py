@@ -6,7 +6,7 @@ from .models import User, MannerReview
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
-from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from artist.models import Artist, Member
 from itertools import chain
 from django.utils.timezone import now
@@ -163,22 +163,52 @@ def review_home(request, username):
         'reviews': reviews
     })
 
-def mypage(request):
+@login_required
+def mypage(request): 
     user_profile = request.user
     favorite_artists = Artist.objects.filter(followers=user_profile)
     favorite_members = Member.objects.filter(followers=user_profile)
     followed_artist_ids = list(favorite_artists.values_list('id', flat=True))
 
-    # 각 멤버별로 유저가 팔로우한 아티스트 중 하나를 연결
+    # ✅ 내가 쓴 글 (Farm)
+    farm_posts = sorted(
+        chain(
+            FarmSellPost.objects.filter(user=user_profile),
+            FarmRentalPost.objects.filter(user=user_profile),
+            FarmSplitPost.objects.filter(user=user_profile)
+        ),
+        key=lambda post: post.created_at,
+        reverse=True
+    )
+
+    # ✅ 내가 찜한 글 (Farm)
+    liked_posts = sorted(
+        chain(
+            FarmSellPost.objects.filter(like=user_profile),
+            FarmRentalPost.objects.filter(like=user_profile),
+            FarmSplitPost.objects.filter(like=user_profile)
+        ),
+        key=lambda post: post.created_at,
+        reverse=True
+    )
+
+    # ✅ 내가 쓴 댓글 (Farm, 상위 댓글만)
+    farm_comments = FarmComment.objects.filter(user=user_profile, parent__isnull=True).select_related('user')
+
+    # 댓글에 연결된 게시글 및 카테고리 추출
+    for comment in farm_comments:
+        comment.target_post = comment.sell_post or comment.rental_post or comment.split_post
+        comment.category = getattr(comment.target_post, 'category_type', None)
+
+    # ✅ 멤버-아티스트 매핑
     for member in favorite_members:
         matched = next(
             (artist for artist in member.artist_name.all() if artist.id in followed_artist_ids),
             None
         )
-        member.matched_artist = matched  # 템플릿에서 접근할 수 있음
-
+        member.matched_artist = matched
         member.filtered_artists = [
-        artist for artist in member.artist_name.all() if artist.id in followed_artist_ids
+            artist for artist in member.artist_name.all() if artist.id in followed_artist_ids
         ]
 
     context = {
@@ -186,9 +216,12 @@ def mypage(request):
         'favorite_artists': favorite_artists,
         'favorite_members': favorite_members,
         'followed_artist_ids': json.dumps(followed_artist_ids),
+        'farm_posts': farm_posts,              # 내가 쓴 글
+        'liked_posts': liked_posts,            # 내가 찜한 글
+        'farm_comments': farm_comments,        # 내가 쓴 댓글
     }
     return render(request, 'mypage.html', context)
-
+    
 @login_required
 def edit_profile(request, username):
     user_profile = get_object_or_404(User, username=username)

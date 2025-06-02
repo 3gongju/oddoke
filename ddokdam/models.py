@@ -13,7 +13,7 @@ class DamBasePost(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
-    artist = models.ForeignKey(Artist, on_delete=models.SET_NULL, null=True, blank=True)
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
     members = models.ManyToManyField(Member, blank=True)
 
     class Meta:
@@ -50,9 +50,9 @@ class DamComment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    community_post = models.ForeignKey(DamCommunityPost, on_delete=models.CASCADE, null=True, blank=True)
-    manner_post = models.ForeignKey(DamMannerPost, on_delete=models.CASCADE, null=True, blank=True)
-    bdaycafe_post = models.ForeignKey(DamBdaycafePost, on_delete=models.CASCADE, null=True, blank=True)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    post = GenericForeignKey('content_type', 'object_id')
 
 # 이미지 여러장
 class DamPostImage(models.Model):
