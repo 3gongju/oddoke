@@ -7,11 +7,11 @@ class BdayCafeForm(forms.ModelForm):
     class Meta:
         model = BdayCafe
         fields = [
-            'artist', 'member', 'cafe_type', 'cafe_name', 'address', 'road_address',
+            'artist', 'member', 'cafe_type', 'cafe_name', 'address', 'place_name', 'road_address',
             'detailed_address', 'kakao_place_id', 'latitude', 'longitude', 'phone',
             'place_url', 'category_name', 'start_date', 'end_date', 'start_time',
             'end_time', 'special_benefits', 'event_description', 'hashtags',
-            'main_image', 'poster_image', 'twitter_source', 'instagram_source'
+            'main_image', 'poster_image', 'twitter_source'
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),

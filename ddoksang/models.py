@@ -29,7 +29,8 @@ class BdayCafe(models.Model):
     cafe_type = models.CharField(max_length=20, choices=CAFE_TYPE_CHOICES, default='bday', verbose_name='카페 유형')
 
     # 카페 정보 (카카오맵 연동)
-    cafe_name = models.CharField(max_length=100, verbose_name='카페명')
+    cafe_name = models.CharField(max_length=100, verbose_name='카페명')  # 사용자 입력 카페명
+    place_name = models.CharField(max_length=100, blank=True, verbose_name='장소명')  # 카카오맵에서 가져온 실제 장소명
     address = models.TextField(verbose_name='주소')
     road_address = models.TextField(blank=True, verbose_name='도로명주소')
     detailed_address = models.CharField(max_length=200, blank=True, verbose_name='상세주소')
