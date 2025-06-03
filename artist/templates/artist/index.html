@@ -52,77 +52,15 @@
 </div>
 
 <!-- 자동완성 스크립트 -->
+<script src="{% static 'js/autocomplete.js' %}"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('artist-search');
-    const list = document.getElementById('autocomplete-list');
-    let selectedIndex = -1;
-
-    input.addEventListener('input', function () {
-      const keyword = this.value.trim();
-      selectedIndex = -1;
-      if (!keyword) {
-        list.classList.add('hidden');
-        list.innerHTML = '';
-        return;
-      }
-
-      fetch(`/artist/autocomplete/?q=${encodeURIComponent(keyword)}`)
-        .then(res => res.json())
-        .then(data => {
-          list.innerHTML = '';
-          if (!data.results.length) {
-            list.classList.add('hidden');
-            return;
-          }
-
-          data.results.forEach((artist, index) => {
-            const item = document.createElement('li');
-            item.textContent = artist;
-            item.className = 'px-4 py-2 hover:bg-yellow-100 cursor-pointer text-sm';
-            item.setAttribute('data-index', index);
-            item.onclick = () => {
-              input.value = artist;
-              list.classList.add('hidden');
-              input.form.submit();
-            };
-            list.appendChild(item);
-          });
-
-          list.classList.remove('hidden');
-        });
-    });
-
-    input.addEventListener('keydown', function (e) {
-      const items = list.querySelectorAll('li');
-      if (!items.length) return;
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        selectedIndex = (selectedIndex + 1) % items.length;
-        updateHighlight(items);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-        updateHighlight(items);
-      } else if (e.key === 'Enter' && selectedIndex >= 0) {
-        e.preventDefault();
-        items[selectedIndex].click();
-      }
-    });
-
-    document.addEventListener('click', e => {
-      if (!list.contains(e.target) && e.target !== input) {
-        list.classList.add('hidden');
-      }
-    });
-
-    function updateHighlight(items) {
-      items.forEach(item => item.classList.remove('bg-yellow-100'));
-      if (selectedIndex >= 0) {
-        items[selectedIndex].classList.add('bg-yellow-100');
-        input.value = items[selectedIndex].textContent;
-      }
-    }
+document.addEventListener('DOMContentLoaded', () => {
+  initAutocomplete('artist-search', 'autocomplete-list', {
+    artistOnly: true,        // 아티스트만 검색
+    showBirthday: false,
+    showArtistTag: false,    // 아티스트만 나오니까 태그 불필요
+    submitOnSelect: true
   });
+});
 </script>
 {% endblock %}

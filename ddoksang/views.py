@@ -549,45 +549,6 @@ def nearby_cafes_api(request):
         return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})
 
 
-@require_GET
-def member_autocomplete(request):
-    q = request.GET.get('q', '').strip()
-    seen_pairs = set()
-    results = []
-
-    if len(q) >= 1:
-        try:
-            members = Member.objects.filter(
-                Q(member_name__icontains=q)
-            ).prefetch_related('artist_name')[:50]
-
-            for member in members:
-                for artist in member.artist_name.all():
-                    pair_key = (member.id, artist.id)
-                    if pair_key in seen_pairs:
-                        continue
-                    seen_pairs.add(pair_key)
-
-                    # 정확도 점수 계산: 정확히 일치하면 높은 점수 부여
-                    exact_match = (member.member_name == q)
-                    results.append({
-                        'member_id': member.id,
-                        'artist_id': artist.id,
-                        'member_name': member.member_name,
-                        'artist_display': artist.display_name,
-                        'bday': member.member_bday,
-                        'priority': 1 if exact_match else 2
-                    })
-        except Exception as e:
-            logger.error(f"[Autocomplete] 멤버 검색 오류: {e}")
-
-    # 🔽 정확한 일치가 위에 오도록 정렬
-    results.sort(key=lambda x: (x['priority'], x['member_name']))
-    return JsonResponse({'results': results})
-
-
-
-
 
 def home_view(request):
     """홈 뷰 - 위치 기반 서비스 포함"""
@@ -623,10 +584,11 @@ def home_view(request):
             
             birthday_artists.append({
                 'member_name': member.member_name,
-                'artist_name': display_artist_name,  # 🔥 수정된 부분
+                'artist_name': display_artist_name,  
                 'birthday_display': member.member_bday,
                 'profile_image': getattr(member, 'profile_image', None),
                 'is_today_birthday': is_today_birthday,
+                'member': member,
             })
     
     # 오늘이 생일인 사람을 맨 앞으로 정렬
@@ -835,7 +797,6 @@ def search_view(request):
     page = request.GET.get('page', 1)
     
     results = []
-    total_count = 0
     
     if query and len(query) >= 2:
         # 검색 기록 저장 (로그인한 사용자만)
@@ -863,7 +824,6 @@ def search_view(request):
     context = {
         'results': results,
         'query': query,
-        'total_count': total_count,
         'user_favorites': user_favorites,
     }
     return render(request, 'ddoksang/search.html', context)

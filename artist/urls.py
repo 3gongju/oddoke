@@ -7,6 +7,8 @@ urlpatterns = [
     path('', views.index, name='index'), #검색 + 찜 분리된 최신 index 뷰
     path('<int:artist_id>/toggle/', views.toggle_favorite, name='toggle_favorite'),
     path('autocomplete/', views.autocomplete, name='autocomplete'),
+    path('artist-autocomplete/', views.artist_only_autocomplete, name='artist_only_autocomplete'),  # 새로 추가
+
 
     # 멤버 리스트 Ajax 요청
     path('<int:artist_id>/members/', views.artist_members_ajax, name='artist_members_ajax'),

@@ -1,0 +1,14 @@
+<!-- member이미지가 없을때 불러올 기본 사람 아이콘 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <!-- 배경 원 -->
+  <circle cx="50" cy="50" r="50" fill="#e5e7eb"/>
+  
+  <!-- 사람 아이콘 -->
+  <g fill="#9ca3af">
+    <!-- 머리 -->
+    <circle cx="50" cy="35" r="12"/>
+    <!-- 몸 -->
+    <path d="M50 50 C35 50, 25 60, 25 75 L75 75 C75 60, 65 50, 50 50 Z"/>
+  </g>
+</svg>
+
