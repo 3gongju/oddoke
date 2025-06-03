@@ -56,10 +56,10 @@ class BdayCafeAdmin(admin.ModelAdmin):
             'fields': ('submitted_by', 'artist', 'member', 'cafe_type', 'status')
         }),
         ('카페 정보', {
-            'fields': ('cafe_name', 'address', 'road_address', 'detailed_address', 'phone')
+            'fields': ('cafe_name', 'place_name', 'address', 'road_address', 'detailed_address')
         }),
         ('위치 정보', {
-            'fields': ('latitude', 'longitude', 'kakao_place_id', 'place_url', 'category_name'),
+            'fields': ('latitude', 'longitude', 'kakao_place_id'),
             'classes': ('collapse',)
         }),
         ('일정 정보', {
@@ -77,7 +77,7 @@ class BdayCafeAdmin(admin.ModelAdmin):
             'description': '새로운 다중 이미지 시스템을 사용합니다. 아래 인라인에서 이미지를 관리하세요.'
         }),
         ('출처', {
-            'fields': ('twitter_source', 'instagram_source')
+            'fields': ('x_source',)  # ← 튜플로 수정 (콤마 추가)
         }),
         ('관리 정보', {
             'fields': ('is_featured', 'view_count', 'verified_by', 'verified_at', 'created_at', 'updated_at'),
@@ -169,32 +169,35 @@ class CafeFavoriteAdmin(admin.ModelAdmin):
 
 @admin.register(TourPlan)
 class TourPlanAdmin(admin.ModelAdmin):
-    list_display = ['user', 'name', 'tour_date', 'transportation_mode', 'is_public', 'cafe_count']
-    list_filter = ['transportation_mode', 'tour_date', 'is_public']
-    search_fields = ['user__username', 'name']
+    # 실제 모델 필드와 일치하도록 수정
+    list_display = ['user', 'title', 'is_public', 'created_at', 'cafe_count']
+    list_filter = ['is_public', 'created_at']
+    search_fields = ['user__username', 'title']
     raw_id_fields = ['user']
     
     def cafe_count(self, obj):
-        return obj.cafes.count()
+        return obj.stops.count()
     cafe_count.short_description = "카페 수"
 
 class TourStopInline(admin.TabularInline):
     model = TourStop
     extra = 0
-    fields = ['cafe', 'order', 'estimated_stay_duration', 'notes']
+    fields = ['cafe', 'order', 'stay_duration', 'notes']
     raw_id_fields = ['cafe']
 
 @admin.register(TourStop)
 class TourStopAdmin(admin.ModelAdmin):
-    list_display = ['tour', 'cafe', 'order', 'estimated_stay_duration']
-    list_filter = ['tour__tour_date']
-    search_fields = ['tour__name', 'cafe__cafe_name']
-    raw_id_fields = ['tour', 'cafe']
+    # 실제 모델 필드와 일치하도록 수정
+    list_display = ['plan', 'cafe', 'order', 'stay_duration']
+    list_filter = ['plan__created_at']
+    search_fields = ['plan__title', 'cafe__cafe_name']
+    raw_id_fields = ['plan', 'cafe']
 
 @admin.register(UserSearchHistory)
 class UserSearchHistoryAdmin(admin.ModelAdmin):
-    list_display = ['user', 'search_query', 'search_type', 'created_at']
-    list_filter = ['search_type', 'created_at']
+    # 실제 모델 필드와 일치하도록 수정 (search_type 제거)
+    list_display = ['user', 'search_query', 'created_at']
+    list_filter = ['created_at']
     search_fields = ['search_query', 'user__username']
     raw_id_fields = ['user']
     readonly_fields = ['created_at']

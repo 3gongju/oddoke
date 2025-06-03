@@ -28,20 +28,18 @@ class BdayCafe(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, null=True, blank=True, verbose_name='멤버')
     cafe_type = models.CharField(max_length=20, choices=CAFE_TYPE_CHOICES, default='bday', verbose_name='카페 유형')
 
-    # 카페 정보 (간소화)
-    cafe_name = models.CharField(max_length=100, verbose_name='카페명')
-    place_name = models.CharField(max_length=100, blank=True, verbose_name='장소명')
+    # 카페 정보 (카카오맵 연동)
+    cafe_name = models.CharField(max_length=100, verbose_name='카페명')  # 사용자 입력 카페명
+    place_name = models.CharField(max_length=100, blank=True, verbose_name='장소명')  # 카카오맵에서 가져온 실제 장소명
     address = models.TextField(verbose_name='주소')
     road_address = models.TextField(blank=True, verbose_name='도로명주소')
     detailed_address = models.CharField(max_length=200, blank=True, verbose_name='상세주소')
     kakao_place_id = models.CharField(max_length=50, blank=True, verbose_name='카카오 장소 ID')
     latitude = models.FloatField(verbose_name='위도')
     longitude = models.FloatField(verbose_name='경도')
-    
-    # 🔧 제거된 필드들:
-    # phone = models.CharField(max_length=20, blank=True, verbose_name='전화번호')  # 제거
-    # place_url = models.URLField(blank=True, verbose_name='카카오맵 URL')  # 제거
-    # category_name = models.CharField(max_length=100, blank=True, verbose_name='카테고리')  # 제거
+    phone = models.CharField(max_length=20, blank=True, verbose_name='전화번호')
+    place_url = models.URLField(blank=True, verbose_name='카카오맵 URL')
+    category_name = models.CharField(max_length=100, blank=True, verbose_name='카테고리')
 
     # 날짜 및 시간
     start_date = models.DateField(verbose_name='시작일')
@@ -58,9 +56,8 @@ class BdayCafe(models.Model):
     main_image = models.ImageField(upload_to='bday_cafes/main/', null=True, blank=True, verbose_name='메인 이미지 (구버전)')
     poster_image = models.ImageField(upload_to='bday_cafes/poster/', null=True, blank=True, verbose_name='포스터 이미지 (구버전)')
 
-    # 출처 (간소화)
-    x_source = models.URLField(blank=True, verbose_name='X 출처')
-    # instagram_source = models.URLField(blank=True, verbose_name='인스타 출처')  # 제거
+    # 출처
+    x_source = models.URLField(blank=True, verbose_name='x 출처')
 
     # 상태 정보
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='상태')
@@ -161,8 +158,9 @@ class BdayCafe(models.Model):
         
         return images_data
 
+
     def get_kakao_map_data(self):
-        """카카오맵용 데이터 (간소화됨)"""
+        """카카오맵용 데이터 (예외 처리 강화)"""
         try:
             # latitude, longitude 유효성 검사
             lat = float(self.latitude) if self.latitude else None
@@ -174,15 +172,14 @@ class BdayCafe(models.Model):
             return {
                 'id': self.id,
                 'name': self.cafe_name,
-                'place_name': self.place_name or self.cafe_name,  # place_name 우선, 없으면 cafe_name
                 'artist': self.artist.display_name,
                 'member': self.member.member_name if self.member else None,
                 'latitude': lat,
                 'longitude': lng,
                 'address': self.address or '',
                 'road_address': self.road_address or '',
-                # 🔧 카카오맵 URL 동적 생성
-                'place_url': f'https://map.kakao.com/link/map/{self.cafe_name},{lat},{lng}',
+                'phone': self.phone or '',
+                'place_url': self.place_url or '',
                 'start_date': self.start_date.strftime('%Y-%m-%d'),
                 'end_date': self.end_date.strftime('%Y-%m-%d'),
                 'cafe_type': self.get_cafe_type_display(),
@@ -194,6 +191,16 @@ class BdayCafe(models.Model):
             }
         except (ValueError, AttributeError, TypeError) as e:
             return None
+
+    class Meta:
+        verbose_name = '생일카페'
+        verbose_name_plural = '생일카페 목록'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['latitude', 'longitude']),
+            models.Index(fields=['start_date', 'end_date']),
+            models.Index(fields=['status', 'start_date']),
+        ]
 
 class BdayCafeImage(models.Model):
     """생일카페 다중 이미지"""
@@ -298,55 +305,109 @@ class BdayCafeImage(models.Model):
             models.Index(fields=['cafe', 'order']),
         ]
         
-
-
 class CafeFavorite(models.Model):
-    """카페 즐겨찾기"""
+    """생카 찜하기"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        unique_together = ('user', 'cafe')
-        verbose_name = '카페 즐겨찾기'
 
-class UserSearchHistory(models.Model):
-    """사용자 검색 기록"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    search_query = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
     class Meta:
-        verbose_name = '검색 기록'
+        unique_together = ['user', 'cafe']
+        verbose_name = '생카 찜'
+        verbose_name_plural = '생카 찜 목록'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.cafe.cafe_name}"
 
 class TourPlan(models.Model):
-    """투어 계획"""
+    """생카 투어 플랜"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100, verbose_name='투어명')
-    total_distance = models.FloatField(null=True, blank=True, verbose_name='총 거리(km)')
-    estimated_time = models.PositiveIntegerField(null=True, blank=True, verbose_name='예상 시간(분)')
-    start_point = models.JSONField(null=True, blank=True, verbose_name='시작점 정보')
-    route_data = models.JSONField(null=True, blank=True, verbose_name='경로 데이터')
+    name = models.CharField(max_length=100, verbose_name='투어명')
+    cafes = models.ManyToManyField(BdayCafe, through='TourStop')
+    tour_date = models.DateField(verbose_name='투어 예정일')
     is_public = models.BooleanField(default=False, verbose_name='공개 여부')
+    
+    # 카카오맵 길찾기 최적화 결과 저장
+    optimized_route_data = models.JSONField(blank=True, null=True, verbose_name='최적화된 경로 데이터')
+    total_distance = models.FloatField(blank=True, null=True, verbose_name='총 거리(km)')
+    total_duration = models.IntegerField(blank=True, null=True, verbose_name='총 소요시간(분)')
+    transportation_mode = models.CharField(
+        max_length=20,
+        choices=[
+            ('TRANSIT', '대중교통'),
+            ('CAR', '자동차'),
+            ('WALK', '도보'),
+        ],
+        default='TRANSIT',
+        verbose_name='이동 수단'
+    )
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
-        verbose_name = '투어 계획'
-        verbose_name_plural = '투어 계획들'
-        ordering = ['-updated_at']
+        verbose_name = '투어 플랜'
+        verbose_name_plural = '투어 플랜 목록'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+
+    def get_route_summary(self):
+        """투어 요약 정보 반환"""
+        stops = self.tourstop_set.all().order_by('order')
+        return {
+            'total_stops': stops.count(),
+            'total_distance': self.total_distance,
+            'total_duration': self.total_duration,
+            'transportation': self.get_transportation_mode_display(),
+            'cafes': [stop.cafe.cafe_name for stop in stops],
+        }
 
 class TourStop(models.Model):
-    """투어 정거장"""
-    plan = models.ForeignKey(TourPlan, on_delete=models.CASCADE, related_name='stops')
+    """투어 경유지"""
+    tour = models.ForeignKey(TourPlan, on_delete=models.CASCADE)
     cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(verbose_name='순서')
-    arrival_time = models.TimeField(null=True, blank=True, verbose_name='도착 예정시간')
-    stay_duration = models.PositiveIntegerField(default=30, verbose_name='체류시간(분)')
-    notes = models.TextField(blank=True, verbose_name='메모')
     
+    # 카카오맵 길찾기 API 결과
+    distance_to_next = models.FloatField(blank=True, null=True, verbose_name='다음 장소까지 거리(km)')
+    duration_to_next = models.IntegerField(blank=True, null=True, verbose_name='다음 장소까지 소요시간(분)')
+    route_info = models.JSONField(blank=True, null=True, verbose_name='경로 상세 정보')
+    
+    # 사용자 설정
+    estimated_stay_duration = models.IntegerField(default=60, verbose_name='예상 체류 시간(분)')
+    notes = models.TextField(blank=True, verbose_name='메모')
+
     class Meta:
-        verbose_name = '투어 정거장'
-        verbose_name_plural = '투어 정거장들'
         ordering = ['order']
-        unique_together = ('plan', 'order')
+        unique_together = ['tour', 'order']
+        verbose_name = '투어 경유지'
+        verbose_name_plural = '투어 경유지 목록'
+
+    def __str__(self):
+        return f"{self.tour.name} - {self.order}. {self.cafe.cafe_name}"
+
+class UserSearchHistory(models.Model):
+    """사용자 검색 기록 (개인화 추천용)"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    search_query = models.CharField(max_length=200, verbose_name='검색어')
+    search_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('keyword', '키워드'),
+            ('location', '위치'),
+            ('artist', '아티스트'),
+        ],
+        verbose_name='검색 유형'
+    )
+    latitude = models.FloatField(null=True, blank=True, verbose_name='검색 위치 위도')
+    longitude = models.FloatField(null=True, blank=True, verbose_name='검색 위치 경도')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = '검색 기록'
+        verbose_name_plural = '검색 기록 목록'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.search_query}"
