@@ -374,14 +374,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const allInputs = this.querySelectorAll('input, textarea, select');
             allInputs.forEach(input => input.disabled = false);
             
-            // Twitter username을 URL로 변환
-            const twitterUsername = document.querySelector('[name="twitter_username"]').value.trim();
-            if (twitterUsername) {
-                const twitterInput = document.createElement('input');
-                twitterInput.type = 'hidden';
-                twitterInput.name = 'twitter_source';
-                twitterInput.value = `https://twitter.com/${twitterUsername.replace('@', '')}`;
-                this.appendChild(twitterInput);
+            // x username을 URL로 변환
+            const xUsername = document.querySelector('[name="x_username"]').value.trim();
+            if (xUsername) {
+                const xInput = document.createElement('input');
+                xInput.type = 'hidden';
+                xInput.name = 'x_source';
+                xInput.value = `https://x.com/${xUsername.replace('@', '')}`;
+                this.appendChild(xInput);
             }
         });
     }
