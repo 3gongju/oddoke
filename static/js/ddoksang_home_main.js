@@ -103,7 +103,7 @@ function setupEventListeners() {
                 return;
             }
             
-            fetch(`/ddoksang/toggle_favorite/${cafeId}/`, {
+            fetch(`/ddoksang/cafe/${cafeId}/toggle-favorite/`, { 
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,

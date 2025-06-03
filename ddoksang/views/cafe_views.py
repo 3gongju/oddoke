@@ -178,13 +178,18 @@ def my_cafes(request):
     status_filter = request.GET.get('status', '')
     runtime_filter = request.GET.get('runtime', '')
     query = request.GET.get('q', '').strip()
+    search_scope = request.GET.get('scope', 'my')  # 🔧 search_scope 추가
+
+    # 🔧 전체 검색이면 search 페이지로 리다이렉트
+    if query and search_scope == 'all':
+        return redirect(f"{reverse('ddoksang:search')}?q={query}")
 
     cafes = BdayCafe.objects.filter(
         submitted_by=request.user
     ).select_related('artist', 'member')
 
     # ✅ 검색어가 있다면 아티스트/멤버명 기준으로 필터링
-    if query:
+    if query and search_scope == 'my':  # 🔧 my 범위일 때만 필터링
         cafes = cafes.filter(
             Q(artist__display_name__icontains=query) |
             Q(member__member_name__icontains=query)
@@ -215,18 +220,36 @@ def my_cafes(request):
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
 
-    # 통계 계산
-    stats = {
-        'total': BdayCafe.objects.filter(submitted_by=request.user).count(),
-        'pending': BdayCafe.objects.filter(submitted_by=request.user, status='pending').count(),
-        'approved': BdayCafe.objects.filter(submitted_by=request.user, status='approved').count(),
-        'rejected': BdayCafe.objects.filter(submitted_by=request.user, status='rejected').count(),
-    }
+    # 통계 계산 - 🔧 검색어가 있으면 해당 결과 기준으로 계산
+    base_cafes = BdayCafe.objects.filter(submitted_by=request.user)
+    
+    # 검색어가 있다면 검색 결과 기준으로 통계 계산
+    if query:
+        search_cafes = base_cafes.filter(
+            Q(artist__display_name__icontains=query) |
+            Q(member__member_name__icontains=query)
+        )
+        stats = {
+            'total': search_cafes.count(),
+            'pending': search_cafes.filter(status='pending').count(),
+            'approved': search_cafes.filter(status='approved').count(),
+            'rejected': search_cafes.filter(status='rejected').count(),
+        }
+    else:
+        # 검색어가 없으면 전체 기준으로 통계 계산
+        stats = {
+            'total': base_cafes.count(),
+            'pending': base_cafes.filter(status='pending').count(),
+            'approved': base_cafes.filter(status='approved').count(),
+            'rejected': base_cafes.filter(status='rejected').count(),
+        }
 
-    # 상태 필터 탭 생성
+    # 상태 필터 탭 생성 - 🔧 검색어 유지 및 표시 개선
+    filter_prefix = f"'{query}' 검색 결과" if query else ""
+    
     status_filters = [
         {
-            'text': '전체',
+            'text': f'{filter_prefix} 전체' if query else '전체',
             'url': f'?q={query}&runtime={runtime_filter}&sort={sort}',
             'active': not status_filter
         },
@@ -271,7 +294,7 @@ def my_cafes(request):
         },
     ]
 
-    # 액션 버튼 데이터
+    # 액션 버튼 데이터 (컴포넌트용)
     action_buttons = [
         {
             'text': '+ 생카 등록',
@@ -280,36 +303,47 @@ def my_cafes(request):
         }
     ]
 
+    # 사용자 찜 목록
+    user_favorites = get_user_favorites(request.user)
+
     context = {
         'cafes': cafes_page,
         'stats': stats,
         'status_filters': status_filters,
         'runtime_filters': runtime_filters,
-        'action_buttons': action_buttons,  # 변수명 수정
         'query': query,
-        'search_url': request.path,  # 현재 페이지 URL
-        'search_placeholder': '내 등록 카페에서 아티스트/멤버 검색...',
-        'search_input_id': 'my-cafes-search',
-        'autocomplete_list_id': 'my-cafes-autocomplete',
+        'search_scope': search_scope,  # 검색 범위 추가
+        'user_favorites': user_favorites,
         'extra_params': {
             'status': status_filter,
             'runtime': runtime_filter,
             'sort': sort,
+            'scope': search_scope,  # 검색 범위 추가
         },
-        'autocomplete_config': {
-            'show_birthday': True,
+        
+        # 컴포넌트용 변수들
+        'action_buttons': action_buttons,
+        'search_placeholder': '내 등록 카페에서 아티스트/멤버 검색...',
+        'search_url': request.path,
+        'search_input_id': 'my-cafes-search',
+        'autocomplete_list_id': 'my-cafes-autocomplete',
+        'autocomplete_options': {
+            'show_birthday': True,    # 🔧 생일 표시 활성화
             'show_artist_tag': True,
             'submit_on_select': True,
             'artist_only': False,
             'api_url': '/artist/autocomplete/'
-        }
+        },
+        'filter_tags': status_filters,  # 검색 헤더에서 필터 탭으로 사용
+        'show_results_summary': False,
+        'total_count': cafes_page.paginator.count,
     }
 
     return render(request, 'ddoksang/my_cafes.html', context)
 
 @login_required
 @require_POST
-def toggle_favorite(request, cafe_id):
+def toggle_favorite(request, cafe_id):  # 함수명 변경
     """카페 찜하기/찜해제 토글"""
     try:
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
