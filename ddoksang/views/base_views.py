@@ -15,7 +15,8 @@ from django.conf import settings
 
 from ..models import BdayCafe, CafeFavorite
 from artist.models import Artist, Member
-from .utils import get_user_favorites, get_safe_cafe_map_data
+from .utils import get_user_favorites, get_nearby_cafes, get_safe_cafe_map_data
+
 
 
 def home_view(request):

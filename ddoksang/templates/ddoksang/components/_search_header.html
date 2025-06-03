@@ -1,0 +1,95 @@
+{% load static %}
+
+<section class="bg-gray-50 border-b border-gray-200 py-4 sm:py-6">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between sm:space-x-4">
+      
+      <!-- 🔍 검색창 -->
+      <div class="w-full sm:flex-1 relative">
+        <form method="get" action="{% if search_url %}{{ search_url }}{% else %}{% url 'ddoksang:search' %}{% endif %}">
+          <input 
+            id="{{ search_input_id|default:'main-search' }}" 
+            type="text" 
+            name="q" 
+            placeholder="{{ search_placeholder|default:'아티스트명, 멤버명 검색...' }}" 
+            class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-lg"
+            value="{{ query|default:'' }}" 
+            autocomplete="off">
+          
+          <!-- 추가 검색 파라미터 유지 -->
+          {% if extra_search_params %}
+            {% for key, value in extra_search_params.items %}
+              <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endfor %}
+          {% endif %}
+          
+          <button type="submit" class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+            </svg>
+          </button>
+        </form>
+        
+        <!-- 자동완성 드롭다운 -->
+        <ul id="{{ autocomplete_list_id|default:'main-autocomplete-list' }}" 
+            class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-48 overflow-y-auto z-50 mt-1">
+        </ul>
+      </div>
+
+      <!-- 우측 액션 버튼들 -->
+      <div class="flex justify-center sm:justify-end space-x-3">
+        {% for button in action_buttons %}
+          <a href="{{ button.url }}" class="{{ button.class|default:'bg-gray-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-sm sm:text-base' }}">
+            {{ button.text }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 필터 태그들 (선택사항) -->
+    {% if filter_tags %}
+    <div class="mt-4 flex flex-wrap gap-2">
+      {% for tag in filter_tags %}
+        <a href="{{ tag.url }}" 
+           class="px-3 py-1 rounded-full text-sm transition-colors {{ tag.active|yesno:'bg-blue-100 text-blue-800,bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+          {{ tag.text }}
+        </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 검색 결과 요약 (선택사항) -->
+    {% if show_results_summary and query %}
+    <div class="mt-4 text-sm text-gray-600">
+      '<span class="font-semibold text-blue-600">{{ query }}</span>' 검색 결과
+      {% if total_count %}
+        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">{{ total_count }}개</span>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInputId = '{{ search_input_id|default:"main-search" }}';
+  const autocompleteListId = '{{ autocomplete_list_id|default:"main-autocomplete-list" }}';
+
+  const options = {
+    showBirthday: {{ autocomplete_options.show_birthday|yesno:'true,false'|default:"false" }},
+    showArtistTag: {{ autocomplete_options.show_artist_tag|yesno:'true,false'|default:"true" }},
+    submitOnSelect: {{ autocomplete_options.submit_on_select|yesno:'true,false'|default:"true" }},
+    artistOnly: {{ autocomplete_options.artist_only|yesno:'true,false'|default:"false" }}
+  };
+
+  {% if autocomplete_options.api_url %}
+    options.apiUrl = '{{ autocomplete_options.api_url }}';
+  {% endif %}
+
+  if (typeof initAutocomplete === 'function') {
+    initAutocomplete(searchInputId, autocompleteListId, options);
+  } else {
+    console.warn('initAutocomplete 함수를 찾을 수 없습니다. autocomplete.js를 로드했는지 확인하세요.');
+  }
+});
+</script>
