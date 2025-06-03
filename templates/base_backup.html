@@ -19,9 +19,6 @@
 </head>
 
 <body class="bg-white text-gray-900 min-h-screen">
-<!-- ✅ CSRF 토큰을 hidden input으로도 제공 (폼에서 사용) -->
-{% csrf_token %}
-
 <!-- ✅ Navbar -->
 <nav class="bg-white shadow sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -124,10 +121,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-<!-- ✅ 새로운 찜하기 시스템을 가장 먼저 로드 -->
-<script src="{% static 'js/favorite_manager.js' %}"></script>
-
 <!-- ✅ 좋아요 하트 비동기 처리 -->
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".like-toggle").forEach(btn => {
@@ -149,36 +144,6 @@
       });
     });
   });
-</script>
-
-<!-- ✅ 전역 CSRF 토큰 설정 및 유틸리티 함수 -->
-<script>
-// 전역 CSRF 토큰 설정
-window.csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
-                  document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-
-// 전역 유틸리티 함수
-window.getCSRFToken = function() {
-    return window.csrfToken || 
-           document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
-           document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-};
-
-// FavoriteManager 초기화 확인
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof window.favoriteManager === 'undefined') {
-        console.warn('FavoriteManager가 아직 로드되지 않았습니다. 잠시 후 다시 시도합니다.');
-        
-        // 100ms 후 다시 확인
-        setTimeout(function() {
-            if (typeof window.favoriteManager === 'undefined') {
-                console.error('FavoriteManager 로드 실패. favorite_manager.js 파일을 확인하세요.');
-            } else {
-                console.log('FavoriteManager가 늦게 로드되었습니다.');
-            }
-        }, 100);
-    }
-});
 </script>
 
 <!-- ✅ 문의하기 기능 스크립트 분리 -->

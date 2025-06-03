@@ -1,3 +1,5 @@
+# ddoksang/views/utils.py
+
 from ddoksang.models import BdayCafe, CafeFavorite
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
@@ -23,7 +25,14 @@ def validate_coordinates(latitude, longitude):
         return False, "좌표 형식이 올바르지 않습니다."
 
 def get_user_favorites(user):
-    """현재 로그인한 유저의 찜한 카페 ID 목록"""
+    """현재 로그인한 유저의 찜한 카페 ID 목록 - 수정된 버전"""
+    if user.is_authenticated:
+        # 리스트로 반환 (set이 아닌)
+        return list(CafeFavorite.objects.filter(user=user).values_list("cafe_id", flat=True))
+    return []
+
+def get_user_favorites_set(user):
+    """현재 로그인한 유저의 찜한 카페 ID set (기존 코드 호환성을 위해)"""
     if user.is_authenticated:
         return set(CafeFavorite.objects.filter(user=user).values_list("cafe_id", flat=True))
     return set()

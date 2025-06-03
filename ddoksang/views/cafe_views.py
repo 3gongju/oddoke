@@ -178,9 +178,9 @@ def my_cafes(request):
     status_filter = request.GET.get('status', '')
     runtime_filter = request.GET.get('runtime', '')
     query = request.GET.get('q', '').strip()
-    search_scope = request.GET.get('scope', 'my')  # 🔧 search_scope 추가
+    search_scope = request.GET.get('scope', 'my')
 
-    # 🔧 전체 검색이면 search 페이지로 리다이렉트
+    # 전체 검색이면 search 페이지로 리다이렉트
     if query and search_scope == 'all':
         return redirect(f"{reverse('ddoksang:search')}?q={query}")
 
@@ -188,18 +188,18 @@ def my_cafes(request):
         submitted_by=request.user
     ).select_related('artist', 'member')
 
-    # ✅ 검색어가 있다면 아티스트/멤버명 기준으로 필터링
-    if query and search_scope == 'my':  # 🔧 my 범위일 때만 필터링
+    # 검색어가 있다면 아티스트/멤버명 기준으로 필터링
+    if query and search_scope == 'my':
         cafes = cafes.filter(
             Q(artist__display_name__icontains=query) |
             Q(member__member_name__icontains=query)
         )
 
-    # ✅ 상태 필터 적용
+    # 상태 필터 적용
     if status_filter:
         cafes = cafes.filter(status=status_filter)
     
-    # ✅ 운영 상태 필터 적용
+    # 운영 상태 필터 적용
     today = date.today()
     if runtime_filter == 'active':
         cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
@@ -208,22 +208,21 @@ def my_cafes(request):
     elif runtime_filter == 'ended':
         cafes = cafes.filter(end_date__lt=today)
 
-    # ✅ 정렬
+    # 정렬
     sort = request.GET.get('sort', 'latest')
     if sort == "start_date":
         cafes = cafes.order_by("start_date")
     elif sort == "oldest":
         cafes = cafes.order_by("created_at")
     else:
-        cafes = cafes.order_by("-created_at")  # 기본 최신순
+        cafes = cafes.order_by("-created_at")
 
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
 
-    # 통계 계산 - 🔧 검색어가 있으면 해당 결과 기준으로 계산
+    # 통계 계산
     base_cafes = BdayCafe.objects.filter(submitted_by=request.user)
     
-    # 검색어가 있다면 검색 결과 기준으로 통계 계산
     if query:
         search_cafes = base_cafes.filter(
             Q(artist__display_name__icontains=query) |
@@ -236,7 +235,6 @@ def my_cafes(request):
             'rejected': search_cafes.filter(status='rejected').count(),
         }
     else:
-        # 검색어가 없으면 전체 기준으로 통계 계산
         stats = {
             'total': base_cafes.count(),
             'pending': base_cafes.filter(status='pending').count(),
@@ -244,7 +242,7 @@ def my_cafes(request):
             'rejected': base_cafes.filter(status='rejected').count(),
         }
 
-    # 상태 필터 탭 생성 - 🔧 검색어 유지 및 표시 개선
+    # 필터 생성
     filter_prefix = f"'{query}' 검색 결과" if query else ""
     
     status_filters = [
@@ -270,7 +268,6 @@ def my_cafes(request):
         },
     ]
 
-    # 운영 상태 필터 생성
     runtime_filters = [
         {
             'text': '전체',
@@ -294,7 +291,6 @@ def my_cafes(request):
         },
     ]
 
-    # 액션 버튼 데이터 (컴포넌트용)
     action_buttons = [
         {
             'text': '+ 생카 등록',
@@ -303,7 +299,7 @@ def my_cafes(request):
         }
     ]
 
-    # 사용자 찜 목록
+    # ✅ 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
 
     context = {
@@ -312,13 +308,13 @@ def my_cafes(request):
         'status_filters': status_filters,
         'runtime_filters': runtime_filters,
         'query': query,
-        'search_scope': search_scope,  # 검색 범위 추가
-        'user_favorites': user_favorites,
+        'search_scope': search_scope,
+        'user_favorites': json.dumps(user_favorites),  # JSON으로 직렬화
         'extra_params': {
             'status': status_filter,
             'runtime': runtime_filter,
             'sort': sort,
-            'scope': search_scope,  # 검색 범위 추가
+            'scope': search_scope,
         },
         
         # 컴포넌트용 변수들
@@ -328,13 +324,13 @@ def my_cafes(request):
         'search_input_id': 'my-cafes-search',
         'autocomplete_list_id': 'my-cafes-autocomplete',
         'autocomplete_options': {
-            'show_birthday': True,    # 🔧 생일 표시 활성화
+            'show_birthday': True,
             'show_artist_tag': True,
             'submit_on_select': True,
             'artist_only': False,
             'api_url': '/artist/autocomplete/'
         },
-        'filter_tags': status_filters,  # 검색 헤더에서 필터 탭으로 사용
+        'filter_tags': status_filters,
         'show_results_summary': False,
         'total_count': cafes_page.paginator.count,
     }
@@ -344,44 +340,52 @@ def my_cafes(request):
 @login_required
 @require_POST
 def toggle_favorite(request, cafe_id):
-    """카페 찜하기/찜해제 토글"""
+    """카페 찜하기/찜해제 토글 - 개선된 버전"""
     try:
+        # 카페 존재 여부 확인
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
+        
+        # 찜하기/찜해제 토글
         favorite, created = CafeFavorite.objects.get_or_create(
             user=request.user,
             cafe=cafe
         )
-
+        
         if not created:
+            # 이미 찜한 상태 -> 찜 해제
             favorite.delete()
             is_favorited = False
-            message = "찜이 해제되었습니다."
-            card_html = ""  # 찜 해제 시 HTML 없음
+            message = "찜 목록에서 제거되었습니다."
         else:
+            # 찜하지 않은 상태 -> 찜 추가
             is_favorited = True
             message = "찜 목록에 추가되었습니다."
-            # ✅ 찜한 카드용 HTML 생성
-            card_html = render_to_string("ddoksang/components/_cafe_card.html", {
-                "cafe": cafe,
-                "show_favorite_btn": True,
-                "show_status_badge": True,
-                "is_favorited": True,
-            }, request=request)
-
+        
+        # 로그 기록
+        logger.info(f"사용자 {request.user.id}가 카페 {cafe_id}를 {'찜함' if is_favorited else '찜해제'}함")
+        
+        # JSON 응답 반환
         return JsonResponse({
             'success': True,
             'is_favorited': is_favorited,
             'message': message,
-            'card_html': card_html,
-            'cafe_id': cafe.id,
+            'cafe_id': cafe_id,
+            'cafe_name': cafe.cafe_name
         })
-
-    except Exception as e:
-        logger.error(f"찜하기 토글 오류: {e}")
+        
+    except BdayCafe.DoesNotExist:
+        logger.warning(f"존재하지 않는 카페 ID: {cafe_id}")
         return JsonResponse({
             'success': False,
-            'error': '오류가 발생했습니다.'
-        })
+            'error': '해당 카페를 찾을 수 없습니다.'
+        }, status=404)
+        
+    except Exception as e:
+        logger.error(f"찜하기 토글 오류 (사용자: {request.user.id}, 카페: {cafe_id}): {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': '처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        }, status=500)
 
 @login_required
 def favorites_view(request):

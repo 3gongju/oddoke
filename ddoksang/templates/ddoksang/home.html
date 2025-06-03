@@ -8,8 +8,17 @@
 {% block body %}
 <!-- JSON 데이터 (JavaScript에서 사용) -->
 {% csrf_token %}
+
+<!-- ✅ CSRF 토큰을 meta 태그로도 제공 -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
 <!-- JSON 데이터 (JavaScript에서 사용) -->
 {{ cafes_json|json_script:"cafes-data" }}
+
+<!-- ✅ 사용자 찜 목록 데이터 추가 -->
+<script id="user-favorites-data" type="application/json">
+{{ user_favorites|safe }}
+</script>
 
 <!-- 위치 동의 모달 -->
 <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -152,107 +161,136 @@
     </div>
   </section>
 
-  <!-- 🎂 이번 주 생일 아티스트 섹션 -->
-  <section class="py-8 sm:py-12 px-4">
-    <div class="text-center mb-8 sm:mb-10">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🎂 이번 주 생일덕</h2>
-      <p class="text-gray-600 text-sm sm:text-base">이번주 생일 아티스트를 추천해드립니다.</p>
-    </div>
+<!-- 🎂 이번 주 생일 아티스트 섹션 -->
+<section class="py-8 sm:py-12 px-4">
+  <div class="text-center mb-8 sm:mb-10">
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🎂 이번 주 생일덕</h2>
+    <p class="text-gray-600 text-sm sm:text-base">이번주 생일 아티스트를 추천해드립니다.</p>
+  </div>
 
-    {% if birthday_artists %}
-      <div class="relative">
-        <div class="overflow-hidden">
-          <div id="birthdaySlider" class="flex transition-transform duration-500 ease-in-out">
-            {% for artist in birthday_artists %}
-              <div class="flex-shrink-0 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 px-2">
-                <div class="{% if artist.is_today_birthday %}bg-red-50{% else %}bg-white{% endif %} rounded-lg p-4 text-center cursor-pointer"
-                     onclick="searchArtist('{{ artist.member_name }}')">
-                  
-                  <!-- 상단 영역: 라벨 또는 여백 -->
-                  <div class="flex justify-center h-6 mb-3">
-                    {% if artist.is_today_birthday %}
-                      <div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold h-fit">
-                        오늘 생일!
-                      </div>
-                    {% endif %}
-                  </div>
-                  
-                  <!-- 중앙 영역: 프로필 이미지 -->
-                  <div class="flex justify-center mb-3">
-                      <img src="{% member_image artist.member_name artist.artist_display_name %}" 
-                          alt="{{ artist.member_name }}" 
-                          class="w-14 h-14 rounded-full object-cover border-2 border-white">
-                  </div>
+  {% if birthday_artists %}
+    <div class="relative">
+      <div class="overflow-hidden">
+        <div id="birthdaySlider" class="flex transition-transform duration-500 ease-in-out">
+          {% for artist in birthday_artists %}
+            <div class="flex-shrink-0 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 px-2">
+              <div class="{% if artist.is_today_birthday %}bg-red-50{% else %}bg-white{% endif %} rounded-lg p-4 text-center cursor-pointer"
+                   onclick="searchArtist('{{ artist.member_name }}')">
+                
+                <!-- 상단 영역: 라벨 또는 여백 -->
+                <div class="flex justify-center h-6 mb-3">
+                  {% if artist.is_today_birthday %}
+                    <div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold h-fit">
+                      오늘 생일!
+                    </div>
+                  {% endif %}
+                </div>
+                
+                <!-- 중앙 영역: 프로필 이미지 -->
+                <div class="flex justify-center mb-3">
+                    <img src="{% member_image artist.member_name artist.artist_display_name %}" 
+                        alt="{{ artist.member_name }}" 
+                        class="w-14 h-14 rounded-full object-cover border-2 border-white">
+                </div>
 
-                  <!-- 하단 영역: 텍스트 정보 -->
-                  <div class="flex-1 flex flex-col justify-center pb-2">
-                    <h3 class="font-semibold text-sm {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-800{% endif %} mb-2 truncate leading-tight">
-                      {{ artist.member_name }}
-                    </h3>
-                    {% if artist.artist_name %}
-                      <p class="text-xs text-gray-500 mb-2 truncate">{{ artist.artist_name }}</p>
-                    {% endif %}
-                    <p class="text-xs {% if artist.is_today_birthday %}text-red-600 font-bold{% else %}text-gray-600{% endif %}">
-                      {{ artist.birthday_display }}
-                    </p>
-                  </div>
+                <!-- 하단 영역: 텍스트 정보 -->
+                <div class="flex-1 flex flex-col justify-center pb-2">
+                  <h3 class="font-semibold text-sm {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-800{% endif %} mb-2 truncate leading-tight">
+                    {{ artist.member_name }}
+                  </h3>
+                  {% if artist.artist_name %}
+                    <p class="text-xs text-gray-500 mb-2 truncate">{{ artist.artist_name }}</p>
+                  {% endif %}
+                  <p class="text-xs {% if artist.is_today_birthday %}text-red-600 font-bold{% else %}text-gray-600{% endif %}">
+                    {{ artist.birthday_display }}
+                  </p>
                 </div>
               </div>
-            {% endfor %}
-          </div>
-        </div>
-        
-        <!-- 네비게이션 버튼들 -->
-        <button id="birthdayPrevBtn" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </button>
-        
-        <button id="birthdayNextBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-          </svg>
-        </button>
-        
-        <!-- 페이지 인디케이터 -->
-        <div class="flex justify-center mt-8 space-x-2" id="birthdayIndicators">
-          <!-- JavaScript로 동적 생성 -->
+            </div>
+          {% endfor %}
         </div>
       </div>
-    {% else %}
-      <div class="text-center py-8 sm:py-12">
-        <div class="text-4xl sm:text-6xl mb-4">🎭</div>
-        <p class="text-gray-500 text-base sm:text-lg">이번 주 생일인 아티스트가 없어요</p>
-        <p class="text-gray-400 text-sm mt-2">다음 주를 기대해주세요!</p>
+      
+      <!-- 네비게이션 버튼들 -->
+      <button id="birthdayPrevBtn" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      
+      <button id="birthdayNextBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
+      
+      <!-- 페이지 인디케이터 -->
+      <div class="flex justify-center mt-8 space-x-2" id="birthdayIndicators">
+        <!-- JavaScript로 동적 생성 -->
       </div>
-    {% endif %}
-  </section>
-
-{% if user.is_authenticated and my_favorite_cafes %}
-<section id="favoritesSection" class="py-4 sm:py-8 px-4 bg-gray-50">
-  <div class="text-center mb-6">
-    <h2 class="text-2xl font-bold">💖 내가 찜한 덕의 생카</h2>
-    <p class="text-sm text-gray-600">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
-  </div>
-
-  <div class="relative">
-    <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 px-1 sm:px-2" style="scroll-snap-type: x mandatory;">
-      {% for favorite in my_favorite_cafes %}
-        <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="{{ favorite.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite show_favorite_btn=True show_status_badge=True %}
-        </div>
-      {% endfor %}
     </div>
-
-    <div class="flex justify-center mt-4">
-      <p class="text-xs sm:text-sm text-gray-500">← 좌우로 스와이프해보세요 →</p>
+  {% else %}
+    <div class="text-center py-8 sm:py-12">
+      <div class="text-4xl sm:text-6xl mb-4">🎭</div>
+      <p class="text-gray-500 text-base sm:text-lg">이번 주 생일인 아티스트가 없어요</p>
+      <p class="text-gray-400 text-sm mt-2">다음 주를 기대해주세요!</p>
     </div>
-  </div>
+  {% endif %}
 </section>
-{% endif %}
 
+  <!-- 💕 내가 찜한 아티스트의 생일카페 (로그인 사용자만) -->
+  {% if user.is_authenticated and my_favorite_cafes %}
+  <section class="py-4 sm:py-8 px-4 bg-gray-50">
+    <div class="text-center mb-6 sm:mb-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">💕 내가 찜한 덕의 생카</h2>
+      <p class="text-gray-600 text-sm sm:text-base">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
+    </div>
 
+    <div class="relative">
+      <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4" style="scroll-snap-type: x mandatory;">
+        {% for cafe in my_favorite_cafes %}
+          <div class="min-w-[280px] sm:min-w-[300px] bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex-shrink-0" style="scroll-snap-align: start;">
+            {% if cafe.get_main_image %}
+              <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
+                   class="w-full h-32 sm:h-40 object-cover">
+            {% else %}
+              <div class="w-full h-32 sm:h-40 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
+                <span class="text-white text-2xl sm:text-3xl">🏪</span>
+              </div>
+            {% endif %}
+
+            <div class="p-3 sm:p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
+                     <span class="text-red-600 mr-1">♥</span> 찜 덕
+                </span>
+
+                {% if cafe.is_active %}
+                  <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">운영중</span>
+                {% endif %}
+              </div>
+
+              <h3 class="font-bold text-base sm:text-lg text-gray-800 mb-1 line-clamp-1">{{ cafe.cafe_name }}</h3>
+              <p class="text-gray-700 font-semibold mb-2 text-sm line-clamp-1">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
+              <p class="text-xs text-gray-600 mb-2">📅 {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}</p>
+              <p class="text-xs text-gray-500 mb-3 line-clamp-2">📍 {{ cafe.address|truncatechars:30 }}</p>
+
+              <a href="{% url 'ddoksang:detail' cafe.id %}" 
+                 class="block w-full text-center bg-gray-900 text-white py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-all duration-200">
+                자세히 보기
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      
+      <!-- 스크롤 인디케이터 -->
+      <div class="flex justify-center mt-3 sm:mt-4">
+        <div class="text-xs sm:text-sm text-gray-500">← 좌우로 스와이프해보세요 →</div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 
   <!-- 🆕 최신 등록된 생일카페 섹션 -->
   <section class="py-4 sm:py-8 px-4">
@@ -296,7 +334,8 @@
                 {% if user.is_authenticated %}
                  <button data-favorite-btn data-cafe-id="{{ cafe.id }}" 
                          class="text-xl sm:text-2xl hover:scale-125 transition-transform duration-200 ml-2"
-                         style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
+                         style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+                         aria-label="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}">
                  {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
                 </button>
                 {% endif %}
@@ -349,14 +388,195 @@
   </a>
 </div>
 
+<!-- ✅ 새로운 찜하기 시스템 먼저 로드 -->
+<script src="{% static 'js/favorite_manager.js' %}"></script>
+
 <!-- 카카오맵 및 스크립트 로드 -->
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ KAKAO_MAP_API_KEY }}&libraries=services,clusterer"></script>
-<script src="{% static 'js/favorite.js' %}"></script>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script src="{% static 'js/maps.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
-<script src="{% static 'js/ddoksang_home_main.js' %}"></script>
 
+<!-- ✅ 수정된 메인 스크립트 -->
+<script>
+// 페이지 로드 시 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    // 사용자 찜 목록 초기화
+    initUserFavorites();
+    
+    // 카페 데이터 로드
+    const cafeDataScript = document.getElementById('cafes-data');
+    if (cafeDataScript) {
+        try {
+            let rawData = JSON.parse(cafeDataScript.textContent);
+            
+            if (typeof rawData === 'string') {
+                rawData = JSON.parse(rawData);
+            }
+            
+            if (Array.isArray(rawData)) {
+                window.cafesData = rawData;
+            } else {
+                window.cafesData = [];
+            }
+            
+        } catch (e) {
+            console.error('JSON 파싱 에러:', e);
+            window.cafesData = [];
+        }
+    } else {
+        window.cafesData = [];
+    }
+    
+    // 위치 권한 확인
+    const locationDenied = localStorage.getItem('locationDenied');
+    
+    if (locationDenied) {
+        initMap();
+    } else {
+        showLocationModal();
+    }
+    
+    // 이벤트 리스너 설정
+    setupEventListeners();
+    
+    // UI 컴포넌트 초기화
+    initFavoriteCarousel();
+    initBirthdayNavigation();
+    
+    // 자동완성 초기화
+    if (typeof initAutocomplete === 'function') {
+        try {
+            initAutocomplete('ddok-search', 'ddok-autocomplete-list', {
+                showBirthday: false,
+                showArtistTag: true,
+                submitOnSelect: true,
+                artistOnly: false
+            });
+        } catch (error) {
+            console.error('자동완성 초기화 실패:', error);
+        }
+    }
+});
 
+// ✅ 사용자 찜 목록 초기화 함수
+function initUserFavorites() {
+    const userFavoritesScript = document.getElementById('user-favorites-data');
+    if (userFavoritesScript && window.favoriteManager) {
+        try {
+            const userFavorites = JSON.parse(userFavoritesScript.textContent);
+            
+            // FavoriteManager에 초기 상태 설정
+            if (Array.isArray(userFavorites)) {
+                userFavorites.forEach(cafeId => {
+                    window.favoriteManager.setFavoriteState(cafeId.toString(), true);
+                });
+            } else if (userFavorites && typeof userFavorites === 'object') {
+                // Set 형태의 데이터인 경우
+                Object.keys(userFavorites).forEach(cafeId => {
+                    window.favoriteManager.setFavoriteState(cafeId, true);
+                });
+            }
+            
+            console.log('사용자 찜 목록 초기화 완료:', userFavorites);
+        } catch (e) {
+            console.error('사용자 찜 목록 파싱 오류:', e);
+        }
+    }
+}
+
+// 이벤트 리스너 설정
+function setupEventListeners() {
+    // 지도 관련 버튼
+    document.getElementById('myLocationBtn').addEventListener('click', moveToMyLocation);
+    document.getElementById('clusterToggle').addEventListener('click', toggleClustering);
+    document.getElementById('closeCafeModal').addEventListener('click', closeCafeModal);
+    
+    // 위치 모달 버튼들
+    document.getElementById('allowLocationBtn').addEventListener('click', function() {
+        document.getElementById('locationModal').classList.add('hidden');
+        requestUserLocation();
+    });
+    
+    document.getElementById('denyLocationBtn').addEventListener('click', function() {
+        document.getElementById('locationModal').classList.add('hidden');
+        localStorage.setItem('locationDenied', 'true');
+        initMap();
+    });
+    
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('cafeModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            closeCafeModal();
+        }
+    });
+    
+    // 리사이즈 이벤트
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            if (map) {
+                map.relayout();
+                if (clusterer) {
+                    clusterer.clear();
+                    createMarkers();
+                }
+            }
+        }, 250);
+    });
+}
+
+// 기존 위치 요청 함수들은 그대로 유지...
+function requestUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                initMap({ lat: userLat, lng: userLng });
+            },
+            (error) => {
+                console.warn('위치 정보 가져오기 실패:', error);
+                initMap();
+            }
+        );
+    } else {
+        console.warn('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
+        initMap();
+    }
+}
+
+// 기타 함수들은 기존과 동일하게 유지...
+function showLocationModal() {
+    document.getElementById('locationModal').classList.remove('hidden');
+}
+
+function closeCafeModal() {
+    document.getElementById('cafeModal').classList.add('hidden');
+}
+
+function initFavoriteCarousel() {
+    // 찜한 카페 캐러셀 초기화 로직
+}
+
+function initBirthdayNavigation() {
+    // 생일 아티스트 네비게이션 초기화 로직
+}
+
+// 아티스트 검색 함수
+function searchArtist(artistName) {
+    const searchForm = document.querySelector('form[action*="search"]');
+    const searchInput = document.querySelector('#ddok-search');
+    
+    if (searchInput && searchForm) {
+        searchInput.value = artistName;
+        searchForm.submit();
+    }
+}
+</script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
 
 {% endblock %}

@@ -1,132 +1,202 @@
-let isSubmitting = false;
+// static/js/favorite.js - FavoriteManager를 사용하도록 수정
 
-document.addEventListener('DOMContentLoaded', function () {
-  document.addEventListener('click', function (e) {
-    const favoriteBtn = e.target.closest('[data-favorite-btn]');
-    if (!favoriteBtn || isSubmitting) return;
-
-    e.preventDefault();
-    isSubmitting = true;
-
-    const cafeId = favoriteBtn.dataset.cafeId;
-    const csrfToken =
-      document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-      document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
-
-    if (!csrfToken) {
-      console.error('CSRF 토큰을 찾을 수 없습니다.');
-      isSubmitting = false;
-      return;
+document.addEventListener('DOMContentLoaded', function() {
+    // FavoriteManager가 로드되었는지 확인
+    if (typeof window.favoriteManager === 'undefined') {
+        console.warn('FavoriteManager가 로드되지 않았습니다. favorite_manager.js를 먼저 로드해주세요.');
+        
+        // Fallback: 기본 찜하기 기능
+        setupFallbackFavoriteSystem();
+        return;
     }
-
-    const originalContent = favoriteBtn.innerHTML;
-    favoriteBtn.innerHTML = '⏳';
-    favoriteBtn.disabled = true;
-
-    fetch(`/ddoksang/cafe/${cafeId}/toggle-favorite/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Content-Type': 'application/json',
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          if (data.card_html) {
-            window.lastFavoriteCardHtml = `
-              <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="${data.cafe_id}">
-                ${data.card_html}
-              </div>`;
-          }
-
-          updateAllFavoriteButtons(cafeId, data.is_favorited);
-          updateFavoritesSection(cafeId, data.is_favorited);
-
-          showToast(data.message, 'success');
-        } else {
-          showToast(data.error || '오류가 발생했습니다.', 'error');
-          favoriteBtn.innerHTML = originalContent;
+    
+    console.log('FavoriteManager 기반 찜하기 시스템이 활성화되었습니다.');
+    
+    // FavoriteManager 이벤트 리스너 등록
+    document.addEventListener('favoriteChanged', function(e) {
+        const { cafeId, isFavorited } = e.detail;
+        console.log(`카페 ${cafeId} 찜 상태 변경: ${isFavorited}`);
+        
+        // 필요시 추가 처리 (예: 분석 이벤트 전송)
+        if (typeof gtag === 'function') {
+            gtag('event', 'favorite_toggle', {
+                'event_category': 'engagement',
+                'event_label': cafeId,
+                'value': isFavorited ? 1 : 0
+            });
         }
-      })
-      .catch((err) => {
-        console.error('찜하기 요청 오류:', err);
-        showToast('네트워크 오류가 발생했습니다.', 'error');
-        favoriteBtn.innerHTML = originalContent;
-      })
-      .finally(() => {
-        favoriteBtn.disabled = false;
-        isSubmitting = false;
-      });
-  });
+    });
 });
 
-function updateAllFavoriteButtons(cafeId, isFavorited) {
-  const buttons = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
-  buttons.forEach((btn) => {
-    btn.innerHTML = isFavorited ? '♥' : '♡';
-    btn.style.color = isFavorited ? '#ef4444' : '#6b7280';
-  });
-}
-
-
-function updateFavoritesSection(cafeId, isFavorited) {
-  const section = document.querySelector('#favoritesSection');
-  const container = document.querySelector('#favoriteCarousel');
-
-  if (!section || !container) return;
-
-  if (!isFavorited) {
-    // 찜 해제 시 삭제
-    const cards = container.querySelectorAll(`[data-cafe-id="${cafeId}"]`);
-    cards.forEach((card) => {
-      card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      card.style.opacity = '0';
-      card.style.transform = 'scale(0.9)';
-      setTimeout(() => {
-        card.remove();
-        if (container.children.length === 0) {
-          section.style.display = 'none';
+// FavoriteManager가 없을 때의 fallback 시스템
+function setupFallbackFavoriteSystem() {
+    console.log('Fallback 찜하기 시스템을 초기화합니다.');
+    
+    document.addEventListener('click', function(e) {
+        const favoriteBtn = e.target.closest('[data-favorite-btn]');
+        if (!favoriteBtn) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const cafeId = favoriteBtn.dataset.cafeId;
+        const csrfToken = getCSRFToken();
+        
+        if (!csrfToken) {
+            showFallbackToast('로그인이 필요합니다.', 'warning');
+            return;
         }
-      }, 300);
+        
+        // 로딩 상태
+        const originalContent = favoriteBtn.innerHTML;
+        favoriteBtn.innerHTML = '⏳';
+        favoriteBtn.disabled = true;
+        
+        // 서버 요청
+        fetch(`/ddoksang/cafe/${cafeId}/toggle-favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // 성공 시 상태 업데이트
+                favoriteBtn.innerHTML = data.is_favorited ? '♥' : '♡';
+                favoriteBtn.style.color = data.is_favorited ? '#ef4444' : '#6b7280';
+                showFallbackToast(data.message, 'success');
+            } else {
+                favoriteBtn.innerHTML = originalContent;
+                showFallbackToast(data.error || '오류가 발생했습니다.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Fallback 찜하기 오류:', error);
+            favoriteBtn.innerHTML = originalContent;
+            showFallbackToast('네트워크 오류가 발생했습니다.', 'error');
+        })
+        .finally(() => {
+            favoriteBtn.disabled = false;
+        });
     });
-  } else {
-    // 찜 추가 시 삽입
-    const exists = container.querySelector(`[data-cafe-id="${cafeId}"]`);
-    if (!exists && window.lastFavoriteCardHtml) {
-      const temp = document.createElement('div');
-      temp.innerHTML = window.lastFavoriteCardHtml.trim();
-      const newCard = temp.firstElementChild;
-      if (newCard) {
-        container.prepend(newCard);
-        section.style.display = 'block';
-      }
+}
+
+// CSRF 토큰 가져오기 함수
+function getCSRFToken() {
+    // 1. Hidden input에서 찾기
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput && csrfInput.value) {
+        return csrfInput.value;
     }
-  }
+
+    // 2. Meta 태그에서 찾기
+    const csrfMeta = document.querySelector('meta[name=csrf-token]');
+    if (csrfMeta && csrfMeta.getAttribute('content')) {
+        return csrfMeta.getAttribute('content');
+    }
+
+    // 3. 쿠키에서 찾기
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') {
+            return value;
+        }
+    }
+
+    return null;
 }
 
-// ✅ toast 메시지 기본 제공
-function showToast(message, type = 'info') {
-  const existing = document.querySelector('.toast-message');
-  if (existing) existing.remove();
-
-  const toast = document.createElement('div');
-  toast.className = 'toast-message fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white transition-all duration-300';
-  toast.classList.add({
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    warning: 'bg-yellow-500',
-    info: 'bg-blue-500',
-  }[type] || 'bg-blue-500');
-
-  toast.textContent = message;
-  toast.style.transform = 'translateX(100%)';
-  document.body.appendChild(toast);
-
-  setTimeout(() => toast.style.transform = 'translateX(0)', 50);
-  setTimeout(() => {
-    toast.style.transform = 'translateX(100%)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+// Fallback 토스트 메시지
+function showFallbackToast(message, type = 'info') {
+    // FavoriteManager의 토스트가 있으면 사용
+    if (window.favoriteManager && typeof window.favoriteManager.showToast === 'function') {
+        window.favoriteManager.showToast(message, type);
+        return;
+    }
+    
+    // 기존 토스트 제거
+    const existingToast = document.querySelector('.fallback-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'fallback-toast fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white transform transition-all duration-300 translate-x-full';
+    
+    // 타입별 색상
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+    };
+    
+    toast.classList.add(colors[type] || colors.info);
+    
+    // 아이콘 추가
+    const icons = {
+        success: '✓',
+        error: '✗',
+        warning: '⚠',
+        info: 'ℹ'
+    };
+    
+    toast.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span class="font-bold">${icons[type] || icons.info}</span>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 애니메이션
+    requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-full');
+    });
+    
+    // 자동 제거
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
 }
+
+// 전역 함수로 노출 (호환성)
+if (typeof window.showToast === 'undefined') {
+    window.showToast = function(message, type = 'info') {
+        if (window.favoriteManager && typeof window.favoriteManager.showToast === 'function') {
+            window.favoriteManager.showToast(message, type);
+        } else {
+            showFallbackToast(message, type);
+        }
+    };
+}
+
+// 디버깅용 함수
+window.favoriteDebug = function() {
+    if (window.favoriteManager) {
+        console.log('FavoriteManager Debug Info:', window.favoriteManager.getDebugInfo());
+    } else {
+        console.log('FavoriteManager가 초기화되지 않았습니다.');
+    }
+};
+
+// 외부에서 사용할 수 있는 유틸리티 함수들
+window.favoriteUtils = {
+    getCSRFToken,
+    showToast: window.showToast
+};
