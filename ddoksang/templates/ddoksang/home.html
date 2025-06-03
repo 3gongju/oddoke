@@ -229,32 +229,32 @@
     {% endif %}
   </section>
 
-{% if user.is_authenticated and my_favorite_cafes %}
-<section id="favoritesSection" class="py-4 sm:py-8 px-4 bg-gray-50">
-  <div class="text-center mb-6">
-    <h2 class="text-2xl font-bold">💖 내가 찜한 덕의 생카</h2>
-    <p class="text-sm text-gray-600">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
-  </div>
-
-  <div class="relative">
-    <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 px-1 sm:px-2" style="scroll-snap-type: x mandatory;">
-      {% for favorite in my_favorite_cafes %}
-        <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="{{ favorite.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite show_favorite_btn=True show_status_badge=True %}
-        </div>
-      {% endfor %}
+  <!-- ✅ 찜한 카페 섹션 - 수정된 버전 -->
+  {% if user.is_authenticated and my_favorite_cafes %}
+  <section id="favoritesSection" class="py-4 sm:py-8 px-4 bg-gray-50">
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-bold">💖 내가 찜한 덕의 생카</h2>
+      <p class="text-sm text-gray-600">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
     </div>
 
-    <div class="flex justify-center mt-4">
-      <p class="text-xs sm:text-sm text-gray-500">← 좌우로 스와이프해보세요 →</p>
+    <div class="relative">
+      <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 px-1 sm:px-2" style="scroll-snap-type: x mandatory;">
+        {% for favorite in my_favorite_cafes %}
+          <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="{{ favorite.id }}">
+            <!-- ✅ is_favorited 제거 - _cafe_card.html에서 user_favorites로 자동 처리 -->
+            {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite show_favorite_btn=True show_status_badge=True %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="flex justify-center mt-4">
+        <p class="text-xs sm:text-sm text-gray-500">← 좌우로 스와이프해보세요 →</p>
+      </div>
     </div>
-  </div>
-</section>
-{% endif %}
+  </section>
+  {% endif %}
 
-
-
-  <!-- 🆕 최신 등록된 생일카페 섹션 -->
+  <!-- 🆕 최신 등록된 생일카페 섹션 - _cafe_card.html 사용으로 변경 -->
   <section class="py-4 sm:py-8 px-4">
     <div class="text-center mb-6 sm:mb-8">
       <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2"> NEW 최신 등록된 생카</h2>
@@ -266,40 +266,88 @@
         {% for cafe in latest_cafes %}
           <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2 overflow-hidden group">
             {% if cafe.get_main_image %}
-              <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
-                   class="w-full h-40 sm:h-48 object-cover group-hover:scale-110 transition-transform duration-300">
+              <div class="relative overflow-hidden">
+                <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
+                     class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
+                <!-- NEW 배지 -->
+                <div class="absolute top-3 left-3">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">
+                    NEW
+                  </span>
+                </div>
+              </div>
             {% else %}
-              <div class="w-full h-40 sm:h-48 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
+              <div class="w-full h-48 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center relative">
                 <span class="text-white text-3xl sm:text-4xl">🏪</span>
+                <!-- NEW 배지 -->
+                <div class="absolute top-3 left-3">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">
+                    NEW
+                  </span>
+                </div>
               </div>
             {% endif %}
 
             <div class="p-4 sm:p-6">
-              <div class="flex items-center justify-between mb-2">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">
-                  NEW
-                </span>
-                <span class="text-xs text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
+                </div>
+
+                <!-- ✅ 찜하기 버튼 - user_favorites 사용 -->
+                {% if user.is_authenticated and cafe.status == 'approved' %}
+                  <button 
+                    data-favorite-btn 
+                    data-cafe-id="{{ cafe.id }}" 
+                    class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
+                    style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+                    title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
+                  >
+                    {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
+                  </button>
+                {% endif %}
               </div>
 
-              <h3 class="font-bold text-base sm:text-lg text-gray-800 mb-2 line-clamp-1">{{ cafe.cafe_name }}</h3>
-              <p class="text-gray-700 font-semibold mb-1 text-sm sm:text-base line-clamp-1">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
-              <p class="text-sm text-gray-600 mb-3">📅 {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}</p>
-              <p class="text-sm text-gray-500 mb-4 line-clamp-2">📍 {{ cafe.address|truncatechars:40 }}</p>
-
-              <div class="flex justify-between items-center">
-                <a href="{% url 'ddoksang:detail' cafe.id %}" 
-                   class="bg-gray-900 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-all duration-200 flex-1 text-center mr-2">
-                  자세히 보기
-                </a>
-
-                {% if user.is_authenticated %}
-                 <button data-favorite-btn data-cafe-id="{{ cafe.id }}" 
-                         class="text-xl sm:text-2xl hover:scale-125 transition-transform duration-200 ml-2"
-                         style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
-                 {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
-                </button>
+              <div class="mb-2">
+                {% if cafe.member %}
+                  <h3 class="font-semibold text-lg text-gray-900">
+                    {{ cafe.member.member_name }}
+                    <span class="text-sm text-gray-500 font-normal">({{ cafe.artist.display_name }})</span>
+                  </h3>
+                {% else %}
+                  <h3 class="font-semibold text-lg text-gray-900">{{ cafe.artist.display_name }}</h3>
                 {% endif %}
+              </div>
+
+              <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium">{{ cafe.cafe_name }}</h4>
+
+              <div class="flex items-center text-sm text-gray-600 mb-2">
+                <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="truncate">{{ cafe.address|truncatechars:35 }}</span>
+              </div>
+
+              <div class="flex items-center text-sm text-gray-600 mb-3">
+                <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <span>{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
+                {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
+                  <span class="ml-2 text-red-600 font-medium text-xs">{{ cafe.days_remaining }}일 남음</span>
+                {% endif %}
+              </div>
+
+              <div class="space-y-2">
+                <div class="flex space-x-2">
+                  {% if cafe.status == 'approved' %}
+                    <a href="{% url 'ddoksang:detail' cafe.id %}" 
+                       class="flex-1 bg-gray-900 text-white py-2.5 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
+                      자세히 보기
+                    </a>
+                  {% endif %}
+                </div>
               </div>
             </div>
           </div>
@@ -356,7 +404,5 @@
 <script src="{% static 'js/maps.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 <script src="{% static 'js/ddoksang_home_main.js' %}"></script>
-
-
 
 {% endblock %}

@@ -29,41 +29,46 @@ from ..models import BdayCafe, CafeFavorite
 import json
 
 def home_view(request):
+    """홈 뷰 - 위치 기반 서비스 포함"""
     today = timezone.now().date()
+    
+    # === 기존 생일 아티스트 로직 유지 ===
     today_str = today.strftime('%m-%d')
-    upcoming_dates = [(today + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
-
-    # ✅ 사용자 찜한 카페 ID 세트
-    user_favorites_set = set(
-        CafeFavorite.objects.filter(user=request.user).values_list('cafe_id', flat=True)
-    ) if request.user.is_authenticated else set()
-
+    
+    upcoming_dates = []
+    for i in range(7):
+        date = today + timedelta(days=i)
+        upcoming_dates.append(date.strftime('%m-%d'))
+    
     birthday_members = Member.objects.filter(
         member_bday__in=upcoming_dates
     ).select_related().prefetch_related('artist_name')
-
+    
     birthday_artists = []
     for member in birthday_members:
         artists = member.artist_name.all()
         if artists:
             artist = artists[0]
+            
             is_today_birthday = member.member_bday == today_str
-
+            
             try:
                 member_month, member_day = map(int, member.member_bday.split('-'))
                 this_year_birthday = today.replace(month=member_month, day=member_day)
+                
                 if this_year_birthday < today:
                     next_year_birthday = this_year_birthday.replace(year=today.year + 1)
                     days_until_birthday = (next_year_birthday - today).days
                 else:
                     days_until_birthday = (this_year_birthday - today).days
+                    
             except (ValueError, TypeError):
                 days_until_birthday = 999
-
+            
             display_artist_name = artist.display_name
             if member.member_name.lower() == artist.display_name.lower():
                 display_artist_name = ""
-
+            
             birthday_artists.append({
                 'member_name': member.member_name,
                 'artist_name': display_artist_name,
@@ -74,57 +79,52 @@ def home_view(request):
                 'days_until_birthday': days_until_birthday,
                 'member': member,
             })
-
+    
     birthday_artists.sort(key=lambda x: (
         not x['is_today_birthday'],
         x['days_until_birthday'],
         x['member_name']
     ))
-
-    # 최신 카페는 매번 갱신 (찜 상태 반영 위해)
-    latest_cafes = BdayCafe.objects.filter(
-        status='approved'
-    ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:3]
-    # cache.set('latest_cafes', latest_cafes, 300)  # 캐싱 비활성화
-
-
-    my_favorite_cafes = []
-    if request.user.is_authenticated:
-        favorited_cafes = CafeFavorite.objects.filter(user=request.user).select_related('cafe__artist', 'cafe__member')
-        favorited_artist_ids = {fav.cafe.artist_id for fav in favorited_cafes if fav.cafe.artist_id}
-        favorited_member_ids = {fav.cafe.member_id for fav in favorited_cafes if fav.cafe.member_id}
-
-        if favorited_artist_ids or favorited_member_ids:
-            my_favorite_cafes_query = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
-            if favorited_artist_ids and favorited_member_ids:
-                my_favorite_cafes_query = my_favorite_cafes_query.filter(
-                    Q(artist_id__in=favorited_artist_ids) | Q(member_id__in=favorited_member_ids)
-                )
-            elif favorited_artist_ids:
-                my_favorite_cafes_query = my_favorite_cafes_query.filter(artist_id__in=favorited_artist_ids)
-            elif favorited_member_ids:
-                my_favorite_cafes_query = my_favorite_cafes_query.filter(member_id__in=favorited_member_ids)
-
-            my_favorite_cafes = my_favorite_cafes_query.order_by('-created_at')[:10]
-
-    user_favorites_cafes = []
-    if request.user.is_authenticated:
-        user_favorites_cafes = BdayCafe.objects.filter(
-            cafefavorite__user=request.user,
+   
+    # === 최신 등록된 카페 ===
+    latest_cafes = cache.get('latest_cafes')
+    if not latest_cafes:
+        latest_cafes = BdayCafe.objects.filter(
             status='approved'
-        ).select_related('artist', 'member').prefetch_related('images').order_by('-cafefavorite__created_at')[:8]
-
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:6]  # 3->6으로 증가
+        cache.set('latest_cafes', latest_cafes, 300)
+    
+    # === ✅ 내가 찜한 카페들 (개선된 버전) ===
+    my_favorite_cafes = []
+    user_favorites = []  # 찜한 카페 ID 목록
+    
+    if request.user.is_authenticated:
+        # 사용자가 찜한 카페 ID 목록
+        user_favorites = list(CafeFavorite.objects.filter(
+            user=request.user
+        ).values_list('cafe_id', flat=True))
+        
+        # 찜한 카페들 (최신순으로 10개)
+        if user_favorites:
+            my_favorite_cafes = BdayCafe.objects.filter(
+                id__in=user_favorites,
+                status='approved'
+            ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:10]
+    
+    # === 현재 운영중인 생일카페들 ===
     active_cafes = BdayCafe.objects.filter(
         status='approved',
         start_date__lte=today,
         end_date__gte=today
     ).select_related('artist', 'member').prefetch_related('images')
-
+    
+    # === 안전한 지도 데이터 생성 ===
     cafes_json_data = []
     for cafe in active_cafes:
         try:
             main_image_url = cafe.get_main_image()
-            cafes_json_data.append({
+            
+            cafe_data = {
                 'id': cafe.id,
                 'name': cafe.cafe_name,
                 'artist': cafe.artist.display_name,
@@ -140,22 +140,29 @@ def home_view(request):
                 'main_image': main_image_url,
                 'special_benefits': cafe.special_benefits or '',
                 'cafe_type': cafe.get_cafe_type_display(),
-            })
-        except Exception:
+            }
+            
+            if (cafe_data['latitude'] and cafe_data['longitude'] and 
+                isinstance(cafe_data['latitude'], (int, float)) and 
+                isinstance(cafe_data['longitude'], (int, float))):
+                cafes_json_data.append(cafe_data)
+                
+        except (AttributeError, ValueError, TypeError) as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"카페 {cafe.id} 지도 데이터 생성 오류: {e}")
             continue
-
+    
     cafes_json = json.dumps(cafes_json_data, ensure_ascii=False)
 
     context = {
-        'birthday_artists': birthday_artists[:10],
+        'birthday_artists': birthday_artists,
         'latest_cafes': latest_cafes,
-        'my_favorite_cafes': my_favorite_cafes,
-        'user_favorites_cafes': user_favorites_cafes,
-        'active_cafes': active_cafes,
+        'my_favorite_cafes': my_favorite_cafes,  # ✅ 찜한 카페 목록
         'cafes_json': cafes_json,
-        'user_favorites': user_favorites_set,
-        'today': today,
-        'KAKAO_MAP_API_KEY': settings.KAKAO_MAP_API_KEY,
+        'total_cafes': len(cafes_json_data),
+        'user_favorites': user_favorites,  # ✅ 찜한 카페 ID 목록 (리스트)
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
     }
     return render(request, 'ddoksang/home.html', context)
 

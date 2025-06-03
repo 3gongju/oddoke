@@ -19,7 +19,9 @@ urlpatterns = [
     # === 사용자 기능 ===
     path('my-cafes/', views.my_cafes, name='my_cafes'),
     path('favorites/', views.my_favorites_view, name='favorites'),
-    path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
+    # path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('toggle_favorite/<int:cafe_id>/', views.toggle_favorite, name='toggle_favorite'),
+
     
 
     # === 미리보기 ===

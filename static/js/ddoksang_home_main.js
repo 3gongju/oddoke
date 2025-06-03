@@ -1,5 +1,3 @@
-// static/js/ddoksang_home_main.js
-
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
     // 카페 데이터 로드
@@ -75,60 +73,9 @@ function setupEventListeners() {
         }
     });
     
-    // 찜하기 기능
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('[data-favorite-btn]')) {
-            const cafeId = e.target.dataset.cafeId;
-            
-            // CSRF 토큰 찾기 (강화된 버전)
-            let csrfToken = '';
-            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-            
-            if (csrfInput) {
-                csrfToken = csrfInput.value;
-            } else {
-                // 쿠키에서 찾기
-                const cookies = document.cookie.split(';');
-                for (let cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === 'csrftoken') {
-                        csrfToken = value;
-                        break;
-                    }
-                }
-            }
-            
-            if (!csrfToken) {
-                console.error('CSRF 토큰을 찾을 수 없습니다.');
-                return;
-            }
-            
-            fetch(`/ddoksang/cafe/${cafeId}/toggle-favorite/`, { 
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.is_favorited !== undefined) {
-                    e.target.textContent = data.is_favorited ? '♥' : '♡';
-                    e.target.style.color = data.is_favorited ? '#ef4444' : '#6b7280';
-                }
-            })
-            .catch(error => {
-                console.error('찜하기 오류:', error);
-                alert('찜하기에 실패했습니다. 다시 시도해주세요.');
-            });
-        }
-    });
+    // ✅ 찜하기 기능 - 완전히 제거하고 favorite.js에 위임
+    // 찜하기는 이제 favorite.js에서만 처리됩니다
+    console.log('찜하기 기능은 favorite.js에서 처리됩니다');
     
     // 리사이즈 이벤트
     let resizeTimeout;

@@ -10,6 +10,8 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.db.models import F, Q
 from django.conf import settings
+from django.views.decorators.csrf import csrf_protect
+
 from django.urls import reverse
 from datetime import date
 import json
@@ -342,46 +344,46 @@ def my_cafes(request):
     return render(request, 'ddoksang/my_cafes.html', context)
 
 @login_required
-@require_POST
+@require_POST 
+@csrf_protect
 def toggle_favorite(request, cafe_id):
-    """카페 찜하기/찜해제 토글"""
+    """찜하기/찜해제 토글 - 완전한 버전"""
     try:
+        # 카페 존재 확인
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
-        favorite, created = CafeFavorite.objects.get_or_create(
-            user=request.user,
-            cafe=cafe
-        )
-
-        if not created:
-            favorite.delete()
-            is_favorited = False
-            message = "찜이 해제되었습니다."
-            card_html = ""  # 찜 해제 시 HTML 없음
-        else:
-            is_favorited = True
-            message = "찜 목록에 추가되었습니다."
-            # ✅ 찜한 카드용 HTML 생성
-            card_html = render_to_string("ddoksang/components/_cafe_card.html", {
-                "cafe": cafe,
-                "show_favorite_btn": True,
-                "show_status_badge": True,
-                "is_favorited": True,
-            }, request=request)
-
-        return JsonResponse({
-            'success': True,
-            'is_favorited': is_favorited,
-            'message': message,
-            'card_html': card_html,
-            'cafe_id': cafe.id,
-        })
-
+        
+        with transaction.atomic():
+            favorite, created = CafeFavorite.objects.get_or_create(
+                user=request.user,
+                cafe=cafe
+            )
+            
+            if created:
+                is_favorited = True
+                action = "added"
+            else:
+                favorite.delete()
+                is_favorited = False
+                action = "removed"
+            
+            # 사용자 캐시 삭제
+            cache_key = f"user_favorites_{request.user.id}"
+            cache.delete(cache_key)
+            
+            return JsonResponse({
+                'success': True,
+                'is_favorited': is_favorited,
+                'action': action,
+                'cafe_id': cafe_id,
+                'message': f'카페를 찜목록에 {"추가했습니다" if is_favorited else "제거했습니다"}'
+            })
+            
     except Exception as e:
         logger.error(f"찜하기 토글 오류: {e}")
         return JsonResponse({
             'success': False,
-            'error': '오류가 발생했습니다.'
-        })
+            'error': '찜하기 처리 중 오류가 발생했습니다.'
+        }, status=500)
 
 @login_required
 def favorites_view(request):
