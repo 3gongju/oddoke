@@ -111,6 +111,21 @@ function initAutocomplete(inputId, listId, options = {}) {
                 </div>
               </div>
             `;
+        //   } else if (result.type === 'member') {
+        //     htmlContent = `
+        //       <div class="flex items-center justify-between">
+        //         <div class="flex items-center">
+        //           ${config.showArtistTag ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mr-2">멤버</span>' : ''}
+        //           <div>
+        //             <div class="font-medium">${result.name}</div>
+        //             <div class="text-xs text-gray-500">${result.artist}</div>
+        //           </div>
+        //         </div>
+        //         ${config.showBirthday && result.birthday ? `<div class="text-xs text-blue-600 font-medium">${formatBirthday(result.birthday)}</div>` : ''}
+        //       </div>
+        //     `;
+        //   }
+
           } else if (result.type === 'member') {
             htmlContent = `
               <div class="flex items-center justify-between">
@@ -121,7 +136,9 @@ function initAutocomplete(inputId, listId, options = {}) {
                     <div class="text-xs text-gray-500">${result.artist}</div>
                   </div>
                 </div>
-                ${config.showBirthday && result.birthday ? `<div class="text-xs text-blue-600 font-medium">${formatBirthday(result.birthday)}</div>` : ''}
+                <div class="text-right">
+                  ${config.showBirthday && result.birthday ? `<div class="text-xs text-blue-600 font-medium">${formatBirthday(result.birthday)}</div>` : ''}
+                </div>
               </div>
             `;
           }

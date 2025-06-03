@@ -31,10 +31,22 @@
 
   <!-- 카페 정보 -->
   <div class="p-4">
+
     <!-- 상단: 상태 배지 및 찜하기 -->
     <div class="flex justify-between items-start mb-3">
       <div class="flex items-center space-x-2">
-        <!-- 상태 배지 -->
+        <!-- 승인 상태 배지 (관리용) -->
+        {% if show_admin_status %}
+          {% if cafe.status == 'pending' %}
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">⏳ 승인대기</span>
+          {% elif cafe.status == 'approved' %}
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✅ 승인됨</span>
+          {% elif cafe.status == 'rejected' %}
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">❌ 거절됨</span>
+          {% endif %}
+        {% endif %}
+
+        <!-- 운영 상태 배지 -->
         {% if show_status_badge %}
           {% with cafe|cafe_status as cafe_state %}
             {% if cafe_state == 'ongoing' %}
@@ -53,8 +65,8 @@
         {% endif %}
       </div>
 
-      <!-- 찜하기 버튼 -->
-      {% if show_favorite_btn and user.is_authenticated %}
+      <!-- 찜하기 버튼 (승인된 카페만) -->
+      {% if show_favorite_btn and user.is_authenticated and cafe.status == 'approved' %}
         <button data-favorite-btn data-cafe-id="{{ cafe.id }}" 
                 class="text-lg hover:scale-125 transition-transform duration-200"
                 style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
