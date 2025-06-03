@@ -136,7 +136,9 @@
     }
 
     else if (data.type == 'enter_chatroom_finish') {
-        // document.querySelectorAll(".unread-label").forEach(el => el.remove());
+        if (data.reader !== currentUser) {
+          document.querySelectorAll(".unread-label").forEach(el => el.remove());
+        }
         return;
     }
 
