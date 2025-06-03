@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function() {
     // 찜하기 버튼 이벤트 리스너
     document.addEventListener('click', function(e) {
@@ -21,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
         favoriteBtn.innerHTML = '⏳';
         favoriteBtn.disabled = true;
         
+        // ✅ 올바른 URL 패턴 사용
         fetch(`/ddoksang/cafe/${cafeId}/toggle-favorite/`, {
             method: 'POST',
             headers: {
@@ -29,8 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status); // 디버깅용
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data); // 디버깅용
             if (data.success) {
                 // 찜하기 상태에 따라 하트 변경
                 if (data.is_favorited) {
@@ -41,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     favoriteBtn.style.color = '#6b7280';
                 }
                 
-                // 토스트 메시지 표시 (있다면)
+                // 토스트 메시지 표시
                 if (typeof showToast === 'function') {
                     showToast(data.message, 'success');
                 }
@@ -50,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 favoriteBtn.innerHTML = originalContent;
                 
                 if (typeof showToast === 'function') {
-                    showToast('오류가 발생했습니다.', 'error');
+                    showToast(data.error || '오류가 발생했습니다.', 'error');
                 }
             }
         })
@@ -68,9 +72,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 간단한 토스트 메시지 함수 (showToast가 없는 경우)
+// 간단한 토스트 메시지 함수
 if (typeof showToast === 'undefined') {
     window.showToast = function(message, type = 'info') {
+        console.log(`Toast: ${message} (${type})`); // 일단 콘솔에 출력
+        
         // 기존 토스트 제거
         const existingToast = document.querySelector('.toast-message');
         if (existingToast) {
