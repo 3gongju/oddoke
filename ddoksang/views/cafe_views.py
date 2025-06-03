@@ -1,4 +1,3 @@
-# ddoksang/views/cafe_views.py
 # 카페 등록, 수정, 찜하기 관련 뷰들
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -9,17 +8,17 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.db.models import F
+from django.db.models import F, Q
 from django.conf import settings
+from django.urls import reverse
+from datetime import date
 import json
 import logging
-
 
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
 from ..forms import BdayCafeForm, BdayCafeImageForm
 from artist.models import Artist, Member
 from .utils import get_user_favorites, get_nearby_cafes, get_safe_cafe_map_data
-
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +176,7 @@ def my_cafes(request):
     """사용자가 등록한 카페 목록"""
     page = request.GET.get('page', 1)
     status_filter = request.GET.get('status', '')
+    runtime_filter = request.GET.get('runtime', '')
     query = request.GET.get('q', '').strip()
 
     cafes = BdayCafe.objects.filter(
@@ -193,6 +193,15 @@ def my_cafes(request):
     # ✅ 상태 필터 적용
     if status_filter:
         cafes = cafes.filter(status=status_filter)
+    
+    # ✅ 운영 상태 필터 적용
+    today = date.today()
+    if runtime_filter == 'active':
+        cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
+    elif runtime_filter == 'upcoming':
+        cafes = cafes.filter(start_date__gt=today)
+    elif runtime_filter == 'ended':
+        cafes = cafes.filter(end_date__lt=today)
 
     # ✅ 정렬
     sort = request.GET.get('sort', 'latest')
@@ -206,6 +215,7 @@ def my_cafes(request):
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
 
+    # 통계 계산
     stats = {
         'total': BdayCafe.objects.filter(submitted_by=request.user).count(),
         'pending': BdayCafe.objects.filter(submitted_by=request.user, status='pending').count(),
@@ -213,26 +223,89 @@ def my_cafes(request):
         'rejected': BdayCafe.objects.filter(submitted_by=request.user, status='rejected').count(),
     }
 
+    # 상태 필터 탭 생성
+    status_filters = [
+        {
+            'text': '전체',
+            'url': f'?q={query}&runtime={runtime_filter}&sort={sort}',
+            'active': not status_filter
+        },
+        {
+            'text': f'승인 대기 ({stats["pending"]})',
+            'url': f'?q={query}&status=pending&runtime={runtime_filter}&sort={sort}',
+            'active': status_filter == 'pending'
+        },
+        {
+            'text': f'승인됨 ({stats["approved"]})',
+            'url': f'?q={query}&status=approved&runtime={runtime_filter}&sort={sort}',
+            'active': status_filter == 'approved'
+        },
+        {
+            'text': f'거절됨 ({stats["rejected"]})',
+            'url': f'?q={query}&status=rejected&runtime={runtime_filter}&sort={sort}',
+            'active': status_filter == 'rejected'
+        },
+    ]
+
+    # 운영 상태 필터 생성
+    runtime_filters = [
+        {
+            'text': '전체',
+            'url': f'?q={query}&status={status_filter}&sort={sort}',
+            'active': not runtime_filter
+        },
+        {
+            'text': '운영중',
+            'url': f'?q={query}&status={status_filter}&runtime=active&sort={sort}',
+            'active': runtime_filter == 'active'
+        },
+        {
+            'text': '예정',
+            'url': f'?q={query}&status={status_filter}&runtime=upcoming&sort={sort}',
+            'active': runtime_filter == 'upcoming'
+        },
+        {
+            'text': '종료',
+            'url': f'?q={query}&status={status_filter}&runtime=ended&sort={sort}',
+            'active': runtime_filter == 'ended'
+        },
+    ]
+
+    # 액션 버튼 데이터
+    action_buttons = [
+        {
+            'text': '+ 생카 등록',
+            'url': reverse('ddoksang:create'),
+            'class': 'bg-gray-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-sm sm:text-base'
+        }
+    ]
+
     context = {
         'cafes': cafes_page,
         'stats': stats,
-        'status_filter': status_filter,
-        'status_choices': BdayCafe.STATUS_CHOICES,
+        'status_filters': status_filters,
+        'runtime_filters': runtime_filters,
+        'action_buttons': action_buttons,  # 변수명 수정
         'query': query,
+        'search_url': request.path,  # 현재 페이지 URL
+        'search_placeholder': '내 등록 카페에서 아티스트/멤버 검색...',
+        'search_input_id': 'my-cafes-search',
+        'autocomplete_list_id': 'my-cafes-autocomplete',
         'extra_params': {
             'status': status_filter,
+            'runtime': runtime_filter,
             'sort': sort,
         },
         'autocomplete_config': {
-            'show_birthday': False,
+            'show_birthday': True,
             'show_artist_tag': True,
             'submit_on_select': True,
             'artist_only': False,
+            'api_url': '/artist/autocomplete/'
         }
     }
 
     return render(request, 'ddoksang/my_cafes.html', context)
-
 
 @login_required
 @require_POST

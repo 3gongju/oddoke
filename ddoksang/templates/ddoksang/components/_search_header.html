@@ -37,6 +37,7 @@
       </div>
 
       <!-- 우측 액션 버튼들 -->
+      {% if action_buttons %}
       <div class="flex justify-center sm:justify-end space-x-3">
         {% for button in action_buttons %}
           <a href="{{ button.url }}" class="{{ button.class|default:'bg-gray-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-sm sm:text-base' }}">
@@ -44,8 +45,8 @@
           </a>
         {% endfor %}
       </div>
+      {% endif %}
     </div>
-
     <!-- 필터 태그들 (선택사항) -->
     {% if filter_tags %}
     <div class="mt-4 flex flex-wrap gap-2">

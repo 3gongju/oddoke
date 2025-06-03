@@ -5,21 +5,14 @@
 {% block title %}내 등록 카페 - 덕생{% endblock %}
 
 {% block body %}
+{% csrf_token %}
 <section class="max-w-7xl mx-auto px-4 py-10">
   <h2 class="text-2xl font-bold mb-6">📋 내가 등록한 생일카페</h2>
 
   <script src="{% static 'js/autocomplete.js' %}"></script>
 
   <!-- ✅ 검색 헤더 컴포넌트 -->
-  {% include 'ddoksang/components/_search_header.html' with 
-      search_placeholder='내 등록 카페에서 아티스트/멤버 검색...' 
-      search_url=request.path 
-      query=request.GET.q 
-      action_buttons=action_buttons_data 
-      filter_tags=status_filters 
-      search_input_id='my-cafes-search' 
-      autocomplete_list_id='my-cafes-autocomplete' 
-      autocomplete_options=autocomplete_config %}
+  {% include 'ddoksang/components/_search_header.html' %}
 
   <!-- ✅ 통계 및 필터 영역 -->
   <div class="py-6">
@@ -87,8 +80,8 @@
       <!-- 정렬 옵션 -->
       <div class="flex justify-between items-center mb-6">
         <div class="text-sm text-gray-600">
-          {% if request.GET.q %}
-            "{{ request.GET.q }}" 검색 결과 {{ cafes.paginator.count }}개
+          {% if query %}
+            "{{ query }}" 검색 결과 {{ cafes.paginator.count }}개
           {% else %}
             총 {{ cafes.paginator.count }}개의 생일카페
           {% endif %}
@@ -96,25 +89,28 @@
         <div class="flex items-center space-x-2">
           <span class="text-sm text-gray-600">정렬:</span>
           <select class="text-sm border rounded px-2 py-1" onchange="location.href=this.value">
-            <option value="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=latest" {% if request.GET.sort == 'latest' or not request.GET.sort %}selected{% endif %}>최신순</option>
-            <option value="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>오래된순</option>
-            <option value="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=start_date" {% if request.GET.sort == 'start_date' %}selected{% endif %}>시작일순</option>
+            <option value="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=latest" {% if request.GET.sort == 'latest' or not request.GET.sort %}selected{% endif %}>최신순</option>
+            <option value="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>오래된순</option>
+            <option value="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=start_date" {% if request.GET.sort == 'start_date' %}selected{% endif %}>시작일순</option>
           </select>
         </div>
       </div>
 
-      {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes empty_message="검색 결과가 없습니다." %}
-      {% include 'ddoksang/components/_pagination.html' with paginated_object=cafes query=request.GET.q extra_params=extra_params %}
+      <!-- ✅ 카페 그리드 컴포넌트 -->
+      {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes empty_message="검색 결과가 없습니다." show_admin_status=True show_status_badge=True show_preview=True show_favorite_btn=True user_favorites=user_favorites %}
+      
+      <!-- ✅ 페이지네이션 컴포넌트 -->
+      {% include 'ddoksang/components/_pagination.html' with paginated_object=cafes query=query extra_params=extra_params %}
 
     {% else %}
       <!-- 빈 상태 -->
       <div class="text-center py-12">
         <div class="text-6xl mb-4">📝</div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">
-          {% if request.GET.q %}검색 결과가 없습니다{% else %}아직 등록한 생일카페가 없어요{% endif %}
+          {% if query %}검색 결과가 없습니다{% else %}아직 등록한 생일카페가 없어요{% endif %}
         </h3>
         <p class="text-gray-600 mb-6">
-          {% if request.GET.q %}
+          {% if query %}
             다른 검색어로 다시 시도해보세요.
           {% else %}
             첫 생일카페를 등록해보세요!
@@ -127,4 +123,7 @@
     {% endif %}
   </div>
 </section>
+
+<!-- 찜하기 기능 스크립트 -->
+<script src="{% static 'js/favorite.js' %}"></script>
 {% endblock %}
