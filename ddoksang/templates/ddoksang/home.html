@@ -3,6 +3,7 @@
 {% load filters %}
 {% load member_images %}
 
+
 {% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block body %}
@@ -397,7 +398,8 @@
   </a>
 </div>
 
-<!-- 카카오맵 및 스크립트 로드 -->
+
+<!-- 카카오맵 및 스크립트 로드  -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ KAKAO_MAP_API_KEY }}&libraries=services,clusterer"></script>
 <script src="{% static 'js/favorite.js' %}"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>

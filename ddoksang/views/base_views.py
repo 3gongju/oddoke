@@ -154,15 +154,18 @@ def home_view(request):
             continue
     
     cafes_json = json.dumps(cafes_json_data, ensure_ascii=False)
+    from django.conf import settings
+
 
     context = {
         'birthday_artists': birthday_artists,
         'latest_cafes': latest_cafes,
-        'my_favorite_cafes': my_favorite_cafes,  # ✅ 찜한 카페 목록
+        'my_favorite_cafes': my_favorite_cafes,
         'cafes_json': cafes_json,
         'total_cafes': len(cafes_json_data),
-        'user_favorites': user_favorites,  # ✅ 찜한 카페 ID 목록 (리스트)
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'user_favorites': user_favorites,
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),      # 소문자 버전
+        'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # 대문자 버전 (템플릿용)
     }
     return render(request, 'ddoksang/home.html', context)
 
