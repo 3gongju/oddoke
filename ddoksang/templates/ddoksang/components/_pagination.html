@@ -1,0 +1,65 @@
+{% if paginated_object.has_other_pages %}
+<div class="flex justify-center mt-8">
+  <nav class="flex items-center space-x-1 sm:space-x-2">
+    <!-- 이전 페이지 -->
+    {% if paginated_object.has_previous %}
+      <a href="?page={{ paginated_object.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% for key, value in extra_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+         class="px-2 sm:px-3 py-2 text-sm border rounded hover:bg-gray-50 transition-colors">
+        <span class="hidden sm:inline">← 이전</span>
+        <span class="sm:hidden">←</span>
+      </a>
+    {% endif %}
+    
+    <!-- 페이지 번호들 -->
+    {% with start_page=paginated_object.number|add:-2 end_page=paginated_object.number|add:2 %}
+      {% for page_num in paginated_object.paginator.page_range %}
+        {% if page_num == paginated_object.number %}
+          <!-- 현재 페이지 -->
+          <span class="px-2 sm:px-3 py-2 text-sm bg-blue-600 text-white rounded font-medium">
+            {{ page_num }}
+          </span>
+        {% elif page_num >= start_page and page_num <= end_page %}
+          <!-- 현재 페이지 주변 -->
+          <a href="?page={{ page_num }}{% if query %}&q={{ query }}{% endif %}{% for key, value in extra_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+             class="px-2 sm:px-3 py-2 text-sm border rounded hover:bg-gray-50 transition-colors">
+            {{ page_num }}
+          </a>
+        {% elif page_num == 1 %}
+          <!-- 첫 페이지 -->
+          <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% for key, value in extra_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+             class="px-2 sm:px-3 py-2 text-sm border rounded hover:bg-gray-50 transition-colors">
+            1
+          </a>
+          {% if start_page > 2 %}
+            <span class="px-1 text-gray-400">...</span>
+          {% endif %}
+        {% elif page_num == paginated_object.paginator.num_pages %}
+          <!-- 마지막 페이지 -->
+          {% if end_page < paginated_object.paginator.num_pages|add:-1 %}
+            <span class="px-1 text-gray-400">...</span>
+          {% endif %}
+          <a href="?page={{ paginated_object.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% for key, value in extra_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+             class="px-2 sm:px-3 py-2 text-sm border rounded hover:bg-gray-50 transition-colors">
+            {{ paginated_object.paginator.num_pages }}
+          </a>
+        {% endif %}
+      {% endfor %}
+    {% endwith %}
+    
+    <!-- 다음 페이지 -->
+    {% if paginated_object.has_next %}
+      <a href="?page={{ paginated_object.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% for key, value in extra_params.items %}&{{ key }}={{ value }}{% endfor %}" 
+         class="px-2 sm:px-3 py-2 text-sm border rounded hover:bg-gray-50 transition-colors">
+        <span class="hidden sm:inline">다음 →</span>
+        <span class="sm:hidden">→</span>
+      </a>
+    {% endif %}
+  </nav>
+</div>
+
+<!-- 페이지 정보 표시 -->
+<div class="text-center mt-4 text-sm text-gray-600">
+  총 {{ paginated_object.paginator.count }}개 중 
+  {{ paginated_object.start_index }} - {{ paginated_object.end_index }}개 표시
+</div>
+{% endif %}

@@ -1,3 +1,4 @@
+# ddoksang/views/cafe_views.py
 # 카페 등록, 수정, 찜하기 관련 뷰들
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -13,10 +14,12 @@ from django.conf import settings
 import json
 import logging
 
+
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
 from ..forms import BdayCafeForm, BdayCafeImageForm
 from artist.models import Artist, Member
-from .utils import get_user_favorites
+from .utils import get_user_favorites, get_nearby_cafes, get_safe_cafe_map_data
+
 
 logger = logging.getLogger(__name__)
 
@@ -167,40 +170,69 @@ def cafe_create_success(request, cafe_id):
     }
     return render(request, 'ddoksang/create_success.html', context)
 
+from django.db.models import Q
+
 @login_required
 def my_cafes(request):
     """사용자가 등록한 카페 목록"""
     page = request.GET.get('page', 1)
     status_filter = request.GET.get('status', '')
-    
-    # 사용자가 등록한 카페들
+    query = request.GET.get('q', '').strip()
+
     cafes = BdayCafe.objects.filter(
         submitted_by=request.user
-    ).select_related('artist', 'member').order_by('-created_at')
-    
-    # 상태별 필터링
+    ).select_related('artist', 'member')
+
+    # ✅ 검색어가 있다면 아티스트/멤버명 기준으로 필터링
+    if query:
+        cafes = cafes.filter(
+            Q(artist__display_name__icontains=query) |
+            Q(member__member_name__icontains=query)
+        )
+
+    # ✅ 상태 필터 적용
     if status_filter:
         cafes = cafes.filter(status=status_filter)
-    
-    # 페이징 처리
+
+    # ✅ 정렬
+    sort = request.GET.get('sort', 'latest')
+    if sort == "start_date":
+        cafes = cafes.order_by("start_date")
+    elif sort == "oldest":
+        cafes = cafes.order_by("created_at")
+    else:
+        cafes = cafes.order_by("-created_at")  # 기본 최신순
+
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
-    
-    # 통계 정보
+
     stats = {
         'total': BdayCafe.objects.filter(submitted_by=request.user).count(),
         'pending': BdayCafe.objects.filter(submitted_by=request.user, status='pending').count(),
         'approved': BdayCafe.objects.filter(submitted_by=request.user, status='approved').count(),
         'rejected': BdayCafe.objects.filter(submitted_by=request.user, status='rejected').count(),
     }
-    
+
     context = {
         'cafes': cafes_page,
         'stats': stats,
         'status_filter': status_filter,
         'status_choices': BdayCafe.STATUS_CHOICES,
+        'query': query,
+        'extra_params': {
+            'status': status_filter,
+            'sort': sort,
+        },
+        'autocomplete_config': {
+            'show_birthday': False,
+            'show_artist_tag': True,
+            'submit_on_select': True,
+            'artist_only': False,
+        }
     }
+
     return render(request, 'ddoksang/my_cafes.html', context)
+
 
 @login_required
 @require_POST

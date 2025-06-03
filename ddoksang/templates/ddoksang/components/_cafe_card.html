@@ -1,52 +1,184 @@
 {% load static %}
-{% load utils %} 
+{% load filters %}
 
-<div class="bg-white rounded-lg shadow hover:shadow-md transition border p-4 space-y-3">
-  <!-- 상단 이미지 -->
-  {% if cafe.main_image %}
-    <img src="{{ cafe.main_image.url }}" alt="{{ cafe.cafe_name }}" class="w-full h-40 object-cover rounded-md">
+<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200 overflow-hidden">
+  <!-- 카페 이미지 -->
+  {% if cafe.get_main_image %}
+    <div class="relative overflow-hidden">
+      <img src="{{ cafe.get_main_image }}" 
+           alt="{{ cafe.cafe_name }}" 
+           class="w-full h-48 object-cover">
+      
+      <!-- 이미지 위 오버레이 배지들 -->
+      <div class="absolute top-3 left-3 flex space-x-2">
+        {% if custom_badge %}
+          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ custom_badge.class }}">
+            {{ custom_badge.text }}
+          </span>
+        {% endif %}
+      </div>
+    </div>
   {% else %}
-    <div class="w-full h-40 bg-gray-100 flex items-center justify-center rounded-md">
-      <span class="text-gray-400 text-3xl">🏪</span>
+    <div class="w-full h-48 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+      <div class="text-center">
+        <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <p class="text-sm text-gray-500">이미지 없음</p>
+      </div>
     </div>
   {% endif %}
 
   <!-- 카페 정보 -->
-  <h3 class="text-lg font-semibold truncate">{{ cafe.cafe_name }}</h3>
-  <p class="text-sm text-gray-600">
-    {{ cafe.artist.name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}
-  </p>
-  <p class="text-sm text-gray-500">
-    📅 {{ cafe.start_date }} ~ {{ cafe.end_date }}
-  </p>
-  <p class="text-sm text-gray-500 truncate">
-    📍 {{ cafe.address|truncatechars:30 }}
-  </p>
-
-  {% if cafe.hashtags %}
-    <div class="flex flex-wrap gap-1 mt-2">
-      {% for tag in cafe.hashtags|split:"#" %}
-        {% if tag.strip %}
-          <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">#{{ tag.strip }}</span>
+  <div class="p-4">
+    <!-- 상단: 상태 배지 및 찜하기 -->
+    <div class="flex justify-between items-start mb-3">
+      <div class="flex items-center space-x-2">
+        <!-- 상태 배지 -->
+        {% if show_status_badge %}
+          {% with cafe|cafe_status as cafe_state %}
+            {% if cafe_state == 'ongoing' %}
+              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✨ 운영중</span>
+            {% elif cafe_state == 'upcoming' %}
+              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">🔜 예정</span>
+            {% else %}
+              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">✅ 종료</span>
+            {% endif %}
+          {% endwith %}
         {% endif %}
-      {% endfor %}
-    </div>
-  {% endif %}
 
-  <!-- 액션 버튼 -->
-  <div class="mt-3 flex justify-between items-center">
-    <a href="{% url 'ddoksang:detail' cafe.id %}" 
-       class="text-sm text-blue-600 hover:underline font-medium">
-      자세히 보기 →
-    </a>
-    {% if cafe.status %}
-      <span class="text-xs px-2 py-0.5 rounded-full
-        {% if cafe.status == 'approved' %}bg-green-100 text-green-700
-        {% elif cafe.status == 'pending' %}bg-yellow-100 text-yellow-700
-        {% elif cafe.status == 'rejected' %}bg-red-100 text-red-700
-        {% else %}bg-gray-100 text-gray-700{% endif %}">
-        {{ cafe.get_status_display }}
-      </span>
+        <!-- 타입 배지 -->
+        {% if show_type_badge %}
+          <span class="text-xs text-gray-500">{{ cafe.get_cafe_type_display }}</span>
+        {% endif %}
+      </div>
+
+      <!-- 찜하기 버튼 -->
+      {% if show_favorite_btn and user.is_authenticated %}
+        <button data-favorite-btn data-cafe-id="{{ cafe.id }}" 
+                class="text-lg hover:scale-125 transition-transform duration-200"
+                style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
+          {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
+        </button>
+      {% endif %}
+    </div>
+
+    <!-- 아티스트/멤버 정보 -->
+    <div class="mb-2">
+      {% if cafe.member %}
+        <h3 class="font-semibold text-lg text-gray-900">
+          {{ cafe.member.member_name }}
+          <span class="text-sm text-gray-500 font-normal">({{ cafe.artist.display_name }})</span>
+        </h3>
+      {% else %}
+        <h3 class="font-semibold text-lg text-gray-900">{{ cafe.artist.display_name }}</h3>
+      {% endif %}
+    </div>
+
+    <!-- 카페명 -->
+    <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium">{{ cafe.cafe_name }}</h4>
+
+    <!-- 위치 정보 -->
+    <div class="flex items-center text-sm text-gray-600 mb-2">
+      <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg>
+      <span class="truncate">{{ cafe.address|truncatechars:35 }}</span>
+    </div>
+
+    <!-- 일정 정보 -->
+    <div class="flex items-center text-sm text-gray-600 mb-3">
+      <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      <span>{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
+      {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
+        <span class="ml-2 text-red-600 font-medium text-xs">{{ cafe.days_remaining }}일 남음</span>
+      {% endif %}
+    </div>
+
+    <!-- 특전 정보 미리보기 -->
+    {% if cafe.special_benefits and show_benefits %}
+      <div class="mb-3">
+        <div class="flex flex-wrap gap-1">
+          {% for benefit in cafe.special_benefits|split:","|slice:":3" %}
+            {% if benefit|strip %}
+              <span class="inline-block bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded">{{ benefit|strip }}</span>
+            {% endif %}
+          {% endfor %}
+          {% if cafe.special_benefits|split:","|length > 3 %}
+            <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-3" }}개</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 해시태그 미리보기 -->
+    {% if cafe.hashtags and show_hashtags %}
+      <div class="mb-3">
+        <div class="flex flex-wrap gap-1">
+          {% for tag in cafe.hashtags|split:"#"|slice:":3" %}
+            {% if tag|strip %}
+              <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">#{{ tag|strip }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- 액션 버튼들 -->
+    <div class="space-y-2">
+      <div class="flex space-x-2">
+        {% if cafe.status == 'approved' %}
+          <a href="{% url 'ddoksang:detail' cafe.id %}" 
+             class="flex-1 bg-gray-900 text-white py-2.5 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
+            자세히 보기
+          </a>
+        {% elif cafe.status == 'pending' and show_preview %}
+          <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+             class="flex-1 bg-orange-600 text-white py-2.5 text-center rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium">
+            미리보기
+          </a>
+        {% elif cafe.status == 'rejected' %}
+          <div class="flex-1 bg-gray-300 text-gray-600 py-2.5 text-center rounded-lg text-sm font-medium cursor-not-allowed">
+            거절됨
+          </div>
+        {% endif %}
+
+        {% for action in extra_actions %}
+          <a href="{{ action.url }}" 
+             class="{{ action.class|default:'px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}">
+            {{ action.text }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if show_meta_info %}
+      <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
+        <div class="flex space-x-3">
+          {% if show_created_date %}
+            <span>{{ cafe.created_at|date:"m.d" }} 등록</span>
+          {% endif %}
+          {% if show_view_count %}
+            <span>조회 {{ cafe.view_count|default:0 }}</span>
+          {% endif %}
+        </div>
+        {% if show_submitter %}
+          <span>{{ cafe.submitted_by.username }}</span>
+        {% endif %}
+      </div>
     {% endif %}
   </div>
 </div>
+
+<style>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>

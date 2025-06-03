@@ -10,7 +10,9 @@ from django.conf import settings
 import logging
 
 from ..models import BdayCafe
-from .utils import admin_required
+from .decorators import admin_required
+
+
 
 logger = logging.getLogger(__name__)
 
