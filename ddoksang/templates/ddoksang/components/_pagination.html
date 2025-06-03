@@ -1,7 +1,7 @@
 {% if paginated_object.has_other_pages %}
 <div class="flex justify-center mt-8">
   <nav class="flex items-center space-x-1 sm:space-x-2">
-    <!-- 이전 페이지 -->
+    <!-- 이전페이지 -->
     {% if paginated_object.has_previous %}
       <a href="?page={{ paginated_object.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% for key, value in extra_params.items %}&{{ key }}={{ value }}{% endfor %}" 
          class="px-2 sm:px-3 py-2 text-sm border rounded hover:bg-gray-50 transition-colors">

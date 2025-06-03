@@ -4,7 +4,7 @@
   <div class="max-w-7xl mx-auto px-4">
     <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between sm:space-x-4">
       
-      <!-- 🔍 검색창 -->
+      <!-- 검색창. -->
       <div class="w-full sm:flex-1 relative">
         <form method="get" action="{% if search_url %}{{ search_url }}{% else %}{% url 'ddoksang:search' %}{% endif %}">
           <input 
