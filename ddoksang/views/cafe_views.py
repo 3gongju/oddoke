@@ -14,7 +14,7 @@ from django.urls import reverse
 from datetime import date
 import json
 import logging
-
+from django.template.loader import render_to_string
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
 from ..forms import BdayCafeForm, BdayCafeImageForm
 from artist.models import Artist, Member
@@ -343,7 +343,7 @@ def my_cafes(request):
 
 @login_required
 @require_POST
-def toggle_favorite(request, cafe_id):  # 함수명 변경
+def toggle_favorite(request, cafe_id):
     """카페 찜하기/찜해제 토글"""
     try:
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
@@ -351,21 +351,31 @@ def toggle_favorite(request, cafe_id):  # 함수명 변경
             user=request.user,
             cafe=cafe
         )
-        
+
         if not created:
             favorite.delete()
             is_favorited = False
             message = "찜이 해제되었습니다."
+            card_html = ""  # 찜 해제 시 HTML 없음
         else:
             is_favorited = True
             message = "찜 목록에 추가되었습니다."
-        
+            # ✅ 찜한 카드용 HTML 생성
+            card_html = render_to_string("ddoksang/components/_cafe_card.html", {
+                "cafe": cafe,
+                "show_favorite_btn": True,
+                "show_status_badge": True,
+                "is_favorited": True,
+            }, request=request)
+
         return JsonResponse({
             'success': True,
             'is_favorited': is_favorited,
-            'message': message
+            'message': message,
+            'card_html': card_html,
+            'cafe_id': cafe.id,
         })
-        
+
     except Exception as e:
         logger.error(f"찜하기 토글 오류: {e}")
         return JsonResponse({

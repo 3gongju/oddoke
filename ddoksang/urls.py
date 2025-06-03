@@ -8,7 +8,7 @@ urlpatterns = [
     path('', views.home_view, name='home'),
     path('map/', views.map_view, name='map'),
     path('search/', views.search_view, name='search'),
-    path('list/', views.cafe_list_view, name='cafe_list'),
+    # path('list/', views.cafe_list_view, name='cafe_list'),
     
     # === 카페 상세/등록 ===
     path('create/', views.cafe_create_view, name='create'),
@@ -36,8 +36,9 @@ urlpatterns = [
     # === 관리자 기능 ===
     path('admin/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('admin/cafes/', views.admin_cafe_list, name='admin_cafe_list'),
-    path('admin/cafe/<int:cafe_id>/approve/', views.approve_cafe, name='approve_cafe'),
-    path('admin/cafe/<int:cafe_id>/reject/', views.reject_cafe, name='reject_cafe'),
+    path('admin/cafe/<int:cafe_id>/approve/', views.approve_cafe, name='admin_approve_cafe'),
+    path('admin/cafe/<int:cafe_id>/reject/', views.reject_cafe, name='admin_reject_cafe'),
+
     
     # === 이미지 관리 ===
     path('image/upload/', views.cafe_image_upload_view, name='image_upload'),

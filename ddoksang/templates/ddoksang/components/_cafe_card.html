@@ -8,8 +8,6 @@
       <img src="{{ cafe.get_main_image }}" 
            alt="{{ cafe.cafe_name }}" 
            class="w-full h-48 object-cover">
-      
-      <!-- 이미지 위 오버레이 배지들 -->
       <div class="absolute top-3 left-3 flex space-x-2">
         {% if custom_badge %}
           <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ custom_badge.class }}">
@@ -29,13 +27,9 @@
     </div>
   {% endif %}
 
-  <!-- 카페 정보 -->
   <div class="p-4">
-
-    <!-- 상단: 상태 배지 및 찜하기 -->
     <div class="flex justify-between items-start mb-3">
       <div class="flex items-center space-x-2">
-        <!-- 승인 상태 배지 (관리용) -->
         {% if show_admin_status %}
           {% if cafe.status == 'pending' %}
             <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">⏳ 승인대기</span>
@@ -46,7 +40,6 @@
           {% endif %}
         {% endif %}
 
-        <!-- 운영 상태 배지 -->
         {% if show_status_badge %}
           {% with cafe|cafe_status as cafe_state %}
             {% if cafe_state == 'ongoing' %}
@@ -59,23 +52,24 @@
           {% endwith %}
         {% endif %}
 
-        <!-- 타입 배지 -->
         {% if show_type_badge %}
           <span class="text-xs text-gray-500">{{ cafe.get_cafe_type_display }}</span>
         {% endif %}
       </div>
 
-      <!-- 찜하기 버튼 (승인된 카페만) -->
       {% if show_favorite_btn and user.is_authenticated and cafe.status == 'approved' %}
-        <button data-favorite-btn data-cafe-id="{{ cafe.id }}" 
-                class="text-lg hover:scale-125 transition-transform duration-200"
-                style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
-          {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
+        <button 
+          data-favorite-btn 
+          data-cafe-id="{{ cafe.id }}" 
+          data-is-favorited="{% if is_favorited %}true{% else %}false{% endif %}"
+          class="text-lg hover:scale-125 transition-transform duration-200"
+          style="color: {% if is_favorited %}#ef4444{% else %}#6b7280{% endif %};"
+        >
+          {% if is_favorited %}♥{% else %}♡{% endif %}
         </button>
       {% endif %}
     </div>
 
-    <!-- 아티스트/멤버 정보 -->
     <div class="mb-2">
       {% if cafe.member %}
         <h3 class="font-semibold text-lg text-gray-900">
@@ -87,10 +81,8 @@
       {% endif %}
     </div>
 
-    <!-- 카페명 -->
     <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium">{{ cafe.cafe_name }}</h4>
 
-    <!-- 위치 정보 -->
     <div class="flex items-center text-sm text-gray-600 mb-2">
       <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -99,7 +91,6 @@
       <span class="truncate">{{ cafe.address|truncatechars:35 }}</span>
     </div>
 
-    <!-- 일정 정보 -->
     <div class="flex items-center text-sm text-gray-600 mb-3">
       <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -110,7 +101,6 @@
       {% endif %}
     </div>
 
-    <!-- 특전 정보 미리보기 -->
     {% if cafe.special_benefits and show_benefits %}
       <div class="mb-3">
         <div class="flex flex-wrap gap-1">
@@ -126,7 +116,6 @@
       </div>
     {% endif %}
 
-    <!-- 해시태그 미리보기 -->
     {% if cafe.hashtags and show_hashtags %}
       <div class="mb-3">
         <div class="flex flex-wrap gap-1">
@@ -139,7 +128,6 @@
       </div>
     {% endif %}
 
-    <!-- 액션 버튼들 -->
     <div class="space-y-2">
       <div class="flex space-x-2">
         {% if cafe.status == 'approved' %}

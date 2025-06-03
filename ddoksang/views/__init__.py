@@ -2,10 +2,10 @@
 
 from .base_views import (
     home_view,
-    bday_cafe_detail as cafe_detail_view,
+    cafe_detail_view,
     search_view,
     map_view,
-    cafe_list_view,
+    # cafe_list_view,
 )
 
 from .cafe_views import (
@@ -41,3 +41,4 @@ create_cafe = cafe_create_view
 bday_cafe_detail = cafe_detail_view
 toggle_favorite = toggle_favorite_view
 admin_dashboard = admin_dashboard_view
+cafe_list_api = bday_cafe_list_api # API 엔드포인트 이름 변경
