@@ -10,7 +10,7 @@
       </a>
     {% endif %}
     
-    <!-- 페이지 번호들 -->
+    <!-- 페이지 번호-->
     {% with start_page=paginated_object.number|add:-2 end_page=paginated_object.number|add:2 %}
       {% for page_num in paginated_object.paginator.page_range %}
         {% if page_num == paginated_object.number %}
