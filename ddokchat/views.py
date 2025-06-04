@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.core.files.storage import default_storage
+from django.urls import reverse
 # Create your views here.
 
 # 채팅방
@@ -110,3 +111,21 @@ def upload_image(request):
         return JsonResponse({'success': True, 'image_url': message.image.url})
     except ChatRoom.DoesNotExist:
         return JsonResponse({'success': False, 'error': '존재하지 않는 채팅방입니다.'}, status=404)
+
+@require_POST
+@login_required
+def complete_trade(request, room_id):
+    """구매자가 거래 완료 누르면 채팅 종료 & 리뷰 작성으로 이동"""
+    room = get_object_or_404(ChatRoom, id=room_id)
+
+    if room.buyer != request.user:
+        return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
+
+    room.is_sold = True
+    room.save()
+
+    # ✅ target_user를 GET 파라미터로 넘김
+    return JsonResponse({
+        'success': True,
+        'redirect_url': reverse('accounts:review_home') + f'?target_user={room.seller.id}'
+    })

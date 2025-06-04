@@ -13,6 +13,9 @@ urlpatterns = [
     # 채팅방 이미지 첨부
     path('upload_image/', views.upload_image, name='upload_image'),
 
+    # 채팅방 거래 완료
+    path('complete/<int:room_id>/', views.complete_trade, name='complete_trade'),
+
     # 내 채팅방 목록
     path('my/', views.my_chatrooms, name='my_chatrooms'),
 ]
