@@ -441,3 +441,32 @@ def cafe_edit_view(request, cafe_id):
 def my_favorites_view(request):
     """내 찜 목록 (favorites_view와 동일)"""
     return favorites_view(request)
+
+def tour_map_view(request):
+    cafes = BdayCafe.objects.filter(status='approved') \
+        .select_related('artist', 'member')
+    
+    cafes_data = []
+    for cafe in cafes:
+        cafes_data.append({
+            "id": cafe.id,
+            "name": cafe.cafe_name,  # ✅ 여기서 name을 넣었는지 확인
+            "artist": cafe.artist.display_name,
+            "member": cafe.member.member_name if cafe.member else "",
+            "latitude": cafe.latitude,
+            "longitude": cafe.longitude,
+            "address": cafe.address,
+            "start_date": cafe.start_date.strftime('%Y-%m-%d'),
+            "end_date": cafe.end_date.strftime('%Y-%m-%d'),
+            "is_active": cafe.start_date <= date.today() <= cafe.end_date,
+            "main_image": cafe.get_main_image_url(),
+            "special_benefits": cafe.special_benefits,
+            "days_remaining": (cafe.end_date - date.today()).days
+        })
+
+    context = {
+        "bday_cafes_json": json.dumps(cafes_data, ensure_ascii=False),
+        "total_bday_cafes": len(cafes_data),
+        "kakao_api_key": getattr(settings, "KAKAO_MAP_API_KEY", "")
+    }
+    return render(request, 'ddoksang/tour_map.html', context)

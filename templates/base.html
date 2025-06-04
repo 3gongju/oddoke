@@ -4,9 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- ✅ CSRF 토큰 메타태그 추가 (찜하기 기능용) -->
   <meta name="csrf-token" content="{{ csrf_token }}">
-  <title>{% block title %}Oddoke{% endblock %}</title>
+  <title>Oddoke</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!--  커스텀 스크롤 제거용 CSS 연결 -->
@@ -14,6 +13,7 @@
 
   <!-- Swiper CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
 
   {% block head %}{% endblock %}
 </head>
@@ -116,12 +116,14 @@
   </div>
 </div>
 
+
 <!-- ✅ 모든 페이지에 적용되는 하단 여유 공간 -->
 <div class="h-48"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <!-- ✅ 좋아요 하트 비동기 처리 -->
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".like-toggle").forEach(btn => {

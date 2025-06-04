@@ -193,258 +193,6 @@ Ddoksang.events = new Ddoksang.EventEmitter();
 </script>
 
 
-<!-- 카카오맵 모듈 -->
-<script>
-Ddoksang.KakaoMap = class {
-    constructor(containerId, options = {}) {
-        this.container = document.getElementById(containerId);
-        this.options = {
-            center: new kakao.maps.LatLng(37.5665, 126.9780),
-            level: 3,
-            ...options
-        };
-        
-        this.map = null;
-        this.markers = [];
-        this.infoWindows = [];
-        this.currentInfoWindow = null;
-        
-        this.init();
-    }
-    
-    init() {
-        if (!this.container || !window.kakao) {
-            console.error('카카오맵 초기화 실패: 컨테이너 또는 kakao 객체가 없습니다.');
-            return;
-        }
-        
-        this.map = new kakao.maps.Map(this.container, this.options);
-        this.placesService = new kakao.maps.services.Places();
-        this.geocoder = new kakao.maps.services.Geocoder();
-        
-        // 컨트롤 추가
-        this.addControls();
-        
-        // 맵 클릭 이벤트
-        kakao.maps.event.addListener(this.map, 'click', () => {
-            this.closeInfoWindow();
-        });
-    }
-    
-    // 지도 컨트롤 추가
-    addControls() {
-        // 확대/축소 컨트롤
-        const zoomControl = new kakao.maps.ZoomControl();
-        this.map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-        
-        // 지도 타입 컨트롤
-        const mapTypeControl = new kakao.maps.MapTypeControl();
-        this.map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-    }
-    
-    // 정보창 닫기
-    closeInfoWindow() {
-        if (this.currentInfoWindow) {
-            this.currentInfoWindow.close();
-            this.currentInfoWindow = null;
-        }
-    }
-    
-    // 마커 추가
-    addMarker(position, options = {}) {
-        const marker = new kakao.maps.Marker({
-            position: position,
-            map: this.map,
-            ...options
-        });
-        
-        this.markers.push(marker);
-        return marker;
-    }
-    
-    // 생일카페 마커 추가 (전용)
-    addCafeMarker(cafeData) {
-        const position = new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude);
-        
-        // 커스텀 마커 이미지 (선택사항)
-        const imageSrc = '/static/images/cafe-marker.png';
-        const imageSize = new kakao.maps.Size(40, 42);
-        const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-        
-        const marker = new kakao.maps.Marker({
-            position: position,
-            map: this.map,
-            image: markerImage
-        });
-        
-        // 정보창 내용 생성
-        const infoContent = this.createCafeInfoContent(cafeData);
-        const infoWindow = new kakao.maps.InfoWindow({
-            content: infoContent,
-            removable: true
-        });
-        
-        // 마커 클릭 이벤트
-        kakao.maps.event.addListener(marker, 'click', () => {
-            this.closeInfoWindow();
-            infoWindow.open(this.map, marker);
-            this.currentInfoWindow = infoWindow;
-        });
-        
-        // 마커 호버 이벤트
-        kakao.maps.event.addListener(marker, 'mouseover', () => {
-            if (this.currentInfoWindow !== infoWindow) {
-                const simpleInfo = new kakao.maps.InfoWindow({
-                    content: `<div style="padding:5px;font-size:12px;">${cafeData.name}</div>`
-                });
-                simpleInfo.open(this.map, marker);
-                setTimeout(() => simpleInfo.close(), 2000);
-            }
-        });
-        
-        this.markers.push(marker);
-        this.infoWindows.push(infoWindow);
-        
-        return { marker, infoWindow };
-    }
-    
-    // 생일카페 정보창 내용 생성
-    createCafeInfoContent(cafeData) {
-        const statusBadge = cafeData.is_active ? 
-            '<span style="background:#10b981;color:white;padding:2px 6px;border-radius:12px;font-size:10px;">진행중</span>' :
-            '<span style="background:#ef4444;color:white;padding:2px 6px;border-radius:12px;font-size:10px;">종료</span>';
-            
-        return `
-            <div style="padding:15px;min-width:250px;font-family:'Pretendard',sans-serif;">
-                <div style="margin-bottom:8px;">
-                    <h4 style="margin:0;font-size:16px;font-weight:600;color:#1f2937;">${cafeData.name}</h4>
-                    ${statusBadge}
-                </div>
-                <div style="margin-bottom:6px;color:#6b7280;font-size:13px;">
-                    🎭 ${cafeData.artist}${cafeData.member ? ` - ${cafeData.member}` : ''}
-                </div>
-                <div style="margin-bottom:6px;color:#6b7280;font-size:13px;">
-                    📅 ${cafeData.start_date} ~ ${cafeData.end_date}
-                </div>
-                <div style="margin-bottom:10px;color:#6b7280;font-size:12px;">
-                    📍 ${cafeData.address}
-                </div>
-                ${cafeData.main_image ? `<img src="${cafeData.main_image}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:8px;" alt="${cafeData.name}">` : ''}
-                <div style="text-align:center;">
-                    <a href="/ddoksang/detail/${cafeData.id}/" 
-                       style="display:inline-block;background:#3b82f6;color:white;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;">
-                        자세히 보기
-                    </a>
-                </div>
-            </div>
-        `;
-    }
-    
-    // 장소 검색
-    searchPlaces(keyword, callback) {
-        if (!keyword.trim()) return;
-        
-        this.placesService.keywordSearch(keyword, (data, status) => {
-            if (status === kakao.maps.services.Status.OK) {
-                callback(data);
-            } else {
-                console.error('장소 검색 실패:', status);
-                callback([]);
-            }
-        });
-    }
-    
-    // 주소로 좌표 검색
-    geocodeAddress(address, callback) {
-        this.geocoder.addressSearch(address, (result, status) => {
-            if (status === kakao.maps.services.Status.OK) {
-                const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-                callback(coords, result[0]);
-            } else {
-                console.error('주소 검색 실패:', status);
-                callback(null);
-            }
-        });
-    }
-    
-    // 좌표로 주소 검색
-    geocodeCoord(lat, lng, callback) {
-        this.geocoder.coord2Address(lng, lat, (result, status) => {
-            if (status === kakao.maps.services.Status.OK) {
-                callback(result[0]);
-            } else {
-                console.error('좌표 변환 실패:', status);
-                callback(null);
-            }
-        });
-    }
-    
-    // 지도 중심 이동
-    panTo(lat, lng) {
-        const moveLatLon = new kakao.maps.LatLng(lat, lng);
-        this.map.panTo(moveLatLon);
-    }
-    
-    // 지도 레벨 설정
-    setLevel(level) {
-        this.map.setLevel(level);
-    }
-    
-    // 모든 마커 제거
-    clearMarkers() {
-        this.markers.forEach(marker => marker.setMap(null));
-        this.markers = [];
-        this.infoWindows.forEach(infoWindow => infoWindow.close());
-        this.infoWindows = [];
-        this.currentInfoWindow = null;
-    }
-    
-    // 마커들이 모두 보이도록 지도 범위 조정
-    setBounds(markers = null) {
-        const bounds = new kakao.maps.LatLngBounds();
-        const targetMarkers = markers || this.markers;
-        
-        targetMarkers.forEach(marker => {
-            bounds.extend(marker.getPosition());
-        });
-        
-        this.map.setBounds(bounds);
-    }
-    
-    // 현재 위치 가져오기
-    getCurrentLocation(callback) {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const coords = new kakao.maps.LatLng(lat, lng);
-                    callback(coords);
-                },
-                (error) => {
-                    console.error('위치 정보 가져오기 실패:', error);
-                    callback(null);
-                }
-            );
-        } else {
-            console.error('Geolocation이 지원되지 않습니다.');
-            callback(null);
-        }
-    }
-    
-    // 거리 계산 (두 좌표 간)
-    calculateDistance(lat1, lng1, lat2, lng2) {
-        const R = 6371; // 지구 반지름 (km)
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLng = (lng2 - lng1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLng/2) * Math.sin(dLng/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-};
-</script>
 
 <!-- 이미지 업loader 모듈 -->
 <script>
@@ -900,12 +648,12 @@ Ddoksang.PlaceSearch = class {
             }
         });
         
-        // 지도 클릭 이벤트
-        kakao.maps.event.addListener(this.map, 'click', (mouseEvent) => {
-            const latlng = mouseEvent.latLng;
-            this.setMarkerPosition(latlng);
-            this.reverseGeocode(latlng.getLat(), latlng.getLng());
-        });
+        // // 지도 클릭 이벤트
+        // kakao.maps.event.addListener(this.map, 'click', (mouseEvent) => {
+        //     const latlng = mouseEvent.latLng;
+        //     this.setMarkerPosition(latlng);
+        //     this.reverseGeocode(latlng.getLat(), latlng.getLng());
+        // });
     }
     
     searchPlace() {
@@ -1337,77 +1085,43 @@ Ddoksang.FavoriteManager = class {
 <!-- 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 전역 인스턴스 생성
-    
-    // 찜하기 매니저 초기화
+    // ✅ 찜하기 매니저 초기화
     if (document.querySelector('[data-favorite-btn]')) {
         Ddoksang.favoriteManager = new Ddoksang.FavoriteManager();
     }
-    
-    
-    // 이미지 업로더 초기화
+
+    // ✅ 이미지 업로더
     const imageUploadContainer = document.querySelector('#image-upload-container');
     if (imageUploadContainer) {
-        Ddoksang.imageUploader = new Ddoksang.ImageUploader('#image-upload-container', {
-            maxFiles: 5,
-            maxFileSize: 5 * 1024 * 1024 // 5MB
-        });
+        Ddoksang.imageUploader = new Ddoksang.ImageUploader('#image-upload-container');
     }
-    
-    // 다단계 폼 초기화
+
+    // ✅ 다단계 폼
     const multiStepForm = document.querySelector('#multiStepForm');
     if (multiStepForm) {
         Ddoksang.multiStepForm = new Ddoksang.MultiStepForm('#multiStepForm');
     }
-    
-    // 장소 검색 초기화
+
+    // ✅ 장소 검색
     const placeSearchInput = document.querySelector('#place-search');
     const mapContainer = document.querySelector('#map');
     if (placeSearchInput && mapContainer && window.kakao) {
         Ddoksang.placeSearch = new Ddoksang.PlaceSearch('#place-search', '#map');
     }
-    
-    // 카카오맵 초기화 (지도 페이지용)
-    const mapContainerMain = document.querySelector('#mapContainer');
-    if (mapContainerMain && window.kakao) {
-        Ddoksang.kakaoMap = new Ddoksang.KakaoMap('mapContainer', {
-            level: 5
-        });
-        
-        // 생일카페 데이터가 있다면 마커 추가
-        if (window.bdayCafesData) {
-            window.bdayCafesData.forEach(cafe => {
-                Ddoksang.kakaoMap.addCafeMarker(cafe);
-            });
-            
-            // 마커들이 모두 보이도록 지도 범위 조정
-            if (window.bdayCafesData.length > 0) {
-                Ddoksang.kakaoMap.setBounds();
-            }
-        }
-    }
-    
-    // 전역 이벤트 리스너
-    Ddoksang.events.on('memberSelected', (data) => {
-        console.log('멤버 선택됨:', data);
-    });
-    
-    Ddoksang.events.on('placeSelected', (data) => {
-        console.log('장소 선택됨:', data);
-    });
-    
-    Ddoksang.events.on('filesChanged', (files) => {
-        console.log('파일 변경됨:', files);
-    });
+
+    // 카카오맵(KakaoMap) 제거됨
+    // 기존 아래 코드 완전히 제거
+    // if (mapContainerMain && window.kakao) { ... }
+
+    // ✅ 전역 이벤트 리스너는 유지
+    Ddoksang.events.on('memberSelected', (data) => console.log('멤버 선택됨:', data));
+    Ddoksang.events.on('placeSelected', (data) => console.log('장소 선택됨:', data));
+    Ddoksang.events.on('filesChanged', (files) => console.log('파일 변경됨:', files));
 });
 
-// 유틸리티 함수들을 전역으로 노출
+// 유틸리티 전역 노출
 window.showToast = Ddoksang.Utils.showToast;
 window.showLoading = Ddoksang.Utils.showLoading;
 
-// 개발용 콘솔 로그
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('🎂 Ddoksang JavaScript 모듈이 로드되었습니다!');
-    console.log('사용 가능한 모듈:', Object.keys(Ddoksang));
-}
+
 </script>
