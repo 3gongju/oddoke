@@ -99,6 +99,7 @@ def post_detail(request, category, post_id):
     comment_form = FarmCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokfarm:comment_create', kwargs={'category': category, 'post_id': post_id})
+    is_owner = request.user == post.user
 
     context = {
         'post': post,
@@ -112,6 +113,7 @@ def post_detail(request, category, post_id):
         'app_name': 'ddokfarm',
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokfarm:comment_delete',
+        "is_owner": is_owner,  # ✅ 로그인한 사용자가 판매자인지 여부
     }
 
     return render(request, 'ddokfarm/detail.html', context)

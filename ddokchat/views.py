@@ -12,6 +12,8 @@ from django.db.models import Q
 def chat_room(request, room_id):
     room = get_object_or_404(ChatRoom, id=room_id)
 
+    room.other_user = room.seller if room.buyer == request.user else room.buyer # 상대방 프로필 이미지 추가
+
     # 내가 안 읽은 메시지 읽음 처리
     Message.objects.filter(
         Q(room=room) & Q(is_read=False) & ~Q(sender=request.user)
@@ -22,6 +24,7 @@ def chat_room(request, room_id):
     context = {
         'room': room,
         'messages': messages,
+        'user': request.user,
     }
 
     return render(request, 'ddokchat/chat_room.html', context)
@@ -62,13 +65,20 @@ def get_or_create_chatroom(request, category, post_id):
 def my_chatrooms(request):
     rooms = ChatRoom.objects.filter(
     Q(buyer=request.user) | Q(seller=request.user)
-    )
+    ).prefetch_related('messages')  # 쿼리 최적화
 
     rooms = sorted(rooms, key=lambda room: room.messages.last().timestamp if room.messages.exists() else room.created_at, reverse=True)
     
     for room in rooms:
+        room._current_user = request.user
+        room.partner = room.seller if room.buyer == request.user else room.buyer
         room.last_message = room.messages.last()
         room.unread_count = room.messages.filter(is_read=False).exclude(sender=request.user).count()
+
+    # 여기서 별도 주입 없이 그냥 room.post 사용 가능
+    # room.post = room.post  # 필요 없음
+
+        room.category = room.post.category_type  # 'sell' 등
 
     context = {
         'rooms': rooms,
