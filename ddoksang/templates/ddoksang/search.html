@@ -1,5 +1,7 @@
 {% extends "ddoksang/base/ddoksang_base.html" %}
 {% load static %}
+{% load filters %}
+
 
 {% block title %}생일카페 검색{% endblock %}
 
@@ -20,11 +22,13 @@
     {% endif %}
   </div>
 
-  <!-- 검색폼 -->
-  <div class="max-w-2xl mx-auto mb-8">
-    <form method="GET" class="relative">
+<!-- 검색폼 -->
+<div class="max-w-2xl mx-auto mb-8">
+  <div class="relative">
+    <form method="GET">
       <div class="flex">
         <input 
+          id="search-autocomplete"
           type="text" 
           name="q" 
           value="{{ query|default:'' }}" 
@@ -42,7 +46,13 @@
         </button>
       </div>
     </form>
+    
+    <!-- 자동완성 드롭다운 추가 -->
+    <ul id="search-autocomplete-list" 
+        class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-lg shadow-lg hidden max-h-48 overflow-y-auto z-50 mt-1">
+    </ul>
   </div>
+</div>
 
   <!-- 필터 옵션 (선택사항) -->
   {% if query %}
@@ -108,20 +118,22 @@
               </div>
             {% endif %}
 
-            <!-- 카페 정보 -->
-            <div class="p-4">
-              <!-- 상태 배지 -->
-              <div class="flex justify-between items-start mb-2">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                  {% if cafe.status == 'upcoming' %}bg-green-300 text-gray-800
-                  {% elif cafe.status == 'ongoing' %}bg-yellow-700 text-gray-800
-                  {% else %}bg-gray-800 text-gray-100{% endif %}">
-                  {% if cafe.status == 'upcoming' %} 예정
-                  {% elif cafe.status == 'ongoing' %} 진행중
-                  {% else %} 종료{% endif %}
-                </span>
-                <span class="text-xs text-gray-500">{{ cafe.cafe_type|default:"생일" }}</span>
+              <!-- 카페 정보 -->
+              <div class="p-4">
+                <!-- 상태 배지 -->
+                {% with cafe|cafe_status as cafe_state %}
+                  <div class="flex justify-between items-start mb-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                      {% if cafe_state == 'upcoming' %}bg-green-300 text-gray-800
+                      {% elif cafe_state == 'ongoing' %}bg-yellow-300 text-gray-800
+                      {% else %}bg-gray-700 text-white{% endif %}">
+                      {% if cafe_state == 'upcoming' %}예정{% elif cafe_state == 'ongoing' %}진행중{% else %}종료{% endif %}
+                    </span>
+                    <span class="text-xs text-gray-500">{{ cafe.cafe_type|default:"생일" }}</span>
+                  </div>
+                {% endwith %}
               </div>
+
 
               <!-- 아티스트/멤버 -->
               <h3 class="font-semibold text-lg text-gray-900 mb-1">
@@ -274,4 +286,17 @@
   text-overflow: ellipsis;
 }
 </style>
+
+<!-- 자동완성 스크립트 -->
+<script src="{% static 'js/autocomplete.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initAutocomplete('search-autocomplete', 'search-autocomplete-list', {
+    artistOnly: false,       // 아티스트 + 멤버 모두 검색
+    showBirthday: true,      // 생일 표시
+    showArtistTag: true,     // 아티스트/멤버 태그 표시
+    submitOnSelect: true     // 선택 시 검색 실행
+  });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block body %}
+<h2 class="text-xl font-bold mb-4">채팅방</h2>
+
+<!-- 채팅 로그 -->
+<div id="chat-log" class="space-y-6 px-2 h-[60vh] sm:h-96 overflow-y-scroll bg-white text-sm">
+  {% for message in messages %}
+    <div class="flex flex-col {% if message.sender == user %}items-end{% else %}items-start{% endif %}">
+      <div class="max-w-[75%] px-4 py-2 text-sm break-words shadow rounded-2xl
+                  {% if message.sender == user %}
+                    bg-black text-white
+                  {% else %}
+                    bg-gray-100 text-gray-900
+                  {% endif %}">
+        {{ message.content }}
+      </div>
+      <div class="flex items-center gap-1 text-xs text-gray-400 mt-1
+                  {% if message.sender == user %} justify-end mr-1 {% else %} justify-start ml-1 {% endif %}">
+        {% if message.sender == user %}          
+            {% if message.is_read == 0 %}
+                <span class="unread-label text-gray-400 font-medium">(안읽음)</span>
+            {% endif %}
+        {% endif %}
+
+        <span>{{ message.timestamp|time:"H:i" }}</span>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- 입력창 + 전송버튼 -->
+<div class="flex space-x-2">
+  <input id="chat-message-input" type="text" class="flex-1 border px-3 py-2 rounded" placeholder="메시지를 입력하세요">
+  <button id="chat-message-submit" class="bg-black text-white px-4 py-2 rounded">전송</button>
+</div>
+
+<script>
+  const roomId = "{{ room.id }}";
+  const socket = new WebSocket(
+    window.location.protocol === "https:"
+      ? 'wss://' + window.location.host + '/ws/chat/' + roomId + '/'
+      : 'ws://' + window.location.host + '/ws/chat/' + roomId + '/'
+  );
+
+  const chatLog = document.getElementById('chat-log');
+  const input = document.getElementById('chat-message-input');
+  const submit = document.getElementById('chat-message-submit');
+  const currentUser = "{{ user.username }}";
+
+  function scrollToBottom() {
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  document.addEventListener('DOMContentLoaded', scrollToBottom);
+
+  // ==== observer start
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const isVisible = entry.isIntersecting;
+        const isMine = entry.target.dataset.sender === currentUser;
+        console.log(isVisible, !isMine)
+        if (isVisible && !isMine) {
+        // 읽음 처리 요청 전송
+        socket.send(JSON.stringify({
+            type: 'read_message_sync',
+            'room_id': roomId
+        }));
+        // 중복 전송 방지: 한 번 읽은 건 감시 중단
+        observer.unobserve(entry.target);
+        }
+    });
+    }, {
+    threshold: 1.0 // 100% 보여야 감지
+    });
+  // ==== observer end 
+
+  // ✅ WebSocket 연결 완료되면 읽음 처리 신호 보내기
+//   socket.onopen = function () {
+//     socket.send(JSON.stringify({
+//       'type': 'read_all'
+//     }));
+//   };
+
+  socket.onopen = function () {
+    socket.send(JSON.stringify({
+      'type': 'enter_chatroom',
+      'room_id': roomId
+    }));
+  };
+
+  socket.onmessage = function (e) {
+    const data = JSON.parse(e.data);
+
+    // ✅ 읽음 처리 신호 받았을 때 → 기존 '(안읽음)' 모두 제거
+    if (data.type === "read_update") {
+      document.querySelectorAll(".unread-label").forEach(el => el.remove());
+      return;
+    }
+    
+    else if (data.type == 'chat_message') {
+        const isMine = data.sender === currentUser;
+    
+        const wrapper = document.createElement("div");
+        wrapper.className = `flex flex-col ${isMine ? 'items-end' : 'items-start'} space-y-1`;
+    
+        const bubble = document.createElement("div");
+        bubble.className = `max-w-[75%] px-4 py-2 text-sm break-words shadow rounded-2xl
+                            ${isMine ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'}`;
+        bubble.innerText = data.message;
+    
+        const time = document.createElement("div");
+        time.className = `text-xs text-gray-400 mt-1 ${isMine ? 'text-right mr-1' : 'text-left ml-1'}`;
+        const now = new Date();
+        const formattedTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+    
+        // ✅ 안읽음 표시 붙이기 (클래스 추가)
+        if (isMine && !data.is_read) {
+          time.innerHTML = `<span class="unread-label text-gray-400 text-xs font-medium mr-1">(안읽음)</span>${formattedTime}`;
+        } else {
+          time.innerText = formattedTime;
+        }
+    
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(time);
+        chatLog.appendChild(wrapper);
+
+        time.dataset.sender = data.sender; // 보내는 사람 정보 저장
+        observer.observe(time); 
+    }
+
+    else if (data.type == 'read_message_sync_finish') {
+        console.log('==read_message_sync_finish===')
+        document.querySelectorAll(".unread-label").forEach(el => el.remove());
+        return;
+    }
+
+    else if (data.type == 'enter_chatroom_finish') {
+        if (data.reader !== currentUser) {
+          document.querySelectorAll(".unread-label").forEach(el => el.remove());
+        }
+        return;
+    }
+
+
+    const emptyText = chatLog.querySelector('p.text-gray-400');
+    if (emptyText) emptyText.remove();
+
+    scrollToBottom();
+  };
+
+  submit.onclick = function () {
+    const message = input.value;
+    if (message.trim()) {
+      socket.send(JSON.stringify({ 
+        'room_id': roomId,
+        message
+     }));
+      input.value = '';
+    }
+  };
+
+  input.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") submit.click();
+  });
+</script>
+{% endblock %}

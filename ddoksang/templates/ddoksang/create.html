@@ -1,10 +1,11 @@
 {% extends "ddoksang/base/ddoksang_base.html" %}
 {% load static %}
+{% load filters %}
 
 {% block body %}
 <section class="max-w-4xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold mb-6">🎁 생일카페 등록하기</h1>
-  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생일카페 정보를 등록해주세요!</p>
+  <h1 class="text-2xl font-bold mb-6">🎁 생카 등록하기</h1>
+  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생카페 정보를 등록해주세요!</p>
 
   <!-- Progress Bar -->
   <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
@@ -17,8 +18,10 @@
     <!-- STEP 1: 아티스트/멤버 검색 -->
     <div id="step-1" class="step">
       <label class="block text-sm font-medium mb-2">아티스트/멤버명 검색</label>
-      <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
-      <ul id="artist-member-results" class="border mt-2 rounded overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
+      <div class="relative">
+        <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
+        <ul id="artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
+      </div>
       
       <input type="hidden" name="artist_id" id="artist_id">
       <input type="hidden" name="member_id" id="member_id">
@@ -36,12 +39,12 @@
 
     <!-- STEP 2: 카페 정보 -->
     <div id="step-2" class="step hidden">
-      <label class="block text-sm font-medium mb-2">카페명</label>
-      <input type="text" name="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="카페명 입력" required>
+      <label class="block text-sm font-medium mb-2">생카명</label>
+      <input type="text" name="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
 
       <label class="block text-sm font-medium mb-2">이벤트 유형</label>
       <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
-        <option value="bday">🎂 생일</option>
+        <option value="bday">생일</option>
         <option value="debut">데뷔</option>
         <option value="comeback">컴백</option>
         <option value="concert">콘서트</option>
@@ -71,6 +74,7 @@
       <ul id="place-results" class="mt-2 max-h-40 overflow-y-auto border rounded hidden"></ul>
       <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
 
+      <input type="hidden" name="place_name" id="place_name"> 
       <input type="hidden" name="address" id="address" required>
       <input type="hidden" name="road_address" id="road_address">
       <input type="hidden" name="latitude" id="latitude" required>
@@ -83,163 +87,70 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">시작일</label>
-          <div class="relative">
-            <input type="date" name="start_date" class="w-full border rounded px-4 py-3 pr-10" required>
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
-            </div>
-          </div>
+          <input type="text" id="start_date" name="start_date" class="w-full border rounded px-4 py-3" required>
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">종료일</label>
-          <div class="relative">
-            <input type="date" name="end_date" class="w-full border rounded px-4 py-3 pr-10" required>
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-              </svg>
-            </div>
-          </div>
+          <input type="text" id="end_date" name="end_date" class="w-full border rounded px-4 py-3" required>
         </div>
       </div>
     </div>
 
     <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
-      <label class="block text-sm font-medium mb-4">특전 정보 (중복 선택 가능)</label>
-      
-      <!-- 음식 -->
+      <label class="block text-sm font-medium mb-4">🎁 특전 정보</label>
+
+      <!-- 일반 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-          🍰 음식
-        </h4>
+        <h4 class="text-sm font-semibold mb-3">🎨 특전</h4>
         <div class="grid grid-cols-4 gap-2">
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="홀케이크" class="sr-only">
-            <span class="perk-btn">🎂 홀케이크</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="포토카드" class="sr-only">
-            <span class="perk-btn">🍰 케이크</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="음료수" class="sr-only">
-            <span class="perk-btn">🥤 음료수</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="쿠키" class="sr-only">
-            <span class="perk-btn">🍪 쿠키</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="컵케이크" class="sr-only">
-            <span class="perk-btn">🧁 컵케이크</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="도넛" class="sr-only">
-            <span class="perk-btn">🍩 도넛</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="초콜릿" class="sr-only">
-            <span class="perk-btn">🍫 초콜릿</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="커피" class="sr-only">
-            <span class="perk-btn">☕ 커피</span>
-          </label>
+          {% for item in "종이컵,포토카드,스티커,엽서,증명사진,달력,포토매틱,엘홀더,포스터,포카홀더,메모지,프리쿠라,부채,마스킹테이프,ID카드,띠부띠부씰,키링,슬로건,그립톡,액자,컵,거울,편지지,틴케이스,토이카메라,짐색,카드지갑,티셔츠,트레카,티켓,수건,기타"|split:"," %}
+            <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" name="perks" value="{{ item }}" class="sr-only">
+              <span class="perk-btn">{{ item }}</span>
+            </label>
+          {% endfor %}
         </div>
       </div>
 
-      <!-- 굿즈 -->
+      <!-- 선착 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-          🎁 굿즈
-        </h4>
+        <h4 class="text-sm font-semibold mb-3">🏃 선착 특전</h4>
         <div class="grid grid-cols-4 gap-2">
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="포토카드" class="sr-only">
-            <span class="perk-btn">📷 포토카드</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="스티커" class="sr-only">
-            <span class="perk-btn">⭐ 스티커</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="키링" class="sr-only">
-            <span class="perk-btn">🔑 키링</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="카드지갑" class="sr-only">
-            <span class="perk-btn">💳 카드지갑</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="티셔츠" class="sr-only">
-            <span class="perk-btn">👕 티셔츠</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="드링크홀더" class="sr-only">
-            <span class="perk-btn">🥤 드링크홀더</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="엽서" class="sr-only">
-            <span class="perk-btn">💌 엽서</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="타투스티커" class="sr-only">
-            <span class="perk-btn">🌟 타투스티커</span>
-          </label>
+          {% for item in "종이컵,포토카드,스티커,엽서,증명사진,달력,포토매틱,엘홀더,포스터,포카홀더,메모지,프리쿠라,부채,마스킹테이프,ID카드,띠부띠부씰,키링,슬로건,그립톡,액자,컵,거울,편지지,틴케이스,토이카메라,짐색,카드지갑,티셔츠,트레카,티켓,수건,기타"|split:"," %}
+            <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" name="perks_priority" value="{{ item }}" class="sr-only">
+              <span class="perk-btn">{{ item }}</span>
+            </label>
+          {% endfor %}
         </div>
       </div>
 
-      <!-- 기타 -->
+      <!-- 그 외 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center">
-          ✨ 기타
-        </h4>
+        <h4 class="text-sm font-semibold mb-3">✨ 그 외 특전</h4>
         <div class="grid grid-cols-4 gap-2">
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="메뉴 특가" class="sr-only">
-            <span class="perk-btn">💰 메뉴 특가</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="선착순 특전" class="sr-only">
-            <span class="perk-btn">🏃 선착순 특전</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="랜덤 특전" class="sr-only">
-            <span class="perk-btn">🎲 랜덤 특전</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="이벤트 할인" class="sr-only">
-            <span class="perk-btn">🎊 이벤트 할인</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="꽃다발" class="sr-only">
-            <span class="perk-btn">💐 꽃다발</span>
-          </label>
-          <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
-            <input type="checkbox" name="perks" value="기념품" class="sr-only">
-            <span class="perk-btn">🎁 기념품</span>
-          </label>
+          {% for item in "메뉴 특전,선착 특전,당일 특전,랜덤 특전,럭키 넘버,럭키 드로우,가챠 뽑기,포토부스,전시회,해시태그 이벤트,기타"|split:"," %}
+            <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+              <input type="checkbox" name="perks_extra" value="{{ item }}" class="sr-only">
+              <span class="perk-btn">{{ item }}</span>
+            </label>
+          {% endfor %}
         </div>
       </div>
 
       <label class="block text-sm font-medium mb-2">이벤트 설명</label>
       <textarea name="event_description" class="w-full border rounded p-3" rows="4" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
-
-      <label class="block text-sm font-medium mb-2 mt-4">해시태그</label>
-      <input type="text" name="hashtags" class="w-full border rounded p-3" placeholder="#태그1 #태그2">
     </div>
 
     <!-- STEP 5: 출처 정보 -->
     <div id="step-5" class="step hidden">
-      <label class="block text-sm font-medium mb-2">X (트위터) 계정</label>
+      <label class="block text-sm font-medium mb-2">X 계정</label>
       <div class="flex items-center mb-4">
         <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l">@</span>
-        <input type="text" name="twitter_username" class="flex-1 border border-gray-300 rounded-r px-3 py-2" placeholder="twitter_username">
+        <input type="text" name="x_username" class="flex-1 border border-gray-300 rounded-r px-3 py-2" placeholder="x_username">
       </div>
-      <p class="text-xs text-gray-500 mb-4">예: @bts_official → https://twitter.com/bts_official 링크로 연결됩니다</p>
+      <p class="text-xs text-gray-500 mb-4">예: @bts_official → https://x.com/bts_official 링크로 연결됩니다</p>
     </div>
 
     <!-- STEP 6: 이미지 업로드 -->
@@ -264,7 +175,6 @@
       <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </div>
 
-  
     <!-- 네비게이션 버튼 -->
     <div class="mt-8 flex justify-between">
       <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">이전</button>
@@ -273,415 +183,34 @@
   </form>
 </section>
 
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
-
+<!-- Styles -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-.perk-btn {
-  display: block;
-  width: 100%;
-  text-align: center;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-input[type="checkbox"]:checked + .perk-btn {
-  background-color: #3b82f6;
-  color: white;
-  border-radius: 4px;
-}
-
-input[type="checkbox"]:checked + .perk-btn {
-  transform: scale(0.95);
-}
-
-label:hover .perk-btn {
-  background-color: #f3f4f6;
-}
-
-input[type="checkbox"]:checked + .perk-btn:hover {
-  background-color: #2563eb !important;
-  color: white !important;
-}
+  .perk-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  input[type="checkbox"]:checked + .perk-btn {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 4px;
+    transform: scale(0.95);
+  }
+  label:hover .perk-btn {
+    background-color: #f3f4f6;
+  }
+  input[type="checkbox"]:checked + .perk-btn:hover {
+    background-color: #2563eb !important;
+    color: white !important;
+  }
 </style>
 
-<script>
-// 🔧 디버깅 및 수정된 스크립트
-const steps = 6;
-let currentStep = 1;
-let map = null;
-
-const nextBtn = document.getElementById("nextBtn");
-const prevBtn = document.getElementById("prevBtn");
-const progressBar = document.getElementById("progressBar");
-
-function updateStepVisibility() {
-  for (let i = 1; i <= steps; i++) {
-    const stepDiv = document.getElementById(`step-${i}`);
-    const inputs = stepDiv.querySelectorAll("input:not([type='hidden']), textarea, select");
-    if (i === currentStep) {
-      stepDiv.classList.remove("hidden");
-      inputs.forEach(el => el.disabled = false);
-    } else {
-      stepDiv.classList.add("hidden");
-      inputs.forEach(el => el.disabled = true);
-    }
-  }
-  
-  // 프로그레스바 업데이트
-  progressBar.style.width = `${(currentStep / steps) * 100}%`;
-
-  // 버튼 상태 조정
-  prevBtn.disabled = currentStep === 1;
-  
-  // 정확히 마지막 단계(6단계)일 때만 제출 버튼으로 변경
-  if (currentStep === steps) {
-    nextBtn.textContent = "최종 제출";
-    nextBtn.type = "submit";
-    nextBtn.className = "px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600";
-  } else {
-    nextBtn.textContent = "다음";
-    nextBtn.type = "button";
-    nextBtn.className = "px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600";
-  }
-  
-  // Step 2에서 지도 초기화
-  if (currentStep === 2 && !map) {
-    initializeMap();
-  }
-}
-
-function validateStep() {
-  const currentStepDiv = document.getElementById(`step-${currentStep}`);
-  
-  // Step 1: 아티스트 선택 검증
-  if (currentStep === 1) {
-    const artistId = document.getElementById("artist_id").value;
-    const searchInput = document.getElementById("artist-member-search").value.trim();
-    
-    if (!artistId || !searchInput) {
-      alert("아티스트/멤버를 검색하고 선택해주세요.");
-      document.getElementById("artist-member-search").focus();
-      return false;
-    }
-    return true;
-  }
-  
-  // 다른 단계들의 기본 검증
-  const requiredFields = currentStepDiv.querySelectorAll("[required]");
-  
-  for (const field of requiredFields) {
-    if (!field.value.trim()) {
-      field.focus();
-      alert("필수 입력란을 모두 채워주세요.");
-      return false;
-    }
-  }
-  
-  // Step 2: 주소 선택 검증
-  if (currentStep === 2) {
-    const address = document.getElementById("address").value;
-    if (!address) {
-      alert("주소를 검색하고 선택해주세요.");
-      document.getElementById("place-search").focus();
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-// 수정된 nextBtn 이벤트 리스너
-nextBtn.addEventListener("click", (e) => {
-  // 마지막 단계가 아닌 경우에만 단계 이동 처리
-  if (currentStep < steps) {
-    e.preventDefault(); // 폼 제출 방지
-    
-    if (!validateStep()) return;
-    
-    currentStep++;
-    updateStepVisibility();
-  }
-  // currentStep === steps인 경우 (6단계)에는 자연스럽게 폼 제출됨
-});
-
-prevBtn.addEventListener("click", () => {
-  if (currentStep > 1) {
-    currentStep--;
-    updateStepVisibility();
-  }
-});
-
-// 초기 상태 설정
-updateStepVisibility();
-
-// 지도 초기화
-function initializeMap() {
-  const mapContainer = document.getElementById('map');
-  const mapOption = {
-    center: new kakao.maps.LatLng(37.5665, 126.9780),
-    level: 3
-  };
-  
-  map = new kakao.maps.Map(mapContainer, mapOption);
-  document.getElementById('mapPlaceholder').style.display = 'none';
-}
-
-// 이미지 미리보기
-document.getElementById("images").addEventListener("change", function () {
-  const previewContainer = document.getElementById("image-preview");
-  previewContainer.innerHTML = "";
-  
-  if (this.files.length > 5) {
-    alert("최대 5개의 이미지만 업로드할 수 있습니다.");
-    this.value = "";
-    return;
-  }
-  
-  Array.from(this.files).forEach((file, index) => {
-    if (file.size > 5 * 1024 * 1024) {
-      alert(`${file.name}: 파일 크기가 5MB를 초과합니다.`);
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const div = document.createElement("div");
-      div.className = "relative";
-      div.innerHTML = `
-        <img src="${e.target.result}" alt="Preview ${index + 1}" class="w-full h-32 object-cover rounded border">
-        <div class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-          ${index === 0 ? '대표' : index + 1}
-        </div>
-        <button type="button" onclick="removeImage(${index})" class="absolute top-2 right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full hover:bg-red-600">
-          ×
-        </button>
-      `;
-      previewContainer.appendChild(div);
-    };
-    reader.readAsDataURL(file);
-  });
-});
-
-function removeImage(index) {
-  const input = document.getElementById("images");
-  const dt = new DataTransfer();
-  
-  Array.from(input.files).forEach((file, i) => {
-    if (i !== index) dt.items.add(file);
-  });
-  
-  input.files = dt.files;
-  input.dispatchEvent(new Event('change'));
-}
-
-// 아티스트/멤버 자동완성
-document.getElementById("artist-member-search").addEventListener("input", function () {
-  const keyword = this.value.trim();
-  const resultsBox = document.getElementById("artist-member-results");
-  resultsBox.innerHTML = "";
-  
-  if (!keyword) {
-    resultsBox.classList.add("hidden");
-    clearSelection();
-    return;
-  }
-  
-  fetch(`/ddoksang/autocomplete/members/?q=${encodeURIComponent(keyword)}`)
-    .then(res => res.json())
-    .then(data => {
-      const results = data.results;
-      if (results.length === 0) {
-        resultsBox.innerHTML = '<li class="px-4 py-2 text-gray-500 text-sm">검색 결과가 없습니다.</li>';
-        resultsBox.classList.remove("hidden");
-        return;
-      }
-      
-      results.forEach(item => {
-        const li = document.createElement("li");
-        li.className = "hover:bg-gray-100 px-4 py-2 cursor-pointer text-sm border-b";
-        li.innerHTML = `
-          <div class="flex justify-between">
-            <span>${item.member_name} <span class="text-gray-500 text-xs">(${item.artist_display})</span></span>
-            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">${item.bday}</span>
-          </div>
-        `;
-        li.onclick = () => selectArtist(item);
-        resultsBox.appendChild(li);
-      });
-      resultsBox.classList.remove("hidden");
-    })
-    .catch(err => {
-      console.error('자동완성 오류:', err);
-      resultsBox.innerHTML = '<li class="px-4 py-2 text-red-500 text-sm">검색 중 오류가 발생했습니다.</li>';
-      resultsBox.classList.remove("hidden");
-    });
-});
-
-function selectArtist(item) {
-  // 검색 결과 숨기기
-  document.getElementById("artist-member-results").classList.add("hidden");
-  
-  // 선택된 아티스트 정보 설정
-  document.getElementById("artist-member-search").value = `${item.member_name} (${item.artist_display})`;
-  document.getElementById("artist_id").value = item.artist_id;
-  document.getElementById("member_id").value = item.member_id;
-  
-  // 선택된 아티스트 표시
-  document.getElementById("selected-artist-text").textContent = `✓ ${item.member_name} (${item.artist_display}) 선택됨`;
-  document.getElementById("selected-artist").classList.remove("hidden");
-}
-
-function clearSelection() {
-  document.getElementById("artist_id").value = "";
-  document.getElementById("member_id").value = "";
-  document.getElementById("artist-member-search").value = "";
-  document.getElementById("selected-artist").classList.add("hidden");
-  document.getElementById("artist-member-results").classList.add("hidden");
-}
-
-// 카카오맵 주소 검색
-let ps = null;
-let marker = null;
-
-function initPlaceSearch() {
-  if (!ps) {
-    ps = new kakao.maps.services.Places();
-    marker = new kakao.maps.Marker({ map: map });
-  }
-}
-
-const placeInput = document.getElementById("place-search");
-const searchBtn = document.getElementById("searchBtn");
-const placeResults = document.getElementById('place-results');
-const selectedPlaceDiv = document.getElementById('selected-place');
-
-searchBtn?.addEventListener('click', searchPlace);
-
-placeInput.addEventListener("keydown", function (e) {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    searchPlace();
-  }
-});
-
-function searchPlace() {
-  if (!map) initializeMap();
-  if (!ps) initPlaceSearch();
-  
-  let keyword = placeInput.value.trim();
-  if (!keyword) return;
-  
-  ps.keywordSearch(keyword, function (data, status) {
-    if (status === kakao.maps.services.Status.OK) {
-      placeResults.innerHTML = '';
-      placeResults.classList.remove('hidden');
-      
-      data.forEach(place => {
-        const li = document.createElement('li');
-        li.textContent = `${place.place_name} (${place.road_address_name || place.address_name})`;
-        li.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200 border-b last:border-none text-sm';
-        li.addEventListener('click', () => selectPlace(place));
-        placeResults.appendChild(li);
-      });
-    } else {
-      placeResults.innerHTML = '<li class="px-4 py-2 text-red-500 text-sm">검색 결과가 없습니다.</li>';
-      placeResults.classList.remove('hidden');
-    }
-  });
-}
-
-function selectPlace(place) {
-  const latlng = new kakao.maps.LatLng(place.y, place.x);
-  map.setCenter(latlng);
-  marker.setPosition(latlng);
-
-  selectedPlaceDiv.innerHTML = `
-    <div class="flex items-center justify-between">
-      <div>
-        <p class="font-medium text-green-800">${place.place_name}</p>
-        <p class="text-sm text-green-600">${place.road_address_name || place.address_name}</p>
-      </div>
-      <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-      </svg>
-    </div>
-  `;
-  selectedPlaceDiv.classList.remove('hidden');
-
-  // 폼 데이터 설정
-  document.getElementById("address").value = place.address_name;
-  document.getElementById("road_address").value = place.road_address_name || '';
-  document.getElementById("latitude").value = place.y;
-  document.getElementById("longitude").value = place.x;
-  document.getElementById("kakao_place_id").value = place.id;
-
-  placeResults.classList.add('hidden');
-}
-
-// 드래그 앤 드롭 이미지 업로드
-const imageUploadArea = document.querySelector('label[for="images"]').parentElement;
-
-imageUploadArea.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  imageUploadArea.classList.add('border-blue-400', 'bg-blue-50');
-});
-
-imageUploadArea.addEventListener('dragleave', (e) => {
-  e.preventDefault();
-  imageUploadArea.classList.remove('border-blue-400', 'bg-blue-50');
-});
-
-imageUploadArea.addEventListener('drop', (e) => {
-  e.preventDefault();
-  imageUploadArea.classList.remove('border-blue-400', 'bg-blue-50');
-  
-  const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-  if (files.length > 0) {
-    const input = document.getElementById('images');
-    const dt = new DataTransfer();
-    files.forEach(file => dt.items.add(file));
-    input.files = dt.files;
-    input.dispatchEvent(new Event('change'));
-  }
-});
-
-// 날짜 유효성 검증
-document.querySelector('[name="start_date"]').addEventListener('change', function() {
-  const endDate = document.querySelector('[name="end_date"]');
-  endDate.min = this.value;
-  
-  if (endDate.value && endDate.value < this.value) {
-    endDate.value = this.value;
-  }
-});
-
-document.querySelector('[name="end_date"]').addEventListener('change', function() {
-  const startDate = document.querySelector('[name="start_date"]');
-  startDate.max = this.value;
-  
-  if (startDate.value && startDate.value > this.value) {
-    startDate.value = this.value;
-  }
-});
-
-// 폼 제출 시 데이터 변환
-document.getElementById('multiStepForm').addEventListener('submit', function(e) {
-  // 모든 input, textarea, select 활성화
-  const allInputs = this.querySelectorAll('input, textarea, select');
-  allInputs.forEach(input => {
-    input.disabled = false;
-  });
-  
-  // Twitter username을 URL로 변환
-  const twitterUsername = document.querySelector('[name="twitter_username"]').value.trim();
-  
-  if (twitterUsername) {
-    const twitterInput = document.createElement('input');
-    twitterInput.type = 'hidden';
-    twitterInput.name = 'twitter_source';
-    twitterInput.value = `https://twitter.com/${twitterUsername.replace('@', '')}`;
-    this.appendChild(twitterInput);
-  }
-});
-</script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+<script src="{% static 'js/autocomplete.js' %}"></script>
+<script src="{% static 'js/ddoksang_create.js' %}"></script>
 {% endblock %}
