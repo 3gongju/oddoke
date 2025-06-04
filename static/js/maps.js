@@ -1,4 +1,4 @@
-// ✅ 통합된 maps.js - 모든 지도 기능 포함
+// 통합된 maps.js - 모든 지도 기능 포함
 // 전역 변수
 let map;
 let clusterer;
@@ -13,8 +13,7 @@ console.log('maps.js 로드 시작');
 function initMap(centerLat = 37.5665, centerLng = 126.9780, userLocationData = null) {
     try {
         console.log('지도 초기화 시작:', centerLat, centerLng);
-        
-        // 카카오맵 API 로드 확인
+
         if (typeof kakao === 'undefined' || typeof kakao.maps === 'undefined') {
             console.error('카카오맵 API가 로드되지 않았습니다.');
             showMapError('카카오맵 API를 불러올 수 없습니다.');
@@ -27,8 +26,7 @@ function initMap(centerLat = 37.5665, centerLng = 126.9780, userLocationData = n
             return;
         }
 
-        // 사용자 위치가 있으면 해당 위치 사용
-        if (userLocationData && userLocationData.lat && userLocationData.lng) {
+        if (userLocationData?.lat && userLocationData?.lng) {
             centerLat = userLocationData.lat;
             centerLng = userLocationData.lng;
             console.log('사용자 위치로 지도 중심 설정:', centerLat, centerLng);
@@ -39,27 +37,21 @@ function initMap(centerLat = 37.5665, centerLng = 126.9780, userLocationData = n
             level: window.innerWidth < 768 ? 9 : 8
         };
 
-        // 지도 생성
         map = new kakao.maps.Map(mapContainer, mapOption);
-        
-        // 전역 변수에 할당
         window.map = map;
         console.log('지도 생성 완료');
 
-        // 클러스터러 생성
         createClusterer();
 
-        // 지도 로딩 완료 후 처리
         setTimeout(() => {
             hideMapLoading();
             createMarkers();
             map.relayout();
-            
-            // 사용자 위치 마커 추가
-            if (userLocationData && userLocationData.lat && userLocationData.lng) {
+
+            if (userLocationData?.lat && userLocationData?.lng) {
                 addUserLocationMarker(userLocationData.lat, userLocationData.lng);
             }
-            
+
             console.log('지도 초기화 완료');
         }, 500);
 
@@ -69,177 +61,88 @@ function initMap(centerLat = 37.5665, centerLng = 126.9780, userLocationData = n
     }
 }
 
-// ✅ 클러스터러 생성
 function createClusterer() {
     if (typeof kakao.maps.MarkerClusterer !== 'undefined') {
         clusterer = new kakao.maps.MarkerClusterer({
             map: map,
             averageCenter: true,
             minLevel: window.innerWidth < 768 ? 7 : 6,
-            disableClickZoom: true,
-            styles: [
-                {
-                    width: window.innerWidth < 768 ? '32px' : '40px',
-                    height: window.innerWidth < 768 ? '32px' : '40px',
-                    background: 'rgba(59, 130, 246, 0.8)',
-                    borderRadius: '50%',
-                    color: '#fff',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                    lineHeight: window.innerWidth < 768 ? '32px' : '40px'
-                },
-                {
-                    width: window.innerWidth < 768 ? '40px' : '50px',
-                    height: window.innerWidth < 768 ? '40px' : '50px',
-                    background: 'rgba(147, 51, 234, 0.8)',
-                    borderRadius: '50%',
-                    color: '#fff',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    fontSize: window.innerWidth < 768 ? '14px' : '16px',
-                    lineHeight: window.innerWidth < 768 ? '40px' : '50px'
-                },
-                {
-                    width: window.innerWidth < 768 ? '48px' : '60px',
-                    height: window.innerWidth < 768 ? '48px' : '60px',
-                    background: 'rgba(239, 68, 68, 0.8)',
-                    borderRadius: '50%',
-                    color: '#fff',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    fontSize: window.innerWidth < 768 ? '16px' : '18px',
-                    lineHeight: window.innerWidth < 768 ? '48px' : '60px'
-                }
-            ]
+            disableClickZoom: true
         });
-        
         window.clusterer = clusterer;
-        
-        // 클러스터 클릭 이벤트
+
         kakao.maps.event.addListener(clusterer, 'clusterclick', (cluster) => {
-            const level = map.getLevel() - 2;
-            map.setLevel(level, { anchor: cluster.getCenter() });
+            map.setLevel(map.getLevel() - 2, { anchor: cluster.getCenter() });
         });
     }
 }
 
-// ✅ 마커 생성
 function createMarkers() {
-    try {
-        markers = [];
-        
-        if (!window.cafesData || window.cafesData.length === 0) {
-            console.log('생일카페 데이터가 없습니다.');
-            updateCafeCount(0);
-            return;
-        }
+    markers = [];
+    if (!window.cafesData?.length) {
+        updateCafeCount(0);
+        return;
+    }
 
-        console.log('마커 생성 시작:', window.cafesData.length + '개');
+    window.cafesData.forEach(cafe => {
+        if (!cafe.latitude || !cafe.longitude) return;
+        const position = new kakao.maps.LatLng(+cafe.latitude, +cafe.longitude);
+        const markerImage = createCustomMarkerImage(cafe);
 
-        window.cafesData.forEach((cafe, index) => {
-            if (!cafe.latitude || !cafe.longitude) {
-                console.warn(`카페 ${cafe.cafe_name || cafe.name}: 좌표 정보 없음`, cafe);
-                return;
-            }
-
-            const position = new kakao.maps.LatLng(parseFloat(cafe.latitude), parseFloat(cafe.longitude));
-            
-            // 커스텀 마커 이미지 생성
-            const markerImage = createCustomMarkerImage(cafe);
-            
-            const marker = new kakao.maps.Marker({
-                position: position,
-                image: markerImage,
-                title: cafe.cafe_name || cafe.name || '생일카페'
-            });
-
-            // 마커 클릭 이벤트
-            kakao.maps.event.addListener(marker, 'click', () => {
-                showCafeModal(cafe);
-                
-                // 지도 중심을 해당 마커로 이동
-                map.setCenter(position);
-                if (map.getLevel() > 5) {
-                    map.setLevel(5);
-                }
-            });
-
-            markers.push(marker);
+        const marker = new kakao.maps.Marker({
+            position, image: markerImage,
+            title: cafe.cafe_name || cafe.name || '생일카페'
         });
 
-        displayMarkers();
-        updateCafeCount(markers.length);
-        
-        console.log('마커 생성 완료:', markers.length + '개');
-        
-    } catch (error) {
-        console.error('마커 생성 중 오류:', error);
-    }
+        kakao.maps.event.addListener(marker, 'click', () => {
+            showCafeModal(cafe);
+            map.setCenter(position);
+            if (map.getLevel() > 5) map.setLevel(5);
+        });
+
+        markers.push(marker);
+    });
+
+    displayMarkers();
+    updateCafeCount(markers.length);
 }
 
-// ✅ 커스텀 마커 이미지 생성
 function createCustomMarkerImage(cafe) {
     const markerSize = window.innerWidth < 768 ? 24 : 32;
-    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="${markerSize}" height="${markerSize + 8}" viewBox="0 0 ${markerSize} ${markerSize + 8}">
-            <path d="M${markerSize/2} 0C${markerSize * 0.3} 0 0 ${markerSize * 0.3} 0 ${markerSize/2}s${markerSize/2} ${markerSize * 0.7} ${markerSize/2} ${markerSize * 0.7} ${markerSize/2}-${markerSize * 0.2} ${markerSize/2}-${markerSize/2}S${markerSize * 0.7} 0 ${markerSize/2} 0z" fill="#ef4444"/>
-            <circle cx="${markerSize/2}" cy="${markerSize/2}" r="${markerSize * 0.25}" fill="white"/>
-            <text x="${markerSize/2}" y="${markerSize/2 + 3}" text-anchor="middle" font-family="Arial" font-size="${markerSize * 0.3}" fill="#ef4444">🎂</text>
-        </svg>
-    `);
-
+    const svg = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='${markerSize}' height='${markerSize + 8}' viewBox='0 0 ${markerSize} ${markerSize + 8}'>
+            <path d='M${markerSize/2} 0C${markerSize * 0.3} 0 0 ${markerSize * 0.3} 0 ${markerSize/2}s${markerSize/2} ${markerSize * 0.7} ${markerSize/2} ${markerSize * 0.7} ${markerSize/2}-${markerSize * 0.2} ${markerSize/2}-${markerSize/2}S${markerSize * 0.7} 0 ${markerSize/2} 0z' fill='#ef4444'/>
+            <circle cx='${markerSize/2}' cy='${markerSize/2}' r='${markerSize * 0.25}' fill='white'/>
+            <text x='${markerSize/2}' y='${markerSize/2 + 3}' text-anchor='middle' font-family='Arial' font-size='${markerSize * 0.3}' fill='#ef4444'>🎂</text>
+        </svg>`;
     const imageSize = new kakao.maps.Size(markerSize, markerSize + 8);
-    const imageOption = { offset: new kakao.maps.Point(markerSize/2, markerSize + 8) };
-    
-    return new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+    return new kakao.maps.MarkerImage(`data:image/svg+xml;base64,${btoa(svg)}`, imageSize, {
+        offset: new kakao.maps.Point(markerSize/2, markerSize + 8)
+    });
 }
 
-// ✅ 마커 표시
 function displayMarkers() {
     if (markers.length === 0) return;
-    
-    if (isClusteringEnabled && clusterer) {
-        clusterer.addMarkers(markers);
-    } else {
-        markers.forEach(marker => marker.setMap(map));
-    }
+    isClusteringEnabled && clusterer ? clusterer.addMarkers(markers) : markers.forEach(m => m.setMap(map));
 }
 
-// ✅ 사용자 위치 마커 추가
 function addUserLocationMarker(lat, lng) {
-    if (!map) return;
-    
     const position = new kakao.maps.LatLng(lat, lng);
     const markerSize = window.innerWidth < 768 ? 16 : 20;
-    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="${markerSize}" height="${markerSize}" viewBox="0 0 ${markerSize} ${markerSize}">
-            <circle cx="${markerSize/2}" cy="${markerSize/2}" r="${markerSize*0.4}" fill="#3b82f6" stroke="white" stroke-width="2"/>
-            <circle cx="${markerSize/2}" cy="${markerSize/2}" r="${markerSize*0.15}" fill="white"/>
-        </svg>
-    `);
-
+    const svg = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='${markerSize}' height='${markerSize}' viewBox='0 0 ${markerSize} ${markerSize}'>
+            <circle cx='${markerSize/2}' cy='${markerSize/2}' r='${markerSize*0.4}' fill='#3b82f6' stroke='white' stroke-width='2'/>
+            <circle cx='${markerSize/2}' cy='${markerSize/2}' r='${markerSize*0.15}' fill='white'/>
+        </svg>`;
     const imageSize = new kakao.maps.Size(markerSize, markerSize);
-    const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+    const markerImage = new kakao.maps.MarkerImage(`data:image/svg+xml;base64,${btoa(svg)}`, imageSize);
 
-    // 기존 사용자 위치 마커 제거
-    if (userLocationMarker) {
-        userLocationMarker.setMap(null);
-    }
-
-    userLocationMarker = new kakao.maps.Marker({
-        map: map,
-        position: position,
-        image: markerImage,
-        title: "내 위치"
-    });
-    
-    window.userLocationMarker = userLocationMarker;
+    userLocationMarker?.setMap(null);
+    userLocationMarker = new kakao.maps.Marker({ map, position, image: markerImage, title: '내 위치' });
     userLocation = { lat, lng };
-    
-    // 주변 카페 표시
     showNearbyCafes(lat, lng);
 }
+
 
 // ✅ 내 위치로 이동
 function moveToMyLocation() {
@@ -488,8 +391,7 @@ function moveToLocation(lat, lng) {
     map.setLevel(3);
     closeCafeModal();
 }
-
-// ✅ 전역 함수로 설정 (home.html에서 접근 가능)
+// ✅ 전역 등록
 window.initMap = initMap;
 window.createMarkers = createMarkers;
 window.addUserLocationMarker = addUserLocationMarker;
@@ -499,19 +401,4 @@ window.showCafeModal = showCafeModal;
 window.closeCafeModal = closeCafeModal;
 window.moveToLocation = moveToLocation;
 
-// 전역 변수도 window에 할당
-window.map = map;
-window.clusterer = clusterer;
-window.markers = markers;
-window.userLocationMarker = userLocationMarker;
-window.isClusteringEnabled = isClusteringEnabled;
-
 console.log('maps.js 로드 완료 - 모든 기능 활성화됨');
-
-// ✅ home.html과의 연동을 위한 함수
-window.initMapFromMapsJS = function(centerLat = 37.5665, centerLng = 126.9780, userLocationData = null) {
-    console.log('maps.js initMapFromMapsJS 호출됨:', centerLat, centerLng);
-    initMap(centerLat, centerLng, userLocationData);
-};
-
-console.log('maps.js 전역 함수 설정 완료');

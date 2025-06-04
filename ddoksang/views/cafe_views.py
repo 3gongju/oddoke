@@ -441,3 +441,6 @@ def cafe_edit_view(request, cafe_id):
 def my_favorites_view(request):
     """내 찜 목록 (favorites_view와 동일)"""
     return favorites_view(request)
+
+def tour_map_view(request):
+    return render(request, 'ddoksang/tour_map.html')
