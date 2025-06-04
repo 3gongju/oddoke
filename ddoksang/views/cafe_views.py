@@ -344,66 +344,82 @@ def my_cafes(request):
     return render(request, 'ddoksang/my_cafes.html', context)
 
 @login_required
-@require_POST 
+@require_POST
 @csrf_protect
 def toggle_favorite(request, cafe_id):
-    """찜하기/찜해제 토글 - 완전한 버전"""
+    """찜하기 토글 기능"""
     try:
-        # 카페 존재 확인
+        # 카페 조회
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
         
-        with transaction.atomic():
-            favorite, created = CafeFavorite.objects.get_or_create(
-                user=request.user,
-                cafe=cafe
-            )
-            
-            if created:
-                is_favorited = True
-                action = "added"
-            else:
-                favorite.delete()
-                is_favorited = False
-                action = "removed"
-            
-            # 사용자 캐시 삭제
-            cache_key = f"user_favorites_{request.user.id}"
-            cache.delete(cache_key)
-            
-            return JsonResponse({
-                'success': True,
-                'is_favorited': is_favorited,
-                'action': action,
-                'cafe_id': cafe_id,
-                'message': f'카페를 찜목록에 {"추가했습니다" if is_favorited else "제거했습니다"}'
-            })
-            
+        # 찜하기 토글
+        favorite, created = CafeFavorite.objects.get_or_create(user=request.user, cafe=cafe)
+        
+        if created:
+            message = "찜 목록에 추가했습니다."
+            is_favorited = True
+        else:
+            favorite.delete()
+            message = "찜 목록에서 제거했습니다."
+            is_favorited = False
+        
+        # 사용자의 모든 찜한 카페 조회
+        my_favorite_cafes = BdayCafe.objects.filter(
+            favoritecafes__user=request.user,
+            status='approved'
+        ).select_related('artist', 'member').order_by('-favoritecafes__created_at')
+        
+        # 사용자 찜 목록 (ID 리스트)
+        user_favorites = list(
+            CafeFavorite.objects.filter(user=request.user).values_list('cafe_id', flat=True)
+        )
+        
+        # 찜한 카페 섹션 HTML 렌더링
+        favorites_html = render_to_string(
+            'ddoksang/components/_favorites_section.html',
+            {'my_favorite_cafes': my_favorite_cafes, 'user': request.user, 'user_favorites': user_favorites},
+            request=request
+        )
+        
+        response_data = {
+            'success': True,
+            'is_favorited': is_favorited,
+            'message': message,
+            'favorites_html': favorites_html
+        }
+        
+        return JsonResponse(response_data)
+        
+    except BdayCafe.DoesNotExist:
+        logger.error(f"카페 {cafe_id}를 찾을 수 없습니다.")
+        return JsonResponse({'success': False, 'error': '카페를 찾을 수 없습니다.'}, status=404)
     except Exception as e:
-        logger.error(f"찜하기 토글 오류: {e}")
-        return JsonResponse({
-            'success': False,
-            'error': '찜하기 처리 중 오류가 발생했습니다.'
-        }, status=500)
+        logger.error(f"찜하기 오류: {str(e)}")
+        return JsonResponse({'success': False, 'error': f'오류가 발생했습니다: {str(e)}'}, status=500)
 
+
+
+# 찜한 카페 목록 페이지 뷰도 수정
 @login_required
 def favorites_view(request):
-    """찜한 카페 목록"""
-    page = request.GET.get('page', 1)
-    
-    # 사용자가 찜한 카페들
+    """찜한 카페 목록 페이지"""
     favorites = CafeFavorite.objects.filter(
         user=request.user
     ).select_related('cafe__artist', 'cafe__member').order_by('-created_at')
     
-    # 페이징 처리
-    paginator = Paginator(favorites, 12)
-    favorites_page = paginator.get_page(page)
+    # 사용자 찜 목록 (ID 리스트)
+    user_favorites = list(
+        CafeFavorite.objects.filter(user=request.user)
+        .values_list('cafe_id', flat=True)
+    )
     
     context = {
-        'favorites': favorites_page,
-        'total_count': favorites.count(),
+        'favorites': favorites,
+        'user_favorites': user_favorites,
     }
+    
     return render(request, 'ddoksang/favorites.html', context)
+
 
 @login_required
 def user_preview_cafe(request, cafe_id):

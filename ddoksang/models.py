@@ -303,12 +303,14 @@ class BdayCafeImage(models.Model):
 class CafeFavorite(models.Model):
     """카페 즐겨찾기"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE)
+    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, related_name='favoritecafes')  # related_name
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         unique_together = ('user', 'cafe')
         verbose_name = '카페 즐겨찾기'
+
+
 
 class UserSearchHistory(models.Model):
     """사용자 검색 기록"""

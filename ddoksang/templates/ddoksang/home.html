@@ -82,7 +82,7 @@
 <!-- 메인 컨텐츠 -->
 <div class="max-w-7xl mx-auto">
 
-<!-- 🗺️ 카카오맵 섹션 - 개선된 버전 -->
+<!-- 🗺️ 카카오맵 섹션 -->
   <section class="py-4 sm:py-8 px-4">
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
       <div class="p-4 sm:p-6 bg-gray-50 border-b">
@@ -100,7 +100,7 @@
           
           <!-- 지도 컨트롤 버튼들 -->
           <div class="flex items-center space-x-2 sm:space-x-3">
-            <!-- ✅ 투어맵 버튼 추가 -->
+            <!-- 투어맵 버튼 -->
             <a href="{% url 'ddoksang:tour_map' %}" class="px-3 py-2 sm:px-4 sm:py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base transition-colors min-w-[100px] sm:min-w-[120px] justify-center">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
@@ -155,7 +155,7 @@
             </div>
         </div>
 
-        <!-- ✅ 내 주변 카페 패널 - tour_map과 동일 -->
+        <!-- 내 주변 카페 패널 -->
         <div id="nearbyPanel" class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 bg-white rounded-lg shadow-lg p-3 sm:p-4 max-w-[250px] sm:max-w-sm hidden z-10">
             <div class="flex items-center justify-between mb-2 sm:mb-3">
                 <h3 class="font-semibold text-gray-800 mb-2 sm:mb-3 text-sm sm:text-base">📍 내 주변 생카</h3>
@@ -173,7 +173,7 @@
     </div>
   </section>
 
-  <!-- ✅ 카페 정보 모달 - tour_map과 동일 -->
+  <!-- 카페 정보 모달 -->
   <div id="cafeModal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden">
       <div class="flex items-center justify-center min-h-screen p-4">
           <div class="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
@@ -271,35 +271,13 @@
     {% endif %}
   </section>
 
-  <!-- ✅ 찜한 카페 섹션 - 수정된 버전 -->
-  {% if user.is_authenticated and my_favorite_cafes %}
-  <section id="favoritesSection" class="py-4 sm:py-8 px-4 bg-gray-50">
-    <div class="text-center mb-6">
-      <h2 class="text-2xl font-bold">💖 내가 찜한 덕의 생카</h2>
-      <p class="text-sm text-gray-600">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
-    </div>
+  <!-- 찜한 카페 섹션 -->
+  {% include 'ddoksang/components/_favorites_section.html' %}
 
-    <div class="relative">
-      <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 px-1 sm:px-2" style="scroll-snap-type: x mandatory;">
-        {% for favorite in my_favorite_cafes %}
-          <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="{{ favorite.id }}">
-            <!-- ✅ is_favorited 제거 - _cafe_card.html에서 user_favorites로 자동 처리 -->
-            {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite show_favorite_btn=True show_status_badge=True %}
-          </div>
-        {% endfor %}
-      </div>
-
-      <div class="flex justify-center mt-4">
-        <p class="text-xs sm:text-sm text-gray-500">← 좌우로 스와이프해보세요 →</p>
-      </div>
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- 🆕 최신 등록된 생일카페 섹션 - _cafe_card.html 사용으로 변경 -->
+  <!-- 🆕 최신 등록된 생일카페 섹션 -->
   <section class="py-4 sm:py-8 px-4">
     <div class="text-center mb-6 sm:mb-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2"> NEW 최신 등록된 생카</h2>
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🆕 NEW 최신 등록된 생카</h2>
       <p class="text-gray-600 text-sm sm:text-base">방금 등록된 따끈따끈한 생카를 확인해보세요!</p>
     </div>
 
@@ -336,7 +314,7 @@
                   <span class="text-xs text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
                 </div>
 
-                <!-- ✅ 찜하기 버튼 - user_favorites 사용 -->
+                <!-- 찜하기 버튼 -->
                 {% if user.is_authenticated and cafe.status == 'approved' %}
                   <button 
                     data-favorite-btn 
@@ -408,27 +386,6 @@
 
 </div>
 
-<!-- 카페 상세 정보 모달 -->
-<div id="cafeModal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-            <div class="p-4 sm:p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <h3 id="cafeModalTitle" class="text-lg sm:text-xl font-bold text-gray-900 pr-4"></h3>
-                    <button id="closeCafeModal" class="text-gray-400 hover:text-gray-600 flex-shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <div id="cafeModalContent">
-                    <!-- 카페 상세 정보가 여기에 표시됩니다 -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- 📱 플로팅 액션 버튼 -->
 <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
   <a href="{% url 'ddoksang:create' %}" 
@@ -439,46 +396,38 @@
   </a>
 </div>
 
-<!-- 카카오맵 및 스크립트 로드  -->
+<!-- 카카오맵 및 스크립트 로드 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ KAKAO_MAP_API_KEY }}&libraries=services,clusterer"></script>
 
+<!-- 메인 JavaScript -->
 <script>
-// ✅ 개선된 위치 권한 관리 - 페이지 로드 시 모달 표시 안함
-
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
     // 사용자 찜 목록 초기화
     initUserFavorites();
     
-    // ✅ tour_map과 동일한 데이터 로드 방식
+    // 카페 데이터 로드
     let cafesData = [];
     try {
         const rawData = `{{ bday_cafes_json|escapejs }}`;
-        console.log('Raw JSON 데이터 길이:', rawData.length);
-        
         if (rawData && rawData.trim() !== '[]' && rawData.trim() !== '') {
             cafesData = JSON.parse(rawData);
-            console.log('파싱된 생일카페 데이터:', cafesData);
             console.log('생일카페 개수:', cafesData.length);
-        } else {
-            console.warn('생일카페 데이터가 비어있습니다.');
         }
     } catch (error) {
         console.error('생일카페 데이터 파싱 오류:', error);
         cafesData = [];
     }
     
-    // 전역 변수로 설정
     window.cafesData = cafesData;
     
-    // ✅ 개선: 위치 권한 상태 확인 후 적절한 초기화 (모달 없이)
+    // 위치 권한 확인 후 지도 초기화
     checkLocationPermissionAndInit();
     
     // 이벤트 리스너 설정
     setupEventListeners();
     
     // UI 컴포넌트 초기화
-    initFavoriteCarousel();
     initBirthdayNavigation();
     
     // 자동완성 초기화
@@ -494,9 +443,16 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('자동완성 초기화 실패:', error);
         }
     }
+    
+    // 찜하기 콜백 등록
+    if (window.favoriteManager) {
+        window.favoriteManager.onFavoriteChange((cafeId, isFavorited) => {
+            console.log(`카페 ${cafeId} 찜하기 상태 변경: ${isFavorited}`);
+        });
+    }
 });
 
-// ✅ 사용자 찜 목록 초기화 함수
+// 사용자 찜 목록 초기화
 function initUserFavorites() {
     const userFavoritesScript = document.getElementById('user-favorites-data');
     if (userFavoritesScript && window.favoriteManager) {
@@ -520,7 +476,7 @@ function initUserFavorites() {
     }
 }
 
-// ✅ 새로운 함수: 위치 권한 상태 확인 후 초기화 (모달 표시 안함)
+// 위치 권한 확인 후 초기화
 async function checkLocationPermissionAndInit() {
     try {
         if ('permissions' in navigator) {
@@ -528,23 +484,17 @@ async function checkLocationPermissionAndInit() {
             
             switch (result.state) {
                 case 'granted':
-                    console.log('위치 권한 이미 허용됨 - 자동으로 내 위치 표시');
                     requestUserLocationSilently();
                     break;
-                    
                 case 'denied':
-                    console.log('위치 권한 거부됨 - 기본 지도 표시');
                     initMapWithDefaultLocation();
                     break;
-                    
                 case 'prompt':
                 default:
-                    console.log('위치 권한 미설정 - 기본 지도 표시, 사용자 액션 대기');
                     initMapWithDefaultLocation();
                     break;
             }
         } else {
-            console.log('Permissions API 미지원 브라우저 - 기본 지도 표시');
             initMapWithDefaultLocation();
         }
         
@@ -557,38 +507,29 @@ async function checkLocationPermissionAndInit() {
     }
 }
 
-// ✅ 조용히 위치 가져오기 (이미 권한이 있는 경우)
 function requestUserLocationSilently() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
-                console.log('사용자 위치 자동 감지:', userLat, userLng);
                 initMap({ lat: userLat, lng: userLng });
             },
             (error) => {
-                console.warn('위치 정보 가져오기 실패 (조용히):', error);
+                console.warn('위치 정보 가져오기 실패:', error);
                 initMapWithDefaultLocation();
             },
-            {
-                enableHighAccuracy: false,
-                timeout: 10000,
-                maximumAge: 300000
-            }
+            { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
         );
     } else {
         initMapWithDefaultLocation();
     }
 }
 
-// ✅ 기본 위치로 지도 초기화
 function initMapWithDefaultLocation() {
-    console.log('기본 위치(서울)로 지도 초기화');
     initMap();
 }
 
-// ✅ 위치 모달 숨기기
 function hideLocationModal() {
     const modal = document.getElementById('locationModal');
     if (modal) {
@@ -596,7 +537,6 @@ function hideLocationModal() {
     }
 }
 
-// ✅ 수정된 이벤트 리스너 설정
 function setupEventListeners() {
     const myLocationBtn = document.getElementById('myLocationBtn');
     const clusterToggle = document.getElementById('clusterToggle');
@@ -629,26 +569,10 @@ function setupEventListeners() {
             }
         });
     }
-    
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            if (window.map) {
-                window.map.relayout();
-                if (window.clusterer) {
-                    window.clusterer.clear();
-                    createTourMapMarkers();
-                }
-            }
-        }, 250);
-    });
 }
 
-// ✅ tour_map과 동일한 지도 초기화 함수
+// 지도 초기화
 function initMap(userLocation = null) {
-    console.log('initMap 함수 호출됨:', userLocation);
-    
     if (typeof kakao === 'undefined' || !kakao.maps) {
         console.error('카카오맵 API가 로드되지 않았습니다');
         return;
@@ -661,26 +585,17 @@ function initMap(userLocation = null) {
     window.isClusteringEnabled = true;
     
     if (userLocation && userLocation.lat && userLocation.lng) {
-        console.log('사용자 위치로 지도 초기화:', userLocation.lat, userLocation.lng);
         initTourMapDirect(userLocation.lat, userLocation.lng);
-        
         setTimeout(() => {
-            if (typeof addUserLocationMarker === 'function') {
-                addUserLocationMarker(userLocation.lat, userLocation.lng);
-            }
+            addUserLocationMarker(userLocation.lat, userLocation.lng);
         }, 1000);
-        
     } else {
-        console.log('기본 위치(서울)로 지도 초기화');
         initTourMapDirect();
     }
 }
 
-// ✅ tour_map과 동일한 지도 직접 초기화
 function initTourMapDirect(centerLat = 37.5665, centerLng = 126.9780) {
     try {
-        console.log('initTourMapDirect 호출:', centerLat, centerLng);
-        
         const mapContainer = document.getElementById('mapContainer');
         if (!mapContainer) {
             console.error('지도 컨테이너를 찾을 수 없습니다.');
@@ -693,7 +608,6 @@ function initTourMapDirect(centerLat = 37.5665, centerLng = 126.9780) {
         };
 
         window.map = new kakao.maps.Map(mapContainer, mapOption);
-        console.log('지도 생성 완료');
 
         if (typeof kakao.maps.MarkerClusterer !== 'undefined') {
             window.clusterer = new kakao.maps.MarkerClusterer({
@@ -701,19 +615,17 @@ function initTourMapDirect(centerLat = 37.5665, centerLng = 126.9780) {
                 averageCenter: true,
                 minLevel: window.innerWidth < 768 ? 7 : 6,
                 disableClickZoom: true,
-                styles: [
-                    {
-                        width: window.innerWidth < 768 ? '32px' : '40px',
-                        height: window.innerWidth < 768 ? '32px' : '40px',
-                        background: 'rgba(59, 130, 246, 0.8)',
-                        borderRadius: '50%',
-                        color: '#fff',
-                        textAlign: 'center',
-                        fontWeight: 'bold',
-                        fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                        lineHeight: window.innerWidth < 768 ? '32px' : '40px'
-                    }
-                ]
+                styles: [{
+                    width: window.innerWidth < 768 ? '32px' : '40px',
+                    height: window.innerWidth < 768 ? '32px' : '40px',
+                    background: 'rgba(59, 130, 246, 0.8)',
+                    borderRadius: '50%',
+                    color: '#fff',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    fontSize: window.innerWidth < 768 ? '12px' : '14px',
+                    lineHeight: window.innerWidth < 768 ? '32px' : '40px'
+                }]
             });
         }
 
@@ -724,9 +636,7 @@ function initTourMapDirect(centerLat = 37.5665, centerLng = 126.9780) {
             }
             
             createTourMapMarkers();
-            
             window.map.relayout();
-            console.log('지도 초기화 완료');
         }, 500);
 
     } catch (error) {
@@ -735,58 +645,30 @@ function initTourMapDirect(centerLat = 37.5665, centerLng = 126.9780) {
         if (mapLoadingEl) {
             mapLoadingEl.innerHTML = `
                 <div class="text-center">
-                    <p class="text-red-600 text-sm sm:text-base">지도 초기화 실패</p>
-                    <p class="text-gray-500 text-xs mt-2">${error.message}</p>
-                    <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-gray-600 text-white rounded text-sm">
-                        새로고침
-                    </button>
+                    <p class="text-red-600 text-sm">지도 초기화 실패</p>
+                    <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-gray-600 text-white rounded text-sm">새로고침</button>
                 </div>
             `;
         }
     }
 }
 
-// ✅ tour_map과 동일한 마커 생성 함수
 function createTourMapMarkers() {
-    console.log('=== createTourMapMarkers 함수 시작 ===');
-    console.log('처리할 카페 수:', window.cafesData ? window.cafesData.length : 0);
-    
-    if (!window.map || !window.cafesData) {
-        console.warn('지도 또는 카페 데이터가 없습니다.');
-        return;
-    }
+    if (!window.map || !window.cafesData) return;
     
     window.markers = [];
-    let successCount = 0;
-    let errorCount = 0;
     
-    window.cafesData.forEach((cafe, index) => {
+    window.cafesData.forEach((cafe) => {
         try {
-            // 좌표 데이터 검증
-            if (!cafe.latitude || !cafe.longitude) {
-                console.warn(`카페 ${index}: 좌표 정보 없음`, cafe);
-                errorCount++;
-                return;
-            }
+            if (!cafe.latitude || !cafe.longitude) return;
             
             const lat = parseFloat(cafe.latitude);
             const lng = parseFloat(cafe.longitude);
             
-            if (isNaN(lat) || isNaN(lng)) {
-                console.warn(`카페 ${index}: 잘못된 좌표 형식`, cafe);
-                errorCount++;
-                return;
-            }
-            
-            if (lat < 33 || lat > 43 || lng < 124 || lng > 132) {
-                console.warn(`카페 ${index}: 좌표가 한국 범위를 벗어남 (${lat}, ${lng})`, cafe);
-                errorCount++;
-                return;
-            }
+            if (isNaN(lat) || isNaN(lng) || lat < 33 || lat > 43 || lng < 124 || lng > 132) return;
             
             const position = new kakao.maps.LatLng(lat, lng);
             
-            // 커스텀 마커 이미지 생성
             const svgString = `
                 <svg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'>
                     <path d='M16 0C7.163 0 0 7.163 0 16s16 24 16 24 16-15.163 16-24S24.837 0 16 0z' fill='#ef4444'/>
@@ -805,57 +687,32 @@ function createTourMapMarkers() {
                 title: cafe.name || cafe.cafe_name || '생일카페'
             });
             
-            // 마커 클릭 이벤트
             kakao.maps.event.addListener(marker, 'click', function() {
-                console.log('마커 클릭됨:', cafe);
                 showCafeInfoModal(cafe);
             });
             
             window.markers.push(marker);
-            successCount++;
-            
-            console.log(`마커 ${successCount} 생성 완료: ${cafe.name || cafe.cafe_name} (${lat}, ${lng})`);
             
         } catch (error) {
-            console.error(`카페 ${index} 마커 생성 오류:`, error, cafe);
-            errorCount++;
+            console.error('마커 생성 오류:', error);
         }
     });
     
-    console.log(`마커 생성 완료 - 성공: ${successCount}, 실패: ${errorCount}`);
-    
-    // 클러스터러에 마커 추가
     if (window.clusterer && window.markers.length > 0) {
         if (window.isClusteringEnabled) {
             window.clusterer.addMarkers(window.markers);
-            console.log('클러스터러에 마커 추가됨');
         } else {
             window.markers.forEach(marker => marker.setMap(window.map));
-            console.log('지도에 개별 마커 추가됨');
         }
         
-        // 클러스터 클릭 이벤트
         kakao.maps.event.addListener(window.clusterer, 'clusterclick', function(cluster) {
             const level = window.map.getLevel() - 2;
             window.map.setLevel(level, { anchor: cluster.getCenter() });
         });
-        
-        // 마커가 있는 경우 지도 중심을 첫 번째 마커로 이동
-        if (window.markers.length > 0) {
-            const firstMarkerPosition = window.markers[0].getPosition();
-            window.map.setCenter(firstMarkerPosition);
-            window.map.setLevel(8);
-            console.log('지도 중심을 첫 번째 마커로 이동');
-        }
-    } else {
-        console.warn('클러스터러가 없거나 마커가 없습니다.');
     }
 }
 
-// ✅ 카페 정보 모달 표시 함수
 function showCafeInfoModal(cafe) {
-    console.log('카페 정보 모달 표시:', cafe);
-    
     const modal = document.getElementById('cafeModal');
     const title = document.getElementById('cafeModalTitle');
     const content = document.getElementById('cafeModalContent');
@@ -864,12 +721,9 @@ function showCafeInfoModal(cafe) {
     const artistName = cafe.artist || '아티스트';
     const memberName = cafe.member || '';
     const address = cafe.address || '주소 정보 없음';
-    const specialBenefits = cafe.special_benefits || '';
     const mainImage = cafe.main_image || '';
     const startDate = cafe.start_date || '';
     const endDate = cafe.end_date || '';
-    const isActive = cafe.is_active || false;
-    const daysRemaining = cafe.days_remaining || 0;
     
     title.textContent = cafeName;
     
@@ -882,10 +736,6 @@ function showCafeInfoModal(cafe) {
                     <h4 class="font-semibold text-lg">${cafeName}</h4>
                     <p class="text-sm text-gray-600">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
                     <p class="text-sm text-blue-600">${startDate} ~ ${endDate}</p>
-                    ${isActive ? 
-                        '<span class="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">운영중</span>' : 
-                        `<span class="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">${daysRemaining < 0 ? '종료' : '예정'}</span>`
-                    }
                 </div>
             </div>
             
@@ -893,13 +743,6 @@ function showCafeInfoModal(cafe) {
                 <h5 class="font-medium mb-2">📍 위치</h5>
                 <p class="text-sm text-gray-600">${address}</p>
             </div>
-            
-            ${specialBenefits ? `
-            <div class="border-t pt-4">
-                <h5 class="font-medium mb-2">🎁 특전</h5>
-                <p class="text-sm text-gray-600">${specialBenefits}</p>
-            </div>
-            ` : ''}
             
             <div class="border-t pt-4 flex space-x-2">
                 <a href="/ddoksang/cafe/${cafe.id}/" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700">
@@ -915,42 +758,31 @@ function showCafeInfoModal(cafe) {
     modal.classList.remove('hidden');
 }
 
-// ✅ 내 위치 버튼 클릭 처리
 async function handleMyLocationClick() {
     const btn = document.getElementById('myLocationBtn');
-    
     const originalContent = btn.innerHTML;
-    btn.innerHTML = `
-        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-        <span class="hidden sm:inline">확인 중...</span>
-    `;
+    
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span class="hidden sm:inline">확인 중...</span>';
     btn.disabled = true;
     
     try {
         if ('permissions' in navigator) {
             const result = await navigator.permissions.query({ name: 'geolocation' });
             
-            switch (result.state) {
-                case 'granted':
-                    console.log('권한 있음 - 바로 위치 이동');
+            if (result.state === 'granted') {
+                moveToMyLocation();
+            } else if (result.state === 'denied') {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                alert('위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용해주세요.');
+                return;
+            } else {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                if (confirm('위치 서비스를 사용하시겠습니까?\n주변 생일카페를 찾는데 도움이 됩니다.')) {
                     moveToMyLocation();
-                    break;
-                    
-                case 'denied':
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                    alert('위치 권한이 거부되었습니다.\n\n브라우저 주소창 옆의 🔒 아이콘을 클릭하여 위치 권한을 허용해주세요.');
-                    return;
-                    
-                case 'prompt':
-                default:
-                    btn.innerHTML = originalContent;
-                    btn.disabled = false;
-                    console.log('권한 요청 필요');
-                    requestLocationPermission();
-                    return;
+                }
+                return;
             }
         } else {
             moveToMyLocation();
@@ -963,40 +795,12 @@ async function handleMyLocationClick() {
     }
 }
 
-// 위치 권한 요청
-function requestLocationPermission() {
-    if (confirm('위치 서비스를 사용하시겠습니까?\n주변 생일카페를 찾는데 도움이 됩니다.')) {
-        moveToMyLocation();
-    }
-}
-
-// 내 위치로 이동
 function moveToMyLocation() {
     const btn = document.getElementById('myLocationBtn');
     const originalContent = btn.innerHTML;
     
-    btn.innerHTML = `
-        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-        </svg>
-        <span class="hidden sm:inline">위치 찾는 중...</span>
-    `;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span class="hidden sm:inline">위치 찾는 중...</span>';
     btn.disabled = true;
-    
-    const restoreButton = (success = false) => {
-        setTimeout(() => {
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-            
-            if (success) {
-                btn.classList.add('bg-green-600');
-                setTimeout(() => {
-                    btn.classList.remove('bg-green-600');
-                    btn.classList.add('bg-blue-600');
-                }, 1500);
-            }
-        }, 100);
-    };
     
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -1017,33 +821,28 @@ function moveToMyLocation() {
                     showNearbyCafes(lat, lng);
                 }
                 
-                restoreButton(true);
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             },
             (error) => {
                 console.error('위치 정보 가져오기 실패:', error);
-                
-                if (error.code === error.PERMISSION_DENIED) {
-                    localStorage.setItem('locationDenied', 'true');
-                    alert('위치 권한이 거부되었습니다.\n브라우저 주소창 옆의 🔒 아이콘을 클릭하여 위치 권한을 허용해주세요.');
-                } else {
-                    alert('위치 정보를 가져올 수 없습니다.');
-                }
-                
-                restoreButton(false);
+                alert('위치 정보를 가져올 수 없습니다.');
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             }
         );
     } else {
         alert('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
-        restoreButton(false);
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
     }
 }
 
-// 내 위치 마커 추가 함수
 function addUserLocationMarker(lat, lng) {
     if (!window.map) return;
     
     const position = new kakao.maps.LatLng(lat, lng);
-    const markerSize = window.innerWidth < 768 ? 16 : 20;
+    const markerSize = 20;
     const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
         <svg xmlns="http://www.w3.org/2000/svg" width="${markerSize}" height="${markerSize}" viewBox="0 0 ${markerSize} ${markerSize}">
             <circle cx="${markerSize/2}" cy="${markerSize/2}" r="${markerSize*0.4}" fill="#3b82f6" stroke="white" stroke-width="2"/>
@@ -1062,7 +861,6 @@ function addUserLocationMarker(lat, lng) {
     });
 }
 
-// 주변 카페 표시 함수
 function showNearbyCafes(userLat, userLng) {
     const panel = document.getElementById('nearbyPanel');
     const list = document.getElementById('nearbyList');
@@ -1129,14 +927,12 @@ function showNearbyCafes(userLat, userLng) {
     panel.classList.remove('hidden');
 }
 
-// 위치로 이동
 function moveToLocation(lat, lng) {
     const movePosition = new kakao.maps.LatLng(lat, lng);
     window.map.setCenter(movePosition);
     window.map.setLevel(5);
 }
 
-// 클러스터링 토글
 function toggleClustering() {
     const button = document.getElementById('clusterToggle');
     if (!button || !window.clusterer || !window.markers) return;
@@ -1144,18 +940,14 @@ function toggleClustering() {
     if (window.isClusteringEnabled) {
         window.clusterer.clear();
         window.markers.forEach(marker => marker.setMap(window.map));
-        button.innerHTML = window.innerWidth < 768 ? 
-            '<span class="sm:hidden">개별표시</span><span class="hidden sm:inline">클러스터링 OFF</span>' :
-            '클러스터링 OFF';
+        button.innerHTML = window.innerWidth < 768 ? '<span class="sm:hidden">개별표시</span><span class="hidden sm:inline">클러스터링 OFF</span>' : '클러스터링 OFF';
         button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
         button.classList.add('bg-red-600', 'hover:bg-red-700');
         window.isClusteringEnabled = false;
     } else {
         window.markers.forEach(marker => marker.setMap(null));
         window.clusterer.addMarkers(window.markers);
-        button.innerHTML = window.innerWidth < 768 ? 
-            '<span class="sm:hidden">클러스터</span><span class="hidden sm:inline">클러스터링 ON</span>' :
-            '클러스터링 ON';
+        button.innerHTML = window.innerWidth < 768 ? '<span class="sm:hidden">클러스터</span><span class="hidden sm:inline">클러스터링 ON</span>' : '클러스터링 ON';
         button.classList.remove('bg-red-600', 'hover:bg-red-700');
         button.classList.add('bg-gray-600', 'hover:bg-gray-700');
         window.isClusteringEnabled = true;
@@ -1167,23 +959,6 @@ function closeCafeModalHandler() {
     if (modal) {
         modal.classList.add('hidden');
     }
-}
-
-// UI 컴포넌트 초기화 함수들
-function initFavoriteCarousel() {
-    const carousel = document.getElementById('favoriteCarousel');
-    if (!carousel) return;
-    
-    let isScrolling = false;
-    
-    carousel.addEventListener('scroll', () => {
-        if (!isScrolling) {
-            window.requestAnimationFrame(() => {
-                isScrolling = false;
-            });
-            isScrolling = true;
-        }
-    });
 }
 
 function initBirthdayNavigation() {
@@ -1244,7 +1019,6 @@ function initBirthdayNavigation() {
     updateSlider();
 }
 
-// 아티스트 검색 함수
 function searchArtist(artistName) {
     const searchForm = document.querySelector('form[action*="search"]');
     const searchInput = document.querySelector('#ddok-search');
@@ -1256,12 +1030,9 @@ function searchArtist(artistName) {
 }
 </script>
 
+<!-- 통합 찜하기 시스템 및 기타 스크립트 로드 -->
 <script src="{% static 'js/favorite.js' %}"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
-
-<script>
-  window.cafesData = JSON.parse(document.getElementById('cafes-data').textContent);
-</script>
 
 {% endblock %}

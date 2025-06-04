@@ -1,0 +1,28 @@
+{% load static %}
+{% load filters %}
+
+<section class="mb-12" id="favoritesSection">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
+    <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
+  </div>
+
+  {% if my_favorite_cafes %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="favoriteCarousel">
+      {% for cafe in my_favorite_cafes %}
+        <div class="flex-shrink-0" data-cafe-id="{{ cafe.id }}">
+          {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-16">
+      <div class="text-6xl mb-4">\ud83d\udc94</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+      <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+        생일카페 둘러보기
+      </a>
+    </div>
+  {% endif %}
+</section>
