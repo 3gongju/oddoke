@@ -3,17 +3,18 @@
 {% load filters %}
 {% load member_images %}
 
-
 {% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block body %}
-<!-- JSON 데이터 (JavaScript에서 사용) -->
+<!-- 데이터 스크립트 -->
 {% csrf_token %}
-<!-- JSON 데이터 (JavaScript에서 사용) -->
 {{ cafes_json|json_script:"cafes-data" }}
+<script id="user-favorites-data" type="application/json">
+{{ user_favorites|safe }}
+</script>
 
 <!-- 위치 동의 모달 -->
-<div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+<div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl">
         <div class="text-center">
             <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -230,7 +231,7 @@
     {% endif %}
   </section>
 
-  <!-- ✅ 찜한 카페 섹션 - 수정된 버전 -->
+  <!-- ✅ 찜한 카페 섹션 -->
   {% if user.is_authenticated and my_favorite_cafes %}
   <section id="favoritesSection" class="py-4 sm:py-8 px-4 bg-gray-50">
     <div class="text-center mb-6">
@@ -242,7 +243,6 @@
       <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 px-1 sm:px-2" style="scroll-snap-type: x mandatory;">
         {% for favorite in my_favorite_cafes %}
           <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="{{ favorite.id }}">
-            <!-- ✅ is_favorited 제거 - _cafe_card.html에서 user_favorites로 자동 처리 -->
             {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite show_favorite_btn=True show_status_badge=True %}
           </div>
         {% endfor %}
@@ -255,7 +255,7 @@
   </section>
   {% endif %}
 
-  <!-- 🆕 최신 등록된 생일카페 섹션 - _cafe_card.html 사용으로 변경 -->
+  <!-- 🆕 최신 등록된 생일카페 섹션 -->
   <section class="py-4 sm:py-8 px-4">
     <div class="text-center mb-6 sm:mb-8">
       <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2"> NEW 최신 등록된 생카</h2>
@@ -295,7 +295,7 @@
                   <span class="text-xs text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
                 </div>
 
-                <!-- ✅ 찜하기 버튼 - user_favorites 사용 -->
+                <!-- ✅ 찜하기 버튼 -->
                 {% if user.is_authenticated and cafe.status == 'approved' %}
                   <button 
                     data-favorite-btn 
@@ -332,7 +332,7 @@
 
               <div class="flex items-center text-sm text-gray-600 mb-3">
                 <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"></path>
                 </svg>
                 <span>{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
                 {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
@@ -398,13 +398,485 @@
   </a>
 </div>
 
-
-<!-- 카카오맵 및 스크립트 로드  -->
+<!-- ✅ 기존 모듈 시스템 활용하는 간단한 스크립트 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ KAKAO_MAP_API_KEY }}&libraries=services,clusterer"></script>
 <script src="{% static 'js/favorite.js' %}"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>
-<script src="{% static 'js/maps.js' %}"></script>
-<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
-<script src="{% static 'js/ddoksang_home_main.js' %}"></script>
+{% include 'ddoksang/components/_javascript_modules.html' %}
+<script>
+// ✅ 기존 Ddoksang 모듈 시스템 활용
 
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('home.html 로드 완료 - Ddoksang 모듈 시스템 활용');
+    
+    // 1️⃣ 데이터 준비
+    prepareData();
+    
+    // 2️⃣ 기존 Ddoksang.KakaoMap 사용
+    initializeDdoksangMap();
+    
+    // 3️⃣ 비지도 UI 초기화
+    initializeUI();
+});
+
+// ✅ 데이터 준비 (강화된 디버깅)
+function prepareData() {
+    console.log('🔍 데이터 준비 시작...');
+    
+    // 카페 데이터 준비
+    const cafeDataScript = document.getElementById('cafes-data');
+    if (cafeDataScript) {
+        try {
+            console.log('📄 카페 데이터 스크립트 발견');
+            let rawData = JSON.parse(cafeDataScript.textContent);
+            console.log('🔍 원본 데이터:', rawData);
+            
+            if (typeof rawData === 'string') {
+                console.log('📝 문자열 데이터 재파싱 중...');
+                rawData = JSON.parse(rawData);
+            }
+            
+            if (Array.isArray(rawData)) {
+                window.bdayCafesData = rawData;
+                console.log('✅ 카페 데이터 준비 완료:', window.bdayCafesData.length + '개');
+                
+                // 샘플 데이터 출력
+                if (window.bdayCafesData.length > 0) {
+                    console.log('📋 첫 번째 카페 데이터 샘플:', window.bdayCafesData[0]);
+                }
+                
+                // 좌표 있는 카페 개수 확인
+                const validCoordCafes = window.bdayCafesData.filter(cafe => cafe.latitude && cafe.longitude);
+                console.log(`📍 좌표가 있는 카페: ${validCoordCafes.length}개 / ${window.bdayCafesData.length}개`);
+                
+            } else {
+                console.error('❌ 카페 데이터가 배열이 아닙니다:', typeof rawData);
+                window.bdayCafesData = [];
+            }
+            
+        } catch (e) {
+            console.error('❌ 카페 데이터 파싱 에러:', e);
+            console.log('🔍 원본 스크립트 내용:', cafeDataScript.textContent.substring(0, 200) + '...');
+            window.bdayCafesData = [];
+        }
+    } else {
+        console.error('❌ cafes-data 스크립트 요소를 찾을 수 없습니다');
+        window.bdayCafesData = [];
+    }
+    
+    // 사용자 찜 목록 준비
+    const userFavoritesScript = document.getElementById('user-favorites-data');
+    if (userFavoritesScript && window.Ddoksang && window.Ddoksang.favoriteManager) {
+        try {
+            const userFavorites = JSON.parse(userFavoritesScript.textContent);
+            console.log('✅ 사용자 찜 목록 준비 완료');
+        } catch (e) {
+            console.error('❌ 사용자 찜 목록 파싱 오류:', e);
+        }
+    } else {
+        console.log('ℹ️ 사용자 찜 목록 스크립트 없음 (정상)');
+    }
+    
+    console.log('🎯 데이터 준비 완료 요약:', {
+        totalCafes: window.bdayCafesData ? window.bdayCafesData.length : 0,
+        hasDdoksang: !!window.Ddoksang,
+        hasKakao: !!window.kakao
+    });
+}
+
+// ✅ Ddoksang.KakaoMap 활용한 지도 초기화 (강화된 버전)
+function initializeDdoksangMap() {
+    console.log('🗺️ 지도 초기화 시작...');
+    
+    // 로딩 숨기기
+    const loadingEl = document.getElementById('mapLoading');
+    if (loadingEl) {
+        loadingEl.style.display = 'none';
+        console.log('✅ 로딩 화면 숨김');
+    }
+    
+    // 카카오맵 API 확인
+    if (!window.kakao || !window.kakao.maps) {
+        console.error('❌ 카카오맵 API가 로드되지 않았습니다');
+        showMapError('카카오맵을 불러올 수 없습니다.');
+        return;
+    }
+    console.log('✅ 카카오맵 API 확인됨');
+    
+    // Ddoksang 모듈 확인
+    if (!window.Ddoksang || !window.Ddoksang.KakaoMap) {
+        console.error('❌ Ddoksang 모듈이 로드되지 않았습니다');
+        showMapError('지도 모듈을 불러올 수 없습니다.');
+        return;
+    }
+    console.log('✅ Ddoksang 모듈 확인됨');
+    
+    // 지도 컨테이너 확인
+    const mapContainer = document.getElementById('mapContainer');
+    if (!mapContainer) {
+        console.error('❌ 지도 컨테이너를 찾을 수 없습니다');
+        showMapError('지도 컨테이너가 없습니다.');
+        return;
+    }
+    console.log('✅ 지도 컨테이너 확인됨');
+    
+    try {
+        // Ddoksang.KakaoMap 인스턴스 생성
+        console.log('🏗️ Ddoksang.KakaoMap 인스턴스 생성 중...');
+        window.ddoksangMap = new Ddoksang.KakaoMap('mapContainer', {
+            level: 8,
+            center: new kakao.maps.LatLng(37.5665, 126.9780) // 서울 중심
+        });
+        
+        console.log('✅ Ddoksang 지도 초기화 완료');
+        console.log('🔍 지도 객체:', window.ddoksangMap);
+        
+        // 잠시 후 마커 추가 (지도가 완전히 로드된 후)
+        setTimeout(() => {
+            console.log('⏰ 지연 후 마커 추가 시작...');
+            
+            // 생일카페 마커 추가
+            if (window.bdayCafesData && window.bdayCafesData.length > 0) {
+                addCafeMarkers();
+            } else {
+                console.warn('⚠️ 표시할 카페 데이터가 없습니다');
+                updateCafeCount(0);
+            }
+            
+            // 버튼 이벤트 연결
+            connectMapButtons();
+            
+            // 위치 권한 확인
+            checkLocationPermission();
+            
+        }, 1000); // 1초 지연
+        
+    } catch (error) {
+        console.error('❌ 지도 초기화 실패:', error);
+        showMapError('지도 초기화에 실패했습니다: ' + error.message);
+    }
+}
+
+// ✅ 카페 마커들 추가 (디버깅 강화)
+function addCafeMarkers() {
+    if (!window.ddoksangMap || !window.bdayCafesData) {
+        console.error('❌ 지도 또는 데이터가 없습니다:', {
+            ddoksangMap: !!window.ddoksangMap,
+            bdayCafesData: !!window.bdayCafesData,
+            dataLength: window.bdayCafesData ? window.bdayCafesData.length : 0
+        });
+        return;
+    }
+    
+    console.log('🔍 카페 데이터 상세 분석:', window.bdayCafesData);
+    
+    let validCafes = 0;
+    let invalidCafes = 0;
+    
+    window.bdayCafesData.forEach((cafe, index) => {
+        console.log(`카페 ${index + 1}:`, {
+            id: cafe.id,
+            name: cafe.cafe_name || cafe.name,
+            latitude: cafe.latitude,
+            longitude: cafe.longitude,
+            hasCoords: !!(cafe.latitude && cafe.longitude)
+        });
+        
+        if (cafe.latitude && cafe.longitude) {
+            try {
+                // 좌표 유효성 검사
+                const lat = parseFloat(cafe.latitude);
+                const lng = parseFloat(cafe.longitude);
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    console.warn(`❌ 잘못된 좌표 (카페 ${index + 1}):`, cafe.latitude, cafe.longitude);
+                    invalidCafes++;
+                    return;
+                }
+                
+                // 한국 좌표 범위 검사 (대략적)
+                if (lat < 33 || lat > 38 || lng < 125 || lng > 132) {
+                    console.warn(`⚠️ 한국 범위 밖 좌표 (카페 ${index + 1}):`, lat, lng);
+                }
+                
+                // 데이터 형식 맞추기
+                const cafeData = {
+                    id: cafe.id,
+                    name: cafe.cafe_name || cafe.name || '생일카페',
+                    artist: cafe.artist_display_name || cafe.artist || '아티스트',
+                    member: cafe.member_name || cafe.member || '',
+                    start_date: cafe.start_date || '',
+                    end_date: cafe.end_date || '',
+                    address: cafe.address || '',
+                    latitude: lat,
+                    longitude: lng,
+                    main_image: cafe.main_image || '',
+                    is_active: cafe.is_active !== false // 기본값 true
+                };
+                
+                console.log(`✅ 마커 추가 중 (카페 ${index + 1}):`, cafeData.name, `(${lat}, ${lng})`);
+                
+                // 마커 추가
+                const result = window.ddoksangMap.addCafeMarker(cafeData);
+                
+                if (result) {
+                    validCafes++;
+                    console.log(`✅ 마커 생성 성공 (카페 ${index + 1})`);
+                } else {
+                    console.error(`❌ 마커 생성 실패 (카페 ${index + 1})`);
+                    invalidCafes++;
+                }
+                
+            } catch (error) {
+                console.error(`❌ 마커 생성 중 오류 (카페 ${index + 1}):`, error);
+                invalidCafes++;
+            }
+        } else {
+            console.warn(`❌ 좌표 없음 (카페 ${index + 1}):`, cafe);
+            invalidCafes++;
+        }
+    });
+    
+    console.log(`📊 마커 생성 결과: 성공 ${validCafes}개, 실패 ${invalidCafes}개`);
+    
+    // 카페 개수 업데이트
+    updateCafeCount(validCafes);
+    
+    // 마커가 있으면 지도 범위 조정
+    if (validCafes > 0 && window.ddoksangMap.markers && window.ddoksangMap.markers.length > 0) {
+        console.log('🎯 지도 범위 조정 중...');
+        try {
+            window.ddoksangMap.setBounds();
+            console.log('✅ 지도 범위 조정 완료');
+        } catch (error) {
+            console.error('❌ 지도 범위 조정 실패:', error);
+        }
+    } else {
+        console.warn('⚠️ 표시할 마커가 없어서 지도 범위 조정하지 않음');
+    }
+    
+    console.log('✅ 카페 마커 추가 완료');
+}
+
+// ✅ 지도 버튼들 연결
+function connectMapButtons() {
+    // 내 위치 버튼
+    const myLocationBtn = document.getElementById('myLocationBtn');
+    if (myLocationBtn) {
+        myLocationBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+            
+            // 로딩 표시
+            btn.innerHTML = `
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <span class="hidden sm:inline">위치 찾는 중...</span>
+            `;
+            btn.disabled = true;
+            
+            // 현재 위치 가져오기
+            window.ddoksangMap.getCurrentLocation((coords) => {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                
+                if (coords) {
+                    window.ddoksangMap.map.setCenter(coords);
+                    window.ddoksangMap.map.setLevel(6);
+                    
+                    // 내 위치 마커 추가
+                    const userMarker = window.ddoksangMap.addMarker(coords, {
+                        title: "내 위치"
+                    });
+                    
+                    console.log('✅ 내 위치로 이동 완료');
+                } else {
+                    Ddoksang.Utils.showToast('위치 정보를 가져올 수 없습니다.', 'error');
+                }
+            });
+        });
+    }
+    
+    // 클러스터 토글 버튼 (기본 기능 제거 - 개별 마커만 사용)
+    const clusterToggle = document.getElementById('clusterToggle');
+    if (clusterToggle) {
+        // 클러스터링 버튼 숨기기 또는 비활성화
+        clusterToggle.style.display = 'none';
+    }
+    
+    // 모달 닫기 버튼
+    const closeCafeModal = document.getElementById('closeCafeModal');
+    if (closeCafeModal) {
+        closeCafeModal.addEventListener('click', function() {
+            const modal = document.getElementById('cafeModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
+}
+
+// ✅ 위치 권한 확인 (간단한 버전)
+async function checkLocationPermission() {
+    try {
+        if ('permissions' in navigator) {
+            const result = await navigator.permissions.query({ name: 'geolocation' });
+            
+            if (result.state === 'granted') {
+                console.log('위치 권한 허용됨 - 자동 위치 감지 가능');
+            }
+        }
+        
+        // 위치 모달 숨기기
+        const modal = document.getElementById('locationModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        
+    } catch (error) {
+        console.log('위치 권한 확인 실패 (무시됨):', error);
+    }
+}
+
+// ✅ 에러 표시
+function showMapError(message) {
+    const loadingEl = document.getElementById('mapLoading');
+    if (loadingEl) {
+        loadingEl.innerHTML = `
+            <div class="text-center">
+                <div class="text-red-500 text-2xl mb-2">⚠️</div>
+                <p class="text-red-600 text-sm sm:text-base">${message}</p>
+                <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+                    새로고침
+                </button>
+            </div>
+        `;
+    }
+}
+
+// ✅ 카페 개수 업데이트
+function updateCafeCount(count) {
+    const countDisplay = document.getElementById('cafeCountDisplay');
+    if (countDisplay) {
+        countDisplay.textContent = `${count}개 운영중`;
+    }
+}
+
+// ✅ 비지도 UI 초기화
+function initializeUI() {
+    // 자동완성
+    if (typeof initAutocomplete === 'function') {
+        try {
+            initAutocomplete('ddok-search', 'ddok-autocomplete-list', {
+                showBirthday: false,
+                showArtistTag: true,
+                submitOnSelect: true,
+                artistOnly: false
+            });
+            console.log('✅ 자동완성 초기화 완료');
+        } catch (error) {
+            console.error('❌ 자동완성 초기화 실패:', error);
+        }
+    }
+    
+    // 찜하기 캐러셀
+    initFavoriteCarousel();
+    
+    // 생일 아티스트 슬라이더
+    initBirthdaySlider();
+}
+
+// ✅ 찜하기 캐러셀
+function initFavoriteCarousel() {
+    const carousel = document.getElementById('favoriteCarousel');
+    if (!carousel) return;
+    
+    let isScrolling = false;
+    carousel.addEventListener('scroll', () => {
+        if (!isScrolling) {
+            window.requestAnimationFrame(() => {
+                isScrolling = false;
+            });
+            isScrolling = true;
+        }
+    });
+    console.log('✅ 찜하기 캐러셀 초기화 완료');
+}
+
+// ✅ 생일 아티스트 슬라이더
+function initBirthdaySlider() {
+    const slider = document.getElementById('birthdaySlider');
+    const prevBtn = document.getElementById('birthdayPrevBtn');
+    const nextBtn = document.getElementById('birthdayNextBtn');
+    const indicators = document.getElementById('birthdayIndicators');
+    
+    if (!slider || !prevBtn || !nextBtn) return;
+    
+    let currentSlide = 0;
+    const slides = slider.children;
+    const totalSlides = slides.length;
+    
+    if (totalSlides === 0) return;
+    
+    // 인디케이터 생성
+    if (indicators && totalSlides > 1) {
+        indicators.innerHTML = '';
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('button');
+            dot.className = `w-2 h-2 rounded-full transition-colors ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`;
+            dot.addEventListener('click', () => goToSlide(i));
+            indicators.appendChild(dot);
+        }
+    }
+    
+    function updateSlider() {
+        const translateX = -currentSlide * 100;
+        slider.style.transform = `translateX(${translateX}%)`;
+        
+        prevBtn.disabled = currentSlide === 0;
+        nextBtn.disabled = currentSlide === totalSlides - 1;
+        
+        if (indicators) {
+            const dots = indicators.children;
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].className = `w-2 h-2 rounded-full transition-colors ${i === currentSlide ? 'bg-gray-800' : 'bg-gray-300'}`;
+            }
+        }
+    }
+    
+    function goToSlide(index) {
+        currentSlide = Math.max(0, Math.min(index, totalSlides - 1));
+        updateSlider();
+    }
+    
+    prevBtn.addEventListener('click', () => {
+        if (currentSlide > 0) {
+            goToSlide(currentSlide - 1);
+        }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+        if (currentSlide < totalSlides - 1) {
+            goToSlide(currentSlide + 1);
+        }
+    });
+    
+    updateSlider();
+    console.log('✅ 생일 아티스트 슬라이더 초기화 완료');
+}
+
+// ✅ 아티스트 검색
+function searchArtist(artistName) {
+    const searchForm = document.querySelector('form[action*="search"]');
+    const searchInput = document.querySelector('#ddok-search');
+    
+    if (searchInput && searchForm) {
+        searchInput.value = artistName;
+        searchForm.submit();
+    }
+}
+
+console.log('🎯 home.html 스크립트 로드 완료 - Ddoksang 모듈 시스템 활용');
+</script>
 {% endblock %}
