@@ -53,13 +53,10 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'bday_calendar',
     'ddoksang',
-<<<<<<< HEAD
     'ddokchat',
     'channels',
 
-=======
     'faq',
->>>>>>> master
 ]
 
 MIDDLEWARE = [
