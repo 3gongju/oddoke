@@ -29,7 +29,7 @@ from ..models import BdayCafe, CafeFavorite
 import json
 
 def home_view(request):
-    """홈 뷰 - 위치 기반 서비스 포함"""
+    """홈 뷰 - 투어맵과 동일한 마커 시스템 적용"""
     today = timezone.now().date()
     
     # === 기존 생일 아티스트 로직 유지 ===
@@ -91,61 +91,82 @@ def home_view(request):
     if not latest_cafes:
         latest_cafes = BdayCafe.objects.filter(
             status='approved'
-        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:6]  # 3->6으로 증가
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:6]
         cache.set('latest_cafes', latest_cafes, 300)
     
-    # === ✅ 내가 찜한 카페들 (개선된 버전) ===
+    # === 내가 찜한 카페들 ===
     my_favorite_cafes = []
-    user_favorites = []  # 찜한 카페 ID 목록
+    user_favorites = []
     
     if request.user.is_authenticated:
-        # 사용자가 찜한 카페 ID 목록
         user_favorites = list(CafeFavorite.objects.filter(
             user=request.user
         ).values_list('cafe_id', flat=True))
         
-        # 찜한 카페들 (최신순으로 10개)
         if user_favorites:
             my_favorite_cafes = BdayCafe.objects.filter(
                 id__in=user_favorites,
                 status='approved'
             ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:10]
     
-    # === 현재 운영중인 생일카페들 ===
+    # === ✅ 현재 운영중인 생일카페들 - tour_map과 동일한 데이터 구조 ===
     active_cafes = BdayCafe.objects.filter(
         status='approved',
         start_date__lte=today,
         end_date__gte=today
     ).select_related('artist', 'member').prefetch_related('images')
     
-    # === 안전한 지도 데이터 생성 ===
+    # ✅ tour_map과 동일한 데이터 구조로 생성
     cafes_json_data = []
     for cafe in active_cafes:
         try:
-            main_image_url = cafe.get_main_image()
+            # 좌표 검증
+            if not cafe.latitude or not cafe.longitude:
+                continue
+                
+            # 좌표를 float로 변환
+            try:
+                lat = float(cafe.latitude)
+                lng = float(cafe.longitude)
+                
+                # 한국 좌표 범위 검증
+                if not (33.0 <= lat <= 43.0 and 124.0 <= lng <= 132.0):
+                    continue
+                    
+            except (ValueError, TypeError):
+                continue
             
+            # 메인 이미지 URL 가져오기
+            main_image_url = None
+            try:
+                if hasattr(cafe, 'get_main_image'):
+                    main_image_url = cafe.get_main_image()
+                elif cafe.images.exists():
+                    main_image_url = cafe.images.first().image.url
+            except Exception:
+                pass
+            
+            # ✅ tour_map과 동일한 데이터 구조 - name 필드 우선 제공
             cafe_data = {
                 'id': cafe.id,
-                'name': cafe.cafe_name,
-                'artist': cafe.artist.display_name,
-                'member': cafe.member.member_name if cafe.member else None,
-                'latitude': float(cafe.latitude) if cafe.latitude else None,
-                'longitude': float(cafe.longitude) if cafe.longitude else None,
+                'name': cafe.cafe_name,           # ✅ JavaScript에서 cafe.name으로 접근
+                'cafe_name': cafe.cafe_name,      # ✅ 하위 호환성
+                'artist': cafe.artist.display_name if cafe.artist else '',
+                'member': cafe.member.member_name if cafe.member else '',
+                'latitude': lat,
+                'longitude': lng,
                 'address': cafe.address or '',
                 'road_address': cafe.road_address or '',
                 'start_date': cafe.start_date.strftime('%Y-%m-%d'),
                 'end_date': cafe.end_date.strftime('%Y-%m-%d'),
-                'is_active': cafe.is_active,
-                'days_remaining': cafe.days_remaining,
+                'is_active': True,
+                'days_remaining': (cafe.end_date - today).days,
                 'main_image': main_image_url,
                 'special_benefits': cafe.special_benefits or '',
                 'cafe_type': cafe.get_cafe_type_display(),
             }
             
-            if (cafe_data['latitude'] and cafe_data['longitude'] and 
-                isinstance(cafe_data['latitude'], (int, float)) and 
-                isinstance(cafe_data['longitude'], (int, float))):
-                cafes_json_data.append(cafe_data)
+            cafes_json_data.append(cafe_data)
                 
         except (AttributeError, ValueError, TypeError) as e:
             import logging
@@ -153,9 +174,8 @@ def home_view(request):
             logger.warning(f"카페 {cafe.id} 지도 데이터 생성 오류: {e}")
             continue
     
+    # ✅ tour_map과 동일한 변수명 사용
     cafes_json = json.dumps(cafes_json_data, ensure_ascii=False)
-    from django.conf import settings
-
 
     context = {
         'birthday_artists': birthday_artists,
@@ -164,12 +184,14 @@ def home_view(request):
         'cafes_json': cafes_json,
         'total_cafes': len(cafes_json_data),
         'user_favorites': user_favorites,
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),      # 소문자 버전
-        'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # 대문자 버전 (템플릿용)
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        
+        # ✅ tour_map과 호환성을 위한 추가 변수들
+        'bday_cafes_json': cafes_json,  # tour_map.html과 동일한 변수명
+        'total_bday_cafes': len(cafes_json_data),  # tour_map.html과 동일한 변수명
     }
     return render(request, 'ddoksang/home.html', context)
-
-
 
 def search_view(request):
     """통합 검색 페이지"""
