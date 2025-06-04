@@ -54,7 +54,7 @@
     {% endif %}
 
     {% if buttons_partial %}
-      {% include buttons_partial %}
+      {% include buttons_partial with is_owner=is_owner %}
     {% endif %}
   </div>
 </div>

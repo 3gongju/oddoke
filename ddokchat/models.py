@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.conf import settings
+import uuid
 
 # Create your models here.
 
@@ -15,7 +16,7 @@ class ChatRoom(models.Model):
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='chat_buyer', on_delete=models.CASCADE)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='chat_seller', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False) # 채팅방 고유 난수 부여
     class Meta:
         unique_together = ('content_type', 'object_id', 'buyer')  # 구매자는 같은 글에 대해 1방만
 

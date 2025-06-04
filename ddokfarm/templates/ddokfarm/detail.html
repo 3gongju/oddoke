@@ -15,7 +15,8 @@
 
       <!-- 콘텐츠 (1/3) -->
       <div class="h-full">
-        {% include 'components/post_detail/_content.html' with is_ddokfarm=True extra_partial='ddokfarm/components/post_detail/_extra_info.html' buttons_partial='ddokfarm/components/post_detail/_buttons.html' %}
+        {% include 'components/post_detail/_content.html' with is_ddokfarm=True is_owner=is_owner extra_partial='ddokfarm/components/post_detail/_extra_info.html' buttons_partial='ddokfarm/components/post_detail/_buttons.html' %}
+
       </div>
     </div>
     {% include 'components/post_detail/_like_comment_info.html' %}

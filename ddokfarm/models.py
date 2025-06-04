@@ -67,6 +67,12 @@ class FarmSellPost(FarmMarketPost):
     def category_type(self):
         return 'sell'
 
+    def get_main_image(self):
+        main_img = self.images.filter(is_representative=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
+
 class FarmRentalPost(FarmMarketPost):
     WANTTO_CHOICES = [
         ('sell', '빌려줍니다'),
@@ -82,6 +88,11 @@ class FarmRentalPost(FarmMarketPost):
     def category_type(self):
         return 'rental'
 
+    def get_main_image(self):
+        main_img = self.images.filter(is_representative=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
 
 
 class FarmSplitPost(FarmBasePost):
@@ -113,6 +124,12 @@ class FarmSplitPost(FarmBasePost):
     @property
     def category_type(self):
         return 'split'
+
+    def get_main_image(self):
+        main_img = self.images.filter(is_representative=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
         
 # 대댓글 기능 수정 
 class FarmComment(models.Model):

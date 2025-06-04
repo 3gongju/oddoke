@@ -10,8 +10,34 @@
   </button>
 
   <!-- 문의하기 버튼 -->
-  <a href="{% url 'ddokchat:start_chat' category=category post_id=post.id %}"
-    class="flex-[2] bg-black hover:bg-gray-800 text-white font-semibold py-2 rounded-lg text-center block">
-    📩 문의하기
-  </a>
+  {% if post.is_sold and not is_owner %}
+    <!-- 거래 완료 + 내가 판매자가 아닐 경우: 모달 띄우기 -->
+    <button onclick="showCompletedModal()" class="bg-gray-400 text-white px-4 py-2 rounded cursor-not-allowed">문의하기</button>
+  {% else %}
+    <!-- 거래 가능 or 판매자는 언제든 접속 가능 -->
+    <a href="{% url 'ddokchat:start_chat' category=category post_id=post.id %}"
+      class="flex-[2] bg-black hover:bg-gray-800 text-white font-semibold py-2 rounded-lg text-center block">
+      📩 문의하기
+    </a>
+  {% endif %}
+
+  <!-- ✅ 거래 완료 알림 모달 -->
+  <div id="completedModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-6 max-w-xs w-full text-center">
+      <h3 class="text-lg font-semibold mb-3 text-gray-800">거래가 완료된 게시글입니다</h3>
+      <p class="text-sm text-gray-600">이 게시글은 더 이상 문의할 수 없습니다.</p>
+      <button onclick="closeCompletedModal()" class="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full">확인</button>
+    </div>
+  </div>
 </div>
+
+ <!-- ✅ 거래 완료 알림 모달 자바 -->
+<script>
+  function showCompletedModal() {
+    document.getElementById('completedModal').classList.remove('hidden');
+  }
+
+  function closeCompletedModal() {
+    document.getElementById('completedModal').classList.add('hidden');
+  }
+</script>
