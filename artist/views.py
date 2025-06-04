@@ -53,20 +53,140 @@ def toggle_favorite(request, artist_id):
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 # 자동완성용 JSON 응답
+# @require_GET
+# def autocomplete(request):
+#     q = request.GET.get('q', '').strip()
+#     if q:
+#         artists = Artist.objects.filter(
+#             Q(display_name__icontains=q) |
+#             Q(korean_name__icontains=q) |
+#             Q(english_name__icontains=q) |
+#             Q(alias__icontains=q)
+#         ).values_list('display_name', flat=True)[:10]
+#     else:
+#         artists = []
+
+#     return JsonResponse({'results': list(artists)})
+# artist/views.py - 솔로 아티스트 중복 제거
+
 @require_GET
 def autocomplete(request):
+    """아티스트 + 멤버 통합 자동완성 (솔로 아티스트 중복 제거)"""
     q = request.GET.get('q', '').strip()
+    results = []
+    seen_names = set()  # 이름 기반 중복 제거
+    
     if q:
+        # 🎵 Artist 검색 (alias 포함)
         artists = Artist.objects.filter(
             Q(display_name__icontains=q) |
             Q(korean_name__icontains=q) |
             Q(english_name__icontains=q) |
             Q(alias__icontains=q)
-        ).values_list('display_name', flat=True)[:10]
-    else:
-        artists = []
+        )[:8]
+        
+        for artist in artists:
+            name_key = artist.display_name.lower()
+            if name_key not in seen_names:
+                results.append({
+                    'type': 'artist',
+                    'name': artist.display_name,
+                    'artist': artist.display_name,
+                    'artist_id': artist.id,
+                    'member_id': None,
+                    'birthday': None,
+                    'is_solo': getattr(artist, 'is_solo', False)
+                })
+                seen_names.add(name_key)
+        
+        # 👤 Member 검색 (솔로 아티스트와 중복되지 않도록)
+        members = Member.objects.filter(
+            member_name__icontains=q
+        ).prefetch_related('artist_name')[:20]  # 더 많이 가져와서 중복 처리
+        
+        member_entries = {}  # 각 멤버(ID별)를 개별 관리
+        
+        for member in members:
+            member_name_key = member.member_name.lower()
+            
+            # 이미 Artist로 추가된 이름이면 건너뛰기 (솔로 아티스트와 중복 방지)
+            if member_name_key in seen_names:
+                continue
+                
+            artist_groups = member.artist_name.all()
+            
+            if artist_groups:
+                # 각 멤버를 ID로 구분 (동명이인 구분)
+                member_unique_key = f"{member_name_key}_{member.id}"
+                
+                if member_unique_key not in member_entries:
+                    member_entries[member_unique_key] = {
+                        'name': member.member_name,
+                        'member_id': member.id,
+                        'birthday': getattr(member, 'member_bday', None),
+                        'all_artists': []
+                    }
+                
+                # 현재 멤버의 모든 아티스트 추가 (동일 멤버의 여러 그룹 소속)
+                for artist in artist_groups:
+                    if artist.display_name not in [a['name'] for a in member_entries[member_unique_key]['all_artists']]:
+                        member_entries[member_unique_key]['all_artists'].append({
+                            'name': artist.display_name,
+                            'id': artist.id
+                        })
+        
+        # 멤버 결과 추가 (동명이인은 각각 별도로 표시)
+        for member_unique_key, member_data in member_entries.items():
+            if len(results) >= 16:  # 전체 결과 수 제한
+                break
+                
+            # 모든 소속 그룹명 표시
+            artist_display = ' / '.join([a['name'] for a in member_data['all_artists']])
+            # 대표 아티스트 ID (첫 번째 아티스트)
+            representative_artist_id = member_data['all_artists'][0]['id'] if member_data['all_artists'] else None
+            
+            results.append({
+                'type': 'member',
+                'name': member_data['name'],
+                'artist': artist_display,
+                'artist_id': representative_artist_id,
+                'member_id': member_data['member_id'],
+                'birthday': member_data['birthday'],
+                'is_solo': False
+            })
+            # seen_names에는 실제 이름만 추가 (솔로 아티스트와 중복 방지용)
+    
+    return JsonResponse({'results': results})
 
-    return JsonResponse({'results': list(artists)})
+
+
+@require_GET
+def artist_only_autocomplete(request):
+    """아티스트만 검색하는 자동완성 (artist/ 페이지용)"""
+    q = request.GET.get('q', '').strip()
+    results = []
+    
+    if q:
+        # 🎵 Artist만 검색 (alias 포함)
+        artists = Artist.objects.filter(
+            Q(display_name__icontains=q) |
+            Q(korean_name__icontains=q) |
+            Q(english_name__icontains=q) |
+            Q(alias__icontains=q)
+        )[:10]
+        
+        for artist in artists:
+            results.append({
+                'type': 'artist',
+                'name': artist.display_name,
+                'artist': artist.display_name,
+                'artist_id': artist.id,
+                'member_id': None,
+                'birthday': None,
+                'is_solo': getattr(artist, 'is_solo', False)
+            })
+    
+    return JsonResponse({'results': results})
 
 # 1. 아티스트 멤버 리스트 Ajax로 렌더링
 def artist_members_ajax(request, artist_id):
@@ -106,3 +226,29 @@ def get_artist_members(request, artist_id):
     })
 
     return JsonResponse({'html': html})
+
+@require_GET
+def member_autocomplete(request):
+    q = request.GET.get('q', '').strip()
+    results = []
+
+    if q:
+        members = Member.objects.filter(
+            Q(member_name__icontains=q)
+        ).prefetch_related('artist_name')[:10]
+
+        for member in members:
+            artist_names = member.artist_name.all()
+            if artist_names:
+                artist = artist_names[0]  # 대표 아티스트 1개만
+                artist_display = ' / '.join([a.display_name for a in artist_names])
+
+                results.append({
+                    'member_id': member.id,
+                    'artist_id': artist.id,
+                    'member_name': member.member_name,
+                    'artist_display': artist_display,
+                    'bday': member.member_bday,
+                })
+
+    return JsonResponse({'results': results})

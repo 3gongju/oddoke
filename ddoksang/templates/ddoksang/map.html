@@ -1,369 +1,105 @@
-<!-- ddoksang/templates/ddoksang/map.html -->
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>덕생 - 생일카페 지도</title>
-    <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif; 
-            background-color: #f5f5f5;
-        }
-        
-        #map { 
-            width: 100%; 
-            height: 100vh; 
-        }
-        
-        .info-panel {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 1000;
-            max-width: 320px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .info-panel h3 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .info-panel p {
-            margin: 0 0 15px 0;
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .bday-cafe-info {
-            margin-bottom: 12px;
-            padding: 12px;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 13px;
-            background: #f8f9fa;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .bday-cafe-info:hover {
-            background: #e3f2fd;
-            border-color: #2196f3;
-            transform: translateY(-1px);
-        }
-        
-        .bday-cafe-name { 
-            font-weight: bold; 
-            color: #333; 
-            margin-bottom: 4px;
-        }
-        
-        .artist-name { 
-            color: #2196f3; 
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-        
-        .bday-cafe-address {
-            color: #666;
-            font-size: 11px;
-        }
-        
-        .custom-overlay {
-            position: relative;
-            bottom: 85px;
-            border-radius: 8px;
-            border: 2px solid #fff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            float: left;
-            background: white;
-            max-width: 280px;
-        }
-        
-        .custom-overlay .title {
-            display: block;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 6px 6px 0 0;
-        }
-        
-        .overlay-content {
-            padding: 12px;
-            background: white;
-        }
-        
-        .artist-info {
-            font-weight: bold; 
-            color: #667eea; 
-            margin-bottom: 6px;
-        }
-        
-        .address-info {
-            font-size: 12px; 
-            color: #666; 
-            margin: 4px 0;
-        }
-        
-        .status-badges {
-            margin-top: 8px;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-            margin-right: 4px;
-        }
-        
-        .badge-type {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-        
-        .badge-active {
-            background: #e8f5e8;
-            color: #2e7d32;
-        }
-        
-        .badge-inactive {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-        
-        .no-cafes {
-            text-align: center;
-            color: #999;
-            padding: 20px;
-            font-size: 14px;
-        }
-        
-        .loading {
-            text-align: center;
-            color: #666;
-            padding: 20px;
-        }
-        
-        /* 반응형 디자인 */
-        @media (max-width: 768px) {
-            .info-panel {
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                max-width: none;
-                padding: 15px;
-            }
-            
-            .custom-overlay {
-                max-width: 240px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="info-panel">
-        <h3>🗺️ 덕생 - 생일카페 지도</h3>
-        <p>현재 <strong>{{ total_bday_cafes }}개</strong>의 생카가 진행 중입니다</p>
-        
-        <div id="bday-cafe-list">
-            <div class="loading">
-                <div>📍 생카 정보를 불러오는 중...</div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="map"></div>
+{% extends "base.html" %}
+{% load static %}
+{% load filters %}
 
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
-    <script>
-        // 생일카페 데이터
-        const bdayCafesData = {{ bday_cafes_json|safe }};
-        console.log('🎉 로드된 생카 데이터:', bdayCafesData);
-        
-        // 지도 생성
-        const container = document.getElementById('map');
-        const options = {
-            center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
-            level: 8
-        };
-        const map = new kakao.maps.Map(container, options);
-        
-        // 마커 배열
-        const markers = [];
-        let currentInfoWindow = null;
-        
-        // 생카 마커 생성 및 표시
-        function createBdayCafeMarkers() {
-            bdayCafesData.forEach(function(bdayCafe) {
-                // 마커 위치
-                const position = new kakao.maps.LatLng(bdayCafe.latitude, bdayCafe.longitude);
-                
-                // 마커 생성
-                const marker = new kakao.maps.Marker({
-                    position: position,
-                    title: bdayCafe.name
-                });
-                
-                // 지도에 마커 표시
-                marker.setMap(map);
-                markers.push(marker);
-                
-                // 정보창 내용
-                const infoContent = `
-                    <div class="custom-overlay">
-                        <div class="title">${bdayCafe.name}</div>
-                        <div class="overlay-content">
-                            <div class="artist-info">${bdayCafe.artist}${bdayCafe.member ? ' - ' + bdayCafe.member : ''}</div>
-                            <div class="address-info">${bdayCafe.address}</div>
-                            <div class="status-badges">
-                                <span class="badge badge-type">${bdayCafe.cafe_type}</span>
-                                ${bdayCafe.is_active ? 
-                                    `<span class="badge badge-active">${bdayCafe.days_remaining}일 남음</span>` :
-                                    `<span class="badge badge-inactive">종료됨</span>`
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // 정보창 생성
-                const infowindow = new kakao.maps.CustomOverlay({
-                    content: infoContent,
-                    position: position,
-                    xAnchor: 0.5,
-                    yAnchor: 1.2
-                });
-                
-                // 마커 클릭 이벤트
-                kakao.maps.event.addListener(marker, 'click', function() {
-                    // 기존 정보창 닫기
-                    if (currentInfoWindow) {
-                        currentInfoWindow.setMap(null);
-                    }
-                    
-                    // 새 정보창 열기
-                    infowindow.setMap(map);
-                    currentInfoWindow = infowindow;
-                    
-                    // 해당 위치를 지도 중심으로 이동
-                    map.setCenter(position);
-                    map.setLevel(4); // 줌 인
-                });
-            });
-        }
-        
-        // 지도 클릭 시 정보창 닫기
-        kakao.maps.event.addListener(map, 'click', function() {
-            if (currentInfoWindow) {
-                currentInfoWindow.setMap(null);
-                currentInfoWindow = null;
-            }
-        });
-        
-        // 사이드 패널에 생카 리스트 표시
-        function displayBdayCafeList() {
-            const bdayCafeListDiv = document.getElementById('bday-cafe-list');
-            
-            if (bdayCafesData.length === 0) {
-                bdayCafeListDiv.innerHTML = `
-                    <div class="no-cafes">
-                        <div>🔍</div>
-                        <div>현재 진행 중인 생카가 없습니다.</div>
-                        <div style="font-size: 12px; margin-top: 8px; color: #999;">
-                            관리자 페이지에서 테스트 생카를 등록해보세요!
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            const listHtml = bdayCafesData.map(bdayCafe => `
-                <div class="bday-cafe-info" onclick="focusBdayCafe(${bdayCafe.latitude}, ${bdayCafe.longitude})">
-                    <div class="bday-cafe-name">${bdayCafe.name}</div>
-                    <div class="artist-name">${bdayCafe.artist}${bdayCafe.member ? ' - ' + bdayCafe.member : ''}</div>
-                    <div class="bday-cafe-address">${bdayCafe.address}</div>
-                    <div style="margin-top: 6px;">
-                        <span class="badge badge-type">${bdayCafe.cafe_type}</span>
-                        ${bdayCafe.is_active ? 
-                            `<span class="badge badge-active">${bdayCafe.days_remaining}일 남음</span>` :
-                            `<span class="badge badge-inactive">종료됨</span>`
-                        }
-                    </div>
-                </div>
-            `).join('');
-            
-            bdayCafeListDiv.innerHTML = listHtml;
-        }
-        
-        // 특정 생카로 지도 이동
-        function focusBdayCafe(lat, lng) {
-            const position = new kakao.maps.LatLng(lat, lng);
-            map.setCenter(position);
-            map.setLevel(3);
-            
-            // 해당 마커의 정보창도 열기
-            const targetMarker = markers.find(marker => {
-                const markerPos = marker.getPosition();
-                return Math.abs(markerPos.getLat() - lat) < 0.0001 && 
-                       Math.abs(markerPos.getLng() - lng) < 0.0001;
-            });
-            
-            if (targetMarker) {
-                // 마커 클릭 이벤트 트리거
-                kakao.maps.event.trigger(targetMarker, 'click');
-            }
-        }
-        
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            // 생카 마커 생성
-            createBdayCafeMarkers();
-            
-            // 사이드 패널 리스트 표시
-            displayBdayCafeList();
-            
-            // 모든 마커가 보이도록 지도 범위 조정
-            if (markers.length > 0) {
-                const bounds = new kakao.maps.LatLngBounds();
-                markers.forEach(marker => {
-                    bounds.extend(marker.getPosition());
-                });
-                map.setBounds(bounds);
-                
-                // 너무 많이 줌인되지 않도록 제한
-                setTimeout(() => {
-                    if (map.getLevel() < 6) {
-                        map.setLevel(6);
-                    }
-                }, 100);
-            }
-            
-            console.log('🗺️ 지도 초기화 완료!');
-            console.log(`📍 총 ${markers.length}개의 생카 마커가 표시되었습니다.`);
-        });
-        
-        // 지도 타입 컨트롤 추가
-        const mapTypeControl = new kakao.maps.MapTypeControl();
-        map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
-        
-        // 줌 컨트롤 추가
-        const zoomControl = new kakao.maps.ZoomControl();
-        map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-    </script>
-</body>
-</html>
+{% block title %}가입한 생일카페 - 덕생{% endblock %}
+
+{% block body %}
+<section class="max-w-7xl mx-auto px-4 py-10">
+  <h2 class="text-2xl font-bold mb-6">📋 내가 가입한 생일카페</h2>
+
+  <script src="{% static 'js/autocomplete.js' %}"></script>
+
+  {% include 'ddoksang/components/_search_header.html' with search_placeholder='내 등록 카페에서 아티스트/메머 검색...' search_url=request.path query=request.GET.q action_buttons=action_buttons_data filter_tags=status_filters search_input_id='my-cafes-search' autocomplete_list_id='my-cafes-autocomplete' autocomplete_options=autocomplete_config %}
+
+  <!-- 통계 카드 -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-blue-600">{{ stats.total }}</div>
+      <div class="text-sm text-blue-600">총 등록</div>
+    </div>
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-yellow-600">{{ stats.pending }}</div>
+      <div class="text-sm text-yellow-600">승인 대기</div>
+    </div>
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-green-600">{{ stats.approved }}</div>
+      <div class="text-sm text-green-600">승인됨</div>
+    </div>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-red-600">{{ stats.rejected }}</div>
+      <div class="text-sm text-red-600">거절됨</div>
+    </div>
+  </div>
+
+  <!-- 승인/일정 필터 -->
+  {% if status_filters %}
+  <div class="mb-6 border-b border-gray-200">
+    <nav class="flex space-x-8">
+      {% for filter in status_filters %}
+        <a href="{{ filter.url }}"
+           class="py-2 px-1 border-b-2 font-medium text-sm transition-colors {{ filter.active|yesno:'border-blue-500 text-blue-600,border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+          {{ filter.text }}
+        </a>
+      {% endfor %}
+    </nav>
+  </div>
+  {% endif %}
+
+  {% if runtime_filters %}
+  <div class="mb-6 border-b border-gray-100">
+    <nav class="flex space-x-4">
+      {% for filter in runtime_filters %}
+        <a href="{{ filter.url }}"
+           class="py-1.5 px-3 rounded-full text-sm border transition
+           {% if filter.active %}
+             bg-black text-white border-black
+           {% else %}
+             bg-white text-gray-600 border-gray-300 hover:bg-gray-100
+           {% endif %}">
+          {{ filter.text }}
+        </a>
+      {% endfor %}
+    </nav>
+  </div>
+  {% endif %}
+
+  <!-- 카페 목록 -->
+  {% if cafes %}
+    <div class="flex justify-between items-center mb-6">
+      <div class="text-sm text-gray-600">
+        {% if request.GET.q %}
+          "{{ request.GET.q }}" 검색 결과 {{ cafes.paginator.count }}개
+        {% else %}
+          총 {{ cafes.paginator.count }}개의 생일카페
+        {% endif %}
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-600">정렬:</span>
+        <select class="text-sm border rounded px-2 py-1" onchange="location.href=this.value">
+          <option value="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=latest" {% if request.GET.sort == 'latest' or not request.GET.sort %}selected{% endif %}>최신순</option>
+          <option value="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>오래된순</option>
+          <option value="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=start_date" {% if request.GET.sort == 'start_date' %}selected{% endif %}>시작일순</option>
+        </select>
+      </div>
+    </div>
+
+    {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes empty_message="검색 결과가 없습니다." %}
+    {% include 'ddoksang/components/_pagination.html' with paginated_object=cafes query=request.GET.q extra_params=extra_params %}
+
+  {% else %}
+    <div class="text-center py-12">
+      <div class="text-6xl mb-4">📝</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">
+        {% if request.GET.q %}검색 결과가 없습니다{% else %}아직 등록한 생일카페가 없어요{% endif %}
+      </h3>
+      <p class="text-gray-600 mb-6">
+        {% if request.GET.q %}다른 검색어로 다시 시도해보세요.{% else %}처음 생일카페를 등록해보세요!{% endif %}
+      </p>
+      <a href="{% url 'ddoksang:create' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+        + 생일카페 등록하기
+      </a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

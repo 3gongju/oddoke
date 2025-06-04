@@ -4,6 +4,7 @@ from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from .forms import FarmSellPostForm, FarmRentalPostForm, FarmSplitPostForm
 from types import SimpleNamespace
 from django.urls import reverse
+from django.contrib.contenttypes.models import ContentType
 
 # url 넘기기
 def get_ddokfarm_category_urls():
@@ -46,14 +47,9 @@ def get_post_form(category):
     }.get(category)
 
 # 카테고리에 따라 해당 게시글의 댓글 쿼리셋 반환
-def get_post_comments(category, post):
-    if category == 'sell':
-        return FarmComment.objects.filter(sell_post=post)
-    elif category == 'rental':
-        return FarmComment.objects.filter(rental_post=post)
-    elif category == 'split':
-        return FarmComment.objects.filter(split_post=post)
-    return FarmComment.objects.none()
+def get_post_comments(post):
+    content_type = ContentType.objects.get_for_model(post.__class__)
+    return FarmComment.objects.filter(content_type=content_type, object_id=post.id)
 
 # 카테고리별 게시글 목록 반환 (전체일 경우 모두 병합)
 def get_post_queryset(category=None):
@@ -79,24 +75,3 @@ def get_post_queryset(category=None):
         all_posts.append(posts)
 
     return chain(*all_posts)  # generator 반환
-
-# 댓글 인스턴스에 게시글 연결
-def assign_post_to_comment(comment, category, post):
-    if category == 'sell':
-        comment.sell_post = post
-    elif category == 'rental':
-        comment.rental_post = post
-    elif category == 'split':
-        comment.split_post = post
-    else:
-        raise Http404("유효하지 않은 카테고리입니다.")
-
-# 댓글이 해당 게시글에 속하는지 검증
-def get_comment_post_field_and_id(comment, category, post_id):
-    if category == 'sell' and comment.sell_post_id == post_id:
-        return 'sell_post', comment.sell_post_id
-    elif category == 'rental' and comment.rental_post_id == post_id:
-        return 'rental_post', comment.rental_post_id
-    elif category == 'split' and comment.split_post_id == post_id:
-        return 'split_post', comment.split_post_id
-    raise Http404("댓글이 해당 게시글에 속하지 않습니다.")

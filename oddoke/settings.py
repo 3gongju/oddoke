@@ -53,9 +53,13 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'bday_calendar',
     'ddoksang',
+<<<<<<< HEAD
     'ddokchat',
     'channels',
 
+=======
+    'faq',
+>>>>>>> master
 ]
 
 MIDDLEWARE = [
@@ -124,7 +128,7 @@ LOGOUT_REDIRECT_URL = '/' #로그아웃 시 home.html로 리다이렉트
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'ko-kr'
+LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Seoul'
 
@@ -168,4 +172,24 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',  # 개발용: 메모리 기반
     },
+}
+# 오픈 API 키 설정
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# settings.py에 추가
+NEARBY_CAFE_RADIUS = 5  # km
+WALKING_SPEED_KMPH = 5  # km/h
+DEFAULT_PAGE_SIZE = 10
+MAX_NEARBY_CAFES = 50
+WALKING_SPEED_KMPH = 5   # 도보 속도 (km/h)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5분
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
 }

@@ -93,3 +93,6 @@ def main(request):
         'latest_bdaycafe_posts': latest_bdaycafe_posts,
 
     })
+
+
+

@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}등록 완료 - 덕생{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-white py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- 성공 헤더 -->
+        <div class="text-center mb-12">
+            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">생일카페 등록 완료</h1>
+            <p class="text-lg text-gray-600">성공적으로 등록되었습니다!</p>
+        </div>
+
+                <!-- 상태 안내 -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-xl p-6 mb-8 shadow-lg">
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">관리자 승인 대기 중</h3>
+                    <p class="text-gray-700 leading-relaxed text-lg">
+                        등록해주신 생일카페가 관리자 승인을 기다리고 있습니다.<br>
+                        <span class="font-semibold text-yellow-700">보통 1-2일 내에 승인</span>되며, 승인되면 바로 공개됩니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 카페 정보 카드 -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-8">
+            <!-- 카페 기본 정보 -->
+            <div class="p-8">
+                <!-- 타이틀 섹션 -->
+                <div class="text-center pb-8 border-b border-gray-200 mb-8">
+                    <div class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-full mb-6 border border-gray-300">
+                        <span class="text-sm font-semibold">
+                            {% if cafe.cafe_type == 'bday' %}🎂 생일 카페
+                            {% elif cafe.cafe_type == 'debut' %}✨ 데뷔 카페
+                            {% elif cafe.cafe_type == 'comeback' %}🎵 컴백 카페
+                            {% elif cafe.cafe_type == 'concert' %}🎤 콘서트 카페
+                            {% else %}🎁 이벤트 카페
+                            {% endif %}
+                        </span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ cafe.cafe_name }}</h2>
+
+                    
+                    <div class="flex items-center justify-center space-x-4 text-lg">
+                        <span class="font-semibold text-gray-800 bg-gray-100 px-4 py-2 rounded-lg border border-gray-200">{{ cafe.artist.display_name }}</span>
+                        {% if cafe.member %}
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-700 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">{{ cafe.member.member_name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 정보 그리드 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- 운영 기간 -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-gray-600 rounded-xl flex items-center justify-center mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-lg text-gray-800">운영 기간</h4>
+                        </div>
+                        <p class="text-gray-700 font-semibold text-lg">
+                            {{ cafe.start_date|date:"Y년 m월 d일" }} ~ {{ cafe.end_date|date:"Y년 m월 d일" }}
+                        </p>
+                    </div>
+
+                    <!-- 위치 정보 -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-gray-600 rounded-xl flex items-center justify-center mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-lg text-gray-800">위치</h4>
+                        </div>
+                        <div class="space-y-2">
+                            {% if cafe.place_name and cafe.place_name != cafe.address %}
+                            <p class="font-semibold text-gray-800">{{ cafe.place_name }}</p>
+                            {% endif %}
+                            <p class="text-gray-700">{{ cafe.address }}</p>
+                            {% if cafe.road_address %}
+                            <p class="text-sm text-gray-500">(도로명) {{ cafe.road_address }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 특전 정보 -->
+                {% if cafe.special_benefits or cafe.perks or cafe.perks_priority or cafe.perks_extra %}
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gray-600 rounded-xl flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                            </svg>
+                        </div>
+                        <h4 class="font-bold text-lg text-gray-800">특전 정보</h4>
+                    </div>
+                    
+                    <!-- 기존 방식 (special_benefits 필드) -->
+                    {% if cafe.special_benefits %}
+                    <p class="text-gray-700 leading-relaxed text-lg mb-4">{{ cafe.special_benefits }}</p>
+                    {% endif %}
+                    
+                    <!-- 새로운 방식 (개별 특전 필드들) -->
+                    {% if cafe.perks or cafe.perks_priority or cafe.perks_extra %}
+                    
+                        <!-- 일반 특전 -->
+                        {% if cafe.perks %}
+                        <div class="mb-4">
+                            <h5 class="text-sm font-semibold text-gray-700 mb-2">🎨 일반 특전</h5>
+                            <div class="flex flex-wrap gap-2">
+                                {% for perk in cafe.perks %}
+                                <span class="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full border border-blue-200">
+                                    #{{ perk }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- 선착 특전 -->
+                        {% if cafe.perks_priority %}
+                        <div class="mb-4">
+                            <h5 class="text-sm font-semibold text-gray-700 mb-2">🏃 선착순 특전</h5>
+                            <div class="flex flex-wrap gap-2">
+                                {% for perk in cafe.perks_priority %}
+                                <span class="inline-block bg-orange-100 text-orange-800 text-sm px-3 py-1 rounded-full border border-orange-200">
+                                    #{{ perk }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- 그 외 특전 -->
+                        {% if cafe.perks_extra %}
+                        <div class="mb-4">
+                            <h5 class="text-sm font-semibold text-gray-700 mb-2">✨ 그 외 특전</h5>
+                            <div class="flex flex-wrap gap-2">
+                                {% for perk in cafe.perks_extra %}
+                                <span class="inline-block bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full border border-purple-200">
+                                    #{{ perk }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- 이벤트 설명 -->
+                {% if cafe.event_description %}
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gray-600 rounded-xl flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="font-bold text-lg text-gray-800">이벤트 설명</h4>
+                    </div>
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-line text-lg">{{ cafe.event_description }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 이미지 섹션 -->
+            {% if cafe.images.all %}
+            <div class="border-t border-gray-200 bg-gray-50">
+                <div class="p-8">
+                    <h4 class="font-bold text-xl text-gray-800 mb-6 flex items-center">
+                        <div class="w-8 h-8 bg-gray-600 rounded-xl flex items-center justify-center mr-3">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        첨부된 이미지
+                    </h4>
+                    
+                    {% if cafe.images.count == 1 %}
+                        <!-- 단일 이미지 - 중앙 정렬, 큰 크기 -->
+                        <div class="flex justify-center">
+                            {% for image in cafe.images.all %}
+                            <div class="relative overflow-hidden rounded-xl shadow-lg bg-white max-w-md border border-gray-200">
+                                <div class="w-full h-64 overflow-hidden">
+                                    <img src="{{ image.image.url }}" alt="생일카페 이미지" 
+                                         class="w-full h-full object-cover cursor-pointer">
+                                </div>
+                                <div class="absolute top-3 left-3 bg-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                                    대표 이미지
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- 다중 이미지 - 그리드 레이아웃 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for image in cafe.images.all %}
+                            <div class="relative overflow-hidden rounded-xl shadow-lg bg-white border border-gray-200">
+                                <div class="w-full h-48 overflow-hidden">
+                                    <img src="{{ image.image.url }}" alt="생일카페 이미지" 
+                                         class="w-full h-full object-cover cursor-pointer">
+                                </div>
+                                {% if forloop.first %}
+                                <div class="absolute top-3 left-3 bg-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                                    대표
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+
+
+        <!-- 액션 버튼들 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+               class="btn-primary">
+                내 카페 미리보기
+            </a>
+            
+            <a href="{% url 'ddoksang:my_cafes' %}" 
+               class="btn-primary">
+                내 등록 현황 보기
+            </a>
+
+            <a href="{% url 'ddoksang:create' %}" 
+               class="btn-primary">
+                다른 생일카페 등록하기
+            </a>
+        </div>
+
+        <!-- 추가 안내 -->
+        <div class="text-center">
+            <div class="bg-yellow-50 rounded-xl p-6 shadow-lg border border-yellow-200 mb-6">
+                <p class="text-gray-700 text-lg mb-4">
+                    문의사항이 있으시면 <span class="font-semibold text-gray-800">관리자</span>에게 연락해주세요
+                </p>
+                <!-- 홈으로 가기를 문의 안내와 함께 배치 -->
+                <a href="{% url 'ddoksang:home' %}" 
+                   class="inline-block text-gray-600 hover:text-gray-800 text-sm font-medium underline">
+                    홈으로 돌아가기
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 이미지 모달 -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+    <div class="max-w-5xl max-h-full relative">
+        <img id="modalImage" src="" alt="확대 이미지" class="max-w-full max-h-full object-contain rounded-lg">
+        <button onclick="closeImageModal()" class="absolute -top-4 -right-4 w-12 h-12 bg-white text-gray-800 rounded-full text-2xl hover:bg-gray-100 transition-colors shadow-lg font-bold">
+            ×
+        </button>
+    </div>
+</div>
+
+<script>
+// 이미지 클릭 확대 기능
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('.w-full.h-48 img, .w-full.h-64 img');
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    
+    images.forEach(img => {
+        img.addEventListener('click', function() {
+            modalImage.src = this.src;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeImageModal();
+        }
+    });
+});
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+</script>
+
+<style>
+.btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #374151;
+    color: #374151;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    background-color: #374151;
+    color: white;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #6b7280;
+    color: #6b7280;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background-color: #6b7280;
+    color: white;
+}
+</style>
+{% endblock %}

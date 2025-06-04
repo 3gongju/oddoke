@@ -29,7 +29,7 @@ urlpatterns = [
     path('<str:category>/<int:post_id>/like/', views.like_post, name='like_post'),
 
     # 멤버 목록 불러오기
-    path('ajax/members/<int:artist_id>/', views.get_members_by_artist, name='get_members_by_artist'),
+    path('ajax/artist/<int:artist_id>/members/', views.get_members_by_artist, name='get_members_by_artist'),
 
     # 아티스트 검색
     path('ajax/search_artists/', views.search_artists, name='search_artists'),

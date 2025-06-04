@@ -16,8 +16,13 @@
 
   <!-- ✅ 프로필 헤더 -->
   <div class="flex items-center space-x-4 mb-8 p-4 bg-gray-50 rounded-lg">
-    <img src="{{ user_profile.profile_image.url }}" alt="프로필"
-         class="w-16 h-16 rounded-full object-cover border-2 border-white shadow">
+    {% if user_profile.profile_image and user_profile.profile_image.name %}
+      <img src="{{ user_profile.profile_image.url }}" alt="프로필"
+          class="w-16 h-16 rounded-full object-cover border-2 border-white shadow">
+    {% else %}
+      <img src="{% static 'image/ddok_logo.png' %}" alt="기본 프로필"
+          class="w-16 h-16 rounded-full object-cover border-2 border-white shadow">
+    {% endif %}
     <div class="flex-1">
       <h3 class="text-lg font-bold text-gray-800">
         {% if user_profile.first_name %}

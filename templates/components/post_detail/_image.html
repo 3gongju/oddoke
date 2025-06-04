@@ -1,10 +1,26 @@
-{# components/post_detail/_image.html #}
-<div class="relative md:col-span-2 bg-gray-100 aspect-square rounded-lg flex items-center justify-center">
-  <img src="{{ post.image.url }}" alt="{{ post.title }}" class="h-full w-full object-contain rounded-lg">
+<!-- 대표 이미지 캐러셀 -->
+<div class="relative md:col-span-2 bg-gray-100 aspect-square rounded-lg">
+  <div class="swiper swiper-container h-full w-full rounded-lg">
+    <div class="swiper-wrapper">
+      {% for image in post.images.all %}
+        <div class="swiper-slide flex items-center justify-center bg-white">
+          <img src="{{ image.image.url }}" alt="이미지"
+               class="object-contain h-full w-full rounded-lg" />
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- 좌우 화살표 -->
+    <div class="swiper-button-next text-black"></div>
+    <div class="swiper-button-prev text-black"></div>
+
+    <!-- 페이지네이션 점 -->
+    <div class="swiper-pagination"></div>
+  </div>
 
   {% if is_sold|default:False %}
-    <div class="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center rounded-lg">
-      <span class="text-white text-xl font-semibold">거래 완료</span>
-    </div>
+  <div class="absolute inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center rounded-lg z-10 pointer-events-none">
+    <span class="text-white text-xl font-semibold">거래 완료</span>
+  </div>
   {% endif %}
 </div>

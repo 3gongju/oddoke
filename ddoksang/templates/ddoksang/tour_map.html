@@ -1,0 +1,348 @@
+<!-- templates/ddoksang/tour_map.html -->
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-gray-900">🗺️ 생카 투어맵</h1>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                        {{ total_bday_cafes }}개 운영중
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="myLocationBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        📍 내 위치
+                    </button>
+                    <button id="clusterToggle" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        🔗 클러스터링 ON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="relative">
+        <div id="map" class="w-full h-[calc(100vh-120px)]"></div>
+        
+        <!-- Map Controls -->
+        <div class="absolute top-4 right-4 bg-white rounded-lg shadow-lg p-4 space-y-2">
+            <div class="text-sm font-medium text-gray-700">범례</div>
+            <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 bg-red-500 rounded-full"></div>
+                <span class="text-sm text-gray-600">운영중 생일카페</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></div>
+                <span class="text-sm text-gray-600">클러스터</span>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="mapLoading" class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center hidden">
+            <div class="bg-white rounded-lg p-4 shadow-lg">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div class="mt-2 text-sm text-gray-600">지도 로딩중...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cafe Info Panel -->
+    <div id="cafeInfoPanel" class="fixed bottom-0 left-0 right-0 bg-white shadow-2xl transform translate-y-full transition-transform duration-300 z-50">
+        <div class="p-4 border-b">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold" id="cafeInfoTitle">카페 정보</h3>
+                <button id="closeCafeInfo" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="cafeInfoContent" class="p-4 max-h-80 overflow-y-auto">
+            <!-- 카페 정보가 여기에 표시됩니다 -->
+        </div>
+    </div>
+</div>
+
+<!-- 카카오맵 스크립트 -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
+
+<script>
+// 전역 변수
+let map;
+let clusterer;
+let markers = [];
+let isClusteringEnabled = true;
+let userLocationMarker = null;
+
+// 생일카페 데이터
+const bdayCafes = {{ bday_cafes_json|safe }};
+
+// 지도 초기화
+function initMap() {
+    document.getElementById('mapLoading').classList.remove('hidden');
+    
+    // 서울 중심으로 지도 생성
+    const mapContainer = document.getElementById('map');
+    const mapOption = {
+        center: new kakao.maps.LatLng(37.5665, 126.9780),
+        level: 8
+    };
+    
+    map = new kakao.maps.Map(mapContainer, mapOption);
+    
+    // 클러스터러 생성
+    clusterer = new kakao.maps.MarkerClusterer({
+        map: map,
+        averageCenter: true,
+        minLevel: 6,
+        disableClickZoom: true,
+        styles: [
+            {
+                width: '40px',
+                height: '40px',
+                background: 'rgba(59, 130, 246, 0.8)',
+                borderRadius: '50%',
+                color: '#fff',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: '14px',
+                lineHeight: '40px'
+            },
+            {
+                width: '50px',
+                height: '50px',
+                background: 'rgba(147, 51, 234, 0.8)',
+                borderRadius: '50%',
+                color: '#fff',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                lineHeight: '50px'
+            },
+            {
+                width: '60px',
+                height: '60px',
+                background: 'rgba(239, 68, 68, 0.8)',
+                borderRadius: '50%',
+                color: '#fff',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                fontSize: '18px',
+                lineHeight: '60px'
+            }
+        ]
+    });
+    
+    // 마커 생성 및 추가
+    createMarkers();
+    
+    document.getElementById('mapLoading').classList.add('hidden');
+    
+    console.log(`${bdayCafes.length}개의 생일카페가 로드되었습니다.`);
+}
+
+// 마커 생성
+function createMarkers() {
+    markers = [];
+    
+    bdayCafes.forEach((cafe, index) => {
+        if (!cafe.latitude || !cafe.longitude) {
+            console.warn(`카페 ${cafe.name}: 좌표 정보 없음`);
+            return;
+        }
+        
+        const position = new kakao.maps.LatLng(cafe.latitude, cafe.longitude);
+        
+        // 커스텀 마커 이미지
+        const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+                <path d="M16 0C7.163 0 0 7.163 0 16s16 24 16 24 16-15.163 16-24S24.837 0 16 0z" fill="#ef4444"/>
+                <circle cx="16" cy="16" r="8" fill="white"/>
+                <text x="16" y="20" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#ef4444">🎂</text>
+            </svg>
+        `);
+        
+        const imageSize = new kakao.maps.Size(32, 40);
+        const imageOption = { offset: new kakao.maps.Point(16, 40) };
+        const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+        
+        const marker = new kakao.maps.Marker({
+            position: position,
+            image: markerImage,
+            title: cafe.name
+        });
+        
+        // 마커 클릭 이벤트
+        kakao.maps.event.addListener(marker, 'click', () => {
+            showCafeInfo(cafe);
+        });
+        
+        markers.push(marker);
+    });
+    
+    // 클러스터러에 마커 추가
+    if (isClusteringEnabled) {
+        clusterer.addMarkers(markers);
+    } else {
+        markers.forEach(marker => marker.setMap(map));
+    }
+    
+    // 클러스터 클릭 이벤트
+    kakao.maps.event.addListener(clusterer, 'clusterclick', (cluster) => {
+        const level = map.getLevel() - 2;
+        map.setLevel(level, { anchor: cluster.getCenter() });
+    });
+}
+
+// 카페 정보 표시
+function showCafeInfo(cafe) {
+    const panel = document.getElementById('cafeInfoPanel');
+    const title = document.getElementById('cafeInfoTitle');
+    const content = document.getElementById('cafeInfoContent');
+    
+    title.textContent = cafe.name;
+    
+    content.innerHTML = `
+        <div class="space-y-4">
+            <div class="flex items-start space-x-4">
+                ${cafe.main_image ? `<img src="${cafe.main_image}" alt="${cafe.name}" class="w-20 h-20 object-cover rounded-lg">` : ''}
+                <div class="flex-1">
+                    <h4 class="font-semibold text-lg">${cafe.name}</h4>
+                    <p class="text-sm text-gray-600">${cafe.artist}${cafe.member ? ` - ${cafe.member}` : ''}</p>
+                    <p class="text-sm text-blue-600">${cafe.start_date} ~ ${cafe.end_date}</p>
+                    ${cafe.is_active ? '<span class="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">운영중</span>' : 
+                      `<span class="inline-block px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">${cafe.days_remaining < 0 ? '종료' : '예정'}</span>`}
+                </div>
+            </div>
+            
+            <div class="border-t pt-4">
+                <h5 class="font-medium mb-2">📍 위치</h5>
+                <p class="text-sm text-gray-600">${cafe.address}</p>
+            </div>
+            
+            ${cafe.special_benefits ? `
+            <div class="border-t pt-4">
+                <h5 class="font-medium mb-2">🎁 특전</h5>
+                <p class="text-sm text-gray-600">${cafe.special_benefits}</p>
+            </div>
+            ` : ''}
+            
+            <div class="border-t pt-4 flex space-x-2">
+                <a href="/ddoksang/detail/${cafe.id}/" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700">
+                    자세히 보기
+                </a>
+                <button onclick="moveToLocation(${cafe.latitude}, ${cafe.longitude})" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    위치로 이동
+                </button>
+            </div>
+        </div>
+    `;
+    
+    panel.classList.remove('translate-y-full');
+}
+
+// 위치로 이동
+function moveToLocation(lat, lng) {
+    const moveLatLng = new kakao.maps.LatLng(lat, lng);
+    map.setCenter(moveLatLng);
+    map.setLevel(3);
+}
+
+// 내 위치 찾기
+function findMyLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const locPosition = new kakao.maps.LatLng(lat, lng);
+            
+            // 기존 내 위치 마커 제거
+            if (userLocationMarker) {
+                userLocationMarker.setMap(null);
+            }
+            
+            // 내 위치 마커 생성
+            const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
+                    <circle cx="10" cy="10" r="3" fill="white"/>
+                </svg>
+            `);
+            
+            const imageSize = new kakao.maps.Size(20, 20);
+            const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+            
+            userLocationMarker = new kakao.maps.Marker({
+                map: map,
+                position: locPosition,
+                image: markerImage
+            });
+            
+            map.setCenter(locPosition);
+            map.setLevel(6);
+            
+        }, (error) => {
+            alert('위치 정보를 가져올 수 없습니다.');
+        });
+    } else {
+        alert('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
+    }
+}
+
+// 클러스터링 토글
+function toggleClustering() {
+    const button = document.getElementById('clusterToggle');
+    
+    if (isClusteringEnabled) {
+        // 클러스터링 비활성화
+        clusterer.clear();
+        markers.forEach(marker => marker.setMap(map));
+        button.textContent = '🔗 클러스터링 OFF';
+        button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+        button.classList.add('bg-red-600', 'hover:bg-red-700');
+        isClusteringEnabled = false;
+    } else {
+        // 클러스터링 활성화
+        markers.forEach(marker => marker.setMap(null));
+        clusterer.addMarkers(markers);
+        button.textContent = '🔗 클러스터링 ON';
+        button.classList.remove('bg-red-600', 'hover:bg-red-700');
+        button.classList.add('bg-gray-600', 'hover:bg-gray-700');
+        isClusteringEnabled = true;
+    }
+}
+
+// 이벤트 리스너
+document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    
+    // 버튼 이벤트
+    document.getElementById('myLocationBtn').addEventListener('click', findMyLocation);
+    document.getElementById('clusterToggle').addEventListener('click', toggleClustering);
+    
+    // 카페 정보 패널 닫기
+    document.getElementById('closeCafeInfo').addEventListener('click', () => {
+        document.getElementById('cafeInfoPanel').classList.add('translate-y-full');
+    });
+    
+    // 지도 클릭 시 패널 닫기
+    kakao.maps.event.addListener(map, 'click', () => {
+        document.getElementById('cafeInfoPanel').classList.add('translate-y-full');
+    });
+});
+
+// 리사이즈 이벤트
+window.addEventListener('resize', () => {
+    if (map) {
+        map.relayout();
+    }
+});
+</script>
+{% endblock %}

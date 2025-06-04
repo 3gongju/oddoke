@@ -325,6 +325,3 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/django,python,windows,macos
-
-# image 폴더를 git으로 관리하지 않음.
-image/

@@ -15,5 +15,6 @@ urlpatterns = [
     path('calendar/', include('bday_calendar.urls', namespace='bday_calendar')), # 생일 달력
     path('ddoksang/', include('ddoksang.urls')),       # 생일 카페, 투어 플랜 등
     path('ddokchat/', include('ddokchat.urls')),        # 채팅
+    path('faq/', include('faq.urls')),                 # faq
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,7 @@
+<div class="comment-list space-y-4">
+  {% for comment in comments %}
+    {% include "components/post_detail/_comment_item.html" with comment=comment is_reply=False %}
+  {% empty %}
+    <p class="text-sm text-gray-400 my-4">등록된 댓글이 없습니다.</p>
+  {% endfor %}
+</div>

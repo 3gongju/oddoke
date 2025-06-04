@@ -47,26 +47,28 @@ market_widgets = {
 
 
 class FarmSellPostForm(forms.ModelForm):
+    md = custom_choice_field(FarmSellPost.MD_CHOICES, label='종류')
     condition = custom_choice_field(FarmSellPost.CONDITION_CHOICES, label='상품 상태')
     shipping = custom_choice_field(FarmSellPost.SHIPPING_CHOICES, label='배송 방법')
     want_to = custom_choice_field(FarmSellPost.WANTTO_CHOICES, label='거래 방식')
 
     class Meta:
         model = FarmSellPost
-        fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'artist', 'members']
+        fields = ['title', 'content', 'price', 'md', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'artist', 'members']
         widgets = {
             **common_widgets,
             **market_widgets,
         }
         
 class FarmRentalPostForm(forms.ModelForm):
+    md = custom_choice_field(FarmSellPost.MD_CHOICES, label='종류')
     condition = custom_choice_field(FarmRentalPost.CONDITION_CHOICES, label='상품 상태')
     shipping = custom_choice_field(FarmRentalPost.SHIPPING_CHOICES, label='배송 방법')
     want_to = custom_choice_field(FarmRentalPost.WANTTO_CHOICES, label='거래 방식')
 
     class Meta:
         model = FarmRentalPost
-        fields = ['title', 'content', 'image', 'price', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date', 'artist', 'members']
+        fields = ['title', 'content', 'price', 'md', 'condition', 'shipping', 'location', 'is_sold', 'want_to', 'start_date', 'end_date', 'artist', 'members']
         widgets = {
             **common_widgets,
             **market_widgets,
@@ -87,7 +89,7 @@ class FarmSplitPostForm(forms.ModelForm):
 
     class Meta:
         model = FarmSplitPost
-        fields = ['title', 'content', 'image', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'members']
+        fields = ['title', 'content', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'members']
         widgets = {
             **common_widgets,
             'shipping_fee': forms.NumberInput(attrs={

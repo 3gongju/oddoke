@@ -23,6 +23,8 @@
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
 </script>
-<script src="{% static 'js/post_form.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script type="module" src="{% static 'js/post_form.js' %}"></script>
 
 {% endblock %}

@@ -28,13 +28,13 @@ common_widgets = {
 class DamCommunityPostForm(forms.ModelForm):
     class Meta:
         model = DamCommunityPost
-        fields = ['title', 'content', 'image', 'artist', 'members']
+        fields = ['title', 'content', 'artist', 'members']
         widgets = common_widgets
 
 class DamMannerPostForm(forms.ModelForm):
     class Meta:
         model = DamMannerPost
-        fields = ['title', 'content', 'image', 'item', 'location', 'artist', 'members']
+        fields = ['title', 'content', 'item', 'location', 'artist', 'members']
         widgets = {
             **common_widgets,
             'location': forms.TextInput(attrs={
@@ -50,7 +50,7 @@ class DamMannerPostForm(forms.ModelForm):
 class DamBdaycafePostForm(forms.ModelForm):
     class Meta:
         model = DamBdaycafePost
-        fields = ['title', 'content', 'image', 'cafe_name', 'artist', 'members']
+        fields = ['title', 'content', 'cafe_name', 'artist', 'members']
         widgets = {
             **common_widgets,
             'cafe_name': forms.TextInput(attrs={
