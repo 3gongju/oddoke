@@ -10,7 +10,8 @@
   </button>
 
   <!-- 문의하기 버튼 -->
-  <button class="flex-[2] bg-black hover:bg-gray-800 text-white font-semibold py-2 rounded-lg">
+  <a href="{% url 'ddokchat:start_chat' category=category post_id=post.id %}"
+    class="flex-[2] bg-black hover:bg-gray-800 text-white font-semibold py-2 rounded-lg text-center block">
     📩 문의하기
-  </button>
+  </a>
 </div>

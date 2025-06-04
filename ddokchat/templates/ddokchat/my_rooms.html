@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block body %}
+<h2 class="text-xl font-bold mb-6">내 채팅방 목록</h2>
+
+<div class="space-y-4">
+  {% for room in rooms %}
+    {% with post=room.post %}
+      <div class="p-4 border rounded-lg">
+        <p class="text-sm text-gray-500">거래글: {{ post.title }}</p>
+
+        {% if me == room.buyer %}
+          <p>판매자: {{ room.seller.username }}</p>
+        {% else %}
+          <p>구매자: {{ room.buyer.username }}</p>
+        {% endif %}
+
+        <!-- 마지막 메시지 요약 -->
+        <p class="text-sm text-gray-700 mt-1">
+            📨
+            {% if room.last_message %}
+                <strong>{{ room.last_message.sender.username }}</strong>: {{ room.last_message.content|truncatechars:30 }}
+                {% if room.unread_count %}
+                <span class="ml-2 text-xs text-red-500 font-semibold">
+                    ({{ room.unread_count }})
+                </span>
+                {% endif %}
+                <span class="text-xs text-gray-400 ml-2">
+                ({{ room.last_message.timestamp|timesince }} 전)
+                </span>
+            {% else %}
+                아직 메시지가 없습니다.
+            {% endif %}
+        </p>
+
+        <a href="{% url 'ddokchat:chat_room' room_id=room.id %}"
+           class="inline-block mt-2 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 text-sm">
+          채팅방 입장
+        </a>
+      </div>
+    {% endwith %}
+  {% empty %}
+    <p class="text-gray-400">참여 중인 채팅방이 없습니다.</p>
+  {% endfor %}
+</div>
+{% endblock %}

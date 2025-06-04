@@ -44,6 +44,7 @@
             {% endif %}
             님
           </span>
+          <a href="{% url 'ddokchat:my_chatrooms' %}" class="text-sm text-gray-700 hover:text-primary">내채팅방</a>
           <a href="{% url 'accounts:mypage' %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
           <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
         {% else %}
