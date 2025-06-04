@@ -648,12 +648,12 @@ Ddoksang.PlaceSearch = class {
             }
         });
         
-        // 지도 클릭 이벤트
-        kakao.maps.event.addListener(this.map, 'click', (mouseEvent) => {
-            const latlng = mouseEvent.latLng;
-            this.setMarkerPosition(latlng);
-            this.reverseGeocode(latlng.getLat(), latlng.getLng());
-        });
+        // // 지도 클릭 이벤트
+        // kakao.maps.event.addListener(this.map, 'click', (mouseEvent) => {
+        //     const latlng = mouseEvent.latLng;
+        //     this.setMarkerPosition(latlng);
+        //     this.reverseGeocode(latlng.getLat(), latlng.getLng());
+        // });
     }
     
     searchPlace() {
