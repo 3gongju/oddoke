@@ -5,7 +5,11 @@ from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from .models import ChatRoom, Message
 from django.db.models import Q
-
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
+from django.core.files.storage import default_storage
 # Create your views here.
 
 # 채팅방
@@ -85,3 +89,24 @@ def my_chatrooms(request):
         'me': request.user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
+
+
+@login_required
+@require_POST
+def upload_image(request):
+    if 'image' not in request.FILES or 'room_id' not in request.POST:
+        return JsonResponse({'success': False, 'error': '요청이 잘못되었습니다.'}, status=400)
+
+    image_file = request.FILES['image']
+    room_id = request.POST['room_id']
+
+    try:
+        room = ChatRoom.objects.get(id=room_id)
+        message = Message.objects.create(
+            room=room,
+            sender=request.user,
+            image=image_file
+        )
+        return JsonResponse({'success': True, 'image_url': message.image.url})
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '존재하지 않는 채팅방입니다.'}, status=404)
