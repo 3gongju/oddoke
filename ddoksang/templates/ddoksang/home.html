@@ -313,18 +313,19 @@
                   <span class="text-xs text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
                 </div>
 
-                <!-- 찜하기 버튼 -->
-                {% if user.is_authenticated and cafe.status == 'approved' %}
-                  <button 
-                    data-favorite-btn 
-                    data-cafe-id="{{ cafe.id }}" 
-                    class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
-                    style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
-                    title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
-                  >
-                    {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
-                  </button>
-                {% endif %}
+                <!-- 찜하기 버튼 수정 부분만 -->
+              {% if user.is_authenticated and cafe.status == 'approved' %}
+                <button 
+                  data-favorite-btn 
+                  data-cafe-id="{{ cafe.id }}" 
+                  class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
+                  style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+                  title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
+                >
+                  {% comment %} ✅ 하트 아이콘 통일: 회색 빈하트(♡) → 빨간 채워진하트(♥) {% endcomment %}
+                  {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
+                </button>
+              {% endif %}
               </div>
 
               <div class="mb-2">
@@ -555,11 +556,11 @@ function showEmptyFavoritesState() {
     if (favoritesSection) {
         favoritesSection.innerHTML = `
             <div class="text-center py-16">
-                <div class="text-6xl mb-4">💔</div>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+                <div class="text-6xl mb-4">♡</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생카가 없어요</h3>
                 <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
                 <a href="/ddoksang/" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
-                    생일카페 둘러보기
+                    생카 둘러보기
                 </a>
             </div>
         `;
