@@ -9,7 +9,9 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
-    
+
+    # 이메일 유효성 검사
+    path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     
     # 카카오 로그인 추가
     path('kakao/login/', views.kakao_login, name='kakao_login'),
@@ -19,7 +21,6 @@ urlpatterns = [
     path('naver/login/', views.naver_login, name='naver_login'),
     path('naver/callback/', views.naver_callback, name='naver_callback'),
     path('naver/logout/', views.naver_logout, name='naver_logout'),  # 선택사항
-
 
     # mypage
     path('my/', views.mypage, name='mypage'),
@@ -35,8 +36,5 @@ urlpatterns = [
     path('<username>/follow/', views.follow, name='follow'),
     path('<str:username>/follow-list/', views.follow_list, name='follow_list'),
     # 리뷰 페이지
-    path('<username>/reviews/', views.review_home, name='review_home'),
- 
-    
-   
+    path('<username>/reviews/', views.review_home, name='review_home'),  
 ]
