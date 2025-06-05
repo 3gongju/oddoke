@@ -1,13 +1,10 @@
 {% extends "ddoksang/base/ddoksang_base.html" %}
-{% load static %}
-{% load filters %} 
-
-
+{% load static %} 
 
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-gradient-to-br from-white">
+<div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
   <!-- 상태 알림 배너 (미리보기/대기중일 때만 표시) -->
   {% if is_preview %}
     <div class="bg-yellow-50 border-b border-yellow-200">
@@ -64,11 +61,11 @@
 
   <!-- 헤더 이미지 섹션 -->
   <div class="relative h-80 overflow-hidden">
-    {% if cafe.main_image %}
-      <img src="{{ cafe.main_image }}" alt="{{ cafe.cafe_name }}" 
+    {% if cafe.get_main_image %}
+      <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
            class="w-full h-full object-cover">
     {% else %}
-      <div class="w-full h-full bg-black"></div>
+      <div class="w-full h-full bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400"></div>
     {% endif %}
     
     <!-- 오버레이 -->
@@ -92,18 +89,14 @@
       </div>
     </div>
     
-    <!-- ✅ 통합된 찜하기 버튼 -->
-    {% if user.is_authenticated and cafe.status == 'approved' %}
+    <!-- 찜하기 버튼 (기존 favorite.js와 연동) -->
+    {% if user.is_authenticated and not is_preview %}
     <div class="absolute top-6 right-6">
-      <button 
-        data-favorite-btn 
-        data-cafe-id="{{ cafe.id }}" 
-        class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer"
-        title="{{ is_favorited|yesno:'찜 해제,찜하기' }}"
-      >
-        <span class="favorite-icon text-2xl" style="color: {{ is_favorited|yesno:"'#ef4444','#6b7280'" }}">
-          {{ is_favorited|yesno:'♥,♡' }}
-        </span>
+      <button data-favorite-btn 
+              data-cafe-id="{{ cafe.id }}"
+              class="text-2xl hover:scale-125 transition-transform duration-200 p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30"
+              style="color: {% if is_favorited %}#ef4444{% else %}#ffffff{% endif %};">
+        {% if is_favorited %}♥{% else %}♡{% endif %}
       </button>
     </div>
     {% endif %}
@@ -123,8 +116,8 @@
           <div class="space-y-4">
             <!-- 주소 -->
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
@@ -144,8 +137,8 @@
 
             <!-- 운영 기간 -->
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
               </div>
@@ -155,7 +148,7 @@
                 {% if cafe.days_remaining > 0 %}
                   <p class="text-sm text-green-600 font-medium">{{ cafe.days_remaining }}일 남음</p>
                 {% elif cafe.days_remaining == 0 %}
-                  <p class="text-sm text-yellow-500 font-medium">오늘 마지막!</p>
+                  <p class="text-sm text-yellow-600 font-medium">오늘 마지막!</p>
                 {% else %}
                   <p class="text-sm text-gray-500">종료됨</p>
                 {% endif %}
@@ -171,9 +164,9 @@
             <span class="mr-2">🎁</span> 특전 정보
           </h2>
           <div class="flex flex-wrap gap-2">
-            {% for benefit in cafe.special_benefits|split:"," %}
-              <span class="px-3 py-1 bg-black text-white rounded-full text-sm">
-                {{ benefit|strip }}
+            {% for benefit in cafe.special_benefits_list %}
+              <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                {{ benefit }}
               </span>
             {% endfor %}
           </div>
@@ -208,8 +201,8 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="font-medium text-gray-900">X</p>
-                  <p class="text-sm text-gray-600">@{{ cafe.x_source|slice:"20:" }}</p>
+                  <p class="font-medium text-gray-900">X (구 트위터)</p>
+                  <p class="text-sm text-gray-600">{{ cafe.x_source }}</p>
                 </div>
               </a>
             {% endif %}
@@ -265,10 +258,8 @@
             <div>
               <span class="text-gray-600 block mb-2">태그</span>
               <div class="flex flex-wrap gap-1">
-                {% for tag in cafe.hashtags|split:" " %}
-                  {% if tag %}
-                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{{ tag }}</span>
-                  {% endif %}
+                {% for tag in cafe.hashtags_list %}
+                  <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">#{{ tag }}</span>
                 {% endfor %}
               </div>
             </div>
@@ -324,6 +315,7 @@
 
 <!-- JavaScript -->
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+<script src="{% static 'js/favorite.js' %}"></script>
 
 <!-- Django 데이터를 JavaScript 변수로 전달 -->
 <script id="cafe-data" type="application/json">
@@ -341,6 +333,9 @@
 // JSON에서 데이터 가져오기
 const cafeDataElement = document.getElementById('cafe-data');
 const cafeData = JSON.parse(cafeDataElement.textContent);
+
+// 사용자 인증 상태를 전역에서 접근 가능하게 설정 (favorite.js에서 사용)
+window.userIsAuthenticated = cafeData.isAuthenticated;
 
 // 지도 초기화
 let map;
@@ -387,39 +382,35 @@ function openKakaoMap() {
 // 주소 복사
 function copyAddress() {
   navigator.clipboard.writeText(cafeData.address).then(() => {
-    alert('주소가 복사되었습니다!');
+    if (window.favoriteManager) {
+      window.favoriteManager.showToast('주소가 복사되었습니다!', 'success');
+    } else {
+      alert('주소가 복사되었습니다!');
+    }
   });
 }
 
 // 링크 복사
 function copyLink() {
   navigator.clipboard.writeText(window.location.href).then(() => {
-    alert('링크가 복사되었습니다!');
+    if (window.favoriteManager) {
+      window.favoriteManager.showToast('링크가 복사되었습니다!', 'success');
+    } else {
+      alert('링크가 복사되었습니다!');
+    }
   });
 }
 
 // 카카오톡 공유
 function shareKakao() {
-  alert('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.');
+  if (window.favoriteManager) {
+    window.favoriteManager.showToast('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.', 'info');
+  } else {
+    alert('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.');
+  }
 }
 </script>
 
 <!-- CSRF 토큰 -->
 {% csrf_token %}
-
-<!-- ✅ 찜하기 스크립트 로드 -->
-<script src="{% static 'js/favorite.js' %}"></script>
-
-<!-- ✅ 사용자 인증 상태를 body에 추가 -->
-<script>
-document.body.dataset.userAuthenticated = {% if user.is_authenticated %}'true'{% else %}'false'{% endif %};
-
-// 찜하기 상태 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    {% if user.is_authenticated and is_favorited %}
-    window.favoriteManager.setFavoriteState('{{ cafe.id }}', true);
-    {% endif %}
-});
-</script>
-
 {% endblock %}

@@ -195,6 +195,27 @@ class BdayCafe(models.Model):
         except (ValueError, AttributeError, TypeError) as e:
             return None
 
+    @property
+    def special_benefits_list(self):
+        """특전 정보를 리스트로 반환"""
+        if not self.special_benefits:
+            return []
+        return [benefit.strip() for benefit in self.special_benefits.split(',') if benefit.strip()]
+
+    @property
+    def hashtags_list(self):
+        """해시태그를 리스트로 반환"""
+        if not self.hashtags:
+            return []
+        # 공백과 #으로 분할하여 정리
+        tags = []
+        for tag in self.hashtags.replace('#', ' ').split():
+            tag = tag.strip()
+            if tag:
+                tags.append(tag)
+        return tags
+
+
 class BdayCafeImage(models.Model):
     """생일카페 다중 이미지"""
     IMAGE_TYPE_CHOICES = [
@@ -289,16 +310,6 @@ class BdayCafeImage(models.Model):
             'file_size': self.file_size,
         }
 
-    class Meta:
-        ordering = ['order', 'created_at']
-        verbose_name = '생카 이미지'
-        verbose_name_plural = '생카 이미지들'
-        indexes = [
-            models.Index(fields=['cafe', 'is_main']),
-            models.Index(fields=['cafe', 'order']),
-        ]
-        
-
 
 class CafeFavorite(models.Model):
     """카페 즐겨찾기"""
@@ -309,7 +320,6 @@ class CafeFavorite(models.Model):
     class Meta:
         unique_together = ('user', 'cafe')
         verbose_name = '카페 즐겨찾기'
-
 
 
 class UserSearchHistory(models.Model):
