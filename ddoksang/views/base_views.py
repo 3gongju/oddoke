@@ -140,7 +140,7 @@ def home_view(request):
         'birthday_artists': birthday_artists,
         'latest_cafes': latest_cafes,
         'my_favorite_cafes': my_favorite_cafes,
-        'user_favorites': user_favorites,
+        'user_favorites': user_favorites,  # ✅ 찜한 카페 ID 리스트
         'cafes_json': cafes_json,
         'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
         'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),

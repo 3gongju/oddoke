@@ -57,15 +57,16 @@
         {% endif %}
       </div>
 
-      <!-- ✅ 찜하기 버튼 - user_favorites로 통일 -->
+      <!-- ✅ 찜하기 버튼 - 하트 아이콘 중복 방지 -->
       {% if show_favorite_btn and user.is_authenticated and cafe.status == 'approved' %}
         <button 
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
           class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
-          style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
           title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
+          style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
         >
+          {# ✅ 하나의 하트만 표시 - JavaScript에서 변경됨 #}
           {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
         </button>
       {% endif %}

@@ -1,4 +1,4 @@
-// static/js/ui-components.js
+// static/js/ddoksang_ui_components.js
 
 // 위치 권한 요청 모달
 function showLocationModal() {
@@ -83,62 +83,7 @@ function closeCafeModal() {
     document.getElementById('cafeModal').classList.add('hidden');
 }
 
-// 찜한 아티스트 카로셀
-function initFavoriteCarousel() {
-    const carousel = document.getElementById('favoriteCarousel');
-    if (!carousel) return;
-    
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-
-    // 마우스 이벤트
-    carousel.addEventListener('mousedown', (e) => {
-        isDown = true;
-        startX = e.pageX - carousel.offsetLeft;
-        scrollLeft = carousel.scrollLeft;
-        carousel.style.cursor = 'grabbing';
-        e.preventDefault();
-    });
-
-    carousel.addEventListener('mouseleave', () => {
-        isDown = false;
-        carousel.style.cursor = 'grab';
-    });
-
-    carousel.addEventListener('mouseup', () => {
-        isDown = false;
-        carousel.style.cursor = 'grab';
-    });
-
-    carousel.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - carousel.offsetLeft;
-        const walk = (x - startX) * 2;
-        carousel.scrollLeft = scrollLeft - walk;
-    });
-
-    // 터치 이벤트
-    carousel.addEventListener('touchstart', (e) => {
-        isDown = true;
-        startX = e.touches[0].pageX - carousel.offsetLeft;
-        scrollLeft = carousel.scrollLeft;
-    });
-
-    carousel.addEventListener('touchmove', (e) => {
-        if (!isDown) return;
-        const x = e.touches[0].pageX - carousel.offsetLeft;
-        const walk = (x - startX) * 2;
-        carousel.scrollLeft = scrollLeft - walk;
-    });
-
-    carousel.addEventListener('touchend', () => {
-        isDown = false;
-    });
-}
-
-// 생일 아티스트 슬라이더
+// 생일 아티스트 슬라이더 (CSS Transform 방식 - home.html 전용)
 function initBirthdayNavigation() {
     const slider = document.getElementById('birthdaySlider');
     const prevBtn = document.getElementById('birthdayPrevBtn');
