@@ -11,6 +11,27 @@
 <!-- JSON 데이터 (JavaScript에서 사용) -->
 {{ cafes_json|json_script:"cafes-data" }}
 
+<script>
+// 기존 FavoriteManager 제거
+if (window.favoriteManager) {
+    console.log('기존 favoriteManager 제거');
+    delete window.favoriteManager;
+}
+
+// 기존 이벤트 리스너들 제거
+document.addEventListener('DOMContentLoaded', function() {
+    // 기존에 등록된 favoriteManager 관련 이벤트 제거
+    const existingButtons = document.querySelectorAll('[data-favorite-btn]');
+    existingButtons.forEach(btn => {
+        // 기존 이벤트 리스너 복제 후 교체로 모든 이벤트 제거
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+    });
+    
+    console.log('기존 찜하기 이벤트 리스너 정리 완료');
+});
+</script>
+
 <!-- ✅ 사용자 찜 목록 데이터 추가 -->
 <script id="user-favorites-data" type="application/json">
 {{ user_favorites|safe }}
@@ -397,7 +418,16 @@
 </div>
 
 <!-- 카카오맵 및 스크립트 로드 -->
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ KAKAO_MAP_API_KEY }}&libraries=services,clusterer"></script>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
+<script src="{% static 'js/autocomplete.js' %}"></script>
+<script src="{% static 'js/favorite.js' %}"></script>  <!-- 통합 찜하기 시스템을 먼저 로드 -->
+<script src="{% static 'js/maps.js' %}"></script>
+<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
+<script src="{% static 'js/ddoksang_home_main.js' %}"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+
 
 <!-- 메인 JavaScript -->
 <script>
@@ -409,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 카페 데이터 로드
     let cafesData = [];
     try {
-        const rawData = `{{ bday_cafes_json|escapejs }}`;
+        const rawData = `{{ cafes_json|escapejs }}`; // ← 이 줄만 수정
         if (rawData && rawData.trim() !== '[]' && rawData.trim() !== '') {
             cafesData = JSON.parse(rawData);
             console.log('생일카페 개수:', cafesData.length);
@@ -1064,10 +1094,5 @@ function searchArtist(artistName) {
     }
 }
 </script>
-
-<!-- 통합 찜하기 시스템 및 기타 스크립트 로드 -->
-<script src="{% static 'js/favorite.js' %}"></script>
-<script src="{% static 'js/autocomplete.js' %}"></script>
-<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
 {% endblock %}

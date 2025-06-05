@@ -347,54 +347,40 @@ def my_cafes(request):
 
 @login_required
 @require_POST
-@csrf_protect
 def toggle_favorite(request, cafe_id):
+    """카페 찜하기/찜해제 토글"""
     try:
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
-        user = request.user
-
-        try:
-            favorite, created = CafeFavorite.objects.get_or_create(user=user, cafe=cafe)
-        except IntegrityError:
-            favorite = CafeFavorite.objects.filter(user=user, cafe=cafe).first()
-            created = False if favorite else True
-
+        favorite, created = CafeFavorite.objects.get_or_create(
+            user=request.user,
+            cafe=cafe
+        )
+        
         if not created:
-            # 이미 찜한 상태 → 해제
             favorite.delete()
             is_favorited = False
-            message = "찜 목록에서 제거했습니다."
-            slide_html = None
+            message = "찜 목록에서 제거했어요!"
         else:
-            # 찜 성공
             is_favorited = True
-            message = "찜 목록에 추가했습니다."
-
-            # ✅ 슬라이드 HTML 생성
-            slide_html = render_to_string(
-                'ddoksang/components/_cafe_card.html',
-                {
-                    'cafe': cafe,
-                    'show_favorite_btn': True,
-                    'user_favorites': [cafe.id],  # 또는 request.user 기준 찜 목록 리스트
-                    'show_status_badge': True
-                },
-                request=request
-            )
-            # ✅ .swiper-slide로 감싸기 (섹션 구조와 맞추기)
-            slide_html = f'<div class="swiper-slide" data-cafe-id="{cafe.id}">{slide_html}</div>'
-
+            message = "찜 목록에 추가했어요!"
+        
+        # 캐시 무효화 (사용자별 찜 목록 변경)
+        cache_key = f"user_favorites_{request.user.id}"
+        cache.delete(cache_key)
+        
         return JsonResponse({
             'success': True,
             'is_favorited': is_favorited,
             'message': message,
-            'cafe_id': cafe.id,
-            'slide_html': slide_html,
+            'cafe_id': str(cafe_id)
         })
-
+        
     except Exception as e:
-        logger.exception(f"[찜 토글 오류] {e}")
-        return JsonResponse({'success': False, 'error': f'서버 오류: {str(e)}'}, status=500)
+        logger.error(f"찜하기 토글 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '처리 중 오류가 발생했습니다.'
+        }, status=500)
     
 
     

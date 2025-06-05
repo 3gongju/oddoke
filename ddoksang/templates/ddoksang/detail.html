@@ -101,7 +101,7 @@
         class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer"
         title="{{ is_favorited|yesno:'찜 해제,찜하기' }}"
       >
-       <span class="favorite-icon text-2xl {{ is_favorited|yesno:'text-red-500,text-gray-400' }}">
+        <span class="favorite-icon text-2xl" style="color: {{ is_favorited|yesno:"'#ef4444','#6b7280'" }}">
           {{ is_favorited|yesno:'♥,♡' }}
         </span>
       </button>
@@ -414,19 +414,12 @@ function shareKakao() {
 <script>
 document.body.dataset.userAuthenticated = {% if user.is_authenticated %}'true'{% else %}'false'{% endif %};
 
+// 찜하기 상태 초기화
 document.addEventListener('DOMContentLoaded', function() {
-    {% if user.is_authenticated %}
-        const cafeId = '{{ cafe.id }}';
-        const isFavorited = {{ is_favorited|yesno:"true,false" }};
-
-        // 상태 저장
-        window.favoriteManager.setFavoriteState(cafeId, isFavorited);
-
-        // 버튼 전체 스타일 반영 (텍스트 + 색상)
-        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
+    {% if user.is_authenticated and is_favorited %}
+    window.favoriteManager.setFavoriteState('{{ cafe.id }}', true);
     {% endif %}
 });
 </script>
-
 
 {% endblock %}
