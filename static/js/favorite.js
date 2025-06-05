@@ -1,4 +1,4 @@
-// static/js/favorite.js - 오류 수정된 통합 찜하기 시스템
+// static/js/favorite.js - Swiper 지원 통합 찜하기 시스템
 
 // ✅ 기존 FavoriteManager가 있다면 제거
 if (window.favoriteManager) {
@@ -133,7 +133,7 @@ class FavoriteManager {
         const currentPath = window.location.pathname;
         
         if (currentPath === '/ddoksang/' || currentPath === '/ddoksang/home/' || currentPath.endsWith('/ddoksang/')) {
-            // 홈 페이지: 찜한 카페 섹션 업데이트
+            // 홈 페이지: 찜한 카페 섹션 업데이트 (Swiper 지원)
             await this.updateHomeFavoritesSection(cafeId, data);
         } else if (currentPath.includes('/favorites/')) {
             // 찜 목록 페이지: 카드 제거만 (추가는 다른 페이지에서)
@@ -143,26 +143,53 @@ class FavoriteManager {
         }
     }
 
-    // ✅ 홈페이지 찜한 카페 섹션 실시간 업데이트
+    // ✅🎯 홈페이지 찜한 카페 섹션 업데이트 (Swiper 지원)
     async updateHomeFavoritesSection(cafeId, data) {
-        if (data.is_favorited) {
-            // ✅ 찜하기 추가: 실시간으로 카드 추가
-            try {
-                await this.addCafeCardToFavorites(cafeId);
-            } catch (error) {
-                console.error('찜한 카페 추가 오류:', error);
-                // 실패 시 서버 HTML로 전체 교체
-                if (data.favorites_html) {
-                    this.replaceFavoritesSection(data.favorites_html);
+        // 기존 Swiper 인스턴스가 있다면 파괴
+        if (window.favoritesSwiper) {
+            window.favoritesSwiper.destroy(true, true);
+            window.favoritesSwiper = null;
+        }
+        
+        if (data.favorites_html) {
+            const favoritesSection = document.getElementById('favoritesSection');
+            
+            if (data.favorites_html.trim()) {
+                // 찜한 카페가 있으면 섹션 업데이트
+                if (favoritesSection) {
+                    favoritesSection.outerHTML = data.favorites_html;
+                } else {
+                    // 섹션이 없으면 생일 아티스트 섹션 다음에 추가
+                    const birthdaySection = document.querySelector('.py-8.sm\\:py-12.px-4');
+                    if (birthdaySection) {
+                        birthdaySection.insertAdjacentHTML('afterend', data.favorites_html);
+                    }
+                }
+                
+                // 새로운 Swiper 초기화는 HTML에 포함된 스크립트가 자동으로 처리
+            } else {
+                // 찜한 카페가 없으면 섹션 제거
+                if (favoritesSection) {
+                    favoritesSection.remove();
                 }
             }
         } else {
-            // ✅ 찜 해제: 카드 제거
-            this.removeCafeCardFromFavorites(cafeId);
+            // 서버에서 HTML을 보내지 않은 경우 직접 처리
+            if (data.is_favorited) {
+                // ✅ 찜하기 추가: 실시간으로 카드 추가
+                try {
+                    await this.addCafeCardToFavorites(cafeId);
+                } catch (error) {
+                    console.error('찜한 카페 추가 오류:', error);
+                }
+            } else {
+                // ✅ 찜 해제: 카드 제거
+                this.removeCafeCardFromFavorites(cafeId);
+            }
         }
     }
 
-    // ✅ 찜한 카페에 카드 실시간 추가
+    // ✅ 찜한 카페에 카드 실시간 추가 (Swiper 지원)
     async addCafeCardToFavorites(cafeId) {
         try {
             // 카페 정보 가져오기
@@ -173,40 +200,55 @@ class FavoriteManager {
 
             let favoritesSection = document.getElementById('favoritesSection');
             
-            // 찜한 카페 섹션이 없으면 생성
+            // 찜한 카페 섹션이 없으면 Swiper 버전으로 생성
             if (!favoritesSection) {
-                await this.createFavoritesSection();
+                await this.createFavoritesSwiperSection();
                 favoritesSection = document.getElementById('favoritesSection');
             }
             
-            const carousel = document.getElementById('favoriteCarousel');
-            if (!carousel) return;
+            // Swiper wrapper 또는 일반 컨테이너 확인
+            let container = document.querySelector('.favorites-swiper .swiper-wrapper');
+            if (!container) {
+                container = document.getElementById('favoriteCarousel');
+            }
+            
+            if (!container) return;
             
             // 빈 상태 메시지가 있으면 제거
-            const emptyMessage = carousel.querySelector('.text-center.py-16, .col-span-full');
-            if (emptyMessage) {
+            const emptyMessage = container.querySelector('.text-center.py-16, .col-span-full, .swiper-slide');
+            if (emptyMessage && emptyMessage.textContent.includes('아직 찜한')) {
                 emptyMessage.remove();
             }
 
             // 새 카드 HTML 생성
             const cardHTML = this.generateCafeCardHTML(cafeData);
             
-            // 카드를 맨 앞에 추가
+            // Swiper 슬라이드 또는 일반 카드 요소 생성
             const cardElement = document.createElement('div');
-            cardElement.className = 'flex-shrink-0';
-            cardElement.setAttribute('data-cafe-id', cafeId);
-            cardElement.innerHTML = cardHTML;
+            if (container.classList.contains('swiper-wrapper')) {
+                cardElement.className = 'swiper-slide';
+                cardElement.innerHTML = `<div class="h-full" data-cafe-id="${cafeId}">${cardHTML}</div>`;
+            } else {
+                cardElement.className = 'flex-shrink-0';
+                cardElement.setAttribute('data-cafe-id', cafeId);
+                cardElement.innerHTML = cardHTML;
+            }
             
             // 애니메이션과 함께 추가
             cardElement.style.opacity = '0';
             cardElement.style.transform = 'scale(0.8)';
-            carousel.insertBefore(cardElement, carousel.firstChild);
+            container.insertBefore(cardElement, container.firstChild);
             
             // 애니메이션 실행
             setTimeout(() => {
                 cardElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 cardElement.style.opacity = '1';
                 cardElement.style.transform = 'scale(1)';
+                
+                // Swiper 업데이트
+                if (window.favoritesSwiper) {
+                    window.favoritesSwiper.update();
+                }
             }, 50);
             
         } catch (error) {
@@ -313,8 +355,8 @@ class FavoriteManager {
         `;
     }
 
-    // ✅ 찜한 카페 섹션 생성
-    async createFavoritesSection() {
+    // ✅ 찜한 카페 Swiper 섹션 생성
+    async createFavoritesSwiperSection() {
         const birthdaySection = document.querySelector('section.py-8.sm\\:py-12.px-4, section.py-4.sm\\:py-8.px-4');
         if (!birthdaySection) return;
 
@@ -325,26 +367,130 @@ class FavoriteManager {
                     <a href="/ddoksang/favorites/" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
                 </div>
 
-                <div id="favoriteCarousel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                    <!-- 카드들이 여기에 추가됩니다 -->
+                <!-- Swiper CSS -->
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+                
+                <!-- Swiper 컨테이너 -->
+                <div class="swiper favorites-swiper relative">
+                    <div class="swiper-wrapper">
+                        <!-- 카드들이 여기에 추가됩니다 -->
+                    </div>
+
+                    <!-- 네비게이션 버튼 -->
+                    <div class="swiper-button-next favorites-next"></div>
+                    <div class="swiper-button-prev favorites-prev"></div>
+                    
+                    <!-- 페이지네이션 -->
+                    <div class="swiper-pagination favorites-pagination"></div>
                 </div>
+
+                <!-- Swiper JS -->
+                <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
             </section>
         `;
 
         birthdaySection.insertAdjacentHTML('afterend', sectionHTML);
+        
+        // Swiper 초기화
+        setTimeout(() => {
+            this.initializeFavoritesSwiper();
+        }, 100);
     }
 
-    // ✅ 찜한 카페에서 카드 제거
+    // Swiper 초기화 함수
+    initializeFavoritesSwiper() {
+        if (window.favoritesSwiper) {
+            window.favoritesSwiper.destroy(true, true);
+        }
+
+        window.favoritesSwiper = new Swiper('.favorites-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            loop: false,
+            
+            breakpoints: {
+                640: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 2,
+                    spaceBetween: 24,
+                },
+                1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 24,
+                },
+                1280: {
+                    slidesPerView: 4,
+                    spaceBetween: 24,
+                },
+            },
+            
+            navigation: {
+                nextEl: '.favorites-next',
+                prevEl: '.favorites-prev',
+            },
+            
+            pagination: {
+                el: '.favorites-pagination',
+                clickable: true,
+                dynamicBullets: true,
+            },
+            
+            keyboard: {
+                enabled: true,
+            },
+            
+            mousewheel: {
+                forceToAxis: true,
+            },
+            
+            autoHeight: false,
+            resistance: true,
+            resistanceRatio: 0.85,
+            effect: 'slide',
+            speed: 400,
+            touchRatio: 1,
+            touchAngle: 45,
+        });
+    }
+
+    // ✅ 찜한 카페에서 카드 제거 (Swiper 지원)
     removeCafeCardFromFavorites(cafeId) {
         const favoritesSection = document.getElementById('favoritesSection');
         if (!favoritesSection) return;
 
-        const carousel = document.getElementById('favoriteCarousel');
-        if (!carousel) return;
+        // Swiper 슬라이드 또는 일반 카드 찾기
+        const swiperSlides = document.querySelectorAll(`.favorites-swiper .swiper-slide [data-cafe-id="${cafeId}"]`);
+        const regularCards = document.querySelectorAll(`#favoriteCarousel [data-cafe-id="${cafeId}"]`);
         
-        const cards = carousel.querySelectorAll(`[data-cafe-id="${cafeId}"]`);
+        // Swiper 슬라이드 제거
+        swiperSlides.forEach(slideContent => {
+            const slide = slideContent.closest('.swiper-slide');
+            if (slide) {
+                slide.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                slide.style.opacity = '0';
+                slide.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    slide.remove();
+                    
+                    // Swiper 업데이트
+                    if (window.favoritesSwiper) {
+                        window.favoritesSwiper.update();
+                        
+                        // 슬라이드가 모두 제거되면 빈 상태 표시
+                        if (window.favoritesSwiper.slides.length === 0) {
+                            this.showEmptyFavoritesInSwiper();
+                        }
+                    }
+                }, 300);
+            }
+        });
         
-        cards.forEach(card => {
+        // 일반 카드 제거
+        regularCards.forEach(card => {
             card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
             card.style.opacity = '0';
             card.style.transform = 'scale(0.8)';
@@ -352,15 +498,38 @@ class FavoriteManager {
             setTimeout(() => {
                 card.remove();
                 
-                // 모든 카드가 제거되면 빈 상태 표시
-                if (carousel.children.length === 0) {
+                const carousel = document.getElementById('favoriteCarousel');
+                if (carousel && carousel.children.length === 0) {
                     this.showEmptyFavoritesInCarousel(carousel);
                 }
             }, 300);
         });
     }
 
-    // ✅ 빈 상태 표시
+    // ✅ Swiper에서 빈 상태 표시
+    showEmptyFavoritesInSwiper() {
+        const swiperWrapper = document.querySelector('.favorites-swiper .swiper-wrapper');
+        if (!swiperWrapper) return;
+
+        swiperWrapper.innerHTML = `
+            <div class="swiper-slide">
+                <div class="text-center py-16">
+                    <div class="text-6xl mb-4">💔</div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+                    <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+                    <a href="/ddoksang/" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+                        생일카페 둘러보기
+                    </a>
+                </div>
+            </div>
+        `;
+
+        if (window.favoritesSwiper) {
+            window.favoritesSwiper.update();
+        }
+    }
+
+    // ✅ 일반 컨테이너에서 빈 상태 표시
     showEmptyFavoritesInCarousel(carousel) {
         carousel.innerHTML = `
             <div class="col-span-full text-center py-16">
@@ -372,26 +541,6 @@ class FavoriteManager {
                 </a>
             </div>
         `;
-    }
-
-    // 서버 응답 HTML로 전체 교체 (fallback)
-    replaceFavoritesSection(favoritesHTML) {
-        const favoritesSection = document.getElementById('favoritesSection');
-        
-        if (favoritesHTML && favoritesHTML.trim()) {
-            if (favoritesSection) {
-                favoritesSection.outerHTML = favoritesHTML;
-            } else {
-                const birthdaySection = document.querySelector('section.py-8.sm\\:py-12.px-4, section.py-4.sm\\:py-8.px-4');
-                if (birthdaySection) {
-                    birthdaySection.insertAdjacentHTML('afterend', favoritesHTML);
-                }
-            }
-        } else {
-            if (favoritesSection) {
-                favoritesSection.remove();
-            }
-        }
     }
 
     updateFavoritesPage(cafeId, isFavorited) {
@@ -566,4 +715,4 @@ window.showToast = function(message, type) {
 };
 
 // 초기화 완료 로그
-console.log('수정된 통합 찜하기 시스템 로드 완료');
+console.log('Swiper 지원 통합 찜하기 시스템 로드 완료');
