@@ -1,0 +1,27 @@
+<div class="mb-6">
+  <label class="block text-sm font-medium text-gray-700 mb-2">멤버별 가격 입력 및 선택</label>
+
+  {% if formset %}
+    {{ formset.management_form }}
+  {% endif %}
+
+  <div class="space-y-2">
+    {% for form, member_name in formset_with_names %}
+      <div class="flex items-center gap-2">
+        {{ form.member }} {# hidden input: 멤버 ID #}
+
+        <!-- ✅ 멤버 이름 옆에 체크박스 -->
+        <input type="checkbox" name="members" value="{{ form.member.value }}" class="mr-2 member-checkbox">
+
+        <!-- 멤버 이름 -->
+        <span class="w-32">{{ member_name }}</span>
+
+        <!-- 가격 입력 필드 -->
+        {{ form.price }}
+        {% if form.price.errors %}
+          <p class="text-red-500 text-sm">{{ form.price.errors.0 }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>

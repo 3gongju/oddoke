@@ -37,6 +37,9 @@ urlpatterns = [
     # 아티스트 검색
     path('ajax/search_artists/', views.search_artists, name='search_artists'),
 
+    # 분철 폼셋
+    path('ajax/load_split_members_and_prices/', views.load_split_members_and_prices, name='load_split_members_and_prices'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 

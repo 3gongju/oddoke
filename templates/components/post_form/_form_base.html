@@ -18,22 +18,25 @@
 </div>
 
 <!-- 멤버 선택 -->
-<div id="member-wrapper" class="mb-6 hidden">
-  <label class="block text-sm font-medium text-gray-700 mb-2">멤버 선택</label>
-  <div id="member-checkboxes">
-    {% for member in selected_members %}
-      <label class="block mb-2">
-        <input type="checkbox" name="members" value="{{ member.id }}"
-               class="mr-2 member-checkbox"
-               {% if member.id in selected_member_ids %}checked{% endif %}>
-        {{ member.member_name }}
-      </label>
-    {% endfor %}
-  </div>
-  {% if form.members.errors %}
-    <p class="text-red-500 text-sm mt-1">{{ form.members.errors.0 }}</p>
+<div id="member-wrapper" class="{% if category != 'split' %}mb-6 hidden{% else %}hidden{% endif %}">
+  <!-- ✅ split일 때는 비워놓고, sell/rental은 서버 렌더 -->
+  {% if category != 'split' %}
+    <label class="block text-sm font-medium text-gray-700 mb-2">멤버 선택</label>
+    <div id="member-checkboxes">
+      {% for member in selected_members %}
+        <label class="block mb-2">
+          <input type="checkbox" name="members" value="{{ member.id }}" class="mr-2 member-checkbox"
+                 {% if member.id in selected_member_ids %}checked{% endif %}>
+          {{ member.member_name }}
+        </label>
+      {% endfor %}
+    </div>
+    {% if form.members.errors %}
+      <p class="text-red-500 text-sm mt-1">{{ form.members.errors.0 }}</p>
+    {% endif %}
   {% endif %}
 </div>
+
 
 <!-- 제목 -->
 <div class="mb-6">

@@ -1,5 +1,5 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.forms import modelformset_factory, HiddenInput
 from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice
 
 COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400'
@@ -115,10 +115,15 @@ class FarmCommentForm(forms.ModelForm):
             'parent': forms.HiddenInput()
         }
 
-SplitPriceFormSet = inlineformset_factory(
-    FarmSplitPost,
+SplitPriceFormSet = modelformset_factory(
     SplitPrice,
     fields=('member', 'price'),
-    extra=0,  # 이미 멤버 목록으로 만들기 때문에, 여유분 row 없음
-    can_delete=False  # row 삭제 불가 (수정만 허용)
+    widgets={
+        'member': HiddenInput(),
+        'price': forms.NumberInput(attrs={
+            'class': COMMON_INPUT_CLASS,
+            'placeholder': '가격을 입력하세요',
+        }),
+    },
+    can_delete=False
 )
