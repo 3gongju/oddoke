@@ -24,7 +24,6 @@ urlpatterns = [
     # path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
     # path('toggle_favorite/<int:cafe_id>/', views.toggle_favorite, name='toggle_favorite'),
     path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
-    
 
 
     

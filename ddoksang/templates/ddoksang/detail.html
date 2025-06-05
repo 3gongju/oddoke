@@ -4,7 +4,7 @@
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+<div class="min-h-screen bg-white">
   <!-- 상태 알림 배너 (미리보기/대기중일 때만 표시) -->
   {% if is_preview %}
     <div class="bg-yellow-50 border-b border-yellow-200">
@@ -163,12 +163,8 @@
           <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
             <span class="mr-2">🎁</span> 특전 정보
           </h2>
-          <div class="flex flex-wrap gap-2">
-            {% for benefit in cafe.special_benefits_list %}
-              <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
-                {{ benefit }}
-              </span>
-            {% endfor %}
+          <div class="prose prose-sm max-w-none">
+            <p class="text-gray-700 leading-relaxed">{{ cafe.special_benefits }}</p>
           </div>
         </div>
         {% endif %}
@@ -257,10 +253,8 @@
             {% if cafe.hashtags %}
             <div>
               <span class="text-gray-600 block mb-2">태그</span>
-              <div class="flex flex-wrap gap-1">
-                {% for tag in cafe.hashtags_list %}
-                  <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">#{{ tag }}</span>
-                {% endfor %}
+              <div class="text-sm text-gray-600">
+                {{ cafe.hashtags }}
               </div>
             </div>
             {% endif %}
