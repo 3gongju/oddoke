@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+import ddoksang.views.cafe_views as cafe_views 
 
 app_name = 'ddoksang'
 
@@ -9,6 +10,7 @@ urlpatterns = [
     path('map/', views.map_view, name='map'),
     path('search/', views.search_view, name='search'),
     # path('list/', views.cafe_list_view, name='cafe_list'),
+   path('tour_map/', cafe_views.tour_map_view, name='tour_map'),
     
     # === 카페 상세/등록 ===
     path('create/', views.cafe_create_view, name='create'),
@@ -20,7 +22,9 @@ urlpatterns = [
     path('my-cafes/', views.my_cafes, name='my_cafes'),
     path('favorites/', views.my_favorites_view, name='favorites'),
     # path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
-    path('toggle_favorite/<int:cafe_id>/', views.toggle_favorite, name='toggle_favorite'),
+    # path('toggle_favorite/<int:cafe_id>/', views.toggle_favorite, name='toggle_favorite'),
+    path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
+
 
     
 

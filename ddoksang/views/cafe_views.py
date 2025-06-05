@@ -344,66 +344,82 @@ def my_cafes(request):
     return render(request, 'ddoksang/my_cafes.html', context)
 
 @login_required
-@require_POST 
+@require_POST
 @csrf_protect
 def toggle_favorite(request, cafe_id):
-    """찜하기/찜해제 토글 - 완전한 버전"""
+    """찜하기 토글 기능"""
     try:
-        # 카페 존재 확인
+        # 카페 조회
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
         
-        with transaction.atomic():
-            favorite, created = CafeFavorite.objects.get_or_create(
-                user=request.user,
-                cafe=cafe
-            )
-            
-            if created:
-                is_favorited = True
-                action = "added"
-            else:
-                favorite.delete()
-                is_favorited = False
-                action = "removed"
-            
-            # 사용자 캐시 삭제
-            cache_key = f"user_favorites_{request.user.id}"
-            cache.delete(cache_key)
-            
-            return JsonResponse({
-                'success': True,
-                'is_favorited': is_favorited,
-                'action': action,
-                'cafe_id': cafe_id,
-                'message': f'카페를 찜목록에 {"추가했습니다" if is_favorited else "제거했습니다"}'
-            })
-            
+        # 찜하기 토글
+        favorite, created = CafeFavorite.objects.get_or_create(user=request.user, cafe=cafe)
+        
+        if created:
+            message = "찜 목록에 추가했습니다."
+            is_favorited = True
+        else:
+            favorite.delete()
+            message = "찜 목록에서 제거했습니다."
+            is_favorited = False
+        
+        # 사용자의 모든 찜한 카페 조회
+        my_favorite_cafes = BdayCafe.objects.filter(
+            favoritecafes__user=request.user,
+            status='approved'
+        ).select_related('artist', 'member').order_by('-favoritecafes__created_at')
+        
+        # 사용자 찜 목록 (ID 리스트)
+        user_favorites = list(
+            CafeFavorite.objects.filter(user=request.user).values_list('cafe_id', flat=True)
+        )
+        
+        # 찜한 카페 섹션 HTML 렌더링
+        favorites_html = render_to_string(
+            'ddoksang/components/_favorites_section.html',
+            {'my_favorite_cafes': my_favorite_cafes, 'user': request.user, 'user_favorites': user_favorites},
+            request=request
+        )
+        
+        response_data = {
+            'success': True,
+            'is_favorited': is_favorited,
+            'message': message,
+            'favorites_html': favorites_html
+        }
+        
+        return JsonResponse(response_data)
+        
+    except BdayCafe.DoesNotExist:
+        logger.error(f"카페 {cafe_id}를 찾을 수 없습니다.")
+        return JsonResponse({'success': False, 'error': '카페를 찾을 수 없습니다.'}, status=404)
     except Exception as e:
-        logger.error(f"찜하기 토글 오류: {e}")
-        return JsonResponse({
-            'success': False,
-            'error': '찜하기 처리 중 오류가 발생했습니다.'
-        }, status=500)
+        logger.error(f"찜하기 오류: {str(e)}")
+        return JsonResponse({'success': False, 'error': f'오류가 발생했습니다: {str(e)}'}, status=500)
 
+
+
+# 찜한 카페 목록 페이지 뷰도 수정
 @login_required
 def favorites_view(request):
-    """찜한 카페 목록"""
-    page = request.GET.get('page', 1)
-    
-    # 사용자가 찜한 카페들
+    """찜한 카페 목록 페이지"""
     favorites = CafeFavorite.objects.filter(
         user=request.user
     ).select_related('cafe__artist', 'cafe__member').order_by('-created_at')
     
-    # 페이징 처리
-    paginator = Paginator(favorites, 12)
-    favorites_page = paginator.get_page(page)
+    # 사용자 찜 목록 (ID 리스트)
+    user_favorites = list(
+        CafeFavorite.objects.filter(user=request.user)
+        .values_list('cafe_id', flat=True)
+    )
     
     context = {
-        'favorites': favorites_page,
-        'total_count': favorites.count(),
+        'favorites': favorites,
+        'user_favorites': user_favorites,
     }
+    
     return render(request, 'ddoksang/favorites.html', context)
+
 
 @login_required
 def user_preview_cafe(request, cafe_id):
@@ -441,3 +457,103 @@ def cafe_edit_view(request, cafe_id):
 def my_favorites_view(request):
     """내 찜 목록 (favorites_view와 동일)"""
     return favorites_view(request)
+
+def tour_map_view(request):
+    """투어맵 뷰 - 디버깅 강화 버전"""
+    from datetime import date
+    import json
+    import logging
+    from django.conf import settings
+    
+    logger = logging.getLogger(__name__)
+    today = date.today()
+    
+    # 현재 운영중인 카페들만 가져오기
+    cafes = BdayCafe.objects.filter(
+        status='approved',
+        start_date__lte=today,
+        end_date__gte=today
+    ).select_related('artist', 'member').prefetch_related('images')
+    
+    logger.info(f"운영중인 카페 수: {cafes.count()}")
+    
+    cafes_data = []
+    for cafe in cafes:
+        try:
+            # 좌표 검증
+            if not cafe.latitude or not cafe.longitude:
+                logger.warning(f"카페 {cafe.id}({cafe.cafe_name}): 좌표 정보 없음")
+                continue
+                
+            # 좌표를 float로 변환
+            try:
+                lat = float(cafe.latitude)
+                lng = float(cafe.longitude)
+                
+                # 한국 좌표 범위 검증
+                if not (33.0 <= lat <= 43.0 and 124.0 <= lng <= 132.0):
+                    logger.warning(f"카페 {cafe.id}: 좌표가 한국 범위를 벗어남 (lat: {lat}, lng: {lng})")
+                    continue
+                    
+            except (ValueError, TypeError) as e:
+                logger.warning(f"카페 {cafe.id}: 좌표 변환 오류 - {e}")
+                continue
+            
+            # 메인 이미지 URL 가져오기
+            main_image_url = None
+            try:
+                if hasattr(cafe, 'get_main_image'):
+                    main_image_url = cafe.get_main_image()
+                elif cafe.images.exists():
+                    main_image_url = cafe.images.first().image.url
+            except Exception as e:
+                logger.warning(f"카페 {cafe.id}: 이미지 처리 오류 - {e}")
+            
+            # ✅ 카페 데이터 구조 - name과 cafe_name 모두 제공
+            cafe_data = {
+                "id": cafe.id,
+                "name": cafe.cafe_name,           # ✅ JavaScript에서 cafe.name으로 접근
+                "cafe_name": cafe.cafe_name,      # ✅ 하위 호환성
+                "artist": cafe.artist.display_name if cafe.artist else "",
+                "member": cafe.member.member_name if cafe.member else "",
+                "latitude": lat,
+                "longitude": lng,
+                "address": cafe.address or "",
+                "road_address": cafe.road_address or "",
+                "start_date": cafe.start_date.strftime('%Y-%m-%d'),
+                "end_date": cafe.end_date.strftime('%Y-%m-%d'),
+                "is_active": True,
+                "main_image": main_image_url,
+                "special_benefits": cafe.special_benefits or "",
+                "days_remaining": (cafe.end_date - today).days,
+                "cafe_type": cafe.get_cafe_type_display(),
+            }
+            
+            cafes_data.append(cafe_data)
+            logger.debug(f"카페 {cafe.id} 데이터 추가됨: {cafe.cafe_name}")
+                
+        except Exception as e:
+            logger.error(f"카페 {cafe.id} 데이터 처리 중 오류: {e}")
+            continue
+    
+    logger.info(f"지도에 표시할 카페 수: {len(cafes_data)}")
+    
+    # JSON 데이터 안전하게 생성
+    try:
+        cafes_json = json.dumps(cafes_data, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"JSON 직렬화 오류: {e}")
+        cafes_json = "[]"
+
+    context = {
+        "bday_cafes_json": cafes_json,
+        "total_bday_cafes": len(cafes_data),
+        "kakao_api_key": getattr(settings, "KAKAO_MAP_API_KEY", ""),
+        "debug_info": {
+            "total_queried": cafes.count(),
+            "total_valid": len(cafes_data),
+            "today": today.strftime('%Y-%m-%d')
+        }
+    }
+    
+    return render(request, 'ddoksang/tour_map.html', context)

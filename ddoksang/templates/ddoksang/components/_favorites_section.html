@@ -1,0 +1,65 @@
+{% load static %}
+{% load filters %}
+
+<section class="mb-12" id="favoritesSection">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
+    <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
+  </div>
+
+  {% if my_favorite_cafes %}
+    <!-- Swiper 컨테이너 -->
+    <div class="swiper-container">
+      <div class="swiper-wrapper">
+        {% for cafe in my_favorite_cafes %}
+          <!-- 각 카페를 swiper-slide로 감쌈 -->
+          <div class="swiper-slide">
+            <div class="flex-shrink-0" data-cafe-id="{{ cafe.id }}">
+              {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- 네비게이션 버튼 -->
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+    </div>
+  {% else %}
+    <div class="text-center py-16">
+      <div class="text-6xl mb-4">💔</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+      <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+        생일카페 둘러보기
+      </a>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@9.0.0/swiper-bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Swiper 초기화
+    const swiper = new Swiper('.swiper-container', {
+        slidesPerView: 1, // 화면 크기에 맞게 조정
+        spaceBetween: 20, // 슬라이드 간 간격
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        breakpoints: {
+            640: {
+                slidesPerView: 2,
+                spaceBetween: 20,
+            },
+            1024: {
+                slidesPerView: 3,
+                spaceBetween: 30,
+            },
+        },
+    });
+});
+</script>
