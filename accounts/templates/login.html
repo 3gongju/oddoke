@@ -26,10 +26,10 @@
     <form method="POST" class="space-y-4 mb-6">
       {% csrf_token %}
 
-      <!-- 아이디 입력 -->
+      <!-- 이메일 입력 -->
       <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-1">아이디 (이메일)</label>
-        {{ form.username }}
+        <label class="block text-sm font-semibold text-gray-700 mb-1">이메일</label>
+        {{ form.email }}
       </div>
 
       <!-- 비밀번호 입력 -->
