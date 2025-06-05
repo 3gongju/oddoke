@@ -57,12 +57,12 @@
         {% endif %}
       </div>
 
-      <!-- ✅ 찜하기 버튼 - user_favorites로 통일 -->
+      <!-- ✅ 통합된 찜하기 버튼 -->
       {% if show_favorite_btn and user.is_authenticated and cafe.status == 'approved' %}
         <button 
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
-          class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
+          class="text-lg transition-all duration-200 hover:scale-125 focus:outline-none cursor-pointer"
           style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
           title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
         >

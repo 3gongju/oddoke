@@ -90,18 +90,19 @@
       </div>
     </div>
     
-    <!-- 찜하기 버튼 -->
+    <!-- ✅ 통합된 찜하기 버튼 -->
+    {% if user.is_authenticated and cafe.status == 'approved' %}
     <div class="absolute top-6 right-6">
-      <button onclick="toggleFavorite({{ cafe.id }})" 
-              class="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all">
-        <svg class="w-6 h-6 text-white{% if is_favorited %} fill-current{% endif %}" 
-             fill="{% if is_favorited %}currentColor{% else %}none{% endif %}" 
-             stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-        </svg>
+      <button 
+        data-favorite-btn 
+        data-cafe-id="{{ cafe.id }}" 
+        class="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all text-2xl focus:outline-none cursor-pointer"
+        title="찜하기"
+      >
+        ♡
       </button>
     </div>
+    {% endif %}
   </div>
 
   <!-- 메인 컨텐츠 -->
@@ -373,28 +374,6 @@ function initMap() {
 // 페이지 로드 시 지도 초기화
 document.addEventListener('DOMContentLoaded', initMap);
 
-// 찜하기 토글
-function toggleFavorite(cafeId) {
-  if (cafeData.isAuthenticated) {
-    fetch(`/ddoksang/toggle_favorite/${cafeId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        'Content-Type': 'application/json',
-      },
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        location.reload();
-      }
-    });
-  } else {
-    alert('로그인이 필요합니다.');
-    window.location.href = '/accounts/login/';
-  }
-}
-
 // 카카오맵에서 보기
 function openKakaoMap() {
   const url = `https://map.kakao.com/link/map/${cafeData.name},${cafeData.latitude},${cafeData.longitude}`;
@@ -423,4 +402,20 @@ function shareKakao() {
 
 <!-- CSRF 토큰 -->
 {% csrf_token %}
+
+<!-- ✅ 찜하기 스크립트 로드 -->
+<script src="{% static 'js/favorite.js' %}"></script>
+
+<!-- ✅ 사용자 인증 상태를 body에 추가 -->
+<script>
+document.body.dataset.userAuthenticated = {% if user.is_authenticated %}'true'{% else %}'false'{% endif %};
+
+// 찜하기 상태 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    {% if user.is_authenticated and is_favorited %}
+    window.favoriteManager.setFavoriteState('{{ cafe.id }}', true);
+    {% endif %}
+});
+</script>
+
 {% endblock %}
