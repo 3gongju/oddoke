@@ -1,26 +1,20 @@
 {% load static %}
 {% load filters %}
 
-<!-- 🔧 템플릿 업데이트 확인용 -->
-<div style="background: red; color: white; padding: 10px; text-align: center;">
-    🚨 새로운 Swiper 템플릿 로드됨! (이 메시지가 보이면 성공)
-</div>
-
 <section class="mb-12" id="favoritesSection">
   <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
+    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜 한 생일카페</h2>
     <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
   </div>
 
   {% if my_favorite_cafes %}
     <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-    
+
     <!-- Swiper 컨테이너 -->
     <div class="swiper favorites-swiper relative">
       <div class="swiper-wrapper">
         {% for cafe in my_favorite_cafes %}
-          <!-- 각 카페를 swiper-slide로 감쌈 -->
           <div class="swiper-slide">
             <div class="h-full" data-cafe-id="{{ cafe.id }}">
               {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites show_status_badge=True show_type_badge=True show_benefits=True %}
@@ -29,219 +23,112 @@
         {% endfor %}
       </div>
 
-      <!-- 네비게이션 버튼 -->
-      <div class="swiper-button-next favorites-next"></div>
-      <div class="swiper-button-prev favorites-prev"></div>
-      
       <!-- 페이지네이션 -->
       <div class="swiper-pagination favorites-pagination"></div>
     </div>
 
     <!-- Swiper JS -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    
-    <!-- Swiper 초기화 스크립트 -->
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // 기존 Swiper 인스턴스가 있다면 제거
-        if (window.favoritesSwiper) {
-            window.favoritesSwiper.destroy(true, true);
+      if (window.favoritesSwiper) {
+        window.favoritesSwiper.destroy(true, true);
+      }
+
+      window.favoritesSwiper = new Swiper('.favorites-swiper', {
+        slidesPerView: 1,
+        spaceBetween: 0,
+        loop: false,
+        breakpoints: {
+          640: { slidesPerView: 2, spaceBetween: 0 },
+          768: { slidesPerView: 2, spaceBetween: 0 },
+          1024: { slidesPerView: 3, spaceBetween: 0 },
+          1280: { slidesPerView: 4, spaceBetween: 0 },
+        },
+        pagination: {
+          el: '.favorites-pagination',
+          clickable: true,
+          dynamicBullets: true,
+        },
+        keyboard: { enabled: true },
+        mousewheel: { forceToAxis: true },
+        autoHeight: false,
+        resistance: true,
+        resistanceRatio: 0.85,
+        effect: 'slide',
+        speed: 400,
+        touchRatio: 1,
+        touchAngle: 45,
+        on: {
+          init: function() {
+            console.log('찜한 카페 Swiper 처리 완료');
+          },
         }
+      });
 
-        // Swiper 초기화
-        window.favoritesSwiper = new Swiper('.favorites-swiper', {
-            // 기본 설정
-            slidesPerView: 1,
-            spaceBetween: 20,
-            loop: false,
-            
-            // 반응형 브레이크포인트
-            breakpoints: {
-                640: {
-                    slidesPerView: 2,
-                    spaceBetween: 20,
-                },
-                768: {
-                    slidesPerView: 2,
-                    spaceBetween: 24,
-                },
-                1024: {
-                    slidesPerView: 3,
-                    spaceBetween: 24,
-                },
-                1280: {
-                    slidesPerView: 4,
-                    spaceBetween: 24,
-                },
-            },
-            
-            // 네비게이션
-            navigation: {
-                nextEl: '.favorites-next',
-                prevEl: '.favorites-prev',
-            },
-            
-            // 페이지네이션
-            pagination: {
-                el: '.favorites-pagination',
-                clickable: true,
-                dynamicBullets: true,
-            },
-            
-            // 접근성
-            a11y: {
-                prevSlideMessage: '이전 찜한 카페',
-                nextSlideMessage: '다음 찜한 카페',
-            },
-            
-            // 키보드 제어
-            keyboard: {
-                enabled: true,
-            },
-            
-            // 마우스 휠
-            mousewheel: {
-                forceToAxis: true,
-            },
-            
-            // 자동 높이 조정
-            autoHeight: false,
-            
-            // 슬라이드 시작/끝에서 효과
-            resistance: true,
-            resistanceRatio: 0.85,
-            
-            // 애니메이션 효과
-            effect: 'slide',
-            speed: 400,
-            
-            // 터치 설정
-            touchRatio: 1,
-            touchAngle: 45,
-            
-            // 이벤트 리스너
-            on: {
-                init: function() {
-                    console.log('찜한 카페 Swiper 초기화 완료');
-                },
-            }
-        });
+      // 카드 높이 까지 복잡화
+      function equalizeCardHeights() {
+        const slides = document.querySelectorAll('.favorites-swiper .swiper-slide');
+        let maxHeight = 0;
 
-        // 카드 높이 균등화
-        function equalizeCardHeights() {
-            const slides = document.querySelectorAll('.favorites-swiper .swiper-slide');
-            let maxHeight = 0;
-            
-            slides.forEach(slide => {
-                slide.style.height = 'auto';
-            });
-            
-            slides.forEach(slide => {
-                maxHeight = Math.max(maxHeight, slide.offsetHeight);
-            });
-            
-            slides.forEach(slide => {
-                slide.style.height = maxHeight + 'px';
-            });
-        }
+        slides.forEach(slide => { slide.style.height = 'auto'; });
+        slides.forEach(slide => { maxHeight = Math.max(maxHeight, slide.offsetHeight); });
+        slides.forEach(slide => { slide.style.height = maxHeight + 'px'; });
+      }
 
-        setTimeout(equalizeCardHeights, 100);
-        window.addEventListener('resize', equalizeCardHeights);
+      setTimeout(equalizeCardHeights, 100);
+      window.addEventListener('resize', equalizeCardHeights);
     });
     </script>
 
-    <!-- Swiper 커스텀 스타일 -->
     <style>
     .favorites-swiper {
-        padding: 0 40px 50px 40px;
-        margin: 0 -20px;
+      padding: 0 0 40px 0;
+      margin: 0;
     }
 
     .favorites-swiper .swiper-slide {
-        height: auto;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .favorites-swiper .swiper-slide > div {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .favorites-next,
-    .favorites-prev {
-        width: 32px !important;
-        height: 32px !important;
-        margin-top: -16px !important;
-        background: white !important;
-        border: 2px solid #e5e7eb !important;
-        border-radius: 50% !important;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-        color: #374151 !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .favorites-next:hover,
-    .favorites-prev:hover {
-        background: #f9fafb !important;
-        border-color: #d1d5db !important;
-        transform: scale(1.1) !important;
-    }
-
-    .favorites-next.swiper-button-disabled,
-    .favorites-prev.swiper-button-disabled {
-        opacity: 0.3 !important;
-        cursor: not-allowed !important;
-    }
-
-    .favorites-next::after,
-    .favorites-prev::after {
-        font-size: 12px !important;
-        font-weight: bold !important;
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      padding: 0;
     }
 
     .favorites-pagination {
-        bottom: 10px !important;
-        text-align: center !important;
+      bottom: 0px !important;
+      position: absolute;
+      width: 100%;
+      left: 0;
+      text-align: center !important;
     }
 
     .favorites-pagination .swiper-pagination-bullet {
-        width: 8px !important;
-        height: 8px !important;
-        background: #d1d5db !important;
-        opacity: 1 !important;
-        margin: 0 4px !important;
+      width: 8px !important;
+      height: 8px !important;
+      background: #d1d5db !important;
+      opacity: 1 !important;
+      margin: 0 4px !important;
     }
 
     .favorites-pagination .swiper-pagination-bullet-active {
-        background: #ec4899 !important;
-        transform: scale(1.2) !important;
-    }
-
-    @media (max-width: 640px) {
-        .favorites-next,
-        .favorites-prev {
-            display: none !important;
-        }
-        
-        .favorites-swiper {
-            padding: 0 20px 40px 20px;
-        }
+      background: #ec4899 !important;
+      transform: scale(1.2) !important;
     }
 
     .favorites-swiper .swiper-slide:hover {
-        transform: translateY(-2px);
-        transition: transform 0.2s ease;
+      transform: translateY(-2px);
+      transition: transform 0.2s ease;
     }
     </style>
 
   {% else %}
-    <!-- 빈 상태 -->
+    <!-- 빈 상황 -->
     <div class="text-center py-16">
-      <div class="text-6xl mb-4">💔</div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
-      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+      <div class="text-6xl mb-4">♡◟( ˘ ³˘)◞ ♡</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜 한 생일카페가 없어요</h3>
+      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜 해보세요!</p>
       <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
         생일카페 둘러보기
       </a>

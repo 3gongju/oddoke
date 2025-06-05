@@ -272,27 +272,12 @@
   </section>
 
   <!-- ✅ 찜한 카페 섹션 - 수정된 버전 -->
-  {% if my_favorite_cafes %}
-  <section class="mb-12" id="favoritesSection">
-    <div class="flex items-center justify-between mb-4 px-4">
-      <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
-      <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
-    </div>
+    {% include 'ddoksang/components/_favorites_section.html' %}
 
-    <div id="favoriteCarousel" class="px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-      {% for cafe in my_favorite_cafes %}
-        <div class="flex-shrink-0" data-cafe-id="{{ cafe.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites show_status_badge=True %}
-        </div>
-      {% endfor %}
-    </div>
-  </section>
-  {% endif %}
-
-  <!-- 🆕 최신 등록된 생일카페 섹션 -->
+  <!--  최신 등록된 생일카페 섹션 -->
   <section class="py-4 sm:py-8 px-4">
     <div class="text-center mb-6 sm:mb-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🆕 NEW 최신 등록된 생카</h2>
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2"> NEW 최신 등록된 생카</h2>
       <p class="text-gray-600 text-sm sm:text-base">방금 등록된 따끈따끈한 생카를 확인해보세요!</p>
     </div>
 
