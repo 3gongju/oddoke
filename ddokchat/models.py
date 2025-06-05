@@ -16,10 +16,17 @@ class ChatRoom(models.Model):
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='chat_buyer', on_delete=models.CASCADE)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='chat_seller', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    buyer_completed = models.BooleanField(default=False)  # 구매자 거래 완료 여부
+    seller_completed = models.BooleanField(default=False)  # 판매자 거래 완료 
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False) # 채팅방 고유 난수 부여
     class Meta:
         unique_together = ('content_type', 'object_id', 'buyer')  # 구매자는 같은 글에 대해 1방만
 
+    @property
+    def is_fully_completed(self):
+        return self.buyer_completed and self.seller_completed
+        
     def __str__(self):
         return f"Post#{self.object_id} | {self.buyer.username} ↔ {self.seller.username}"
 
@@ -28,6 +35,7 @@ class Message(models.Model):
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
+    image = models.ImageField(upload_to='chat_images/', blank=True, null=True) # 채팅방 이미지
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 

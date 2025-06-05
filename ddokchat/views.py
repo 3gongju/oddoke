@@ -5,7 +5,12 @@ from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from .models import ChatRoom, Message
 from django.db.models import Q
-
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_POST
+from django.core.files.storage import default_storage
+from django.urls import reverse
 # Create your views here.
 
 # 채팅방
@@ -74,14 +79,56 @@ def my_chatrooms(request):
         room.partner = room.seller if room.buyer == request.user else room.buyer
         room.last_message = room.messages.last()
         room.unread_count = room.messages.filter(is_read=False).exclude(sender=request.user).count()
-
-    # 여기서 별도 주입 없이 그냥 room.post 사용 가능
-    # room.post = room.post  # 필요 없음
-
         room.category = room.post.category_type  # 'sell' 등
 
+    # ✅ 거래중 / 거래완료 분리
+    active_rooms = [room for room in rooms if not room.is_fully_completed]
+    completed_rooms = [room for room in rooms if room.is_fully_completed]
+
     context = {
-        'rooms': rooms,
+        "rooms": rooms,
+        'active_rooms': active_rooms,
+        'completed_rooms': completed_rooms,
         'me': request.user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
+
+
+@login_required
+@require_POST
+def upload_image(request):
+    if 'image' not in request.FILES or 'room_id' not in request.POST:
+        return JsonResponse({'success': False, 'error': '요청이 잘못되었습니다.'}, status=400)
+
+    image_file = request.FILES['image']
+    room_id = request.POST['room_id']
+
+    try:
+        room = ChatRoom.objects.get(id=room_id)
+        message = Message.objects.create(
+            room=room,
+            sender=request.user,
+            image=image_file
+        )
+        return JsonResponse({'success': True, 'image_url': message.image.url})
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '존재하지 않는 채팅방입니다.'}, status=404)
+
+@require_POST
+@login_required
+def complete_trade(request, room_id):
+    """구매자가 거래 완료 누르면 채팅 종료 & 리뷰 작성으로 이동"""
+    room = get_object_or_404(ChatRoom, id=room_id)
+
+    if room.buyer != request.user:
+        return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
+
+    room.buyer_completed = True
+    room.save()
+    
+    # ✅ target_user를 GET 파라미터로 넘김
+    return JsonResponse({
+        'success': True,
+        'is_fully_completed': room.is_fully_completed,  # 프론트에 넘김
+        'redirect_url': reverse('accounts:review_home') + f'?target_user={room.seller.id}'
+    })
