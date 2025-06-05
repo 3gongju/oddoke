@@ -278,6 +278,19 @@
 }
 </style>
 
+{% if user == room.buyer %}
+<dialog id="reviewModal" class="rounded-xl shadow-xl p-6 max-w-xl w-full">
+  <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="mt-4 flex justify-end space-x-3">
+      <button type="submit" class="bg-black text-white px-4 py-2 rounded-lg">리뷰 제출</button>
+      <button type="button" onclick="document.getElementById('reviewModal').close()" class="text-gray-500 px-4 py-2">취소</button>
+    </div>
+  </form>
+</dialog>
+{% endif %}
+
 <script>
   const roomId = "{{ room.id }}";
   const socket = new WebSocket(
@@ -602,5 +615,52 @@
       });
     }
   });
+
+  // 거래 완료 시 리뷰 폼 모달 띄우기 
+  document.addEventListener("DOMContentLoaded", function () {
+    const confirmBtn = document.querySelector("#confirmBtn");
+
+    // ✅ hasAlreadyReviewed 템플릿 값 가져오기
+    const hasAlreadyReviewed = "{{ has_already_reviewed }}" === "True";
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", async function () {
+        const confirmComplete = confirm("정말 거래를 완료하시겠습니까?");
+        if (!confirmComplete) return;
+
+        const response = await fetch(`/chat/complete/{{ room.id }}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+        });
+
+        const data = await response.json();
+
+        // ✅ 구매자이면서, 거래가 완료되었고, 리뷰를 아직 작성하지 않은 경우만 모달 표시
+        if (data.success && data.is_fully_completed && data.is_buyer && !hasAlreadyReviewed) {
+          const reviewModal = document.getElementById("reviewModal");
+          if (reviewModal) {
+            reviewModal.showModal();
+          }
+        } else {
+          alert("거래 완료 상태가 저장되었습니다.");
+        }
+      });
+    }
+  });
+  // 리뷰 모달 띄워지는지 테스트
+  const reviewModal = document.getElementById("reviewModal");
+  if (reviewModal) {
+    console.log("✅ 리뷰 모달 찾음, 띄우기 시도");
+    try {
+      reviewModal.showModal();
+    } catch (e) {
+      console.error("❌ 모달 띄우기 실패:", e);
+      reviewModal.style.display = "block";
+    }
+  } else {
+    console.error("❌ 리뷰 모달을 찾을 수 없습니다.");
+  }
 </script>
 {% endblock %}

@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import ChatRoom
+from accounts.models import MannerReview
+from accounts.forms import MannerReviewForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
@@ -19,6 +21,14 @@ def chat_room(request, room_id):
 
     room.other_user = room.seller if room.buyer == request.user else room.buyer # 상대방 프로필 이미지 추가
 
+    # ✅ 구매자 리뷰 작성 여부 확인
+    has_already_reviewed = False
+    if request.user == room.buyer and room.buyer_completed and room.seller_completed:
+        has_already_reviewed = MannerReview.objects.filter(
+            user=request.user,
+            target_user=room.seller
+        ).exists()
+
     # 내가 안 읽은 메시지 읽음 처리
     Message.objects.filter(
         Q(room=room) & Q(is_read=False) & ~Q(sender=request.user)
@@ -30,6 +40,8 @@ def chat_room(request, room_id):
         'room': room,
         'messages': messages,
         'user': request.user,
+        'form': MannerReviewForm(),
+        'has_already_reviewed': str(has_already_reviewed),
     }
 
     return render(request, 'ddokchat/chat_room.html', context)
@@ -86,7 +98,7 @@ def my_chatrooms(request):
     completed_rooms = [room for room in rooms if room.is_fully_completed]
 
     context = {
-        "rooms": rooms,
+        'rooms': rooms,
         'active_rooms': active_rooms,
         'completed_rooms': completed_rooms,
         'me': request.user,
@@ -117,18 +129,26 @@ def upload_image(request):
 @require_POST
 @login_required
 def complete_trade(request, room_id):
-    """구매자가 거래 완료 누르면 채팅 종료 & 리뷰 작성으로 이동"""
     room = get_object_or_404(ChatRoom, id=room_id)
+    user = request.user
 
-    if room.buyer != request.user:
+    is_buyer = (room.buyer == user)
+    is_seller = (room.seller == user)
+
+    if not (is_buyer or is_seller):
         return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
 
-    room.buyer_completed = True
+    if is_buyer:
+        room.buyer_completed = True
+    if is_seller:
+        room.seller_completed = True
+
     room.save()
-    
-    # ✅ target_user를 GET 파라미터로 넘김
+
+    is_fully_completed = room.buyer_completed and room.seller_completed
+
     return JsonResponse({
         'success': True,
-        'is_fully_completed': room.is_fully_completed,  # 프론트에 넘김
-        'redirect_url': reverse('accounts:review_home') + f'?target_user={room.seller.id}'
+        'is_fully_completed': is_fully_completed,
+        'is_buyer': is_buyer,
     })
