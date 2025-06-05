@@ -347,7 +347,7 @@ def my_cafes(request):
 @require_POST
 @csrf_protect
 def toggle_favorite(request, cafe_id):
-    """찜하기 토글 기능"""
+    """찜하기 토글 기능 - 단순 JSON 응답"""
     try:
         # 카페 조회
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
@@ -363,29 +363,12 @@ def toggle_favorite(request, cafe_id):
             message = "찜 목록에서 제거했습니다."
             is_favorited = False
         
-        # 사용자의 모든 찜한 카페 조회
-        my_favorite_cafes = BdayCafe.objects.filter(
-            favoritecafes__user=request.user,
-            status='approved'
-        ).select_related('artist', 'member').order_by('-favoritecafes__created_at')
-        
-        # 사용자 찜 목록 (ID 리스트)
-        user_favorites = list(
-            CafeFavorite.objects.filter(user=request.user).values_list('cafe_id', flat=True)
-        )
-        
-        # 찜한 카페 섹션 HTML 렌더링
-        favorites_html = render_to_string(
-            'ddoksang/components/_favorites_section.html',
-            {'my_favorite_cafes': my_favorite_cafes, 'user': request.user, 'user_favorites': user_favorites},
-            request=request
-        )
-        
+        # 🔧 HTML 렌더링 제거하고 단순 JSON만 응답
         response_data = {
             'success': True,
             'is_favorited': is_favorited,
             'message': message,
-            'favorites_html': favorites_html
+            'cafe_id': cafe_id,
         }
         
         return JsonResponse(response_data)
@@ -396,8 +379,6 @@ def toggle_favorite(request, cafe_id):
     except Exception as e:
         logger.error(f"찜하기 오류: {str(e)}")
         return JsonResponse({'success': False, 'error': f'오류가 발생했습니다: {str(e)}'}, status=500)
-
-
 
 # 찜한 카페 목록 페이지 뷰도 수정
 @login_required

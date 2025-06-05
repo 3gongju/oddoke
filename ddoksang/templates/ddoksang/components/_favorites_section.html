@@ -8,16 +8,28 @@
   </div>
 
   {% if my_favorite_cafes %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="favoriteCarousel">
-      {% for cafe in my_favorite_cafes %}
-        <div class="flex-shrink-0" data-cafe-id="{{ cafe.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites %}
+    <!-- 고정 컨테이너 안에서 스와이핑 -->
+    <div class="relative">
+      <!-- Swiper 컨테이너 -->
+      <div class="swiper-container favorites-swiper overflow-hidden">
+        <div class="swiper-wrapper">
+          {% for cafe in my_favorite_cafes %}
+            <!-- 각 카페를 swiper-slide로 감쌈 -->
+            <div class="swiper-slide">
+              <div class="h-full px-2" data-cafe-id="{{ cafe.id }}">
+                {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites %}
+              </div>
+            </div>
+          {% endfor %}
         </div>
-      {% endfor %}
+      </div>
+      
+      <!-- 페이지네이션만 유지 -->
+      <div class="swiper-pagination favorites-pagination mt-4"></div>
     </div>
   {% else %}
     <div class="text-center py-16">
-      <div class="text-6xl mb-4">\ud83d\udc94</div>
+      <div class="text-6xl mb-4">💔</div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
       <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
       <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
@@ -26,3 +38,201 @@
     </div>
   {% endif %}
 </section>
+
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9.0.0/swiper-bundle.min.css">
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@9.0.0/swiper-bundle.min.js"></script>
+
+<!-- 커스텀 CSS -->
+<style>
+/* 컨테이너 고정 및 오버플로우 숨김 */
+.favorites-swiper {
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 페이지네이션 */
+.favorites-pagination {
+  position: static !important;
+  text-align: center;
+}
+
+.favorites-swiper .swiper-pagination-bullet {
+  background: #d1d5db;
+  opacity: 1;
+  transition: all 0.3s ease;
+  margin: 0 4px;
+}
+
+.favorites-swiper .swiper-pagination-bullet-active {
+  background: #ec4899;
+  transform: scale(1.2);
+}
+
+/* 슬라이드 간격 조정 */
+.favorites-swiper .swiper-slide {
+  height: auto;
+  display: flex;
+  box-sizing: border-box;
+}
+
+.favorites-swiper .swiper-slide > div {
+  width: 100%;
+}
+
+/* 생일 아티스트 섹션과 일치하는 스타일 */
+.favorites-swiper .swiper-wrapper {
+  align-items: stretch;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let favoritesSwiper = null;
+    
+    // Swiper 초기화 함수
+    function initFavoritesSwiper() {
+        // 기존 Swiper가 있다면 완전히 파괴
+        if (favoritesSwiper) {
+            try {
+                favoritesSwiper.destroy(true, true);
+            } catch (e) {
+                console.warn('Swiper destroy error:', e);
+            }
+            favoritesSwiper = null;
+        }
+        
+        // Swiper 컨테이너가 존재하는지 확인
+        const swiperContainer = document.querySelector('.favorites-swiper');
+        if (!swiperContainer) {
+            console.log('Swiper container not found');
+            return;
+        }
+        
+        // 새 Swiper 인스턴스 생성
+        favoritesSwiper = new Swiper('.favorites-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 16,
+            loop: false,
+            centeredSlides: false,
+            
+            // 반응형 설정 (생일 아티스트와 동일)
+            breakpoints: {
+                640: {
+                    slidesPerView: 2,
+                    spaceBetween: 16,
+                },
+                768: {
+                    slidesPerView: 3,
+                    spaceBetween: 20,
+                },
+                1024: {
+                    slidesPerView: 4,
+                    spaceBetween: 20,
+                },
+                1280: {
+                    slidesPerView: 5,
+                    spaceBetween: 24,
+                }
+            },
+            
+            // 페이지네이션만 유지
+            pagination: {
+                el: '.favorites-pagination',
+                clickable: true,
+                dynamicBullets: true,
+            },
+            
+            // 추가 설정
+            autoHeight: false,
+            touchRatio: 1,
+            touchAngle: 45,
+            grabCursor: true,
+            
+            // 슬라이드 전환 효과
+            effect: 'slide',
+            speed: 300,
+            
+            // 접근성
+            a11y: {
+                enabled: true,
+            },
+            
+            // 옵저버 설정 (DOM 변경 감지)
+            observer: true,
+            observeParents: true,
+        });
+        
+        console.log('Favorites Swiper initialized');
+        return favoritesSwiper;
+    }
+    
+    // 초기 Swiper 생성
+    initFavoritesSwiper();
+    
+    // 찜하기 상태 변경 시 처리 - 단순화된 버전
+    if (window.favoriteManager) {
+        window.favoriteManager.onFavoriteChange((cafeId, isFavorited) => {
+            console.log(`찜하기 상태 변경: 카페 ${cafeId}, 찜됨: ${isFavorited}`);
+            
+            if (!isFavorited) {
+                // 찜 해제 시 해당 슬라이드 찾기
+                const slideToRemove = document.querySelector(`.favorites-swiper .swiper-slide [data-cafe-id="${cafeId}"]`)?.closest('.swiper-slide');
+                
+                if (slideToRemove && favoritesSwiper) {
+                    // 부드러운 애니메이션으로 제거
+                    slideToRemove.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    slideToRemove.style.opacity = '0';
+                    slideToRemove.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        // DOM에서 제거
+                        slideToRemove.remove();
+                        
+                        // Swiper 업데이트
+                        if (favoritesSwiper && favoritesSwiper.el) {
+                            try {
+                                favoritesSwiper.update();
+                                favoritesSwiper.updateSlidesClasses();
+                            } catch (e) {
+                                console.warn('Swiper update error:', e);
+                            }
+                        }
+                        
+                        // 모든 슬라이드가 제거되었는지 확인
+                        const remainingSlides = document.querySelectorAll('.favorites-swiper .swiper-slide');
+                        if (remainingSlides.length === 0) {
+                            console.log('모든 찜이 해제됨, 빈 상태로 변경');
+                            // 전체 섹션을 빈 상태로 교체
+                            const favoritesSection = document.getElementById('favoritesSection');
+                            if (favoritesSection) {
+                                favoritesSection.innerHTML = `
+                                    <div class="flex items-center justify-between mb-4">
+                                        <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
+                                        <a href="/ddoksang/favorites/" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
+                                    </div>
+                                    <div class="text-center py-16">
+                                        <div class="text-6xl mb-4">💔</div>
+                                        <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+                                        <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+                                        <a href="/ddoksang/home/" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+                                            생일카페 둘러보기
+                                        </a>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }, 300);
+                }
+            }
+            // 찜 추가의 경우 페이지 새로고침으로 처리 (단순화)
+        });
+    }
+    
+    // 전역에서 재초기화 가능하도록 함수 노출
+    window.reinitFavoritesSwiper = initFavoritesSwiper;
+});
+</script>
