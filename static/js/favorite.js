@@ -1,3 +1,10 @@
+// static/js/favorite.js - 오류 수정된 통합 찜하기 시스템
+
+// ✅ 기존 FavoriteManager가 있다면 제거
+if (window.favoriteManager) {
+    delete window.favoriteManager;
+}
+
 class FavoriteManager {
     constructor() {
         this.isSubmitting = false;
@@ -30,28 +37,7 @@ class FavoriteManager {
             }
         });
 
-        // 초기 찜 상태 설정
-        this.initializeFavoriteStates();
-
         console.log('FavoriteManager 초기화 완료');
-    }
-
-    // ✅ 초기 찜 상태 설정
-    initializeFavoriteStates() {
-        // 모든 찜하기 버튼의 현재 상태를 확인하여 초기화
-        const favoriteButtons = document.querySelectorAll('[data-favorite-btn]');
-        favoriteButtons.forEach(button => {
-            const cafeId = button.dataset.cafeId;
-            const currentHeart = button.innerHTML.trim();
-            const isCurrentlyFavorited = currentHeart === '♥' || button.style.color === 'rgb(239, 68, 68)';
-            
-            this.favoriteStates.set(cafeId.toString(), isCurrentlyFavorited);
-            
-            // 버튼 상태 정규화
-            this.updateButtonAppearance(button, isCurrentlyFavorited);
-        });
-        
-        console.log('초기 찜 상태:', this.favoriteStates);
     }
 
     async toggleFavorite(cafeId) {
@@ -65,10 +51,6 @@ class FavoriteManager {
             this.isSubmitting = false;
             return;
         }
-
-        // 현재 찜 상태 확인
-        const currentState = this.favoriteStates.get(cafeId.toString()) || false;
-        console.log(`카페 ${cafeId} 현재 찜 상태:`, currentState);
 
         // 모든 해당 카페의 버튼들 찾기
         const buttons = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
@@ -91,24 +73,22 @@ class FavoriteManager {
             }
 
             const data = await response.json();
-            console.log('서버 응답:', data);
 
             if (data.success) {
-                // 상태 저장 (서버 응답 기준)
-                this.favoriteStates.set(cafeId.toString(), data.is_favorited);
-                
-                // 모든 버튼 상태 업데이트
+                // ✅ 모든 버튼 상태 업데이트
                 this.updateAllButtons(cafeId, data.is_favorited);
                 
-                // 페이지별 특별 처리
-                this.handlePageSpecificUpdates(cafeId, data);
+                // 상태 저장
+                this.favoriteStates.set(cafeId.toString(), data.is_favorited);
+                
+                // ✅ 페이지별 특별 처리
+                await this.handlePageSpecificUpdates(cafeId, data);
                 
                 // 콜백 실행
                 this.executeCallbacks(cafeId, data.is_favorited);
                 
                 // 성공 메시지
-                const message = data.message || (data.is_favorited ? '찜 목록에 추가했어요!' : '찜 목록에서 제거했어요!');
-                this.showToast(message, 'success');
+                this.showToast(data.message || (data.is_favorited ? '찜 목록에 추가했어요!' : '찜 목록에서 제거했어요!'), 'success');
                 
             } else {
                 throw new Error(data.error || '찜하기 처리에 실패했습니다.');
@@ -123,23 +103,22 @@ class FavoriteManager {
         }
     }
 
-    // ✅ 버튼 외형 업데이트 함수 분리
-    updateButtonAppearance(button, isFavorited) {
-        // 하트 아이콘 변경
-        button.innerHTML = isFavorited ? '♥' : '♡';
-        
-        // 색상 변경
-        button.style.color = isFavorited ? '#ef4444' : '#6b7280';
-        
-        // 툴팁 변경
-        button.title = isFavorited ? '찜 해제' : '찜하기';
-    }
-
+    // ✅ 하트 아이콘 업데이트 (중복 방지)
     updateAllButtons(cafeId, isFavorited) {
         const buttons = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
         
         buttons.forEach(button => {
-            this.updateButtonAppearance(button, isFavorited);
+            // ✅ 하트 아이콘과 색상을 직접 설정
+            if (isFavorited) {
+                button.textContent = '♥';  // 찜됨: 채워진 하트
+                button.style.color = '#ef4444';  // 빨간색
+            } else {
+                button.textContent = '♡';  // 찜안됨: 빈 하트
+                button.style.color = '#6b7280';  // 회색
+            }
+            
+            // 툴팁 변경
+            button.title = isFavorited ? '찜 해제' : '찜하기';
             
             // 애니메이션 효과
             button.style.transform = 'scale(1.2)';
@@ -149,63 +128,278 @@ class FavoriteManager {
         });
     }
 
-    handlePageSpecificUpdates(cafeId, data) {
+    // ✅ 페이지별 업데이트 로직
+    async handlePageSpecificUpdates(cafeId, data) {
         const currentPath = window.location.pathname;
         
-        if (currentPath === '/ddoksang/' || currentPath === '/ddoksang/home/') {
+        if (currentPath === '/ddoksang/' || currentPath === '/ddoksang/home/' || currentPath.endsWith('/ddoksang/')) {
             // 홈 페이지: 찜한 카페 섹션 업데이트
-            this.updateHomeFavoritesSection(data);
+            await this.updateHomeFavoritesSection(cafeId, data);
         } else if (currentPath.includes('/favorites/')) {
-            // 찜 목록 페이지: 카드 제거/추가
-            this.updateFavoritesPage(cafeId, data.is_favorited);
+            // 찜 목록 페이지: 카드 제거만 (추가는 다른 페이지에서)
+            if (!data.is_favorited) {
+                this.updateFavoritesPage(cafeId, false);
+            }
         }
     }
 
-    // ✅ 홈페이지 찜한 섹션 업데이트 개선
-    updateHomeFavoritesSection(data) {
-        if (data.favorites_html) {
-            const favoritesSection = document.getElementById('favoritesSection');
+    // ✅ 홈페이지 찜한 카페 섹션 실시간 업데이트
+    async updateHomeFavoritesSection(cafeId, data) {
+        if (data.is_favorited) {
+            // ✅ 찜하기 추가: 실시간으로 카드 추가
+            try {
+                await this.addCafeCardToFavorites(cafeId);
+            } catch (error) {
+                console.error('찜한 카페 추가 오류:', error);
+                // 실패 시 서버 HTML로 전체 교체
+                if (data.favorites_html) {
+                    this.replaceFavoritesSection(data.favorites_html);
+                }
+            }
+        } else {
+            // ✅ 찜 해제: 카드 제거
+            this.removeCafeCardFromFavorites(cafeId);
+        }
+    }
+
+    // ✅ 찜한 카페에 카드 실시간 추가
+    async addCafeCardToFavorites(cafeId) {
+        try {
+            // 카페 정보 가져오기
+            const cafeData = await this.fetchCafeData(cafeId);
+            if (!cafeData) {
+                throw new Error('카페 정보를 가져올 수 없습니다.');
+            }
+
+            let favoritesSection = document.getElementById('favoritesSection');
             
-            if (favoritesSection) {
-                // 기존 섹션이 있으면 교체
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.favorites_html;
-                const newSection = tempDiv.firstElementChild;
+            // 찜한 카페 섹션이 없으면 생성
+            if (!favoritesSection) {
+                await this.createFavoritesSection();
+                favoritesSection = document.getElementById('favoritesSection');
+            }
+            
+            const carousel = document.getElementById('favoriteCarousel');
+            if (!carousel) return;
+            
+            // 빈 상태 메시지가 있으면 제거
+            const emptyMessage = carousel.querySelector('.text-center.py-16, .col-span-full');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            // 새 카드 HTML 생성
+            const cardHTML = this.generateCafeCardHTML(cafeData);
+            
+            // 카드를 맨 앞에 추가
+            const cardElement = document.createElement('div');
+            cardElement.className = 'flex-shrink-0';
+            cardElement.setAttribute('data-cafe-id', cafeId);
+            cardElement.innerHTML = cardHTML;
+            
+            // 애니메이션과 함께 추가
+            cardElement.style.opacity = '0';
+            cardElement.style.transform = 'scale(0.8)';
+            carousel.insertBefore(cardElement, carousel.firstChild);
+            
+            // 애니메이션 실행
+            setTimeout(() => {
+                cardElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                cardElement.style.opacity = '1';
+                cardElement.style.transform = 'scale(1)';
+            }, 50);
+            
+        } catch (error) {
+            console.error('카드 추가 실패:', error);
+            throw error;
+        }
+    }
+
+    // ✅ 카페 데이터 가져오기 API
+    async fetchCafeData(cafeId) {
+        try {
+            const response = await fetch(`/ddoksang/api/cafe/${cafeId}/quick/`);
+            if (!response.ok) throw new Error('카페 정보 조회 실패');
+            
+            const result = await response.json();
+            return result.success ? result.cafe : null;
+        } catch (error) {
+            console.error('카페 데이터 조회 오류:', error);
+            return null;
+        }
+    }
+
+    // ✅ 카페 카드 HTML 생성
+    generateCafeCardHTML(cafe) {
+        const daysRemainingText = cafe.days_remaining > 0 && cafe.days_remaining <= 7 
+            ? `<span class="ml-2 text-red-600 font-medium text-xs">${cafe.days_remaining}일 남음</span>` 
+            : '';
+
+        return `
+            <div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200 overflow-hidden">
+                ${cafe.main_image ? `
+                    <div class="relative overflow-hidden">
+                        <img src="${cafe.main_image}" alt="${cafe.name}" class="w-full h-48 object-cover">
+                    </div>
+                ` : `
+                    <div class="w-full h-48 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+                        <div class="text-center">
+                            <svg class="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-500">이미지 없음</p>
+                        </div>
+                    </div>
+                `}
+
+                <div class="p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-2">
+                            ${cafe.is_active ? `
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✨ 운영중</span>
+                            ` : `
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">✅ 종료</span>
+                            `}
+                        </div>
+
+                        <button 
+                            data-favorite-btn 
+                            data-cafe-id="${cafe.id}" 
+                            class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
+                            style="color: #ef4444;"
+                            title="찜 해제"
+                        >
+                            ♥
+                        </button>
+                    </div>
+
+                    <div class="mb-2">
+                        <h3 class="font-semibold text-lg text-gray-900">
+                            ${cafe.member ? `
+                                ${cafe.member}
+                                <span class="text-sm text-gray-500 font-normal">(${cafe.artist})</span>
+                            ` : cafe.artist}
+                        </h3>
+                    </div>
+
+                    <h4 class="text-gray-700 mb-3 font-medium" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${cafe.name}</h4>
+
+                    <div class="flex items-center text-sm text-gray-600 mb-2">
+                        <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span class="truncate">${cafe.address || '주소 정보 없음'}</span>
+                    </div>
+
+                    <div class="flex items-center text-sm text-gray-600 mb-3">
+                        <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>${cafe.start_date} - ${cafe.end_date}</span>
+                        ${daysRemainingText}
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex space-x-2">
+                            <a href="/ddoksang/cafe/${cafe.id}/" 
+                               class="flex-1 bg-gray-900 text-white py-2.5 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
+                                자세히 보기
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ✅ 찜한 카페 섹션 생성
+    async createFavoritesSection() {
+        const birthdaySection = document.querySelector('section.py-8.sm\\:py-12.px-4, section.py-4.sm\\:py-8.px-4');
+        if (!birthdaySection) return;
+
+        const sectionHTML = `
+            <section class="mb-12" id="favoritesSection">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
+                    <a href="/ddoksang/favorites/" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
+                </div>
+
+                <div id="favoriteCarousel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <!-- 카드들이 여기에 추가됩니다 -->
+                </div>
+            </section>
+        `;
+
+        birthdaySection.insertAdjacentHTML('afterend', sectionHTML);
+    }
+
+    // ✅ 찜한 카페에서 카드 제거
+    removeCafeCardFromFavorites(cafeId) {
+        const favoritesSection = document.getElementById('favoritesSection');
+        if (!favoritesSection) return;
+
+        const carousel = document.getElementById('favoriteCarousel');
+        if (!carousel) return;
+        
+        const cards = carousel.querySelectorAll(`[data-cafe-id="${cafeId}"]`);
+        
+        cards.forEach(card => {
+            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.8)';
+            
+            setTimeout(() => {
+                card.remove();
                 
-                if (newSection) {
-                    favoritesSection.parentNode.replaceChild(newSection, favoritesSection);
-                    
-                    // 새로 추가된 버튼들의 상태 초기화
-                    setTimeout(() => {
-                        this.initializeFavoriteStates();
-                    }, 100);
-                } else {
-                    // 찜한 카페가 없으면 섹션 제거
-                    favoritesSection.remove();
+                // 모든 카드가 제거되면 빈 상태 표시
+                if (carousel.children.length === 0) {
+                    this.showEmptyFavoritesInCarousel(carousel);
                 }
+            }, 300);
+        });
+    }
+
+    // ✅ 빈 상태 표시
+    showEmptyFavoritesInCarousel(carousel) {
+        carousel.innerHTML = `
+            <div class="col-span-full text-center py-16">
+                <div class="text-6xl mb-4">💔</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+                <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+                <a href="/ddoksang/" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+                    생일카페 둘러보기
+                </a>
+            </div>
+        `;
+    }
+
+    // 서버 응답 HTML로 전체 교체 (fallback)
+    replaceFavoritesSection(favoritesHTML) {
+        const favoritesSection = document.getElementById('favoritesSection');
+        
+        if (favoritesHTML && favoritesHTML.trim()) {
+            if (favoritesSection) {
+                favoritesSection.outerHTML = favoritesHTML;
             } else {
-                // 섹션이 없으면 최신 카페 섹션 앞에 추가
-                const latestSection = document.querySelector('section:has(h2:contains("🆕 NEW"))');
-                if (latestSection && data.favorites_html.trim()) {
-                    latestSection.insertAdjacentHTML('beforebegin', data.favorites_html);
-                    
-                    // 새로 추가된 버튼들의 상태 초기화
-                    setTimeout(() => {
-                        this.initializeFavoriteStates();
-                    }, 100);
+                const birthdaySection = document.querySelector('section.py-8.sm\\:py-12.px-4, section.py-4.sm\\:py-8.px-4');
+                if (birthdaySection) {
+                    birthdaySection.insertAdjacentHTML('afterend', favoritesHTML);
                 }
+            }
+        } else {
+            if (favoritesSection) {
+                favoritesSection.remove();
             }
         }
     }
 
     updateFavoritesPage(cafeId, isFavorited) {
-        const container = document.querySelector('#favoriteCarousel');
-        
-        if (!container) return;
-
         if (!isFavorited) {
             // 찜 해제: 카드 제거
-            const cards = container.querySelectorAll(`[data-cafe-id="${cafeId}"]`);
+            const container = document.querySelector('#favoriteCarousel');
+            const cards = container?.querySelectorAll(`[data-cafe-id="${cafeId}"]`) || [];
+            
             cards.forEach(card => {
                 card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                 card.style.opacity = '0';
@@ -215,7 +409,7 @@ class FavoriteManager {
                     card.remove();
                     
                     // 모든 카드가 제거되면 빈 상태 표시
-                    if (container.children.length === 0) {
+                    if (container && container.children.length === 0) {
                         this.showEmptyFavoritesState();
                     }
                 }, 300);
@@ -249,12 +443,15 @@ class FavoriteManager {
     setButtonsLoading(buttons, isLoading) {
         buttons.forEach(button => {
             if (isLoading) {
-                button.dataset.originalContent = button.innerHTML;
-                button.innerHTML = '⏳';
+                button.dataset.originalContent = button.textContent;
+                button.textContent = '⏳';
                 button.style.opacity = '0.7';
                 button.disabled = true;
             } else {
-                button.innerHTML = button.dataset.originalContent || (button.innerHTML === '⏳' ? '♡' : button.innerHTML);
+                const original = button.dataset.originalContent;
+                if (original && original !== '⏳') {
+                    button.textContent = original;
+                }
                 button.style.opacity = '1';
                 button.disabled = false;
                 delete button.dataset.originalContent;
@@ -348,27 +545,24 @@ class FavoriteManager {
     setFavoriteState(cafeId, isFavorited) {
         this.favoriteStates.set(cafeId.toString(), isFavorited);
     }
-
-    // ✅ 디버깅용 함수
-    debugFavoriteStates() {
-        console.log('현재 찜 상태:', this.favoriteStates);
-        const buttons = document.querySelectorAll('[data-favorite-btn]');
-        buttons.forEach(btn => {
-            console.log(`카페 ${btn.dataset.cafeId}: ${btn.innerHTML} (${btn.style.color})`);
-        });
-    }
 }
 
-// 전역 인스턴스 생성
-window.favoriteManager = new FavoriteManager();
+// ✅ 안전한 전역 인스턴스 생성
+if (!window.favoriteManager) {
+    window.favoriteManager = new FavoriteManager();
+}
 
 // 레거시 함수들 (기존 코드 호환성을 위해)
 window.updateAllFavoriteButtons = function(cafeId, isFavorited) {
-    window.favoriteManager.updateAllButtons(cafeId, isFavorited);
+    if (window.favoriteManager) {
+        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
+    }
 };
 
 window.showToast = function(message, type) {
-    window.favoriteManager.showToast(message, type);
+    if (window.favoriteManager) {
+        window.favoriteManager.showToast(message, type);
+    }
 };
 
 // 초기화 완료 로그
