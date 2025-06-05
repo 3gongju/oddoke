@@ -35,12 +35,12 @@
         <div class="flex items-center gap-2">
           <!-- 거래 완료 버튼 -->
           <div id="tradeStatusContainer">
-            {% if user == room.buyer and not room.is_sold %}
-              <button id="completeTradeBtn" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors shadow-sm">
-                거래 완료
-              </button>
-            {% elif room.is_sold %}
+            {% if room.is_fully_completed %}
               <span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>
+            {% elif user == room.buyer and not room.buyer_completed %}
+              <button id="completeTradeBtn" class="...">거래 완료</button>
+            {% else %}
+              <span class="text-xs text-gray-500">상대방의 거래 완료를 기다리는 중입니다.</span>
             {% endif %}
           </div>
           <button class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
@@ -89,7 +89,7 @@
 
     <!-- 메시지 입력 영역 -->
     <div id="messageInputArea" class="bg-white border-t border-gray-200 px-4 py-3">
-      {% if room.is_sold %}
+      {% if room.is_fully_completed %}
         <div class="text-center text-sm text-gray-500 py-4">
           ✅ 거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
         </div>
@@ -292,7 +292,7 @@
   const currentUser = "{{ user.username }}";
   
   // 거래 완료 상태 추적
-  let isTradeCompleted = "{{ room.is_sold }}" === "True" || "{{ room.is_sold }}" === "true";
+  let isTradeCompleted = "{{ room.is_fully_completed }}" === "True";
 
   function scrollToBottom() {
     chatLog.scrollTop = chatLog.scrollHeight;
@@ -425,25 +425,22 @@
   };
 
   // 거래 완료 후 UI 업데이트 함수
-  function updateUIAfterTradeComplete() {
-    // 1. 거래 완료 버튼을 "거래 완료된 채팅" 텍스트로 변경
+  function updateUIAfterTradeComplete(isFullyCompleted) {
     const tradeStatusContainer = document.getElementById('tradeStatusContainer');
-    if (tradeStatusContainer) {
-      tradeStatusContainer.innerHTML = '<span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>';
-    }
-    
-    // 2. 메시지 입력 영역을 비활성화 메시지로 교체
     const messageInputArea = document.getElementById('messageInputArea');
-    if (messageInputArea) {
+
+    if (isFullyCompleted) {
+      // 🔒 채팅 차단
+      tradeStatusContainer.innerHTML = '<span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>';
       messageInputArea.innerHTML = `
         <div class="text-center text-sm text-gray-500 py-4">
           ✅ 거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
-        </div>
-      `;
+        </div>`;
+      isTradeCompleted = true;
+    } else {
+      // 🔁 상대방 거래 완료 대기 중
+      tradeStatusContainer.innerHTML = '<span class="text-xs text-gray-500">상대방의 거래 완료를 기다리는 중입니다.</span>';
     }
-    
-    // 3. 거래 완료 상태 플래그 설정
-    isTradeCompleted = true;
   }
 
   // 메시지 전송
@@ -573,7 +570,7 @@
         .then(data => {
           if (data.success) {
             // 성공 시 즉시 UI 업데이트
-            updateUIAfterTradeComplete();
+            updateUIAfterTradeComplete(data.is_fully_completed); // 수정
             
             // 모달 닫기
             confirmModal.classList.add('hidden');

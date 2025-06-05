@@ -16,178 +16,418 @@
     </h2>
   </div>
 
-  <div class="space-y-4">
-    {% for room in rooms %}
-      {% with post=room.post %}
-        <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item">
-          <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
-            <!-- 헤더 영역 -->
-            <div class="p-4 border-b border-gray-100">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <!-- 프로필 아바타 -->
-                  <div class="relative">
-                    <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
-                      {% if room.partner.profile_image %}
-                        <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover">
-                      {% else %}
-                        <div class="w-full h-full flex items-center justify-center text-white bg-gradient-to-r from-blue-400 to-purple-500">
-                          {{ room.partner.username|first|upper }}
-                        </div>
-                      {% endif %}
-                    </div>
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
-                  </div>
-                  
-                  <div>
-                    {% if me == room.buyer %}
-                      <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-                        {{ room.seller.username }}
-                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">판매자</span>
-                      </h3>
-                    {% else %}
-                      <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-                        {{ room.buyer.username }}
-                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">구매자</span>
-                      </h3>
-                    {% endif %}
-                    <p class="text-sm text-gray-500">{{ post.title|truncatechars:30 }}</p>
-                  </div>
-                </div>
-                
-                <div class="flex items-center gap-2">
-                  {% if room.last_message %}
-                    <span class="text-xs text-gray-400">
-                      {{ room.last_message.timestamp|timesince }} 전
-                    </span>
-                  {% endif %}
-                  {% if room.unread_count %}
-                    <span class="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-semibold unread-badge">
-                      {{ room.unread_count }}
-                    </span>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
+  <!-- 탭 네비게이션 -->
+  <div class="bg-white rounded-xl shadow-sm mb-6">
+    <div class="flex border-b border-gray-200">
+      <button id="activeTab" class="tab-button active flex-1 px-6 py-4 text-center font-medium text-sm rounded-tl-xl transition-all duration-200 flex items-center justify-center gap-2">
+        <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        거래중
+        {% if active_rooms %}
+          <span class="text-sm bg-orange-100 text-orange-700 px-2 py-1 rounded-full">{{ active_rooms|length }}개</span>
+        {% endif %}
+      </button>
+      <button id="completedTab" class="tab-button flex-1 px-6 py-4 text-center font-medium text-sm rounded-tr-xl transition-all duration-200 flex items-center justify-center gap-2">
+        <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        거래완료
+        {% if completed_rooms %}
+          <span class="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">{{ completed_rooms|length }}개</span>
+        {% endif %}
+      </button>
+    </div>
 
-            <!-- 채팅 미리보기 영역 -->
-            <div class="p-4">
-              <div class="flex items-start gap-4">
-                <!-- 상품 썸네일 -->
-                <div class="flex-shrink-0">
-                  <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
-                    <img src="{{ post.get_main_image }}" 
-                         alt="{{ post.title }}" 
-                         class="w-full h-full object-cover">
-                  </div>
-                </div>
-                
-                <!-- 마지막 메시지 말풍선 -->
-                <div class="flex-1 min-w-0">
-                  {% if room.last_message %}
-                    <div class="chat-preview">
-                      <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
-                      {% if room.last_message.sender == me %}
-                        <!-- 내가 보낸 메시지 (오른쪽 정렬, 파란색) -->
-                        <div class="flex justify-end mb-2">
-                          <div class="max-w-xs">
-                            <div class="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
-                              {% if room.last_message.image %}
-                                <p class="text-sm italic text-white-500">사진을 보냈습니다.</p>
-                              {% else %}
-                                <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
-                              {% endif %}
-                            </div>
-                            <div class="flex justify-end items-center gap-1 mt-1">
-                              <span class="text-xs text-gray-400">나</span>
-                              <span class="text-xs text-gray-400">•</span>
-                              <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
-                              {% if room.unread_count %}
-                                <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
-                              {% endif %}
-                            </div>
+    <!-- 거래중 채팅 탭 내용 -->
+    <div id="activeContent" class="tab-content active p-6">
+      {% if active_rooms %}
+        <div class="space-y-4">
+          {% for room in active_rooms %}
+            {% with post=room.post %}
+              <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item">
+                <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
+                  <!-- 헤더 영역 -->
+                  <div class="p-4 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <!-- 프로필 아바타 -->
+                        <div class="relative">
+                          <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                            {% if room.partner.profile_image %}
+                              <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover">
+                            {% else %}
+                              <div class="w-full h-full flex items-center justify-center text-white bg-gradient-to-r from-blue-400 to-purple-500">
+                                {{ room.partner.username|first|upper }}
+                              </div>
+                            {% endif %}
                           </div>
+                          <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
                         </div>
-                      {% else %}
-                        <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
-                        <div class="flex justify-start mb-2">
-                          <div class="max-w-xs">
-                            <div class="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
-                              {% if room.last_message.image %}
-                                <p class="text-sm italic text-white-500">사진을 보냈습니다.</p>
-                              {% else %}
-                                <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
-                              {% endif %}
-                            </div>
-                            <div class="flex justify-start items-center gap-1 mt-1">
-                              <span class="text-xs text-gray-600 font-medium">{{ room.last_message.sender.username }}</span>
-                              <span class="text-xs text-gray-400">•</span>
-                              <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
-                              {% if room.unread_count %}
-                                <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
-                              {% endif %}
-                            </div>
-                          </div>
+                        
+                        <div>
+                          {% if me == room.buyer %}
+                            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                              {{ room.seller.username }}
+                              <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">판매자</span>
+                            </h3>
+                          {% else %}
+                            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                              {{ room.buyer.username }}
+                              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">구매자</span>
+                            </h3>
+                          {% endif %}
+                          <p class="text-sm text-gray-500">{{ post.title|truncatechars:30 }}</p>
                         </div>
-                      {% endif %}
-                    </div>
-                  {% else %}
-                    <div class="flex justify-center">
-                      <div class="bg-gray-50 text-gray-500 px-4 py-3 rounded-xl text-sm">
-                        💬 첫 메시지를 보내보세요!
+                      </div>
+                      
+                      <div class="flex items-center gap-2">
+                        {% if room.last_message %}
+                          <span class="text-xs text-gray-400">
+                            {{ room.last_message.timestamp|timesince }} 전
+                          </span>
+                        {% endif %}
+                        {% if room.unread_count %}
+                          <span class="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-semibold unread-badge">
+                            {{ room.unread_count }}
+                          </span>
+                        {% endif %}
                       </div>
                     </div>
-                  {% endif %}
+                  </div>
+
+                  <!-- 채팅 미리보기 영역 -->
+                  <div class="p-4">
+                    <div class="flex items-start gap-4">
+                      <!-- 상품 썸네일 -->
+                      <div class="flex-shrink-0">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
+                          <img src="{{ post.get_main_image }}" 
+                               alt="{{ post.title }}" 
+                               class="w-full h-full object-cover">
+                        </div>
+                      </div>
+                      
+                      <!-- 마지막 메시지 말풍선 -->
+                      <div class="flex-1 min-w-0">
+                        {% if room.last_message %}
+                          <div class="chat-preview">
+                            <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
+                            {% if room.last_message.sender == me %}
+                              <!-- 내가 보낸 메시지 (오른쪽 정렬, 파란색) -->
+                              <div class="flex justify-end mb-2">
+                                <div class="max-w-xs">
+                                  <div class="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
+                                    {% if room.last_message.image %}
+                                      <p class="text-sm italic text-white-500">사진을 보냈습니다.</p>
+                                    {% else %}
+                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
+                                    {% endif %}
+                                  </div>
+                                  <div class="flex justify-end items-center gap-1 mt-1">
+                                    <span class="text-xs text-gray-400">나</span>
+                                    <span class="text-xs text-gray-400">•</span>
+                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
+                                    {% if room.unread_count %}
+                                      <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              </div>
+                            {% else %}
+                              <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
+                              <div class="flex justify-start mb-2">
+                                <div class="max-w-xs">
+                                  <div class="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
+                                    {% if room.last_message.image %}
+                                      <p class="text-sm italic text-white-500">사진을 보냈습니다.</p>
+                                    {% else %}
+                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
+                                    {% endif %}
+                                  </div>
+                                  <div class="flex justify-start items-center gap-1 mt-1">
+                                    <span class="text-xs text-gray-600 font-medium">{{ room.last_message.sender.username }}</span>
+                                    <span class="text-xs text-gray-400">•</span>
+                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
+                                    {% if room.unread_count %}
+                                      <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
+                                    {% endif %}
+                                  </div>
+                                </div>
+                              </div>
+                            {% endif %}
+                          </div>
+                        {% else %}
+                          <div class="flex justify-center">
+                            <div class="bg-gray-50 text-gray-500 px-4 py-3 rounded-xl text-sm">
+                              💬 첫 메시지를 보내보세요!
+                            </div>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+
+                <!-- 하단 액션 영역 -->
+                <div class="border-t border-gray-100 px-4 py-3 bg-gray-50 rounded-b-xl">
+                  <div class="flex items-center justify-between">
+                    <a href="{% url 'ddokfarm:post_detail' category=room.category post_id=post.id %}" 
+                       class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      거래글 상세보기
+                    </a>
+                    
+                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                      </svg>
+                      채팅 계속하기
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </a>
+            {% endwith %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <p class="text-sm text-gray-400">거래중인 채팅이 없습니다.</p>
+        </div>
+      {% endif %}
+    </div>
 
-          <!-- 하단 액션 영역 -->
-          <div class="border-t border-gray-100 px-4 py-3 bg-gray-50 rounded-b-xl">
-            <div class="flex items-center justify-between">
-              <a href="{% url 'ddokfarm:post_detail' category=room.category post_id=post.id %}" 
-                 class="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                거래글 상세보기
-              </a>
-              
-              <div class="flex items-center gap-2 text-xs text-gray-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
-                채팅 계속하기
+    <!-- 거래완료 채팅 탭 내용 -->
+    <div id="completedContent" class="tab-content p-6">
+      {% if completed_rooms %}
+        <div class="space-y-4">
+          {% for room in completed_rooms %}
+            {% with post=room.post %}
+              <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item opacity-75">
+                <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
+                  <!-- 헤더 영역 -->
+                  <div class="p-4 border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <!-- 프로필 아바타 -->
+                        <div class="relative">
+                          <div class="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
+                            {% if room.partner.profile_image %}
+                              <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover">
+                            {% else %}
+                              <div class="w-full h-full flex items-center justify-center text-white bg-gradient-to-r from-gray-400 to-gray-500">
+                                {{ room.partner.username|first|upper }}
+                              </div>
+                            {% endif %}
+                          </div>
+                          <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-gray-400 border-2 border-white rounded-full"></div>
+                        </div>
+                        
+                        <div>
+                          {% if me == room.buyer %}
+                            <h3 class="font-semibold text-gray-700 flex items-center gap-2">
+                              {{ room.seller.username }}
+                              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">판매자</span>
+                              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">거래완료</span>
+                            </h3>
+                          {% else %}
+                            <h3 class="font-semibold text-gray-700 flex items-center gap-2">
+                              {{ room.buyer.username }}
+                              <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">구매자</span>
+                              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">거래완료</span>
+                            </h3>
+                          {% endif %}
+                          <p class="text-sm text-gray-400">{{ post.title|truncatechars:30 }}</p>
+                        </div>
+                      </div>
+                      
+                      <div class="flex items-center gap-2">
+                        {% if room.last_message %}
+                          <span class="text-xs text-gray-400">
+                            {{ room.last_message.timestamp|timesince }} 전
+                          </span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 채팅 미리보기 영역 -->
+                  <div class="p-4">
+                    <div class="flex items-start gap-4">
+                      <!-- 상품 썸네일 -->
+                      <div class="flex-shrink-0">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
+                          <img src="{{ post.get_main_image }}" 
+                               alt="{{ post.title }}" 
+                               class="w-full h-full object-cover">
+                        </div>
+                      </div>
+                      
+                      <!-- 마지막 메시지 말풍선 -->
+                      <div class="flex-1 min-w-0">
+                        {% if room.last_message %}
+                          <div class="chat-preview">
+                            <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
+                            {% if room.last_message.sender == me %}
+                              <!-- 내가 보낸 메시지 (오른쪽 정렬, 회색톤) -->
+                              <div class="flex justify-end mb-2">
+                                <div class="max-w-xs">
+                                  <div class="bg-gray-400 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
+                                    {% if room.last_message.image %}
+                                      <p class="text-sm italic">사진을 보냈습니다.</p>
+                                    {% else %}
+                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
+                                    {% endif %}
+                                  </div>
+                                  <div class="flex justify-end items-center gap-1 mt-1">
+                                    <span class="text-xs text-gray-400">나</span>
+                                    <span class="text-xs text-gray-400">•</span>
+                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
+                                  </div>
+                                </div>
+                              </div>
+                            {% else %}
+                              <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
+                              <div class="flex justify-start mb-2">
+                                <div class="max-w-xs">
+                                  <div class="bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
+                                    {% if room.last_message.image %}
+                                      <p class="text-sm italic">사진을 보냈습니다.</p>
+                                    {% else %}
+                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
+                                    {% endif %}
+                                  </div>
+                                  <div class="flex justify-start items-center gap-1 mt-1">
+                                    <span class="text-xs text-gray-500 font-medium">{{ room.last_message.sender.username }}</span>
+                                    <span class="text-xs text-gray-400">•</span>
+                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
+                                  </div>
+                                </div>
+                              </div>
+                            {% endif %}
+                          </div>
+                        {% else %}
+                          <div class="flex justify-center">
+                            <div class="bg-gray-50 text-gray-400 px-4 py-3 rounded-xl text-sm">
+                              💬 거래완료된 채팅입니다
+                            </div>
+                          </div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+
+                <!-- 하단 액션 영역 -->
+                <div class="border-t border-gray-100 px-4 py-3 bg-gray-50 rounded-b-xl">
+                  <div class="flex items-center justify-between">
+                    <a href="{% url 'ddokfarm:post_detail' category=room.category post_id=post.id %}" 
+                       class="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors flex items-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
+                      거래글 상세보기
+                    </a>
+                    
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      거래완료
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            {% endwith %}
+          {% endfor %}
         </div>
-      {% endwith %}
-    {% empty %}
-      <div class="bg-white rounded-xl shadow-sm">
-        <div class="text-center py-16">
-          <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+      {% else %}
+        <div class="text-center py-8">
+          <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-100 to-blue-100 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
           </div>
-          <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 채팅방이 없어요</h3>
-          <p class="text-gray-500 mb-6">관심있는 상품에 메시지를 보내보세요!</p>
-          <a href="{% url 'ddokfarm:home' %}" class="inline-flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            상품 둘러보기
-          </a>
+          <p class="text-sm text-gray-400">거래완료된 채팅이 없습니다.</p>
         </div>
-      </div>
-    {% endfor %}
+      {% endif %}
+    </div>
   </div>
+
+  <!-- 채팅방이 전체적으로 없을 때 -->
+  {% if not active_rooms and not completed_rooms %}
+    <div class="bg-white rounded-xl shadow-sm">
+      <div class="text-center py-16">
+        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+          <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 채팅방이 없어요</h3>
+        <p class="text-gray-500 mb-6">관심있는 상품에 메시지를 보내보세요!</p>
+        <a href="{% url 'ddokfarm:home' %}" class="inline-flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          상품 둘러보기
+        </a>
+      </div>
+    </div>
+  {% endif %}
 </div>
 
 <style>
+/* 탭 스타일 */
+.tab-button {
+  color: #6b7280;
+  background: #f9fafb;
+  border-bottom: 3px solid transparent;  /* 기본 상태는 투명 */
+}
+
+.tab-button.active {
+  color: #1f2937;
+  background: white;
+  border-bottom: 3px solid #3b82f6;  /* 선택된 탭만 하단에 파랑색 라인 */
+}
+
+.tab-button:hover:not(.active) {
+  color: #374151;
+  background: #f3f4f6;
+  border-bottom: 3px solid transparent;  /* 호버 상태도 투명 유지 */
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* 채팅방 아이템 호버 효과 */
 .chatroom-item {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -230,6 +470,11 @@
   .max-w-xs {
     max-width: 200px;
   }
+  
+  .tab-button {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
 }
 
 /* 온라인 상태 표시 애니메이션 */
@@ -269,7 +514,7 @@
 .loading-shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  animation: shimmer 2s infinite linear;
 }
 
 @keyframes shimmer {
@@ -280,5 +525,416 @@
     background-position: 200% 0;
   }
 }
+
+/* 거래완료 상태 스타일 */
+.completed-room {
+  filter: grayscale(0.3);
+}
+
+.completed-room:hover {
+  filter: grayscale(0);
+}
+
+/* 메시지 말풍선 개선 */
+.message-bubble {
+  position: relative;
+  word-wrap: break-word;
+}
+
+.message-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.message-bubble.sent::after {
+  right: -6px;
+  border-left-color: #3b82f6;
+  border-right: none;
+}
+
+.message-bubble.received::after {
+  left: -6px;
+  border-right-color: #f3f4f6;
+  border-left: none;
+}
+
+/* 탭 전환 애니메이션 */
+.tab-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 빈 상태 일러스트레이션 */
+.empty-state {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 알림 배지 그라데이션 */
+.notification-badge {
+  background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+}
+
+/* 프로필 이미지 테두리 */
+.profile-ring {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  padding: 2px;
+  border-radius: 50%;
+}
+
+.profile-ring img {
+  border-radius: 50%;
+  display: block;
+}
+
+/* 상품 썸네일 호버 효과 */
+.product-thumbnail {
+  transition: transform 0.3s ease;
+}
+
+.product-thumbnail:hover {
+  transform: scale(1.05);
+}
+
+/* 액션 버튼 호버 효과 */
+.action-button {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-button:hover::before {
+  left: 100%;
+}
+
+/* 반응형 개선 */
+@media (max-width: 768px) {
+  .max-w-4xl {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+  
+  .chatroom-item {
+    margin: 0 -4px;
+  }
+  
+  .tab-button {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  .chat-preview .max-w-xs {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .p-6 {
+    padding: 16px;
+  }
+  
+  .p-4 {
+    padding: 12px;
+  }
+  
+  .gap-4 {
+    gap: 12px;
+  }
+  
+  .w-16.h-16 {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .text-2xl {
+    font-size: 20px;
+  }
+}
+
+/* 접근성 개선 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 포커스 상태 */
+.tab-button:focus {
+  outline: none;
+}
+
+.chatroom-item:focus,
+.action-button:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 다크모드 대응 (선택사항) */
+@media (prefers-color-scheme: dark) {
+  .bg-gray-50 {
+    background-color: #1f2937;
+  }
+  
+  .bg-white {
+    background-color: #374151;
+  }
+  
+  .text-gray-800 {
+    color: #f9fafb;
+  }
+  
+  .text-gray-600 {
+    color: #d1d5db;
+  }
+  
+  .border-gray-200 {
+    border-color: #4b5563;
+  }
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 탭 요소들 선택
+    const activeTab = document.getElementById('activeTab');
+    const completedTab = document.getElementById('completedTab');
+    const activeContent = document.getElementById('activeContent');
+    const completedContent = document.getElementById('completedContent');
+    
+    // 탭 전환 함수
+    function switchTab(activeTabEl, activeContentEl, inactiveTabEl, inactiveContentEl) {
+        // 탭 버튼 상태 변경
+        activeTabEl.classList.add('active');
+        inactiveTabEl.classList.remove('active');
+        
+        // 컨텐츠 표시/숨김
+        activeContentEl.classList.add('active');
+        inactiveContentEl.classList.remove('active');
+        
+        // 접근성을 위한 aria 속성 업데이트
+        activeTabEl.setAttribute('aria-selected', 'true');
+        inactiveTabEl.setAttribute('aria-selected', 'false');
+        
+        // 로컬 스토리지에 현재 탭 저장 (페이지 새로고침 시 유지)
+        const tabName = activeTabEl.id === 'activeTab' ? 'active' : 'completed';
+        try {
+            localStorage.setItem('selectedChatTab', tabName);
+        } catch (e) {
+            // localStorage 사용 불가능한 환경에서는 무시
+            console.warn('localStorage not available');
+        }
+    }
+    
+    // 거래중 탭 클릭 이벤트
+    activeTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!this.classList.contains('active')) {
+            switchTab(activeTab, activeContent, completedTab, completedContent);
+        }
+    });
+    
+    // 거래완료 탭 클릭 이벤트  
+    completedTab.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (!this.classList.contains('active')) {
+            switchTab(completedTab, completedContent, activeTab, activeContent);
+        }
+    });
+    
+    // 키보드 접근성 지원
+    [activeTab, completedTab].forEach(tab => {
+        tab.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+        
+        // 탭 요소에 role과 tabindex 설정
+        tab.setAttribute('role', 'tab');
+        tab.setAttribute('tabindex', '0');
+    });
+    
+    // 페이지 로드 시 이전에 선택했던 탭 복원
+    try {
+        const savedTab = localStorage.getItem('selectedChatTab');
+        if (savedTab === 'completed') {
+            switchTab(completedTab, completedContent, activeTab, activeContent);
+        }
+    } catch (e) {
+        // localStorage 사용 불가능한 환경에서는 기본값 유지
+        console.warn('localStorage not available');
+    }
+    
+    // 읽지 않은 메시지 실시간 업데이트 (WebSocket 연결 시)
+    function updateUnreadCount(roomId, count) {
+        const badge = document.querySelector(`[data-room-id="${roomId}"] .unread-badge`);
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+    
+    // 채팅방 목록 새로고침 함수
+    function refreshChatRooms() {
+        // AJAX로 채팅방 목록 업데이트
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // 새로운 컨텐츠로 업데이트
+            const parser = new DOMParser();
+            const newDoc = parser.parseFromString(html, 'text/html');
+            const newActiveContent = newDoc.getElementById('activeContent');
+            const newCompletedContent = newDoc.getElementById('completedContent');
+            
+            if (newActiveContent) {
+                activeContent.innerHTML = newActiveContent.innerHTML;
+            }
+            if (newCompletedContent) {
+                completedContent.innerHTML = newCompletedContent.innerHTML;
+            }
+        })
+        .catch(error => {
+            console.error('채팅방 목록 업데이트 실패:', error);
+        });
+    }
+    
+    // 주기적으로 채팅방 목록 업데이트 (30초마다)
+    setInterval(refreshChatRooms, 30000);
+    
+    // 페이지 포커스 시 채팅방 목록 업데이트
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            refreshChatRooms();
+        }
+    });
+    
+    // 채팅방 아이템 클릭 시 읽음 표시 처리
+    document.addEventListener('click', function(e) {
+        const chatItem = e.target.closest('.chatroom-item a');
+        if (chatItem) {
+            const unreadBadge = chatItem.querySelector('.unread-badge');
+            if (unreadBadge) {
+                // 읽음 처리 API 호출 (선택사항)
+                const roomId = chatItem.href.split('/').pop();
+                markAsRead(roomId);
+            }
+        }
+    });
+    
+    // 읽음 처리 함수
+    function markAsRead(roomId) {
+        fetch(`/chat/mark-read/${roomId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || '',
+                'Content-Type': 'application/json',
+            }
+        })
+        .catch(error => {
+            console.error('읽음 처리 실패:', error);
+        });
+    }
+    
+    // 스크롤 위치 복원
+    const savedScrollPos = sessionStorage.getItem('chatListScrollPos');
+    if (savedScrollPos) {
+        window.scrollTo(0, parseInt(savedScrollPos));
+        sessionStorage.removeItem('chatListScrollPos');
+    }
+    
+    // 페이지 이동 전 스크롤 위치 저장
+    window.addEventListener('beforeunload', function() {
+        sessionStorage.setItem('chatListScrollPos', window.scrollY);
+    });
+    
+    // 초기 접근성 속성 설정
+    activeTab.setAttribute('aria-selected', 'true');
+    completedTab.setAttribute('aria-selected', 'false');
+    activeContent.setAttribute('role', 'tabpanel');
+    completedContent.setAttribute('role', 'tabpanel');
+});
+
+// 전역 함수들
+window.chatRoomUtils = {
+    // 특정 채팅방의 읽지 않은 메시지 수 업데이트
+    updateUnreadCount: function(roomId, count) {
+        const badges = document.querySelectorAll(`[data-room-id="${roomId}"] .unread-badge`);
+        badges.forEach(badge => {
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+    },
+    
+    // 새 메시지 도착 시 채팅방을 목록 맨 위로 이동
+    moveToTop: function(roomId) {
+        const activeRoom = document.querySelector(`#activeContent [data-room-id="${roomId}"]`);
+        const completedRoom = document.querySelector(`#completedContent [data-room-id="${roomId}"]`);
+        
+        if (activeRoom) {
+            const container = activeRoom.parentElement;
+            container.insertBefore(activeRoom, container.firstChild);
+            
+            // 부드러운 하이라이트 효과
+            activeRoom.style.backgroundColor = '#fef3c7';
+            setTimeout(() => {
+                activeRoom.style.backgroundColor = '';
+            }, 2000);
+        }
+    },
+    
+    // 채팅방 상태 변경 (거래중 -> 거래완료)
+    updateRoomStatus: function(roomId, status) {
+        const room = document.querySelector(`[data-room-id="${roomId}"]`);
+        if (room) {
+            if (status === 'completed') {
+                // 거래중에서 거래완료로 이동
+                const activeContainer = document.querySelector('#activeContent .space-y-4');
+                const completedContainer = document.querySelector('#completedContent .space-y-4');
+                
+                if (activeContainer && completedContainer) {
+                    room.classList.add('completed-room');
+                    completedContainer.appendChild(room);
+                }
+            }
+        }
+    }
+};
+</script>
+
 {% endblock %}

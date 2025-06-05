@@ -79,14 +79,16 @@ def my_chatrooms(request):
         room.partner = room.seller if room.buyer == request.user else room.buyer
         room.last_message = room.messages.last()
         room.unread_count = room.messages.filter(is_read=False).exclude(sender=request.user).count()
-
-    # 여기서 별도 주입 없이 그냥 room.post 사용 가능
-    # room.post = room.post  # 필요 없음
-
         room.category = room.post.category_type  # 'sell' 등
 
+    # ✅ 거래중 / 거래완료 분리
+    active_rooms = [room for room in rooms if not room.is_fully_completed]
+    completed_rooms = [room for room in rooms if room.is_fully_completed]
+
     context = {
-        'rooms': rooms,
+        "rooms": rooms,
+        'active_rooms': active_rooms,
+        'completed_rooms': completed_rooms,
         'me': request.user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
@@ -121,11 +123,12 @@ def complete_trade(request, room_id):
     if room.buyer != request.user:
         return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
 
-    room.is_sold = True
+    room.buyer_completed = True
     room.save()
-
+    
     # ✅ target_user를 GET 파라미터로 넘김
     return JsonResponse({
         'success': True,
+        'is_fully_completed': room.is_fully_completed,  # 프론트에 넘김
         'redirect_url': reverse('accounts:review_home') + f'?target_user={room.seller.id}'
     })
