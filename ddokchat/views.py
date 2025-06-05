@@ -15,7 +15,7 @@ from django.core.files.storage import default_storage
 from django.urls import reverse
 # Create your views here.
 
-# 채팅방
+# 채팅방.
 def chat_room(request, room_id):
     room = get_object_or_404(ChatRoom, id=room_id)
 
