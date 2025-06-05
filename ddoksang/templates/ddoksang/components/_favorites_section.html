@@ -2,136 +2,156 @@
 {% load filters %}
 
 <section class="mb-12" id="favoritesSection">
-  <div class="flex items-center justify-between mb-4">
-    <h2 class="text-xl font-semibold text-gray-800">❤︎ 내가 찜한 생일카페 ❤︎</h2>
+  <div class="flex items-center justify-between mb-4 px-4">
+    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
     <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
   </div>
 
   {% if my_favorite_cafes %}
-    <!-- Swiper CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-
-    <!-- Swiper 컨테이너 -->
-    <div class="swiper favorites-swiper relative">
-      <div class="swiper-wrapper">
-        {% for cafe in my_favorite_cafes %}
-          <div class="swiper-slide">
-            <div class="h-full" data-cafe-id="{{ cafe.id }}">
-              {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites show_status_badge=True show_type_badge=True show_benefits=True %}
+    <div class="relative px-4">
+      <div class="swiper favorites-swiper">
+        <div class="swiper-wrapper" id="favoriteCarousel">
+          {% for cafe in my_favorite_cafes %}
+            <div class="swiper-slide" data-cafe-id="{{ cafe.id }}">
+              {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites show_status_badge=True %}
             </div>
-          </div>
-        {% endfor %}
+          {% endfor %}
+        </div>
+        <div class="swiper-pagination favorites-pagination"></div>
       </div>
-
-      <!-- 페이지네이션 -->
-      <div class="swiper-pagination favorites-pagination"></div>
     </div>
-
-    <!-- Swiper JS -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.favoritesSwiper) {
-        window.favoritesSwiper.destroy(true, true);
-      }
-
-      window.favoritesSwiper = new Swiper('.favorites-swiper', {
-        slidesPerView: 1,
-        spaceBetween: 0,
-        loop: false,
-        breakpoints: {
-          640: { slidesPerView: 2, spaceBetween: 0 },
-          768: { slidesPerView: 2, spaceBetween: 0 },
-          1024: { slidesPerView: 3, spaceBetween: 0 },
-          1280: { slidesPerView: 4, spaceBetween: 0 },
-        },
-        pagination: {
-          el: '.favorites-pagination',
-          clickable: true,
-          dynamicBullets: true,
-        },
-        keyboard: { enabled: true },
-        mousewheel: { forceToAxis: true },
-        autoHeight: false,
-        resistance: true,
-        resistanceRatio: 0.85,
-        effect: 'slide',
-        speed: 400,
-        touchRatio: 1,
-        touchAngle: 45,
-        on: {
-          init: function() {
-            console.log('찜한 카페 Swiper 처리 완료');
-          },
-        }
-      });
-
-      // 카드 높이 까지 복잡화
-      function equalizeCardHeights() {
-        const slides = document.querySelectorAll('.favorites-swiper .swiper-slide');
-        let maxHeight = 0;
-
-        slides.forEach(slide => { slide.style.height = 'auto'; });
-        slides.forEach(slide => { maxHeight = Math.max(maxHeight, slide.offsetHeight); });
-        slides.forEach(slide => { slide.style.height = maxHeight + 'px'; });
-      }
-
-      setTimeout(equalizeCardHeights, 100);
-      window.addEventListener('resize', equalizeCardHeights);
-    });
-    </script>
-
-    <style>
-    .favorites-swiper {
-      padding: 0 0 40px 0;
-      margin: 0;
-    }
-
-    .favorites-swiper .swiper-slide {
-      height: auto;
-      display: flex;
-      flex-direction: column;
-      box-sizing: border-box;
-      padding: 0;
-    }
-
-    .favorites-pagination {
-      bottom: 0px !important;
-      position: absolute;
-      width: 100%;
-      left: 0;
-      text-align: center !important;
-    }
-
-    .favorites-pagination .swiper-pagination-bullet {
-      width: 8px !important;
-      height: 8px !important;
-      background: #d1d5db !important;
-      opacity: 1 !important;
-      margin: 0 4px !important;
-    }
-
-    .favorites-pagination .swiper-pagination-bullet-active {
-      background: #ec4899 !important;
-      transform: scale(1.2) !important;
-    }
-
-    .favorites-swiper .swiper-slide:hover {
-      transform: translateY(-2px);
-      transition: transform 0.2s ease;
-    }
-    </style>
-
   {% else %}
-    <!-- 빈 상황 -->
     <div class="text-center py-16">
-      <div class="text-6xl mb-4">♡◟( ˘ ³˘)◞ ♡</div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜 한 생일카페가 없어요</h3>
-      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜 해보세요!</p>
+      <div class="text-6xl mb-4">💔</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
       <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
         생일카페 둘러보기
       </a>
     </div>
   {% endif %}
 </section>
+
+<!-- Swiper CSS & JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initFavoritesSwiper();
+});
+
+function initFavoritesSwiper() {
+    const swiperContainer = document.querySelector('.favorites-swiper');
+    if (!swiperContainer) return;
+
+    const swiper = new Swiper('.favorites-swiper', {
+        slidesPerView: 'auto',  // 카드 너비 고정 시 필수
+        spaceBetween: 20,
+        pagination: {
+            el: '.favorites-pagination',
+            clickable: true,
+            dynamicBullets: true,
+        },
+        loop: false,
+        mousewheel: { forceToAxis: true },
+        keyboard: { enabled: true },
+        touchRatio: 1,
+        touchAngle: 45,
+        grabCursor: true,
+        lazy: { loadPrevNext: true },
+        breakpoints: {
+            640: { slidesPerView: 'auto', spaceBetween: 20 },
+            1024: { slidesPerView: 'auto', spaceBetween: 24 },
+            1280: { slidesPerView: 'auto', spaceBetween: 24 },
+        },
+        on: {
+            init: function() {
+                console.log('찜한 카페 Swiper 초기화 완료');
+            },
+            slideChange: function() {
+                // 슬라이드 변경 시 동작 가능
+            }
+        }
+    });
+
+    window.favoritesSwiper = swiper;
+}
+
+function updateFavoritesSwiper() {
+    if (window.favoritesSwiper) {
+        window.favoritesSwiper.update();
+        window.favoritesSwiper.updateSlides();
+    }
+}
+
+function addSlideToFavoritesSwiper(slideHTML, prepend = true) {
+    if (!window.favoritesSwiper) return;
+    const html = `<div class="swiper-slide" data-cafe-id="">${slideHTML}</div>`;
+    prepend ? window.favoritesSwiper.prependSlide(html) : window.favoritesSwiper.appendSlide(html);
+}
+
+function removeSlideFromFavoritesSwiper(cafeId) {
+    if (!window.favoritesSwiper) return;
+    const slides = document.querySelectorAll('.favorites-swiper .swiper-slide[data-cafe-id="' + cafeId + '"]');
+    slides.forEach(slide => {
+        const index = Array.from(slide.parentNode.children).indexOf(slide);
+        window.favoritesSwiper.removeSlide(index);
+    });
+}
+</script>
+
+<style>
+.favorites-swiper {
+    padding: 0 0 50px 0;
+}
+
+/* ✅ 카드 고정 너비 적용 */
+.favorites-swiper .swiper-slide {
+    width: 260px !important;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.favorites-swiper .swiper-slide:hover {
+    transform: translateY(-4px);
+}
+
+/* 페이지네이션 커스터마이징 */
+.favorites-pagination {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 20px;
+    flex-wrap: nowrap;  /* ✅ 한 줄 유지 */
+    overflow-x: auto;    /* ✅ overflow 방지 */
+}
+
+
+.favorites-pagination .swiper-pagination-bullet {
+    width: 8px;
+    height: 8px;
+    background: #d1d5db;
+    opacity: 1;
+    transition: all 0.2s ease;
+}
+.favorites-pagination .swiper-pagination-bullet-active {
+    background: #ec4899;
+    transform: scale(1.2);
+}
+
+/* 모바일 스와이프 안내 문구 */
+@media (max-width: 640px) {
+    .favorites-swiper::before {
+        content: '← 좌우로 스와이프하세요 →';
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        color: #9ca3af;
+        z-index: 10;
+    }
+}
+</style>

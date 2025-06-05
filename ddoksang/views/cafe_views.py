@@ -356,32 +356,47 @@ def toggle_favorite(request, cafe_id):
         try:
             favorite, created = CafeFavorite.objects.get_or_create(user=user, cafe=cafe)
         except IntegrityError:
-            # 중복 요청이 거의 동시에 발생했을 경우
             favorite = CafeFavorite.objects.filter(user=user, cafe=cafe).first()
-            created = False if favorite else True  # fallback
+            created = False if favorite else True
 
         if not created:
-            # 이미 찜한 상태 → 찜 해제
+            # 이미 찜한 상태 → 해제
             favorite.delete()
             is_favorited = False
             message = "찜 목록에서 제거했습니다."
+            slide_html = None
         else:
+            # 찜 성공
             is_favorited = True
             message = "찜 목록에 추가했습니다."
+
+            # ✅ 슬라이드 HTML 생성
+            slide_html = render_to_string(
+                'ddoksang/components/_cafe_card.html',
+                {
+                    'cafe': cafe,
+                    'show_favorite_btn': True,
+                    'user_favorites': [cafe.id],  # 또는 request.user 기준 찜 목록 리스트
+                    'show_status_badge': True
+                },
+                request=request
+            )
+            # ✅ .swiper-slide로 감싸기 (섹션 구조와 맞추기)
+            slide_html = f'<div class="swiper-slide" data-cafe-id="{cafe.id}">{slide_html}</div>'
 
         return JsonResponse({
             'success': True,
             'is_favorited': is_favorited,
             'message': message,
             'cafe_id': cafe.id,
+            'slide_html': slide_html,
         })
 
     except Exception as e:
         logger.exception(f"[찜 토글 오류] {e}")
         return JsonResponse({'success': False, 'error': f'서버 오류: {str(e)}'}, status=500)
-
-
     
+
     
 # 찜한 카페 목록 페이지 뷰도 수정
 @login_required

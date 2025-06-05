@@ -2,10 +2,12 @@
 {% load static %}
 {% load filters %} 
 
+
+
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+<div class="min-h-screen bg-gradient-to-br from-white">
   <!-- 상태 알림 배너 (미리보기/대기중일 때만 표시) -->
   {% if is_preview %}
     <div class="bg-yellow-50 border-b border-yellow-200">
@@ -66,7 +68,7 @@
       <img src="{{ cafe.main_image }}" alt="{{ cafe.cafe_name }}" 
            class="w-full h-full object-cover">
     {% else %}
-      <div class="w-full h-full bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400"></div>
+      <div class="w-full h-full bg-black"></div>
     {% endif %}
     
     <!-- 오버레이 -->
@@ -96,10 +98,12 @@
       <button 
         data-favorite-btn 
         data-cafe-id="{{ cafe.id }}" 
-        class="p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all text-2xl focus:outline-none cursor-pointer"
-        title="찜하기"
+        class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer"
+        title="{{ is_favorited|yesno:'찜 해제,찜하기' }}"
       >
-        ♡
+       <span class="favorite-icon text-2xl {{ is_favorited|yesno:'text-red-500,text-gray-400' }}">
+          {{ is_favorited|yesno:'♥,♡' }}
+        </span>
       </button>
     </div>
     {% endif %}
@@ -119,8 +123,8 @@
           <div class="space-y-4">
             <!-- 주소 -->
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
@@ -140,8 +144,8 @@
 
             <!-- 운영 기간 -->
             <div class="flex items-start gap-3">
-              <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
               </div>
@@ -151,7 +155,7 @@
                 {% if cafe.days_remaining > 0 %}
                   <p class="text-sm text-green-600 font-medium">{{ cafe.days_remaining }}일 남음</p>
                 {% elif cafe.days_remaining == 0 %}
-                  <p class="text-sm text-yellow-600 font-medium">오늘 마지막!</p>
+                  <p class="text-sm text-yellow-500 font-medium">오늘 마지막!</p>
                 {% else %}
                   <p class="text-sm text-gray-500">종료됨</p>
                 {% endif %}
@@ -168,7 +172,7 @@
           </h2>
           <div class="flex flex-wrap gap-2">
             {% for benefit in cafe.special_benefits|split:"," %}
-              <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+              <span class="px-3 py-1 bg-black text-white rounded-full text-sm">
                 {{ benefit|strip }}
               </span>
             {% endfor %}
@@ -204,7 +208,7 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="font-medium text-gray-900">X (구 트위터)</p>
+                  <p class="font-medium text-gray-900">X</p>
                   <p class="text-sm text-gray-600">@{{ cafe.x_source|slice:"20:" }}</p>
                 </div>
               </a>
@@ -410,12 +414,19 @@ function shareKakao() {
 <script>
 document.body.dataset.userAuthenticated = {% if user.is_authenticated %}'true'{% else %}'false'{% endif %};
 
-// 찜하기 상태 초기화
 document.addEventListener('DOMContentLoaded', function() {
-    {% if user.is_authenticated and is_favorited %}
-    window.favoriteManager.setFavoriteState('{{ cafe.id }}', true);
+    {% if user.is_authenticated %}
+        const cafeId = '{{ cafe.id }}';
+        const isFavorited = {{ is_favorited|yesno:"true,false" }};
+
+        // 상태 저장
+        window.favoriteManager.setFavoriteState(cafeId, isFavorited);
+
+        // 버튼 전체 스타일 반영 (텍스트 + 색상)
+        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
     {% endif %}
 });
 </script>
+
 
 {% endblock %}
