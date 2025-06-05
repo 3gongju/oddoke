@@ -5,9 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token }}">
-   <!-- ✅ 사용자 인증 상태 추가 (찜하기용) -->
-  <meta name="user-authenticated" content="{% if user.is_authenticated %}true{% else %}false{% endif %}">
-
   <title>Oddoke</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -21,10 +18,7 @@
   {% block head %}{% endblock %}
 </head>
 
-<!-- ✅ 사용자 인증 상태 data 속성 추가 (찜하기용) -->
-<body class="bg-white text-gray-900 min-h-screen" data-user-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}">
-
-<!-- <body class="bg-white text-gray-900 min-h-screen"> -->
+<body class="bg-white text-gray-900 min-h-screen">
 <!-- ✅ Navbar -->
 <nav class="bg-white shadow sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -50,7 +44,6 @@
             {% endif %}
             님
           </span>
-          <a href="{% url 'ddokchat:my_chatrooms' %}" class="text-sm text-gray-700 hover:text-primary">내채팅방</a>
           <a href="{% url 'accounts:mypage' %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
           <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
         {% else %}
@@ -152,10 +145,6 @@
     });
   });
 </script>
-
-<!-- ✅ 찜하기 시스템 스크립트 추가 (덕생용) -->
-<script src="{% static 'js/favorite.js' %}"></script>
-
 
 <!-- ✅ 문의하기 기능 스크립트 분리 -->
 <script src="{% static 'js/faq.js' %}"></script>

@@ -223,12 +223,12 @@
                   <div class="flex justify-center mb-3">
                       <img src="{% member_image artist.member_name artist.artist_display_name %}" 
                           alt="{{ artist.member_name }}" 
-                          class="w-14 h-14 rounded-full object-cover border-2 border-white">
+                          class="w-24 h-24 rounded-full object-cover border-2 border-white">
                   </div>
 
                   <!-- 하단 영역: 텍스트 정보 -->
                   <div class="flex-1 flex flex-col justify-center pb-2">
-                    <h3 class="font-semibold text-sm {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-800{% endif %} mb-2 truncate leading-tight">
+                    <h3 class="font-semibold text-m {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-800{% endif %} mb-2 truncate leading-tight">
                       {{ artist.member_name }}
                     </h3>
                     {% if artist.artist_name %}
