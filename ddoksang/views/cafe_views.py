@@ -11,6 +11,8 @@ from django.core.cache import cache
 from django.db.models import F, Q
 from django.conf import settings
 from django.views.decorators.csrf import csrf_protect
+from django.db import IntegrityError, transaction
+
 
 from django.urls import reverse
 from datetime import date
@@ -347,39 +349,40 @@ def my_cafes(request):
 @require_POST
 @csrf_protect
 def toggle_favorite(request, cafe_id):
-    """찜하기 토글 기능 - 단순 JSON 응답"""
     try:
-        # 카페 조회
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
-        
-        # 찜하기 토글
-        favorite, created = CafeFavorite.objects.get_or_create(user=request.user, cafe=cafe)
-        
-        if created:
-            message = "찜 목록에 추가했습니다."
-            is_favorited = True
-        else:
+        user = request.user
+
+        try:
+            favorite, created = CafeFavorite.objects.get_or_create(user=user, cafe=cafe)
+        except IntegrityError:
+            # 중복 요청이 거의 동시에 발생했을 경우
+            favorite = CafeFavorite.objects.filter(user=user, cafe=cafe).first()
+            created = False if favorite else True  # fallback
+
+        if not created:
+            # 이미 찜한 상태 → 찜 해제
             favorite.delete()
-            message = "찜 목록에서 제거했습니다."
             is_favorited = False
-        
-        # 🔧 HTML 렌더링 제거하고 단순 JSON만 응답
-        response_data = {
+            message = "찜 목록에서 제거했습니다."
+        else:
+            is_favorited = True
+            message = "찜 목록에 추가했습니다."
+
+        return JsonResponse({
             'success': True,
             'is_favorited': is_favorited,
             'message': message,
-            'cafe_id': cafe_id,
-        }
-        
-        return JsonResponse(response_data)
-        
-    except BdayCafe.DoesNotExist:
-        logger.error(f"카페 {cafe_id}를 찾을 수 없습니다.")
-        return JsonResponse({'success': False, 'error': '카페를 찾을 수 없습니다.'}, status=404)
-    except Exception as e:
-        logger.error(f"찜하기 오류: {str(e)}")
-        return JsonResponse({'success': False, 'error': f'오류가 발생했습니다: {str(e)}'}, status=500)
+            'cafe_id': cafe.id,
+        })
 
+    except Exception as e:
+        logger.exception(f"[찜 토글 오류] {e}")
+        return JsonResponse({'success': False, 'error': f'서버 오류: {str(e)}'}, status=500)
+
+
+    
+    
 # 찜한 카페 목록 페이지 뷰도 수정
 @login_required
 def favorites_view(request):

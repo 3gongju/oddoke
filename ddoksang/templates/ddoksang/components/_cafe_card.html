@@ -62,8 +62,8 @@
         <button 
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
-          class="text-lg transition-all duration-200 hover:scale-125 focus:outline-none cursor-pointer"
-          style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+          class="text-lg transition-all duration-200 hover:scale-125 focus:outline-none cursor-pointer favoritable"
+          data-initial-state="{% if cafe.id in user_favorites %}true{% else %}false{% endif %}"
           title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
         >
           {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
