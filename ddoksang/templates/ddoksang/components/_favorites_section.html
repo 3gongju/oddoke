@@ -103,12 +103,6 @@ function updateFavoritesSwiper() {
     margin-top: 20px;
     flex-wrap: nowrap;
     overflow-x: auto;
-    white-space: nowrap;       /* ✅ 줄바꿈 방지 */
-    line-height: 1;            /* ✅ 두 줄처럼 보이는 현상 방지 */
-}
-/* Swiper 기본 페이지네이션 중복 생성을 방지 */
-.swiper-pagination + .swiper-pagination {
-    display: none !important;  /* ✅ 혹시라도 중복 생성되었을 때 강제로 숨김 */
 }
 .favorites-pagination .swiper-pagination-bullet {
     width: 8px;

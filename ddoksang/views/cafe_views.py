@@ -443,7 +443,7 @@ def user_preview_cafe(request, cafe_id):
         'is_favorited': False,
         'nearby_cafes': nearby_cafes,
         'user_favorites': [],
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # ✅ 수정된 부분
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  
         'is_preview': True,
         'can_edit': True,
         'preview_type': 'user',
