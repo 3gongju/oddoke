@@ -1,3 +1,4 @@
+
 {% extends "ddoksang/base/ddoksang_base.html" %}
 
 {% load static %}
@@ -79,6 +80,7 @@
 <!-- 메인 컨텐츠 -->
 <div class="max-w-7xl mx-auto">
 
+    
 <!-- 🗺️ 카카오맵 섹션 -->
   <section class="py-4 sm:py-8 px-4">
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
@@ -269,7 +271,7 @@
   </section>
 
   <!-- ✅ 찜한 카페 섹션 - 수정된 버전 -->
-    {% include 'ddoksang/components/_favorites_section.html' %}
+  {% include 'ddoksang/components/_favorites_section.html' %}
 
   <!--  최신 등록된 생일카페 섹션 -->
   <section class="py-4 sm:py-8 px-4">
@@ -393,6 +395,9 @@
   </a>
 </div>
 
+<!-- 카카오맵 및 스크립트 로드 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
+<script src="{% static 'js/autocomplete.js' %}"></script>
 <!-- 카카오맵 및 스크립트 로드 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>

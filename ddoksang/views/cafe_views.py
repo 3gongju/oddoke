@@ -348,7 +348,7 @@ def my_cafes(request):
 @login_required
 @require_POST
 def toggle_favorite(request, cafe_id):
-    """카페 찜하기/찜해제 토글"""
+    """카페 찜하기/찜해제 토글 (HTML 조각 포함)"""
     try:
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
         favorite, created = CafeFavorite.objects.get_or_create(
@@ -363,25 +363,38 @@ def toggle_favorite(request, cafe_id):
         else:
             is_favorited = True
             message = "찜 목록에 추가했어요!"
-        
-        # 캐시 무효화 (사용자별 찜 목록 변경)
+
+        # 캐시 무효화
         cache_key = f"user_favorites_{request.user.id}"
         cache.delete(cache_key)
-        
+
+       # ✅ HTML 조각 렌더링
+        card_html = render_to_string(
+            'ddoksang/components/_cafe_card.html',
+            {
+                'cafe': cafe,
+                'user': request.user,
+                'user_favorites': get_user_favorites(request.user),
+                'show_favorite_btn': True,
+                'show_status_badge': True,
+            },
+            request=request
+        )
+
         return JsonResponse({
             'success': True,
             'is_favorited': is_favorited,
             'message': message,
-            'cafe_id': str(cafe_id)
+            'cafe_id': str(cafe_id),
+            'card_html': card_html,
         })
-        
+
     except Exception as e:
         logger.error(f"찜하기 토글 오류: {e}")
         return JsonResponse({
             'success': False,
             'error': '처리 중 오류가 발생했습니다.'
         }, status=500)
-    
 
     
 # 찜한 카페 목록 페이지 뷰도 수정

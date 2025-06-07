@@ -1,6 +1,8 @@
 # API 엔드포인트들
 
+from datetime import date
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_GET
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -12,34 +14,28 @@ from .utils import DEFAULT_PAGE_SIZE, validate_coordinates, get_nearby_cafes
 
 logger = logging.getLogger(__name__)
 
-@require_GET
+
 def cafe_quick_view(request, cafe_id):
-    """생일카페 빠른 보기 API"""
     try:
-        cafe = BdayCafe.objects.select_related('artist', 'member').get(
-            id=cafe_id, status='approved'
-        )
-        
+        cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
         data = {
             'success': True,
             'cafe': {
                 'id': cafe.id,
                 'name': cafe.cafe_name,
                 'artist': cafe.artist.display_name,
-                'member': cafe.member.member_name if cafe.member else None,
+                'member': cafe.member.member_name if cafe.member else '',
                 'start_date': cafe.start_date.strftime('%m.%d'),
                 'end_date': cafe.end_date.strftime('%m.%d'),
-                'address': cafe.address,
-                'special_benefits': cafe.special_benefits,
-                'main_image': cafe.get_main_image(),
-                'latitude': float(cafe.latitude) if cafe.latitude else None,
-                'longitude': float(cafe.longitude) if cafe.longitude else None,
-                'is_active': cafe.is_active,
-                'days_remaining': cafe.days_remaining,
+                'address': cafe.address or '',
+                'main_image': cafe.get_main_image() if hasattr(cafe, 'get_main_image') else '',
+                'is_active': cafe.start_date <= date.today() <= cafe.end_date,
             }
         }
-        
         return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
         
     except BdayCafe.DoesNotExist:
         return JsonResponse({'success': False, 'error': '카페를 찾을 수 없습니다.'})
