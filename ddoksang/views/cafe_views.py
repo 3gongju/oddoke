@@ -12,19 +12,20 @@ from django.db.models import F, Q
 from django.conf import settings
 from django.views.decorators.csrf import csrf_protect
 from django.db import IntegrityError, transaction
-
-
 from django.urls import reverse
 from datetime import date
 import json
 import logging
 from django.template.loader import render_to_string
+
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
 from ..forms import BdayCafeForm, BdayCafeImageForm
+from ..utils.map_utils import get_map_context, get_nearby_cafes  # 유틸리티 사용
 from artist.models import Artist, Member
-from .utils import get_user_favorites, get_nearby_cafes, get_safe_cafe_map_data
+from .utils import get_user_favorites
 
 logger = logging.getLogger(__name__)
+
 
 @login_required
 def create_cafe(request):
@@ -424,13 +425,15 @@ def user_preview_cafe(request, cafe_id):
     """사용자 미리보기 (자신이 등록한 카페만, 상태 무관)"""
     cafe = get_object_or_404(BdayCafe, id=cafe_id, submitted_by=request.user)
     
-    # 주변 카페들 (미리보기에서도 주변 카페 표시)
+    # 주변 카페들 - 유틸리티 사용
     nearby_cafes = []
     if cafe.latitude and cafe.longitude:
         try:
+            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
             nearby_cafes = get_nearby_cafes(
-                lat=float(cafe.latitude), 
-                lng=float(cafe.longitude), 
+                user_lat=float(cafe.latitude), 
+                user_lng=float(cafe.longitude), 
+                cafes_queryset=approved_cafes,
                 radius_km=5, 
                 limit=5, 
                 exclude_id=cafe.id
@@ -438,17 +441,21 @@ def user_preview_cafe(request, cafe_id):
         except (ValueError, TypeError) as e:
             logger.warning(f"주변 카페 조회 오류: {e}")
     
+    # 지도 관련 컨텍스트 생성
+    map_context = get_map_context()
+    
     context = {
         'cafe': cafe,
         'is_favorited': False,
         'nearby_cafes': nearby_cafes,
         'user_favorites': [],
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  
         'is_preview': True,
         'can_edit': True,
         'preview_type': 'user',
+        **map_context,  # 지도 관련 컨텍스트 병합
     }
     return render(request, 'ddoksang/detail.html', context)
+
 
 # 추가로 필요한 함수들
 def cafe_image_upload_view(request):
@@ -469,13 +476,10 @@ def cafe_edit_view(request, cafe_id):
 def my_favorites_view(request):
     """내 찜 목록 (favorites_view와 동일)"""
     return favorites_view(request)
-
 def tour_map_view(request):
-    """투어맵 뷰 - 디버깅 강화 버전"""
+    """투어맵 뷰 - 유틸리티 사용으로 간소화"""
     from datetime import date
-    import json
     import logging
-    from django.conf import settings
     
     logger = logging.getLogger(__name__)
     today = date.today()
@@ -489,83 +493,19 @@ def tour_map_view(request):
     
     logger.info(f"운영중인 카페 수: {cafes.count()}")
     
-    cafes_data = []
-    for cafe in cafes:
-        try:
-            # 좌표 검증
-            if not cafe.latitude or not cafe.longitude:
-                logger.warning(f"카페 {cafe.id}({cafe.cafe_name}): 좌표 정보 없음")
-                continue
-                
-            # 좌표를 float로 변환
-            try:
-                lat = float(cafe.latitude)
-                lng = float(cafe.longitude)
-                
-                # 한국 좌표 범위 검증
-                if not (33.0 <= lat <= 43.0 and 124.0 <= lng <= 132.0):
-                    logger.warning(f"카페 {cafe.id}: 좌표가 한국 범위를 벗어남 (lat: {lat}, lng: {lng})")
-                    continue
-                    
-            except (ValueError, TypeError) as e:
-                logger.warning(f"카페 {cafe.id}: 좌표 변환 오류 - {e}")
-                continue
-            
-            # 메인 이미지 URL 가져오기
-            main_image_url = None
-            try:
-                if hasattr(cafe, 'get_main_image'):
-                    main_image_url = cafe.get_main_image()
-                elif cafe.images.exists():
-                    main_image_url = cafe.images.first().image.url
-            except Exception as e:
-                logger.warning(f"카페 {cafe.id}: 이미지 처리 오류 - {e}")
-            
-            # ✅ 카페 데이터 구조 - name과 cafe_name 모두 제공
-            cafe_data = {
-                "id": cafe.id,
-                "name": cafe.cafe_name,           # ✅ JavaScript에서 cafe.name으로 접근
-                "cafe_name": cafe.cafe_name,      # ✅ 하위 호환성
-                "artist": cafe.artist.display_name if cafe.artist else "",
-                "member": cafe.member.member_name if cafe.member else "",
-                "latitude": lat,
-                "longitude": lng,
-                "address": cafe.address or "",
-                "road_address": cafe.road_address or "",
-                "start_date": cafe.start_date.strftime('%Y-%m-%d'),
-                "end_date": cafe.end_date.strftime('%Y-%m-%d'),
-                "is_active": True,
-                "main_image": main_image_url,
-                "special_benefits": cafe.special_benefits or "",
-                "days_remaining": (cafe.end_date - today).days,
-                "cafe_type": cafe.get_cafe_type_display(),
-            }
-            
-            cafes_data.append(cafe_data)
-            logger.debug(f"카페 {cafe.id} 데이터 추가됨: {cafe.cafe_name}")
-                
-        except Exception as e:
-            logger.error(f"카페 {cafe.id} 데이터 처리 중 오류: {e}")
-            continue
+    # 지도 관련 컨텍스트 생성 (유틸리티 사용)
+    map_context = get_map_context(cafes_queryset=cafes)
     
-    logger.info(f"지도에 표시할 카페 수: {len(cafes_data)}")
+    # 디버깅 정보
+    debug_info = {
+        "total_queried": cafes.count(),
+        "total_valid": map_context.get('total_cafes', 0),
+        "today": today.strftime('%Y-%m-%d')
+    }
     
-    # JSON 데이터 안전하게 생성
-    try:
-        cafes_json = json.dumps(cafes_data, ensure_ascii=False, indent=2)
-    except Exception as e:
-        logger.error(f"JSON 직렬화 오류: {e}")
-        cafes_json = "[]"
-
     context = {
-        "bday_cafes_json": cafes_json,
-        "total_bday_cafes": len(cafes_data),
-        "kakao_api_key": getattr(settings, "KAKAO_MAP_API_KEY", ""),
-        "debug_info": {
-            "total_queried": cafes.count(),
-            "total_valid": len(cafes_data),
-            "today": today.strftime('%Y-%m-%d')
-        }
+        **map_context,  # 지도 관련 컨텍스트 (cafes_json, total_cafes 등 포함)
+        "debug_info": debug_info
     }
     
     return render(request, 'ddoksang/tour_map.html', context)
