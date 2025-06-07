@@ -521,7 +521,7 @@ function showNearbyCafes(userLat, userLng) {
             distance: Math.round(distance),
             walkTime: Math.round(distance / 80) // 도보 시간 (평균 속도 80m/분)
         };
-    }).sort((a, b) => a.distance - b.distance); // 거리순 정렬
+    }).sort((a, b) => a.distance - b.distance); // 거리순
 
     if (nearby.length === 0) {
         list.innerHTML = '<div class="text-center text-gray-500 py-4"><p class="text-sm">주변 2km 이내에 운영중인 생카가 없습니다.</p></div>';
