@@ -1,11 +1,14 @@
-{% extends "base.html" %}
+{% extends "ddoksang/base/ddoksang_base.html" %}
+
 {% load static %}
 {% load filters %}
 {% load member_images %}
 
 {% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
 
-{% block body %}
+
+{% block ddoksang_content %}
+
 <!-- JSON 데이터 (JavaScript에서 사용) -->
 {% csrf_token %}
 {{ cafes_json|json_script:"cafes-data" }}
@@ -393,7 +396,7 @@
 <!-- 카카오맵 및 스크립트 로드 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>
-<script src="{% static 'js/favorite.js' %}"></script>  <!-- 통합 찜하기 시스템 -->
+<!-- <script src="{% static 'js/favorite.js' %}"></script>  통합 찜하기 시스템 -->
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
 <!-- CSS -->
@@ -765,4 +768,4 @@ function moveToLocation(lat, lng) {
 }
 </script>
 
-{% endblock %}
+{% endblock ddoksang_content %}
