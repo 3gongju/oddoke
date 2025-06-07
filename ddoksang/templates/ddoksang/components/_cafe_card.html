@@ -1,7 +1,8 @@
 {% load static %}
 {% load filters %}
 
-<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200 overflow-hidden">
+<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200 overflow-hidden"
+     data-cafe-id="{{ cafe.id }}">
   <!-- 카페 이미지 -->
   {% if cafe.get_main_image %}
     <div class="relative overflow-hidden">

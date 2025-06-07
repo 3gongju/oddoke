@@ -46,7 +46,7 @@ function initFavoritesSwiper() {
     if (!swiperContainer) return;
 
     const swiper = new Swiper('.favorites-swiper', {
-        slidesPerView: 'auto',  // 카드 너비 고정 시 필수
+        slidesPerView: 'auto',
         spaceBetween: 20,
         pagination: {
             el: '.favorites-pagination',
@@ -68,9 +68,6 @@ function initFavoritesSwiper() {
         on: {
             init: function() {
                 console.log('찜한 카페 Swiper 초기화 완료');
-            },
-            slideChange: function() {
-                // 슬라이드 변경 시 동작 가능
             }
         }
     });
@@ -84,51 +81,29 @@ function updateFavoritesSwiper() {
         window.favoritesSwiper.updateSlides();
     }
 }
-
-function addSlideToFavoritesSwiper(slideHTML, prepend = true) {
-    if (!window.favoritesSwiper) return;
-    const html = `<div class="swiper-slide" data-cafe-id="">${slideHTML}</div>`;
-    prepend ? window.favoritesSwiper.prependSlide(html) : window.favoritesSwiper.appendSlide(html);
-}
-
-function removeSlideFromFavoritesSwiper(cafeId) {
-    if (!window.favoritesSwiper) return;
-    const slides = document.querySelectorAll('.favorites-swiper .swiper-slide[data-cafe-id="' + cafeId + '"]');
-    slides.forEach(slide => {
-        const index = Array.from(slide.parentNode.children).indexOf(slide);
-        window.favoritesSwiper.removeSlide(index);
-    });
-}
 </script>
 
 <style>
 .favorites-swiper {
     padding: 0 0 50px 0;
 }
-
-/* ✅ 카드 고정 너비 적용 */
 .favorites-swiper .swiper-slide {
     width: 260px !important;
     flex-shrink: 0;
     transition: transform 0.2s ease;
 }
-
 .favorites-swiper .swiper-slide:hover {
     transform: translateY(-4px);
 }
-
-/* 페이지네이션 커스터마이징 */
 .favorites-pagination {
     position: relative;
     display: flex;
     justify-content: center;
     gap: 6px;
     margin-top: 20px;
-    flex-wrap: nowrap;  /* ✅ 한 줄 유지 */
-    overflow-x: auto;    /* ✅ overflow 방지 */
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
-
-
 .favorites-pagination .swiper-pagination-bullet {
     width: 8px;
     height: 8px;
@@ -140,8 +115,6 @@ function removeSlideFromFavoritesSwiper(cafeId) {
     background: #ec4899;
     transform: scale(1.2);
 }
-
-/* 모바일 스와이프 안내 문구 */
 @media (max-width: 640px) {
     .favorites-swiper::before {
         content: '← 좌우로 스와이프하세요 →';

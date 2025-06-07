@@ -2,8 +2,6 @@
 {% load static %}
 {% load filters %} 
 
-
-
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block body %}
@@ -62,13 +60,26 @@
     </div>
   {% endif %}
 
+  <!-- ✅ 임시 디버깅 정보 (개발 중에만 표시) -->
+  {% if settings.DEBUG %}
+  <div style="background: #ffffcc; padding: 10px; margin: 10px; border: 1px solid #ccc;">
+    <strong>🔍 디버깅 정보:</strong><br>
+    API 키 존재: {% if kakao_api_key %}Yes ({{ kakao_api_key|slice:":10" }}...){% else %}No{% endif %}<br>
+    카페 좌표: {{ cafe.latitude|default:"None" }}, {{ cafe.longitude|default:"None" }}<br>
+    Preview 모드: {{ is_preview|yesno:"Yes,No" }}<br>
+    Preview 타입: {{ preview_type|default:"None" }}
+  </div>
+  {% endif %}
+
   <!-- 헤더 이미지 섹션 -->
   <div class="relative h-80 overflow-hidden">
-    {% if cafe.main_image %}
-      <img src="{{ cafe.main_image }}" alt="{{ cafe.cafe_name }}" 
+    {% if cafe.get_main_image %}
+      <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
            class="w-full h-full object-cover">
     {% else %}
-      <div class="w-full h-full bg-black"></div>
+      <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
+        <span class="text-white text-6xl">🏪</span>
+      </div>
     {% endif %}
     
     <!-- 오버레이 -->
@@ -79,9 +90,11 @@
       <div class="max-w-4xl mx-auto">
         <div class="flex items-center gap-3 mb-2">
           <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
-            {% if cafe.status == 'ongoing' %}🎉 진행중
-            {% elif cafe.status == 'upcoming' %}🔜 예정
-            {% else %}✅ 종료{% endif %}
+            {% with cafe|cafe_status as cafe_state %}
+              {% if cafe_state == 'ongoing' %}🎉 진행중
+              {% elif cafe_state == 'upcoming' %}🔜 예정
+              {% else %}✅ 종료{% endif %}
+            {% endwith %}
           </span>
           <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
             {{ cafe.get_cafe_type_display }}
@@ -134,7 +147,6 @@
                 {% if cafe.place_name %}
                    <p class="text-sm text-gray-900 font-semibold">{{ cafe.place_name }}</p>
                 {% endif %}
-
                 <p class="text-gray-600">{{ cafe.address }}</p>
                 {% if cafe.road_address %}
                   <p class="text-sm text-gray-500">(도로명) {{ cafe.road_address }}</p>
@@ -199,20 +211,18 @@
             <span class="mr-2">🔗</span> 출처
           </h2>
           <div class="space-y-3">
-            {% if cafe.x_source %}
-              <a href="{{ cafe.x_source }}" target="_blank" 
-                 class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-medium text-gray-900">X</p>
-                  <p class="text-sm text-gray-600">@{{ cafe.x_source|slice:"20:" }}</p>
-                </div>
-              </a>
-            {% endif %}
+            <a href="{{ cafe.x_source }}" target="_blank" 
+               class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+              <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">X (Twitter)</p>
+                <p class="text-sm text-gray-600">{{ cafe.x_source }}</p>
+              </div>
+            </a>
           </div>
         </div>
         {% endif %}
@@ -223,7 +233,14 @@
             <span class="mr-2">🗺️</span> 위치
           </h2>
           <div class="rounded-lg overflow-hidden border">
-            <div id="map" class="w-full h-64"></div>
+            <div id="map" class="w-full h-64 bg-gray-100 flex items-center justify-center">
+              <div class="text-gray-500 text-center">
+                <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                </svg>
+                <p class="text-sm">지도를 로딩 중...</p>
+              </div>
+            </div>
           </div>
           <div class="mt-4 flex gap-2">
             <button onclick="openKakaoMap()" class="flex-1 bg-yellow-400 text-yellow-900 py-2 px-4 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
@@ -244,14 +261,16 @@
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-gray-600">상태</span>
+              {% with cafe|cafe_status as cafe_state %}
               <span class="px-2 py-1 rounded text-xs font-medium
-                {% if cafe.status == 'ongoing' %}bg-green-100 text-green-800
-                {% elif cafe.status == 'upcoming' %}bg-blue-100 text-blue-800
+                {% if cafe_state == 'ongoing' %}bg-green-100 text-green-800
+                {% elif cafe_state == 'upcoming' %}bg-blue-100 text-blue-800
                 {% else %}bg-gray-100 text-gray-600{% endif %}">
-                {% if cafe.status == 'ongoing' %}진행중
-                {% elif cafe.status == 'upcoming' %}예정
+                {% if cafe_state == 'ongoing' %}진행중
+                {% elif cafe_state == 'upcoming' %}예정
                 {% else %}종료{% endif %}
               </span>
+              {% endwith %}
             </div>
             <div class="flex justify-between items-center">
               <span class="text-gray-600">이벤트 타입</span>
@@ -305,6 +324,7 @@
         </div>
         {% endif %}
 
+
         <!-- 공유하기 -->
         <div class="bg-white rounded-2xl shadow-sm border p-6">
           <h3 class="font-bold text-gray-900 mb-4">📤 공유하기</h3>
@@ -322,10 +342,10 @@
   </div>
 </div>
 
-<!-- JavaScript -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+<!-- ✅ 카카오맵 API 로드 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
 
-<!-- Django 데이터를 JavaScript 변수로 전달 -->
+<!-- ✅ Django 데이터를 JavaScript 변수로 전달 -->
 <script id="cafe-data" type="application/json">
 {
     "latitude": {{ cafe.latitude|default:"37.5665" }},
@@ -333,100 +353,415 @@
     "name": "{{ cafe.cafe_name|escapejs }}",
     "address": "{{ cafe.address|escapejs }}",
     "id": {{ cafe.id }},
-    "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %}
+    "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %},
+    "apiKey": "{{ kakao_api_key|escapejs }}"
 }
 </script>
 
 <script>
-// JSON에서 데이터 가져오기
-const cafeDataElement = document.getElementById('cafe-data');
-const cafeData = JSON.parse(cafeDataElement.textContent);
-
-// 지도 초기화
+// ✅ 수정된 JavaScript 코드
 let map;
 let marker;
 
-function initMap() {
-  const container = document.getElementById('map');
-  const options = {
-    center: new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude),
-    level: 3
-  };
-  
-  map = new kakao.maps.Map(container, options);
-  
-  // 마커 생성
-  const markerPosition = new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude);
-  marker = new kakao.maps.Marker({
-    position: markerPosition,
-    map: map
-  });
-  
-  // 인포윈도우 생성
-  const infowindow = new kakao.maps.InfoWindow({
-    content: `
-      <div style="padding:10px; font-size:12px; width:200px;">
-        <strong>${cafeData.name}</strong><br>
-        ${cafeData.address}
-      </div>
-    `
-  });
-  
-  infowindow.open(map, marker);
+// JSON에서 데이터 가져오기
+function getCafeData() {
+    try {
+        const cafeDataElement = document.getElementById('cafe-data');
+        if (!cafeDataElement) {
+            console.error('cafe-data 엘리먼트를 찾을 수 없습니다.');
+            return null;
+        }
+        
+        const textContent = cafeDataElement.textContent;
+        if (!textContent) {
+            console.error('cafe-data가 비어있습니다.');
+            return null;
+        }
+        
+        return JSON.parse(textContent);
+    } catch (error) {
+        console.error('카페 데이터 파싱 오류:', error);
+        return null;
+    }
 }
 
-// 페이지 로드 시 지도 초기화
-document.addEventListener('DOMContentLoaded', initMap);
+// 지도 초기화 함수
+function initMap() {
+    const cafeData = getCafeData();
+    if (!cafeData) {
+        console.error('카페 데이터를 가져올 수 없습니다.');
+        showMapError('카페 데이터를 불러올 수 없습니다.');
+        return;
+    }
+    
+    // 카카오맵 API 로드 확인
+    if (typeof kakao === 'undefined' || !kakao.maps) {
+        console.error('카카오맵 API가 로드되지 않았습니다. API 키를 확인하세요.');
+        showMapError('카카오맵 API 로드 실패<br>API 키를 확인해주세요.');
+        return;
+    }
+    
+    try {
+        const container = document.getElementById('map');
+        if (!container) {
+            console.error('지도 컨테이너를 찾을 수 없습니다.');
+            return;
+        }
+        
+        const options = {
+            center: new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude),
+            level: 3
+        };
+        
+        map = new kakao.maps.Map(container, options);
+        
+        // 마커 생성
+        const markerPosition = new kakao.maps.LatLng(cafeData.latitude, cafeData.longitude);
+        marker = new kakao.maps.Marker({
+            position: markerPosition,
+            map: map
+        });
+        
+        // 인포윈도우 생성
+        const infowindow = new kakao.maps.InfoWindow({
+            content: `
+                <div style="padding:10px; font-size:12px; width:200px;">
+                    <strong>${cafeData.name}</strong><br>
+                    ${cafeData.address}
+                </div>
+            `
+        });
+        
+        infowindow.open(map, marker);
+        
+        console.log('지도 초기화 완료');
+        
+    } catch (error) {
+        console.error('지도 초기화 오류:', error);
+        showMapError('지도 초기화 중 오류가 발생했습니다.');
+    }
+}
+
+// 지도 오류 표시 함수
+function showMapError(message) {
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        mapContainer.innerHTML = `
+            <div class="flex items-center justify-center h-full bg-gray-100 text-gray-600">
+                <div class="text-center">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <p class="text-sm">${message}</p>
+                    <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
+                        새로고침
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
 
 // 카카오맵에서 보기
 function openKakaoMap() {
-  const url = `https://map.kakao.com/link/map/${cafeData.name},${cafeData.latitude},${cafeData.longitude}`;
-  window.open(url, '_blank');
+    const cafeData = getCafeData();
+    if (!cafeData) return;
+    
+    const url = `https://map.kakao.com/link/map/${cafeData.name},${cafeData.latitude},${cafeData.longitude}`;
+    window.open(url, '_blank');
 }
 
 // 주소 복사
 function copyAddress() {
-  navigator.clipboard.writeText(cafeData.address).then(() => {
-    alert('주소가 복사되었습니다!');
-  });
+    const cafeData = getCafeData();
+    if (!cafeData) return;
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(cafeData.address).then(() => {
+            showToast('주소가 복사되었습니다!', 'success');
+        }).catch(() => {
+            fallbackCopyToClipboard(cafeData.address);
+        });
+    } else {
+        fallbackCopyToClipboard(cafeData.address);
+    }
+}
+
+// 클립보드 복사 대체 함수
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        showToast('주소가 복사되었습니다!', 'success');
+    } catch (err) {
+        console.error('복사 실패:', err);
+        showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
 }
 
 // 링크 복사
 function copyLink() {
-  navigator.clipboard.writeText(window.location.href).then(() => {
-    alert('링크가 복사되었습니다!');
-  });
+    const currentUrl = window.location.href;
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(currentUrl).then(() => {
+            showToast('링크가 복사되었습니다!', 'success');
+        }).catch(() => {
+            fallbackCopyToClipboard(currentUrl);
+        });
+    } else {
+        fallbackCopyToClipboard(currentUrl);
+    }
 }
 
-// 카카오톡 공유
-function shareKakao() {
-  alert('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.');
+// 토스트 메시지 표시
+function showToast(message, type = 'info') {
+    // 기존 토스트 제거
+    const existing = document.querySelector('.toast-message');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-message fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 transform';
+
+    const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        warning: 'bg-yellow-500',
+        info: 'bg-blue-500'
+    };
+    toast.classList.add(colors[type] || colors.info);
+
+    toast.textContent = message;
+    toast.style.transform = 'translateX(100%)';
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 50);
+
+    setTimeout(() => {
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
 }
+
+// 카카오톡 공유 (추후 구현)
+function shareKakao() {
+    showToast('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.', 'info');
+}
+
+// ✅ 페이지 로드 완료 후 지도 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    // 카카오맵 API 로드 확인 후 지도 초기화
+    if (typeof kakao !== 'undefined' && kakao.maps) {
+        initMap();
+    } else {
+        // API가 로드되지 않은 경우 재시도
+        console.warn('카카오맵 API 로드 대기 중...');
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        const checkKakaoLoaded = setInterval(() => {
+            retryCount++;
+            if (typeof kakao !== 'undefined' && kakao.maps) {
+                clearInterval(checkKakaoLoaded);
+                initMap();
+            } else if (retryCount >= maxRetries) {
+                clearInterval(checkKakaoLoaded);
+                console.error('카카오맵 API 로드 실패');
+                showMapError('카카오맵 API 로드 실패<br>새로고침을 시도해주세요.');
+            }
+        }, 100); // 100ms마다 확인
+    }
+});
+
+
+// ✅ 디버깅 정보 출력
+console.log('Detail 페이지 JavaScript 로드됨');
+console.log('API 키 존재:', '{{ kakao_api_key }}' ? 'Yes' : 'No');
+console.log('카페 좌표:', {{ cafe.latitude|default:"null" }}, {{ cafe.longitude|default:"null" }});
 </script>
 
 <!-- CSRF 토큰 -->
 {% csrf_token %}
 
-<!-- ✅ 찜하기 스크립트 로드 -->
-<script src="{% static 'js/favorite.js' %}"></script>
+<!-- 사용자 데이터 전달 (숨겨진 div 방식) -->
+<div id="user-data" 
+     data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+     data-cafe-id="{{ cafe.id }}"
+     data-is-favorited="{% if is_favorited %}true{% else %}false{% endif %}"
+     style="display: none;">
+</div>
 
-<!-- ✅ 사용자 인증 상태를 body에 추가 -->
+<!-- 찜하기 스크립트 로드 -->
+<!-- <script src="{% static 'js/favorite.js' %}"></script> -->
+
+<!-- 찜하기 초기화 스크립트 (오류 방지 강화) -->
 <script>
-document.body.dataset.userAuthenticated = {% if user.is_authenticated %}'true'{% else %}'false'{% endif %};
-
 document.addEventListener('DOMContentLoaded', function() {
-    {% if user.is_authenticated %}
-        const cafeId = '{{ cafe.id }}';
-        const isFavorited = {{ is_favorited|yesno:"true,false" }};
-
-        // 상태 저장
-        window.favoriteManager.setFavoriteState(cafeId, isFavorited);
-
-        // 버튼 전체 스타일 반영 (텍스트 + 색상)
-        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
-    {% endif %}
+    console.log('DOM 로드 완료 - 찜하기 초기화 시작');
+    
+    // 숨겨진 div에서 데이터 가져오기
+    var userData = document.getElementById('user-data');
+    if (!userData) {
+        console.error('사용자 데이터를 찾을 수 없습니다.');
+        return;
+    }
+    
+    var userAuthenticated = userData.getAttribute('data-authenticated') === 'true';
+    var cafeId = userData.getAttribute('data-cafe-id');
+    var isFavorited = userData.getAttribute('data-is-favorited') === 'true';
+    
+    // body 데이터셋 설정
+    document.body.dataset.userAuthenticated = userAuthenticated ? 'true' : 'false';
+    
+    console.log('찜하기 데이터:', {
+        userAuthenticated: userAuthenticated,
+        cafeId: cafeId,
+        isFavorited: isFavorited,
+        favoriteManagerExists: !!window.favoriteManager
+    });
+    
+    // 사용자가 로그인한 경우에만 찜하기 기능 초기화
+    if (userAuthenticated) {
+        // FavoriteManager 로드 확인 (재시도 로직)
+        var initAttempts = 0;
+        var maxAttempts = 20; // 2초 대기
+        
+        function tryInitFavorite() {
+            initAttempts++;
+            
+            if (window.favoriteManager && typeof window.favoriteManager.setFavoriteState === 'function') {
+                try {
+                    // 찜하기 상태 저장
+                    window.favoriteManager.setFavoriteState(cafeId, isFavorited);
+                    
+                    // 모든 찜하기 버튼 상태 업데이트
+                    if (typeof window.favoriteManager.updateAllButtons === 'function') {
+                        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
+                    }
+                    
+                    console.log('찜하기 시스템 초기화 완료');
+                } catch (error) {
+                    console.error('찜하기 초기화 오류:', error);
+                }
+            } else if (initAttempts < maxAttempts) {
+                console.log('FavoriteManager 로드 대기 중... (' + initAttempts + '/' + maxAttempts + ')');
+                setTimeout(tryInitFavorite, 100);
+            } else {
+                console.warn('FavoriteManager 로드 실패 - 찜하기 기능을 사용할 수 없습니다.');
+                
+                // 수동으로 간단한 찜하기 기능 구현
+                setupBasicFavorite();
+            }
+        }
+        
+        // 찜하기 초기화 시작
+        tryInitFavorite();
+    } else {
+        console.log('비로그인 사용자 - 찜하기 기능 비활성화');
+    }
 });
-</script>
 
+// ✅ 기본 찜하기 기능 (FavoriteManager 실패 시 백업)
+function setupBasicFavorite() {
+    console.log('기본 찜하기 기능 활성화');
+    
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('[data-favorite-btn]') || e.target.closest('[data-favorite-btn]')) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            var btn = e.target.matches('[data-favorite-btn]') ? e.target : e.target.closest('[data-favorite-btn]');
+            var cafeId = btn.dataset.cafeId;
+            
+            if (cafeId) {
+                basicToggleFavorite(cafeId, btn);
+            }
+        }
+    });
+}
+
+// ✅ 기본 찜하기 토글 함수
+function basicToggleFavorite(cafeId, button) {
+    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrfToken) {
+        console.error('CSRF 토큰을 찾을 수 없습니다.');
+        return;
+    }
+    
+    // 버튼 비활성화
+    button.disabled = true;
+    var originalContent = button.textContent;
+    button.textContent = '⏳';
+    
+    fetch('/ddoksang/cafe/' + cafeId + '/toggle-favorite/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 버튼 상태 업데이트
+            button.textContent = data.is_favorited ? '♥' : '♡';
+            button.style.color = data.is_favorited ? '#ef4444' : '#6b7280';
+            
+            // 간단한 알림
+            showSimpleToast(data.message || (data.is_favorited ? '찜했어요!' : '찜 해제했어요!'));
+        } else {
+            throw new Error(data.error || '오류가 발생했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('찜하기 오류:', error);
+        button.textContent = originalContent;
+        showSimpleToast('오류가 발생했습니다.');
+    })
+    .finally(() => {
+        button.disabled = false;
+    });
+}
+
+// 간단한 토스트 메시지
+function showSimpleToast(message) {
+    var toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #333;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        z-index: 10000;
+        font-size: 14px;
+    `;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
+}
+</script>
 
 {% endblock %}
