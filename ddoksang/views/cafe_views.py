@@ -411,12 +411,26 @@ def user_preview_cafe(request, cafe_id):
     """사용자 미리보기 (자신이 등록한 카페만, 상태 무관)"""
     cafe = get_object_or_404(BdayCafe, id=cafe_id, submitted_by=request.user)
     
+    # 주변 카페들 (미리보기에서도 주변 카페 표시)
+    nearby_cafes = []
+    if cafe.latitude and cafe.longitude:
+        try:
+            nearby_cafes = get_nearby_cafes(
+                lat=float(cafe.latitude), 
+                lng=float(cafe.longitude), 
+                radius_km=5, 
+                limit=5, 
+                exclude_id=cafe.id
+            )
+        except (ValueError, TypeError) as e:
+            logger.warning(f"주변 카페 조회 오류: {e}")
+    
     context = {
         'cafe': cafe,
         'is_favorited': False,
-        'nearby_cafes': [],
+        'nearby_cafes': nearby_cafes,
         'user_favorites': [],
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # ✅ 수정된 부분
         'is_preview': True,
         'can_edit': True,
         'preview_type': 'user',

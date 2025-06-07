@@ -8,7 +8,7 @@ from datetime import timedelta
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, F  # ✅ F 추가
 from django.views.decorators.cache import cache_page
 from django.core.paginator import Paginator
 from django.core.cache import cache
@@ -193,6 +193,13 @@ def cafe_detail_view(request, cafe_id):
         status='approved'
     )
     
+    # 조회수 증가
+    try:
+        BdayCafe.objects.filter(id=cafe_id).update(view_count=F('view_count') + 1)
+        cafe.refresh_from_db()
+    except Exception as e:
+        logger.warning(f"조회수 업데이트 실패: {e}")
+    
     # 사용자 찜 상태 확인
     is_favorited = False
     if request.user.is_authenticated:
@@ -201,7 +208,21 @@ def cafe_detail_view(request, cafe_id):
             cafe=cafe
         ).exists()
     
-    # 같은 아티스트/멤버의 다른 카페들
+    # 주변 카페들 (5km 이내)
+    nearby_cafes = []
+    if cafe.latitude and cafe.longitude:
+        try:
+            nearby_cafes = get_nearby_cafes(
+                lat=float(cafe.latitude), 
+                lng=float(cafe.longitude), 
+                radius_km=5, 
+                limit=5, 
+                exclude_id=cafe.id
+            )
+        except (ValueError, TypeError) as e:
+            logger.warning(f"주변 카페 조회 오류: {e}")
+    
+    # 같은 아티스트/멤버의 다른 카페들 (related_cafes로 유지)
     related_cafes = BdayCafe.objects.filter(
         Q(artist=cafe.artist) | Q(member=cafe.member),
         status='approved'
@@ -210,11 +231,21 @@ def cafe_detail_view(request, cafe_id):
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
     
+    # API 키 확인 (디버깅)
+    kakao_api_key = getattr(settings, 'KAKAO_MAP_API_KEY', '')
+    if settings.DEBUG:  # ✅ DEBUG 모드에서만 출력
+        print(f"KAKAO_MAP_API_KEY: {kakao_api_key[:10]}..." if kakao_api_key else "KAKAO_MAP_API_KEY: None")
+    
     context = {
         'cafe': cafe,
         'is_favorited': is_favorited,
-        'related_cafes': related_cafes,
+        'nearby_cafes': nearby_cafes,
+        'related_cafes': related_cafes,  # ✅ 기존 템플릿 호환성 유지
         'user_favorites': user_favorites,
+        'kakao_api_key': kakao_api_key,
+        'is_preview': False,
+        'can_edit': False,
+        'preview_type': None,
     }
     
     return render(request, 'ddoksang/detail.html', context)
@@ -242,7 +273,7 @@ def map_view(request):
         'active_cafes': active_cafes,
         'cafes_json': cafes_json,
         'user_favorites': user_favorites,
-        'KAKAO_MAP_API_KEY': settings.KAKAO_MAP_API_KEY,  # API 키 직접 전달
+        'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # ✅ 안전한 접근
     }
     
     return render(request, 'ddoksang/map.html', context)
