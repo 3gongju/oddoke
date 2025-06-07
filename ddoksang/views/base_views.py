@@ -136,6 +136,8 @@ def search_view(request):
     return render(request, 'ddoksang/search.html', context)
 
 
+
+
 def cafe_detail_view(request, cafe_id):
     """생일카페 상세 뷰"""
     cafe = get_object_or_404(

@@ -553,4 +553,20 @@
         isClusteringEnabled: { get: () => isClusteringEnabled, configurable: true }
     });
 
+
+    DdoksangMap.LocationManager.requestLocationPermission().then(async result => {
+    if (result.granted) {
+        const position = await mapManager.moveToUserLocation();
+        const nearby = DdoksangMap.findNearbyCafes(
+            position.lat,
+            position.lng,
+            cafesDataFromServer // 이건 서버에서 내려받은 전체 카페 JSON
+        );
+        DdoksangMap.displayNearbyCafes(nearby, 'nearbyCafeList', (cafe) => {
+            window.location.href = `/ddoksang/${cafe.id}/`;
+        });
+    }
+});
+
+
 })(window);
