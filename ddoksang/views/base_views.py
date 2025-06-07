@@ -1,22 +1,20 @@
 # ddoksang/views/base_views.py
-# 기본 뷰들 (홈, 상세보기, 검색, 지도)
+# 기본 뷰들 (홈, 상세보기, 검색, 지도) - 지도 유틸리티 사용으로 리팩토링
 
-import json
 import logging
 from datetime import timedelta
 
 from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
 from django.utils import timezone
-from django.db.models import Q, F  # ✅ F 추가
+from django.db.models import Q, F
 from django.views.decorators.cache import cache_page
 from django.core.paginator import Paginator
 from django.core.cache import cache
-from django.conf import settings
 
 from ..models import BdayCafe, CafeFavorite
+from ..utils.map_utils import get_map_context, get_nearby_cafes
 from artist.models import Artist, Member
-from .utils import get_user_favorites, get_nearby_cafes, get_safe_cafe_map_data
+from .utils import get_user_favorites
 
 logger = logging.getLogger(__name__)
 
@@ -85,72 +83,27 @@ def home_view(request):
                 status='approved'
             ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:10]
 
-    # === 4. 현재 운영 중인 생카 지도용 JSON 데이터 ===
+    # === 4. 현재 운영 중인 생카들 ===
     active_cafes = BdayCafe.objects.filter(
         status='approved',
         start_date__lte=today,
         end_date__gte=today
     ).select_related('artist', 'member').prefetch_related('images')
 
-    cafes_json_data = []
-    for cafe in active_cafes:
-        try:
-            if not cafe.latitude or not cafe.longitude:
-                continue
-            lat = float(cafe.latitude)
-            lng = float(cafe.longitude)
-            if not (33.0 <= lat <= 43.0 and 124.0 <= lng <= 132.0):
-                continue
-            main_image_url = None
-            try:
-                if hasattr(cafe, 'get_main_image'):
-                    main_image_url = cafe.get_main_image()
-                elif cafe.images.exists():
-                    main_image_url = cafe.images.first().image.url
-            except Exception:
-                pass
+    # === 5. 지도 관련 컨텍스트 생성 (유틸리티 사용) ===
+    map_context = get_map_context(cafes_queryset=active_cafes)
 
-            cafe_data = {
-                'id': cafe.id,
-                'name': cafe.cafe_name,
-                'cafe_name': cafe.cafe_name,
-                'artist': cafe.artist.display_name if cafe.artist else '',
-                'member': cafe.member.member_name if cafe.member else '',
-                'latitude': lat,
-                'longitude': lng,
-                'address': cafe.address or '',
-                'road_address': cafe.road_address or '',
-                'start_date': cafe.start_date.strftime('%Y-%m-%d'),
-                'end_date': cafe.end_date.strftime('%Y-%m-%d'),
-                'is_active': True,
-                'days_remaining': (cafe.end_date - today).days,
-                'main_image': main_image_url,
-                'special_benefits': cafe.special_benefits or '',
-                'cafe_type': cafe.get_cafe_type_display(),
-            }
-            cafes_json_data.append(cafe_data)
-        except Exception as e:
-            logger.warning(f"지도용 카페 데이터 오류 - ID {cafe.id}: {e}")
-            continue
-
-    cafes_json = json.dumps(cafes_json_data, ensure_ascii=False)
-
-    # === 5. 템플릿 렌더 ===
+    # === 6. 템플릿 컨텍스트 ===
     context = {
         'birthday_artists': birthday_artists,
         'latest_cafes': latest_cafes,
         'my_favorite_cafes': my_favorite_cafes,
-        'user_favorites': user_favorites,  # ✅ 찜한 카페 ID 리스트
-        'cafes_json': cafes_json,
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
-        'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
-        'total_cafes': len(cafes_json_data),
-
-        # 호환성 유지
-        'bday_cafes_json': cafes_json,
-        'total_bday_cafes': len(cafes_json_data),
+        'user_favorites': user_favorites,
+        **map_context,  # 지도 관련 컨텍스트 병합
     }
+    
     return render(request, 'ddoksang/home.html', context)
+
 
 def search_view(request):
     """통합 검색 페이지"""
@@ -208,13 +161,16 @@ def cafe_detail_view(request, cafe_id):
             cafe=cafe
         ).exists()
     
-    # 주변 카페들 (5km 이내)
+    # 주변 카페들 (5km 이내) - 유틸리티 사용
     nearby_cafes = []
     if cafe.latitude and cafe.longitude:
         try:
+            # 승인된 카페들 중에서 주변 카페 검색
+            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
             nearby_cafes = get_nearby_cafes(
-                lat=float(cafe.latitude), 
-                lng=float(cafe.longitude), 
+                user_lat=float(cafe.latitude), 
+                user_lng=float(cafe.longitude), 
+                cafes_queryset=approved_cafes,
                 radius_km=5, 
                 limit=5, 
                 exclude_id=cafe.id
@@ -231,21 +187,19 @@ def cafe_detail_view(request, cafe_id):
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
     
-    # API 키 확인 (디버깅)
-    kakao_api_key = getattr(settings, 'KAKAO_MAP_API_KEY', '')
-    if settings.DEBUG:  # ✅ DEBUG 모드에서만 출력
-        print(f"KAKAO_MAP_API_KEY: {kakao_api_key[:10]}..." if kakao_api_key else "KAKAO_MAP_API_KEY: None")
+    # 지도 관련 컨텍스트 생성
+    map_context = get_map_context()
     
     context = {
         'cafe': cafe,
         'is_favorited': is_favorited,
         'nearby_cafes': nearby_cafes,
-        'related_cafes': related_cafes,  # ✅ 기존 템플릿 호환성 유지
+        'related_cafes': related_cafes,
         'user_favorites': user_favorites,
-        'kakao_api_key': kakao_api_key,
         'is_preview': False,
         'can_edit': False,
         'preview_type': None,
+        **map_context,  # 지도 관련 컨텍스트 병합
     }
     
     return render(request, 'ddoksang/detail.html', context)
@@ -263,17 +217,16 @@ def map_view(request):
         end_date__gte=today
     ).select_related('artist', 'member').prefetch_related('images')
     
-    # 안전한 지도 데이터 생성
-    cafes_json = get_safe_cafe_map_data(active_cafes)
+    # 지도 관련 컨텍스트 생성 (유틸리티 사용)
+    map_context = get_map_context(cafes_queryset=active_cafes)
     
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
     
     context = {
         'active_cafes': active_cafes,
-        'cafes_json': cafes_json,
         'user_favorites': user_favorites,
-        'KAKAO_MAP_API_KEY': getattr(settings, 'KAKAO_MAP_API_KEY', ''),  # ✅ 안전한 접근
+        **map_context,  # 지도 관련 컨텍스트 병합
     }
     
     return render(request, 'ddoksang/map.html', context)
