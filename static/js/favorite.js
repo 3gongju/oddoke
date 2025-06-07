@@ -1,32 +1,33 @@
-// static/js/favorite.js - 간단하고 정확한 찜하기 시스템 (최종)
+// ✅ 기존 FavoriteManager가 있다면 제거
+if (window.favoriteManager) {
+    delete window.favoriteManager;
+}
 
-class UnifiedFavoriteManager {
+class FavoriteManager {
     constructor() {
         this.isSubmitting = false;
         this.favoriteStates = new Map();
+        this.callbacks = [];
+        this.initialized = false;
         this.init();
     }
 
     init() {
+        if (this.initialized) return;
+        
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
         } else {
             this.setupEventListeners();
         }
         
-        // 기존 찜 상태 초기화
-        this.initializeExistingStates();
-    }
-
-    initializeExistingStates() {
-        document.querySelectorAll('[data-favorite-btn][data-cafe-id]').forEach(btn => {
-            const cafeId = btn.dataset.cafeId;
-            const isFavorited = btn.textContent.includes('♥');
-            this.favoriteStates.set(cafeId.toString(), isFavorited);
-        });
+        this.initialized = true;
     }
 
     setupEventListeners() {
+        // ✅ 중복 이벤트 리스너 방지
+        if (this._eventListenerAdded) return;
+        
         document.addEventListener('click', (e) => {
             const favoriteBtn = e.target.closest('[data-favorite-btn]');
             if (!favoriteBtn || this.isSubmitting) return;
@@ -39,10 +40,17 @@ class UnifiedFavoriteManager {
                 this.toggleFavorite(cafeId);
             }
         });
+
+        this._eventListenerAdded = true;
+        console.log('FavoriteManager 초기화 완료');
     }
 
     async toggleFavorite(cafeId) {
-        if (this.isSubmitting) return;
+        if (this.isSubmitting) {
+            console.log('이미 요청 처리 중...');
+            return;
+        }
+        
         this.isSubmitting = true;
 
         const csrfToken = this.getCSRFToken();
@@ -63,6 +71,7 @@ class UnifiedFavoriteManager {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Content-Type': 'application/json',
                 },
+                credentials: 'same-origin', // ✅ 쿠키 포함
             });
 
             if (!response.ok) {
@@ -72,279 +81,334 @@ class UnifiedFavoriteManager {
             const data = await response.json();
 
             if (data.success) {
+                // ✅ 상태 업데이트 - 크기 안정성 확보
                 this.updateAllButtons(cafeId, data.is_favorited);
                 this.favoriteStates.set(cafeId.toString(), data.is_favorited);
-                this.handleFavoriteCarousel(cafeId, data.is_favorited);
-                this.showToast(data.is_favorited ? '찜 목록에 추가했어요!' : '찜 목록에서 제거했어요!');
+                this.handlePageSpecificUpdates(cafeId, data);
+                this.executeCallbacks(cafeId, data.is_favorited);
+                this.showToast(data.message || (data.is_favorited ? '찜 목록에 추가했어요!' : '찜 목록에서 제거했어요!'), 'success');
             } else {
                 throw new Error(data.error || '찜하기 처리에 실패했습니다.');
             }
 
         } catch (error) {
             console.error('찜하기 오류:', error);
-            this.showToast('오류가 발생했습니다.', 'error');
+            this.handleError(error);
         } finally {
             this.setButtonsLoading(buttons, false);
             this.isSubmitting = false;
         }
     }
 
+    // ✅ 버튼 업데이트 - 크기 안정성 강화
     updateAllButtons(cafeId, isFavorited) {
         const buttons = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
+        
         buttons.forEach(button => {
-            button.textContent = isFavorited ? '♥' : '♡';
-            button.style.color = isFavorited ? '#ef4444' : '#6b7280';
-            
-            // 애니메이션
-            button.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-            }, 150);
-        });
-    }
-
-    async handleFavoriteCarousel(cafeId, isFavorited) {
-        const favoriteCarousel = document.getElementById('favoriteCarousel');
-        if (!favoriteCarousel) return;
-
-        if (isFavorited) {
-            // 찜 추가 - 카페 정보 가져와서 카로셀에 추가
             try {
-                const response = await fetch(`/ddoksang/api/cafe/${cafeId}/quick/`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.addCafeToCarousel(data.cafe);
+                // ✅ 크기 고정을 위한 스타일 적용
+                if (!button.style.width) {
+                    const computedStyle = window.getComputedStyle(button);
+                    button.style.width = computedStyle.width;
+                    button.style.height = computedStyle.height;
+                    button.style.minWidth = computedStyle.width;
+                    button.style.minHeight = computedStyle.height;
                 }
-            } catch (error) {
-                console.error('카페 정보 가져오기 오류:', error);
-            }
-        } else {
-            // 찜 해제 - 카로셀에서 제거
-            this.removeCafeFromCarousel(cafeId);
-        }
-    }
 
-    addCafeToCarousel(cafe) {
-        const favoriteCarousel = document.getElementById('favoriteCarousel');
-        if (!favoriteCarousel) return;
-
-        // 🔧 기존 카드가 있으면 그것을 템플릿으로 사용 (완전 복제 방식)
-        const existingCard = favoriteCarousel.querySelector('[data-cafe-id]');
-        
-        if (existingCard) {
-            // 기존 카드 완전 복제
-            const newCard = existingCard.cloneNode(true);
-            
-            // 카페 정보로 내용 업데이트
-            this.updateCardContent(newCard, cafe);
-            
-            // 카로셀 맨 앞에 추가
-            favoriteCarousel.insertBefore(newCard, existingCard);
-            
-            // 애니메이션
-            this.animateCardEntry(newCard);
-            
-        } else {
-            // 첫 번째 카드면 템플릿으로 생성
-            const newCard = this.createCardFromTemplate(cafe);
-            favoriteCarousel.appendChild(newCard);
-            this.animateCardEntry(newCard);
-        }
-
-        // 빈 메시지 숨기기
-        this.hideEmptyMessage();
-
-        console.log('카페가 찜 목록에 추가되었습니다:', cafe.name);
-    }
-
-    updateCardContent(cardElement, cafe) {
-        // 카페 ID 업데이트
-        cardElement.setAttribute('data-cafe-id', cafe.id);
-        
-        // 이미지 업데이트
-        const img = cardElement.querySelector('img');
-        const imgContainer = cardElement.querySelector('.w-full.h-32, .w-full.h-40');
-        
-        if (cafe.main_image && img) {
-            img.src = cafe.main_image;
-            img.alt = cafe.name;
-        } else if (!cafe.main_image && imgContainer) {
-            imgContainer.innerHTML = `
-                <div class="w-full h-32 sm:h-40 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
-                    <span class="text-white text-2xl sm:text-3xl">🏪</span>
-                </div>
-            `;
-        }
-        
-        // 텍스트 내용 업데이트
-        const title = cardElement.querySelector('h3');
-        const artist = cardElement.querySelector('p.text-gray-700');
-        const date = cardElement.querySelector('p.text-xs.text-gray-600');
-        const address = cardElement.querySelector('p.text-xs.text-gray-500');
-        const link = cardElement.querySelector('a[href*="/ddoksang/detail/"]');
-        
-        if (title) title.textContent = cafe.name;
-        if (artist) artist.textContent = `${cafe.artist}${cafe.member ? ' - ' + cafe.member : ''}`;
-        if (date) date.textContent = `📅 ${cafe.start_date} ~ ${cafe.end_date}`;
-        if (address) address.textContent = `📍 ${cafe.address ? cafe.address.substring(0, 30) + '...' : ''}`;
-        if (link) link.href = `/ddoksang/detail/${cafe.id}/`;
-        
-        // 운영중 배지 업데이트
-        const statusBadge = cardElement.querySelector('.bg-green-100');
-        if (cafe.is_active && !statusBadge) {
-            const badgeContainer = cardElement.querySelector('.flex.items-center.justify-between');
-            if (badgeContainer) {
-                badgeContainer.innerHTML += '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">운영중</span>';
-            }
-        } else if (!cafe.is_active && statusBadge) {
-            statusBadge.remove();
-        }
-    }
-
-    createCardFromTemplate(cafe) {
-        // 첫 번째 카드를 위한 기본 템플릿
-        const cardHtml = `
-            <div class="min-w-[280px] sm:min-w-[300px] bg-white rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex-shrink-0" 
-                 data-cafe-id="${cafe.id}" 
-                 style="scroll-snap-align: start;">
-                ${cafe.main_image ? `
-                    <img src="${cafe.main_image}" alt="${cafe.name}" class="w-full h-32 sm:h-40 object-cover">
-                ` : `
-                    <div class="w-full h-32 sm:h-40 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
-                        <span class="text-white text-2xl sm:text-3xl">🏪</span>
-                    </div>
-                `}
-
-                <div class="p-3 sm:p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-800">
-                            <span class="text-red-600 mr-1">♥</span> 찜 덕
-                        </span>
-                        ${cafe.is_active ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">운영중</span>' : ''}
-                    </div>
-
-                    <h3 class="font-bold text-base sm:text-lg text-gray-800 mb-1 line-clamp-1">${cafe.name}</h3>
-                    <p class="text-gray-700 font-semibold mb-2 text-sm line-clamp-1">${cafe.artist}${cafe.member ? ' - ' + cafe.member : ''}</p>
-                    <p class="text-xs text-gray-600 mb-2">📅 ${cafe.start_date} ~ ${cafe.end_date}</p>
-                    <p class="text-xs text-gray-500 mb-3 line-clamp-2">📍 ${cafe.address ? cafe.address.substring(0, 30) + '...' : ''}</p>
-
-                    <a href="/ddoksang/detail/${cafe.id}/" 
-                       class="block w-full text-center bg-gray-900 text-white py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-all duration-200">
-                        자세히 보기
-                    </a>
-                </div>
-            </div>
-        `;
-        
-        const cardElement = document.createElement('div');
-        cardElement.innerHTML = cardHtml.trim();
-        return cardElement.firstElementChild;
-    }
-
-    animateCardEntry(card) {
-        card.style.opacity = '0';
-        card.style.transform = 'translateX(-30px)';
-        
-        requestAnimationFrame(() => {
-            card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            card.style.opacity = '1';
-            card.style.transform = 'translateX(0)';
-        });
-
-        // 카로셀을 맨 앞으로 스크롤
-        setTimeout(() => {
-            const favoriteCarousel = document.getElementById('favoriteCarousel');
-            if (favoriteCarousel && favoriteCarousel.scrollTo) {
-                favoriteCarousel.scrollTo({
-                    left: 0,
-                    behavior: 'smooth'
+                const icon = button.querySelector('.favorite-icon');
+                if (icon) {
+                    icon.textContent = isFavorited ? '♥' : '♡';
+                    icon.style.color = isFavorited ? '#ef4444' : '#6b7280';
+                } else {
+                    // ✅ 아이콘이 없는 경우 버튼 내용 직접 변경
+                    button.textContent = isFavorited ? '♥' : '♡';
+                }
+                
+                // ✅ 색상 업데이트
+                button.style.color = isFavorited ? '#ef4444' : '#6b7280';
+                button.title = isFavorited ? '찜 해제' : '찜하기';
+                
+                // ✅ 애니메이션 - 크기 변화 최소화
+                button.style.transform = 'scale(1.1)';
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        button.style.transform = 'scale(1)';
+                    }, 150);
                 });
-            }
-        }, 100);
-    }
-
-    removeCafeFromCarousel(cafeId) {
-        const favoriteCarousel = document.getElementById('favoriteCarousel');
-        if (!favoriteCarousel) return;
-
-        const cafeCard = favoriteCarousel.querySelector(`[data-cafe-id="${cafeId}"]`);
-        if (cafeCard) {
-            cafeCard.style.transition = 'all 0.3s ease';
-            cafeCard.style.opacity = '0';
-            cafeCard.style.transform = 'translateX(-20px)';
-            
-            setTimeout(() => {
-                cafeCard.remove();
                 
-                // 카로셀이 비었으면 빈 메시지 표시
-                const remainingCards = favoriteCarousel.querySelectorAll('[data-cafe-id]');
-                if (remainingCards.length === 0) {
-                    this.showEmptyMessage();
+            } catch (error) {
+                console.warn(`버튼 업데이트 오류 (카페 ID: ${cafeId}):`, error);
+            }
+        });
+    }
+
+    handlePageSpecificUpdates(cafeId, data) {
+        const swiper = window.favoritesSwiper;
+        if (!swiper) return;
+
+        if (!data.is_favorited) {
+            // ✅ 찜 해제 시 슬라이드 제거
+            const slide = document.querySelector(`.favorites-swiper .swiper-slide[data-cafe-id="${cafeId}"]`);
+            if (slide) {
+                const index = Array.from(slide.parentNode.children).indexOf(slide);
+                if (index !== -1) {
+                    swiper.removeSlide(index);
+                    swiper.update();
                 }
-            }, 300);
+            }
+
+            // ✅ 모든 슬라이드가 제거되면 빈 상태 표시
+            const remaining = swiper.wrapperEl.querySelectorAll('.swiper-slide[data-cafe-id]').length;
+            if (remaining === 0) {
+                this.showEmptyFavoritesState();
+            }
+        } else if (data.slide_html) {
+            // ✅ 찜 추가 시 슬라이드 추가
+            try {
+                swiper.prependSlide(data.slide_html);
+                swiper.update();
+            } catch (error) {
+                console.error('슬라이드 추가 오류:', error);
+            }
         }
     }
 
-    hideEmptyMessage() {
-        const emptyMessage = document.querySelector('.empty-favorites-message');
-        if (emptyMessage) {
-            emptyMessage.style.display = 'none';
-        }
-    }
-
-    showEmptyMessage() {
-        // 빈 메시지는 템플릿에서 처리하도록 단순화
-        console.log('찜한 카페가 없습니다.');
-    }
-
+    // ✅ 로딩 상태 처리 개선
     setButtonsLoading(buttons, isLoading) {
         buttons.forEach(button => {
             if (isLoading) {
+                // ✅ 기존 크기 저장
+                const computedStyle = window.getComputedStyle(button);
+                button.dataset.originalWidth = computedStyle.width;
+                button.dataset.originalHeight = computedStyle.height;
                 button.dataset.originalContent = button.textContent;
+                
+                // ✅ 크기 고정 후 로딩 표시
+                button.style.width = computedStyle.width;
+                button.style.height = computedStyle.height;
+                button.style.minWidth = computedStyle.width;
+                button.style.minHeight = computedStyle.height;
+                
                 button.textContent = '⏳';
                 button.style.opacity = '0.7';
                 button.disabled = true;
             } else {
+                // ✅ 원래 상태 복원
                 const original = button.dataset.originalContent;
                 if (original && original !== '⏳') {
-                    const cafeId = button.dataset.cafeId;
-                    const isFavorited = this.favoriteStates.get(cafeId?.toString()) || false;
-                    button.textContent = isFavorited ? '♥' : '♡';
+                    button.textContent = original;
                 }
+                
                 button.style.opacity = '1';
                 button.disabled = false;
+                
+                // ✅ 데이터 정리
                 delete button.dataset.originalContent;
+                delete button.dataset.originalWidth;
+                delete button.dataset.originalHeight;
             }
         });
     }
 
-    getCSRFToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-               document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+    executeCallbacks(cafeId, isFavorited) {
+        this.callbacks.forEach(callback => {
+            try {
+                callback(cafeId, isFavorited);
+            } catch (error) {
+                console.error('찜하기 콜백 오류:', error);
+            }
+        });
     }
 
-    showToast(message, type = 'success') {
+    showEmptyFavoritesState() {
+        const section = document.querySelector('#favoritesSection');
+        if (!section) return;
+
+        section.innerHTML = `
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">💕 내가 찜한 덕의 생카</h2>
+                    <p class="text-gray-600 text-sm sm:text-base">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
+                </div>
+                <a href="/ddoksang/" class="text-pink-600 hover:underline text-sm sm:text-base">홈으로 &rarr;</a>
+            </div>
+            <div class="text-center py-16">
+                <div class="text-6xl mb-4">💔</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+                <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
+                <a href="/ddoksang/" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+                    생일카페 둘러보기
+                </a>
+            </div>`;
+    }
+
+    // ✅ CSRF 토큰 가져오기 강화
+    getCSRFToken() {
+        // 1. 폼의 CSRF 토큰
+        const formToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (formToken) return formToken;
+        
+        // 2. 메타 태그의 CSRF 토큰
+        const metaToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+        if (metaToken) return metaToken;
+        
+        // 3. 데이터 속성의 CSRF 토큰
+        const dataToken = document.querySelector('[data-csrf-token]')?.dataset.csrfToken;
+        if (dataToken) return dataToken;
+        
+        // 4. 쿠키에서 CSRF 토큰 추출
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return value;
+            }
+        }
+        
+        console.error('CSRF 토큰을 찾을 수 없습니다.');
+        return null;
+    }
+
+    handleError(error) {
+        let message = '오류가 발생했습니다.';
+
+        if (error.message.includes('401') || error.message.includes('403')) {
+            message = '로그인이 필요합니다.';
+            setTimeout(() => {
+                window.location.href = '/accounts/login/';
+            }, 2000);
+        } else if (error.message.includes('404')) {
+            message = '카페를 찾을 수 없습니다.';
+        } else if (error.message.includes('500')) {
+            message = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        } else if (error.message.includes('네트워크')) {
+            message = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
+        }
+
+        this.showToast(message, 'error');
+        console.error('찜하기 처리 오류:', error);
+    }
+
+    showToast(message, type = 'info') {
+        // ✅ 기존 토스트 제거
         const existing = document.querySelector('.toast-message');
         if (existing) existing.remove();
 
         const toast = document.createElement('div');
-        toast.className = 'toast-message fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300';
-        toast.classList.add(type === 'error' ? 'bg-red-500' : 'bg-green-500');
+        toast.className = 'toast-message fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 transform';
+
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            warning: 'bg-yellow-500',
+            info: 'bg-blue-500'
+        };
+        toast.classList.add(colors[type] || colors.info);
+
         toast.textContent = message;
         toast.style.transform = 'translateX(100%)';
 
         document.body.appendChild(toast);
 
-        setTimeout(() => toast.style.transform = 'translateX(0)', 50);
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 50);
+
         setTimeout(() => {
             toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
         }, 3000);
+    }
+
+    onFavoriteChange(callback) {
+        this.callbacks.push(callback);
+    }
+
+    getFavoriteState(cafeId) {
+        return this.favoriteStates.get(cafeId.toString()) || false;
+    }
+    
+    setFavoriteState(cafeId, isFavorited) {
+        this.favoriteStates.set(cafeId.toString(), isFavorited);
+
+        const btns = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
+        btns.forEach(btn => {
+            try {
+                // ✅ 크기 안정성 확보
+                if (!btn.style.width) {
+                    const computedStyle = window.getComputedStyle(btn);
+                    btn.style.width = computedStyle.width;
+                    btn.style.height = computedStyle.height;
+                    btn.style.minWidth = computedStyle.width;
+                    btn.style.minHeight = computedStyle.height;
+                }
+
+                const icon = btn.querySelector('.favorite-icon');
+                if (icon) {
+                    icon.textContent = isFavorited ? '♥' : '♡';
+                    icon.style.color = isFavorited ? '#ef4444' : '#6b7280';
+                } else {
+                    btn.textContent = isFavorited ? '♥' : '♡';
+                }
+
+                btn.style.color = isFavorited ? '#ef4444' : '#6b7280';
+                btn.title = isFavorited ? '찜 해제' : '찜하기';
+            } catch (error) {
+                console.warn(`상태 설정 오류 (카페 ID: ${cafeId}):`, error);
+            }
+        });
+    }
+
+    // ✅ 안전한 초기화 메서드
+    safeInit() {
+        try {
+            if (this.initialized) return;
+            
+            // DOM이 준비될 때까지 대기
+            if (document.readyState !== 'complete') {
+                window.addEventListener('load', () => this.safeInit());
+                return;
+            }
+            
+            this.setupEventListeners();
+            this.initialized = true;
+            console.log('FavoriteManager 안전 초기화 완료');
+        } catch (error) {
+            console.error('FavoriteManager 초기화 오류:', error);
+        }
     }
 }
 
-// 글로벌 인스턴스 생성
-window.favoriteManager = new UnifiedFavoriteManager();
+// ✅ 글로벌 인스턴스 등록 - 안전한 방식
+if (!window.favoriteManager) {
+    window.favoriteManager = new FavoriteManager();
+}
 
-console.log('찜하기 시스템 로드 완료');
+// ✅ 전역 함수 등록
+window.updateAllFavoriteButtons = function (cafeId, isFavorited) {
+    if (window.favoriteManager) {
+        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
+    }
+};
+
+window.showToast = function (message, type) {
+    if (window.favoriteManager) {
+        window.favoriteManager.showToast(message, type);
+    }
+};
+
+// ✅ 디버깅용 전역 함수
+window.debugFavoriteManager = function() {
+    console.log('FavoriteManager 상태:', {
+        initialized: window.favoriteManager?.initialized,
+        favoriteStates: window.favoriteManager?.favoriteStates,
+        isSubmitting: window.favoriteManager?.isSubmitting,
+        callbacksCount: window.favoriteManager?.callbacks?.length
+    });
+};
+
+console.log('✅ 개선된 찜하기 시스템 로드 완료 - 크기 안정성 및 오류 처리 강화');

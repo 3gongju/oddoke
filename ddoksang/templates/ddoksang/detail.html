@@ -105,7 +105,7 @@
       </div>
     </div>
     
-    <!-- ✅ 통합된 찜하기 버튼 -->
+<!-- 찜하기 버튼  -->
     {% if user.is_authenticated and cafe.status == 'approved' %}
     <div class="absolute top-6 right-6">
       <button 
@@ -113,8 +113,9 @@
         data-cafe-id="{{ cafe.id }}" 
         class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer"
         title="{{ is_favorited|yesno:'찜 해제,찜하기' }}"
+        style="width: 3.5rem; height: 3.5rem; min-width: 3.5rem; min-height: 3.5rem; display: flex; align-items: center; justify-content: center;"
       >
-       <span class="favorite-icon text-2xl {{ is_favorited|yesno:'text-red-500,text-gray-400' }}">
+       <span class="favorite-icon text-2xl" style="color: {{ is_favorited|yesno:'#ef4444,#9ca3af' }}; line-height: 1;">
           {{ is_favorited|yesno:'♥,♡' }}
         </span>
       </button>
