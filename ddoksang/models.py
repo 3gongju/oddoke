@@ -280,14 +280,6 @@ class CafeFavorite(models.Model):
         verbose_name = '카페 즐겨찾기'
 
 
-class UserSearchHistory(models.Model):
-    """사용자 검색 기록"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    search_query = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = '검색 기록'
 
 
 class TourPlan(models.Model):
