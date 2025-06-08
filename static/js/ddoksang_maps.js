@@ -515,6 +515,52 @@
         }
     };
 
+    // ✅ 자동 초기화 함수 수정 (mapManager 변수 오류 해결)
+    function autoInitializeWithLocation() {
+        console.log('🚀 자동 위치 기반 초기화 시작');
+        
+        // mapManager 변수 대신 직접 MapManager 인스턴스 생성
+        const mapManager = new MapManager('mapContainer');
+        
+        // 위치 권한 요청 후 초기화
+        LocationManager.requestLocationPermission().then(async result => {
+            try {
+                // 지도 먼저 초기화
+                await mapManager.init();
+                
+                if (result.granted) {
+                    console.log('📍 위치 권한 허용됨, 사용자 위치로 이동');
+                    try {
+                        const position = await mapManager.moveToUserLocation();
+                        
+                        // 서버에서 전달된 카페 데이터가 있다면 주변 카페 표시
+                        if (typeof cafesDataFromServer !== 'undefined' && Array.isArray(cafesDataFromServer)) {
+                            const nearby = NearbyUtils.findNearbyCafes(
+                                position.lat,
+                                position.lng,
+                                cafesDataFromServer
+                            );
+                            
+                            NearbyUtils.displayNearbyCafes(nearby, 'nearbyList', (cafe) => {
+                                if (cafe.id) {
+                                    window.location.href = `/ddoksang/cafe/${cafe.id}/`;
+                                }
+                            });
+                        }
+                    } catch (locationError) {
+                        console.warn('위치 정보 가져오기 실패:', locationError);
+                        Utils.showToast('위치 정보를 가져올 수 없어 기본 지도를 표시합니다.', 'warning');
+                    }
+                } else {
+                    console.log('📍 위치 권한 거부됨, 기본 지도 표시');
+                }
+            } catch (error) {
+                console.error('지도 초기화 실패:', error);
+                Utils.showToast('지도 초기화에 실패했습니다.', 'error');
+            }
+        });
+    }
+
     // 전역 API 노출
     window.DdoksangMap = {
         // 클래스들
@@ -541,7 +587,10 @@
         validateCoordinates: Utils.validateCoordinates,
         calculateDistance: Utils.calculateDistance,
         findNearbyCafes: NearbyUtils.findNearbyCafes,
-        displayNearbyCafes: NearbyUtils.displayNearbyCafes
+        displayNearbyCafes: NearbyUtils.displayNearbyCafes,
+        
+        // 자동 초기화 함수
+        autoInitializeWithLocation
     };
 
     // 하위 호환성을 위한 전역 변수들
@@ -553,20 +602,6 @@
         isClusteringEnabled: { get: () => isClusteringEnabled, configurable: true }
     });
 
-
-    DdoksangMap.LocationManager.requestLocationPermission().then(async result => {
-    if (result.granted) {
-        const position = await mapManager.moveToUserLocation();
-        const nearby = DdoksangMap.findNearbyCafes(
-            position.lat,
-            position.lng,
-            cafesDataFromServer // 이건 서버에서 내려받은 전체 카페 JSON
-        );
-        DdoksangMap.displayNearbyCafes(nearby, 'nearbyCafeList', (cafe) => {
-            window.location.href = `/ddoksang/${cafe.id}/`;
-        });
-    }
-});
-
+    console.log('✅ DdoksangMap 모듈 로드 완료');
 
 })(window);
