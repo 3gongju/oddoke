@@ -439,9 +439,7 @@
 
 <!-- ✅ 수정된 메인 지도 스크립트 -->
 <script>
-console.log('🚀 홈페이지 지도 스크립트 v2 시작');
 
-// ✅ 전역 변수 선언
 console.log('🚀 홈페이지 지도 스크립트 v4 시작');
 
 // ✅ 전역 변수 선명하게 선언
@@ -1042,6 +1040,41 @@ function initializeOtherFeatures() {
     } else {
         console.warn('⚠️ initBirthdayNavigation 함수를 찾을 수 없음');
     }
+    
+    // 사이드바 카페 카드 클릭 이벤트 추가
+    initializeSidebarCafeCards();
+}
+
+// ✅ 사이드바 카페 카드 이벤트 초기화
+function initializeSidebarCafeCards() {
+    const cafeCards = document.querySelectorAll('.cafe-card-mini');
+    
+    cafeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const lat = parseFloat(this.dataset.cafeLat);
+            const lng = parseFloat(this.dataset.cafeLng);
+            const cafeId = this.dataset.cafeId;
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                console.log('🖱️ 사이드바 카페 클릭:', { lat, lng, cafeId });
+                moveToLocationHome(lat, lng);
+                
+                // 해당 카페 정보도 표시 (선택사항)
+                const matchedCafe = homeCafesData.find(cafe => 
+                    cafe.id == cafeId || 
+                    (Math.abs(cafe.latitude - lat) < 0.0001 && Math.abs(cafe.longitude - lng) < 0.0001)
+                );
+                
+                if (matchedCafe) {
+                    setTimeout(() => showCafeModal(matchedCafe), 500);
+                }
+            } else {
+                console.warn('⚠️ 카페 좌표 정보가 올바르지 않음:', { lat, lng });
+            }
+        });
+    });
+    
+    console.log(`✅ 사이드바 카페 카드 ${cafeCards.length}개 이벤트 리스너 추가`);
 }
 
 // ✅ 이벤트 리스너
@@ -1122,6 +1155,7 @@ window.addEventListener('resize', function() {
 
 // ✅ 전역 함수로 노출 (다른 스크립트에서 사용할 수 있도록)
 window.moveToLocationHome = moveToLocationHome;
+window.moveToLocation = moveToLocationHome; // HTML에서 사용하는 함수명과 호환
 window.searchArtist = searchArtist;
 window.showCafeModal = showCafeModal;
 
