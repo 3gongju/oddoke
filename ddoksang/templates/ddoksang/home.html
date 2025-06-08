@@ -8,7 +8,7 @@
 
 {% block ddoksang_content %}
 
-<!-- JSON 데이터 (JavaScript에서 사용) -->
+<!-- JSON 데이터 전달 (json_script 사용) -->
 {% csrf_token %}
 {{ cafes_json|json_script:"cafes-data" }}
 
@@ -49,7 +49,7 @@
     <!-- 🔍 검색창 -->
     <div class="w-full sm:flex-1 relative">
       <form method="get" action="{% url 'ddoksang:search' %}">
-        <input id="ddok-search" type="text" name="q" placeholder="아티스트명, 카페명 검색..." 
+        <input id="ddok-search" type="text" name="q" placeholder="아티스트, 멤버 검색..." 
                class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-lg"
                value="{{ request.GET.q }}" autocomplete="off">
         <button type="submit" class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
@@ -75,25 +75,23 @@
   </div>
 </section>
 
-
-
 <!-- 🗺️ 메인 지도 섹션 with 사이드바 -->
 <section class="py-4 sm:py-8 px-4">
   <div class="max-w-7xl mx-auto">
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
       
       <!-- 헤더 -->
-      <div class="p-4 sm:p-6 bg-gray-50 border-b">
+      <div class="p-14 sm:p-6 bg-gray-50 border-b">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
               <span class="text-2xl sm:text-3xl mr-2 sm:mr-3">🗺️</span>
-              <span>전국 생일카페 지도</span>
+              <span>생카 지도</span>
             </h2>
             <div class="flex items-center mt-2">
               <span class="text-xs sm:text-sm bg-gray-200 text-gray-800 px-2 sm:px-3 py-1 rounded-full" id="cafeCountDisplay">{{ total_cafes }}개 운영중</span>
             </div>
-            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">마커를 클릭하면 생일카페 정보를 확인할 수 있어요!</p>
+            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">투어맵을 통해 더 자세한 카페 위치 정보를 확인하세요!</p>
           </div>
           
           <!-- 지도 컨트롤 버튼들 -->
@@ -121,55 +119,18 @@
           </div>
         </div>
       </div>
-      
+ 
+
+
       <!-- 지도 + 사이드바 컨테이너 -->
       <div class="flex flex-col lg:flex-row relative">
         
-        <!-- 사이드바 (왼쪽) -->
-        <div class="w-full lg:w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto" style="max-height: 500px;">
-          
-          <!-- 운영중인 카페 섹션 -->
-          <div class="p-4">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-sm font-semibold text-gray-800 flex items-center">
-                <span class="mr-2">✨</span>운영중인 생카
-              </h3>
-              <span class="text-xs text-gray-500">{{ total_cafes }}개</span>
-            </div>
-            <div class="space-y-2 max-h-64 overflow-y-auto">
-              {% for cafe in latest_cafes|slice:":5" %}
-                <div class="cafe-card-mini border border-gray-200 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors" 
-                     data-cafe-lat="{{ cafe.latitude }}" 
-                     data-cafe-lng="{{ cafe.longitude }}"
-                     data-cafe-id="{{ cafe.id }}"
-                     onclick="moveToLocation({{ cafe.latitude }}, {{ cafe.longitude }})">
-                  <div class="flex items-center space-x-2">
-                    {% if cafe.get_main_image %}
-                      <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" class="w-10 h-10 object-cover rounded-lg flex-shrink-0">
-                    {% else %}
-                      <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span class="text-gray-400 text-sm">🎂</span>
-                      </div>
-                    {% endif %}
-                    <div class="flex-1 min-w-0">
-                      <h4 class="font-medium text-xs text-gray-900 truncate">{{ cafe.cafe_name }}</h4>
-                      <p class="text-xs text-gray-600 truncate">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
-                      <p class="text-xs text-gray-500">{{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}</p>
-                      {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
-                        <span class="text-xs text-red-600 font-medium">{{ cafe.days_remaining }}일 남음</span>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-          
-        </div>
-        
+        {% include 'ddoksang/components/_floating_card_list.html' %}
+
+       
         <!-- 지도 컨테이너 (오른쪽) -->
         <div class="flex-1 relative">
-          <div id="mapContainer" class="w-full h-[300px] lg:h-[500px] bg-gray-100"></div>
+          <div id="mapContainer" class="w-full h-[900px] lg:h-[600px] bg-gray-100"></div>
           
           <!-- 지도 로딩 상태 -->
           <div id="mapLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
@@ -179,20 +140,6 @@
               </div>
           </div>
 
-          <!-- 범례 -->
-          <div class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white rounded-lg shadow-lg p-2 sm:p-4 space-y-1 sm:space-y-3">
-              <h3 class="text-xs sm:text-sm font-semibold text-gray-800">범례</h3>
-              <div class="space-y-1 sm:space-y-2">
-                  <div class="flex items-center space-x-1 sm:space-x-2">
-                      <div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-                      <span class="text-xs sm:text-sm text-gray-600">생일카페</span>
-                  </div>
-                  <div class="flex items-center space-x-1 sm:space-x-2">
-                      <div class="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full"></div>
-                      <span class="text-xs sm:text-sm text-gray-600">내 위치</span>
-                  </div>
-              </div>
-          </div>
 
           <!-- 내 주변 카페 패널 -->
           <div id="nearbyPanel" class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 bg-white rounded-lg shadow-lg p-3 sm:p-4 max-w-[250px] sm:max-w-sm hidden z-10">
@@ -434,163 +381,356 @@
   </a>
 </div>
 
-<!-- 카카오맵 및 스크립트 로드 -->
+<!-- ✅ 카카오맵 및 스크립트 로드 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
-<!-- 간단한 JavaScript - tour_map.html의 기능 활용 -->
+<!-- ✅ 수정된 메인 지도 스크립트 -->
 <script>
-// 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    // 카페 데이터 로드
-    let cafesData = [];
-    try {
-        const rawData = `{{ cafes_json|escapejs }}`;
-        if (rawData && rawData.trim() !== '[]' && rawData.trim() !== '') {
-            cafesData = JSON.parse(rawData);
-            console.log('생일카페 개수:', cafesData.length);
-        }
-    } catch (error) {
-        console.error('생일카페 데이터 파싱 오류:', error);
-        cafesData = [];
-    }
-    
-    window.cafesData = cafesData;
-    
-    // tour_map.html에서 사용하는 지도 초기화 함수 호출
-    // (이미 ddoksang_ui_components.js나 다른 파일에 구현되어 있다고 가정)
-    if (typeof initializeMap === 'function') {
-        initializeMap();
-    } else {
-        // 기본 지도 초기화 (tour_map.html과 동일한 로직)
-        initBasicMap();
-    }
-    
-    // 자동완성 초기화
-    if (typeof initAutocomplete === 'function') {
-        try {
-            initAutocomplete('ddok-search', 'ddok-autocomplete-list', {
-                showBirthday: false,
-                showArtistTag: true,
-                submitOnSelect: true,
-                artistOnly: false
-            });
-        } catch (error) {
-            console.error('자동완성 초기화 실패:', error);
-        }
-    }
-    
-    // 생일 슬라이더 초기화
-    initBirthdaySlider();
-});
 
-// 기본 지도 초기화 (tour_map.html과 동일)
-function initBasicMap() {
+console.log('🚀 홈페이지 지도 스크립트 v4 시작');
+
+// ✅ 전역 변수 선명하게 선언
+let homeMap = null;
+let homeClusterer = null; 
+let homeMarkers = [];
+let homeCafesData = [];
+let homeUserLocationMarker = null;
+
+// ✅ JSON 데이터 파싱 개선 함수
+function loadCafeDataSafely() {
+    console.log('📄 카페 데이터 로드 시작');
+    
+    try {
+        const cafesJsonElement = document.getElementById('cafes-data');
+        if (!cafesJsonElement) {
+            console.error('❌ cafes-data 엘리먼트를 찾을 수 없음');
+            return [];
+        }
+        
+        let rawData = cafesJsonElement.textContent;
+        if (!rawData || rawData.trim() === '') {
+            console.warn('⚠️ 카페 데이터가 비어있음');
+            return [];
+        }
+        
+        console.log('📊 Raw JSON 데이터 길이:', rawData.length);
+        console.log('📋 Raw 데이터 첫 100자:', rawData.substring(0, 100));
+        
+        // Django의 json_script는 때때로 이중 인코딩할 수 있음
+        let parsedData;
+        
+        // 먼저 문자열인지 확인
+        if (typeof rawData === 'string') {
+            // 따옴표로 시작하고 끝나는 경우 (이중 인코딩)
+            if (rawData.startsWith('"') && rawData.endsWith('"')) {
+                console.log('🔄 이중 인코딩 감지, 재파싱 시도');
+                rawData = JSON.parse(rawData); // 첫 번째 파싱
+            }
+            
+            // 두 번째 파싱 시도
+            if (typeof rawData === 'string') {
+                parsedData = JSON.parse(rawData);
+            } else {
+                parsedData = rawData;
+            }
+        } else {
+            parsedData = rawData;
+        }
+        
+        // 데이터 타입 검증
+        if (!Array.isArray(parsedData)) {
+            console.error('❌ 파싱된 데이터가 배열이 아님:', typeof parsedData);
+            console.log('📋 실제 데이터:', parsedData);
+            
+            // 객체인 경우 값들을 배열로 변환 시도
+            if (typeof parsedData === 'object' && parsedData !== null) {
+                if (parsedData.cafes && Array.isArray(parsedData.cafes)) {
+                    console.log('🔄 객체에서 cafes 배열 추출');
+                    parsedData = parsedData.cafes;
+                } else {
+                    const keys = Object.keys(parsedData);
+                    if (keys.length > 0) {
+                        console.log('🔄 객체를 배열로 변환 시도');
+                        parsedData = Object.values(parsedData);
+                    }
+                }
+            }
+            
+            // 여전히 배열이 아니면 빈 배열 반환
+            if (!Array.isArray(parsedData)) {
+                console.error('❌ 배열 변환 실패, 빈 배열 반환');
+                return [];
+            }
+        }
+        
+        console.log('✅ 카페 데이터 로드 성공:', parsedData.length, '개');
+        
+        if (parsedData.length > 0) {
+            console.log('📋 첫 번째 카페 예시:', parsedData[0]);
+            
+            // 필수 필드 확인
+            const firstCafe = parsedData[0];
+            const hasCoords = firstCafe.latitude && firstCafe.longitude;
+            const hasName = firstCafe.name || firstCafe.cafe_name;
+            console.log('🔍 첫 번째 카페 필드 체크:', { hasCoords, hasName });
+        }
+        
+        return parsedData;
+        
+    } catch (error) {
+        console.error('❌ 카페 데이터 파싱 실패:', error);
+        console.log('🔍 파싱 오류 상세 정보:', {
+            message: error.message,
+            stack: error.stack?.substring(0, 200)
+        });
+        return [];
+    }
+}
+
+// ✅ 카카오맵 초기화
+function initializeHomeMap() {
+    console.log('🗺️ 홈 지도 초기화 시작');
+    
     if (typeof kakao === 'undefined' || !kakao.maps) {
-        console.error('카카오맵 API가 로드되지 않았습니다.');
+        console.error('❌ 카카오맵 API 로드 실패');
+        showMapError('카카오맵 API를 불러올 수 없습니다.');
+        return false;
+    }
+    
+    try {
+        const mapContainer = document.getElementById('mapContainer');
+        if (!mapContainer) {
+            console.error('❌ mapContainer를 찾을 수 없음');
+            return false;
+        }
+        
+        // 지도 생성
+        const mapOption = {
+            center: new kakao.maps.LatLng(37.5665, 126.9780),
+            level: window.innerWidth < 768 ? 9 : 8
+        };
+        
+        homeMap = new kakao.maps.Map(mapContainer, mapOption);
+        console.log('✅ 지도 생성 완료');
+        
+        // 클러스터러 생성
+        if (typeof kakao.maps.MarkerClusterer !== 'undefined') {
+            homeClusterer = new kakao.maps.MarkerClusterer({
+                map: homeMap,
+                averageCenter: true,
+                minLevel: 6,
+                disableClickZoom: false,
+                styles: [{
+                    width: '40px', height: '40px',
+                    background: 'rgba(59, 130, 246, 0.8)',
+                    borderRadius: '50%', color: '#fff',
+                    textAlign: 'center', fontWeight: 'bold',
+                    fontSize: '14px', lineHeight: '40px'
+                }]
+            });
+            
+            // 클러스터 클릭 이벤트
+            kakao.maps.event.addListener(homeClusterer, 'clusterclick', function(cluster) {
+                const level = homeMap.getLevel() - 2;
+                homeMap.setLevel(level, { anchor: cluster.getCenter() });
+            });
+            
+            console.log('✅ 클러스터러 생성 완료');
+        } else {
+            console.warn('⚠️ MarkerClusterer를 사용할 수 없음');
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ 지도 초기화 실패:', error);
+        showMapError('지도 초기화 중 오류가 발생했습니다.');
+        return false;
+    }
+}
+
+// ✅ 커스텀 마커 이미지 생성
+function createCustomMarkerImage() {
+    const svgString = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'>
+            <path d='M16 0C7.163 0 0 7.163 0 16s16 24 16 24 16-15.163 16-24S24.837 0 16 0z' fill='#ef4444'/>
+            <circle cx='16' cy='16' r='8' fill='white'/>
+            <text x='16' y='20' text-anchor='middle' font-family='Arial' font-size='12' font-weight='bold' fill='#ef4444'>🎂</text>
+        </svg>
+    `;
+    
+    const imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+    const imageSize = new kakao.maps.Size(32, 40);
+    const imageOption = { offset: new kakao.maps.Point(16, 40) };
+    
+    return new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+}
+
+// ✅ 마커 생성 함수 개선
+function createHomeMarkers() {
+    console.log('🏷️ 홈 마커 생성 시작');
+    
+    if (!homeMap) {
+        console.warn('⚠️ 지도가 초기화되지 않음');
         return;
     }
     
-    const mapContainer = document.getElementById('mapContainer');
-    const mapOption = {
-        center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
-        level: window.innerWidth < 768 ? 9 : 8
-    };
-
-    window.map = new kakao.maps.Map(mapContainer, mapOption);
-    
-    // 클러스터러 초기화 (tour_map.html과 동일한 로직)
-    if (typeof kakao.maps.MarkerClusterer !== 'undefined') {
-        window.clusterer = new kakao.maps.MarkerClusterer({
-            map: window.map,
-            averageCenter: true,
-            minLevel: 6
-        });
+    if (!homeCafesData || homeCafesData.length === 0) {
+        console.warn('⚠️ 카페 데이터 없음');
+        updateCafeCount(0);
+        return;
     }
     
-    // 마커 생성 및 표시
-    createMapMarkers();
+    homeMarkers = [];
+    let successCount = 0;
+    let failCount = 0;
     
-    // 로딩 화면 숨기기
-    setTimeout(() => {
-        const loadingEl = document.getElementById('mapLoading');
-        if (loadingEl) loadingEl.style.display = 'none';
-    }, 1000);
-}
-
-// 마커 생성 (tour_map.html과 동일한 로직 사용)
-function createMapMarkers() {
-    if (!window.map || !window.cafesData) return;
+    console.log('📊 처리할 카페 수:', homeCafesData.length);
     
-    window.markers = [];
-    
-    window.cafesData.forEach((cafe) => {
-        if (!cafe.latitude || !cafe.longitude) return;
-        
-        const lat = parseFloat(cafe.latitude);
-        const lng = parseFloat(cafe.longitude);
-        
-        if (isNaN(lat) || isNaN(lng)) return;
-        
-        const position = new kakao.maps.LatLng(lat, lng);
-        const marker = new kakao.maps.Marker({
-            position: position,
-            title: cafe.name || cafe.cafe_name || '생일카페'
-        });
-        
-        // 마커 클릭 이벤트
-        kakao.maps.event.addListener(marker, 'click', function() {
-            showCafeModal(cafe);
-        });
-        
-        window.markers.push(marker);
+    homeCafesData.forEach((cafe, index) => {
+        try {
+            if (!cafe || typeof cafe !== 'object') {
+                console.warn(`⚠️ 카페 ${index}: 잘못된 객체`);
+                failCount++;
+                return;
+            }
+            
+            // 다양한 필드명 지원
+            const cafeName = cafe.name || cafe.cafe_name || cafe.title || '생일카페';
+            const latitude = cafe.latitude || cafe.lat;
+            const longitude = cafe.longitude || cafe.lng || cafe.lon;
+            
+            const lat = parseFloat(latitude);
+            const lng = parseFloat(longitude);
+            
+            if (isNaN(lat) || isNaN(lng)) {
+                console.warn(`⚠️ 카페 ${index}: 잘못된 좌표`, cafeName, {latitude, longitude});
+                failCount++;
+                return;
+            }
+            
+            // 한국 좌표 범위 확인
+            if (lat < 33 || lat > 43 || lng < 124 || lng > 132) {
+                console.warn(`⚠️ 카페 ${index}: 좌표 범위 초과 (${lat}, ${lng})`);
+                failCount++;
+                return;
+            }
+            
+            const position = new kakao.maps.LatLng(lat, lng);
+            const markerImage = createCustomMarkerImage();
+            
+            const marker = new kakao.maps.Marker({
+                position: position,
+                image: markerImage,
+                title: cafeName
+            });
+            
+            // 마커 클릭 이벤트
+            kakao.maps.event.addListener(marker, 'click', function() {
+                console.log('🖱️ 마커 클릭:', cafeName);
+                showCafeModal(cafe);
+            });
+            
+            homeMarkers.push(marker);
+            successCount++;
+            
+            // 처음 3개만 로그 출력
+            if (successCount <= 3) {
+                console.log(`✅ 마커 ${successCount}: ${cafeName} (${lat}, ${lng})`);
+            }
+            
+        } catch (error) {
+            console.error(`❌ 마커 ${index} 생성 실패:`, error);
+            failCount++;
+        }
     });
     
-    // 클러스터러에 마커 추가
-    if (window.clusterer && window.markers.length > 0) {
-        window.clusterer.addMarkers(window.markers);
+    console.log(`📊 마커 생성 완료: 성공 ${successCount}개, 실패 ${failCount}개`);
+
+
+    
+    
+    // 마커를 지도에 표시
+    if (homeMarkers.length > 0) {
+        if (homeClusterer) {
+            homeClusterer.addMarkers(homeMarkers);
+            console.log('✅ 클러스터러에 마커 추가');
+        } else {
+            homeMarkers.forEach(marker => marker.setMap(homeMap));
+            console.log('✅ 개별 마커로 지도 표시');
+        }
+        
+        // 첫 번째 마커 위치로 지도 중심 조정
+        const firstMarkerPosition = homeMarkers[0].getPosition();
+        homeMap.setCenter(firstMarkerPosition);
+        homeMap.setLevel(8);
+        
+        console.log('📍 지도 중심을 첫 번째 마커로 이동');
+    } else {
+        console.warn('⚠️ 생성된 마커가 없습니다');
+    }
+    
+    // 카페 수 업데이트
+    updateCafeCount(successCount);
+}
+
+// ✅ 카페 수 표시 업데이트
+function updateCafeCount(count) {
+    const countDisplay = document.getElementById('cafeCountDisplay');
+    if (countDisplay) {
+        countDisplay.textContent = `${count}개 운영중`;
     }
 }
 
-// 지도 위치 이동 함수 (사이드바에서 호출)
-function moveToLocation(lat, lng) {
-    if (window.map) {
-        const movePosition = new kakao.maps.LatLng(lat, lng);
-        window.map.setCenter(movePosition);
-        window.map.setLevel(5); // 확대
-    }
-}
-
-// 카페 모달 표시 (간단 버전)
+// ✅ 카페 모달 표시 개선
 function showCafeModal(cafe) {
     const modal = document.getElementById('cafeModal');
     const title = document.getElementById('cafeModalTitle');
     const content = document.getElementById('cafeModalContent');
     
-    if (!modal || !title || !content) return;
+    if (!modal || !title || !content) {
+        console.error('❌ 모달 엘리먼트 없음');
+        return;
+    }
     
-    title.textContent = cafe.cafe_name || cafe.name || '생일카페';
+    const cafeName = cafe.name || cafe.cafe_name || cafe.title || '생일카페';
+    const artistName = cafe.artist || cafe.artist_name || '';
+    const memberName = cafe.member || cafe.member_name || '';
+    const address = cafe.address || '주소 정보 없음';
+    const startDate = cafe.start_date || '';
+    const endDate = cafe.end_date || '';
+    const mainImage = cafe.main_image || cafe.image;
+    const cafeId = cafe.id || cafe.pk;
+    
+    title.textContent = cafeName;
     
     content.innerHTML = `
         <div class="space-y-4">
             <div class="flex items-start space-x-4">
-                ${cafe.main_image ? `<img src="${cafe.main_image}" alt="${cafe.cafe_name}" class="w-20 h-20 object-cover rounded-lg">` : 
-                '<div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center"><span class="text-gray-400">🎂</span></div>'}
+                ${mainImage ? 
+                    `<img src="${mainImage}" alt="${cafeName}" class="w-20 h-20 object-cover rounded-lg">` : 
+                    '<div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center"><span class="text-gray-400">🎂</span></div>'
+                }
                 <div class="flex-1">
-                    <h4 class="font-semibold text-lg">${cafe.cafe_name || cafe.name}</h4>
-                    <p class="text-sm text-gray-600">${cafe.artist || ''}</p>
-                    <p class="text-sm text-blue-600">${cafe.start_date || ''} ~ ${cafe.end_date || ''}</p>
+                    <h4 class="font-semibold text-lg">${cafeName}</h4>
+                    <p class="text-sm text-gray-600">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
+                    <p class="text-sm text-blue-600">${startDate} ~ ${endDate}</p>
                 </div>
             </div>
             <div class="border-t pt-4">
                 <h5 class="font-medium mb-2">📍 위치</h5>
-                <p class="text-sm text-gray-600">${cafe.address || '주소 정보 없음'}</p>
+                <p class="text-sm text-gray-600">${address}</p>
             </div>
             <div class="border-t pt-4 flex space-x-2">
-                <a href="/ddoksang/cafe/${cafe.id}/" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700">
-                    자세히 보기
-                </a>
+                ${cafeId ? 
+                    `<a href="/ddoksang/cafe/${cafeId}/" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700">자세히 보기</a>` :
+                    ''
+                }
+                <button onclick="moveToLocationHome(${cafe.latitude || cafe.lat}, ${cafe.longitude || cafe.lng})" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    위치로 이동
+                </button>
             </div>
         </div>
     `;
@@ -598,20 +738,168 @@ function showCafeModal(cafe) {
     modal.classList.remove('hidden');
 }
 
-// 모달 닫기 이벤트
-document.addEventListener('click', function(e) {
-    const closeBtn = e.target.closest('#closeCafeModal');
-    if (closeBtn) {
-        document.getElementById('cafeModal').classList.add('hidden');
+// ✅ 위치 이동 함수 (이름 변경으로 충돌 방지)
+function moveToLocationHome(lat, lng) {
+    if (homeMap && lat && lng) {
+        const position = new kakao.maps.LatLng(lat, lng);
+        homeMap.setCenter(position);
+        homeMap.setLevel(5);
+    }
+}
+
+// ✅ 사용자 위치 찾기
+function findUserLocationHome() {
+    if (!navigator.geolocation) {
+        alert('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
+        return;
     }
     
-    // 모달 배경 클릭으로 닫기
-    if (e.target.id === 'cafeModal') {
-        document.getElementById('cafeModal').classList.add('hidden');
-    }
-});
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const locPosition = new kakao.maps.LatLng(lat, lng);
+            
+            // 기존 사용자 위치 마커 제거
+            if (homeUserLocationMarker) {
+                homeUserLocationMarker.setMap(null);
+            }
+            
+            // 사용자 위치 마커 생성
+            const userMarkerSvg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
+                    <circle cx="10" cy="10" r="3" fill="white"/>
+                </svg>
+            `;
+            const userMarkerSrc = 'data:image/svg+xml;base64,' + btoa(userMarkerSvg);
+            const userMarkerImage = new kakao.maps.MarkerImage(userMarkerSrc, new kakao.maps.Size(20, 20));
+            
+            homeUserLocationMarker = new kakao.maps.Marker({
+                map: homeMap,
+                position: locPosition,
+                image: userMarkerImage,
+                title: '내 위치'
+            });
+            
+            // 지도 중심 이동
+            homeMap.setCenter(locPosition);
+            homeMap.setLevel(6);
+            
+            // 주변 카페 표시
+            showNearbyCafesHome(lat, lng);
+        },
+        (error) => {
+            console.error('위치 정보 오류:', error);
+            alert('위치 정보를 가져올 수 없습니다.');
+        }
+    );
+}
 
-// 아티스트 검색 함수
+// ✅ 주변 카페 표시
+function showNearbyCafesHome(userLat, userLng) {
+    const panel = document.getElementById('nearbyPanel');
+    const list = document.getElementById('nearbyList');
+    
+    if (!panel || !list) return;
+    
+    const userPosition = new kakao.maps.LatLng(userLat, userLng);
+    
+    // 주변 카페 찾기 (3km 이내)
+    const nearby = homeCafesData.filter(cafe => {
+        const lat = cafe.latitude || cafe.lat;
+        const lng = cafe.longitude || cafe.lng;
+        
+        if (!lat || !lng) return false;
+        
+        const cafePosition = new kakao.maps.LatLng(lat, lng);
+        const distance = kakao.maps.services.Util.getDistance(userPosition, cafePosition);
+        return distance <= 3000; // 3km 이내
+    }).map(cafe => {
+        const lat = cafe.latitude || cafe.lat;
+        const lng = cafe.longitude || cafe.lng;
+        const cafePosition = new kakao.maps.LatLng(lat, lng);
+        const distance = kakao.maps.services.Util.getDistance(userPosition, cafePosition);
+        
+        return {
+            ...cafe,
+            distance: Math.round(distance),
+            walkTime: Math.round(distance / 80) // 도보 시간
+        };
+    }).sort((a, b) => a.distance - b.distance);
+    
+    list.innerHTML = '';
+    
+    if (nearby.length === 0) {
+        list.innerHTML = '<div class="text-center text-gray-500 py-4"><p class="text-sm">주변 3km 이내에 운영중인 생카가 없습니다.</p></div>';
+    } else {
+        nearby.slice(0, 10).forEach(cafe => { // 최대 10개만 표시
+            const cafeName = cafe.name || cafe.cafe_name || '생일카페';
+            const artistName = cafe.artist || '';
+            const memberName = cafe.member || '';
+            const mainImage = cafe.main_image || cafe.image;
+            
+            const item = document.createElement('div');
+            item.className = 'border border-gray-200 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
+            
+            item.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    ${mainImage ? 
+                        `<img src="${mainImage}" alt="${cafeName}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0">` :
+                        '<div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-gray-400 text-sm">🎂</span></div>'
+                    }
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-sm text-gray-900 truncate">${cafeName}</h4>
+                        <p class="text-xs text-gray-600 truncate">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
+                        <div class="flex items-center space-x-2 mt-2">
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${cafe.distance}m</span>
+                            <span class="text-xs text-gray-500">도보 ${cafe.walkTime}분</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            item.addEventListener('click', () => {
+                showCafeModal(cafe);
+                moveToLocationHome(cafe.latitude || cafe.lat, cafe.longitude || cafe.lng);
+            });
+            
+            list.appendChild(item);
+        });
+    }
+    
+    panel.classList.remove('hidden');
+}
+
+// ✅ 에러 표시
+function showMapError(message) {
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer) {
+        mapContainer.innerHTML = `
+            <div class="flex items-center justify-center h-full bg-gray-100 text-gray-600">
+                <div class="text-center p-8">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01"></path>
+                    </svg>
+                    <p class="text-sm">${message}</p>
+                    <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-blue-600 text-white rounded text-sm">새로고침</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// ✅ 로딩 숨기기
+function hideMapLoading() {
+    setTimeout(() => {
+        const loadingEl = document.getElementById('mapLoading');
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+        }
+    }, 1500);
+}
+
+// ✅ 검색 함수
 function searchArtist(artistName) {
     const searchForm = document.querySelector('form[action*="search"]');
     const searchInput = document.querySelector('#ddok-search');
@@ -622,65 +910,206 @@ function searchArtist(artistName) {
     }
 }
 
-// 간단한 생일 슬라이더 초기화
-function initBirthdaySlider() {
-    const slider = document.getElementById('birthdaySlider');
-    const prevBtn = document.getElementById('birthdayPrevBtn');
-    const nextBtn = document.getElementById('birthdayNextBtn');
+// ✅ 메인 실행 함수
+function initializeHomePage() {
+    console.log('🏠 홈페이지 초기화 시작');
     
-    if (!slider || !prevBtn || !nextBtn) return;
+    // 1. 카페 데이터 로드
+    homeCafesData = loadCafeDataSafely();
+    console.log('📊 로드된 카페 수:', homeCafesData.length);
     
-    let currentSlide = 0;
-    const slides = slider.children;
-    const slidesToShow = window.innerWidth < 640 ? 1 : 
-                       window.innerWidth < 768 ? 2 : 
-                       window.innerWidth < 1024 ? 3 : 4;
-    
-    const maxSlide = Math.max(0, slides.length - slidesToShow);
-    
-    function updateSlider() {
-        const translateX = -(currentSlide * (100 / slidesToShow));
-        slider.style.transform = `translateX(${translateX}%)`;
-        
-        prevBtn.disabled = currentSlide === 0;
-        nextBtn.disabled = currentSlide >= maxSlide;
+    // 디버깅을 위한 추가 정보
+    if (homeCafesData.length === 0) {
+        console.log('🔍 카페 데이터 디버깅');
+        const cafesJsonElement = document.getElementById('cafes-data');
+        if (cafesJsonElement) {
+            const content = cafesJsonElement.textContent;
+            console.log('📋 Element content length:', content.length);
+            console.log('📋 Element content sample:', content.substring(0, 200));
+        }
     }
     
-    prevBtn.onclick = () => {
-        if (currentSlide > 0) {
-            currentSlide--;
-            updateSlider();
+    // 2. 카카오맵 초기화
+    if (typeof kakao !== 'undefined' && kakao.maps) {
+        console.log('✅ 카카오맵 API 즉시 사용 가능');
+        if (initializeHomeMap()) {
+            createHomeMarkers();
+            hideMapLoading();
         }
-    };
+    } else {
+        console.log('⏰ 카카오맵 API 로드 대기 중...');
+        let retryCount = 0;
+        const maxRetries = 30;
+        
+        const checkKakaoLoaded = setInterval(() => {
+            retryCount++;
+            if (typeof kakao !== 'undefined' && kakao.maps) {
+                clearInterval(checkKakaoLoaded);
+                console.log('✅ 카카오맵 API 로드 완료');
+                if (initializeHomeMap()) {
+                    createHomeMarkers();
+                    hideMapLoading();
+                }
+            } else if (retryCount >= maxRetries) {
+                clearInterval(checkKakaoLoaded);
+                console.error('❌ 카카오맵 API 로드 실패');
+                showMapError('카카오맵 API 로드 실패<br>새로고침을 시도해주세요.');
+            }
+        }, 100);
+    }
     
-    nextBtn.onclick = () => {
-        if (currentSlide < maxSlide) {
-            currentSlide++;
-            updateSlider();
-        }
-    };
-    
-    updateSlider();
+    // 3. 기타 기능 초기화
+    initializeOtherFeatures();
 }
 
-// 간단한 버튼 이벤트들 (tour_map.html의 기능 호출)
+// ✅ 기타 기능 초기화
+function initializeOtherFeatures() {
+    // 자동완성 초기화
+    if (typeof initAutocomplete === 'function') {
+        try {
+            initAutocomplete('ddok-search', 'ddok-autocomplete-list', {
+                showBirthday: false,
+                showArtistTag: true,
+                submitOnSelect: true,
+                artistOnly: false
+            });
+            console.log('✅ 자동완성 초기화 완료');
+        } catch (error) {
+            console.error('❌ 자동완성 초기화 실패:', error);
+        }
+    } else {
+        console.warn('⚠️ initAutocomplete 함수를 찾을 수 없음');
+    }
+    
+    // 생일 슬라이더 초기화
+    if (typeof initBirthdayNavigation === 'function') {
+        try {
+            initBirthdayNavigation();
+            console.log('✅ 생일 슬라이더 초기화 완료');
+        } catch (error) {
+            console.error('❌ 생일 슬라이더 초기화 실패:', error);
+        }
+    } else {
+        console.warn('⚠️ initBirthdayNavigation 함수를 찾을 수 없음');
+    }
+    
+    // 사이드바 카페 카드 클릭 이벤트 추가
+    initializeSidebarCafeCards();
+}
+
+// ✅ 사이드바 카페 카드 이벤트 초기화
+function initializeSidebarCafeCards() {
+    const cafeCards = document.querySelectorAll('.cafe-card-mini');
+    
+    cafeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const lat = parseFloat(this.dataset.cafeLat);
+            const lng = parseFloat(this.dataset.cafeLng);
+            const cafeId = this.dataset.cafeId;
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                console.log('🖱️ 사이드바 카페 클릭:', { lat, lng, cafeId });
+                moveToLocationHome(lat, lng);
+                
+                // 해당 카페 정보도 표시 (선택사항)
+                const matchedCafe = homeCafesData.find(cafe => 
+                    cafe.id == cafeId || 
+                    (Math.abs(cafe.latitude - lat) < 0.0001 && Math.abs(cafe.longitude - lng) < 0.0001)
+                );
+                
+                if (matchedCafe) {
+                    setTimeout(() => showCafeModal(matchedCafe), 500);
+                }
+            } else {
+                console.warn('⚠️ 카페 좌표 정보가 올바르지 않음:', { lat, lng });
+            }
+        });
+    });
+    
+    console.log(`✅ 사이드바 카페 카드 ${cafeCards.length}개 이벤트 리스너 추가`);
+}
+
+// ✅ 이벤트 리스너
 document.addEventListener('click', function(e) {
     // 내 위치 버튼
     if (e.target.closest('#myLocationBtn')) {
-        // tour_map.html의 내 위치 함수 호출
-        if (typeof handleMyLocation === 'function') {
-            handleMyLocation();
+        e.preventDefault();
+        findUserLocationHome();
+    }
+    
+    // 클러스터 토글
+    if (e.target.closest('#clusterToggle')) {
+        e.preventDefault();
+        const button = e.target.closest('#clusterToggle');
+        
+        if (homeClusterer && homeMarkers.length > 0) {
+            if (button.textContent.includes('ON')) {
+                homeClusterer.clear();
+                homeMarkers.forEach(marker => marker.setMap(homeMap));
+                button.innerHTML = '<span class="hidden sm:inline">클러스터링 OFF</span><span class="sm:hidden">OFF</span>';
+                button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                button.classList.add('bg-red-600', 'hover:bg-red-700');
+            } else {
+                homeMarkers.forEach(marker => marker.setMap(null));
+                homeClusterer.addMarkers(homeMarkers);
+                button.innerHTML = '<span class="hidden sm:inline">클러스터링 ON</span><span class="sm:hidden">ON</span>';
+                button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                button.classList.add('bg-gray-600', 'hover:bg-gray-700');
+            }
         }
     }
     
-    // 클러스터 토글 버튼
-    if (e.target.closest('#clusterToggle')) {
-        // tour_map.html의 클러스터 토글 함수 호출
-        if (typeof toggleClustering === 'function') {
-            toggleClustering();
+    // 모달 닫기
+    if (e.target.closest('#closeCafeModal') || (e.target.id === 'cafeModal' && e.target === e.currentTarget)) {
+        const modal = document.getElementById('cafeModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+    
+    // 주변 카페 패널 닫기
+    if (e.target.closest('#closeNearbyPanel')) {
+        const panel = document.getElementById('nearbyPanel');
+        if (panel) {
+            panel.classList.add('hidden');
         }
     }
 });
+
+// ESC로 모달 닫기
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modal = document.getElementById('cafeModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        const panel = document.getElementById('nearbyPanel');
+        if (panel) {
+            panel.classList.add('hidden');
+        }
+    }
+});
+
+// ✅ DOM 로드 완료 후 실행
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📱 DOM 로드 완료');
+    initializeHomePage();
+});
+
+// ✅ 창 크기 변경 시 지도 재조정
+window.addEventListener('resize', function() {
+    if (homeMap) {
+        setTimeout(() => {
+            homeMap.relayout();
+        }, 100);
+    }
+});
+
+// ✅ 전역 함수로 노출 (다른 스크립트에서 사용할 수 있도록)
+window.moveToLocationHome = moveToLocationHome;
+window.moveToLocation = moveToLocationHome; // HTML에서 사용하는 함수명과 호환
+window.searchArtist = searchArtist;
+window.showCafeModal = showCafeModal;
 
 </script>
 
