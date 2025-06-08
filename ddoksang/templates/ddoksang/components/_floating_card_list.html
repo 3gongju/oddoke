@@ -2,97 +2,129 @@
 {% load static %}
 {% load filters %}
 
-<!-- 사이드바 (왼쪽) -->
-<div class="w-full lg:w-80 border-r border-gray-200 overflow-y-auto" style="max-height: 500px;">
-  <div class="p-4">
-
-    <!-- 헤더 -->
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-semibold text-gray-800 flex items-center">
-        <span class="mr-2">✨</span>운영중인 생카
+<!-- 사이드바 (왼쪽) - 개선된 버전 -->
+<div class="w-full lg:w-80 border-r border-gray-200 bg-white flex flex-col" style="height: 600px;">
+  
+  <!-- 고정 헤더 -->
+  <div class="flex-shrink-0 p-4 border-b border-gray-100 bg-gray-50">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-lg font-bold text-gray-800 flex items-center">
+        <span class="mr-2">🎂</span>운영중인 생카
       </h3>
       <div class="flex items-center space-x-2">
-        <span class="text-xs text-gray-500">{{ total_cafes }}개</span>
+        <span class="text-sm text-gray-500 bg-white px-2 py-1 rounded-full border">{{ total_cafes }}개</span>
         <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
       </div>
     </div>
     
-    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-      <p class="text-xs text-gray-600 text-center">
-        💡 <strong>팁:</strong> 카페를 클릭하면 지도가 해당 위치로 이동해요!
+    <!-- 간단한 안내 -->
+    <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
+      <p class="text-xs text-blue-700 text-center flex items-center justify-center">
+        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        카페를 클릭하면 지도가 해당 위치로 이동해요!
       </p>
     </div>
+  </div>
 
-    <!-- 카드 리스트 -->
-    <div id="cafeCardContainer" class="space-y-3 max-h-96 overflow-y-auto pr-1">
-      {% for cafe in latest_cafes|slice:":6" %}
-        <div class="cafe-card-mini bg-white border border-gray-200 p-3 rounded-lg hover:shadow-md hover:border-blue-300 cursor-pointer transition-all duration-200 group"
+  <!-- 스크롤 가능한 카드 리스트 영역 -->
+  <div class="flex-1 overflow-y-auto" style="scroll-behavior: smooth;">
+    <div id="cafeCardContainer" class="p-4 space-y-3">
+      {% for cafe in latest_cafes|slice:":10" %}
+        <div class="cafe-card-mini bg-white border border-gray-200 p-3 rounded-lg hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all duration-200 group transform hover:-translate-y-1"
              data-cafe-id="{{ cafe.id }}"
              data-cafe-lat="{{ cafe.latitude }}"
              data-cafe-lng="{{ cafe.longitude }}">
 
           <div class="flex items-start space-x-3">
-            <!-- 썸네일 -->
-            <div class="flex-shrink-0">
+            <!-- 썸네일 이미지 -->
+            <div class="flex-shrink-0 relative">
               {% if cafe.get_main_image %}
                 <img src="{{ cafe.get_main_image }}"
                      alt="{{ cafe.cafe_name }}"
-                     class="w-12 h-12 object-cover rounded-lg shadow-sm border-2 border-white">
+                     class="w-14 h-14 object-cover rounded-lg shadow-sm border-2 border-white group-hover:border-blue-200 transition-colors">
               {% else %}
-                <div class="w-12 h-12 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center shadow-sm border-2 border-white">
-                  <span class="text-pink-400 text-lg">🎂</span>
+                <div class="w-14 h-14 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center shadow-sm border-2 border-white group-hover:border-blue-200 transition-colors">
+                  <span class="text-pink-400 text-xl">🎂</span>
                 </div>
               {% endif %}
+              
+              <!-- 운영 상태 표시 -->
+              <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
             </div>
 
-            <!-- 텍스트 정보 -->
+            <!-- 카페 정보 -->
             <div class="flex-1 min-w-0">
-              <div class="flex items-start justify-between mb-1">
-                <h4 class="font-semibold text-sm text-gray-900 leading-tight">
-                  {{ cafe.cafe_name|truncatechars:15 }}
-                </h4>
+              <!-- 카페명 -->
+              <h4 class="font-semibold text-sm text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors">
+                {{ cafe.cafe_name|truncatechars:18 }}
+              </h4>
+              
+              <!-- 아티스트/멤버 정보 -->
+              <div class="flex items-center mb-2">
+                <p class="text-xs text-gray-600 leading-tight mr-2">
+                  {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name|truncatechars:8 }}{% endif %}
+                </p>
                 <a href="{% url 'ddoksang:detail' cafe.id %}"
-                   class="text-blue-500 hover:text-blue-700 text-lg font-bold ml-1"
+                   class="text-blue-500 hover:text-blue-700 text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                   onclick="event.stopPropagation()"
                    title="상세 보기">
-                  ＋
+                  →
                 </a>
               </div>
-              <p class="text-xs text-gray-600 mb-1 leading-tight">
-                {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name|truncatechars:8 }}{% endif %}
-              </p>
-              <p class="text-xs text-blue-600 font-medium mb-1">
-                {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}
-              </p>
-              <p class="text-xs text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity">
+              
+              <!-- 운영 기간 -->
+              <div class="flex items-center mb-2">
+                <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                <p class="text-xs text-blue-600 font-medium">
+                  {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}
+                </p>
+              </div>
+              
+              <!-- 주소 (호버 시에만 표시) -->
+              <p class="text-xs text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
                 📍 {{ cafe.address|truncatechars:25 }}
               </p>
-              <!-- ⏱ 거리 및 시간 -->
-              <p class="distance-time text-xs text-gray-700 font-medium mt-1 hidden">
+              
+              <!-- 거리 및 시간 (위치 정보 있을 때만 표시) -->
+              <div class="distance-time text-xs text-green-600 font-medium mt-1 hidden">
                 🚶 도보 <span class="walk-time"></span> · <span class="walk-distance"></span>
-              </p>
+              </div>
             </div>
           </div>
 
+          <!-- 호버 시 액션 힌트 -->
           <div class="mt-2 text-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <span class="text-xs text-blue-600 font-medium">👆 클릭하여 지도에서 보기</span>
+            <span class="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">👆 클릭하여 지도에서 보기</span>
           </div>
         </div>
       {% endfor %}
     </div>
+  </div>
 
-    {% if latest_cafes|length > 6 %}
-      <div class="mt-4 pt-3 border-t border-gray-100">
-        <a href="{% url 'ddoksang:search' %}"
-           class="block w-full text-center py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors">
-          전체 {{ total_cafes }}개 카페 보기 →
+  <!-- 하단 액션 영역 (고정) -->
+  <div class="flex-shrink-0 p-4 border-t border-gray-100 bg-gray-50">
+    {% if latest_cafes|length > 10 %}
+      <a href="{% url 'ddoksang:search' %}"
+         class="block w-full text-center py-2.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 hover:border-blue-300">
+        전체 {{ total_cafes }}개 카페 보기 →
+      </a>
+    {% else %}
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-2">모든 운영중인 카페입니다</p>
+        <a href="{% url 'ddoksang:create' %}"
+           class="inline-block text-sm text-green-600 hover:text-green-800 font-medium">
+           + 새 생카 등록하기
         </a>
       </div>
     {% endif %}
-
   </div>
 </div>
 
-<!-- 거리 정렬 및 표시 스크립트 -->
+<!-- 거리 정렬 및 표시 스크립트 (기존 유지) -->
 <script>
   function haversine(lat1, lng1, lat2, lng2) {
     const R = 6371;
@@ -115,12 +147,15 @@
       const timeEl = card.querySelector('.walk-time');
       const boxEl = card.querySelector('.distance-time');
 
-      distEl.textContent = distKm.toFixed(1) + 'km';
-      timeEl.textContent = minutes + '분';
-      boxEl.classList.remove('hidden');
+      if (distEl && timeEl && boxEl) {
+        distEl.textContent = distKm.toFixed(1) + 'km';
+        timeEl.textContent = minutes + '분';
+        boxEl.classList.remove('hidden');
+      }
     });
 
-    cards.sort((a, b) => parseFloat(a.dataset.distance) - parseFloat(b.dataset.distance));
+    // 거리순 정렬
+    cards.sort((a, b) => parseFloat(a.dataset.distance || 999) - parseFloat(b.dataset.distance || 999));
     const container = document.getElementById('cafeCardContainer');
     cards.forEach(card => container.appendChild(card));
   }
@@ -134,5 +169,75 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', requestLocationAndSort);
+  // 카드 클릭 이벤트 (지도 이동)
+  document.addEventListener('DOMContentLoaded', function() {
+    requestLocationAndSort();
+    
+    // 카페 카드 클릭 시 지도 이동
+    document.addEventListener('click', function(e) {
+      const cafeCard = e.target.closest('.cafe-card-mini');
+      if (cafeCard) {
+        const lat = parseFloat(cafeCard.dataset.cafeLat);
+        const lng = parseFloat(cafeCard.dataset.cafeLng);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          // 전역 지도 이동 함수 호출
+          if (typeof moveToLocationHome === 'function') {
+            moveToLocationHome(lat, lng);
+          } else if (typeof window.map !== 'undefined' && window.map) {
+            const position = new kakao.maps.LatLng(lat, lng);
+            window.map.setCenter(position);
+            window.map.setLevel(5);
+          }
+          
+          // 시각적 피드백
+          cafeCard.classList.add('ring-2', 'ring-blue-400');
+          setTimeout(() => {
+            cafeCard.classList.remove('ring-2', 'ring-blue-400');
+          }, 1000);
+        }
+      }
+    });
+  });
 </script>
+
+<!-- 커스텀 스크롤바 스타일 -->
+<style>
+  /* Webkit 브라우저 (Chrome, Safari) */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  
+  /* Firefox */
+  .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+  
+  /* 스크롤 시 부드러운 효과 */
+  .cafe-card-mini {
+    scroll-margin-top: 1rem;
+  }
+  
+  /* 반응형 조정 */
+  @media (max-width: 1024px) {
+    .w-full.lg\:w-80 {
+      min-height: 300px;
+      max-height: 400px;
+    }
+  }
+</style>
