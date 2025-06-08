@@ -16,7 +16,7 @@
                     <!-- 디버깅 정보 -->
                     {% if debug_info %}
                     <div class="text-xs text-gray-500">
-                        (전체: {{ debug_info.total_queried }}개, 유효: {{ debug_info.total_valid }}개)
+                        (전체: {{ debug_info.total_queried }}개)
                     </div>
                     {% endif %}
                 </div>
@@ -112,14 +112,6 @@
 
 <!-- 카카오맵 스크립트 -->
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
-
-<!-- 디버깅 정보 출력 -->
-<script>
-console.log('=== 투어맵 디버깅 정보 ===');
-console.log('API 키:', '{{ kakao_api_key }}');
-console.log('총 카페 수:', {{ total_bday_cafes }});
-console.log('디버그 정보:', {{ debug_info|safe }});
-</script>
 
 <script>
 // 전역 변수

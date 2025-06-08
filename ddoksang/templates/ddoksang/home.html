@@ -8,7 +8,7 @@
 
 {% block ddoksang_content %}
 
-<!-- ✅ 안전한 JSON 데이터 전달 (json_script 사용) -->
+<!-- JSON 데이터 전달 (json_script 사용) -->
 {% csrf_token %}
 {{ cafes_json|json_script:"cafes-data" }}
 
@@ -49,7 +49,7 @@
     <!-- 🔍 검색창 -->
     <div class="w-full sm:flex-1 relative">
       <form method="get" action="{% url 'ddoksang:search' %}">
-        <input id="ddok-search" type="text" name="q" placeholder="아티스트명, 카페명 검색..." 
+        <input id="ddok-search" type="text" name="q" placeholder="아티스트, 멤버 검색..." 
                class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-lg"
                value="{{ request.GET.q }}" autocomplete="off">
         <button type="submit" class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
@@ -81,17 +81,17 @@
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
       
       <!-- 헤더 -->
-      <div class="p-4 sm:p-6 bg-gray-50 border-b">
+      <div class="p-14 sm:p-6 bg-gray-50 border-b">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
               <span class="text-2xl sm:text-3xl mr-2 sm:mr-3">🗺️</span>
-              <span>전국 생일카페 지도</span>
+              <span>생카 지도</span>
             </h2>
             <div class="flex items-center mt-2">
               <span class="text-xs sm:text-sm bg-gray-200 text-gray-800 px-2 sm:px-3 py-1 rounded-full" id="cafeCountDisplay">{{ total_cafes }}개 운영중</span>
             </div>
-            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">마커를 클릭하면 생일카페 정보를 확인할 수 있어요!</p>
+            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">투어맵을 통해 더 자세한 카페 위치 정보를 확인하세요!</p>
           </div>
           
           <!-- 지도 컨트롤 버튼들 -->
@@ -119,55 +119,18 @@
           </div>
         </div>
       </div>
-      
+ 
+
+
       <!-- 지도 + 사이드바 컨테이너 -->
       <div class="flex flex-col lg:flex-row relative">
         
-        <!-- 사이드바 (왼쪽) -->
-        <div class="w-full lg:w-80 bg-gray-50 border-r border-gray-200 overflow-y-auto" style="max-height: 500px;">
-          
-          <!-- 운영중인 카페 섹션 -->
-          <div class="p-4">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-sm font-semibold text-gray-800 flex items-center">
-                <span class="mr-2">✨</span>운영중인 생카
-              </h3>
-              <span class="text-xs text-gray-500">{{ total_cafes }}개</span>
-            </div>
-            <div class="space-y-2 max-h-64 overflow-y-auto">
-              {% for cafe in latest_cafes|slice:":5" %}
-                <div class="cafe-card-mini border border-gray-200 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors" 
-                     data-cafe-lat="{{ cafe.latitude }}" 
-                     data-cafe-lng="{{ cafe.longitude }}"
-                     data-cafe-id="{{ cafe.id }}"
-                     onclick="moveToLocation({{ cafe.latitude }}, {{ cafe.longitude }})">
-                  <div class="flex items-center space-x-2">
-                    {% if cafe.get_main_image %}
-                      <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" class="w-10 h-10 object-cover rounded-lg flex-shrink-0">
-                    {% else %}
-                      <div class="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span class="text-gray-400 text-sm">🎂</span>
-                      </div>
-                    {% endif %}
-                    <div class="flex-1 min-w-0">
-                      <h4 class="font-medium text-xs text-gray-900 truncate">{{ cafe.cafe_name }}</h4>
-                      <p class="text-xs text-gray-600 truncate">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
-                      <p class="text-xs text-gray-500">{{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}</p>
-                      {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
-                        <span class="text-xs text-red-600 font-medium">{{ cafe.days_remaining }}일 남음</span>
-                      {% endif %}
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-          
-        </div>
-        
+        {% include 'ddoksang/components/_floating_card_list.html' %}
+
+       
         <!-- 지도 컨테이너 (오른쪽) -->
         <div class="flex-1 relative">
-          <div id="mapContainer" class="w-full h-[300px] lg:h-[500px] bg-gray-100"></div>
+          <div id="mapContainer" class="w-full h-[900px] lg:h-[600px] bg-gray-100"></div>
           
           <!-- 지도 로딩 상태 -->
           <div id="mapLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
@@ -177,20 +140,6 @@
               </div>
           </div>
 
-          <!-- 범례 -->
-          <div class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white rounded-lg shadow-lg p-2 sm:p-4 space-y-1 sm:space-y-3">
-              <h3 class="text-xs sm:text-sm font-semibold text-gray-800">범례</h3>
-              <div class="space-y-1 sm:space-y-2">
-                  <div class="flex items-center space-x-1 sm:space-x-2">
-                      <div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-                      <span class="text-xs sm:text-sm text-gray-600">생일카페</span>
-                  </div>
-                  <div class="flex items-center space-x-1 sm:space-x-2">
-                      <div class="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full"></div>
-                      <span class="text-xs sm:text-sm text-gray-600">내 위치</span>
-                  </div>
-              </div>
-          </div>
 
           <!-- 내 주변 카페 패널 -->
           <div id="nearbyPanel" class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 bg-white rounded-lg shadow-lg p-3 sm:p-4 max-w-[250px] sm:max-w-sm hidden z-10">
@@ -699,6 +648,9 @@ function createHomeMarkers() {
     });
     
     console.log(`📊 마커 생성 완료: 성공 ${successCount}개, 실패 ${failCount}개`);
+
+
+    
     
     // 마커를 지도에 표시
     if (homeMarkers.length > 0) {
@@ -1159,7 +1111,6 @@ window.moveToLocation = moveToLocationHome; // HTML에서 사용하는 함수명
 window.searchArtist = searchArtist;
 window.showCafeModal = showCafeModal;
 
-console.log('🏁 홈페이지 스크립트 로드 완료');
 </script>
 
 {% endblock ddoksang_content %}
