@@ -1,18 +1,39 @@
 {% comment %}
 =====================================
-텍스트 영역에 큰 찜하기 버튼
-- 하트 버튼을 정보 영역에 배치
-- 크고 눈에 띄는 디자인
-- 텍스트와 자연스럽게 어우러짐
+완전한 cafe_card_latest.html
+지역 기반 레이아웃 - 시/도 → 이미지 → 멤버/카페명/위치
+=====================================
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden card-latest">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden card-latest group">
   
-  <!-- 이미지 (간소화) -->
-  <div class="relative h-48 overflow-hidden">
+  <!-- 맨 위: 사용자가 입력한 생일카페명 -->
+  <div class="p-4 pb-2 text-center relative">
+    <!-- 하트 버튼 (우상단, 완전 독립) -->
+    {% if user.is_authenticated and cafe.status == 'approved' %}
+      <div class="absolute top-4 right-4 z-10">
+        <button 
+          data-favorite-btn 
+          data-cafe-id="{{ cafe.id }}" 
+          class="w-9 h-9 rounded-full transition-all {% if cafe.id in user_favorites %}bg-red-50 border-2 border-red-200 text-red-500{% else %}bg-gray-50 border-2 border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500{% endif %}"
+          title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
+        >
+          <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
+        </button>
+      </div>
+    {% endif %}
+    
+    <!-- 사용자가 입력한 생일카페명 -->
+    <h4 class="text-lg font-bold text-gray-900 line-clamp-2 leading-snug">
+      {{ cafe.cafe_name }}
+    </h4>
+  </div>
+  
+  <!-- 중간: 이미지 -->
+  <div class="relative h-40 mx-4 rounded-lg overflow-hidden">
     {% if cafe.get_main_image %}
       <img src="{{ cafe.get_main_image }}" 
            alt="{{ cafe.cafe_name }}" 
@@ -20,112 +41,69 @@
            loading="lazy">
     {% else %}
       <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
-        <span class="text-orange-400 text-4xl">🎂</span>
+        <span class="text-orange-400 text-3xl">🎂</span>
       </div>
     {% endif %}
     
-    <!-- NEW 뱃지 (좌상단) -->
-    <div class="absolute top-3 left-3">
-      <span class="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+    <!-- 노란색 NEW 뱃지 (좌상단) -->
+    <div class="absolute top-2 left-2">
+      <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
         NEW
       </span>
     </div>
     
     <!-- 운영 상태 (우상단) -->
-    <div class="absolute top-3 right-3">
+    <div class="absolute top-2 right-2">
       {% with cafe|cafe_status as cafe_state %}
         {% if cafe_state == 'ongoing' %}
-          <span class="bg-green-500 text-white text-sm font-bold px-3 py-1 rounded-full">운영중</span>
+          <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">운영중</span>
         {% elif cafe_state == 'upcoming' %}
-          <span class="bg-blue-500 text-white text-sm font-bold px-3 py-1 rounded-full">예정</span>
+          <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">예정</span>
         {% else %}
-          <span class="bg-gray-500 text-white text-sm px-3 py-1 rounded-full">종료</span>
+          <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded-full">종료</span>
         {% endif %}
       {% endwith %}
     </div>
-    
-    <!-- D-day (하단 중앙) -->
-    {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
-      <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-        <div class="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-bold">
-          🔥 D-{{ cafe.days_remaining }}
-        </div>
-      </div>
-    {% elif cafe.days_remaining > 7 and cafe.days_remaining <= 30 %}
-      <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-        <div class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-          {{ cafe.days_remaining }}일 후
-        </div>
-      </div>
-    {% endif %}
   </div>
   
-  <!-- 텍스트 정보 영역 -->
-  <div class="p-5 space-y-3">
-    <!-- 상단: 아티스트/멤버 정보 + 큰 찜하기 버튼 -->
-    <div class="flex items-start justify-between">
-      <div class="flex-1 min-w-0">
-        <h3 class="font-bold text-lg text-gray-900 leading-tight">
-          {% if cafe.member %}
-            {{ cafe.member.member_name }} 생일카페
-          {% else %}
-            {{ cafe.artist.display_name }}
-          {% endif %}
-        </h3>
-        <p class="text-sm text-gray-600 mt-1">{{ cafe.artist.display_name }}</p>
-      </div>
-      
-      <!-- 큰 하트 버튼 -->
-      {% if user.is_authenticated and cafe.status == 'approved' %}
-        <div class="ml-3 flex-shrink-0">
-          <button 
-            data-favorite-btn 
-            data-cafe-id="{{ cafe.id }}" 
-            class="heart-btn-large w-12 h-12 rounded-full transition-all hover:scale-110 {% if cafe.id in user_favorites %}bg-red-50 border-2 border-red-200 text-red-500{% else %}bg-gray-50 border-2 border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500{% endif %}"
-            title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
-          >
-            <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
-          </button>
-        </div>
+  <!-- 아래: 멤버 정보 + 카페명 + 위치 + 버튼 -->
+  <div class="p-4 pt-3 space-y-3 text-center">
+    <!-- 멤버 정보 -->
+    <div>
+      {% if cafe.member %}
+        <h5 class="font-bold text-lg text-gray-900 leading-tight">
+          {{ cafe.member.member_name }}
+        </h5>
+        <p class="text-sm text-gray-500 mt-1">{{ cafe.artist.display_name }}</p>
+      {% else %}
+        <h5 class="font-bold text-lg text-gray-900 leading-tight">
+          {{ cafe.artist.display_name }}
+        </h5>
+        <p class="text-sm text-gray-500 mt-1">아티스트 생일카페</p>
       {% endif %}
     </div>
     
-    <!-- 카페명 -->
-    <h4 class="text-base font-semibold text-gray-800 line-clamp-2 leading-relaxed">
-      {{ cafe.cafe_name }}
-    </h4>
-    
-    <!-- 핵심 정보 박스 -->
-    <div class="bg-gray-50 rounded-lg p-3 space-y-2">
-      <div class="flex items-center text-sm">
-        <span class="w-5 text-center mr-2">📅</span>
-        <span class="font-medium text-gray-800">{{ cafe.start_date|date:"m월 d일" }} - {{ cafe.end_date|date:"m월 d일" }}</span>
-      </div>
-      <div class="flex items-center text-sm">
-        <span class="w-5 text-center mr-2">📍</span>
-        <span class="text-gray-700 truncate">{{ cafe.place_name|default:cafe.address|truncatechars:25 }}</span>
-      </div>
-    </div>
-    
-    <!-- 특전 (간단히, 있을 때만) -->
-    {% if cafe.special_benefits %}
-      <div class="flex flex-wrap gap-1">
-        {% for benefit in cafe.special_benefits|split:","|slice:":2" %}
-          {% if benefit|strip %}
-            <span class="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">
-              {{ benefit|strip }}
-            </span>
-          {% endif %}
-        {% endfor %}
-        {% if cafe.special_benefits|split:","|length > 2 %}
-          <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-2" }}개</span>
+    <!-- 지역 정보 (시/군) -->
+    <div class="flex items-center justify-center text-sm text-gray-600">
+      <span class="w-4 text-center mr-2">📍</span>
+      <span class="truncate">
+        {% if cafe.road_address %}
+          {% with cafe.road_address|split:" " as address_parts %}
+            {{ address_parts.0 }} {{ address_parts.1|default:"" }}
+          {% endwith %}
+        {% elif cafe.address %}
+          {% with cafe.address|split:" " as address_parts %}
+            {{ address_parts.0 }} {{ address_parts.1|default:"" }}
+          {% endwith %}
+        {% else %}
+          위치 정보 없음
         {% endif %}
-      </div>
-    {% endif %}
+      </span>
+    </div>
     
     <!-- 액션 버튼 -->
     <a href="{% url 'ddoksang:detail' cafe.id %}" 
-       class="block w-full bg-gray-900 text-white py-3 text-center rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+       class="block w-full bg-gray-900 text-white py-3 text-center rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
       자세히 보기
     </a>
   </div>
@@ -141,25 +119,34 @@
 }
 
 .card-latest:hover {
-  transform: translateY(-2px);
+  transform: translateY(-8px);
 }
 
-/* 큰 하트 버튼 스타일 */
-.heart-btn-large {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* 카드 호버 시 그림자 애니메이션 */
+.card-latest {
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
-.heart-btn-large:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: scale(1.1) translateY(-1px);
+.card-latest:hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.heart-btn-large:active {
+/* 하트 버튼 애니메이션 (더 부드럽게) */
+.card-latest button[data-favorite-btn]:hover {
+  transform: scale(1.1);
+}
+
+.card-latest button[data-favorite-btn]:active {
   transform: scale(0.95);
+}
+
+/* 카드 클릭 영역 강화 */
+.card-latest a {
+  transition: all 0.3s ease;
+}
+
+.card-latest a:hover .group {
+  transform: translateY(-8px);
 }
 
 /* 반응형 */
@@ -168,17 +155,30 @@
     padding: 1rem;
   }
   
-  .card-latest h3 {
-    font-size: 1rem;
-  }
-  
   .card-latest h4 {
-    font-size: 0.875rem;
+    font-size: 1.125rem; /* 18px */
   }
   
-  .heart-btn-large {
-    width: 2.75rem;
-    height: 2.75rem;
+  .card-latest h5 {
+    font-size: 1.125rem; /* 18px */
   }
+  
+  .card-latest .h-48 {
+    height: 10rem; /* 160px */
+  }
+  
+  .card-latest:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* 로딩 상태 스켈레톤 */
+.card-latest.loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .7; }
 }
 </style>
