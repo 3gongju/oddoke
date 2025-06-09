@@ -54,11 +54,15 @@ def home_view(request):
             CafeFavorite.objects.filter(user=request.user)
             .values_list('cafe_id', flat=True)
         )
-        if user_favorites:
-            my_favorite_cafes = BdayCafe.objects.filter(
-                id__in=user_favorites,
-                status='approved'
-            ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')[:5]
+
+        # 찜한 카페를 찜 시간순으로 가져오기 
+        favorites = CafeFavorite.objects.filter(
+            user=request.user,
+            cafe__status='approved'
+        ).select_related('cafe__artist', 'cafe__member') \
+        .order_by('-created_at')
+
+        my_favorite_cafes = [fav.cafe for fav in favorites]
 
     # === 5. 지도 관련 컨텍스트 생성 (모든 운영중인 카페들) ===
     map_context = get_map_context(cafes_queryset=active_cafes)
