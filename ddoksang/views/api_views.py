@@ -233,7 +233,7 @@ def search_suggestions_api(request):
         if len(query) < 2:
             return JsonResponse({'success': True, 'suggestions': []})
         
-        # 아티스트명과 카페명에서 검색
+        # 아티스트 검색
         suggestions = []
         
         # 아티스트명 검색
@@ -249,19 +249,7 @@ def search_suggestions_api(request):
                 'label': f'아티스트: {artist}'
             })
         
-        # 카페명 검색
-        cafe_names = BdayCafe.objects.filter(
-            cafe_name__icontains=query,
-            status='approved'
-        ).values_list('cafe_name', flat=True).distinct()[:5]
-        
-        for cafe_name in cafe_names:
-            suggestions.append({
-                'type': 'cafe',
-                'text': cafe_name,
-                'label': f'카페: {cafe_name}'
-            })
-        
+
         return JsonResponse({
             'success': True,
             'suggestions': suggestions[:10]  # 최대 10개

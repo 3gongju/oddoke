@@ -16,6 +16,10 @@ from ..models import BdayCafe, CafeFavorite
 from ..utils.map_utils import get_map_context, get_nearby_cafes
 from artist.models import Artist, Member
 from .utils import get_user_favorites
+from ..utils.bday_utils import get_weekly_bday_artists
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,45 +30,12 @@ def home_view(request):
     today_str = today.strftime('%m-%d')
 
     # === 1. 생일 멤버 계산 (이번 주) ===
-    upcoming_dates = [(today + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
-    birthday_members = Member.objects.filter(
-        member_bday__in=upcoming_dates
-    ).select_related().prefetch_related('artist_name')
+    # upcoming_dates = [(today + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
+    # birthday_members = Member.objects.filter(
+    #     member_bday__in=upcoming_dates
+    # ).select_related().prefetch_related('artist_name')
 
-    birthday_artists = []
-    for member in birthday_members:
-        artists = member.artist_name.all()
-        if not artists:
-            continue
-        artist = artists[0]
-        is_today_birthday = member.member_bday == today_str
-        
-        try:
-            month, day = map(int, member.member_bday.split('-'))
-            this_year_birthday = today.replace(month=month, day=day)
-            if this_year_birthday < today:
-                next_birthday = this_year_birthday.replace(year=today.year + 1)
-                days_until = (next_birthday - today).days
-            else:
-                days_until = (this_year_birthday - today).days
-        except:
-            days_until = 999
-
-        display_artist = "" if member.member_name.lower() == artist.display_name.lower() else artist.display_name
-
-        birthday_artists.append({
-            'member_name': member.member_name,
-            'artist_name': display_artist,
-            'artist_display_name': artist.display_name,
-            'birthday_display': member.member_bday,
-            'profile_image': getattr(member, 'profile_image', None),
-            'is_today_birthday': is_today_birthday,
-            'days_until_birthday': days_until,
-            'member': member,
-        })
-
-    birthday_artists.sort(key=lambda x: (not x['is_today_birthday'], x['days_until_birthday'], x['member_name']))
-
+    birthday_artists = get_weekly_bday_artists
     # === 2. 현재 운영중인 생일카페들 (지도 + 리스트) ===
     active_cafes = BdayCafe.objects.filter(
         status='approved',
@@ -102,6 +73,7 @@ def home_view(request):
         'my_favorite_cafes': my_favorite_cafes,
         'user_favorites': user_favorites,
         **map_context,  # 지도 관련 컨텍스트 (모든 운영중인 카페들)
+        'birthday_artists': birthday_artists,
     }
     
     return render(request, 'ddoksang/home.html', context)

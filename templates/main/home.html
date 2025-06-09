@@ -1,6 +1,7 @@
 {# templates/main/home.html #}
 {% extends 'base.html' %}
 {% load static %}
+{% load member_images %}
 
 {% block body %}
 
@@ -102,18 +103,18 @@
     </div>
   </section>
 
-<!-- ✅ 이번 주 생일 멤버: FullCalendar 주간 뷰 -->
-<section class="mt-28 mb-28 max-w-6xl mx-auto px-4">
-  <div class="flex items-center justify-between mb-3">
-    <h3 class="text-lg font-bold text-black">🎂 이번 주 생일 덕</h3>
-    <a href="{% url 'bday_calendar:calendar' %}" class="text-sm text-blue-600 hover:underline">전체 보기 →</a>
+
+<!-- 이번 주 생일 멤버: 슬라이더 버전 -->
+<section class="mt-28 mb-28 max-w-7xl mx-auto px-4">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h3 class="text-lg sm:text-xl font-bold text-gray-800">🎂 이번 주 생일 덕</h3>
+      <p class="text-sm text-gray-500 mt-1">이번 주 생일 아티스트를 추천해드립니다.</p>
+    </div>
+    <a href="{% url 'bday_calendar:calendar' %}" class="text-sm text-blue-600 hover:underline mt-1">전체 보기 →</a>
   </div>
 
-  <div id="home-calendar" class="overflow-x-auto"></div>
-
-  <p id="no-events-message" class="text-sm text-gray-500 text-center mt-4 hidden">
-    😢 이번 주에 생일인 멤버가 없어요.
-  </p>
+  {% include "ddoksang/_weekly_bday_member.html" %}
 </section>
 
 
@@ -175,28 +176,20 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('home-calendar');
-    const isMobile = window.innerWidth < 768;
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: isMobile ? 'listDay' : 'dayGridWeek',
+      initialView: 'dayGridWeek',  // ✅ 주간 뷰
       locale: 'ko',
       headerToolbar: false,
-      nowIndicator: true,
-      height: 'auto',
-      events: '{% url "bday_calendar:weekly_events_api" %}',
+      events: '{% url "bday_calendar:weekly_events_api" %}',  // 주간 생일 API
       eventColor: '#f472b6',
-      noEventsContent: '😢 이번 주에 생일인 멤버가 없어요.',
-      views: {
-        listDay: {
-          dayHeaderFormat: { weekday: 'long', month: 'numeric', day: 'numeric' }, // 예: '목요일 6.13.'
-        }
-      }
+      nowIndicator: true,
+      height: 'auto'
     });
 
     calendar.render();
   });
 </script>
-
 
 
 

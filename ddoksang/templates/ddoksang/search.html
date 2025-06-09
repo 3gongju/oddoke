@@ -7,11 +7,11 @@
 {% block body %}
 
 <!-- 검색 헤더 컴포넌트 -->
-{% include 'ddoksang/components/_search_header.html' with search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트명, 멤버명 검색...' query=query show_results_summary=True total_count=results.count %}
+{% include 'ddoksang/components/_search_header.html' with search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=True total_count=results.count %}
 
 <section class="max-w-6xl mx-auto px-4 py-8">
   
-  <!-- ✅ 간단한 상태 필터 버튼 -->
+  <!-- 간단한 상태 필터 버튼 -->
   {% if query %}
   <div class="flex justify-center gap-2 mb-6">
     <a href="?q={{ query }}&sort={{ current_sort }}" 
