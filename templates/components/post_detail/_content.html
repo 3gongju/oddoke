@@ -49,6 +49,10 @@
 
   <!-- 정보 테이블 + 버튼 묶음 -->
   <div class="mt-auto space-y-4">
+    {% if member_prices %}
+      {% include 'ddokfarm/components/post_detail/_splitprice_info.html' %}
+    {% endif %}
+
     {% if extra_partial %}
       {% include extra_partial %}
     {% endif %}

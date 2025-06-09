@@ -1,0 +1,16 @@
+{# 분철 멤버별 가격 #}
+{% load humanize %}
+  <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <tbody>
+          {% for sp in member_prices %}
+            <tr>
+              <th class="text-left py-2 text-gray-700">{{ sp.member.member_name }}</th>
+              <td class="text-right py-2 text-gray-800">{{ sp.price|intcomma }}원</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
