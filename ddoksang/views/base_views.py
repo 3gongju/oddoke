@@ -29,22 +29,20 @@ def home_view(request):
     today = timezone.now().date()
     today_str = today.strftime('%m-%d')
 
-    # === 1. 생일 멤버 계산 (이번 주) ===
-    # upcoming_dates = [(today + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
-    # birthday_members = Member.objects.filter(
-    #     member_bday__in=upcoming_dates
-    # ).select_related().prefetch_related('artist_name')
-
     birthday_artists = get_weekly_bday_artists
-    # === 2. 현재 운영중인 생일카페들 (지도 + 리스트) ===
+
+    # === 2. 현재 운영중인 생일카페들 (지도용) ===
     active_cafes = BdayCafe.objects.filter(
         status='approved',
         start_date__lte=today,
         end_date__gte=today
     ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')
 
-    # === 3. 최신 등록된 카페들 (리스트 표시용) ===
-    latest_cafes = active_cafes[:10]  # 상위 10개만 리스트에 표시
+    # === 3. ✅ 최신 등록된 카페들 (모든 승인된 카페) ===
+    latest_cafes = BdayCafe.objects.filter(
+        status='approved'  # 운영 상태와 관계없이 승인된 모든 카페
+    ).select_related('artist', 'member').prefetch_related('images') \
+     .order_by('-created_at')[:6]  # 최신 등록 순으로 6개
 
     # === 4. 사용자 찜 목록 ===
     my_favorite_cafes = []
@@ -60,28 +58,24 @@ def home_view(request):
             user=request.user,
             cafe__status='approved'
         ).select_related('cafe__artist', 'cafe__member') \
-        .order_by('-created_at')
+        .order_by('-created_at')[:10]  # 찜한 카페도 최대 10개
 
         my_favorite_cafes = [fav.cafe for fav in favorites]
 
-    # === 5. 지도 관련 컨텍스트 생성 (모든 운영중인 카페들) ===
+    # === 5. 지도 관련 컨텍스트 생성 (현재 운영중인 카페들만) ===
     map_context = get_map_context(cafes_queryset=active_cafes)
-    # 검색창 (home에서는 생카 등록 버튼까지 보이게)
-    
-
 
     # === 6. 템플릿 컨텍스트 ===
     context = {
         'birthday_artists': birthday_artists,
-        'latest_cafes': latest_cafes,  # 리스트 표시용
+        'latest_cafes': latest_cafes,  # ✅ 모든 승인된 카페 중 최신 6개
+        'active_cafes': active_cafes,  # 지도용 (현재 운영중)
         'my_favorite_cafes': my_favorite_cafes,
         'user_favorites': user_favorites,
-        **map_context,  # 지도 관련 컨텍스트 (모든 운영중인 카페들)
-        'birthday_artists': birthday_artists,
+        **map_context,  # 지도 관련 컨텍스트 (현재 운영중인 카페들)
     }
     
     return render(request, 'ddoksang/home.html', context)
-
 
 
 def search_view(request):

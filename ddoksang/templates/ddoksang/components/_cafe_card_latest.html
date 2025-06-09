@@ -1,160 +1,137 @@
 {% comment %}
 =====================================
-_cafe_card_latest.html - 최신 카페용
-=====================================
-특징:
-- 큰 텍스트로 가독성 향상 (16px → 18-20px)
-- NEW 뱃지로 최신성 강조
-- 넉넉한 패딩과 여백
-- 골드 그라디언트 컬러
+텍스트 영역에 큰 찜하기 버튼
+- 하트 버튼을 정보 영역에 배치
+- 크고 눈에 띄는 디자인
+- 텍스트와 자연스럽게 어우러짐
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
-<div class="group transform transition-all duration-300 hover:-translate-y-2 card-latest">
-  <div class="bg-white rounded-3xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-all duration-300 border border-gray-100">
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden card-latest">
+  
+  <!-- 이미지 (간소화) -->
+  <div class="relative h-48 overflow-hidden">
+    {% if cafe.get_main_image %}
+      <img src="{{ cafe.get_main_image }}" 
+           alt="{{ cafe.cafe_name }}" 
+           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+           loading="lazy">
+    {% else %}
+      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
+        <span class="text-orange-400 text-4xl">🎂</span>
+      </div>
+    {% endif %}
     
-    <!-- 이미지 섹션 -->
-    <div class="relative h-56 overflow-hidden">
-      {% if cafe.get_main_image %}
-        <img src="{{ cafe.get_main_image }}" 
-             alt="{{ cafe.cafe_name }}" 
-             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-             loading="lazy">
-      {% else %}
-        <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
-          <span class="text-orange-400 text-5xl">🎂</span>
+    <!-- NEW 뱃지 (좌상단) -->
+    <div class="absolute top-3 left-3">
+      <span class="bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+        NEW
+      </span>
+    </div>
+    
+    <!-- 운영 상태 (우상단) -->
+    <div class="absolute top-3 right-3">
+      {% with cafe|cafe_status as cafe_state %}
+        {% if cafe_state == 'ongoing' %}
+          <span class="bg-green-500 text-white text-sm font-bold px-3 py-1 rounded-full">운영중</span>
+        {% elif cafe_state == 'upcoming' %}
+          <span class="bg-blue-500 text-white text-sm font-bold px-3 py-1 rounded-full">예정</span>
+        {% else %}
+          <span class="bg-gray-500 text-white text-sm px-3 py-1 rounded-full">종료</span>
+        {% endif %}
+      {% endwith %}
+    </div>
+    
+    <!-- D-day (하단 중앙) -->
+    {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
+      <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+        <div class="bg-red-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+          🔥 D-{{ cafe.days_remaining }}
         </div>
-      {% endif %}
-      
-      <!-- NEW 뱃지 -->
-      <div class="absolute top-4 left-4">
-        <span class="new-badge text-white text-sm font-bold px-4 py-2 rounded-full shadow-lg flex items-center">
-          ⭐ NEW
-        </span>
       </div>
-      
-      <!-- 상태 뱃지 -->
-      <div class="absolute top-4 right-4">
-        {% with cafe|cafe_status as cafe_state %}
-          {% if cafe_state == 'ongoing' %}
-            <span class="bg-green-500 text-white text-sm font-medium px-3 py-1 rounded-full shadow-lg">✨ 운영중</span>
-          {% elif cafe_state == 'upcoming' %}
-            <span class="bg-blue-500 text-white text-sm font-medium px-3 py-1 rounded-full shadow-lg">🔜 예정</span>
+    {% elif cafe.days_remaining > 7 and cafe.days_remaining <= 30 %}
+      <div class="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+        <div class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+          {{ cafe.days_remaining }}일 후
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  
+  <!-- 텍스트 정보 영역 -->
+  <div class="p-5 space-y-3">
+    <!-- 상단: 아티스트/멤버 정보 + 큰 찜하기 버튼 -->
+    <div class="flex items-start justify-between">
+      <div class="flex-1 min-w-0">
+        <h3 class="font-bold text-lg text-gray-900 leading-tight">
+          {% if cafe.member %}
+            {{ cafe.member.member_name }} 생일카페
           {% else %}
-            <span class="bg-gray-500 text-white text-sm font-medium px-3 py-1 rounded-full shadow-lg">✅ 종료</span>
+            {{ cafe.artist.display_name }}
           {% endif %}
-        {% endwith %}
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">{{ cafe.artist.display_name }}</p>
       </div>
       
-      <!-- 찜하기 버튼 -->
+      <!-- 큰 하트 버튼 -->
       {% if user.is_authenticated and cafe.status == 'approved' %}
-        <div class="absolute bottom-4 right-4">
-          <button data-favorite-btn 
-                  data-cafe-id="{{ cafe.id }}"
-                  class="w-12 h-12 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center text-xl hover:scale-110 transition-all shadow-lg"
-                  style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
-                  title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}">
-            {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
+        <div class="ml-3 flex-shrink-0">
+          <button 
+            data-favorite-btn 
+            data-cafe-id="{{ cafe.id }}" 
+            class="heart-btn-large w-12 h-12 rounded-full transition-all hover:scale-110 {% if cafe.id in user_favorites %}bg-red-50 border-2 border-red-200 text-red-500{% else %}bg-gray-50 border-2 border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500{% endif %}"
+            title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
+          >
+            <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
           </button>
         </div>
       {% endif %}
     </div>
     
-    <!-- 콘텐츠 섹션 -->
-    <div class="p-6">
-      <!-- 등록일 -->
-      <div class="flex items-center justify-between mb-4">
-        <span class="text-sm text-orange-600 font-medium bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
-          {% if cafe.created_at|timesince|slice:":2" == "0분" %}
-            방금 등록됨
-          {% else %}
-            {{ cafe.created_at|timesince }} 전 등록
-          {% endif %}
-        </span>
-        <span class="text-sm text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
+    <!-- 카페명 -->
+    <h4 class="text-base font-semibold text-gray-800 line-clamp-2 leading-relaxed">
+      {{ cafe.cafe_name }}
+    </h4>
+    
+    <!-- 핵심 정보 박스 -->
+    <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+      <div class="flex items-center text-sm">
+        <span class="w-5 text-center mr-2">📅</span>
+        <span class="font-medium text-gray-800">{{ cafe.start_date|date:"m월 d일" }} - {{ cafe.end_date|date:"m월 d일" }}</span>
       </div>
-      
-      <!-- 아티스트/멤버 정보 (더 큰 텍스트) -->
-      <h3 class="text-xl font-bold text-gray-900 mb-2">
-        {% if cafe.member %}
-          {{ cafe.member.member_name }} 생일카페
-        {% else %}
-          {{ cafe.artist.display_name }}
-        {% endif %}
-      </h3>
-      <p class="text-base text-gray-600 mb-1 font-medium">
-        {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}
-      </p>
-      
-      <!-- 카페명 (더 읽기 쉽게) -->
-      <h4 class="text-lg font-semibold text-gray-800 mb-4 leading-relaxed line-clamp-2">
-        {{ cafe.cafe_name }}
-      </h4>
-      
-      <!-- 위치 정보 (더 큰 텍스트) -->
-      <div class="flex items-center text-base text-gray-600 mb-3">
-        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-        </svg>
-        <span class="truncate font-medium">{{ cafe.place_name|default:cafe.address|truncatechars:25 }}</span>
+      <div class="flex items-center text-sm">
+        <span class="w-5 text-center mr-2">📍</span>
+        <span class="text-gray-700 truncate">{{ cafe.place_name|default:cafe.address|truncatechars:25 }}</span>
       </div>
-      
-      <!-- 기간 정보 (더 큰 텍스트) -->
-      <div class="flex items-center text-base text-gray-600 mb-4">
-        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-        </svg>
-        <span class="font-semibold">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
-        {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
-          <span class="ml-3 text-red-600 font-bold text-sm bg-red-50 px-2 py-1 rounded-full">{{ cafe.days_remaining }}일 남음</span>
-        {% elif cafe.days_remaining > 7 %}
-          <span class="ml-3 text-blue-600 font-bold text-sm bg-blue-50 px-2 py-1 rounded-full">{{ cafe.days_remaining }}일 후</span>
-        {% endif %}
-      </div>
-      
-      <!-- 특전 미리보기 (더 보기 쉽게) -->
-      {% if cafe.special_benefits %}
-        <div class="mb-5">
-          <div class="flex flex-wrap gap-2">
-            {% for benefit in cafe.special_benefits|split:","|slice:":3" %}
-              {% if benefit|strip %}
-                <span class="inline-block bg-purple-100 text-purple-700 text-sm px-3 py-1 rounded-full font-medium border border-purple-200">
-                  {{ benefit|strip }}
-                </span>
-              {% endif %}
-            {% endfor %}
-            {% if cafe.special_benefits|split:","|length > 3 %}
-              <span class="text-sm text-gray-500 font-medium">+{{ cafe.special_benefits|split:","|length|add:"-3" }}개</span>
-            {% endif %}
-          </div>
-        </div>
-      {% endif %}
-      
-      <!-- 버튼 (더 큰 크기) -->
-      <a href="{% url 'ddoksang:detail' cafe.id %}" 
-         class="block w-full bg-gray-900 text-white py-3 px-6 rounded-xl text-base font-semibold hover:bg-gray-800 transition-colors text-center">
-        자세히 보기
-      </a>
     </div>
+    
+    <!-- 특전 (간단히, 있을 때만) -->
+    {% if cafe.special_benefits %}
+      <div class="flex flex-wrap gap-1">
+        {% for benefit in cafe.special_benefits|split:","|slice:":2" %}
+          {% if benefit|strip %}
+            <span class="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">
+              {{ benefit|strip }}
+            </span>
+          {% endif %}
+        {% endfor %}
+        {% if cafe.special_benefits|split:","|length > 2 %}
+          <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-2" }}개</span>
+        {% endif %}
+      </div>
+    {% endif %}
+    
+    <!-- 액션 버튼 -->
+    <a href="{% url 'ddoksang:detail' cafe.id %}" 
+       class="block w-full bg-gray-900 text-white py-3 text-center rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+      자세히 보기
+    </a>
   </div>
 </div>
 
 <style>
-/* 최신 카페 카드 전용 스타일 */
-.card-latest .new-badge {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
-}
-
-.card-latest:hover .new-badge {
-  transform: scale(1.05);
-  transition: transform 0.2s ease;
-}
-
 .card-latest .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -163,22 +140,45 @@ _cafe_card_latest.html - 최신 카페용
   text-overflow: ellipsis;
 }
 
-/* 반응형 텍스트 크기 */
+.card-latest:hover {
+  transform: translateY(-2px);
+}
+
+/* 큰 하트 버튼 스타일 */
+.heart-btn-large {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heart-btn-large:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1) translateY(-1px);
+}
+
+.heart-btn-large:active {
+  transform: scale(0.95);
+}
+
+/* 반응형 */
 @media (max-width: 640px) {
+  .card-latest .p-5 {
+    padding: 1rem;
+  }
+  
   .card-latest h3 {
-    font-size: 1.125rem; /* 18px */
+    font-size: 1rem;
   }
   
   .card-latest h4 {
-    font-size: 1rem; /* 16px */
+    font-size: 0.875rem;
   }
   
-  .card-latest .text-base {
-    font-size: 0.875rem; /* 14px */
-  }
-  
-  .card-latest .p-6 {
-    padding: 1rem;
+  .heart-btn-large {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 }
 </style>

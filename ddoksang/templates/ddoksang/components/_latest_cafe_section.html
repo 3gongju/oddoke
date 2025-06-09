@@ -1,27 +1,53 @@
-<section class="py-8 px-4 sm:py-10 sm:px-6 bg-gray-50">
-  <div class="max-w-7xl mx-auto">
-    
-    <!-- 헤더 -->
-    <div class="text-center mb-10 sm:mb-12">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">NEW 최신 등록된 생카</h2>
-      <p class="text-gray-600 text-sm sm:text-base">방금 등록된 따끈따끈한 생카를 확인해보세요!</p>
-    </div>
+{% load static %}
+{% load filters %}
 
-    {% if latest_cafes %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+<section class="mb-12" id="latestCafesSection">
+  <!-- 헤더 -->
+  <div class="flex items-center justify-between mb-6 px-4">
+    <div class="flex items-center space-x-3">
+      <h2 class="text-xl font-semibold text-gray-800">⭐ 최신 등록된 생카</h2>
+    </div>
+    <a href="{% url 'ddoksang:search' %}?sort=latest" class="text-sm text-orange-600 hover:underline">
+      전체 보기 &rarr;
+    </a>
+  </div>
+
+  {% if latest_cafes %}
+    <!-- 6개 카페 그리드 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4" id="latestCafesGrid">
       {% for cafe in latest_cafes|slice:":6" %}
-        {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='latest' user_favorites=user_favorites %}
+        <div class="cafe-card-item">
+          {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='latest' user_favorites=user_favorites %}
+        </div>
       {% endfor %}
     </div>
-    {% else %}
-    <div class="text-center py-12">
-      <div class="text-5xl mb-4">☕</div>
-      <p class="text-gray-500 text-base">아직 등록된 생카가 없어요</p>
+
+  {% else %}
+    <!-- 빈 상태 -->
+    <div class="text-center py-16 px-4">
+      <div class="text-6xl mb-4">☕</div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 등록된 생카가 없어요</h3>
+      <p class="text-gray-600 mb-6">첫 번째 생일카페를 등록해보세요!</p>
       <a href="{% url 'ddoksang:create' %}" 
-         class="inline-block mt-4 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition text-sm">
-        첫 생카 등록하기
+         class="inline-block bg-orange-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-600 transition-colors">
+        생카 등록하기
       </a>
     </div>
-    {% endif %}
-  </div>
+  {% endif %}
 </section>
+
+<style>
+/* 간단한 애니메이션 */
+.cafe-card-item {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.cafe-card-item:nth-child(n+4) {
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>

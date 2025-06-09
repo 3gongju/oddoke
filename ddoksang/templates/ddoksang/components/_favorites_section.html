@@ -55,7 +55,6 @@ function initFavoritesSwiper() {
         touchAngle: 45,
         grabCursor: true,
         lazy: { loadPrevNext: true },
-        // ✅ 카드가 잘리지 않도록 설정
         slidesOffsetBefore: 0,
         slidesOffsetAfter: 20,
         centeredSlides: false,
@@ -115,7 +114,7 @@ function updateFavoritesSwiper() {
   transform: translateY(-4px);
 }
 
-/* ✅ 모든 화면에서 스와이프 안내 텍스트 표시 */
+/* 스와이프 안내 텍스트 */
 .favorites-swiper::after {
   content: '← 좌우로 스와이프하세요 →';
   position: absolute;
@@ -129,7 +128,6 @@ function updateFavoritesSwiper() {
   text-align: center;
 }
 
-/* 데스크톱에서 더 자세한 안내 */
 @media (min-width: 768px) {
   .favorites-swiper::after {
     content: '← 드래그하거나 스와이프하여 더 많은 카페를 확인하세요 →';
@@ -139,7 +137,6 @@ function updateFavoritesSwiper() {
   }
 }
 
-/* 모바일에서는 간단하게 */
 @media (max-width: 767px) {
   .favorites-swiper::after {
     content: '← 스와이프 →';
