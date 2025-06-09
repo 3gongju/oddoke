@@ -1,19 +1,20 @@
 {% comment %}
 =====================================
-_cafe_card_favorite.html - 찜한 카페용
+_cafe_card_favorite.html - 찜한 카페용 (하트 크기 통일)
 =====================================
 특징:
 - 오버레이 스타일로 공간 효율성 극대화
 - 핑크/레드 컬러로 '찜한' 느낌 강조
 - 컴팩트한 정보 표시
 - 그림자 없는 깔끔한 디자인
+- 전역 CSS와 통일된 하트 크기
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
 <div class="relative group transform transition-all duration-300 hover:-translate-y-1 card-favorite">
-  <!-- ✅ 그림자 클래스 제거: shadow-lg group-hover:shadow-2xl → border -->
+  <!-- 그림자 클래스 제거: shadow-lg group-hover:shadow-2xl → border -->
   <div class="relative overflow-hidden rounded-2xl border border-gray-200 transition-all duration-300">
     
     <!-- 이미지 + 오버레이 -->
@@ -34,7 +35,7 @@ _cafe_card_favorite.html - 찜한 카페용
       
       <!-- 찜 뱃지 -->
       <div class="absolute top-3 left-3">
-        <!-- ✅ 뱃지 그림자도 제거: shadow-lg → 없음 -->
+        <!-- 뱃지 그림자도 제거: shadow-lg → 없음 -->
         <span class="favorite-badge text-white text-xs font-bold px-3 py-1 rounded-full flex items-center">
           ♥ 찜한 카페
         </span>
@@ -46,11 +47,12 @@ _cafe_card_favorite.html - 찜한 카페용
           <button 
             data-favorite-btn 
             data-cafe-id="{{ cafe.id }}" 
-            class="w-10 h-10 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center text-xl hover:scale-110 transition-all favorite-heart-btn"
+            class="w-10 h-10 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-all favorite-heart-btn"
             style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
             title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
           >
-            {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
+            <!-- ✅ 하트 크기 전역 CSS로 통일 -->
+            <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
           </button>
         </div>
       {% endif %}
@@ -59,7 +61,7 @@ _cafe_card_favorite.html - 찜한 카페용
       <div class="absolute bottom-20 right-3">
         {% with cafe|cafe_status as cafe_state %}
           {% if cafe_state == 'ongoing' %}
-            <!-- ✅ 뱃지 그림자 제거: shadow-lg → 없음 -->
+            <!-- 뱃지 그림자 제거: shadow-lg → 없음 -->
             <span class="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full">✨ 운영중</span>
           {% elif cafe_state == 'upcoming' %}
             <span class="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded-full">🔜 예정</span>
@@ -112,21 +114,21 @@ _cafe_card_favorite.html - 찜한 카페용
 /* 찜한 카페 카드 전용 스타일 */
 .card-favorite .favorite-badge {
   background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-  /* ✅ 뱃지 그림자 제거 */
+  /* 뱃지 그림자 제거 */
 }
 
 .card-favorite .text-shadow {
   text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
-/* ✅ 호버 시 테두리 변경 없이 살짝 확대만 */
+/* 호버 시 테두리 변경 없이 살짝 확대만 */
 .card-favorite:hover > div {
   transform: scale(1.02);
 }
 
 .card-favorite .favorite-heart-btn:hover {
   transform: scale(1.15);
-  /* ✅ 하트 버튼 그림자도 제거 */
+  /* 하트 버튼 그림자도 제거 */
 }
 
 .card-favorite .favorite-heart-btn:active {

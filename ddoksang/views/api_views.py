@@ -44,8 +44,9 @@ def cafe_quick_view(request, cafe_id):
         return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})
 
 @require_GET
+@require_GET
 def bday_cafe_list_api(request):
-    """생일카페 목록 API"""
+    """생일카페 목록 API (새 게시물 체크 기능 추가)"""
     try:
         page = int(request.GET.get('page', 1))
         limit = int(request.GET.get('limit', DEFAULT_PAGE_SIZE))
@@ -54,11 +55,37 @@ def bday_cafe_list_api(request):
         status_filter = request.GET.get('status', 'active')
         sort_by = request.GET.get('sort', 'latest')
         
+        # ✅ 새 게시물 체크를 위한 추가 파라미터
+        since_param = request.GET.get('since', '').strip()
+        check_new_only = request.GET.get('check_new_only', 'false').lower() == 'true'
+        
         # 제한값 검증
         if page < 1 or limit < 1 or limit > 50:
             return JsonResponse({'success': False, 'error': '잘못된 페이징 정보입니다.'})
         
         today = timezone.now().date()
+        
+        # ✅ 새 게시물만 체크하는 경우 (경량 응답)
+        if check_new_only and since_param:
+            try:
+                from datetime import datetime
+                since_time = datetime.fromisoformat(since_param.replace('Z', '+00:00'))
+                
+                new_cafes_count = BdayCafe.objects.filter(
+                    status='approved',
+                    created_at__gt=since_time
+                ).count()
+                
+                return JsonResponse({
+                    'success': True,
+                    'new_posts_count': new_cafes_count,
+                    'has_new_posts': new_cafes_count > 0,
+                    'current_time': timezone.now().isoformat(),
+                    'since': since_time.isoformat()
+                })
+                
+            except ValueError:
+                return JsonResponse({'success': False, 'error': '잘못된 날짜 형식입니다.'})
         
         # 기본 쿼리
         cafes = BdayCafe.objects.filter(
@@ -113,12 +140,14 @@ def bday_cafe_list_api(request):
                     'days_remaining': cafe.days_remaining,
                     'view_count': cafe.view_count,
                     'special_benefits': cafe.special_benefits,
+                    'created_at': cafe.created_at.isoformat(),  # ✅ 추가
                 })
             except Exception as e:
                 logger.warning(f"카페 {cafe.id} 데이터 처리 오류: {e}")
                 continue
         
-        return JsonResponse({
+        # ✅ 기본 응답 데이터
+        response_data = {
             'success': True,
             'cafes': cafes_data,
             'pagination': {
@@ -127,8 +156,33 @@ def bday_cafe_list_api(request):
                 'has_next': cafes_page.has_next(),
                 'has_previous': cafes_page.has_previous(),
                 'total_count': paginator.count,
-            }
-        })
+            },
+            'current_time': timezone.now().isoformat()  # ✅ 추가
+        }
+        
+        # ✅ since 파라미터가 있으면 새 게시물 정보도 포함
+        if since_param:
+            try:
+                from datetime import datetime
+                since_time = datetime.fromisoformat(since_param.replace('Z', '+00:00'))
+                
+                # since_time 이후 새로 생성된 카페 수
+                new_cafes_count = BdayCafe.objects.filter(
+                    status='approved',
+                    created_at__gt=since_time
+                ).count()
+                
+                response_data.update({
+                    'new_posts_count': new_cafes_count,
+                    'has_new_posts': new_cafes_count > 0,
+                    'since': since_time.isoformat()
+                })
+                
+            except ValueError:
+                # 잘못된 날짜 형식이면 무시
+                pass
+        
+        return JsonResponse(response_data)
         
     except ValueError as e:
         logger.warning(f"API 파라미터 오류: {e}")

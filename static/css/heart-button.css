@@ -1,0 +1,70 @@
+/* 
+=====================================
+전역 하트 버튼 스타일 (큰 사이즈)
+static/css/heart-buttons.css 에 추가하거나 교체
+=====================================
+*/
+
+/* 모든 찜하기 버튼 기본 스타일 통일 */
+[data-favorite-btn] {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 하트 아이콘 크기 강제 통일 (더 크게) */
+[data-favorite-btn] span,
+[data-favorite-btn] .favorite-icon {
+    font-size: 2rem !important; /* 32px로 확대 */
+    line-height: 1 !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* detail.html의 헤더 하트 버튼 (더 크게) */
+.favorite-button .favorite-icon {
+    font-size: 2.5rem !important; /* 40px - 헤더용은 더욱 크게 */
+    line-height: 1 !important;
+}
+
+/* 카드 내부의 하트 버튼 (latest, favorite 등) */
+.card-latest .heart-btn-large span,
+.card-favorite .favorite-heart-btn span,
+.heart-btn-large span {
+    font-size: 2rem !important; /* 32px로 통일 */
+    line-height: 1 !important;
+}
+
+/* 호버 효과 통일 */
+[data-favorite-btn]:hover {
+    transform: scale(1.1);
+}
+
+[data-favorite-btn]:active {
+    transform: scale(0.95);
+}
+
+/* 로딩 상태일 때도 크기 유지 */
+[data-favorite-btn]:disabled span,
+[data-favorite-btn]:disabled .favorite-icon {
+    font-size: inherit !important;
+}
+
+/* 모바일에서는 살짝 작게 */
+@media (max-width: 640px) {
+    [data-favorite-btn] span,
+    [data-favorite-btn] .favorite-icon {
+        font-size: 1.75rem !important; /* 28px */
+    }
+    
+    .card-latest .heart-btn-large span,
+    .card-favorite .favorite-heart-btn span,
+    .heart-btn-large span {
+        font-size: 1.75rem !important; /* 28px */
+    }
+    
+    .favorite-button .favorite-icon {
+        font-size: 2.25rem !important; /* 36px */
+    }
+}
