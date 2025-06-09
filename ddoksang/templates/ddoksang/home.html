@@ -65,37 +65,8 @@
 </div>
 
 <!-- 상단 검색 헤더 -->
-<section class="bg-gray-100 border-b border-gray-200 py-4 sm:py-6">
-  <div class="max-w-7xl mx-auto px-4 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:space-x-4">
+{% include 'ddoksang/components/_search_header.html' with search_input_id='ddok-search' autocomplete_list_id='ddok-autocomplete-list' search_placeholder='아티스트명, 카페명 검색...' show_create_button=True %}
 
-    <!-- 🔍 검색창 -->
-    <div class="w-full sm:flex-1 relative">
-      <form method="get" action="{% url 'ddoksang:search' %}">
-        <input id="ddok-search" type="text" name="q" placeholder="아티스트명, 카페명 검색..." 
-               class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-lg"
-               value="{{ request.GET.q }}" autocomplete="off">
-        <button type="submit" class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
-          </svg>
-        </button>
-      </form>
-
-      <!-- 자동완성 드롭다운 -->
-      <ul id="ddok-autocomplete-list" 
-          class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-48 overflow-y-auto z-50 mt-1">
-      </ul>
-    </div>
-
-    <!-- 생카 등록 버튼 -->
-    <div class="flex justify-center sm:justify-end">
-      <a href="{% url 'ddoksang:create' %}" 
-         class="bg-gray-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-sm sm:text-base">
-        + 생카 등록
-      </a>
-    </div>
-  </div>
-</section>
 
 <!-- 🗺️ 메인 지도 섹션 with 사이드바 -->
 <section class="py-4 sm:py-8 px-4">
@@ -1324,14 +1295,14 @@ function initBirthdaySlider() {
     updateButtons();
 }
 
-// 아티스트 검색 함수
-function searchArtist(memberName) {
-    const searchInput = document.getElementById('ddok-search');
-    if (searchInput) {
-        searchInput.value = memberName;
-        searchInput.form.submit();
-    }
-}
+// // 아티스트 검색 함수
+// function searchArtist(memberName) {
+//     const searchInput = document.getElementById('ddok-search');
+//     if (searchInput) {
+//         searchInput.value = memberName;
+//         searchInput.form.submit();
+//     }
+// }
 </script>
 
 {% endblock %}

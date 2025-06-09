@@ -225,7 +225,7 @@ def my_cafes(request):
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
 
-    # 통계 계산 - 🔧 검색어가 있으면 해당 결과 기준으로 계산
+    # 통계 계산 - 검색어가 있으면 해당 결과 기준으로 계산
     base_cafes = BdayCafe.objects.filter(submitted_by=request.user)
     
     # 검색어가 있다면 검색 결과 기준으로 통계 계산

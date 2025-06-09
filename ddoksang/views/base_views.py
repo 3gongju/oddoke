@@ -5,6 +5,7 @@ import logging
 from datetime import timedelta, date
 
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q, F
 from django.views.decorators.cache import cache_page
@@ -90,6 +91,9 @@ def home_view(request):
 
     # === 5. 지도 관련 컨텍스트 생성 (모든 운영중인 카페들) ===
     map_context = get_map_context(cafes_queryset=active_cafes)
+    # 검색창 (home에서는 생카 등록 버튼까지 보이게)
+    
+
 
     # === 6. 템플릿 컨텍스트 ===
     context = {
@@ -103,10 +107,13 @@ def home_view(request):
     return render(request, 'ddoksang/home.html', context)
 
 
+
 def search_view(request):
     """통합 검색 페이지"""
     query = request.GET.get('q', '').strip()
     page = request.GET.get('page', 1)
+    status_filter = request.GET.get('status', '')  # ongoing, upcoming, ended
+    sort_order = request.GET.get('sort', 'latest')
     
     results = []
     total_count = 0
@@ -118,6 +125,23 @@ def search_view(request):
             Q(member__member_name__icontains=query),
             status='approved'
         ).select_related('artist', 'member').distinct()
+        
+        # ✅ 간단한 상태 필터링
+        today = timezone.now().date()
+        
+        if status_filter == 'ongoing':
+            cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
+        elif status_filter == 'upcoming':
+            cafes = cafes.filter(start_date__gt=today)
+        elif status_filter == 'ended':
+            cafes = cafes.filter(end_date__lt=today)
+        # status_filter가 없으면 전체
+        
+        # 정렬
+        if sort_order == 'latest':
+            cafes = cafes.order_by('-created_at')
+        elif sort_order == 'start_date':
+            cafes = cafes.order_by('start_date', '-created_at')
         
         # 페이징 처리
         paginator = Paginator(cafes, 10)
@@ -132,10 +156,10 @@ def search_view(request):
         'query': query,
         'total_count': total_count,
         'user_favorites': user_favorites,
+        'current_status': status_filter,  # 템플릿에서 사용
+        'current_sort': sort_order,
     }
     return render(request, 'ddoksang/search.html', context)
-
-
 
 
 def cafe_detail_view(request, cafe_id):

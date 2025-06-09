@@ -175,20 +175,28 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('home-calendar');
+    const isMobile = window.innerWidth < 768;
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridWeek',  // ✅ 주간 뷰
+      initialView: isMobile ? 'listDay' : 'dayGridWeek',
       locale: 'ko',
       headerToolbar: false,
-      events: '{% url "bday_calendar:weekly_events_api" %}',  // 주간 생일 API
-      eventColor: '#f472b6',
       nowIndicator: true,
-      height: 'auto'
+      height: 'auto',
+      events: '{% url "bday_calendar:weekly_events_api" %}',
+      eventColor: '#f472b6',
+      noEventsContent: '😢 이번 주에 생일인 멤버가 없어요.',
+      views: {
+        listDay: {
+          dayHeaderFormat: { weekday: 'long', month: 'numeric', day: 'numeric' }, // 예: '목요일 6.13.'
+        }
+      }
     });
 
     calendar.render();
   });
 </script>
+
 
 
 
