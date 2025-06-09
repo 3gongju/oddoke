@@ -1,38 +1,25 @@
 {% comment %}
 =====================================
-완전한 cafe_card_latest.html
-지역 기반 레이아웃 - 시/도 → 이미지 → 멤버/카페명/위치
+최신 생일카페 카드 (cafe_card_latest.html)
+- 지역 기반 카드 구성
+- 하트 버튼: 이미지와 텍스트 사이에 위치
+- 상태 뱃지: 운영중 / 예정 / 종료
 =====================================
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden card-latest group">
-  
-  <!-- 맨 위: 사용자가 입력한 생일카페명 -->
+<a href="{% url 'ddoksang:detail' cafe.id %}" class="block group card-latest bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden">
+
+  <!-- 제목 -->
   <div class="p-4 pb-2 text-center relative">
-    <!-- 하트 버튼 (우상단, 완전 독립) -->
-    {% if user.is_authenticated and cafe.status == 'approved' %}
-      <div class="absolute top-4 right-4 z-10">
-        <button 
-          data-favorite-btn 
-          data-cafe-id="{{ cafe.id }}" 
-          class="w-9 h-9 rounded-full transition-all {% if cafe.id in user_favorites %}bg-red-50 border-2 border-red-200 text-red-500{% else %}bg-gray-50 border-2 border-gray-200 text-gray-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500{% endif %}"
-          title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
-        >
-          <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
-        </button>
-      </div>
-    {% endif %}
-    
-    <!-- 사용자가 입력한 생일카페명 -->
     <h4 class="text-lg font-bold text-gray-900 line-clamp-2 leading-snug">
       {{ cafe.cafe_name }}
     </h4>
   </div>
-  
-  <!-- 중간: 이미지 -->
+
+  <!-- 이미지 -->
   <div class="relative h-40 mx-4 rounded-lg overflow-hidden">
     {% if cafe.get_main_image %}
       <img src="{{ cafe.get_main_image }}" 
@@ -44,15 +31,8 @@
         <span class="text-orange-400 text-3xl">🎂</span>
       </div>
     {% endif %}
-    
-    <!-- 노란색 NEW 뱃지 (좌상단) -->
-    <div class="absolute top-2 left-2">
-      <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm">
-        NEW
-      </span>
-    </div>
-    
-    <!-- 운영 상태 (우상단) -->
+
+    <!-- 상태 뱃지 -->
     <div class="absolute top-2 right-2">
       {% with cafe|cafe_status as cafe_state %}
         {% if cafe_state == 'ongoing' %}
@@ -64,17 +44,30 @@
         {% endif %}
       {% endwith %}
     </div>
+
+    <!-- 찜 하트 버튼 -->
+    {% if user.is_authenticated and cafe.status == 'approved' %}
+      <div class="absolute bottom-2 right-2 z-40">
+        <button 
+          data-favorite-btn 
+          data-cafe-id="{{ cafe.id }}" 
+          class="w-10 h-10 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-all favorite-heart-btn"
+          style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+          title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}">
+          <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
+        </button>
+      </div>
+    {% endif %}
   </div>
-  
-  <!-- 아래: 멤버 정보 + 카페명 + 위치 + 버튼 -->
-  <div class="p-4 pt-3 space-y-3 text-center">
-    <!-- 멤버 정보 -->
+
+  <!-- 멤버 정보 & 지역 -->
+  <div class="p-4 pt-6 space-y-3 text-center">
     <div>
       {% if cafe.member %}
-        <h5 class="font-bold text-lg text-gray-900 leading-tight">
+        <p class="text-base text-gray-900 font-bold leading-tight">
           {{ cafe.member.member_name }}
-        </h5>
-        <p class="text-sm text-gray-500 mt-1">{{ cafe.artist.display_name }}</p>
+          <span class="text-sm text-gray-500 font-normal">({{ cafe.artist.display_name }})</span>
+        </p>
       {% else %}
         <h5 class="font-bold text-lg text-gray-900 leading-tight">
           {{ cafe.artist.display_name }}
@@ -82,8 +75,7 @@
         <p class="text-sm text-gray-500 mt-1">아티스트 생일카페</p>
       {% endif %}
     </div>
-    
-    <!-- 지역 정보 (시/군) -->
+
     <div class="flex items-center justify-center text-sm text-gray-600">
       <span class="w-4 text-center mr-2">📍</span>
       <span class="truncate">
@@ -100,14 +92,8 @@
         {% endif %}
       </span>
     </div>
-    
-    <!-- 액션 버튼 -->
-    <a href="{% url 'ddoksang:detail' cafe.id %}" 
-       class="block w-full bg-gray-900 text-white py-3 text-center rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors">
-      자세히 보기
-    </a>
   </div>
-</div>
+</a>
 
 <style>
 .card-latest .line-clamp-2 {
@@ -122,16 +108,15 @@
   transform: translateY(-8px);
 }
 
-/* 카드 호버 시 그림자 애니메이션 */
 .card-latest {
   transition: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+  position: relative;
 }
 
 .card-latest:hover {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* 하트 버튼 애니메이션 (더 부드럽게) */
 .card-latest button[data-favorite-btn]:hover {
   transform: scale(1.1);
 }
@@ -140,7 +125,6 @@
   transform: scale(0.95);
 }
 
-/* 카드 클릭 영역 강화 */
 .card-latest a {
   transition: all 0.3s ease;
 }
@@ -149,30 +133,25 @@
   transform: translateY(-8px);
 }
 
-/* 반응형 */
 @media (max-width: 640px) {
   .card-latest .p-5 {
     padding: 1rem;
   }
-  
-  .card-latest h4 {
-    font-size: 1.125rem; /* 18px */
-  }
-  
+
+  .card-latest h4,
   .card-latest h5 {
-    font-size: 1.125rem; /* 18px */
+    font-size: 1.125rem;
   }
-  
+
   .card-latest .h-48 {
-    height: 10rem; /* 160px */
+    height: 10rem;
   }
-  
+
   .card-latest:hover {
     transform: translateY(-4px);
   }
 }
 
-/* 로딩 상태 스켈레톤 */
 .card-latest.loading {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
