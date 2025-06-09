@@ -5,6 +5,18 @@
 <div class="min-h-screen bg-white flex items-center justify-center px-4">
   <div class="w-full max-w-md">
     
+    <!-- 로그인 메시지 -->
+    {% if messages %}
+      <div id="message-modal" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-96 max-w-full p-6 text-center">
+          {% for message in messages %}
+            <p class="text-gray-800 text-sm">{{ message|linebreaksbr }}</p>
+          {% endfor %}
+          <button id="close-modal" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">확인</button>
+        </div>
+      </div>
+    {% endif %}
+
     <!-- 로고 -->
     <div class="text-center mb-8">
       <h1 class="text-3xl font-bold">어덕해</h1>
@@ -148,5 +160,17 @@
   }
 }
 </style>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("message-modal");
+  const closeBtn = document.getElementById("close-modal");
+  
+  if (modal && closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
+});
+</script>
 
 {% endblock %}
