@@ -85,12 +85,11 @@ class FarmRentalPostForm(forms.ModelForm):
 
 class FarmSplitPostForm(forms.ModelForm):
     album = custom_choice_field(FarmSplitPost.ALBUM_CHOICES, label='앨범 포함 여부')
-    opened = custom_choice_field(FarmSplitPost.OPENED_CHOICES, label='앨범 개봉 여부')
     failure = custom_choice_field(FarmSplitPost.FAILURE_CHOICES, label='무산 여부')
 
     class Meta:
         model = FarmSplitPost
-        fields = ['title', 'content', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist']
+        fields = ['title', 'content', 'album', 'shipping_fee', 'where', 'when', 'failure', 'artist']
         widgets = {
             **common_widgets,
             'shipping_fee': forms.NumberInput(attrs={
@@ -115,15 +114,14 @@ class FarmCommentForm(forms.ModelForm):
             'parent': forms.HiddenInput()
         }
 
-SplitPriceFormSet = modelformset_factory(
-    SplitPrice,
-    fields=('member', 'price'),
-    widgets={
-        'member': HiddenInput(),
-        'price': forms.NumberInput(attrs={
-            'class': COMMON_INPUT_CLASS,
-            'placeholder': '가격을 입력하세요',
-        }),
-    },
-    can_delete=False
-)
+class SplitPriceForm(forms.ModelForm):
+    class Meta:
+        model = SplitPrice
+        fields = ('member', 'price')
+        widgets = {
+            'member': forms.HiddenInput(),
+            'price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded',
+                'placeholder': '가격을 입력하세요',
+            }),
+        }

@@ -1,11 +1,13 @@
 <div class="mb-6">
-  <label class="block text-sm font-medium text-gray-700 mb-2">멤버별 가격 입력 및 선택</label>
+  <label class="block text-sm font-medium text-gray-700 mb-2">
+    멤버별 가격 입력(분철 제외 멤버를 체크해주세요)
+  </label>
 
   {% if formset %}
     {{ formset.management_form }}
   {% endif %}
 
-  <div class="space-y-2">
+  <div id="split-price-container" class="space-y-2">
     {% for form, member_name in formset_with_names %}
       <div class="flex items-center gap-2">
         {{ form.member }} {# hidden input: 멤버 ID #}

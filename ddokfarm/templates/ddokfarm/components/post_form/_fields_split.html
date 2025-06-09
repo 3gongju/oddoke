@@ -12,13 +12,6 @@
   {% if form.album.errors %}<p class="text-red-500 text-sm mt-1">{{ form.album.errors.0 }}</p>{% endif %}
 </div>
 
-<!-- 개봉 여부 -->
-<div class="mb-6">
-  <label for="{{ form.opened.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">개봉 여부</label>
-  {{ form.opened }}
-  {% if form.opened.errors %}<p class="text-red-500 text-sm mt-1">{{ form.opened.errors.0 }}</p>{% endif %}
-</div>
-
 <!-- 재배송비 -->
 <div class="mb-6">
   <label for="{{ form.shipping_fee.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">재배송비</label>
@@ -33,9 +26,9 @@
   {% if form.where.errors %}<p class="text-red-500 text-sm mt-1">{{ form.where.errors.0 }}</p>{% endif %}
 </div>
 
-<!-- 구매예정일 -->
+<!-- 구매일 -->
 <div class="mb-6">
-  <label for="{{ form.when.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">구매예정일</label>
+  <label for="{{ form.when.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">구매일</label>
   {{ form.when }}
   {% if form.when.errors %}<p class="text-red-500 text-sm mt-1">{{ form.when.errors.0 }}</p>{% endif %}
 </div>

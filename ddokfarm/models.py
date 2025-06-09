@@ -94,16 +94,10 @@ class FarmRentalPost(FarmMarketPost):
             return main_img.image.url
         return None
 
-
 class FarmSplitPost(FarmBasePost):
     ALBUM_CHOICES = [
         ('include', '포함'),
         ('not_include', '미포함'),
-    ]
-
-    OPENED_CHOICES = [
-        ('opende', '개봉'),
-        ('unopened', '미개봉'),
     ]
 
     FAILURE_CHOICES = [
@@ -113,18 +107,17 @@ class FarmSplitPost(FarmBasePost):
     ]
 
     album = models.CharField(max_length=20, choices=ALBUM_CHOICES)
-    opened = models.CharField(max_length=20, choices=OPENED_CHOICES)
     shipping_fee = models.PositiveIntegerField()
     where = models.CharField(max_length=100)
     when = models.DateField()
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
     images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
-    # 멤버별 가격 설정 필드 연결 필요
+    checked_out_members = models.ManyToManyField(Member, blank=True, related_name="checked_out_split_posts")
 
     @property
     def category_type(self):
         return 'split'
-        
+
     def get_main_image(self):
         main_img = self.images.filter(is_representative=True).first()
         if main_img:
