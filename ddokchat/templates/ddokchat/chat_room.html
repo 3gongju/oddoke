@@ -771,17 +771,21 @@
     }
   });
   // 리뷰 모달 띄워지는지 테스트
-  const reviewModal = document.getElementById("reviewModal");
-  if (reviewModal) {
-    console.log("✅ 리뷰 모달 찾음, 띄우기 시도");
-    try {
-      reviewModal.showModal();
-    } catch (e) {
-      console.error("❌ 모달 띄우기 실패:", e);
-      reviewModal.style.display = "block";
+  document.addEventListener("DOMContentLoaded", function () {
+  const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
+  const isFullyCompleted = {{ is_fully_completed|yesno:"true,false" }};
+  const isBuyer = "{{ user.username }}" === "{{ room.buyer.username }}";
+
+  if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
+    const reviewModal = document.getElementById("reviewModal");
+    if (reviewModal) {
+      try {
+        reviewModal.showModal();
+      } catch (e) {
+        reviewModal.style.display = "block";
+      }
     }
-  } else {
-    console.error("❌ 리뷰 모달을 찾을 수 없습니다.");
   }
+});
 </script>
 {% endblock %}
