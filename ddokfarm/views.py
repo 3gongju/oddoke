@@ -161,41 +161,37 @@ def post_create(request):
     raw_category = request.POST.get('category') or request.GET.get('category') or 'sell'
     category = raw_category.split('?')[0]
     selected_artist_id = request.GET.get('artist')
-    selected_member_ids = list(map(int, request.POST.getlist('members')))  # 체크한 멤버들
     form_class = get_post_form(category)
-    
+
     if not form_class:
         raise Http404("존재하지 않는 카테고리입니다.")
-    
-    # artist_id 없으면 첫 번째 아티스트로 기본값
-    if not selected_artist_id and favorite_artists.exists():
-        selected_artist_id = str(favorite_artists[0].id)
+
+    selected_member_ids = []
 
     if request.method == 'POST':
         selected_artist_id = request.POST.get('artist') or selected_artist_id
+        selected_member_ids = list(map(int, request.POST.getlist('members'))) if request.POST.getlist('members') else []
         image_files = request.FILES.getlist('images')
         form = form_class(request.POST, request.FILES)
-        
-        # ✅ split 카테고리라면 formset 준비
+
         if category == 'split' and selected_artist_id:
             selected_members = Member.objects.filter(artist_name__id=selected_artist_id).distinct()
             initial_data = [{'member': m.id} for m in selected_members]
-            SplitPriceFormSet = modelformset_factory(
-                SplitPrice,
-                form=SplitPriceForm,
-                extra=len(initial_data),
-                can_delete=False
-            )
+            SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=len(initial_data), can_delete=False)
             formset = SplitPriceFormSet(
                 request.POST,
                 prefix='splitprice',
                 queryset=SplitPrice.objects.none(),
                 initial=initial_data
             )
+            for formset_form in formset.forms:
+                member_id = str(formset_form.initial['member'])
+                if member_id in request.POST.getlist('members'):
+                    formset_form.fields['price'].required = False
+                    formset_form.fields['price'].widget.attrs.pop('required', None)
         else:
             formset = None
-        
-        # ✅ 모든 폼이 유효할 때만 저장 진행
+
         if form.is_valid() and (formset.is_valid() if formset else True):
             if not image_files:
                 form.add_error(None, "이미지는 최소 1장 이상 업로드해야 합니다.")
@@ -205,27 +201,21 @@ def post_create(request):
                 if selected_artist_id:
                     post.artist_id = selected_artist_id
                 post.save()
-                
+
                 if category == 'split' and formset:
                     for sp_form in formset.forms:
                         member_field = sp_form.cleaned_data.get('member')
                         if member_field:
                             member_id = member_field.id
-                            if member_id not in selected_member_ids:
-                                if sp_form.cleaned_data.get('price'):
-                                    sp_instance = sp_form.save(commit=False)
-                                    sp_instance.post = post
-                                    sp_instance.save()
-
-                    if selected_member_ids:
-                        post.checked_out_members.set(selected_member_ids)
+                            if member_id not in selected_member_ids and sp_form.cleaned_data.get('price'):
+                                sp_instance = sp_form.save(commit=False)
+                                sp_instance.post = post
+                                sp_instance.save()
+                    post.checked_out_members.set(selected_member_ids)
                 else:
-                    # ✅ sell/rental은 체크한 멤버들을 저장
                     post.members.set(selected_member_ids)
-                
+
                 form.save_m2m()
-                
-                # ✅ 이미지 저장
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
                     FarmPostImage.objects.create(
@@ -234,29 +224,23 @@ def post_create(request):
                         object_id=post.id,
                         is_representative=(idx == 0)
                     )
-                
                 return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
         form = form_class()
         formset = None
+        selected_member_ids = []
 
     default_artist_id = int(selected_artist_id) if selected_artist_id else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )
     selected_members = []
     formset_with_names = None
-    member_names = []
 
     if category == 'split' and default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
         initial_data = [{'member': m.id} for m in selected_members]
-        SplitPriceFormSet = modelformset_factory(
-            SplitPrice,
-            form=SplitPriceForm,
-            extra=len(initial_data),
-            can_delete=False
-        )
+        SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=len(initial_data), can_delete=False)
         formset = SplitPriceFormSet(
             queryset=SplitPrice.objects.none(),
             initial=initial_data,
@@ -293,13 +277,7 @@ def load_split_members_and_prices(request):
     members = Member.objects.filter(artist_name__id=artist_id).distinct()
     initial_data = [{'member': m.id} for m in members]
 
-    SplitPriceFormSet = modelformset_factory(
-        SplitPrice,
-        form=SplitPriceForm,
-        extra=len(initial_data),
-        can_delete=False
-    )
-
+    SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=len(initial_data), can_delete=False)
     formset = SplitPriceFormSet(
         queryset=SplitPrice.objects.none(),
         initial=initial_data,
@@ -311,7 +289,11 @@ def load_split_members_and_prices(request):
 
     formset_html = render_to_string(
         'ddokfarm/components/post_form/_splitprice_formset.html',
-        {'formset': formset, 'formset_with_names': formset_with_names},
+        {
+            'formset': formset,
+            'formset_with_names': formset_with_names,
+            'selected_member_ids': [],  # ✅ split 진입 시 무조건 빈 리스트로 넘김
+        },
         request=request
     )
 
@@ -363,21 +345,62 @@ def post_edit(request, category, post_id):
         return render(request, 'ddokfarm/error_message.html', context)
 
     if request.method == 'POST':
-        form = form_class(request.POST, request.FILES, instance=post)
-        image_files = request.FILES.getlist('images')  # 새 이미지 받기
-        removed_ids = request.POST.get('removed_image_ids', '').split(',')
-        removed_ids = [int(id) for id in removed_ids if id.isdigit()]  # 삭제할 ID만 정수로 처리
+        # ✅ artist 수정 불가: 기존 artist로 강제 세팅
+        post_data = request.POST.copy()
+        post_data['artist'] = post.artist.id
 
-        if form.is_valid():
+        form = form_class(post_data, request.FILES, instance=post)
+        image_files = request.FILES.getlist('images')
+        removed_ids = post_data.get('removed_image_ids', '').split(',')
+        removed_ids = [int(id) for id in removed_ids if id.isdigit()]
+        selected_member_ids = list(map(int, post_data.getlist('members')))
+
+        if category == 'split':
+            selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+            splitprice_dict = {sp.member_id: sp for sp in post.member_prices.all()}
+
+            formset_with_names = []
+            for member in selected_members:
+                sp_instance = splitprice_dict.get(member.id)
+                sp_form = SplitPriceForm(
+                    post_data,
+                    prefix=f'splitprice-{member.id}',
+                    instance=sp_instance
+                )
+                sp_form.fields['member'].initial = member.id
+
+                # ✅ 체크된 멤버는 price.required=False
+                if str(member.id) in post_data.getlist('members'):
+                    sp_form.fields['price'].required = False
+                    sp_form.fields['price'].widget.attrs.pop('required', None)
+
+                formset_with_names.append((sp_form, member.member_name))
+
+            # ✅ dummy formset for management_form
+            SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=0, can_delete=False)
+            dummy_formset = SplitPriceFormSet(queryset=SplitPrice.objects.none(), prefix='splitprice')
+        else:
+            formset_with_names = None
+            dummy_formset = None
+
+        formset_valid = all(form.is_valid() for form, _ in formset_with_names) if formset_with_names else True
+
+        if form.is_valid() and formset_valid:
             post = form.save(commit=False)
-            artist_id = request.POST.get('artist')
-            member_ids = request.POST.getlist('members')
-
-            if artist_id:
-                post.artist_id = artist_id
-
             post.save()
-            post.members.set(member_ids)
+
+            if category == 'split' and formset_with_names:
+                post.member_prices.all().delete()
+                for sp_form, _ in formset_with_names:
+                    member_id = sp_form.cleaned_data.get('member').id
+                    if member_id not in selected_member_ids:
+                        if sp_form.cleaned_data.get('price'):
+                            sp_instance = sp_form.save(commit=False)
+                            sp_instance.post = post
+                            sp_instance.save()
+                post.checked_out_members.set(selected_member_ids)
+            else:
+                post.members.set(selected_member_ids)
 
             if removed_ids:
                 post.images.filter(id__in=removed_ids).delete()
@@ -392,21 +415,43 @@ def post_edit(request, category, post_id):
                         is_representative=(idx == 0)
                     )
 
+            form.save_m2m()
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
         form = form_class(instance=post)
 
-    existing_images = []
-    for img in post.images.all():
-        existing_images.append({
-            "id": img.id,
-            "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"
-        })
+        if category == 'split':
+            selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+            splitprice_dict = {sp.member_id: sp for sp in post.member_prices.all()}
 
+            formset_with_names = []
+            for member in selected_members:
+                sp_instance = splitprice_dict.get(member.id)
+                sp_form = SplitPriceForm(
+                    prefix=f'splitprice-{member.id}',
+                    instance=sp_instance
+                )
+                sp_form.fields['member'].initial = member.id
+                formset_with_names.append((sp_form, member.member_name))
+
+            # ✅ dummy formset for management_form
+            SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=0, can_delete=False)
+            dummy_formset = SplitPriceFormSet(queryset=SplitPrice.objects.none(), prefix='splitprice')
+        else:
+            formset_with_names = None
+            dummy_formset = None
+
+    existing_images = [
+        {"id": img.id, "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"}
+        for img in post.images.all()
+    ]
     sorted_artists = Artist.objects.order_by('display_name')
     selected_members = Member.objects.filter(artist_name=post.artist).distinct()
-    selected_member_ids = list(post.members.values_list('id', flat=True))
+    selected_member_ids = (
+        list(post.checked_out_members.values_list('id', flat=True))
+        if category == 'split' else list(post.members.values_list('id', flat=True))
+    )
     selected_artist_id = post.artist.id if post.artist else None
 
     context = {
@@ -417,6 +462,8 @@ def post_edit(request, category, post_id):
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
         'selected_artist_id': selected_artist_id,
+        'formset_with_names': formset_with_names,
+        'formset': dummy_formset,
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         'mode': 'edit',

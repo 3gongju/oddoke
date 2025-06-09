@@ -125,3 +125,6 @@ class SplitPriceForm(forms.ModelForm):
                 'placeholder': '가격을 입력하세요',
             }),
         }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['price'].required = False

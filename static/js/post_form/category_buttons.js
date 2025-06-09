@@ -7,12 +7,11 @@ export function setupCategoryButtons(ajaxBaseUrl) {
   if (form && categoryInput) {
     buttons.forEach(btn => {
       btn.addEventListener("click", (e) => {
-        e.preventDefault();  // ✅ form.submit() 기본 동작 막기!
+        e.preventDefault();
 
         const selectedCategory = btn.dataset.category;
         categoryInput.value = selectedCategory;
 
-        // ✅ split 카테고리인 경우만 AJAX 먼저 요청
         if (selectedCategory === "split" && artistSelect && artistSelect.value) {
           console.log("✅ split 카테고리 AJAX 먼저 요청!");
 
@@ -27,14 +26,10 @@ export function setupCategoryButtons(ajaxBaseUrl) {
             .then(data => {
               console.log("✅ split 버튼 클릭 후 AJAX 응답:", data);
 
-              // ✅ 멤버 hidden input들 업데이트
+              // ✅ split 전환 시 member-wrapper를 비워두기 (hidden input 제거)
               const memberWrapper = document.getElementById("member-wrapper");
               if (memberWrapper) {
-                let html = "";
-                data.members.forEach(m => {
-                  html += `<input type="hidden" name="members" value="${m.id}">`;
-                });
-                memberWrapper.innerHTML = html;
+                memberWrapper.innerHTML = "";  // hidden input 안 넣음!
               } else {
                 console.warn("⚠️ member-wrapper div가 페이지에 없습니다.");
               }
@@ -48,7 +43,10 @@ export function setupCategoryButtons(ajaxBaseUrl) {
                 console.warn("⚠️ splitprice-formset-wrapper div가 페이지에 없습니다!");
               }
 
-              // ✅ AJAX로 split 멤버/가격 로드 후, form을 다시 제출
+              // ✅ split 카테고리 전환 시 selectedMemberIds를 빈 리스트로 초기화
+              window.selectedMemberIds = [];
+
+              // ✅ split 전환 후 form 자동 제출
               form.submit();
             })
             .catch(err => {

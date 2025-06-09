@@ -12,8 +12,8 @@
       <div class="flex items-center gap-2">
         {{ form.member }} {# hidden input: 멤버 ID #}
 
-        <!-- ✅ 멤버 이름 옆에 체크박스 -->
-        <input type="checkbox" name="members" value="{{ form.member.value }}" class="mr-2 member-checkbox">
+        <input type="checkbox" name="members" value="{{ form.member.value }}" class="mr-2 member-checkbox"
+          {% if form.member.value|stringformat:"s" in selected_member_ids|stringformat:"s" %}checked{% endif %}>
 
         <!-- 멤버 이름 -->
         <span class="w-32">{{ member_name }}</span>
