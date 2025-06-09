@@ -13,7 +13,8 @@
         <div class="swiper-wrapper" id="favoriteCarousel">
           {% for cafe in my_favorite_cafes %}
             <div class="swiper-slide" data-cafe-id="{{ cafe.id }}">
-              {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites show_status_badge=True %}
+              {# ✅ 찜한 카페용 오버레이 스타일 카드 사용 #}
+              {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='favorite' show_favorite_btn=True user_favorites=user_favorites show_status_badge=True %}
             </div>
           {% endfor %}
         </div>
@@ -21,7 +22,7 @@
       </div>
     </div>
   {% else %}
-<div class="text-center py-16">
+    <div class="text-center py-16">
       <div class="text-6xl mb-4">💔</div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
       <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
