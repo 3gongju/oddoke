@@ -85,46 +85,57 @@ function updateFavoritesSwiper() {
 
 <style>
 .favorites-swiper {
-    padding: 0 0 50px 0;
+  position: relative;        /* ::before 표시용 */
+  padding-bottom: 64px;      /* 페이지네이션 & 안내 문구 공간 확보 */
 }
+
 .favorites-swiper .swiper-slide {
-    width: 260px !important;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
+  width: 260px !important;   /* 카드 너비 고정 */
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 .favorites-swiper .swiper-slide:hover {
-    transform: translateY(-4px);
+  transform: translateY(-4px);
 }
+
+/* 페이지네이션: 중앙 아래 고정 */
 .favorites-pagination {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 20px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  z-index: 10;
 }
 .favorites-pagination .swiper-pagination-bullet {
-    width: 8px;
-    height: 8px;
-    background: #d1d5db;
-    opacity: 1;
-    transition: all 0.2s ease;
+  width: 8px;
+  height: 8px;
+  background: #d1d5db;
+  opacity: 1;
+  transition: all 0.2s ease;
 }
 .favorites-pagination .swiper-pagination-bullet-active {
-    background: #ec4899;
-    transform: scale(1.2);
+  background: #ec4899;
+  transform: scale(1.2);
 }
+
+/* 모바일에서 스와이프 안내 텍스트 */
 @media (max-width: 640px) {
-    .favorites-swiper::before {
-        content: '← 좌우로 스와이프하세요 →';
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 12px;
-        color: #9ca3af;
-        z-index: 10;
-    }
+  .favorites-swiper::before {
+    content: '← 좌우로 스와이프하세요 →';
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: #9ca3af;
+    z-index: 20;
+    white-space: nowrap;
+  }
 }
 </style>
