@@ -16,7 +16,7 @@
                     <!-- 디버깅 정보 -->
                     {% if debug_info %}
                     <div class="text-xs text-gray-500">
-                        (전체: {{ debug_info.total_queried }}개, 유효: {{ debug_info.total_valid }}개)
+                        (전체: {{ debug_info.total_queried }}개)
                     </div>
                     {% endif %}
                 </div>
@@ -112,14 +112,6 @@
 
 <!-- 카카오맵 스크립트 -->
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
-
-<!-- 디버깅 정보 출력 -->
-<script>
-console.log('=== 투어맵 디버깅 정보 ===');
-console.log('API 키:', '{{ kakao_api_key }}');
-console.log('총 카페 수:', {{ total_bday_cafes }});
-console.log('디버그 정보:', {{ debug_info|safe }});
-</script>
 
 <script>
 // 전역 변수
@@ -521,7 +513,7 @@ function showNearbyCafes(userLat, userLng) {
             distance: Math.round(distance),
             walkTime: Math.round(distance / 80) // 도보 시간 (평균 속도 80m/분)
         };
-    }).sort((a, b) => a.distance - b.distance); // 거리순 정렬
+    }).sort((a, b) => a.distance - b.distance); // 거리순
 
     if (nearby.length === 0) {
         list.innerHTML = '<div class="text-center text-gray-500 py-4"><p class="text-sm">주변 2km 이내에 운영중인 생카가 없습니다.</p></div>';

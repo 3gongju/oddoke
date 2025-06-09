@@ -78,10 +78,10 @@ class Command(BaseCommand):
         
         # 접속 정보 안내
         self.stdout.write("\n--- 로그인 정보 ---")
-        self.stdout.write(f"관리자: admin / admin1234")
-        self.stdout.write(f"일반 사용자: testuser / test1234")
-        self.stdout.write(f"아이돌 팬: btsfan / test1234")
-        self.stdout.write(f"판매자: seller / test1234")
+        self.stdout.write(f"관리자: admin@example.com / admin1234")
+        self.stdout.write(f"일반 사용자: test@example.com / test1234")
+        self.stdout.write(f"아이돌 팬: btsfan@example.com / test1234")
+        self.stdout.write(f"판매자: seller@example.com / test1234")
     
     def copy_default_image(self):
         """기본 이미지를 필요한 디렉토리로 복사"""

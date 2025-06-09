@@ -3,7 +3,6 @@ from django.conf import settings
 from artist.models import Artist, Member
 from PIL import Image
 import os
-import json
 
 class BdayCafe(models.Model):
     """생일카페 등록 모델"""
@@ -28,7 +27,7 @@ class BdayCafe(models.Model):
     member = models.ForeignKey(Member, on_delete=models.CASCADE, null=True, blank=True, verbose_name='멤버')
     cafe_type = models.CharField(max_length=20, choices=CAFE_TYPE_CHOICES, default='bday', verbose_name='카페 유형')
 
-    # 카페 정보 (간소화)
+    # 카페 정보
     cafe_name = models.CharField(max_length=100, verbose_name='카페명')
     place_name = models.CharField(max_length=100, blank=True, verbose_name='장소명')
     address = models.TextField(verbose_name='주소')
@@ -37,11 +36,6 @@ class BdayCafe(models.Model):
     kakao_place_id = models.CharField(max_length=50, blank=True, verbose_name='카카오 장소 ID')
     latitude = models.FloatField(verbose_name='위도')
     longitude = models.FloatField(verbose_name='경도')
-    
-    # 🔧 제거된 필드들:
-    # phone = models.CharField(max_length=20, blank=True, verbose_name='전화번호')  # 제거
-    # place_url = models.URLField(blank=True, verbose_name='카카오맵 URL')  # 제거
-    # category_name = models.CharField(max_length=100, blank=True, verbose_name='카테고리')  # 제거
 
     # 날짜 및 시간
     start_date = models.DateField(verbose_name='시작일')
@@ -58,9 +52,8 @@ class BdayCafe(models.Model):
     main_image = models.ImageField(upload_to='bday_cafes/main/', null=True, blank=True, verbose_name='메인 이미지 (구버전)')
     poster_image = models.ImageField(upload_to='bday_cafes/poster/', null=True, blank=True, verbose_name='포스터 이미지 (구버전)')
 
-    # 출처 (간소화)
+    # 출처
     x_source = models.URLField(blank=True, verbose_name='X 출처')
-    # instagram_source = models.URLField(blank=True, verbose_name='인스타 출처')  # 제거
 
     # 상태 정보
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='상태')
@@ -161,39 +154,26 @@ class BdayCafe(models.Model):
         
         return images_data
 
-    def get_kakao_map_data(self):
-        """카카오맵용 데이터 (간소화됨)"""
-        try:
-            # latitude, longitude 유효성 검사
-            lat = float(self.latitude) if self.latitude else None
-            lng = float(self.longitude) if self.longitude else None
-            
-            if lat is None or lng is None:
-                return None
-                
-            return {
-                'id': self.id,
-                'name': self.cafe_name,
-                'place_name': self.place_name or self.cafe_name,  # place_name 우선, 없으면 cafe_name
-                'artist': self.artist.display_name,
-                'member': self.member.member_name if self.member else None,
-                'latitude': lat,
-                'longitude': lng,
-                'address': self.address or '',
-                'road_address': self.road_address or '',
-                # 🔧 카카오맵 URL 동적 생성
-                'place_url': f'https://map.kakao.com/link/map/{self.cafe_name},{lat},{lng}',
-                'start_date': self.start_date.strftime('%Y-%m-%d'),
-                'end_date': self.end_date.strftime('%Y-%m-%d'),
-                'cafe_type': self.get_cafe_type_display(),
-                'special_benefits': self.special_benefits or '',
-                'days_remaining': self.days_remaining,
-                'main_image': self.get_main_image(),
-                'is_active': self.is_active,
-                'images': self.get_all_images(),
-            }
-        except (ValueError, AttributeError, TypeError) as e:
-            return None
+    @property
+    def special_benefits_list(self):
+        """특전 정보를 리스트로 반환"""
+        if not self.special_benefits:
+            return []
+        return [benefit.strip() for benefit in self.special_benefits.split(',') if benefit.strip()]
+
+    @property
+    def hashtags_list(self):
+        """해시태그를 리스트로 반환"""
+        if not self.hashtags:
+            return []
+        # 공백과 #으로 분할하여 정리
+        tags = []
+        for tag in self.hashtags.replace('#', ' ').split():
+            tag = tag.strip()
+            if tag:
+                tags.append(tag)
+        return tags
+
 
 class BdayCafeImage(models.Model):
     """생일카페 다중 이미지"""
@@ -233,41 +213,40 @@ class BdayCafeImage(models.Model):
         ]
     
     def save(self, *args, **kwargs):
-            # 대표 이미지가 설정되면 같은 카페의 다른 이미지들의 is_main을 False로 변경
-            if self.is_main:
-                BdayCafeImage.objects.filter(cafe=self.cafe, is_main=True).exclude(pk=self.pk).update(is_main=False)
-            
-            super().save(*args, **kwargs)
-            
-            # 이미지 최적화 및 메타데이터 저장
-            if self.image and hasattr(self.image, 'path') and os.path.exists(self.image.path):
-                try:
-                    with Image.open(self.image.path) as img:
+        # 대표 이미지가 설정되면 같은 카페의 다른 이미지들의 is_main을 False로 변경
+        if self.is_main:
+            BdayCafeImage.objects.filter(cafe=self.cafe, is_main=True).exclude(pk=self.pk).update(is_main=False)
+        
+        super().save(*args, **kwargs)
+        
+        # 이미지 최적화 및 메타데이터 저장
+        if self.image and hasattr(self.image, 'path') and os.path.exists(self.image.path):
+            try:
+                with Image.open(self.image.path) as img:
+                    self.width, self.height = img.size
+                    self.file_size = os.path.getsize(self.image.path)
+                    
+                    # 이미지 최적화 (너무 클 경우)
+                    max_size = (1920, 1920)
+                    if img.width > max_size[0] or img.height > max_size[1]:
+                        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+                        img.save(self.image.path, optimize=True, quality=85)
+                        
                         self.width, self.height = img.size
                         self.file_size = os.path.getsize(self.image.path)
-                        
-                        # 이미지 최적화 (너무 클 경우)
-                        max_size = (1920, 1920)
-                        if img.width > max_size[0] or img.height > max_size[1]:
-                            img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                            img.save(self.image.path, optimize=True, quality=85)
-                            
-                            self.width, self.height = img.size
-                            self.file_size = os.path.getsize(self.image.path)
-                    
-                    # 메타데이터 업데이트 (무한 루프 방지)
-                    if self.pk:
-                        BdayCafeImage.objects.filter(pk=self.pk).update(
-                            width=self.width,
-                            height=self.height,
-                            file_size=self.file_size
-                        )
-                except Exception as e:
-                    print(f"이미지 처리 중 오류: {e}")
-        
+                
+                # 메타데이터 업데이트 (무한 루프 방지)
+                if self.pk:
+                    BdayCafeImage.objects.filter(pk=self.pk).update(
+                        width=self.width,
+                        height=self.height,
+                        file_size=self.file_size
+                    )
+            except Exception as e:
+                print(f"이미지 처리 중 오류: {e}")
+    
     def __str__(self):
         return f"{self.cafe.cafe_name} - {self.get_image_type_display()}"
-    
     
     @property
     def thumbnail_url(self):
@@ -289,21 +268,11 @@ class BdayCafeImage(models.Model):
             'file_size': self.file_size,
         }
 
-    class Meta:
-        ordering = ['order', 'created_at']
-        verbose_name = '생카 이미지'
-        verbose_name_plural = '생카 이미지들'
-        indexes = [
-            models.Index(fields=['cafe', 'is_main']),
-            models.Index(fields=['cafe', 'order']),
-        ]
-        
-
 
 class CafeFavorite(models.Model):
     """카페 즐겨찾기"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, related_name='favoritecafes')  # related_name
+    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, related_name='favoritecafes')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -312,14 +281,6 @@ class CafeFavorite(models.Model):
 
 
 
-class UserSearchHistory(models.Model):
-    """사용자 검색 기록"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    search_query = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = '검색 기록'
 
 class TourPlan(models.Model):
     """투어 계획"""
@@ -337,6 +298,7 @@ class TourPlan(models.Model):
         verbose_name = '투어 계획'
         verbose_name_plural = '투어 계획들'
         ordering = ['-updated_at']
+
 
 class TourStop(models.Model):
     """투어 정거장"""

@@ -1,20 +1,16 @@
-{% extends "base.html" %}
+{% extends "ddoksang/base/ddoksang_base.html" %}
+
 {% load static %}
 {% load filters %}
 {% load member_images %}
 
 {% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
 
-{% block body %}
-<!-- JSON 데이터 (JavaScript에서 사용) -->
-{% csrf_token %}
-<!-- JSON 데이터 (JavaScript에서 사용) -->
-{{ cafes_json|json_script:"cafes-data" }}
+{% block ddoksang_content %}
 
-<!-- ✅ 사용자 찜 목록 데이터 추가 -->
-<script id="user-favorites-data" type="application/json">
-{{ user_favorites|safe }}
-</script>
+<!-- JSON 데이터 전달 (json_script 사용) -->
+{% csrf_token %}
+{{ cafes_json|json_script:"cafes-data" }}
 
 <!-- 위치 동의 모달 -->
 <div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
@@ -46,10 +42,32 @@
     </div>
 </div>
 
+<!-- 카페 정보 모달 -->
+<div id="cafeInfoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="closeCafeInfoModal(event)">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto transform transition-all duration-300 scale-95" onclick="event.stopPropagation()" id="cafeInfoContent">
+        <!-- 모달 헤더 -->
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl z-10">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900" id="modalCafeTitle">카페 정보</h3>
+                <button onclick="closeCafeInfoModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 모달 콘텐츠 -->
+        <div class="p-6" id="modalCafeContent">
+            <!-- 카페 정보가 여기에 동적으로 삽입됩니다 -->
+        </div>
+    </div>
+</div>
+
 <!-- 상단 검색 헤더 -->
 <section class="bg-gray-100 border-b border-gray-200 py-4 sm:py-6">
   <div class="max-w-7xl mx-auto px-4 space-y-4 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:space-x-4">
-    
+
     <!-- 🔍 검색창 -->
     <div class="w-full sm:flex-1 relative">
       <form method="get" action="{% url 'ddoksang:search' %}">
@@ -62,7 +80,7 @@
           </svg>
         </button>
       </form>
-      
+
       <!-- 자동완성 드롭다운 -->
       <ul id="ddok-autocomplete-list" 
           class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-48 overflow-y-auto z-50 mt-1">
@@ -79,23 +97,23 @@
   </div>
 </section>
 
-<!-- 메인 컨텐츠 -->
-<div class="max-w-7xl mx-auto">
-
-<!-- 🗺️ 카카오맵 섹션 -->
-  <section class="py-4 sm:py-8 px-4">
+<!-- 🗺️ 메인 지도 섹션 with 사이드바 -->
+<section class="py-4 sm:py-8 px-4">
+  <div class="max-w-7xl mx-auto">
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
-      <div class="p-4 sm:p-6 bg-gray-50 border-b">
+      
+      <!-- 헤더 -->
+      <div class="p-14 sm:p-6 bg-gray-50 border-b">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
               <span class="text-2xl sm:text-3xl mr-2 sm:mr-3">🗺️</span>
-              <span>전국 생일카페 지도</span>
+              <span>생카 지도</span>
             </h2>
             <div class="flex items-center mt-2">
               <span class="text-xs sm:text-sm bg-gray-200 text-gray-800 px-2 sm:px-3 py-1 rounded-full" id="cafeCountDisplay">{{ total_cafes }}개 운영중</span>
             </div>
-            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">마커를 클릭하면 생일카페 정보를 확인할 수 있어요!</p>
+            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">투어맵을 통해 더 자세한 카페 위치 정보를 확인하세요!</p>
           </div>
           
           <!-- 지도 컨트롤 버튼들 -->
@@ -123,79 +141,39 @@
           </div>
         </div>
       </div>
-      
-      <!-- 지도 컨테이너 -->
-      <div class="relative">
-        <div id="mapContainer" class="w-full h-[300px] sm:h-[400px] lg:h-[500px] bg-gray-100"></div>
+ 
+      <!-- 지도 + 사이드바 컨테이너 -->
+      <div class="flex flex-col lg:flex-row relative">
         
-        <!-- 지도 로딩 상태 -->
-        <div id="mapLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
-            <div class="text-center">
-                <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-gray-800 mx-auto mb-2 sm:mb-4"></div>
-                <p class="text-gray-600 text-sm sm:text-base">생일카페 지도를 불러오는 중...</p>
-            </div>
-        </div>
+        {% include 'ddoksang/components/_floating_card_list.html' %}
 
-        <!-- 범례 -->
-        <div class="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white rounded-lg shadow-lg p-2 sm:p-4 space-y-1 sm:space-y-3">
-            <h3 class="text-xs sm:text-sm font-semibold text-gray-800">범례</h3>
-            <div class="space-y-1 sm:space-y-2">
-                <div class="flex items-center space-x-1 sm:space-x-2">
-                    <div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-                    <span class="text-xs sm:text-sm text-gray-600">생일카페</span>
-                </div>
-                <div class="flex items-center space-x-1 sm:space-x-2">
-                    <div class="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full"></div>
-                    <span class="text-xs sm:text-sm text-gray-600">내 위치</span>
-                </div>
-                <div class="flex items-center space-x-1 sm:space-x-2">
-                    <div class="w-4 h-4 sm:w-6 sm:h-6 bg-gray-600 rounded-full flex items-center justify-center text-xs text-white font-bold">5</div>
-                    <span class="text-xs sm:text-sm text-gray-600">클러스터</span>
-                </div>
-            </div>
-        </div>
+       
+        <!-- 지도 컨테이너 (오른쪽) -->
+        <div class="flex-1 relative">
+          <div id="mapContainer" class="w-full h-[900px] lg:h-[600px] bg-gray-100"></div>
+          
+          <!-- 지도 로딩 상태 -->
+          <div id="mapLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
+              <div class="text-center">
+                  <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-gray-800 mx-auto mb-2 sm:mb-4"></div>
+                  <p class="text-gray-600 text-sm sm:text-base">생일카페 지도를 불러오는 중...</p>
+              </div>
+          </div>
 
-        <!-- 내 주변 카페 패널 -->
-        <div id="nearbyPanel" class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 bg-white rounded-lg shadow-lg p-3 sm:p-4 max-w-[250px] sm:max-w-sm hidden z-10">
-            <div class="flex items-center justify-between mb-2 sm:mb-3">
-                <h3 class="font-semibold text-gray-800 mb-2 sm:mb-3 text-sm sm:text-base">📍 내 주변 생카</h3>
-                <button id="closeNearbyPanel" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div id="nearbyList" class="space-y-2 max-h-40 sm:max-h-60 overflow-y-auto">
-                <!-- 주변 카페 목록이 여기에 표시됩니다 -->
-            </div>
+
+          <!-- 내 주변 카페 패널 -->
+        
+             
+          </div>
         </div>
       </div>
     </div>
-  </section>
-
-  <!-- 카페 정보 모달 -->
-  <div id="cafeModal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden">
-      <div class="flex items-center justify-center min-h-screen p-4">
-          <div class="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
-              <div class="p-4 sm:p-6">
-                  <div class="flex justify-between items-start mb-4">
-                      <h3 id="cafeModalTitle" class="text-lg sm:text-xl font-bold text-gray-900 pr-4"></h3>
-                      <button id="closeCafeModal" class="text-gray-400 hover:text-gray-600 flex-shrink-0">
-                          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                          </svg>
-                      </button>
-                  </div>
-                  <div id="cafeModalContent">
-                      <!-- 카페 상세 정보가 여기에 표시됩니다 -->
-                  </div>
-              </div>
-          </div>
-      </div>
   </div>
+</section>
+<!-- 🎂 이번 주 생일 아티스트 섹션 -->
+<section class="py-8 sm:py-12 px-4">
+  <div class="max-w-7xl mx-auto"> <!-- ✅ 너비 통일 -->
 
-  <!-- 🎂 이번 주 생일 아티스트 섹션 -->
-  <section class="py-8 sm:py-12 px-4">
     <div class="text-center mb-8 sm:mb-10">
       <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🎂 이번 주 생일덕</h2>
       <p class="text-gray-600 text-sm sm:text-base">이번주 생일 아티스트를 추천해드립니다.</p>
@@ -209,8 +187,8 @@
               <div class="flex-shrink-0 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 px-2">
                 <div class="{% if artist.is_today_birthday %}bg-red-50{% else %}bg-white{% endif %} rounded-lg p-4 text-center cursor-pointer"
                      onclick="searchArtist('{{ artist.member_name }}')">
-                  
-                  <!-- 상단 영역: 라벨 또는 여백 -->
+
+                  <!-- 상단 라벨 -->
                   <div class="flex justify-center h-6 mb-3">
                     {% if artist.is_today_birthday %}
                       <div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold h-fit">
@@ -218,17 +196,17 @@
                       </div>
                     {% endif %}
                   </div>
-                  
-                  <!-- 중앙 영역: 프로필 이미지 -->
+
+                  <!-- 프로필 이미지 -->
                   <div class="flex justify-center mb-3">
-                      <img src="{% member_image artist.member_name artist.artist_display_name %}" 
-                          alt="{{ artist.member_name }}" 
-                          class="w-14 h-14 rounded-full object-cover border-2 border-white">
+                    <img src="{% member_image artist.member_name artist.artist_display_name %}"
+                         alt="{{ artist.member_name }}"
+                         class="w-24 h-24 rounded-full object-cover border-2 border-white">
                   </div>
 
-                  <!-- 하단 영역: 텍스트 정보 -->
+                  <!-- 텍스트 정보 -->
                   <div class="flex-1 flex flex-col justify-center pb-2">
-                    <h3 class="font-semibold text-sm {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-800{% endif %} mb-2 truncate leading-tight">
+                    <h3 class="font-semibold text-m {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-800{% endif %} mb-2 truncate leading-tight">
                       {{ artist.member_name }}
                     </h3>
                     {% if artist.artist_name %}
@@ -243,25 +221,28 @@
             {% endfor %}
           </div>
         </div>
-        
-        <!-- 네비게이션 버튼들 -->
-        <button id="birthdayPrevBtn" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+
+        <!-- 네비게이션 버튼 -->
+        <button id="birthdayPrevBtn"
+                class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
-        
-        <button id="birthdayNextBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+
+        <button id="birthdayNextBtn"
+                class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full p-2 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
           <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
         </button>
-        
+
         <!-- 페이지 인디케이터 -->
         <div class="flex justify-center mt-8 space-x-2" id="birthdayIndicators">
-          <!-- JavaScript로 동적 생성 -->
+          <!-- JS로 생성 -->
         </div>
       </div>
+
     {% else %}
       <div class="text-center py-8 sm:py-12">
         <div class="text-4xl sm:text-6xl mb-4">🎭</div>
@@ -269,15 +250,23 @@
         <p class="text-gray-400 text-sm mt-2">다음 주를 기대해주세요!</p>
       </div>
     {% endif %}
-  </section>
 
-  <!-- 찜한 카페 섹션 -->
-  {% include 'ddoksang/components/_favorites_section.html' %}
+  </div>
+</section>
 
-  <!-- 🆕 최신 등록된 생일카페 섹션 -->
-  <section class="py-4 sm:py-8 px-4">
+<!--  찜한 카페 섹션 -->
+<section class="py-4 sm:py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    {% include 'ddoksang/components/_favorites_section.html' %}
+  </div>
+</section>
+
+<!-- 최신 등록된 생일카페 섹션 -->
+<section class="py-4 sm:py-8 px-4">
+  <div class="max-w-7xl mx-auto"> <!-- ✅ 너비 통일 -->
+
     <div class="text-center mb-6 sm:mb-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🆕 NEW 최신 등록된 생카</h2>
+      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">NEW 최신 등록된 생카</h2>
       <p class="text-gray-600 text-sm sm:text-base">방금 등록된 따끈따끈한 생카를 확인해보세요!</p>
     </div>
 
@@ -289,21 +278,15 @@
               <div class="relative overflow-hidden">
                 <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
                      class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-300">
-                <!-- NEW 배지 -->
                 <div class="absolute top-3 left-3">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">
-                    NEW
-                  </span>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">NEW</span>
                 </div>
               </div>
             {% else %}
               <div class="w-full h-48 bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center relative">
                 <span class="text-white text-3xl sm:text-4xl">🏪</span>
-                <!-- NEW 배지 -->
                 <div class="absolute top-3 left-3">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">
-                    NEW
-                  </span>
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-400 text-gray-800">NEW</span>
                 </div>
               </div>
             {% endif %}
@@ -314,15 +297,13 @@
                   <span class="text-xs text-gray-500">{{ cafe.created_at|date:"m.d" }}</span>
                 </div>
 
-                <!-- 찜하기 버튼 -->
                 {% if user.is_authenticated and cafe.status == 'approved' %}
                   <button 
                     data-favorite-btn 
                     data-cafe-id="{{ cafe.id }}" 
                     class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none"
-                    style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
                     title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
-                  >
+                    style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
                     {% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}
                   </button>
                 {% endif %}
@@ -351,7 +332,7 @@
 
               <div class="flex items-center text-sm text-gray-600 mb-3">
                 <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
                 <span>{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
                 {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
@@ -382,9 +363,10 @@
         </a>
       </div>
     {% endif %}
-  </section>
 
-</div>
+  </div>
+</section>
+
 
 <!-- 📱 플로팅 액션 버튼 -->
 <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
@@ -396,40 +378,175 @@
   </a>
 </div>
 
-<!-- 카카오맵 및 스크립트 로드 -->
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ KAKAO_MAP_API_KEY }}&libraries=services,clusterer"></script>
+<!-- ✅ 카카오맵 및 스크립트 로드 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
+<script src="{% static 'js/autocomplete.js' %}"></script>
+<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
-<!-- 메인 JavaScript -->
+<!-- ✅ 카페 정보 모달 스크립트 -->
 <script>
-// 페이지 로드 시 초기화
-document.addEventListener('DOMContentLoaded', function() {
-    // 사용자 찜 목록 초기화
-    initUserFavorites();
+// 전역 변수로 현재 선택된 카페 정보 저장
+let currentSelectedCafe = null;
+
+
+// 카페 정보 모달 표시 함수
+function showCafeInfoModal(cafe) {
+    console.log('카페 정보 모달 표시:', cafe);
     
-    // 카페 데이터 로드
-    let cafesData = [];
-    try {
-        const rawData = `{{ bday_cafes_json|escapejs }}`;
-        if (rawData && rawData.trim() !== '[]' && rawData.trim() !== '') {
-            cafesData = JSON.parse(rawData);
-            console.log('생일카페 개수:', cafesData.length);
-        }
-    } catch (error) {
-        console.error('생일카페 데이터 파싱 오류:', error);
-        cafesData = [];
+    currentSelectedCafe = cafe;
+    const modal = document.getElementById('cafeInfoModal');
+    const title = document.getElementById('modalCafeTitle');
+    const content = document.getElementById('modalCafeContent');
+    
+    if (!modal || !title || !content) {
+        console.error('모달 요소를 찾을 수 없습니다.');
+        return;
     }
     
-    window.cafesData = cafesData;
+    // 카페 정보 추출 (다양한 필드명 지원)
+    const cafeName = cafe.name || cafe.cafe_name || '생일카페';
+    const artistName = cafe.artist || cafe.artist_name || '';
+    const memberName = cafe.member || cafe.member_name || '';
+    const address = cafe.address || '주소 정보 없음';
+    const mainImage = cafe.main_image || cafe.image;
+    const startDate = cafe.start_date || '';
+    const endDate = cafe.end_date || '';
+    const specialBenefits = cafe.special_benefits || '';
+    const eventDescription = cafe.event_description || '';
+    const cafeId = cafe.id || cafe.pk;
+    const isActive = cafe.is_active || false;
+    const daysRemaining = cafe.days_remaining || 0;
     
-    // 위치 권한 확인 후 지도 초기화
-    checkLocationPermissionAndInit();
+    // 운영 상태 계산
+    let statusBadge = '';
+    if (isActive) {
+        statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✨ 운영중</span>';
+    } else if (daysRemaining > 0) {
+        statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">🔜 예정</span>';
+    } else {
+        statusBadge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">✅ 종료</span>';
+    }
     
-    // 이벤트 리스너 설정
-    setupEventListeners();
+    // 제목 설정
+    title.textContent = cafeName;
     
-    // UI 컴포넌트 초기화
-    initBirthdayNavigation();
+    // 콘텐츠 생성
+    content.innerHTML = `
+        <div class="space-y-4">
+            <!-- 메인 이미지 -->
+            ${mainImage ? `
+                <div class="relative overflow-hidden rounded-lg">
+                    <img src="${mainImage}" alt="${cafeName}" class="w-full h-48 object-cover">
+                    <div class="absolute top-3 left-3">
+                        ${statusBadge}
+                    </div>
+                </div>
+            ` : `
+                <div class="w-full h-48 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center relative">
+                    <span class="text-pink-400 text-6xl">🎂</span>
+                    <div class="absolute top-3 left-3">
+                        ${statusBadge}
+                    </div>
+                </div>
+            `}
+
+            <!-- 기본 정보 -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <h4 class="font-bold text-lg text-gray-900 mb-1">${cafeName}</h4>
+                        <p class="text-gray-600">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
+                    </div>
+                </div>
+                
+                <!-- 운영 기간 -->
+                ${startDate && endDate ? `
+                <div class="flex items-center text-sm text-gray-600 mb-2">
+                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="font-medium">${startDate} ~ ${endDate}</span>
+                    ${daysRemaining > 0 && daysRemaining <= 7 ? `<span class="ml-2 text-red-600 font-medium text-xs">${daysRemaining}일 남음</span>` : ''}
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- 위치 정보 -->
+            <div class="border border-gray-200 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-800 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    위치
+                </h5>
+                <p class="text-gray-600 text-sm leading-relaxed">${address}</p>
+            </div>
+
+            <!-- 특전 정보 -->
+            ${specialBenefits ? `
+            <div class="border border-gray-200 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-800 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                    </svg>
+                    특전 정보
+                </h5>
+                <div class="bg-yellow-50 p-3 rounded-lg">
+                    <p class="text-gray-700 text-sm leading-relaxed">${specialBenefits}</p>
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- 이벤트 설명 -->
+            ${eventDescription ? `
+            <div class="border border-gray-200 rounded-lg p-4">
+                <h5 class="font-semibold text-gray-800 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    이벤트 설명
+                </h5>
+                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">${eventDescription}</p>
+            </div>
+            ` : ''}
+
+            <!-- 액션 버튼들 -->
+            <div class="flex space-x-2 pt-4 border-t border-gray-200">
+                ${cafeId ? `
+                <a href="/ddoksang/cafe/${cafeId}/" 
+                   class="flex-1 bg-gray-900 text-white py-3 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium">
+                    자세히 보기
+                </a>
+                ` : ''}
+                <button onclick="moveToLocationAndClose(${cafe.latitude || cafe.lat}, ${cafe.longitude || cafe.lng})" 
+                        class="px-4 py-3 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    </svg>
+                    위치 보기
+                </button>
+            </div>
+        </div>
+    `;
     
+    // 모달 표시
+    modal.classList.remove('hidden');
+    
+    // 애니메이션 효과
+    setTimeout(() => {
+        const modalContent = document.getElementById('cafeInfoContent');
+        if (modalContent) {
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+        }
+    }, 10);
+}
+
+
+
+// 기타 기능 초기화
+function initializeOtherFeatures() {
     // 자동완성 초기화
     if (typeof initAutocomplete === 'function') {
         try {
@@ -439,600 +556,782 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitOnSelect: true,
                 artistOnly: false
             });
+            console.log('✅ 자동완성 초기화 완료');
         } catch (error) {
-            console.error('자동완성 초기화 실패:', error);
+            console.error('❌ 자동완성 초기화 실패:', error);
         }
     }
     
-    // 찜하기 콜백 등록
-    if (window.favoriteManager) {
-        window.favoriteManager.onFavoriteChange((cafeId, isFavorited) => {
-            console.log(`카페 ${cafeId} 찜하기 상태 변경: ${isFavorited}`);
-        });
-    }
-});
-
-// 사용자 찜 목록 초기화
-function initUserFavorites() {
-    const userFavoritesScript = document.getElementById('user-favorites-data');
-    if (userFavoritesScript && window.favoriteManager) {
+    // 생일 슬라이더 초기화
+    if (typeof initBirthdayNavigation === 'function') {
         try {
-            const userFavorites = JSON.parse(userFavoritesScript.textContent);
-            
-            if (Array.isArray(userFavorites)) {
-                userFavorites.forEach(cafeId => {
-                    window.favoriteManager.setFavoriteState(cafeId.toString(), true);
-                });
-            } else if (userFavorites && typeof userFavorites === 'object') {
-                Object.keys(userFavorites).forEach(cafeId => {
-                    window.favoriteManager.setFavoriteState(cafeId, true);
-                });
-            }
-            
-            console.log('사용자 찜 목록 초기화 완료:', userFavorites);
-        } catch (e) {
-            console.error('사용자 찜 목록 파싱 오류:', e);
+            initBirthdayNavigation();
+            console.log('✅ 생일 슬라이더 초기화 완료');
+        } catch (error) {
+            console.error('❌ 생일 슬라이더 초기화 실패:', error);
         }
     }
 }
 
-// 위치 권한 확인 후 초기화
-async function checkLocationPermissionAndInit() {
-    try {
-        if ('permissions' in navigator) {
-            const result = await navigator.permissions.query({ name: 'geolocation' });
-            
-            switch (result.state) {
-                case 'granted':
-                    requestUserLocationSilently();
-                    break;
-                case 'denied':
-                    initMapWithDefaultLocation();
-                    break;
-                case 'prompt':
-                default:
-                    initMapWithDefaultLocation();
-                    break;
-            }
-        } else {
-            initMapWithDefaultLocation();
-        }
-        
-        hideLocationModal();
-        
-    } catch (error) {
-        console.error('위치 권한 확인 오류:', error);
-        initMapWithDefaultLocation();
-        hideLocationModal();
-    }
-}
 
-function requestUserLocationSilently() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                initMap({ lat: userLat, lng: userLng });
-            },
-            (error) => {
-                console.warn('위치 정보 가져오기 실패:', error);
-                initMapWithDefaultLocation();
-            },
-            { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
-        );
-    } else {
-        initMapWithDefaultLocation();
-    }
-}
 
-function initMapWithDefaultLocation() {
-    initMap();
-}
 
-function hideLocationModal() {
-    const modal = document.getElementById('locationModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-function setupEventListeners() {
-    const myLocationBtn = document.getElementById('myLocationBtn');
-    const clusterToggle = document.getElementById('clusterToggle');
-    const closeCafeModal = document.getElementById('closeCafeModal');
-    const closeNearbyPanel = document.getElementById('closeNearbyPanel');
-    
-    if (myLocationBtn) {
-        myLocationBtn.addEventListener('click', handleMyLocationClick);
-    }
-    
-    if (clusterToggle) {
-        clusterToggle.addEventListener('click', toggleClustering);
-    }
-    
-    if (closeCafeModal) {
-        closeCafeModal.addEventListener('click', closeCafeModalHandler);
-    }
-    
-    if (closeNearbyPanel) {
-        closeNearbyPanel.addEventListener('click', () => {
-            document.getElementById('nearbyPanel').classList.add('hidden');
-        });
-    }
-    
-    const cafeModal = document.getElementById('cafeModal');
-    if (cafeModal) {
-        cafeModal.addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) {
-                closeCafeModalHandler();
-            }
-        });
-    }
-}
-
-// 지도 초기화
-function initMap(userLocation = null) {
-    if (typeof kakao === 'undefined' || !kakao.maps) {
-        console.error('카카오맵 API가 로드되지 않았습니다');
+// 카페 정보 모달 닫기
+function closeCafeInfoModal(event) {
+    // 오버레이 클릭이나 닫기 버튼 클릭 시에만 닫기
+    if (event && event.target !== event.currentTarget && !event.target.closest('[onclick="closeCafeInfoModal()"]')) {
         return;
     }
     
-    window.map = null;
-    window.clusterer = null;
-    window.markers = [];
-    window.userLocationMarker = null;
-    window.isClusteringEnabled = true;
+    const modal = document.getElementById('cafeInfoModal');
+    const modalContent = document.getElementById('cafeInfoContent');
     
-    if (userLocation && userLocation.lat && userLocation.lng) {
-        initTourMapDirect(userLocation.lat, userLocation.lng);
-        setTimeout(() => {
-            addUserLocationMarker(userLocation.lat, userLocation.lng);
-        }, 1000);
-    } else {
-        initTourMapDirect();
+    if (modalContent) {
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+    }
+    
+    setTimeout(() => {
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }, 200);
+    
+    currentSelectedCafe = null;
+}
+
+// 위치로 이동하고 모달 닫기
+function moveToLocationAndClose(lat, lng) {
+    if (typeof moveToLocationHome === 'function') {
+        moveToLocationHome(lat, lng);
+    } else if (typeof window.map !== 'undefined' && window.map) {
+        const position = new kakao.maps.LatLng(lat, lng);
+        window.map.setCenter(position);
+        window.map.setLevel(5);
+    }
+    closeCafeInfoModal();
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !document.getElementById('cafeInfoModal').classList.contains('hidden')) {
+        closeCafeInfoModal();
+    }
+});
+
+// 전역 함수로 노출 (다른 스크립트에서 사용할 수 있도록)
+window.showCafeInfoModal = showCafeInfoModal;
+window.closeCafeInfoModal = closeCafeInfoModal;
+window.moveToLocationAndClose = moveToLocationAndClose;
+</script>
+
+<!-- ✅ 수정된 메인 지도 스크립트 -->
+<script>
+
+console.log('🚀 홈페이지 지도 스크립트 v4 시작');
+
+// ✅ 전역 변수 선명하게 선언
+let homeMap = null;
+let homeClusterer = null; 
+let homeMarkers = [];
+let homeCafesData = [];
+let homeUserLocationMarker = null;
+
+// ✅ JSON 데이터 파싱 개선 함수
+function loadCafeDataSafely() {
+    console.log('📄 카페 데이터 로드 시작');
+    
+    try {
+        const cafesJsonElement = document.getElementById('cafes-data');
+        if (!cafesJsonElement) {
+            console.error('❌ cafes-data 엘리먼트를 찾을 수 없음');
+            return [];
+        }
+        
+        let rawData = cafesJsonElement.textContent;
+        if (!rawData || rawData.trim() === '') {
+            console.warn('⚠️ 카페 데이터가 비어있음');
+            return [];
+        }
+        
+        console.log('📊 Raw JSON 데이터 길이:', rawData.length);
+        console.log('📋 Raw 데이터 첫 100자:', rawData.substring(0, 100));
+        
+        // Django의 json_script는 때때로 이중 인코딩할 수 있음
+        let parsedData;
+        
+        // 먼저 문자열인지 확인
+        if (typeof rawData === 'string') {
+            // 따옴표로 시작하고 끝나는 경우 (이중 인코딩)
+            if (rawData.startsWith('"') && rawData.endsWith('"')) {
+                console.log('🔄 이중 인코딩 감지, 재파싱 시도');
+                rawData = JSON.parse(rawData); // 첫 번째 파싱
+            }
+            
+            // 두 번째 파싱 시도
+            if (typeof rawData === 'string') {
+                parsedData = JSON.parse(rawData);
+            } else {
+                parsedData = rawData;
+            }
+        } else {
+            parsedData = rawData;
+        }
+        
+        // 데이터 타입 검증
+        if (!Array.isArray(parsedData)) {
+            console.error('❌ 파싱된 데이터가 배열이 아님:', typeof parsedData);
+            console.log('📋 실제 데이터:', parsedData);
+            
+            // 객체인 경우 값들을 배열로 변환 시도
+            if (typeof parsedData === 'object' && parsedData !== null) {
+                if (parsedData.cafes && Array.isArray(parsedData.cafes)) {
+                    console.log('🔄 객체에서 cafes 배열 추출');
+                    parsedData = parsedData.cafes;
+                } else {
+                    const keys = Object.keys(parsedData);
+                    if (keys.length > 0) {
+                        console.log('🔄 객체를 배열로 변환 시도');
+                        parsedData = Object.values(parsedData);
+                    }
+                }
+            }
+            
+            // 여전히 배열이 아니면 빈 배열 반환
+            if (!Array.isArray(parsedData)) {
+                console.error('❌ 배열 변환 실패, 빈 배열 반환');
+                return [];
+            }
+        }
+        
+        console.log('✅ 카페 데이터 로드 성공:', parsedData.length, '개');
+        
+        if (parsedData.length > 0) {
+            console.log('📋 첫 번째 카페 예시:', parsedData[0]);
+            
+            // 필수 필드 확인
+            const firstCafe = parsedData[0];
+            const hasCoords = firstCafe.latitude && firstCafe.longitude;
+            const hasName = firstCafe.name || firstCafe.cafe_name;
+            console.log('🔍 첫 번째 카페 필드 체크:', { hasCoords, hasName });
+        }
+        
+        return parsedData;
+        
+    } catch (error) {
+        console.error('❌ 카페 데이터 파싱 실패:', error);
+        console.log('🔍 파싱 오류 상세 정보:', {
+            message: error.message,
+            stack: error.stack?.substring(0, 200)
+        });
+        return [];
     }
 }
 
-function initTourMapDirect(centerLat = 37.5665, centerLng = 126.9780) {
+// ✅ 카카오맵 초기화
+function initializeHomeMap() {
+    console.log('🗺️ 홈 지도 초기화 시작');
+    
+    if (typeof kakao === 'undefined' || !kakao.maps) {
+        console.error('❌ 카카오맵 API 로드 실패');
+        showMapError('카카오맵 API를 불러올 수 없습니다.');
+        return false;
+    }
+    
     try {
         const mapContainer = document.getElementById('mapContainer');
         if (!mapContainer) {
-            console.error('지도 컨테이너를 찾을 수 없습니다.');
-            return;
+            console.error('❌ mapContainer를 찾을 수 없음');
+            return false;
         }
-
+        
+        // 지도 생성
         const mapOption = {
-            center: new kakao.maps.LatLng(centerLat, centerLng),
+            center: new kakao.maps.LatLng(37.5665, 126.9780),
             level: window.innerWidth < 768 ? 9 : 8
         };
-
-        window.map = new kakao.maps.Map(mapContainer, mapOption);
-
+        
+        homeMap = new kakao.maps.Map(mapContainer, mapOption);
+        console.log('✅ 지도 생성 완료');
+        
+        // 클러스터러 생성
         if (typeof kakao.maps.MarkerClusterer !== 'undefined') {
-            window.clusterer = new kakao.maps.MarkerClusterer({
-                map: window.map,
+            homeClusterer = new kakao.maps.MarkerClusterer({
+                map: homeMap,
                 averageCenter: true,
-                minLevel: window.innerWidth < 768 ? 7 : 6,
-                disableClickZoom: true,
+                minLevel: 6,
+                disableClickZoom: false,
                 styles: [{
-                    width: window.innerWidth < 768 ? '32px' : '40px',
-                    height: window.innerWidth < 768 ? '32px' : '40px',
+                    width: '40px', height: '40px',
                     background: 'rgba(59, 130, 246, 0.8)',
-                    borderRadius: '50%',
-                    color: '#fff',
-                    textAlign: 'center',
-                    fontWeight: 'bold',
-                    fontSize: window.innerWidth < 768 ? '12px' : '14px',
-                    lineHeight: window.innerWidth < 768 ? '32px' : '40px'
+                    borderRadius: '50%', color: '#fff',
+                    textAlign: 'center', fontWeight: 'bold',
+                    fontSize: '14px', lineHeight: '40px'
                 }]
             });
-        }
-
-        setTimeout(() => {
-            const mapLoadingEl = document.getElementById('mapLoading');
-            if (mapLoadingEl) {
-                mapLoadingEl.style.display = 'none';
-            }
             
-            createTourMapMarkers();
-            window.map.relayout();
-        }, 500);
-
-    } catch (error) {
-        console.error('지도 초기화 중 오류 발생:', error);
-        const mapLoadingEl = document.getElementById('mapLoading');
-        if (mapLoadingEl) {
-            mapLoadingEl.innerHTML = `
-                <div class="text-center">
-                    <p class="text-red-600 text-sm">지도 초기화 실패</p>
-                    <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-gray-600 text-white rounded text-sm">새로고침</button>
-                </div>
-            `;
+            // 클러스터 클릭 이벤트
+            kakao.maps.event.addListener(homeClusterer, 'clusterclick', function(cluster) {
+                const level = homeMap.getLevel() - 2;
+                homeMap.setLevel(level, { anchor: cluster.getCenter() });
+            });
+            
+            console.log('✅ 클러스터러 생성 완료');
+        } else {
+            console.warn('⚠️ MarkerClusterer를 사용할 수 없음');
         }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ 지도 초기화 실패:', error);
+        showMapError('지도 초기화 중 오류가 발생했습니다.');
+        return false;
     }
 }
 
-function createTourMapMarkers() {
-    if (!window.map || !window.cafesData) return;
+// ✅ 커스텀 마커 이미지 생성
+function createCustomMarkerImage() {
+    const svgString = `
+        <svg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'>
+            <path d='M16 0C7.163 0 0 7.163 0 16s16 24 16 24 16-15.163 16-24S24.837 0 16 0z' fill='#ef4444'/>
+            <circle cx='16' cy='16' r='8' fill='white'/>
+            <text x='16' y='20' text-anchor='middle' font-family='Arial' font-size='12' font-weight='bold' fill='#ef4444'>🎂</text>
+        </svg>
+    `;
     
-    window.markers = [];
+    const imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+    const imageSize = new kakao.maps.Size(32, 40);
+    const imageOption = { offset: new kakao.maps.Point(16, 40) };
     
-    window.cafesData.forEach((cafe) => {
+    return new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+}
+
+// ✅ 마커 생성 함수 개선 - 클릭 이벤트 추가
+function createHomeMarkers() {
+    console.log('🏷️ 홈 마커 생성 시작');
+    
+    if (!homeMap) {
+        console.warn('⚠️ 지도가 초기화되지 않음');
+        return;
+    }
+    
+    if (!homeCafesData || homeCafesData.length === 0) {
+        console.warn('⚠️ 카페 데이터 없음');
+        updateCafeCount(0);
+        return;
+    }
+    
+    homeMarkers = [];
+    let successCount = 0;
+    let failCount = 0;
+    
+    console.log('📊 처리할 카페 수:', homeCafesData.length);
+    
+    homeCafesData.forEach((cafe, index) => {
         try {
-            if (!cafe.latitude || !cafe.longitude) return;
+            if (!cafe || typeof cafe !== 'object') {
+                console.warn(`⚠️ 카페 ${index}: 잘못된 객체`);
+                failCount++;
+                return;
+            }
             
-            const lat = parseFloat(cafe.latitude);
-            const lng = parseFloat(cafe.longitude);
+            // 다양한 필드명 지원
+            const cafeName = cafe.name || cafe.cafe_name || cafe.title || '생일카페';
+            const latitude = cafe.latitude || cafe.lat;
+            const longitude = cafe.longitude || cafe.lng || cafe.lon;
             
-            if (isNaN(lat) || isNaN(lng) || lat < 33 || lat > 43 || lng < 124 || lng > 132) return;
+            const lat = parseFloat(latitude);
+            const lng = parseFloat(longitude);
+            
+            if (isNaN(lat) || isNaN(lng)) {
+                console.warn(`⚠️ 카페 ${index}: 잘못된 좌표`, cafeName, {latitude, longitude});
+                failCount++;
+                return;
+            }
+            
+            // 한국 좌표 범위 확인
+            if (lat < 33 || lat > 43 || lng < 124 || lng > 132) {
+                console.warn(`⚠️ 카페 ${index}: 좌표 범위 초과 (${lat}, ${lng})`);
+                failCount++;
+                return;
+            }
             
             const position = new kakao.maps.LatLng(lat, lng);
-            
-            const svgString = `
-                <svg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'>
-                    <path d='M16 0C7.163 0 0 7.163 0 16s16 24 16 24 16-15.163 16-24S24.837 0 16 0z' fill='#ef4444'/>
-                    <circle cx='16' cy='16' r='8' fill='white'/>
-                    <text x='16' y='20' text-anchor='middle' font-family='Arial' font-size='12' font-weight='bold' fill='#ef4444'>🎂</text>
-                </svg>`;
-
-            const imageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-            const imageSize = new kakao.maps.Size(32, 40);
-            const imageOption = { offset: new kakao.maps.Point(16, 40) };
-            const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+            const markerImage = createCustomMarkerImage();
             
             const marker = new kakao.maps.Marker({
                 position: position,
                 image: markerImage,
-                title: cafe.name || cafe.cafe_name || '생일카페'
+                title: cafeName
             });
             
+            // ✅ 마커 클릭 이벤트 추가 - 카페 정보 모달 표시
             kakao.maps.event.addListener(marker, 'click', function() {
-                showCafeInfoModal(cafe);
+                console.log('🖱️ 마커 클릭:', cafeName);
+                
+                // 전역 함수 showCafeInfoModal 호출
+                if (typeof showCafeInfoModal === 'function') {
+                    showCafeInfoModal(cafe);
+                } else {
+                    console.error('showCafeInfoModal 함수를 찾을 수 없습니다.');
+                }
             });
             
-            window.markers.push(marker);
+            // ✅ 마커 호버 이벤트 추가 (선택사항)
+            kakao.maps.event.addListener(marker, 'mouseover', function() {
+                // 간단한 인포윈도우 표시
+                if (!marker.infoWindow) {
+                    marker.infoWindow = new kakao.maps.InfoWindow({
+                        content: `<div style="padding:8px;font-size:12px;white-space:nowrap;">
+                            <strong>${cafeName}</strong><br>
+                            <span style="color:#666;">${cafe.artist || ''}</span>
+                        </div>`,
+                        removable: false
+                    });
+                }
+                marker.infoWindow.open(homeMap, marker);
+            });
+            
+            kakao.maps.event.addListener(marker, 'mouseout', function() {
+                if (marker.infoWindow) {
+                    marker.infoWindow.close();
+                }
+            });
+            
+            homeMarkers.push(marker);
+            successCount++;
+            
+            // 처음 3개만 로그 출력
+            if (successCount <= 3) {
+                console.log(`✅ 마커 ${successCount}: ${cafeName} (${lat}, ${lng})`);
+            }
             
         } catch (error) {
-            console.error('마커 생성 오류:', error);
+            console.error(`❌ 마커 ${index} 생성 실패:`, error);
+            failCount++;
         }
     });
     
-    if (window.clusterer && window.markers.length > 0) {
-        if (window.isClusteringEnabled) {
-            window.clusterer.addMarkers(window.markers);
+    console.log(`📊 마커 생성 완료: 성공 ${successCount}개, 실패 ${failCount}개`);
+    
+    // 마커를 지도에 표시
+    if (homeMarkers.length > 0) {
+        if (homeClusterer) {
+            homeClusterer.addMarkers(homeMarkers);
+            console.log('✅ 클러스터러에 마커 추가');
         } else {
-            window.markers.forEach(marker => marker.setMap(window.map));
+            homeMarkers.forEach(marker => marker.setMap(homeMap));
+            console.log('✅ 개별 마커로 지도 표시');
         }
         
-        kakao.maps.event.addListener(window.clusterer, 'clusterclick', function(cluster) {
-            const level = window.map.getLevel() - 2;
-            window.map.setLevel(level, { anchor: cluster.getCenter() });
-        });
-    }
-}
-
-function showCafeInfoModal(cafe) {
-    const modal = document.getElementById('cafeModal');
-    const title = document.getElementById('cafeModalTitle');
-    const content = document.getElementById('cafeModalContent');
-    
-    const cafeName = cafe.name || cafe.cafe_name || '생일카페';
-    const artistName = cafe.artist || '아티스트';
-    const memberName = cafe.member || '';
-    const address = cafe.address || '주소 정보 없음';
-    const mainImage = cafe.main_image || '';
-    const startDate = cafe.start_date || '';
-    const endDate = cafe.end_date || '';
-    
-    title.textContent = cafeName;
-    
-    content.innerHTML = `
-        <div class="space-y-4">
-            <div class="flex items-start space-x-4">
-                ${mainImage ? `<img src="${mainImage}" alt="${cafeName}" class="w-20 h-20 object-cover rounded-lg">` : 
-                '<div class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center"><span class="text-gray-400">🎂</span></div>'}
-                <div class="flex-1">
-                    <h4 class="font-semibold text-lg">${cafeName}</h4>
-                    <p class="text-sm text-gray-600">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
-                    <p class="text-sm text-blue-600">${startDate} ~ ${endDate}</p>
-                </div>
-            </div>
-            
-            <div class="border-t pt-4">
-                <h5 class="font-medium mb-2">📍 위치</h5>
-                <p class="text-sm text-gray-600">${address}</p>
-            </div>
-            
-            <div class="border-t pt-4 flex space-x-2">
-                <a href="/ddoksang/cafe/${cafe.id}/" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-lg hover:bg-blue-700">
-                    자세히 보기
-                </a>
-                <button onclick="moveToLocation(${cafe.latitude}, ${cafe.longitude})" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                    위치로 이동
-                </button>
-            </div>
-        </div>
-    `;
-    
-    modal.classList.remove('hidden');
-}
-
-async function handleMyLocationClick() {
-    const btn = document.getElementById('myLocationBtn');
-    const originalContent = btn.innerHTML;
-    
-    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span class="hidden sm:inline">확인 중...</span>';
-    btn.disabled = true;
-    
-    try {
-        if ('permissions' in navigator) {
-            const result = await navigator.permissions.query({ name: 'geolocation' });
-            
-            if (result.state === 'granted') {
-                moveToMyLocation();
-            } else if (result.state === 'denied') {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-                alert('위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 권한을 허용해주세요.');
-                return;
-            } else {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-                if (confirm('위치 서비스를 사용하시겠습니까?\n주변 생일카페를 찾는데 도움이 됩니다.')) {
-                    moveToMyLocation();
-                }
-                return;
-            }
-        } else {
-            moveToMyLocation();
-        }
-    } catch (error) {
-        console.error('위치 권한 확인 오류:', error);
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
-        moveToMyLocation();
-    }
-}
-
-function moveToMyLocation() {
-    const btn = document.getElementById('myLocationBtn');
-    const originalContent = btn.innerHTML;
-    
-    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg><span class="hidden sm:inline">위치 찾는 중...</span>';
-    btn.disabled = true;
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                
-                if (window.map) {
-                    const moveLatLng = new kakao.maps.LatLng(lat, lng);
-                    window.map.setCenter(moveLatLng);
-                    window.map.setLevel(6);
-                    
-                    if (window.userLocationMarker) {
-                        window.userLocationMarker.setMap(null);
-                    }
-                    
-                    addUserLocationMarker(lat, lng);
-                    showNearbyCafes(lat, lng);
-                }
-                
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            },
-            (error) => {
-                console.error('위치 정보 가져오기 실패:', error);
-                alert('위치 정보를 가져올 수 없습니다.');
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }
-        );
+        // 첫 번째 마커 위치로 지도 중심 조정
+        const firstMarkerPosition = homeMarkers[0].getPosition();
+        homeMap.setCenter(firstMarkerPosition);
+        homeMap.setLevel(8);
+        
+        console.log('📍 지도 중심을 첫 번째 마커로 이동');
     } else {
-        alert('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
+        console.warn('⚠️ 생성된 마커가 없습니다');
+    }
+    
+    // 카페 수 업데이트
+    updateCafeCount(successCount);
+}
+
+// ✅ 카페 수 표시 업데이트
+function updateCafeCount(count) {
+    const countDisplay = document.getElementById('cafeCountDisplay');
+    if (countDisplay) {
+        countDisplay.textContent = `${count}개 운영중`;
     }
 }
 
-function addUserLocationMarker(lat, lng) {
-    if (!window.map) return;
-    
-    const position = new kakao.maps.LatLng(lat, lng);
-    const markerSize = 20;
-    const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="${markerSize}" height="${markerSize}" viewBox="0 0 ${markerSize} ${markerSize}">
-            <circle cx="${markerSize/2}" cy="${markerSize/2}" r="${markerSize*0.4}" fill="#3b82f6" stroke="white" stroke-width="2"/>
-            <circle cx="${markerSize/2}" cy="${markerSize/2}" r="${markerSize*0.15}" fill="white"/>
-        </svg>
-    `);
-
-    const imageSize = new kakao.maps.Size(markerSize, markerSize);
-    const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-
-    window.userLocationMarker = new kakao.maps.Marker({
-        map: window.map,
-        position: position,
-        image: markerImage,
-        title: "내 위치"
-    });
+// ✅ 위치 이동 함수 (이름 변경으로 충돌 방지)
+function moveToLocationHome(lat, lng) {
+    if (homeMap && lat && lng) {
+        const position = new kakao.maps.LatLng(lat, lng);
+        homeMap.setCenter(position);
+        homeMap.setLevel(5);
+    }
 }
 
-function showNearbyCafes(userLat, userLng) {
+// ✅ 사용자 위치 찾기
+function findUserLocationHome() {
+    if (!navigator.geolocation) {
+        alert('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const locPosition = new kakao.maps.LatLng(lat, lng);
+            
+            // 기존 사용자 위치 마커 제거
+            if (homeUserLocationMarker) {
+                homeUserLocationMarker.setMap(null);
+            }
+            
+            // 사용자 위치 마커 생성
+            const userMarkerSvg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
+                    <circle cx="10" cy="10" r="3" fill="white"/>
+                </svg>
+            `;
+            const userMarkerSrc = 'data:image/svg+xml;base64,' + btoa(userMarkerSvg);
+            const userMarkerImage = new kakao.maps.MarkerImage(userMarkerSrc, new kakao.maps.Size(20, 20));
+            
+            homeUserLocationMarker = new kakao.maps.Marker({
+                map: homeMap,
+                position: locPosition,
+                image: userMarkerImage,
+                title: '내 위치'
+            });
+            
+            // 지도 중심 이동
+            homeMap.setCenter(locPosition);
+            homeMap.setLevel(6);
+            
+            // 주변 카페 표시
+            showNearbyCafesHome(lat, lng);
+        },
+        (error) => {
+            console.error('위치 정보 오류:', error);
+            alert('위치 정보를 가져올 수 없습니다.');
+        }
+    );
+}
+
+// ✅ 주변 카페 표시
+function showNearbyCafesHome(userLat, userLng) {
     const panel = document.getElementById('nearbyPanel');
     const list = document.getElementById('nearbyList');
-    list.innerHTML = '';
-
+    
+    if (!panel || !list) return;
+    
     const userPosition = new kakao.maps.LatLng(userLat, userLng);
     
-    const nearby = window.cafesData.filter(cafe => {
-        if (!cafe.latitude || !cafe.longitude) return false;
+    // 주변 카페 찾기 (3km 이내)
+    const nearby = homeCafesData.filter(cafe => {
+        const lat = cafe.latitude || cafe.lat;
+        const lng = cafe.longitude || cafe.lng;
         
-        const cafePosition = new kakao.maps.LatLng(cafe.latitude, cafe.longitude);
+        if (!lat || !lng) return false;
+        
+        const cafePosition = new kakao.maps.LatLng(lat, lng);
         const distance = kakao.maps.services.Util.getDistance(userPosition, cafePosition);
-        return distance <= 2000;
+        return distance <= 3000; // 3km 이내
     }).map(cafe => {
-        const cafePosition = new kakao.maps.LatLng(cafe.latitude, cafe.longitude);
+        const lat = cafe.latitude || cafe.lat;
+        const lng = cafe.longitude || cafe.lng;
+        const cafePosition = new kakao.maps.LatLng(lat, lng);
         const distance = kakao.maps.services.Util.getDistance(userPosition, cafePosition);
+        
         return {
             ...cafe,
             distance: Math.round(distance),
-            walkTime: Math.round(distance / 80)
+            walkTime: Math.round(distance / 80) // 도보 시간
         };
     }).sort((a, b) => a.distance - b.distance);
-
+    
+    list.innerHTML = '';
+    
     if (nearby.length === 0) {
-        list.innerHTML = '<div class="text-center text-gray-500 py-4"><p class="text-sm">주변 2km 이내에 운영중인 생카가 없습니다.</p></div>';
+        list.innerHTML = '<div class="text-center text-gray-500 py-4"><p class="text-sm">주변 3km 이내에 운영중인 생카가 없습니다.</p></div>';
     } else {
-        nearby.forEach(cafe => {
-            const item = document.createElement('div');
-            item.className = 'border border-gray-200 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
-            
+        nearby.slice(0, 10).forEach(cafe => { // 최대 10개만 표시
             const cafeName = cafe.name || cafe.cafe_name || '생일카페';
             const artistName = cafe.artist || '';
             const memberName = cafe.member || '';
-            const address = cafe.address || '';
-            const mainImage = cafe.main_image || '';
+            const mainImage = cafe.main_image || cafe.image;
             
+            const item = document.createElement('div');
+            item.className = 'border border-gray-200 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
             item.innerHTML = `
                 <div class="flex items-start space-x-3">
-                    ${mainImage ? 
-                        `<img src="${mainImage}" alt="${cafeName}" class="w-12 h-12 object-cover rounded-lg flex-shrink-0">` :
-                        '<div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0"><span class="text-gray-400 text-sm">🎂</span></div>'
-                    }
+                    ${mainImage ? `
+                        <img src="${mainImage}" alt="${cafeName}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
+                    ` : `
+                        <div class="w-12 h-12 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-pink-400 text-xl">🎂</span>
+                        </div>
+                    `}
                     <div class="flex-1 min-w-0">
-                        <h4 class="font-medium text-sm text-gray-900 truncate">${cafeName}</h4>
-                        <p class="text-xs text-gray-600 truncate">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
-                        <p class="text-xs text-gray-500 truncate mt-1">${address}</p>
-                        <div class="flex items-center space-x-2 mt-2">
-                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${cafe.distance}m</span>
-                            <span class="text-xs text-gray-500">도보 ${cafe.walkTime}분</span>
+                        <h6 class="font-medium text-gray-900 text-sm truncate">${cafeName}</h6>
+                        <p class="text-xs text-gray-500 truncate">${artistName}${memberName ? ` - ${memberName}` : ''}</p>
+                        <div class="flex items-center text-xs text-gray-600 mt-1">
+                            <span class="mr-3">${cafe.distance}m</span>
+                            <span>도보 ${cafe.walkTime}분</span>
                         </div>
                     </div>
                 </div>
             `;
             
-            item.addEventListener('click', () => {
-                showCafeInfoModal(cafe);
-                moveToLocation(cafe.latitude, cafe.longitude);
-            });
+            item.onclick = () => {
+                const lat = cafe.latitude || cafe.lat;
+                const lng = cafe.longitude || cafe.lng;
+                moveToLocationHome(lat, lng);
+                
+                // 카페 정보 모달 표시
+                if (typeof showCafeInfoModal === 'function') {
+                    showCafeInfoModal(cafe);
+                }
+            };
             
             list.appendChild(item);
         });
     }
-
+    
     panel.classList.remove('hidden');
 }
 
-function moveToLocation(lat, lng) {
-    const movePosition = new kakao.maps.LatLng(lat, lng);
-    window.map.setCenter(movePosition);
-    window.map.setLevel(5);
-}
-
+// ✅ 클러스터링 토글
 function toggleClustering() {
-    const button = document.getElementById('clusterToggle');
-    if (!button || !window.clusterer || !window.markers) return;
+    const toggleBtn = document.getElementById('clusterToggle');
+    if (!toggleBtn || !homeClusterer) return;
     
-    if (window.isClusteringEnabled) {
-        window.clusterer.clear();
-        window.markers.forEach(marker => marker.setMap(window.map));
-        button.innerHTML = window.innerWidth < 768 ? '<span class="sm:hidden">개별표시</span><span class="hidden sm:inline">클러스터링 OFF</span>' : '클러스터링 OFF';
-        button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
-        button.classList.add('bg-red-600', 'hover:bg-red-700');
-        window.isClusteringEnabled = false;
+    const isClusteringOn = toggleBtn.textContent.includes('ON');
+    
+    if (isClusteringOn) {
+        // 클러스터링 끄기
+        homeClusterer.clear();
+        homeMarkers.forEach(marker => marker.setMap(homeMap));
+        toggleBtn.innerHTML = '<span class="hidden sm:inline">클러스터링 OFF</span><span class="sm:hidden">클러스터</span>';
     } else {
-        window.markers.forEach(marker => marker.setMap(null));
-        window.clusterer.addMarkers(window.markers);
-        button.innerHTML = window.innerWidth < 768 ? '<span class="sm:hidden">클러스터</span><span class="hidden sm:inline">클러스터링 ON</span>' : '클러스터링 ON';
-        button.classList.remove('bg-red-600', 'hover:bg-red-700');
-        button.classList.add('bg-gray-600', 'hover:bg-gray-700');
-        window.isClusteringEnabled = true;
+        // 클러스터링 켜기
+        homeMarkers.forEach(marker => marker.setMap(null));
+        homeClusterer.addMarkers(homeMarkers);
+        toggleBtn.innerHTML = '<span class="hidden sm:inline">클러스터링 ON</span><span class="sm:hidden">클러스터</span>';
     }
 }
 
-function closeCafeModalHandler() {
-    const modal = document.getElementById('cafeModal');
-    if (modal) {
-        modal.classList.add('hidden');
+// ✅ 지도 에러 표시
+function showMapError(message) {
+    const loadingDiv = document.getElementById('mapLoading');
+    if (loadingDiv) {
+        loadingDiv.innerHTML = `
+            <div class="text-center">
+                <div class="text-red-500 text-4xl mb-4">⚠️</div>
+                <p class="text-red-600 text-sm">${message}</p>
+                <button onclick="location.reload()" class="mt-3 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600">
+                    새로고침
+                </button>
+            </div>
+        `;
     }
 }
 
-function initBirthdayNavigation() {
+// ✅ 메인 초기화 함수
+function initializeHomePage() {
+    console.log('🏠 홈페이지 초기화 시작');
+    
+    // 데이터 로드
+    homeCafesData = loadCafeDataSafely();
+    
+    // 지도 초기화
+    if (initializeHomeMap()) {
+        console.log('🗺️ 지도 초기화 성공');
+        createHomeMarkers();
+        
+        // 로딩 상태 숨기기
+        setTimeout(() => {
+            const loadingDiv = document.getElementById('mapLoading');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
+        }, 1000);
+    } else {
+        console.error('❌ 지도 초기화 실패');
+    }
+    
+    // 이벤트 리스너 등록
+    setupEventListeners();
+}
+
+// ✅ 이벤트 리스너 설정
+function setupEventListeners() {
+    // 내 위치 버튼
+    const myLocationBtn = document.getElementById('myLocationBtn');
+    if (myLocationBtn) {
+        myLocationBtn.addEventListener('click', findUserLocationHome);
+    }
+    
+    // 클러스터링 토글 버튼
+    const clusterToggle = document.getElementById('clusterToggle');
+    if (clusterToggle) {
+        clusterToggle.addEventListener('click', toggleClustering);
+    }
+    
+    // 주변 카페 패널 닫기
+    const closeNearbyPanel = document.getElementById('closeNearbyPanel');
+    if (closeNearbyPanel) {
+        closeNearbyPanel.addEventListener('click', () => {
+            const panel = document.getElementById('nearbyPanel');
+            if (panel) {
+                panel.classList.add('hidden');
+            }
+        });
+    }
+    
+    console.log('✅ 이벤트 리스너 설정 완료');
+}
+
+// ✅ 페이지 로드 시 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM 로드 완료, 홈페이지 초기화 시작');
+
+   
+    // 위치 동의 모달 처리
+    const locationModal = document.getElementById('locationModal');
+    const allowLocationBtn = document.getElementById('allowLocationBtn');
+    const denyLocationBtn = document.getElementById('denyLocationBtn');
+    
+    if (locationModal && allowLocationBtn && denyLocationBtn) {
+        // 3초 후 모달 표시
+        setTimeout(() => {
+            locationModal.classList.remove('hidden');
+        }, 2000);
+        
+        allowLocationBtn.addEventListener('click', () => {
+            locationModal.classList.add('hidden');
+            setTimeout(() => {
+                findUserLocationHome();
+            }, 500);
+        });
+        
+        denyLocationBtn.addEventListener('click', () => {
+            locationModal.classList.add('hidden');
+        });
+    }
+    
+    // 지도 초기화 (약간의 지연을 두어 DOM이 완전히 준비되도록)
+    setTimeout(initializeHomePage, 500);
+});
+
+// ✅ 전역 함수로 노출
+window.moveToLocationHome = moveToLocationHome;
+window.findUserLocationHome = findUserLocationHome;
+window.showNearbyCafesHome = showNearbyCafesHome;
+window.toggleClustering = toggleClustering;
+
+console.log('🚀 홈페이지 스크립트 로드 완료');
+
+</script>
+
+<!-- ✅ 생일 아티스트 슬라이더 스크립트 -->
+<script>
+// 생일 아티스트 슬라이더 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initBirthdaySlider();
+});
+
+function initBirthdaySlider() {
     const slider = document.getElementById('birthdaySlider');
     const prevBtn = document.getElementById('birthdayPrevBtn');
     const nextBtn = document.getElementById('birthdayNextBtn');
-    const indicators = document.getElementById('birthdayIndicators');
+    const indicatorsContainer = document.getElementById('birthdayIndicators');
     
-    if (!slider || !prevBtn || !nextBtn) return;
+    if (!slider) return;
     
-    let currentSlide = 0;
     const slides = slider.children;
-    const totalSlides = slides.length;
+    let currentIndex = 0;
+    let itemsPerView = getItemsPerView();
+    const totalPages = Math.ceil(slides.length / itemsPerView);
     
-    if (totalSlides === 0) return;
+    // 반응형 아이템 수 계산
+    function getItemsPerView() {
+        if (window.innerWidth >= 1280) return 5; // xl
+        if (window.innerWidth >= 1024) return 4; // lg
+        if (window.innerWidth >= 768) return 3;  // md
+        if (window.innerWidth >= 640) return 2;  // sm
+        return 1; // 모바일
+    }
     
-    if (indicators && totalSlides > 1) {
-        for (let i = 0; i < totalSlides; i++) {
+    // 인디케이터 생성
+    function createIndicators() {
+        if (!indicatorsContainer) return;
+        
+        indicatorsContainer.innerHTML = '';
+        for (let i = 0; i < totalPages; i++) {
             const dot = document.createElement('button');
             dot.className = `w-2 h-2 rounded-full transition-colors ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`;
-            dot.addEventListener('click', () => goToSlide(i));
-            indicators.appendChild(dot);
+            dot.onclick = () => goToPage(i);
+            indicatorsContainer.appendChild(dot);
         }
     }
     
-    function updateSlider() {
-        const translateX = -currentSlide * 100;
+    // 페이지 이동
+    function goToPage(pageIndex) {
+        currentIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
+        const translateX = -(currentIndex * 100);
         slider.style.transform = `translateX(${translateX}%)`;
         
-        prevBtn.disabled = currentSlide === 0;
-        nextBtn.disabled = currentSlide === totalSlides - 1;
+        updateButtons();
+        updateIndicators();
+    }
+    
+    // 버튼 상태 업데이트
+    function updateButtons() {
+        if (prevBtn) {
+            prevBtn.disabled = currentIndex === 0;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = currentIndex >= totalPages - 1;
+        }
+    }
+    
+    // 인디케이터 상태 업데이트
+    function updateIndicators() {
+        if (!indicatorsContainer) return;
         
-        if (indicators) {
-            const dots = indicators.children;
-            for (let i = 0; i < dots.length; i++) {
-                dots[i].className = `w-2 h-2 rounded-full transition-colors ${i === currentSlide ? 'bg-gray-800' : 'bg-gray-300'}`;
+        const dots = indicatorsContainer.children;
+        for (let i = 0; i < dots.length; i++) {
+            dots[i].className = `w-2 h-2 rounded-full transition-colors ${
+                i === currentIndex ? 'bg-gray-800' : 'bg-gray-300'
+            }`;
+        }
+    }
+    
+    // 이벤트 리스너
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => goToPage(currentIndex - 1));
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => goToPage(currentIndex + 1));
+    }
+    
+    // 화면 크기 변경 시 재계산
+    window.addEventListener('resize', () => {
+        const newItemsPerView = getItemsPerView();
+        if (newItemsPerView !== itemsPerView) {
+            itemsPerView = newItemsPerView;
+            const newTotalPages = Math.ceil(slides.length / itemsPerView);
+            
+            if (newTotalPages !== totalPages) {
+                totalPages = newTotalPages;
+                createIndicators();
+                goToPage(0); // 첫 페이지로 리셋
             }
         }
-    }
-    
-    function goToSlide(index) {
-        currentSlide = Math.max(0, Math.min(index, totalSlides - 1));
-        updateSlider();
-    }
-    
-    prevBtn.addEventListener('click', () => {
-        if (currentSlide > 0) {
-            goToSlide(currentSlide - 1);
-        }
     });
     
-    nextBtn.addEventListener('click', () => {
-        if (currentSlide < totalSlides - 1) {
-            goToSlide(currentSlide + 1);
-        }
-    });
-    
-    updateSlider();
+    // 초기화
+    createIndicators();
+    updateButtons();
 }
 
-function searchArtist(artistName) {
-    const searchForm = document.querySelector('form[action*="search"]');
-    const searchInput = document.querySelector('#ddok-search');
-    
-    if (searchInput && searchForm) {
-        searchInput.value = artistName;
-        searchForm.submit();
+// 아티스트 검색 함수
+function searchArtist(memberName) {
+    const searchInput = document.getElementById('ddok-search');
+    if (searchInput) {
+        searchInput.value = memberName;
+        searchInput.form.submit();
     }
 }
 </script>
-
-<!-- 통합 찜하기 시스템 및 기타 스크립트 로드 -->
-<script src="{% static 'js/favorite.js' %}"></script>
-<script src="{% static 'js/autocomplete.js' %}"></script>
-<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
 {% endblock %}

@@ -1,5 +1,4 @@
 # 관리자 기능들
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -10,12 +9,10 @@ from django.conf import settings
 import logging
 
 from ..models import BdayCafe
+from ..utils.map_utils import get_map_context, get_nearby_cafes  # 유틸리티 사용
 from .decorators import admin_required
 
-
-
 logger = logging.getLogger(__name__)
-
 @admin_required
 def admin_dashboard(request):
     """관리자 대시보드"""
@@ -147,14 +144,33 @@ def admin_preview_cafe(request, cafe_id):
     """관리자 미리보기 (모든 카페, 상태 무관)"""
     cafe = get_object_or_404(BdayCafe, id=cafe_id)
     
+    # 주변 카페들 - 유틸리티 사용
+    nearby_cafes = []
+    if cafe.latitude and cafe.longitude:
+        try:
+            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
+            nearby_cafes = get_nearby_cafes(
+                user_lat=float(cafe.latitude), 
+                user_lng=float(cafe.longitude), 
+                cafes_queryset=approved_cafes,
+                radius_km=5, 
+                limit=5, 
+                exclude_id=cafe.id
+            )
+        except (ValueError, TypeError) as e:
+            logger.warning(f"주변 카페 조회 오류: {e}")
+    
+    # 지도 관련 컨텍스트 생성
+    map_context = get_map_context()
+    
     context = {
         'cafe': cafe,
         'is_favorited': False,
-        'nearby_cafes': [],
+        'nearby_cafes': nearby_cafes,
         'user_favorites': [],
-        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
         'is_preview': True,
         'can_edit': False,
         'preview_type': 'admin',
+        **map_context,  # 지도 관련 컨텍스트 병합
     }
     return render(request, 'ddoksang/detail.html', context)

@@ -154,6 +154,20 @@ MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'accounts.User'
 
+# 이메일 가입
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailBackend',  # 경로는 실제 코드 경로에 맞게!
+]
+
+# 메일 서버 설정
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 # TAILWIND_APP_NAME = 'theme'
 
 # 카카오맵 API 키 설정

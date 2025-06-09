@@ -1,6 +1,8 @@
+from django import forms
+from django.contrib.auth import authenticate
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User, MannerReview
-from django import forms
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -28,18 +30,55 @@ class CustomUserCreationForm(UserCreationForm):
         if password1 and password2 and password1 != password2:
             self.add_error('password2', "비밀번호가 일치하지 않습니다.")
 
-# 추가 로그인폼폼
-class CustomAuthenticationForm(AuthenticationForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_active = False  # 이메일 인증 전까지 비활성화
+        if commit:
+            user.save()
+        return user
+
+# 이메일 로그인폼
+class EmailAuthenticationForm(forms.Form):
+    email = forms.EmailField(
+        label="이메일",
+        widget=forms.EmailInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
-            'placeholder': '아이디 또는 이메일을 입력하세요'
+            'placeholder': '이메일을 입력하세요'
         })
-        self.fields['password'].widget.attrs.update({
+    )
+    password = forms.CharField(
+        label="비밀번호",
+        widget=forms.PasswordInput(attrs={
             'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
             'placeholder': '비밀번호를 입력하세요'
         })
+    )
+
+    def clean(self):
+        email = self.cleaned_data.get('email')
+        password = self.cleaned_data.get('password')
+
+        if email and password:
+            self.user = authenticate(email=email, password=password)
+            if self.user is None:
+                raise forms.ValidationError("이메일 또는 비밀번호가 올바르지 않습니다.")
+        return self.cleaned_data
+
+    def get_user(self):
+        return self.user
+
+# 추가 로그인폼
+# class CustomAuthenticationForm(AuthenticationForm):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.fields['username'].widget.attrs.update({
+#             'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+#             'placeholder': '아이디 또는 이메일을 입력하세요'
+#         })
+#         self.fields['password'].widget.attrs.update({
+#             'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+#             'placeholder': '비밀번호를 입력하세요'
+#         })
 
 class MannerReviewForm(forms.ModelForm):
     class Meta:

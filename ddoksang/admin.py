@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import BdayCafe, BdayCafeImage, CafeFavorite, TourPlan, TourStop, UserSearchHistory
+from .models import BdayCafe, BdayCafeImage, CafeFavorite, TourPlan, TourStop
 
 class BdayCafeImageInline(admin.TabularInline):
     """생일카페 이미지 인라인"""
@@ -193,14 +193,7 @@ class TourStopAdmin(admin.ModelAdmin):
     search_fields = ['plan__title', 'cafe__cafe_name']
     raw_id_fields = ['plan', 'cafe']
 
-@admin.register(UserSearchHistory)
-class UserSearchHistoryAdmin(admin.ModelAdmin):
-    # 실제 모델 필드와 일치하도록 수정 (search_type 제거)
-    list_display = ['user', 'search_query', 'created_at']
-    list_filter = ['created_at']
-    search_fields = ['search_query', 'user__username']
-    raw_id_fields = ['user']
-    readonly_fields = ['created_at']
+
 
 # Admin 사이트 커스터마이징
 admin.site.site_header = "최고 경영자 및 관리자"

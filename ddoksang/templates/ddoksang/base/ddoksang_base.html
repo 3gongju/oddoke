@@ -1,14 +1,23 @@
 {% extends "base.html" %}
-{% load static filters %}
+{% load static %}
+{% load filters %}
 
 {% block body %}
-  <!-- 덕생 헤더 컴포넌트 포함 (검색창 + 투어맵 버튼 등) -->
-  {% include "ddoksang/components/_ddoksang_header.html" %}
-
   <!-- 덕생 본문 콘텐츠 블록 -->
   <div class="max-w-6xl mx-auto px-4 py-10">
     {% block ddoksang_content %}
     <!-- 하위 템플릿에서 이 부분을 덮어씀 -->
     {% endblock %}
   </div>
+
+  <!-- ✅ Base 템플릿에 JavaScript 로드 (한 번만) -->
+  {% csrf_token %}
+  <script src="{% static 'js/favorite.js' %}"></script>
+  <script src="{% static 'js/autocomplete.js' %}"></script>
+  <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
+  <script src="{% static 'js/ddoksang_maps.js' %}"></script>  <!-- 새로 추가 -->
+  
+  {% block extra_js %}
+  <!-- 하위 템플릿에서 추가 스크립트 -->
+  {% endblock %}
 {% endblock %}
