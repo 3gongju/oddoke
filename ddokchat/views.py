@@ -23,10 +23,11 @@ def chat_room(request, room_id):
 
     # ✅ 구매자 리뷰 작성 여부 확인
     has_already_reviewed = False
-    if request.user == room.buyer and room.buyer_completed and room.seller_completed:
+    if request.user == room.buyer and room.is_fully_completed:
         has_already_reviewed = MannerReview.objects.filter(
             user=request.user,
-            target_user=room.seller
+            target_user=room.seller,
+            chatroom=room
         ).exists()
 
     # 내가 안 읽은 메시지 읽음 처리
@@ -41,7 +42,8 @@ def chat_room(request, room_id):
         'messages': messages,
         'user': request.user,
         'form': MannerReviewForm(),
-        'has_already_reviewed': str(has_already_reviewed),
+        'has_already_reviewed': has_already_reviewed,
+        'is_fully_completed': room.is_fully_completed,
     }
 
     return render(request, 'ddokchat/chat_room.html', context)

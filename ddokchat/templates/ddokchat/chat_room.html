@@ -276,18 +276,139 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* 리뷰 모달 스타일링 */
+#reviewModal {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#reviewModal::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* 폼 필드 스타일링 */
+#reviewModal form p {
+  margin-bottom: 1.5rem;
+}
+
+#reviewModal form label {
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+#reviewModal form select,
+#reviewModal form textarea,
+#reviewModal form input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+#reviewModal form select:focus,
+#reviewModal form textarea:focus,
+#reviewModal form input[type="text"]:focus {
+  outline: none;
+  border-color: #374151;
+  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+}
+
+#reviewModal form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* 라디오 버튼 스타일링 */
+#reviewModal form input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  accent-color: #000;
+}
+
+/* 체크박스 스타일링 */
+#reviewModal form input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  accent-color: #000;
+}
+
+/* 모달 애니메이션 */
+#reviewModal[open] {
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  #reviewModal {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+  
+  #reviewModal .p-6 {
+    padding: 1rem;
+  }
+  
+  #reviewModal .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
 </style>
 
-{% if user == room.buyer %}
-<dialog id="reviewModal" class="rounded-xl shadow-xl p-6 max-w-xl w-full">
-  <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="mt-4 flex justify-end space-x-3">
-      <button type="submit" class="bg-black text-white px-4 py-2 rounded-lg">리뷰 제출</button>
-      <button type="button" onclick="document.getElementById('reviewModal').close()" class="text-gray-500 px-4 py-2">취소</button>
+{% if user == room.buyer and not has_already_reviewed %}
+<dialog id="reviewModal" class="backdrop:bg-black backdrop:bg-opacity-50 bg-white rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 border-0">
+  <div class="bg-white rounded-2xl overflow-hidden">
+    <!-- 헤더 -->
+    <div class="bg-black text-white px-6 py-4">
+      <h2 class="text-xl font-bold">매너 리뷰 작성</h2>
+      <p class="text-gray-300 text-sm mt-1">거래 경험을 공유해주세요</p>
     </div>
-  </form>
+    
+    <!-- 폼 내용 -->
+    <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}" class="p-6">
+      {% csrf_token %}
+      <input type="hidden" name="chatroom_id" value="{{ room.id }}">
+      
+      <div class="space-y-6">
+        {{ form.as_p }}
+      </div>
+      
+      <!-- 버튼 영역 -->
+      <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
+        <button type="button" onclick="document.getElementById('reviewModal').close()" 
+                class="px-6 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+          취소
+        </button>
+        <button type="submit" 
+                class="px-6 py-2.5 bg-black text-white hover:bg-gray-800 rounded-lg transition-colors font-medium">
+          리뷰 제출
+        </button>
+      </div>
+    </form>
+  </div>
 </dialog>
 {% endif %}
 
@@ -621,7 +742,7 @@
     const confirmBtn = document.querySelector("#confirmBtn");
 
     // ✅ hasAlreadyReviewed 템플릿 값 가져오기
-    const hasAlreadyReviewed = "{{ has_already_reviewed }}" === "True";
+    const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
 
     if (confirmBtn) {
       confirmBtn.addEventListener("click", async function () {

@@ -31,6 +31,7 @@ class MannerReview(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='manner_reviews')
     target_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_received')
+    chatroom = models.ForeignKey('ddokchat.ChatRoom', on_delete=models.CASCADE, null=True, blank=True)
     rating = models.IntegerField(choices=RATING_CHOICES)
     punctuality = models.CharField(max_length=50)
     description_match = models.CharField(max_length=50)

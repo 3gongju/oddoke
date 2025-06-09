@@ -15,6 +15,7 @@ from PIL import Image, ExifTags
 from dotenv import load_dotenv
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
+from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
 from .models import User, MannerReview
 from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm
@@ -194,24 +195,43 @@ def follow_list(request, username):
 def review_home(request, username):
     user_profile = get_object_or_404(User, username=username)
 
-    # 리뷰 작성
     if request.method == 'POST':
         form = MannerReviewForm(request.POST)
         if form.is_valid():
             review = form.save(commit=False)
             review.user = request.user
             review.target_user = user_profile
-            review.save()
-            return redirect('accounts:review_home', username=username)
+
+            chatroom_id = request.POST.get('chatroom_id')
+            if chatroom_id:
+                try:
+                    chatroom = ChatRoom.objects.get(id=chatroom_id)
+                    # ✅ 중복 확인
+                    already_reviewed = MannerReview.objects.filter(
+                        user=request.user,
+                        target_user=user_profile,
+                        chatroom=chatroom
+                    ).exists()
+
+                    if already_reviewed:
+                        form.add_error(None, "이미 이 채팅방에 대한 리뷰를 작성하셨습니다.")
+                        # 아래 return 문으로 넘어감
+                    else:
+                        review.chatroom = chatroom
+                        review.save()
+                        return redirect('accounts:review_home', username=username)
+
+                except ChatRoom.DoesNotExist:
+                    form.add_error(None, "유효하지 않은 채팅방 정보입니다.")
+
     else:
         form = MannerReviewForm()
 
     reviews = MannerReview.objects.filter(target_user=user_profile).order_by('-created_at')
-
     return render(request, 'accounts/review_home.html', {
         'user_profile': user_profile,
         'form': form,
-        'reviews': reviews
+        'reviews': reviews,
     })
 
 @login_required
