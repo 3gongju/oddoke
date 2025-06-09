@@ -31,12 +31,12 @@ class MannerReview(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='manner_reviews')
     target_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_received')
-    rating = models.IntegerField(choices=RATING_CHOICES)
-    punctuality = models.CharField(max_length=50)
-    description_match = models.CharField(max_length=50)
-    response_speed = models.CharField(max_length=50)
-    politeness = models.CharField(max_length=50)
-    deal_again = models.CharField(max_length=10)
+    chatroom = models.ForeignKey('ddokchat.ChatRoom', on_delete=models.CASCADE, null=True, blank=True)
+    rating = models.IntegerField(choices=RATING_CHOICES, verbose_name="전반적인 거래 만족도")
+    description_match = models.CharField(max_length=50, verbose_name="상품 상태 일치 여부")
+    response_speed = models.CharField(max_length=50, verbose_name="응답 속도")
+    politeness = models.CharField(max_length=50, verbose_name="메시지 말투")
+    deal_again = models.CharField(max_length=10, verbose_name="재거래 의사")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

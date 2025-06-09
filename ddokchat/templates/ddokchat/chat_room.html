@@ -4,10 +4,10 @@
 <div class="max-w-4xl mx-auto px-4 py-0 bg-gray-50 min-h-screen">
   <div class="flex flex-col h-screen bg-gray-100 rounded-xl overflow-hidden shadow-sm">
     <!-- 채팅방 헤더 -->
-    <div class="bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
+    <div class="bg-gray-900 border-b border-gray-700 px-4 py-3 shadow-sm">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button onclick="history.back()" class="text-gray-600 hover:text-gray-800 transition-colors">
+          <button onclick="history.back()" class="text-gray-300 hover:text-white transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -26,8 +26,8 @@
             </div>
             
             <div>
-              <h2 class="font-semibold text-gray-900">{{ room.other_user.username }}</h2>
-              <p class="text-sm text-gray-500">{{ room.post.title|truncatechars:25 }}</p>
+              <h2 class="font-semibold text-white">{{ room.other_user.username }}</h2>
+              <p class="text-sm text-gray-300">{{ room.post.title|truncatechars:25 }}</p>
             </div>
           </div>
         </div>
@@ -40,10 +40,10 @@
             {% elif user == room.buyer and not room.buyer_completed %}
               <button id="completeTradeBtn" class="...">거래 완료</button>
             {% else %}
-              <span class="text-xs text-gray-500">상대방의 거래 완료를 기다리는 중입니다.</span>
+              <span class="text-xs text-white bg-gray-800 px-2 py-1 rounded">상대방의 거래 완료를 기다리는 중입니다.</span>
             {% endif %}
           </div>
-          <button class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
+          <button class="p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-full transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
             </svg>
@@ -53,7 +53,7 @@
     </div>
 
     <!-- 채팅 메시지 영역 -->
-    <div id="chat-log" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-blue-50 to-white">
+    <div id="chat-log" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
       {% for message in messages %}
         <div class="flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %} mb-3">
           <div class="max-w-xs">
@@ -66,7 +66,7 @@
             {% endif %}
             
             <!-- 💬 말풍선 (기존 메시지 + 이미지가 있을경우 추가)-->
-            <div class="{% if message.sender == user %}bg-blue-500 text-white{% else %}bg-gray-100 text-gray-800{% endif %} px-4 py-2 rounded-2xl shadow-sm">
+            <div class="{% if message.sender == user %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-4 py-2 rounded-2xl shadow-sm">
               {% if message.image %}
                 <img src="{{ message.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
               {% elif message.content %}
@@ -88,7 +88,7 @@
     </div>
 
     <!-- 메시지 입력 영역 -->
-    <div id="messageInputArea" class="bg-white border-t border-gray-200 px-4 py-3">
+    <div id="messageInputArea" class="bg-gray-50 border-t border-gray-300 px-4 py-3">
       {% if room.is_fully_completed %}
         <div class="text-center text-sm text-gray-500 py-4">
           ✅ 거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
@@ -96,7 +96,7 @@
       {% else %}
       <div class="flex items-center gap-3">
         <!-- ✅ 클립 버튼 -> 이미지 첨부 -->
-        <label for="chat-image-upload" class="p-2 cursor-pointer text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+        <label for="chat-image-upload" class="p-2 cursor-pointer text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
@@ -109,7 +109,7 @@
           <input 
             id="chat-message-input" 
             type="text" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm bg-white"
             placeholder="메시지를 입력하세요..."
           >
         </div>
@@ -117,7 +117,7 @@
         <!-- 전송 버튼 -->
         <button 
           id="chat-message-submit" 
-          class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full transition-colors shadow-md hover:shadow-lg"
+          class="bg-gray-900 hover:bg-black text-white p-3 rounded-full transition-colors shadow-md hover:shadow-lg"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
@@ -276,7 +276,141 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* 리뷰 모달 스타일링 */
+#reviewModal {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#reviewModal::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* 폼 필드 스타일링 */
+#reviewModal form p {
+  margin-bottom: 1.5rem;
+}
+
+#reviewModal form label {
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+#reviewModal form select,
+#reviewModal form textarea,
+#reviewModal form input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+#reviewModal form select:focus,
+#reviewModal form textarea:focus,
+#reviewModal form input[type="text"]:focus {
+  outline: none;
+  border-color: #374151;
+  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+}
+
+#reviewModal form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* 라디오 버튼 스타일링 */
+#reviewModal form input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  accent-color: #000;
+}
+
+/* 체크박스 스타일링 */
+#reviewModal form input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  accent-color: #000;
+}
+
+/* 모달 애니메이션 */
+#reviewModal[open] {
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 반응형 */
+@media (max-width: 640px) {
+  #reviewModal {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+  
+  #reviewModal .p-6 {
+    padding: 1rem;
+  }
+  
+  #reviewModal .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
 </style>
+
+{% if user == room.buyer and not has_already_reviewed %}
+<dialog id="reviewModal" class="backdrop:bg-black backdrop:bg-opacity-50 bg-white rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 border-0">
+  <div class="bg-white rounded-2xl overflow-hidden">
+    <!-- 헤더 -->
+    <div class="bg-black text-white px-6 py-4">
+      <h2 class="text-xl font-bold">매너 리뷰 작성</h2>
+      <p class="text-gray-300 text-sm mt-1">거래 경험을 공유해주세요</p>
+    </div>
+    
+    <!-- 폼 내용 -->
+    <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}" class="p-6">
+      {% csrf_token %}
+      <input type="hidden" name="chatroom_id" value="{{ room.id }}">
+      
+      <div class="space-y-6">
+        {{ form.as_p }}
+      </div>
+      
+      <!-- 버튼 영역 -->
+      <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
+        <button type="button" onclick="document.getElementById('reviewModal').close()" 
+                class="px-6 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+          취소
+        </button>
+        <button type="submit" 
+                class="px-6 py-2.5 bg-black text-white hover:bg-gray-800 rounded-lg transition-colors font-medium">
+          리뷰 제출
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+{% endif %}
 
 <script>
   const roomId = "{{ room.id }}";
@@ -350,7 +484,7 @@
         // 내 메시지 (오른쪽) - my_rooms.html 스타일
         messageContainer.innerHTML = `
           <div class="max-w-xs">
-            <div class="bg-blue-500 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
+            <div class="bg-gray-900 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
               <p class="text-sm break-words">${data.message}</p>
             </div>
             <div class="flex justify-end items-center gap-1 mt-1">
@@ -362,7 +496,7 @@
         // 상대방 메시지 (왼쪽) - my_rooms.html 스타일
         messageContainer.innerHTML = `
           <div class="max-w-xs">
-            <div class="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
+            <div class="bg-white text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm border border-gray-200">
               <p class="text-sm break-words">${data.message}</p>
             </div>
             <div class="flex justify-start items-center gap-1 mt-1">
@@ -392,7 +526,7 @@
 
       messageContainer.innerHTML = `
         <div class="max-w-xs">
-          <div class="${isMine ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'} px-3 py-2 rounded-2xl shadow-sm">
+          <div class="${isMine ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-3 py-2 rounded-2xl shadow-sm">
             <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
           </div>
           <div class="flex ${isMine ? 'justify-end' : 'justify-start'} items-center gap-1 mt-1">
@@ -439,7 +573,7 @@
       isTradeCompleted = true;
     } else {
       // 🔁 상대방 거래 완료 대기 중
-      tradeStatusContainer.innerHTML = '<span class="text-xs text-gray-500">상대방의 거래 완료를 기다리는 중입니다.</span>';
+      tradeStatusContainer.innerHTML = '<span class="text-xs text-red-700 font-medium">상대방의 거래 완료를 기다리는 중입니다.</span>';
     }
   }
 
@@ -602,5 +736,56 @@
       });
     }
   });
+
+  // 거래 완료 시 리뷰 폼 모달 띄우기 
+  document.addEventListener("DOMContentLoaded", function () {
+    const confirmBtn = document.querySelector("#confirmBtn");
+
+    // ✅ hasAlreadyReviewed 템플릿 값 가져오기
+    const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener("click", async function () {
+        const confirmComplete = confirm("정말 거래를 완료하시겠습니까?");
+        if (!confirmComplete) return;
+
+        const response = await fetch(`/chat/complete/{{ room.id }}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+        });
+
+        const data = await response.json();
+
+        // ✅ 구매자이면서, 거래가 완료되었고, 리뷰를 아직 작성하지 않은 경우만 모달 표시
+        if (data.success && data.is_fully_completed && data.is_buyer && !hasAlreadyReviewed) {
+          const reviewModal = document.getElementById("reviewModal");
+          if (reviewModal) {
+            reviewModal.showModal();
+          }
+        } else {
+          alert("거래 완료 상태가 저장되었습니다.");
+        }
+      });
+    }
+  });
+  // 리뷰 모달 띄워지는지 테스트
+  document.addEventListener("DOMContentLoaded", function () {
+  const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
+  const isFullyCompleted = {{ is_fully_completed|yesno:"true,false" }};
+  const isBuyer = "{{ user.username }}" === "{{ room.buyer.username }}";
+
+  if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
+    const reviewModal = document.getElementById("reviewModal");
+    if (reviewModal) {
+      try {
+        reviewModal.showModal();
+      } catch (e) {
+        reviewModal.style.display = "block";
+      }
+    }
+  }
+});
 </script>
 {% endblock %}

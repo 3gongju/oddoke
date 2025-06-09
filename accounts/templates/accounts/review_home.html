@@ -27,131 +27,13 @@
   <!-- ✅ 리뷰 탭 영역 -->
   <div class="bg-white rounded-lg shadow p-6">
     <div class="flex space-x-6 mb-4 border-b pb-2">
-      <button class="tab-btn text-blue-600 font-semibold border-b-2 border-blue-500" onclick="showTab('write')">리뷰 쓰기</button>
-      <button class="tab-btn text-gray-500 hover:text-blue-500" onclick="showTab('written')">내 리뷰</button>
+      <!-- <button class="tab-btn text-blue-600 font-semibold border-b-2 border-blue-500" onclick="showTab('write')">리뷰 쓰기</button> -->
+      <h2 class="text-lg font-semibold text-gray-800">구매자가 이렇게 평가했어요!</h2>
     </div>
 
-    <!-- 리뷰 쓰기 영역 -->
-    <div id="tab-write" class="tab-content">
-      <form method="post" class="space-y-6" id="reviewForm">
-        {% csrf_token %}
-        
-        <!-- ✅ 1. 전반적인 거래 만족도 (별점) -->
-        <div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-200">
-          <label class="block text-lg font-bold text-gray-800 mb-4 text-center">1. 전반적인 거래 만족도</label>
-          <div class="flex justify-center space-x-1 mb-3">
-            <div class="rating-stars" data-field="rating">
-              {% for i in "12345" %}
-                <button type="button" class="star text-4xl text-gray-300 hover:text-yellow-400 transition-colors" data-value="{{ i }}">★</button>
-              {% endfor %}
-            </div>
-          </div>
-          <p class="text-center text-sm text-gray-600" id="rating-text">별점을 선택해주세요</p>
-          {{ form.rating.as_hidden }}
-        </div>
-
-        <!-- ✅ 2. 약속 시간과 장소 -->
-        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <label class="block text-base font-bold text-gray-800 mb-4 flex items-center">
-            <span class="text-blue-500 mr-2">⏰</span>
-            2. 약속 시간과 장소
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {% for choice in form.punctuality %}
-              <label class="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">
-                {{ choice.tag }}
-                <span class="ml-3 text-sm font-medium text-gray-700">{{ choice.choice_label }}</span>
-              </label>
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- ✅ 3. 상품 상태 -->
-        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <label class="block text-base font-bold text-gray-800 mb-4 flex items-center">
-            <span class="text-blue-500 mr-2">📦</span>
-            3. 상품 상태
-          </label>
-          <div class="space-y-2">
-            {% for choice in form.description_match %}
-              <label class="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">
-                {{ choice.tag }}
-                <span class="ml-3 text-sm font-medium text-gray-700">{{ choice.choice_label }}</span>
-              </label>
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- ✅ 4. 응답 속도 -->
-        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <label class="block text-base font-bold text-gray-800 mb-4 flex items-center">
-            <span class="text-blue-500 mr-2">💬</span>
-            4. 응답 속도
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {% for choice in form.response_speed %}
-              <label class="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">
-                {{ choice.tag }}
-                <span class="ml-3 text-sm font-medium text-gray-700">{{ choice.choice_label }}</span>
-              </label>
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- ✅ 5. 메시지/말투 -->
-        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <label class="block text-base font-bold text-gray-800 mb-4 flex items-center">
-            <span class="text-blue-500 mr-2">😊</span>
-            5. 메시지/말투
-          </label>
-          <div class="space-y-2">
-            {% for choice in form.politeness %}
-              <label class="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all">
-                {{ choice.tag }}
-                <span class="ml-3 text-sm font-medium text-gray-700">{{ choice.choice_label }}</span>
-              </label>
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- ✅ 6. 재거래 의사 (버튼형) -->
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 mb-8">
-          <label class="block text-base font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
-            <span class="text-red-500 mr-2">💝</span>
-            6. 재거래 의사
-          </label>
-          <div class="flex gap-4">
-            <label class="flex-1 cursor-pointer">
-              <input type="radio" name="deal_again" value="O" class="sr-only">
-              <div class="deal-button bg-white p-6 rounded-xl border-2 border-gray-200 text-center hover:border-green-400 transition-all duration-300 hover:shadow-md">
-                <div class="text-4xl mb-3">😍</div>
-                <div class="font-semibold text-gray-800 mb-1">네, 좋아요!</div>
-                <div class="text-xs text-gray-500">재거래 희망</div>
-              </div>
-            </label>
-            
-            <label class="flex-1 cursor-pointer">
-              <input type="radio" name="deal_again" value="X" class="sr-only">
-              <div class="deal-button bg-white p-6 rounded-xl border-2 border-gray-200 text-center hover:border-orange-400 transition-all duration-300 hover:shadow-md">
-                <div class="text-4xl mb-3">😅</div>
-                <div class="font-semibold text-gray-800 mb-1">글쎄요...</div>
-                <div class="text-xs text-gray-500">재거래 고민</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <!-- ✅ 제출 버튼 -->
-        <div class="text-center pt-8">
-          <button type="submit" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold py-4 px-12 rounded-xl hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
-            ✨ 리뷰 제출하기
-          </button>
-        </div>
-      </form>
-    </div>
-
+    
     <!-- 내 리뷰 보기 영역 -->
-    <div id="tab-written" class="tab-content hidden space-y-6">
+    <div id="tab-written" class="space-y-6">
       {% for r in reviews %}
       <div class="p-4 border rounded shadow">
         <div class="flex items-center justify-between mb-3">
@@ -179,10 +61,10 @@
         </div>
         
         <div class="grid grid-cols-2 gap-2 text-sm">
-          <div class="bg-gray-50 px-3 py-2 rounded">
+          <!-- <div class="bg-gray-50 px-3 py-2 rounded">
             <span class="font-medium text-gray-700">약속 시간:</span>
             <span class="text-gray-600">{{ r.punctuality }}</span>
-          </div>
+          </div> -->
           <div class="bg-gray-50 px-3 py-2 rounded">
             <span class="font-medium text-gray-700">상품 상태:</span>
             <span class="text-gray-600">{{ r.description_match }}</span>

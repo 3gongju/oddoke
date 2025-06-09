@@ -2,20 +2,20 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+<div class="min-h-screen bg-gray-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <!-- 🎨 프로필 헤더 - 현대적 카드 디자인 -->
     <div class="relative mb-12">
       <!-- 배경 그라디언트 -->
-      <div class="absolute inset-0 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-3xl opacity-90"></div>
-      <div class="relative bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/20">
+      <div class="absolute inset-0 bg-gray-800 rounded-3xl"></div>
+      <div class="relative bg-white p-8 rounded-3xl shadow-2xl border border-gray-200">
         <div class="flex flex-col lg:flex-row items-start gap-8">
           
           <!-- 프로필 이미지 섹션 -->
           <div class="flex flex-col items-center space-y-4">
             <div class="relative">
-              <div class="w-32 h-32 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 p-1 shadow-2xl">
+              <div class="w-32 h-32 rounded-full bg-gray-300 p-1 shadow-2xl">
                 <div class="w-full h-full rounded-full overflow-hidden bg-white">
                   {% if user_profile.profile_image and user_profile.profile_image.name %}
                     <img src="{{ user_profile.profile_image.url }}"
@@ -73,7 +73,7 @@
                 </div>
               {% else %}
                 <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
-                  class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                  class="inline-flex items-center px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transform hover:scale-105 transition-all duration-200 shadow-lg">
                   <span class="mr-2">🎫</span> 공식 팬덤 인증하기
                 </a>
               {% endif %}
@@ -92,13 +92,14 @@
           <!-- 액션 버튼들 -->
           <div class="flex flex-col space-y-3 min-w-[160px]">
             <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
-               class="flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-yellow-400 text-gray-800 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md">
+               class="flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md">
               <span class="mr-2">⚙️</span> 설정
+            </a>
             </a>
             
             {% if user.is_authenticated %}
               <a href="{% url 'accounts:profile' request.user.username %}" 
-                 class="flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-md">
+                 class="flex items-center justify-center px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 shadow-md">
                 <span class="mr-2">🔗</span> 공개 프로필
               </a>
             {% endif %}
@@ -111,7 +112,7 @@
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <div class="flex justify-between items-center mb-8">
-          <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600">
+          <h2 class="text-2xl font-bold text-gray-800">
             ♥ 내가 찜한 덕
           </h2>
           <a href="{% url 'artist:index' %}" 
@@ -127,7 +128,7 @@
           <div id="favArtistSlider" class="flex overflow-x-auto space-x-6 pb-4 scrollbar-hide">
             {% for artist in favorite_artists %}
               <div class="min-w-[140px] text-center transform hover:scale-105 transition-transform duration-200">
-                <div class="bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl p-4 shadow-md hover:shadow-lg transition-shadow">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-md hover:shadow-lg transition-shadow">
                   <img src="{% static artist.logo %}" 
                        alt="{{ artist.display_name }}"
                        data-artist-id="{{ artist.id }}" 
@@ -172,7 +173,7 @@
     <!-- 🎨 최애 멤버 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-red-600">
+        <h2 class="text-2xl font-bold text-gray-800">
           최애 ❤
         </h2>
         
@@ -220,7 +221,7 @@
     <!-- 🎨 덕팜 활동 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
+        <h2 class="text-2xl font-bold text-gray-800">
           📌 나의 덕팜 활동
         </h2>
 
@@ -238,6 +239,11 @@
                   onclick="showFarmTab('liked')">
             ❤️ 찜한 글
           </button>
+
+          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showFarmTab('reviewed')">
+            🌟 내가 쓴 리뷰
+          </button>
         </div>
 
         <!-- 덕팜 탭 콘텐츠 -->
@@ -245,9 +251,9 @@
           {% if farm_posts %}
             <div class="space-y-4">
               {% for post in farm_posts %}
-                <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                <div class="p-5 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-blue-600 hover:text-blue-800 font-semibold text-lg transition-colors">
+                    class="text-black hover:text-gray-700 font-semibold text-lg transition-colors">
                     [덕팜] {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
@@ -265,9 +271,9 @@
           {% if farm_comments %}
             <div class="space-y-4">
               {% for comment in farm_comments %}
-                <div class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100 hover:shadow-md transition-shadow">
+                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-green-600 hover:text-green-800 font-semibold text-xl transition-colors">
+                    class="text-gray-800 hover:text-black font-semibold transition-colors">
                     {{ comment.post.title }}
                   </a>
                   <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">💬 {{ comment.content|truncatewords:15 }}</p>
@@ -286,9 +292,9 @@
           {% if liked_farm_posts %}
             <div class="space-y-4">
               {% for post in liked_farm_posts %}
-                <div class="p-5 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-100 hover:shadow-md transition-shadow">
+                <div class="p-5 bg-white rounded-2xl border border-gray-300 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-pink-600 hover:text-pink-800 font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-semibold transition-colors">
                     ❤️ {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
@@ -301,14 +307,59 @@
             </div>
           {% endif %}
         </div>
+
+        <div id="farm-tab-reviewed" class="tab-content hidden">
+          {% if my_reviews %}
+            <div class="space-y-4">
+              {% for r in my_reviews %}
+                <div class="p-5 bg-gradient-to-r from-white to-gray-50 rounded-2xl border border-gray-300 shadow-sm">
+                  <p class="text-gray-900 font-semibold">- 판매자 : {{ r.target_user.first_name|default:r.target_user.username }}</p>
+                  <p class="text-gray-800 font-semibold mt-1">- 평점 : {{ r.rating }}점</p>
+
+                  <div class="grid grid-cols-2 gap-2 text-sm mt-3">
+                    <div class="bg-gray-100 px-3 py-2 rounded">
+                      <span class="font-medium text-gray-900">상품 상태:</span>
+                      <span class="text-gray-700">{{ r.description_match }}</span>
+                    </div>
+                    <div class="bg-gray-100 px-3 py-2 rounded">
+                      <span class="font-medium text-gray-900">응답 속도:</span>
+                      <span class="text-gray-700">{{ r.response_speed }}</span>
+                    </div>
+                    <div class="bg-gray-100 px-3 py-2 rounded">
+                      <span class="font-medium text-gray-900">메시지 말투:</span>
+                      <span class="text-gray-700">{{ r.politeness }}</span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 pt-3 border-t border-gray-200 text-sm">
+                    <span class="font-medium text-gray-900">재거래 의사:</span>
+                    <span class="text-gray-700 ml-2">
+                      {% if r.deal_again == 'O' %}
+                        ✅ 재거래 하고 싶어요
+                      {% else %}
+                        ❌ 재거래는 어려울 것 같아요
+                      {% endif %}
+                    </span>
+                  </div>
+
+                  <p class="text-sm text-gray-500 mt-2">{{ r.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">아직 작성한 리뷰가 없습니다. ✍️</p>
+            </div>
+          {% endif %}
+        </div>
       </div>
     </div>
 
     <!-- 🎨 덕담 활동 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-600">
-          📌 나의 덕담 활동
+        <h2 class="text-2xl font-bold text-gray-800">
+          📌 나의 덕팜 활동
         </h2>
 
         <!-- 덕담 탭 네비게이션 -->
@@ -332,9 +383,9 @@
           {% if dam_posts %}
             <div class="space-y-4">
               {% for post in dam_posts %}
-                <div class="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 hover:shadow-md transition-shadow">
+                <div class="p-5 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-blue-600 hover:text-blue-800 font-semibold text-lg transition-colors">
+                    class="text-black hover:text-gray-700 font-semibold text-lg transition-colors">
                     [덕담] {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
@@ -352,9 +403,9 @@
           {% if dam_comments %}
             <div class="space-y-4">
               {% for comment in dam_comments %}
-                <div class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-100 hover:shadow-md transition-shadow">
+                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-green-600 hover:text-green-800 font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-semibold transition-colors">
                     {{ comment.post.title }}
                   </a>
                   <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">💬 {{ comment.content|truncatewords:15 }}</p>
@@ -373,9 +424,9 @@
           {% if liked_dam_posts %}
             <div class="space-y-4">
               {% for post in liked_dam_posts %}
-                <div class="p-5 bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl border border-pink-100 hover:shadow-md transition-shadow">
+                <div class="p-5 bg-white rounded-2xl border border-gray-300 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-pink-600 hover:text-pink-800 font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-semibold transition-colors">
                     ❤️ {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
@@ -392,75 +443,73 @@
     </div>
 
     <!-- 🎨 계정 정보 섹션 -->
-    <div class="mb-12">
-      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h3 class="text-2xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-gray-600 to-gray-800">
-          계정 정보
-        </h3>
-        
-        <div class="space-y-6">
-          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border border-gray-200">
-            <span class="text-gray-600 font-semibold">닉네임</span>
-            <span class="font-bold text-gray-800 text-lg">
-              {% if user_profile.first_name %}
-                {{ user_profile.first_name }}
-              {% elif user_profile.username|slice:":6" == "kakao_" %}
-                카카오 사용자
-              {% elif user_profile.username|slice:":6" == "naver_" %}
-                네이버 사용자
-              {% else %}
-                {{ user_profile.username }}
-              {% endif %}
-            </span>
-          </div>
-          
-          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-50 to-green-50 rounded-2xl border border-gray-200">
-            <span class="text-gray-600 font-semibold">가입일</span>
-            <span class="font-bold text-gray-800">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
-          </div>
-          
-          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-50 to-purple-50 rounded-2xl border border-gray-200">
-            <span class="text-gray-600 font-semibold">로그인 방식</span>
-            <span class="font-bold text-gray-800">
-              {% if user_profile.username|slice:":6" == "kakao_" %}
-                카카오 소셜 로그인
-              {% elif user_profile.username|slice:":6" == "naver_" %}
-                네이버 소셜 로그인
-              {% else %}
-                이메일 로그인
-              {% endif %}
-            </span>
-          </div>
-          
-          {% if user.is_superuser %}
-          <div class="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl border border-red-200">
-            <span class="text-gray-600 font-semibold">이메일 (관리자)</span>
-            <span class="font-mono text-sm text-gray-600 break-all">{{ user_profile.email }}</span>
-          </div>
+<div class="mb-12">
+  <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+    <h3 class="text-2xl font-bold mb-8 text-gray-800">
+      계정 정보
+    </h3>
+    
+    <div class="space-y-6">
+      <div class="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-200">
+        <span class="text-gray-600 font-semibold">닉네임</span>
+        <span class="font-bold text-gray-800 text-lg">
+          {% if user_profile.first_name %}
+            {{ user_profile.first_name }}
+          {% elif user_profile.username|slice:":6" == "kakao_" %}
+            카카오 사용자
+          {% elif user_profile.username|slice:":6" == "naver_" %}
+            네이버 사용자
+          {% else %}
+            {{ user_profile.username }}
           {% endif %}
-          
-          <!-- 안내사항 -->
-          <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-2xl border border-blue-200">
-            <div class="flex items-start space-x-3">
-              <div class="text-2xl">💡</div>
-              <div>
-                <h4 class="font-bold text-gray-800 mb-3">안내사항</h4>
-                <ul class="text-sm text-gray-700 space-y-2 leading-relaxed">
-                  <li class="flex items-start space-x-2">
-                    <span class="text-blue-500 mt-1">•</span>
-                    <span>닉네임은 프로필 관리에서 언제든 변경할 수 있습니다</span>
-                  </li>
-                  <li class="flex items-start space-x-2">
-                    <span class="text-blue-500 mt-1">•</span>
-                    <span>소셜 로그인 계정은 비밀번호 변경이 불가능합니다</span>
-                  </li>
-                  <li class="flex items-start space-x-2">
-                    <span class="text-blue-500 mt-1">•</span>
-                    <span>계정 관련 문의사항은 고객센터를 이용해주세요</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
+        </span>
+      </div>
+      
+      <div class="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-200">
+        <span class="text-gray-600 font-semibold">가입일</span>
+        <span class="font-bold text-gray-800">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
+      </div>
+      
+      <div class="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-200">
+        <span class="text-gray-600 font-semibold">로그인 방식</span>
+        <span class="font-bold text-gray-800">
+          {% if user_profile.username|slice:":6" == "kakao_" %}
+            카카오 소셜 로그인
+          {% elif user_profile.username|slice:":6" == "naver_" %}
+            네이버 소셜 로그인
+          {% else %}
+            이메일 로그인
+          {% endif %}
+        </span>
+      </div>
+      
+      {% if user.is_superuser %}
+      <div class="flex justify-between items-center py-4 px-6 bg-gray-100 rounded-2xl border border-gray-300">
+        <span class="text-gray-600 font-semibold">이메일 (관리자)</span>
+        <span class="font-mono text-sm text-gray-600 break-all">{{ user_profile.email }}</span>
+      </div>
+      {% endif %}
+      
+      <!-- 안내사항 -->
+      <div class="bg-gray-100 p-6 rounded-2xl border border-gray-200">
+        <div class="flex items-start space-x-3">
+          <div class="text-2xl">💡</div>
+          <div>
+            <h4 class="font-bold text-gray-800 mb-3">안내사항</h4>
+            <ul class="text-sm text-gray-700 space-y-2 leading-relaxed">
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>닉네임은 프로필 관리에서 언제든 변경할 수 있습니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>소셜 로그인 계정은 비밀번호 변경이 불가능합니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>계정 관련 문의사항은 고객센터를 이용해주세요</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

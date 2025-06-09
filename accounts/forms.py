@@ -83,15 +83,15 @@ class EmailAuthenticationForm(forms.Form):
 class MannerReviewForm(forms.ModelForm):
     class Meta:
         model = MannerReview
-        fields = ['rating', 'punctuality', 'description_match', 'response_speed', 'politeness', 'deal_again']
+        fields = ['rating', 'description_match', 'response_speed', 'politeness', 'deal_again']
         widgets = {
             'rating': forms.RadioSelect(choices=MannerReview.RATING_CHOICES),
-            'punctuality': forms.RadioSelect(choices=[
-                ('빠름', '약속 시간보다 빨리 나옴'),
-                ('정확', '정확하게 지킴'),
-                ('늦음', '약속보다 늦음'),
-                ('무통보', '연락 없이 늦거나 안 나옴')
-            ]),
+            # 'punctuality': forms.RadioSelect(choices=[
+            #     ('빠름', '약속 시간보다 빨리 나옴'),
+            #     ('정확', '정확하게 지킴'),
+            #     ('늦음', '약속보다 늦음'),
+            #     ('무통보', '연락 없이 늦거나 안 나옴')
+            # ]),
             'description_match': forms.RadioSelect(choices=[
                 ('동일', '설명과 동일함'),
                 ('미세 차이', '미세한 차이가 있었음'),
