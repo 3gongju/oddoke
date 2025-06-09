@@ -307,6 +307,8 @@ def mypage(request):
             artist for artist in member.artist_name.all() if artist.id in followed_artist_ids
         ]
 
+    my_reviews = MannerReview.objects.filter(user=request.user).order_by('-created_at')
+    
     context = {
         'user_profile': user_profile,
         'favorite_artists': favorite_artists,
@@ -318,6 +320,7 @@ def mypage(request):
         'dam_posts': dam_posts,              # 내가 쓴 글
         'liked_dam_posts': liked_dam_posts,            # 내가 찜한 글
         'dam_comments': dam_comments,        # 내가 쓴 댓글
+        'my_reviews': my_reviews,            # 내가 쓴 리뷰
     }
     return render(request, 'mypage.html', context)
     

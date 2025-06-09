@@ -238,6 +238,11 @@
                   onclick="showFarmTab('liked')">
             ❤️ 찜한 글
           </button>
+
+          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+                  onclick="showFarmTab('reviewed')">
+            🌟 내가 쓴 리뷰
+          </button>
         </div>
 
         <!-- 덕팜 탭 콘텐츠 -->
@@ -298,6 +303,51 @@
           {% else %}
             <div class="text-center py-12">
               <p class="text-gray-500 text-lg">찜한 글이 없습니다. ❤️</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div id="farm-tab-reviewed" class="tab-content hidden">
+          {% if my_reviews %}
+            <div class="space-y-4">
+              {% for r in my_reviews %}
+                <div class="p-5 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-2xl border border-yellow-200 shadow-sm">
+                  <p class="text-gray-800 font-semibold">🧑 리뷰 대상: {{ r.target_user.first_name|default:r.target_user.username }}</p>
+                  <p class="text-black-400 font-semibold mt-1">⭐ 평점: {{ r.rating }}점</p>
+
+                  <div class="grid grid-cols-2 gap-2 text-sm mt-3">
+                    <div class="bg-gray-50 px-3 py-2 rounded">
+                      <span class="font-medium text-gray-700">상품 상태:</span>
+                      <span class="text-gray-600">{{ r.description_match }}</span>
+                    </div>
+                    <div class="bg-gray-50 px-3 py-2 rounded">
+                      <span class="font-medium text-gray-700">응답 속도:</span>
+                      <span class="text-gray-600">{{ r.response_speed }}</span>
+                    </div>
+                    <div class="bg-gray-50 px-3 py-2 rounded">
+                      <span class="font-medium text-gray-700">메시지 말투:</span>
+                      <span class="text-gray-600">{{ r.politeness }}</span>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 pt-3 border-t border-gray-100 text-sm">
+                    <span class="font-medium text-gray-700">재거래 의사:</span>
+                    <span class="text-gray-600 ml-2">
+                      {% if r.deal_again == 'O' %}
+                        ✅ 재거래 하고 싶어요
+                      {% else %}
+                        ❌ 재거래는 어려울 것 같아요
+                      {% endif %}
+                    </span>
+                  </div>
+
+                  <p class="text-sm text-gray-500 mt-2">{{ r.created_at|date:"Y.m.d H:i" }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-12">
+              <p class="text-gray-500 text-lg">아직 작성한 리뷰가 없습니다. ✍️</p>
             </div>
           {% endif %}
         </div>
