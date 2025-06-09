@@ -1,0 +1,30 @@
+<!-- 공통 로직 (분기 처리용 카페 카드) -->
+
+{% comment %}
+=====================================
+_cafe_card_base.html - 공통 로직 분기
+=====================================
+사용법:
+{% include 'ddoksang/components/_cafe_card_base.html' with card_variant='favorite' %}
+{% include 'ddoksang/components/_cafe_card_base.html' with card_variant='latest' %}
+{% include 'ddoksang/components/_cafe_card_base.html' with card_variant='default' %}
+{% endcomment %}
+
+{% load static %}
+{% load filters %}
+
+{% comment %}
+카드 변형 타입별 분기 처리
+- favorite: 찜한 카페용 (오버레이 스타일)
+- latest: 최신 카페용 (큰 텍스트)
+- default: 기본/검색용 (기존 스타일)
+- 없으면: default로 처리
+{% endcomment %}
+
+{% if card_variant == 'favorite' %}
+  {% include 'ddoksang/components/_cafe_card_favorite.html' %}
+{% elif card_variant == 'latest' %}
+  {% include 'ddoksang/components/_cafe_card_latest.html' %}
+{% else %}
+  {% include 'ddoksang/components/_cafe_card_default.html' %}
+{% endif %}
