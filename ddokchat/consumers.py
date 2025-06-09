@@ -82,6 +82,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'reader': self.scope['user'].username
                 }
             )
+
+        elif message_type == 'chat_image':
+            image_url = data['image_url']
+            sender_id = data['sender_id']
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'image_message',
+                    'image_url': image_url,
+                    'sender_id': sender_id
+                }
+            )
         
 
 
@@ -142,4 +155,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'enter_chatroom_finish',
             'reader': event['reader'],
+        }))
+
+    async def image_message(self, event):
+        sender = await self.get_username(event['sender_id'])
+        await self.send(text_data=json.dumps({
+            'type': 'chat_image',
+            'image_url': event['image_url'],
+            'sender': sender,
+            'is_read': False, 
         }))

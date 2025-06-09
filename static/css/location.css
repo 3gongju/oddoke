@@ -81,15 +81,7 @@
     }
 }
 
-/* 범례 호버 효과 */
-.legend-item {
-    transition: all 0.2s ease;
-}
 
-.legend-item:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-}
 
 /* 주변 카페 아이템 호버 효과 */
 .nearby-cafe-item {
@@ -137,18 +129,3 @@ button:active {
     }
 }
 
-/* 다크 모드 지원 (선택사항) */
-@media (prefers-color-scheme: dark) {
-    #locationModal .bg-white,
-    #nearbyPanel,
-    #cafeModal .bg-white {
-        background-color: #1f2937;
-        color: #f9fafb;
-    }
-    
-    #locationModal .text-gray-600,
-    #nearbyPanel .text-gray-600,
-    #cafeModal .text-gray-600 {
-        color: #d1d5db;
-    }
-}

@@ -1,0 +1,363 @@
+[33m92f307e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mddoksang[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #106 from 3gongju/bdayCafe
+[33maab04a6[m bdayCafe 가 맞는 버전, master와 merge 시도
+[33m319aafe[m Merge pull request #105 from 3gongju/bdayCafe
+[33m75f3fc4[m bdayCafe - ddoksang branch에서 하던 내용 오류 -> 브랜치 삭제 후 새롭게 덕생 관련 내용 여기서 작업
+[33ma9c256b[m Merge pull request #104 from 3gongju/ddoksang
+[33m66b4220[m[33m ([m[1;31morigin/ddoksang[m[33m)[m ddoksang 좋아요 csrf 토큰 전역 설정, 수정 완료
+[33m5065eb6[m Merge pull request #103 from 3gongju/ddoksang
+[33mf185a8e[m ddoksang 덕생 홈페이지 찜하기 비동기처리 오류 수정중
+[33mff00ec2[m Merge pull request #102 from 3gongju/ddoksang
+[33m90ba54d[m ddoksang 게시글 찜하기 기능 POST 구현, 검색 내가 쓴글과 전체 게시글 구분해서 나오도록 구현
+[33m694cc3a[m Merge pull request #101 from 3gongju/ddoksang
+[33m22d65dc[m ddoksang my_cafe.html 재사용 컴포넌트 코드로 분리
+[33m9471ebc[m Merge pull request #100 from 3gongju/ddoksang
+[33mfd5b20d[m ddoksang component 분리중 (home, views.py 분리 완료)
+[33mf9cb3c0[m Merge pull request #98 from 3gongju/ddoksang
+[33m45670fb[m ddoksang component 분리중 (home, views.py 분리 완료)
+[33mc0cfa00[m Merge pull request #97 from 3gongju/ddoksang
+[33mb872a88[m ddoksang js로 세분화, 중복되는 코드 분리 / create에도 재사용 검색창 사용
+[33m5b034b6[m ddoksang - artist 에서 구현한 아티스트 검색 자동완성 검색 (autocomplete.js)로 재사용 분리 후 상속 받아 ddoksang의 검색에서 구현
+[33m43b1cef[m artist 멤버/ 아티스트 동시 검색 출력 -> 자동 검색 alias 고려
+[33m41dcd56[m Merge pull request #96 from 3gongju/ddoksang
+[33m5defa05[m Merge pull request #95 from 3gongju/cs
+[33me225a18[m 아티스트 이미지 셀레늄
+[33m1166ad3[m ddoksang create시 보이는 create_success 수정중 -> 문제: 특전, 그외 특전 등 관련 models.py가 없어서 성공 페이지에서 특전 정보가 안불러와짐
+[33mc91ac60[m Merge pull request #94 from 3gongju/split
+[33mc4f8a2d[m main-page image
+[33m9e95b74[m Merge pull request #93 from 3gongju/comment
+[33maaa9efc[m mypage
+[33m71e1840[m mypage
+[33mb4998cc[m Merge branch 'master' of https://github.com/3gongju/oddoke
+[33mde8ea52[m Merge pull request #92 from 3gongju/comment
+[33m74531c5[m requirements.txt
+[33mae2025d[m Merge pull request #91 from 3gongju/comment
+[33md70d7cc[m update
+[33mccd09d6[m reset_db
+[33m09aa213[m Merge pull request #90 from 3gongju/ddoksang
+[33m613a2a0[m ddoksang 지도 메인페이지 나의 위치잡기, 클러스터링 ON 수정
+[33m9aa3fbb[m Merge pull request #89 from 3gongju/cs
+[33ma37c2bf[m Merge branch 'master' into cs
+[33m60a3a46[m Merge pull request #88 from 3gongju/ddoksang
+[33mb978dbc[m 마이페이지 ui 수정
+[33m7be123b[m ddoksang 지도 메인페이지 나의 위치잡기, 클러스터링 ON 수정
+[33m1f9319d[m member csv 변경
+[33m09e8755[m profile ui 수정
+[33mcf98953[m Merge pull request #87 from 3gongju/ddoksang
+[33m297a071[m Merge pull request #86 from 3gongju/search
+[33m54eb8cd[m reset_db
+[33mf11f584[m ddoksang 메인페이지 수정
+[33m5cc007b[m csv
+[33m08c5e01[m Merge pull request #85 from 3gongju/image
+[33m4028e4b[m edit 성공
+[33ma410879[m ddoksang user/admin preview 페이지 오류 수정 - 각 승인대기 시에 게시글 보이게
+[33me276262[m Merge pull request #84 from 3gongju/ddoksang
+[33m2b5aa15[m chat gpt test중 오류 발생
+[33md284021[m ddoksang preview / 승인 대기 일때 화면 수정중
+[33m20a9926[m 이미지 다중 업로드 구현중 / 수정할 때 기존 이미지가 안 보이는 오류
+[33m9a60cd3[m faq -chatgpt install까지 완
+[33m65771bf[m 모달색 변경/faq.js 정리/모달 드래그 기능 추가
+[33m22815e7[m 프로필 이미지 업로드 x -> if문 분기처리
+[33m29cb29b[m merge
+[33m63e8327[m Merge pull request #83 from 3gongju/ddoksang
+[33md6147aa[m ddoksang 덕생 검색 , create 구현중 1차 수정
+[33m0fd2ba2[m edit
+[33m8bc107b[m ddokfarm 다중 이미지
+[33mc96bdcb[m Merge pull request #82 from 3gongju/comment
+[33m5b42ab3[m 덕담 댓글/대댓글 비동기 처리 완료
+[33mc95df75[m 덕팜 댓글 비동기 처리 완료
+[33mcf83aac[m Merge pull request #81 from 3gongju/search
+[33mc52e4d9[m 덕팜 / 덕담 인덱스에서 검색하기
+[33m4433655[m 덕팜 create에 다중 이미지 기능 구현 / 하지만 이미지 추가시 누적이 아니라 대체되고 있음
+[33m7739465[m 언어 설정 변경
+[33m3b0fe57[m Merge pull request #80 from 3gongju/comment-list
+[33m35b9497[m comment refactoring
+[33mbbdba5f[m image gitignore 설정 해제
+[33m95ce2e3[m Merge pull request #79 from 3gongju/ddoksang
+[33m746215c[m ddoksang components 분리, ui 진행중
+[33m273ec38[m Merge pull request #78 from 3gongju/ddoksang
+[33mc0a8809[m ddoksang 컴포넌트 분리중
+[33m360a168[m ddoksang 지도 api 오류 수정, 수정중
+[33mec36d27[m Merge pull request #77 from 3gongju/mypage
+[33mbab442e[m 공식 인증 팬덤 admin 이미지 관리 /팬덤명 호버 설정
+[33m9f3d6e7[m Merge pull request #76 from 3gongju/refactoring
+[33m019a762[m 본문 블록 상단 배치
+[33m6b2c18d[m Merge pull request #75 from 3gongju/refactoring
+[33mfa1b3fa[m update
+[33m1285527[m Merge branch 'master' of https://github.com/3gongju/oddoke into refactoring
+[33m1cd168e[m refactoring
+[33m3dc0331[m ddoksang 카카오맵 api 연동, 관리자 create 승인 처리하는 로직 작업중
+[33m824011c[m Merge pull request #74 from 3gongju/mypage
+[33mb33595a[m admin 팬덤 인증 관리, fandom 데이터 db 관리
+[33m22ed231[m 공식 팬덤 스크린샷 규격에 따라 통과/실패 메시지 생성
+[33m887189c[m Merge pull request #73 from 3gongju/ddoksang
+[33mdd98a17[m ddoksang 생카 브랜치 시작, 지도 (카카오맵 api) 연결 성공
+[33m63d9f84[m Merge pull request #72 from 3gongju/oauth
+[33mf77963d[m[33m ([m[1;31morigin/oauth[m[33m)[m djanogo allauth 관련 설정 삭제 - 사용하지 않는 라이브러리 제거
+[33mf03cba9[m Merge pull request #71 from 3gongju/oauth
+[33m003b9d7[m oauth 마이페이지 닉네임 보이기 수정 완료/ 리뷰 매너 폼 수정
+[33m367ab9f[m Merge pull request #70 from 3gongju/edit
+[33m6b657f0[m header 위치 조정
+[33m70b07c2[m 네이버/ 구글 계정 연동 로그인 성공
+[33m9f098c0[m Merge pull request #69 from 3gongju/post-artist
+[33mdfab427[m 찜덕/노덕 구분
+[33m0ef3ad1[m oauth 카카오, 네이버 계정 연결
+[33mdd640f3[m Merge pull request #68 from 3gongju/post-artist
+[33mefb7504[m 팔로우한 아티스트 순서
+[33m533937f[m Merge pull request #67 from 3gongju/post-artist
+[33m5ecd2cf[m artist, member ~ post create, edit, detail
+[33ma6b26ac[m kakao로그인 계정 연동 성공
+[33m723187b[m dam-detail-aritst-member
+[33m171feb2[m dam-create
+[33mc68e3ff[m Merge pull request #66 from 3gongju/mypage
+[33m46f4aaa[m 내가 보는 마이페이지 구매/판매내역 제외 완료
+[33m51e97ee[m update
+[33m66bf6cb[m 프로필 관리 - 소개멘트 추가
+[33mfabf12c[m Merge pull request #65 from 3gongju/post-artist
+[33m8f21361[m artist 팔로우 취소시 멤버 자동 팔로우 취소
+[33mcbd8ba4[m Merge pull request #64 from 3gongju/post-artist
+[33m2381cd6[m mypage favorite members
+[33m9765db5[m Merge pull request #63 from 3gongju/bday_calendar
+[33m74deb2d[m 모든 덕 추가
+[33m35039fb[m merge
+[33m2dc5e37[m name vs logo
+[33m01a6759[m Merge pull request #62 from 3gongju/mypage
+[33mebb2fac[m merge해결
+[33ma092942[m 프로필관 - 이미지변경 / 프로필이름변경 구현
+[33m22852d7[m favorite members
+[33m9debf7b[m[33m ([m[1;31morigin/bday_calendar[m[33m, [m[1;32mbday_calendar[m[33m)[m bday_calendar home화면에서는 주간 캘린더/ 전체에서는 월간 캘린더 수정
+[33m403db30[m Merge pull request #61 from 3gongju/post-artist
+[33mcd0145f[m nct 수정
+[33mfebd54f[m Merge pull request #60 from 3gongju/mypage
+[33mb64235f[m 매너리뷰
+[33m6d9efa6[m Merge pull request #59 from 3gongju/post-artist
+[33m493a9cd[m 매너리뷰 기능 추가
+[33m1abc9fc[m mypage 만드는중...
+[33m7f649a5[m 게시글 작성 사용자 경험 개선
+[33m29e23ce[m components header 수정
+[33mc0f4101[m Merge pull request #58 from 3gongju/comment
+[33m6f65481[m 문의하기 버튼 수정
+[33m48392f8[m Merge branch 'master' of https://github.com/3gongju/oddoke
+[33mef1d39a[m 댓글 출력 오류 수정
+[33m817ccc6[m Merge pull request #57 from 3gongju/mypage
+[33m4a61729[m 남이 보는 마이페이지 기능완료
+[33mdb6090e[m Merge pull request #56 from 3gongju/form
+[33m7df3cba[m forms, models 수정
+[33m0a60d5a[m merge 해결
+[33md998971[m 팔로우기능 수정중/ 마이페이지로 버튼 옮기기
+[33mfac5784[m farm create edit html
+[33ma246734[m Merge pull request #55 from 3gongju/bday_calendar
+[33m1c0dd52[m 전체 월간 생일 캘린더, mainpage에서 주간 이번주 생일 멤버 표시
+[33m9973929[m ddokdam create_form/edit_form
+[33mef955e1[m[33m ([m[1;32mmainpage[m[33m)[m Merge pull request #54 from 3gongju/artist
+[33m5b1f87a[m[33m ([m[1;31morigin/artist[m[33m, [m[1;32martist[m[33m)[m artist branch랑 mypage branch 충돌 수정
+[33me8fec84[m Merge pull request #53 from 3gongju/artist
+[33m091e380[m Merge branch 'master' into artist
+[33ma4989d6[m mainpage detail 연결 수정
+[33m3e317af[m artist 충돌 수정
+[33mffeffcf[m Merge pull request #52 from 3gongju/mypage
+[33m667c8fe[m Merge pull request #51 from 3gongju/mainpage
+[33mb824e33[m[33m ([m[1;31morigin/mypage[m[33m)[m 통합 자바스크립트 슬라이더 함수로 수정
+[33m61bd6bb[m artist 충돌 해결
+[33m83708d6[m 통합 자바스크립트 슬라이더 함수로 수정
+[33med31bd4[m[33m ([m[1;31morigin/mainpage[m[33m)[m mainpage 찜한 아티스트 0개일때 오리 로고 보이기 수정
+[33mbc45bc5[m modeling
+[33me133c58[m Merge pull request #50 from 3gongju/detailcss
+[33md9ebbb9[m[33m ([m[1;31morigin/detailcss[m[33m)[m Merge branch 'master' of https://github.com/3gongju/oddoke into detailcss
+[33mb67c1d7[m ddokfarm detail, mark-as-sold
+[33mbcbc531[m Merge pull request #49 from 3gongju/mypage
+[33mf2fab1d[m Merge branch 'master' of https://github.com/3gongju/oddoke into mypage
+[33ma1d2f6b[m 아티스트 연동 / 슬라이더 추가 / 패딩 조절
+[33m3ef44ad[m Merge pull request #48 from 3gongju/mainpage
+[33m1b4a9f2[m mainpage 에서 각 ddokfarm, ddokdam의 최신 게시물 3개 보이기, 누르면 detail로 연결
+[33mf9eeb05[m mainpage 에서 각 ddokfarm, ddokdam의 최신 게시물 3개 보이기, 누르면 detail로 연결
+[33mdf95dad[m Merge pull request #47 from 3gongju/detailcss
+[33m81428e1[m ddokdam detail
+[33m0534db2[m 덕담, 덕팜 게시글 불러오기 / 슬라이더 추가
+[33m4aca159[m mainpage 오류(찜한 아티스트 로고만 보이기) 수정 완료
+[33m3954b7f[m artist 검색창 겹침 해결
+[33m1b23078[m mainpage 찜한 아티스트가 5명 이하일때 빈공간 오리 아이콘으로 채움
+[33mbd6d9f3[m mainpage 찜한 아티스트 로고 가운데 정렬, 5개 기준 설정 완료
+[33m1b0dcc6[m 검색창 드롭다운창과 하트 아이콘 겹쳐지는 것 수정
+[33m02c267a[m Merge branch 'master' of https://github.com/3gongju/oddoke into mypage
+[33mf3e72a0[m detail_test
+[33m31552a3[m 찜한 아티스트 없을때 로고 수정중
+[33m2ca8d02[m Merge pull request #46 from 3gongju/mainpage
+[33mf9406a1[m banner 추가 자동 변화
+[33mf615a93[m 덕담 게시글 연동
+[33mb698e7e[m mainpage 에서 찜한 아티스트 목록 보이기 ui 수정
+[33m13c5c92[m Merge pull request #45 from 3gongju/mainpage
+[33mf88c057[m mainpage 에서 찜한 아티스트 목록 보이기 ui 등록
+[33mc24efeb[m Merge pull request #44 from 3gongju/artist
+[33m5289081[m 찜하기 ui 수정, 찜한 아티스트 먼저 출력
+[33m0302000[m Merge pull request #43 from 3gongju/artist
+[33m971b86a[m artist 검색창, 좋아요 버튼 연결
+[33m2d9d8d4[m Merge pull request #42 from 3gongju/mypage
+[33ma2a8c12[m 팔로우/팔로워 목록 추가
+[33mf4bf23f[m Merge pull request #41 from 3gongju/artist
+[33maf1139b[m artist 로고 목록 ui 변경
+[33m424241b[m db 용 문서
+[33me63ac47[m Merge pull request #40 from 3gongju/modeling
+[33m3093a1a[m[33m ([m[1;31morigin/modeling[m[33m)[m update
+[33m81369c6[m Merge branch 'master' of https://github.com/3gongju/oddoke into modeling
+[33m38f0773[m edit, comment, error_message
+[33medc1bfb[m Merge pull request #39 from 3gongju/artist
+[33m618183b[m artist csv 수정 생일 등록
+[33m1a7a0b0[m artist bday csv에 솔로 아티스트 생일 추가
+[33m6be0a5c[m artist - 솔로 가수 생일 정보 csv 업데이트/ db에도 업데이트된 파일 import
+[33m3de50b0[m artist - 솔로 가수 생일 정보 csv 업데이트/ db에도 업데이트된 파일 import
+[33mbdb6f97[m artist - 솔로 가수 생일 정보 csv 업데이트/ db에도 업데이트된 파일 import
+[33m6f57dde[m detail, create
+[33m192376a[m Merge pull request #38 from 3gongju/artist
+[33m9a4c732[m db에 member 정보 등록 완료 (아티스트, 이름, 생일)
+[33m4d20247[m 만두입양
+[33m3210746[m Merge branch 'master' of https://github.com/3gongju/oddoke into modeling
+[33m4b390b9[m Mhttps://www.youtube.com/watch?v=vEEpj8fTKwYerge branch 'master' of https://github.com/3gongju/oddoke into artist
+[33ma0efedd[m[33m ([m[1;31morigin/design[m[33m)[m update
+[33m9821e04[m artist member 생일 정보 db 저장
+[33m04f8c18[m Merge pull request #37 from 3gongju/artist
+[33m3a5a835[m Merge branch 'master' into artist
+[33me96de0b[m artist member 생일 정보 db 저장
+[33m996b3e4[m dam like 수정
+[33mda19992[m Merge branch 'master' of https://github.com/3gongju/oddoke into modeling
+[33m150fdbb[m Merge pull request #36 from 3gongju/cs
+[33ma1c322c[m[33m ([m[1;31morigin/cs[m[33m)[m base.html cs 모달로 수정
+[33m9911014[m 덕담 생일카페 모델 수정
+[33m2143b64[m Merge pull request #35 from 3gongju/cs
+[33md0d1237[m 모달로 채널톡 구현/선택지 부여
+[33m8f437b4[m Merge pull request #34 from 3gongju/modeling
+[33ma4d3780[m like
+[33mf14e761[m update delete comment error 구현 완료/like 구현중...
+[33m9f3c67a[m detail, comment_create
+[33md118b4a[m artist - bday 웹 크롤링 (블로그)
+[33m412e1ca[m 채널톡 기본기능 달기
+[33m35a7a75[m read
+[33m13849d6[m artist - 로고 정렬 (id기준)
+[33mef69f86[m artist db연결, 화면에 각 아티스트 로고 출력 완료
+[33m94670ae[m Merge pull request #33 from 3gongju/artist
+[33mad26fea[m requirements
+[33mfc7a26e[m artist logo image upload
+[33mb3af008[m[33m ([m[1;32mfarm[m[33m)[m Merge pull request #32 from 3gongju/mypage
+[33m21184d6[m migrate 오류 해결
+[33mff15c94[m Merge pull request #31 from 3gongju/farm
+[33m167aed9[m[33m ([m[1;31morigin/farm[m[33m)[m farm 찜하기 수정 - 모델명 변경
+[33m270b6aa[m Merge pull request #30 from 3gongju/ddokdam
+[33m9600359[m[33m ([m[1;31morigin/ddokdam[m[33m)[m 대댓글 기능 추가
+[33m7983cec[m 대댓글 수정중
+[33mff6e3ae[m ddokdam으로 이동
+[33m521fb56[m Merge pull request #29 from 3gongju/farm
+[33m3d61aef[m 카테고리 확인
+[33m07e2edc[m db backup용 파일 공유
+[33m1d4d7dd[m update
+[33m3dd8cf3[m commit 용
+[33mddc1ee3[m Merge pull request #28 from 3gongju/artist
+[33m336ef46[m artist 구현중
+[33m047a973[m Merge branch 'master' of https://github.com/3gongju/oddoke into mypage
+[33mceaed78[m[33m ([m[1;32mddokdam[m[33m)[m Merge pull request #27 from 3gongju/ddokdam
+[33m7b8aee2[m ddokdam 각 카테고리별 게시물 등록 성공
+[33m2d0b04f[m artist db에 추가 성공
+[33m4854641[m mypage 세부 카테고리 추가
+[33m8138050[m Merge branch 'master' of https://github.com/3gongju/oddoke into artist
+[33m065acca[m Merge pull request #26 from 3gongju/test
+[33m939c086[m[33m ([m[1;31morigin/test[m[33m)[m model명 수정
+[33m169b6d4[m ddokdam create ui 각 카테고리별로 다르게 수정 완료
+[33m0af8fd9[m Merge branch 'master' of https://github.com/3gongju/oddoke into artist
+[33mc2d7ff7[m Merge branch 'master' of https://github.com/3gongju/oddoke into ddokdam
+[33m3357a94[m 댓글 상단으로 스크롤 x 수정
+[33mb764cb1[m ddokdam 게시물 작성 (create) ui 수정중
+[33m2dd8eec[m Merge pull request #25 from 3gongju/farm
+[33m04f83a2[m 카테고리 게시글과 연결
+[33ma3223da[m Merge pull request #24 from 3gongju/ddokdam
+[33ma8fe4bc[m ddokdam category별 create 글 작성 수정 완료
+[33m5df38bd[m Merge branch 'master' of https://github.com/3gongju/oddoke into farm
+[33md690d6c[m 덕팜 게시글 작성시 카테고리 선택
+[33m9149083[m Merge pull request #23 from 3gongju/main
+[33m7b72387[m[33m ([m[1;31morigin/main[m[33m)[m main service
+[33m25d8073[m ddokfarm categories 추가
+[33m911bc65[m Merge pull request #22 from 3gongju/mypage
+[33m77ccd94[m profile page
+[33me718c6f[m Merge pull request #21 from 3gongju/mypage
+[33mac9b227[m 회원가입 시 이미지 미리보기
+[33m0700ba9[m Merge pull request #20 from 3gongju/farm
+[33mea88059[m 찜하기 버튼 고정
+[33m0240c1b[m merge
+[33m5369c1b[m Merge pull request #19 from 3gongju/farm
+[33m9e66011[m Merge branch 'master' of https://github.com/3gongju/oddoke into farm
+[33m34744e3[m 찜하기 기능 구현
+[33mff98e3b[m master에서 작업한것 삭제
+[33m2466169[m 찜하기-수정필요
+[33madef5e0[m Merge pull request #18 from 3gongju/ddokdam
+[33m25a8abc[m Merge branch 'master' of https://github.com/3gongju/oddoke into ddokdam
+[33m701c050[m Merge pull request #17 from 3gongju/mypage
+[33m80a3e08[m signup
+[33md986b83[m Merge pull request #16 from 3gongju/farm
+[33m7aadfc6[m Merge branch 'master' of https://github.com/3gongju/oddoke into ddokdam
+[33m6959210[m ddokfarm 대댓글 기능 추가
+[33m445b352[m ddokdam update 버튼 url연결 수정 완료
+[33m7f4673f[m update
+[33m31eccc4[m master merging
+[33mde52d09[m master에서 ddokdam update 수정중
+[33md65a925[m pull ddokfam update
+[33m1fe9c5c[m Merge pull request #15 from 3gongju/farm
+[33m29863e3[m ddokfarm ui 수정 확인
+[33mdc3d21f[m ddokfarm ui 폴더/ 파일 구조 변경, 세분화
+[33mcb8f6db[m ddokfarm 판매완료 표시 버튼 수정
+[33mf7fcba4[m ddokfarm detail연결 오류 수정
+[33mdeabce9[m ddokfarm ui 직거래 버튼 수정, 이미지 미리보기 구현
+[33mea37e72[m Merge pull request #14 from 3gongju/ddokdam
+[33m0e863de[m ddokdam, ddokfarm 최신 병합
+[33mb8fb81c[m ddokfarm 수정 오류 수정 (update)
+[33md6b6a9f[m ddokfarm, ddokdam ui 수정 완료
+[33mfad89a8[m ddofarm/views.py 충돌 해결
+[33me3d3906[m ddokdam/admin.py 충돌 해결
+[33m31327fe[m ddokdam 충돌 해결
+[33m0fc38c7[m ddokfarm 오류 수정
+[33ma7f1a14[m ddokdam 게시물 작성 ui 수정중, detail 페이지 수정 필요
+[33me8acea0[m ddokdam 각 커뮤니티 연결 오류 수정
+[33m250d6a8[m ddokdam ui update
+[33ma40fb13[m ddokfarm / ddokdam ui edit
+[33mae04b86[m ddokdam ui / category 분류 (3가지: community, food, cafe)
+[33m110b469[m Merge pull request #12 from 3gongju/farm
+[33m35ebace[m farm ui 수정
+[33mbd43bc0[m Merge pull request #11 from 3gongju/ddokdam
+[33m6631b0e[m post create 기능 구현
+[33mf66f51d[m post read 기능 구현/createsuperuser
+[33m95595a6[m moddeling, .gitignore에 image 추가
+[33mbb53255[m artist modeling
+[33m353264e[m Merge pull request #10 from 3gongju/farm
+[33mba2bff9[m ddokfarm
+[33m6089d18[m Merge pull request #9 from 3gongju/yunseo
+[33mdcf8396[m[33m ([m[1;31morigin/yunseo[m[33m)[m _card.html
+[33m5858d04[m _card.html
+[33m46a8e6e[m ddokfarm update, delete, 카드 형식구성
+[33m45a843b[m Merge pull request #8 from 3gongju/mainpage
+[33md6430cf[m login page, main (home.html) css
+[33m9efa12f[m commentcreate
+[33m4ae2c09[m update
+[33m5f2a23e[m Merge pull request #7 from 3gongju/shp
+[33md8d0a57[m[33m ([m[1;31morigin/shp[m[33m, [m[1;32mshp[m[33m)[m edit create form
+[33m093e57a[m Merge pull request #6 from 3gongju/base
+[33m4ce472d[m[33m ([m[1;31morigin/base[m[33m)[m Merge branch 'master' of https://github.com/3gongju/oddoke into base
+[33m99be5af[m main url
+[33mf80f5df[m test
+[33m51043ef[m Merge pull request #5 from 3gongju/farm
+[33mac31ecd[m create 오류 수정
+[33mef9be78[m title edit
+[33md530fbb[m django-tailwind test fail
+[33m43248c5[m models resize modified
+[33m49a6225[m Merge pull request #2 from 3gongju/lyj
+[33mf8e76cd[m test
+[33me1aa882[m models.py resize
+[33meda81b9[m[33m ([m[1;31morigin/lyj[m[33m)[m base title 수정
+[33m50f0a86[m Merge pull request #1 from 3gongju/base
+[33m34c1c05[m add p tag
+[33m8892120[m README
+[33m5568de1[m requirements
+[33m8b294b0[m accounts
+[33me72d26c[m account
+[33md0580ce[m read 1
+[33m76d824e[m Read all
+[33m1f0bc39[m create
+[33m295080e[m Post modeling/migration/admin에 모델 등록
+[33m5cf4367[m 공통 html 구조 작성
+[33mc88b769[m project, app 생성 및 등록
+[33m193a420[m .gitignore 설정

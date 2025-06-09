@@ -24,7 +24,7 @@ from .utils import (
     get_ddokfarm_categories,
     get_ddokfarm_category_urls,
 )
-
+from ddokchat.models import ChatRoom
 # ✅ 홈 화면 (루트 URL)
 def main(request):
     return render(request, 'main/home.html')
@@ -101,6 +101,7 @@ def post_detail(request, category, post_id):
     comment_form = FarmCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokfarm:comment_create', kwargs={'category': category, 'post_id': post_id})
+    is_owner = request.user == post.user
 
     if category == 'split':
         members = [sp.member for sp in post.member_prices.select_related('member').all()]
@@ -119,6 +120,7 @@ def post_detail(request, category, post_id):
         'app_name': 'ddokfarm',
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokfarm:comment_delete',
+        "is_owner": is_owner,  # ✅ 로그인한 사용자가 판매자인지 여부
     }
 
     return render(request, 'ddokfarm/detail.html', context)
@@ -493,13 +495,22 @@ def like_post(request, category, post_id):
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
+    # 🔹 1. 카테고리 → 모델 매핑 함수 또는 직접 매핑
+    def get_post_model(category):
+        return {
+            'sell': FarmSellPost,
+            'rental': FarmRentalPost,
+            'split': FarmSplitPost,
+        }.get(category)
+
     model = get_post_model(category)
     if not model:
         raise Http404("존재하지 않는 카테고리입니다.")
 
+    # 🔹 2. 게시글 조회
     post = get_object_or_404(model, id=post_id)
 
-    # 작성자 권한 확인
+    # 🔹 3. 권한 확인
     if request.user != post.user:
         context = {
             'title': '접근 권한 없음',
@@ -508,10 +519,17 @@ def mark_as_sold(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
 
-    # 판매 상태 토글
+    # 🔹 4. 판매 상태 토글
     post.is_sold = not post.is_sold
     post.save()
 
+    # 🔹 5. 연결된 채팅방의 seller_completed도 같이 업데이트
+    content_type = ContentType.objects.get_for_model(post)
+    ChatRoom.objects.filter(content_type=content_type, object_id=post_id).update(
+        seller_completed=post.is_sold
+    )
+
+    # 🔹 6. 리디렉션
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
 # 아티스트 선택시 멤버 목록 출력

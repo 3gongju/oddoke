@@ -1,95 +1,136 @@
-// 매우 간단한 찜하기 시스템 - 팝업 완전 제거
-let isSubmitting = false;
+// ✅ static/js/favorite.js (최종 확정본 - 중복 제거 + 크기 유지 + 정확한 제거 + 중복 삽입 방지)
 
-document.addEventListener('DOMContentLoaded', function () {
-  console.log('찜하기 시스템 초기화');
-  
-  // 이벤트 위임으로 찜하기 버튼 처리
-  document.addEventListener('click', function (e) {
-    const favoriteBtn = e.target.closest('[data-favorite-btn]');
-    if (!favoriteBtn || isSubmitting) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    
-    toggleFavorite(favoriteBtn);
-  });
-});
-
-async function toggleFavorite(btn) {
-  if (isSubmitting) return;
-  
-  isSubmitting = true;
-  
-  const cafeId = btn.dataset.cafeId;
-  const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
-
-  if (!csrfToken) {
-    console.error('CSRF 토큰이 없습니다');
-    isSubmitting = false;
-    return;
-  }
-
-  // UI 즉시 업데이트
-  const currentIsFav = btn.innerHTML.trim() === '♥';
-  const newIsFav = !currentIsFav;
-  
-  btn.innerHTML = '⏳';
-  btn.disabled = true;
-
-  try {
-    const response = await fetch(`/ddoksang/toggle_favorite/${cafeId}/`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken,
-        'Content-Type': 'application/json',
-      },
-      credentials: 'same-origin'
-    });
-
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+class UnifiedFavoriteManager {
+    constructor() {
+        this.isSubmitting = false;
+        this.favoriteStates = new Map();
+        this.init();
     }
 
-    const data = await response.json();
-    console.log('Server response:', data);
-
-    if (data.success) {
-      // 성공 - 모든 같은 카페의 버튼 업데이트
-      updateAllFavoriteButtons(cafeId, data.is_favorited);
-      
-      // 조용한 성공 표시 (콘솔만)
-      console.log(`✅ ${data.message}`);
-      
-    } else {
-      // 서버에서 실패 응답
-      console.error('서버 오류:', data.error);
-      btn.innerHTML = currentIsFav ? '♥' : '♡';
-      btn.style.color = currentIsFav ? '#ef4444' : '#6b7280';
+    init() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.setupEventListeners());
+        } else {
+            this.setupEventListeners();
+        }
+        this.initializeExistingStates();
     }
 
-  } catch (error) {
-    // 네트워크 오류
-    console.error('네트워크 오류:', error);
-    btn.innerHTML = currentIsFav ? '♥' : '♡';
-    btn.style.color = currentIsFav ? '#ef4444' : '#6b7280';
-    
-  } finally {
-    btn.disabled = false;
-    isSubmitting = false;
-  }
+    initializeExistingStates() {
+        document.querySelectorAll('[data-favorite-btn][data-cafe-id]').forEach(btn => {
+            const cafeId = btn.dataset.cafeId;
+            const isFavorited = btn.textContent.includes('♥');
+            this.favoriteStates.set(cafeId.toString(), isFavorited);
+        });
+    }
+
+    setupEventListeners() {
+        document.addEventListener('click', (e) => {
+            const favoriteBtn = e.target.closest('[data-favorite-btn]');
+            if (!favoriteBtn || this.isSubmitting) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const cafeId = favoriteBtn.dataset.cafeId;
+            if (cafeId) {
+                this.toggleFavorite(cafeId);
+            }
+        });
+    }
+
+    async toggleFavorite(cafeId) {
+        if (this.isSubmitting) return;
+        this.isSubmitting = true;
+
+        const csrfToken = this.getCSRFToken();
+        if (!csrfToken) return;
+
+        const buttons = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
+        this.setButtonsLoading(buttons, true);
+
+        try {
+            const response = await fetch(`/ddoksang/cafe/${cafeId}/toggle-favorite/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                this.updateAllButtons(cafeId, data.is_favorited);
+                this.favoriteStates.set(cafeId.toString(), data.is_favorited);
+
+                if (data.is_favorited && data.card_html) {
+                    this.addCardHtmlToCarousel(data.card_html, cafeId);
+                } else {
+                    this.removeCafeFromCarousel(cafeId);
+                }
+            }
+        } catch (err) {
+            console.error('찜 오류:', err);
+        } finally {
+            this.setButtonsLoading(buttons, false);
+            this.isSubmitting = false;
+        }
+    }
+
+    updateAllButtons(cafeId, isFavorited) {
+        document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`).forEach(button => {
+            button.textContent = isFavorited ? '♥' : '♡';
+            button.style.color = isFavorited ? '#ef4444' : '#6b7280';
+        });
+    }
+
+    addCardHtmlToCarousel(html, cafeId) {
+        const favoriteCarousel = document.getElementById('favoriteCarousel');
+        if (!favoriteCarousel) return;
+
+        // ✅ 중복 방지: 이미 존재하는 슬라이드 제거
+        const existing = favoriteCarousel.querySelector(`.swiper-slide[data-cafe-id="${cafeId}"]`);
+        if (existing) {
+            existing.remove();
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const newCard = wrapper.firstElementChild;
+
+        // ✅ 강제 스타일 및 클래스 지정
+        newCard.classList.add('swiper-slide');
+        newCard.setAttribute('data-cafe-id', cafeId);
+        newCard.style.width = '260px';
+        newCard.style.flexShrink = '0';
+
+        favoriteCarousel.insertBefore(newCard, favoriteCarousel.firstChild);
+
+        if (window.favoritesSwiper) {
+            window.favoritesSwiper.update();
+        }
+    }
+
+    removeCafeFromCarousel(cafeId) {
+        const card = document.querySelector(`#favoriteCarousel .swiper-slide[data-cafe-id="${cafeId}"]`);
+        if (card) {
+            card.remove();
+            if (window.favoritesSwiper) {
+                window.favoritesSwiper.update();
+            }
+        }
+    }
+
+    setButtonsLoading(buttons, isLoading) {
+        buttons.forEach(button => {
+            button.disabled = isLoading;
+            button.textContent = isLoading ? '⏳' : (this.favoriteStates.get(button.dataset.cafeId) ? '♥' : '♡');
+        });
+    }
+
+    getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    }
 }
 
-function updateAllFavoriteButtons(cafeId, isFavorited) {
-  const buttons = document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`);
-  
-  buttons.forEach((btn) => {
-    btn.innerHTML = isFavorited ? '♥' : '♡';
-    btn.style.color = isFavorited ? '#ef4444' : '#6b7280';
-    btn.title = isFavorited ? '찜 해제' : '찜하기';
-  });
-  
-  console.log(`${buttons.length}개 버튼 업데이트 완료`);
-}
+window.favoriteManager = new UnifiedFavoriteManager();

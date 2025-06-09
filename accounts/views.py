@@ -5,6 +5,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
 from django.http import JsonResponse
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
 from itertools import chain
 from PIL import Image, ExifTags
 from dotenv import load_dotenv
@@ -12,7 +17,7 @@ from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmCom
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from artist.models import Artist, Member
 from .models import User, MannerReview
-from .forms import CustomUserCreationForm, CustomAuthenticationForm, MannerReviewForm, ProfileImageForm
+from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm
 
 import uuid
 import requests
@@ -30,33 +35,86 @@ def signup(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False  # 이메일 인증 전까지 비활성화
             user = form.save()
             
             if user.profile_image:
                 preview_image_url = user.profile_image.url
 
+            # ✅ 이메일 인증 토큰 생성
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            activation_link = request.build_absolute_uri(
+                f'/accounts/activate/{uid}/{token}/'
+            )
+
+            # ✅ HTML 이메일 내용 렌더링
+            subject = '어덕해 회원가입 이메일 인증'
+            from_email = os.getenv('EMAIL_HOST_USER')
+            to = user.email
+
+            # 순수 텍스트 버전 (백업용)
+            text_content = f'아래 링크를 클릭해주세요:\n{activation_link}'
+
+            # HTML 형식 버전 (템플릿)
+            html_content = render_to_string('emails/activation_email.html', {
+                'activation_link': activation_link,
+                'user': user
+            })
+
+            # 이메일 객체 생성
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
+
+            messages.success(request, '인증 이메일이 전송되었습니다!\n이메일을 확인해주세요.')
             return redirect('accounts:login')
     else:
         form = CustomUserCreationForm()
     
     context = {
         'form': form,
+        'preview_image_url': preview_image_url,
     }
 
     return render(request, 'signup.html', context)
 
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, '🎉 이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.')
+        return redirect('accounts:login')
+    else:
+        messages.error(request, '⚠️ 인증 링크가 유효하지 않거나 만료되었습니다.')
+        return redirect('accounts:login')
+
 def login(request):
     if request.method == 'POST':
-        form = CustomAuthenticationForm(request, request.POST)
+        form = EmailAuthenticationForm(request.POST)
         if form.is_valid():
             user = form.get_user()
+
+            # ✅ 이메일 인증 여부 체크
+            if not user.is_active:
+                messages.warning(request, "이메일 인증이 필요합니다.\n이메일을 확인해주세요!")
+                # 로그인 실패 처리 (폼에 오류 추가 가능)
+                return render(request, 'login.html', {'form': form})
+
             auth_login(request, user)
 
             # next 파라미터 우선 적용
             next_url = request.GET.get('next') or '/'
             return redirect(next_url)
     else:
-        form = CustomAuthenticationForm()
+        form = EmailAuthenticationForm()
 
     context = {
         'form': form,

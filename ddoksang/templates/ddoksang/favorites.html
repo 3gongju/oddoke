@@ -11,30 +11,68 @@
       <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">💕 내가 찜한 덕의 생카</h2>
       <p class="text-gray-600 text-sm sm:text-base">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
     </div>
-    <a href="{% url 'ddoksang:home' %}" class="text-pink-600 hover:underline text-sm sm:text-base">전체보기 &rarr;</a>
+    <a href="{% url 'ddoksang:home' %}" class="text-pink-600 hover:underline text-sm sm:text-base">홈으로 &rarr;</a>
   </div>
 
   {% if favorites %}
-    <div id="favoriteCarousel" class="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-4 px-1 sm:px-2" style="scroll-snap-type: x mandatory;">
+    <div id="favoriteCarousel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {% for favorite in favorites %}
-        <div class="min-w-[280px] sm:min-w-[300px] scroll-snap-align-start flex-shrink-0" data-cafe-id="{{ favorite.cafe.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite.cafe show_favorite_btn=True is_favorited=True %}
+        <div class="flex-shrink-0" data-cafe-id="{{ favorite.cafe.id }}">
+          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite.cafe show_favorite_btn=True user_favorites=user_favorites %}
         </div>
       {% endfor %}
     </div>
-    <div class="flex justify-center mt-4">
-      <p class="text-xs sm:text-sm text-gray-500">← 좌우로 스와이프해보세요 →</p>
+    
+    <!-- 총 개수 표시 -->
+    <div class="mt-8 text-center">
+      <p class="text-sm text-gray-500">총 {{ favorites.count }}개의 생일카페를 찜했어요</p>
     </div>
   {% else %}
     <div class="text-center py-16">
       <div class="text-6xl mb-4">💔</div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
       <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
-      <a href="{% url 'ddoksang:index' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+      <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
         생일카페 둘러보기
       </a>
     </div>
   {% endif %}
 </section>
-<script src="{% static 'js/favorite.js' %}"></script>
+
+<!-- CSRF 토큰 -->
+{% csrf_token %}
+
+<!-- 통합 찜하기 시스템 로드 -->
+
+<!-- 페이지별 초기화 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 찜하기 상태 변경 콜백 등록
+    if (window.favoriteManager) {
+        window.favoriteManager.onFavoriteChange((cafeId, isFavorited) => {
+            console.log(`카페 ${cafeId} 찜하기 상태 변경: ${isFavorited}`);
+            
+            // 찜 해제 시 페이지에서 해당 카드 제거
+            if (!isFavorited) {
+                const card = document.querySelector(`[data-cafe-id="${cafeId}"]`);
+                if (card) {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        card.remove();
+                        
+                        // 카드가 모두 제거되면 빈 상태 표시
+                        const carousel = document.getElementById('favoriteCarousel');
+                        if (carousel && carousel.children.length === 0) {
+                            window.location.reload(); // 빈 상태 UI로 새로고침
+                        }
+                    }, 300);
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
