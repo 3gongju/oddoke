@@ -51,7 +51,7 @@ def signup(request):
 
             # ✅ HTML 이메일 내용 렌더링
             subject = '어덕해 회원가입 이메일 인증'
-            from_email = os.getenv('GMAIL_ID')
+            from_email = os.getenv('EMAIL_HOST_USER')
             to = user.email
 
             # 순수 텍스트 버전 (백업용)
