@@ -177,6 +177,40 @@ function initBirthdayNavigation() {
     });
 }
 
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '60px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: 
+      type === 'success' ? '#10b981' : 
+      type === 'warning' ? '#4b5563' : 
+      '#333',
+    color: '#fff',
+    padding: '12px 20px',
+    borderRadius: '9999px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    zIndex: 9999,
+    opacity: 0,
+    transition: 'opacity 0.4s ease',
+  });
+
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => (toast.style.opacity = 1));
+
+  setTimeout(() => {
+    toast.style.opacity = 0;
+    toast.addEventListener('transitionend', () => toast.remove());
+  }, 2000);
+}
+
+
 // 아티스트 검색
 function searchArtist(artistName) {
     window.location.href = `/ddoksang/search/?q=${encodeURIComponent(artistName)}`;
