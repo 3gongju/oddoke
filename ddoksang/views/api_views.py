@@ -319,39 +319,40 @@ def latest_cafes_api(request):
     """최신 카페 더보기 API"""
     try:
         page = int(request.GET.get('page', 1))
-        per_page = int(request.GET.get('per_page', 6))
+        per_page = 6  # 페이지당 6개씩
         
-        # 제한값 검증
-        if page < 1 or per_page < 1 or per_page > 50:
-            return JsonResponse({'success': False, 'error': '잘못된 페이징 정보입니다.'})
-        
-        start = (page - 1) * per_page
-        end = start + per_page
-        
-        # 승인된 모든 카페를 최신순으로 가져오기
+        # 승인된 최신 카페들만 가져오기
         cafes = BdayCafe.objects.filter(
             status='approved'
-        ).select_related('artist', 'member').order_by('-created_at')[start:end]
+        ).select_related('artist', 'member').order_by('-created_at')
         
-        total_count = BdayCafe.objects.filter(status='approved').count()
+        paginator = Paginator(cafes, per_page)
         
-        # 데이터 직렬화
-        cafe_data = []
-        for cafe in cafes:
+        try:
+            page_obj = paginator.page(page)
+        except:
+            return JsonResponse({'error': 'Invalid page'}, status=400)
+        
+        # 카페 데이터를 JSON으로 변환
+        cafes_data = []
+        for cafe in page_obj:
             try:
-                cafe_data.append({
+                cafes_data.append({
                     'id': cafe.id,
-                    'cafe_name': cafe.cafe_name,
-                    'artist_name': cafe.artist.display_name if cafe.artist else '',
-                    'member_name': cafe.member.member_name if cafe.member else '',
-                    'main_image': cafe.get_main_image(),
-                    'place_name': cafe.place_name or '',
-                    'address': cafe.address or '',
-                    'start_date': cafe.start_date.isoformat() if cafe.start_date else '',
-                    'end_date': cafe.end_date.isoformat() if cafe.end_date else '',
+                    'name': cafe.cafe_name,
+                    'artist': cafe.artist.display_name,
+                    'member': cafe.member.member_name if cafe.member else None,
+                    'address': cafe.address,
+                    'place_name': cafe.place_name,
+                    'image_url': cafe.get_main_image() if cafe.get_main_image() else '',
+                    'start_date': cafe.start_date.strftime('%m.%d'),
+                    'end_date': cafe.end_date.strftime('%m.%d'),
                     'is_active': cafe.is_active,
                     'days_remaining': cafe.days_remaining,
+                    'days_until_start': cafe.days_until_start,
                     'special_benefits': cafe.special_benefits or '',
+                    'hashtags': cafe.hashtags or '',
+                    'created_at': cafe.created_at.strftime('%Y-%m-%d'),
                 })
             except Exception as e:
                 logger.warning(f"카페 {cafe.id} 데이터 처리 오류: {e}")
@@ -359,16 +360,17 @@ def latest_cafes_api(request):
         
         return JsonResponse({
             'success': True,
-            'cafes': cafe_data,
-            'has_more': end < total_count,
-            'total': total_count,
-            'current_page': page,
-            'per_page': per_page
+            'cafes': cafes_data,
+            'has_next': page_obj.has_next(),
+            'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
+            'total_pages': paginator.num_pages,
+            'current_page': page_obj.number,
+            'total_count': paginator.count,
         })
         
     except ValueError as e:
-        logger.warning(f"최신 카페 API 파라미터 오류: {e}")
+        logger.warning(f"Latest cafes API 파라미터 오류: {e}")
         return JsonResponse({'success': False, 'error': '잘못된 요청 파라미터입니다.'})
     except Exception as e:
-        logger.error(f"최신 카페 API 오류: {e}")
+        logger.error(f"Latest cafes API 오류: {e}")
         return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})
