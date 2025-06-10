@@ -337,14 +337,25 @@ def latest_cafes_api(request):
         cafes_data = []
         for cafe in page_obj:
             try:
+                # 이미지 URL을 더 안전하게 가져오기
+                image_url = ''
+                if hasattr(cafe, 'get_main_image'):
+                    image_url = cafe.get_main_image() or ''
+                elif cafe.main_image:
+                    image_url = cafe.main_image.url
+                elif cafe.images.exists():
+                    first_image = cafe.images.first()
+                    if first_image and first_image.image:
+                        image_url = first_image.image.url
+                
                 cafes_data.append({
                     'id': cafe.id,
                     'name': cafe.cafe_name,
                     'artist': cafe.artist.display_name,
                     'member': cafe.member.member_name if cafe.member else None,
-                    'address': cafe.address,
-                    'place_name': cafe.place_name,
-                    'image_url': cafe.get_main_image() if cafe.get_main_image() else '',
+                    'address': cafe.address or '',
+                    'place_name': cafe.place_name or '',  # 추가
+                    'image_url': image_url,  # 더 견고한 이미지 처리
                     'start_date': cafe.start_date.strftime('%m.%d'),
                     'end_date': cafe.end_date.strftime('%m.%d'),
                     'is_active': cafe.is_active,

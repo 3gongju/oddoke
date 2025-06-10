@@ -77,6 +77,7 @@ def home_view(request):
     }
     
     return render(request, 'ddoksang/home.html', context)
+
 def search_view(request):
     """통합 검색 페이지"""
     query = request.GET.get('q', '').strip()

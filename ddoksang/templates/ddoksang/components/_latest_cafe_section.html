@@ -6,8 +6,6 @@
   <div class="flex items-center justify-between mb-6 px-4">
     <div class="flex items-center space-x-3">
       <h2 class="text-xl font-semibold text-gray-800">⭐ 최신 등록된 생카</h2>
-      <!-- 디버그: 전체 카페 개수 표시 -->
-      <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">전체 {{ total_latest_cafes_count }}개 중 6개 표시</span>
     </div>
     <a href="{% url 'ddoksang:search' %}?sort=latest" class="text-sm text-orange-600 hover:underline">
       전체 보기 &rarr;
@@ -15,49 +13,23 @@
   </div>
 
   {% if latest_cafes %}
-    <!-- 최신 6개 카페 그리드 - 넓은 간격으로 여유롭게 -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-16 px-6 md:px-8 lg:px-12" id="latestCafesGrid">
-      {% for cafe in latest_cafes|slice:":6" %}
-        <div class="cafe-card-item w-full">
+    <!-- 6개 카페 그리드 -->
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6 px-4 justify-items-center" id="latestCafesGrid">
+      {% for cafe in latest_cafes %}
+        <div class="cafe-card-item w-full max-w-[175px] md:max-w-none">
           {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='latest' user_favorites=user_favorites %}
         </div>
       {% endfor %}
     </div>
 
-    <!-- 더보기 버튼 (전체 카페가 6개보다 많을 때만 표시) -->
+    <!-- 더보기 버튼 -->
     {% if total_latest_cafes_count > 6 %}
-      <div class="text-center mt-8 px-4">
-        <button id="loadMoreCafes" 
-                class="bg-gray-900 text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors inline-flex items-center space-x-2">
-          <span>더 많은 생카 보기</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </button>
-      </div>
-    {% endif %}
-
-    <!-- 로딩 상태 -->
-    <div id="loadingMore" class="hidden text-center mt-4">
-      <div class="inline-flex items-center space-x-2 text-gray-600">
-        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.25"></circle>
-          <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span>로딩 중...</span>
-      </div>
-    </div>
-
-    <!-- 더 적게 보기 버튼 -->
-    <div id="showLessContainer" class="hidden text-center mt-6 px-4">
-      <button id="showLessCafes" 
-              class="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors inline-flex items-center space-x-2">
-        <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-        <span>접기</span>
+    <div class="text-center mt-6">
+      <button id="loadMoreBtn" class="load-more-btn bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium" data-page="2">
+        더보기 ({{ total_latest_cafes_count|add:"-6" }}개 더)
       </button>
     </div>
+    {% endif %}
 
   {% else %}
     <!-- 빈 상태 -->
@@ -73,8 +45,175 @@
   {% endif %}
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const cafesGrid = document.getElementById('latestCafesGrid');
+    
+    if (loadMoreBtn && cafesGrid) {
+        loadMoreBtn.addEventListener('click', function() {
+            const page = parseInt(this.dataset.page);
+            
+            // 로딩 상태
+            const originalText = this.textContent;
+            this.textContent = '로딩 중...';
+            this.disabled = true;
+            
+            // CSRF 토큰 가져오기
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/ddoksang/api/latest-cafes/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API 응답:', data); // 디버그용
+                
+                if (data.success && data.cafes) {
+                    // 새로운 카페들 추가 - 기존 템플릿과 완전히 동일한 구조
+                    data.cafes.forEach(cafe => {
+                        const cafeItem = document.createElement('div');
+                        cafeItem.className = 'cafe-card-item w-full max-w-[175px] md:max-w-none';
+                        
+                        // 이미지 HTML 생성 (기존 템플릿과 동일한 로직)
+                        let imageHtml = '';
+                        if (cafe.image_url && cafe.image_url.trim() !== '') {
+                            imageHtml = `
+                                <img src="${cafe.image_url}" 
+                                     alt="${cafe.name}" 
+                                     class="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
+                                     loading="lazy"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
+                                    <span class="text-orange-400 text-6xl mb-2">🎂</span>
+                                    <p class="text-orange-600 font-medium text-lg">${cafe.name}</p>
+                                </div>
+                            `;
+                        } else {
+                            imageHtml = `
+                                <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center">
+                                    <span class="text-orange-400 text-6xl mb-2">🎂</span>
+                                    <p class="text-orange-600 font-medium text-lg">${cafe.name}</p>
+                                </div>
+                            `;
+                        }
+                        
+                        // 상태 뱃지 결정
+                        let statusBadge = '';
+                        if (cafe.is_active) {
+                            statusBadge = '<span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-green-500 text-white">운영중</span>';
+                        } else {
+                            // 간단하게 날짜로 판단
+                            const today = new Date();
+                            const startDate = new Date('2024-' + cafe.start_date.replace('.', '-'));
+                            
+                            if (startDate > today) {
+                                statusBadge = '<span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-blue-500 text-white">예정</span>';
+                            } else {
+                                statusBadge = '<span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-gray-500 text-white">종료</span>';
+                            }
+                        }
+                        
+                        // D-day 정보
+                        let dDayInfo = '';
+                        if (cafe.is_active && cafe.days_remaining > 0 && cafe.days_remaining <= 7) {
+                            dDayInfo = `<span class="text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">종료 D-${cafe.days_remaining}</span>`;
+                        } else if (!cafe.is_active && cafe.days_until_start > 0 && cafe.days_until_start <= 7) {
+                            dDayInfo = `<span class="text-blue-600 font-medium text-xs bg-blue-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">시작 D-${cafe.days_until_start}</span>`;
+                        }
+                        
+                        // 기존 _cafe_card_latest.html과 완전히 동일한 구조
+                        cafeItem.innerHTML = `
+                            <a href="/ddoksang/cafe/${cafe.id}/" class="block group poster-card bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
+                                <!-- 포스터 이미지 메인 -->
+                                <div class="relative poster-aspect overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+                                    ${imageHtml}
+                                    <!-- 그라데이션 오버레이 (하단) -->
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent h-20"></div>
+                                </div>
+
+                                <!-- 카페 정보 (간결하게) -->
+                                <div class="px-6 py-5 pb-6 flex flex-col h-36 justify-between">
+                                    <!-- 상단: 카페명과 상태 뱃지 -->
+                                    <div class="flex items-start justify-between mb-2">
+                                        <h4 class="font-bold text-lg text-gray-900 line-clamp-1 leading-tight flex-1 mr-3">
+                                            ${cafe.name}
+                                        </h4>
+                                        ${statusBadge}
+                                    </div>
+
+                                    <!-- 중간: 멤버/아티스트 정보 -->
+                                    <div class="flex items-center space-x-2 mb-2 artist-info">
+                                        ${cafe.member ? `
+                                            <span class="text-sm font-medium text-gray-700 truncate member-name">${cafe.member}</span>
+                                            <span class="text-xs text-gray-400">•</span>
+                                            <span class="text-sm text-gray-500 truncate artist-name">${cafe.artist}</span>
+                                        ` : `
+                                            <span class="text-sm font-medium text-gray-700 truncate artist-name">${cafe.artist}</span>
+                                            <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full flex-shrink-0">아티스트 생카</span>
+                                        `}
+                                    </div>
+
+                                    <!-- 하단: 위치와 날짜 정보 -->
+                                    <div class="space-y-1 location-date-info">
+                                        <!-- 위치 정보 -->
+                                        <div class="flex items-center text-sm text-gray-600">
+                                            <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
+                                            </svg>
+                                            <span class="truncate location-text">${cafe.place_name || cafe.address || '위치 정보 없음'}</span>
+                                        </div>
+
+                                        <!-- 운영 기간 -->
+                                        <div class="flex items-center text-sm text-gray-600">
+                                            <div class="flex items-center">
+                                                <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                </svg>
+                                                <span class="truncate date-range">${cafe.start_date} - ${cafe.end_date}</span>
+                                            </div>
+                                            ${dDayInfo}
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                        
+                        cafesGrid.appendChild(cafeItem);
+                    });
+                    
+                    // 다음 페이지가 있으면 버튼 업데이트, 없으면 숨기기
+                    if (data.has_next) {
+                        this.dataset.page = data.next_page_number;
+                        const remaining = data.total_count - ((page - 1) * 6 + data.cafes.length);
+                        this.textContent = `더보기 (${remaining}개 더)`;
+                        this.disabled = false;
+                    } else {
+                        this.style.display = 'none';
+                    }
+                } else {
+                    console.error('API 응답 오류:', data);
+                    this.textContent = '오류 발생';
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('네트워크 오류:', error);
+                this.textContent = '오류 발생';
+                this.disabled = false;
+            });
+        });
+    }
+});
+</script>
+
 <style>
-/* 애니메이션 */
+/* 기존 애니메이션 */
 .cafe-card-item {
     animation: fadeIn 0.5s ease forwards;
 }
@@ -92,274 +231,161 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+/* 포스터 카드 전용 스타일 */
+.poster-card {
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
-.additional-cafe.show {
-    display: block !important;
-    animation: slideDown 0.4s ease forwards;
+.poster-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+}
+
+.poster-card .line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.poster-card img {
+  transition: transform 0.5s ease;
+}
+
+.poster-card:hover img {
+  transform: scale(1.02);
+}
+
+/* 포스터 비율 유지 (3:4 비율) */
+.poster-aspect {
+  aspect-ratio: 3 / 4;
+}
+
+@supports not (aspect-ratio: 3 / 4) {
+  .poster-aspect {
+    position: relative;
+    padding-bottom: 133.33%;
+    height: 0;
+  }
+  
+  .poster-aspect > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* 더보기 버튼 스타일 */
+.load-more-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  #latestCafesGrid {
+    gap: 0.5rem;
+  }
+  
+  .poster-card {
+    max-width: 160px;
+  }
+  
+  .poster-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .poster-card .px-6 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    height: 8rem;
+  }
+  
+  .poster-card h4 {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+  
+  .poster-card .text-sm {
+    font-size: 0.7rem;
+  }
+  
+  .poster-card .text-xs {
+    font-size: 0.6rem;
+  }
+}
+
+/* 태블릿에서 간격 조정 */
+@media (min-width: 641px) and (max-width: 1023px) {
+  #latestCafesGrid {
+    gap: 1rem;
+  }
+}
+
+/* 아이폰 SE 등 매우 작은 화면 */
+@media (max-width: 375px) {
+  .poster-card {
+    max-width: 145px;
+  }
+  
+  .poster-card .px-6 {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    height: 7.5rem;
+  }
+  
+  .poster-card h4 {
+    font-size: 0.75rem;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+  }
+  
+  .poster-card .text-sm {
+    font-size: 0.65rem;
+  }
+  
+  .poster-card .text-xs {
+    font-size: 0.55rem;
+  }
+}
+
+/* 320px 이하 */
+@media (max-width: 320px) {
+  .poster-card {
+    max-width: 135px;
+  }
+  
+  .poster-card .px-6 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    height: 7rem;
+  }
+  
+  .poster-card h4 {
+    font-size: 0.7rem;
+    line-height: 1.1;
+    margin-bottom: 0.125rem;
+  }
+  
+  .poster-card .text-sm {
+    font-size: 0.6rem;
+  }
+  
+  .poster-card .text-xs {
+    font-size: 0.5rem;
+  }
+  
+  .poster-card .space-y-1 > * + * {
+    margin-top: 0.125rem;
+  }
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const loadMoreBtn = document.getElementById('loadMoreCafes');
-    const showLessBtn = document.getElementById('showLessCafes');
-    const showLessContainer = document.getElementById('showLessContainer');
-    const loadingMore = document.getElementById('loadingMore');
-    const latestCafesGrid = document.getElementById('latestCafesGrid');
-    
-    let currentPage = 1;
-    let isLoading = false;
-    let hasMoreData = true;
-    const itemsPerPage = 6;
-    
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', function() {
-            if (isLoading || !hasMoreData) return;
-            
-            loadMoreCafes();
-        });
-    } else {
-        console.log('더보기 버튼이 없습니다. (6개 이하의 카페)');
-    }
-    
-    if (showLessBtn) {
-        showLessBtn.addEventListener('click', function() {
-            // 추가된 카페들 제거 (첫 6개만 남기기)
-            const allCards = latestCafesGrid.querySelectorAll('.cafe-card-item');
-            for (let i = 6; i < allCards.length; i++) {
-                allCards[i].remove();
-            }
-            
-            // UI 상태 초기화
-            currentPage = 1;
-            hasMoreData = true;
-            loadMoreBtn.style.display = 'inline-flex';
-            loadMoreBtn.querySelector('span').textContent = '더 많은 생카 보기';
-            showLessContainer.classList.add('hidden');
-            
-            // 상단으로 스크롤
-            document.getElementById('latestCafesSection').scrollIntoView({ 
-                behavior: 'smooth',
-                block: 'start'
-            });
-        });
-    }
-    
-    async function loadMoreCafes() {
-        isLoading = true;
-        
-        // 로딩 상태 표시
-        loadMoreBtn.style.display = 'none';
-        loadingMore.classList.remove('hidden');
-        
-        try {
-            // AJAX 요청
-            const response = await fetch(`/ddoksang/api/latest-cafes/?page=${currentPage + 1}&per_page=${itemsPerPage}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.cafes && data.cafes.length > 0) {
-                // 새로운 카페 카드들 추가
-                data.cafes.forEach((cafe, index) => {
-                    const cardHtml = createCafeCardHtml(cafe);
-                    const cardElement = document.createElement('div');
-                    cardElement.className = 'cafe-card-item w-full';
-                    cardElement.innerHTML = cardHtml;
-                    
-                    // 순차적 애니메이션을 위한 딜레이
-                    cardElement.style.opacity = '0';
-                    cardElement.style.transform = 'translateY(20px)';
-                    
-                    latestCafesGrid.appendChild(cardElement);
-                    
-                    setTimeout(() => {
-                        cardElement.style.transition = 'all 0.4s ease';
-                        cardElement.style.opacity = '1';
-                        cardElement.style.transform = 'translateY(0)';
-                    }, index * 100);
-                });
-                
-                currentPage++;
-                hasMoreData = data.has_more;
-                
-                // 더보기 버튼 상태 업데이트
-                if (hasMoreData) {
-                    loadMoreBtn.querySelector('span').textContent = `더 많은 생카 보기`;
-                } else {
-                    loadMoreBtn.style.display = 'none';
-                }
-                
-                // 접기 버튼 표시
-                showLessContainer.classList.remove('hidden');
-                
-            } else {
-                // 더 이상 데이터가 없음
-                hasMoreData = false;
-                loadMoreBtn.style.display = 'none';
-            }
-            
-        } catch (error) {
-            console.error('카페 로드 실패:', error);
-            
-            // 에러 발생 시 사용자에게 알림
-            const errorMsg = document.createElement('div');
-            errorMsg.className = 'text-center text-red-500 mt-4 p-4 bg-red-50 rounded-lg mx-4';
-            errorMsg.innerHTML = `
-                <p class="text-sm">카페를 불러오는 중 오류가 발생했습니다.</p>
-                <button onclick="location.reload()" class="mt-2 px-4 py-2 bg-red-500 text-white rounded text-xs hover:bg-red-600">
-                    새로고침
-                </button>
-            `;
-            document.getElementById('latestCafesSection').appendChild(errorMsg);
-            
-        } finally {
-            // 로딩 상태 숨기기
-            loadingMore.classList.add('hidden');
-            
-            if (hasMoreData) {
-                loadMoreBtn.style.display = 'inline-flex';
-            }
-            
-            isLoading = false;
-        }
-    }
-    
-    // 카페 카드 HTML 생성 함수 (포스터 스타일)
-    function createCafeCardHtml(cafe) {
-        const cafeName = cafe.cafe_name || cafe.name || '생일카페';
-        const artistName = cafe.artist?.display_name || cafe.artist_name || '';
-        const memberName = cafe.member?.member_name || cafe.member_name || '';
-        const mainImage = cafe.main_image || cafe.image || '';
-        const address = cafe.place_name || cafe.address || '';
-        const startDate = cafe.start_date ? new Date(cafe.start_date).toLocaleDateString('ko-KR', {month: 'numeric', day: 'numeric'}) : '';
-        const endDate = cafe.end_date ? new Date(cafe.end_date).toLocaleDateString('ko-KR', {month: 'numeric', day: 'numeric'}) : '';
-        
-        // 상태 판단
-        const today = new Date();
-        const start = new Date(cafe.start_date);
-        const end = new Date(cafe.end_date);
-        let statusBadge = '';
-        let statusClass = '';
-        
-        if (today >= start && today <= end) {
-            statusBadge = '운영중';
-            statusClass = 'bg-green-500 text-white';
-        } else if (today < start) {
-            statusBadge = '예정';
-            statusClass = 'bg-blue-500 text-white';
-        } else {
-            statusBadge = '종료';
-            statusClass = 'bg-gray-500 text-white';
-        }
-        
-        return `
-            <a href="/ddoksang/cafe/${cafe.id}/" class="block group poster-card bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
-                <!-- 포스터 이미지 메인 -->
-                <div class="relative poster-aspect overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100" style="aspect-ratio: 3 / 4;">
-                    ${mainImage ? `
-                        <img src="${mainImage}" 
-                             alt="${cafeName}" 
-                             class="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
-                             loading="lazy">
-                    ` : `
-                        <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center">
-                            <span class="text-orange-400 text-4xl mb-2">🎂</span>
-                            <p class="text-orange-600 font-medium text-sm">${cafeName}</p>
-                        </div>
-                    `}
-                    
-                    <!-- 그라데이션 오버레이 -->
-                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent h-16"></div>
-                </div>
-
-                <!-- 카페 정보 -->
-                <div class="px-3 py-2.5 flex flex-col h-24 justify-between">
-                    <!-- 상단: 카페명과 상태 뱃지 -->
-                    <div class="flex items-start justify-between mb-1.5">
-                        <h4 class="font-bold text-xs text-gray-900 line-clamp-1 leading-tight flex-1 mr-2">
-                            ${cafeName}
-                        </h4>
-                        <span class="inline-flex px-1 py-0.5 rounded-full text-xs ${statusClass} flex-shrink-0">${statusBadge}</span>
-                    </div>
-
-                    <!-- 중간: 멤버/아티스트 정보 -->
-                    <div class="flex items-center space-x-1 mb-1.5">
-                        ${memberName ? `
-                            <span class="text-xs font-medium text-gray-700 truncate">${memberName.substring(0, 8)}</span>
-                            <span class="text-xs text-gray-400">•</span>
-                            <span class="text-xs text-gray-500 truncate">${artistName.substring(0, 6)}</span>
-                        ` : `
-                            <span class="text-xs font-medium text-gray-700 truncate">${artistName.substring(0, 12)}</span>
-                        `}
-                    </div>
-
-                    <!-- 하단: 위치와 날짜 정보 -->
-                    <div class="space-y-1">
-                        <!-- 위치 정보 -->
-                        <div class="flex items-center text-xs text-gray-600">
-                            <svg class="w-2.5 h-2.5 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            </svg>
-                            <span class="truncate">${address.substring(0, 15)}</span>
-                        </div>
-
-                        <!-- 운영 기간 -->
-                        <div class="flex items-center justify-between text-xs text-gray-600">
-                            <div class="flex items-center flex-1 min-w-0">
-                                <svg class="w-2.5 h-2.5 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                <span class="truncate">${startDate} - ${endDate}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        `;
-    }
-    
-    // 포스터 카드 스타일 CSS 추가 (AJAX로 추가되는 카드용)
-    const style = document.createElement('style');
-    style.textContent = `
-        .poster-aspect { aspect-ratio: 3 / 4; }
-        .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
-        .poster-card { transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1); }
-        .poster-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3); }
-        .poster-card img { transition: transform 0.5s ease; }
-        .poster-card:hover img { transform: scale(1.02); }
-        @supports not (aspect-ratio: 3 / 4) {
-            .poster-aspect { position: relative; padding-bottom: 133.33%; height: 0; }
-            .poster-aspect > * { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        }
-        @media (max-width: 640px) {
-            .poster-card { max-width: 160px; }
-            .poster-card:hover { transform: translateY(-3px); }
-            .poster-card .px-6 { padding-left: 0.75rem; padding-right: 0.75rem; padding-top: 0.75rem; padding-bottom: 0.75rem; height: 8rem; }
-            .poster-card h4 { font-size: 0.8rem; line-height: 1.2; }
-            .poster-card .text-sm { font-size: 0.7rem; }
-            .poster-card .text-xs { font-size: 0.6rem; }
-        }
-        @media (max-width: 375px) {
-            .poster-card { max-width: 145px; }
-            .poster-card .px-6 { padding-left: 0.625rem; padding-right: 0.625rem; height: 7.5rem; }
-            .poster-card h4 { font-size: 0.75rem; line-height: 1.1; }
-            .poster-card .text-sm { font-size: 0.65rem; }
-            .poster-card .text-xs { font-size: 0.55rem; }
-        }
-    `;
-    document.head.appendChild(style);
-});
-</script>
