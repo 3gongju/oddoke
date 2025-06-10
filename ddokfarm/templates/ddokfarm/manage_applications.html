@@ -30,41 +30,39 @@
     </div>
   </div>
 
-  <!-- 승인된 참여자 빠른 접근 -->
-  {% if approved_count > 0 %}
+  <!-- 승인된 참여자 빠른 접근 - 참여자 기준으로 묶어서 표시 -->
+  {% if approved_users_for_chat %}
     <div class="bg-white rounded-lg shadow mb-6 p-6">
       <h2 class="text-lg font-semibold mb-4">💬 승인된 참여자와 채팅</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {% for application in applications %}
-          {% if application.status == 'approved' %}
-            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-8 w-8">
-                    {% if application.user.profile_image %}
-                      <img class="h-8 w-8 rounded-full object-cover" src="{{ application.user.profile_image.url }}" alt="{{ application.user.username }}">
-                    {% else %}
-                      <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-medium">
-                        {{ application.user.username|first|upper }}
-                      </div>
-                    {% endif %}
-                  </div>
-                  <div class="ml-3">
-                    <div class="text-sm font-medium text-gray-900">{{ application.user.username }}</div>
-                    <div class="text-xs text-gray-500">
-                      {% for member in application.members.all %}
-                        {{ member.member_name }}{% if not forloop.last %}, {% endif %}
-                      {% endfor %}
+        {% for user_data in approved_users_for_chat %}
+          <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="flex-shrink-0 h-8 w-8">
+                  {% if user_data.user.profile_image %}
+                    <img class="h-8 w-8 rounded-full object-cover" src="{{ user_data.user.profile_image.url }}" alt="{{ user_data.user.username }}">
+                  {% else %}
+                    <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs font-medium">
+                      {{ user_data.user.username|first|upper }}
                     </div>
+                  {% endif %}
+                </div>
+                <div class="ml-3">
+                  <div class="text-sm font-medium text-gray-900">{{ user_data.user.username }}</div>
+                  <div class="text-xs text-gray-500">
+                    {% for member in user_data.approved_members %}
+                      {{ member }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
                   </div>
                 </div>
-                <a href="{% url 'ddokchat:start_split_chat' post_id=post.id user_id=application.user.id %}"
-                   class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                  💬
-                </a>
               </div>
+              <a href="{% url 'ddokchat:start_split_chat' post_id=post.id user_id=user_data.user.id %}"
+                 class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                💬
+              </a>
             </div>
-          {% endif %}
+          </div>
         {% endfor %}
       </div>
     </div>
@@ -211,6 +209,30 @@ function updateStatus(applicationId, status) {
     alert('처리 중 오류가 발생했습니다.');
   });
 }
+
+// 승인된 신청들 중에서 같은 사용자의 중복 채팅 버튼 제거
+document.addEventListener('DOMContentLoaded', function() {
+  const seenUsers = new Set();
+  const rows = document.querySelectorAll('tbody tr');
+  
+  rows.forEach(row => {
+    const usernameEl = row.querySelector('.text-sm.font-medium.text-gray-900');
+    const chatCell = row.querySelector('td:last-child'); // 마지막 칼럼 (채팅 칼럼)
+    const chatButton = chatCell?.querySelector('a[href*="start_split_chat"]');
+    
+    if (usernameEl && chatButton) {
+      const username = usernameEl.textContent.trim();
+      
+      if (seenUsers.has(username)) {
+        // 이미 본 사용자면 채팅 버튼을 "위와 동일"로 변경
+        chatCell.innerHTML = '<span class="text-gray-400 text-xs">위와 동일</span>';
+      } else {
+        // 처음 보는 사용자면 Set에 추가
+        seenUsers.add(username);
+      }
+    }
+  });
+});
 </script>
 
 {% csrf_token %}

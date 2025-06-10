@@ -71,6 +71,10 @@
               <th class="text-left py-2 text-gray-700">무산 여부</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_failure_display }}</td>
             </tr>
+            <tr>
+              <th class="text-left py-2 text-gray-700">밀어내기</th>
+              <td class="text-right py-2 text-gray-800">{{ post.get_push_display }}</td>
+            </tr>
           {% endif %}
         </tbody>
       </table>

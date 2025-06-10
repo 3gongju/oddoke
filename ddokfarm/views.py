@@ -195,9 +195,7 @@ def post_create(request):
     selected_member_ids = []
 
     if request.method == 'POST':
-        print("[디버그] POST 데이터:", request.POST)
         selected_member_ids = list(set(map(int, request.POST.getlist('members'))))
-        print("[디버그] 실제로 체크된 멤버:", selected_member_ids)
 
         selected_artist_id = request.POST.get('artist') or request.GET.get('artist') or default_artist_id
         image_files = request.FILES.getlist('images')
@@ -234,8 +232,6 @@ def post_create(request):
                             member_id = sp_form.initial.get('member')
                             if member_id:
                                 member_field = Member.objects.get(id=member_id)
-
-                        print(f"[디버그] 폼셋 idx={idx}, 멤버={member_field}, 가격={price_field}, 체크됨={member_field.id in selected_member_ids if member_field else None}")
 
                         if member_field and member_field.id not in selected_member_ids and price_field:
                             sp_instance = sp_form.save(commit=False)
@@ -719,6 +715,9 @@ def split_application(request, category, post_id):
         'message': f'{len(selected_member_ids)}명의 멤버 신청이 완료되었습니다. 총대의 승인을 기다려주세요.'
     })
 
+# ddokfarm/views.py - manage_split_applications 함수 개선
+# ddokfarm/views.py - manage_split_applications 함수 개선 (채팅 섹션만)
+
 @login_required
 def manage_split_applications(request, category, post_id):
     if category != 'split':
@@ -735,20 +734,47 @@ def manage_split_applications(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
     
-    # 최신 신청순으로 정렬
+    # 최신 신청순으로 정렬 (기존과 동일)
     applications = SplitApplication.objects.filter(post=post).prefetch_related('members', 'user').order_by('-created_at')
     
-    # 상태별 개수 계산
+    # 상태별 개수 계산 (기존과 동일)
     pending_count = applications.filter(status='pending').count()
     approved_count = applications.filter(status='approved').count()
     rejected_count = applications.filter(status='rejected').count()
     
+    # ✅ 새로 추가: 승인된 참여자들을 사용자별로 그룹화 (채팅용)
+    approved_users_for_chat = {}
+    for app in applications.filter(status='approved'):
+        user_id = app.user.id
+        if user_id not in approved_users_for_chat:
+            approved_users_for_chat[user_id] = {
+                'user': app.user,
+                'approved_members': set(),
+                'latest_approved_date': app.created_at,
+            }
+        
+        # 승인된 멤버들 추가
+        member_names = app.members.values_list('member_name', flat=True)
+        approved_users_for_chat[user_id]['approved_members'].update(member_names)
+        
+        # 가장 최근 승인일 업데이트
+        if app.created_at > approved_users_for_chat[user_id]['latest_approved_date']:
+            approved_users_for_chat[user_id]['latest_approved_date'] = app.created_at
+    
+    # 최신 승인일 순으로 정렬
+    approved_users_list = sorted(
+        approved_users_for_chat.values(),
+        key=lambda x: x['latest_approved_date'],
+        reverse=True
+    )
+    
     context = {
         'post': post,
         'category': category,
-        'applications': applications,
+        'applications': applications,  # 기존 전체 히스토리
+        'approved_users_for_chat': approved_users_list,  # ✅ 새로 추가: 채팅용 그룹화된 사용자
         'pending_count': pending_count,
-        'approved_count': approved_count,
+        'approved_count': len(approved_users_list),  # ✅ 참여자 수 기준으로 변경
         'rejected_count': rejected_count,
     }
     
