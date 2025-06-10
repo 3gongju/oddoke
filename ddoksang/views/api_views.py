@@ -1,16 +1,18 @@
 # API 엔드포인트들
 
-from datetime import date
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET
-from django.core.paginator import Paginator
-from django.utils import timezone
-from django.db.models import Q
-import logging
+from datetime import date # 날짜 처리
+from django.http import JsonResponse # JSON 응답
+from django.shortcuts import get_object_or_404 # 객체 조회
+from django.views.decorators.http import require_GET # GET 데코레이터
+from django.core.paginator import Paginator # 페이지네이션
+from django.utils import timezone # 시간대 처리
+from django.db.models import Q # 쿼리 필터링
+import logging # 로깅깅
 
-from ..models import BdayCafe
-from .utils import DEFAULT_PAGE_SIZE, validate_coordinates, get_nearby_cafes
+from django.template.loader import render_to_string # HTML 렌더링
+
+from ..models import BdayCafe, CafeFavorite # 찜하기 기능용용
+from .utils import DEFAULT_PAGE_SIZE, validate_coordinates, get_nearby_cafes # 유틸리티 함수
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +318,7 @@ def search_suggestions_api(request):
 # 최신 카페 6개 이상 더보기로 전체 불러옴
 @require_GET
 def latest_cafes_api(request):
-    """최신 카페 더보기 API"""
+    """최신 카페 더보기 API - HTML 렌더링 방식"""
     try:
         page = int(request.GET.get('page', 1))
         per_page = 6  # 페이지당 6개씩
@@ -324,7 +326,7 @@ def latest_cafes_api(request):
         # 승인된 최신 카페들만 가져오기
         cafes = BdayCafe.objects.filter(
             status='approved'
-        ).select_related('artist', 'member').order_by('-created_at')
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')
         
         paginator = Paginator(cafes, per_page)
         
@@ -333,50 +335,36 @@ def latest_cafes_api(request):
         except:
             return JsonResponse({'error': 'Invalid page'}, status=400)
         
-        # 카페 데이터를 JSON으로 변환
-        cafes_data = []
+        # 사용자 찜 목록 가져오기
+        user_favorites = []
+        if request.user.is_authenticated:
+            user_favorites = list(
+                CafeFavorite.objects.filter(user=request.user)
+                .values_list('cafe_id', flat=True)
+            )
+        
+        # 템플릿에서 HTML 렌더링
+        html_content = ""
         for cafe in page_obj:
-            try:
-                # 이미지 URL을 더 안전하게 가져오기
-                image_url = ''
-                if hasattr(cafe, 'get_main_image'):
-                    image_url = cafe.get_main_image() or ''
-                elif cafe.main_image:
-                    image_url = cafe.main_image.url
-                elif cafe.images.exists():
-                    first_image = cafe.images.first()
-                    if first_image and first_image.image:
-                        image_url = first_image.image.url
-                
-                cafes_data.append({
-                    'id': cafe.id,
-                    'name': cafe.cafe_name,
-                    'artist': cafe.artist.display_name,
-                    'member': cafe.member.member_name if cafe.member else None,
-                    'address': cafe.address or '',
-                    'place_name': cafe.place_name or '',  # 추가
-                    'image_url': image_url,  # 더 견고한 이미지 처리
-                    'start_date': cafe.start_date.strftime('%m.%d'),
-                    'end_date': cafe.end_date.strftime('%m.%d'),
-                    'is_active': cafe.is_active,
-                    'days_remaining': cafe.days_remaining,
-                    'days_until_start': cafe.days_until_start,
-                    'special_benefits': cafe.special_benefits or '',
-                    'hashtags': cafe.hashtags or '',
-                    'created_at': cafe.created_at.strftime('%Y-%m-%d'),
-                })
-            except Exception as e:
-                logger.warning(f"카페 {cafe.id} 데이터 처리 오류: {e}")
-                continue
+            cafe_html = render_to_string('ddoksang/components/_cafe_card_base.html', {
+                'cafe': cafe,
+                'card_variant': 'latest',
+                'user_favorites': user_favorites,
+                'user': request.user,
+            }, request=request)
+            
+            # div 래퍼로 감싸기
+            html_content += f'<div class="cafe-card-item w-full max-w-[175px] md:max-w-none">{cafe_html}</div>'
         
         return JsonResponse({
             'success': True,
-            'cafes': cafes_data,
+            'html': html_content,  # 렌더링된 HTML
             'has_next': page_obj.has_next(),
             'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
             'total_pages': paginator.num_pages,
             'current_page': page_obj.number,
             'total_count': paginator.count,
+            'cafes_count': len(page_obj),  # 현재 페이지 카페 수
         })
         
     except ValueError as e:
