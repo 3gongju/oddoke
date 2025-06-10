@@ -13,10 +13,10 @@
   </div>
 
   {% if latest_cafes %}
-    <!-- 6개 카페 그리드 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4" id="latestCafesGrid">
+    <!-- 6개 카페 그리드 - 모바일에서 2열, 태블릿에서 2열, 데스크톱에서 3열 -->
+    <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6 px-4 justify-items-center" id="latestCafesGrid">
       {% for cafe in latest_cafes|slice:":6" %}
-        <div class="cafe-card-item">
+        <div class="cafe-card-item w-full max-w-[175px] md:max-w-none">
           {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='latest' user_favorites=user_favorites %}
         </div>
       {% endfor %}
@@ -42,12 +42,30 @@
     animation: fadeIn 0.5s ease forwards;
 }
 
-.cafe-card-item:nth-child(n+4) {
+.cafe-card-item:nth-child(n+3) {
     animation-delay: 0.1s;
+}
+
+.cafe-card-item:nth-child(n+5) {
+    animation-delay: 0.2s;
 }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* 모바일에서 카드 간격 최적화 */
+@media (max-width: 640px) {
+  #latestCafesGrid {
+    gap: 0.5rem; /* 8px - 모바일에서 더 좁은 간격 */
+  }
+}
+
+/* 태블릿에서 간격 조정 */
+@media (min-width: 641px) and (max-width: 1023px) {
+  #latestCafesGrid {
+    gap: 1rem; /* 16px */
+  }
 }
 </style>
