@@ -40,6 +40,11 @@ urlpatterns = [
     # 분철 폼셋
     path('ajax/load_split_members_and_prices/', views.load_split_members_and_prices, name='load_split_members_and_prices'),
 
+    # 분철 참여 신청
+    path('<str:category>/<int:post_id>/split-application/', views.split_application, name='split_application'),
+    path('<str:category>/<int:post_id>/manage-applications/', views.manage_split_applications, name='manage_split_applications'),
+    path('<str:category>/<int:post_id>/update-application-status/', views.update_application_status, name='update_application_status'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 

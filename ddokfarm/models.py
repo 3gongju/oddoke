@@ -106,6 +106,11 @@ class FarmSplitPost(FarmBasePost):
         ('split', 'N빵'),
     ]
 
+    PUSH_CHOICES = [
+        ('yes', '가능'),
+        ('no', '불가능'),
+    ]
+
     album = models.CharField(max_length=20, choices=ALBUM_CHOICES)
     shipping_fee = models.PositiveIntegerField()
     where = models.CharField(max_length=100)
@@ -113,6 +118,7 @@ class FarmSplitPost(FarmBasePost):
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
     images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
     checked_out_members = models.ManyToManyField(Member, blank=True, related_name="checked_out_split_posts")
+    push = models.CharField(max_length=20, choices=ALBUM_CHOICES)
 
     @property
     def category_type(self):
@@ -132,6 +138,21 @@ class SplitPrice(models.Model):
 
     class Meta:
         unique_together = ('post', 'member')
+
+# 분철 참여 관리
+class SplitApplication(models.Model):
+    STATUS_CHOICES = [
+        ('pending', '대기중'),
+        ('approved', '승인됨'),
+        ('rejected', '반려됨'),
+    ]
+    
+    post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, related_name='applications')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    members = models.ManyToManyField(Member)  # 신청한 멤버들
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
         
 # 대댓글 기능 수정 
 class FarmComment(models.Model):
