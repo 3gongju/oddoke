@@ -54,9 +54,9 @@
       </h4>
       {% with cafe|cafe_status as cafe_state %}
         {% if cafe_state == 'ongoing' %}
-          <span class="bg-green-500 text-white text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0">운영중</span>
+          <span class="bg-green-500 text-white text-xs px-2.5 py-1 rounded-full flex-shrink-0">운영중</span>
         {% elif cafe_state == 'upcoming' %}
-          <span class="bg-blue-500 text-white text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0">예정</span>
+          <span class="bg-blue-500 text-white text-xs px-2.5 py-1 rounded-full flex-shrink-0">예정</span>
         {% else %}
           <span class="bg-gray-500 text-white text-xs px-2.5 py-1 rounded-full flex-shrink-0">종료</span>
         {% endif %}
@@ -98,7 +98,7 @@
         </span>
       </div>
 
-      <!-- 운영 기간 (항상 표시되는 영역 확보) -->
+      <!-- 운영 기간 -->
       <div class="flex items-center justify-between text-sm text-gray-600 date-area">
         {% if cafe.start_date and cafe.end_date %}
           <div class="flex items-center flex-1 min-w-0">
