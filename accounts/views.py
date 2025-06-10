@@ -231,7 +231,7 @@ def review_home(request, username):
     deal_again_counter = Counter()
 
     for r in reviews:
-        rating_counter[r.rating] += 1               
+        rating_counter[f"{r.rating}"] += 1               # 문자열로 변환
         description_counter[r.description_match] += 1   
         response_counter[r.response_speed] += 1          
         politeness_counter[r.politeness] += 1            
@@ -246,15 +246,16 @@ def review_home(request, username):
         'deal_again': max(deal_again_counter.values(), default=1),
     }
 
+    # ✅ JavaScript에서 사용할 수 있도록 JSON 변환
     context = {
         'user_profile': user_profile,
         'form': form,
         'reviews': reviews,
-        'rating_counter': dict(rating_counter),
-        'description_counter': dict(description_counter),
-        'response_counter': dict(response_counter),
-        'politeness_counter': dict(politeness_counter),
-        'deal_again_counter': dict(deal_again_counter),
+        'rating_counter': json.dumps(dict(rating_counter)),
+        'description_counter': json.dumps(dict(description_counter)),
+        'response_counter': json.dumps(dict(response_counter)),
+        'politeness_counter': json.dumps(dict(politeness_counter)),
+        'deal_again_counter': json.dumps(dict(deal_again_counter)),
         'max_counts': max_counts,
     }
 
