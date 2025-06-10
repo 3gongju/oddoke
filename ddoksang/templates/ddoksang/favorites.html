@@ -6,31 +6,40 @@
 
 {% block body %}
 
-<!-- 상단 인트로 배너 -->
-<section class="bg-pink-50 py-10 mb-10 rounded-b-2xl shadow-inner">
-  <div class="max-w-2xl mx-auto text-center px-4">
-    <div class="text-4xl mb-2">♥</div>
-    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">내가 찜한 생카</h2>
-    <p class="text-gray-600 text-sm">내 덕의 생카들을 한눈에 모아볼 수 있어요!</p>
-  </div>
-</section>
-
-<!-- 찜한 생일카페 목록 -->
-<section class="max-w-6xl mx-auto px-4 sm:px-6">
-  {% if favorites %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">
-      {% for favorite in favorites %}
-        <div class="flex-shrink-0" data-cafe-id="{{ favorite.cafe.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite.cafe show_favorite_btn=False %}
-        </div>
-      {% endfor %}
+<!-- 상단 인트로 배너 --> 
+<section class="max-w-6xl mx-auto px-4 sm:px-6 mb-16 pt-12">   
+  <div class="bg-gradient-to-br from-gray-50 to-gray-100 py-16 rounded-2xl border border-gray-200 relative">
+    <div class="max-w-2xl mx-auto text-center px-4">
+      <div class="flex justify-center items-center gap-3 mb-6">
+        <div class="text-4xl text-red-500">♥</div>
+      </div>    
+      <h2 class="text-3xl sm:text-4xl font-light text-gray-800 mb-4">찜한 생카</h2>     
+      <div class="w-24 h-1 bg-gradient-to-r from-gray-400 to-gray-600 mx-auto mb-4 rounded-full"></div>
+      <p class="text-gray-600 text-base">내 덕의 생카들을 한눈에 모아볼 수 있어요!</p>   
     </div>
+  </div> 
+</section> 
 
-    <div class="mt-16 text-center">
-      <p class="text-sm text-gray-500 mb-2">총 {{ favorites.count }}개의 생일카페를 찜했어요</p>
-      <a href="{% url 'ddoksang:home' %}" class="inline-block mt-2 text-pink-600 hover:underline text-sm">
-        ← 홈으로 돌아가기
-      </a>
+<!-- 찜한 생일카페 목록 --> 
+<section class="max-w-6xl mx-auto px-4 sm:px-6 pt-8">   
+  {% if favorites %}
+    <!-- 총 개수 표시 -->
+    <div class="mb-8 text-align-left">       
+      <p class="text-sm text-gray-500 mb-2">총 {{ favorites.count }}개의 생일카페를 찜했어요</p>     
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-10">       
+      {% for favorite in favorites %}         
+        <div class="flex-shrink-0" data-cafe-id="{{ favorite.cafe.id }}">           
+          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite.cafe show_favorite_btn=False %}         
+        </div>       
+      {% endfor %}     
+    </div>      
+    
+    <div class="mt-24 text-center">    
+      <a href="{% url 'ddoksang:home' %}" class="inline-block mt-2 text-pink-600 hover:underline text-sm">         
+        ← 홈으로 돌아가기       
+      </a>    
     </div>
 
   {% else %}
