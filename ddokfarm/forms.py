@@ -128,3 +128,4 @@ class SplitPriceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['price'].required = False
+        self.fields['member'].disabled = False

@@ -21,7 +21,11 @@
     {% include 'components/post_detail/_like_comment_info.html' %}
     
     <div class="comment-section mt-8">
-      {% include "components/post_detail/_comment_list.html" %}
+      <div class="comment-list space-y-4">
+        {% for comment in comments %}
+          {% include "components/post_detail/_comment_list.html" with comment=comment is_reply=False %}
+        {% endfor %}
+      </div>
       {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=None %}
     </div>
 

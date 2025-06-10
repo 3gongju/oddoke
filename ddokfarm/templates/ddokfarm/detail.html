@@ -7,6 +7,7 @@
   <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
 
     {% include 'components/post_detail/_artist_tags.html' %}
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- 이미지 (2/3) -->
       <div class="md:col-span-2">
@@ -18,10 +19,15 @@
         {% include 'components/post_detail/_content.html' with is_ddokfarm=True is_owner=is_owner extra_partial='ddokfarm/components/post_detail/_extra_info.html' buttons_partial='ddokfarm/components/post_detail/_buttons.html' %}
       </div>
     </div>
+
     {% include 'components/post_detail/_like_comment_info.html' %}
 
     <div class="comment-section mt-8">
-      {% include "components/post_detail/_comment_list.html" %}
+      <div class="comment-list space-y-4">
+        {% for comment in comments %}
+          {% include "components/post_detail/_comment_list.html" with comment=comment is_reply=False %}
+        {% endfor %}
+      </div>
       {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=None %}
     </div>
 

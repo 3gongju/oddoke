@@ -349,7 +349,7 @@ def comment_create(request, category, post_id):
 
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             html = render_to_string(
-                "components/post_detail/_comment_item.html",  # 동일 템플릿 사용
+                "components/post_detail/_comment_list.html",  # 동일 템플릿 사용
                 {
                     "comment": comment,
                     "is_reply": bool(parent_id),

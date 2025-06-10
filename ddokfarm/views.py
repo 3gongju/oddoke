@@ -160,17 +160,24 @@ def post_create(request):
     favorite_artists = Artist.objects.filter(followers=request.user)
     raw_category = request.POST.get('category') or request.GET.get('category') or 'sell'
     category = raw_category.split('?')[0]
-    selected_artist_id = request.GET.get('artist')
     form_class = get_post_form(category)
 
     if not form_class:
         raise Http404("존재하지 않는 카테고리입니다.")
 
+    default_artist_id = int(request.GET.get('artist')) if request.GET.get('artist') else (
+        favorite_artists[0].id if favorite_artists.exists() else None
+    )
+
+    selected_artist_id = default_artist_id
     selected_member_ids = []
 
     if request.method == 'POST':
-        selected_artist_id = request.POST.get('artist') or selected_artist_id
-        selected_member_ids = list(map(int, request.POST.getlist('members'))) if request.POST.getlist('members') else []
+        print("[디버그] POST 데이터:", request.POST)
+        selected_member_ids = list(set(map(int, request.POST.getlist('members'))))
+        print("[디버그] 실제로 체크된 멤버:", selected_member_ids)
+
+        selected_artist_id = request.POST.get('artist') or request.GET.get('artist') or default_artist_id
         image_files = request.FILES.getlist('images')
         form = form_class(request.POST, request.FILES)
 
@@ -184,11 +191,6 @@ def post_create(request):
                 queryset=SplitPrice.objects.none(),
                 initial=initial_data
             )
-            for formset_form in formset.forms:
-                member_id = str(formset_form.initial['member'])
-                if member_id in request.POST.getlist('members'):
-                    formset_form.fields['price'].required = False
-                    formset_form.fields['price'].widget.attrs.pop('required', None)
         else:
             formset = None
 
@@ -203,14 +205,22 @@ def post_create(request):
                 post.save()
 
                 if category == 'split' and formset:
-                    for sp_form in formset.forms:
+                    for idx, sp_form in enumerate(formset.forms):
                         member_field = sp_form.cleaned_data.get('member')
-                        if member_field:
-                            member_id = member_field.id
-                            if member_id not in selected_member_ids and sp_form.cleaned_data.get('price'):
-                                sp_instance = sp_form.save(commit=False)
-                                sp_instance.post = post
-                                sp_instance.save()
+                        price_field = sp_form.cleaned_data.get('price')
+                        if not member_field:
+                            member_id = sp_form.initial.get('member')
+                            if member_id:
+                                member_field = Member.objects.get(id=member_id)
+
+                        print(f"[디버그] 폼셋 idx={idx}, 멤버={member_field}, 가격={price_field}, 체크됨={member_field.id in selected_member_ids if member_field else None}")
+
+                        if member_field and member_field.id not in selected_member_ids and price_field:
+                            sp_instance = sp_form.save(commit=False)
+                            sp_instance.post = post
+                            sp_instance.member = member_field
+                            sp_instance.save()
+
                     post.checked_out_members.set(selected_member_ids)
                 else:
                     post.members.set(selected_member_ids)
@@ -224,19 +234,14 @@ def post_create(request):
                         object_id=post.id,
                         is_representative=(idx == 0)
                     )
-                return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
+                return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
     else:
         form = form_class()
         formset = None
-        selected_member_ids = []
 
-    default_artist_id = int(selected_artist_id) if selected_artist_id else (
-        favorite_artists[0].id if favorite_artists.exists() else None
-    )
     selected_members = []
     formset_with_names = None
-
     if category == 'split' and default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
         initial_data = [{'member': m.id} for m in selected_members]
@@ -292,7 +297,7 @@ def load_split_members_and_prices(request):
         {
             'formset': formset,
             'formset_with_names': formset_with_names,
-            'selected_member_ids': [],  # ✅ split 진입 시 무조건 빈 리스트로 넘김
+            'selected_member_ids': [],  # ✅ 빈 리스트 (아무도 체크되지 않은 상태)
         },
         request=request
     )
@@ -533,7 +538,7 @@ def comment_create(request, category, post_id):
         # ✅ AJAX 요청일 경우, HTML 조각 반환
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             html = render_to_string(
-                "components/post_detail/_comment_item.html",
+                "components/post_detail/_comment_list.html",
                 {
                     "comment": comment,
                     "is_reply": bool(parent_id),

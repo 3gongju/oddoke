@@ -1,16 +1,26 @@
 {# 분철 멤버별 가격 #}
-{% load humanize %}
-  <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <tbody>
-          {% for sp in member_prices %}
-            <tr>
-              <th class="text-left py-2 text-gray-700">{{ sp.member.member_name }}</th>
-              <td class="text-right py-2 text-gray-800">{{ sp.price|intcomma }}원</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+<div class="p-2 text-sm">
+  <h2 class="font-bold mb-2">분철 현황</h2>
+
+  <!-- 잔여 -->
+  <div class="flex flex-wrap items-center gap-2 mb-1">
+    <span class="inline-block font-semibold text-sm">잔여</span>
+    {% for member in participating_members %}
+      <span class="inline-block border rounded-full px-2 py-1 text-sm">
+        {{ member.member_name }}
+      </span>
+    {% endfor %}
   </div>
+
+  <!-- 마감 -->
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="inline-block font-semibold text-sm">마감</span>
+    {% if checked_out_members %}
+      {% for member in checked_out_members %}
+        <span class="inline-block border rounded-full px-2 py-1 text-sm">
+          {{ member.member_name }}
+        </span>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
