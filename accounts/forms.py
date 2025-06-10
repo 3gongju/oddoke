@@ -115,3 +115,111 @@ class ProfileImageForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['profile_image']
+
+class BankAccountForm(forms.ModelForm):
+    BANK_CHOICES = [
+        ('004', 'KB국민은행'),
+        ('088', '신한은행'),
+        ('020', '우리은행'),
+        ('003', 'IBK기업은행'),
+        ('011', 'NH농협은행'),
+        ('081', 'KEB하나은행'),
+        ('071', '우체국예금보험'),
+        ('023', 'SC제일은행'),
+        ('090', '카카오뱅크'),
+        ('089', '케이뱅크'),
+        ('092', '토스뱅크'),
+        ('031', '대구은행'),
+        ('032', '부산은행'),
+        ('034', '광주은행'),
+        ('035', '제주은행'),
+        ('037', '전북은행'),
+        ('039', '경남은행'),
+        ('045', '새마을금고'),
+        ('048', '신협'),
+        ('050', '상호저축은행'),
+        ('064', '산림조합'),
+        ('101', '신용보증기금'),
+    ]
+    
+    bank_code = forms.ChoiceField(
+        choices=BANK_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'required': True
+        }),
+        label="은행 선택"
+    )
+    
+    account_number = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '계좌번호를 입력하세요 (하이픈 제외)',
+            'required': True
+        }),
+        label="계좌번호"
+    )
+    
+    account_holder = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '예금주명을 입력하세요',
+            'required': True
+        }),
+        label="예금주명"
+    )
+    
+    class Meta:
+        model = User
+        fields = ['bank_code', 'account_number', 'account_holder']
+    
+    def clean_account_number(self):
+        account_number = self.cleaned_data.get('account_number')
+        if not account_number:
+            raise forms.ValidationError("계좌번호를 입력해주세요.")
+        
+        # 숫자만 남기기 (하이픈, 공백 등 제거)
+        cleaned_number = ''.join(filter(str.isdigit, account_number))
+        
+        if len(cleaned_number) < 8:
+            raise forms.ValidationError("올바른 계좌번호를 입력해주세요. (최소 8자리)")
+        
+        if len(cleaned_number) > 20:
+            raise forms.ValidationError("계좌번호가 너무 깁니다. (최대 20자리)")
+        
+        return cleaned_number
+    
+    def clean_account_holder(self):
+        account_holder = self.cleaned_data.get('account_holder')
+        if not account_holder:
+            raise forms.ValidationError("예금주명을 입력해주세요.")
+        
+        # 공백 제거
+        account_holder = account_holder.strip()
+        
+        # 한글, 영문만 허용 (공백 포함)
+        import re
+        if not re.match(r'^[가-힣a-zA-Z\s]+$', account_holder):
+            raise forms.ValidationError("예금주명은 한글 또는 영문만 입력 가능합니다.")
+        
+        if len(account_holder) < 2:
+            raise forms.ValidationError("예금주명은 최소 2자 이상 입력해주세요.")
+        
+        if len(account_holder) > 20:
+            raise forms.ValidationError("예금주명이 너무 깁니다. (최대 20자)")
+        
+        return account_holder
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        bank_code = cleaned_data.get('bank_code')
+        account_number = cleaned_data.get('account_number')
+        account_holder = cleaned_data.get('account_holder')
+        
+        # 모든 필드가 입력되었는지 확인
+        if not all([bank_code, account_number, account_holder]):
+            raise forms.ValidationError("모든 필드를 입력해주세요.")
+        
+        return cleaned_data
