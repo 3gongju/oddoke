@@ -1,21 +1,70 @@
 <!-- 주변 생일카페 리스트 -->
- <div id="nearbyCafeContainer" class="bg-white rounded-2xl shadow-sm border p-6">
-  <h3 class="font-bold text-gray-900 mb-4 flex items-center"><span class="mr-2">📍</span>주변 생일카페 <span class="ml-auto text-xs text-gray-500">{{ nearby_cafes|length }}개</span></h3>
-  <div class="space-y-3">
-    {% for cafe in nearby_cafes %}
-      <div class="nearby-cafe-card flex items-center p-3 rounded-lg cursor-pointer" onclick="location.href='{% url 'ddoksang:detail' cafe.id %}'">
-        {% if cafe.get_main_image %}<img…>{% else %}<div…>🎂</div>{% endif %}
-        <div class="flex-1 min-w-0">
-          <h4 class="text-sm truncate">{{ cafe.cafe_name }}</h4>
-          <p class="text-xs text-gray-600">{{ cafe.artist.display_name }}</p>
-          <div class="flex items-center space-x-2">
-            <span class="distance-badge">{{ cafe.distance|floatformat:1 }}km</span>
-            {% if cafe.duration %}<span class="text-xs">🚶‍♂️ {{ cafe.duration }}분</span>{% endif %}
+
+<div id="nearbyCafeContainer" class="bg-white rounded-2xl shadow-sm border p-6">
+  <h3 class="font-bold text-gray-900 mb-4 flex items-center">
+    <span class="mr-2">📍</span> 주변 생일카페
+    {% if nearby_cafes %}
+      <span class="ml-auto text-xs text-gray-500 font-normal">{{ nearby_cafes|length }}개</span>
+    {% endif %}
+  </h3>
+  <div id="nearbyCafeList" class="space-y-3">
+    {% if nearby_cafes %}
+      {% for nearby_cafe in nearby_cafes %}
+        <div class="nearby-cafe-card flex items-center space-x-3 p-3 rounded-lg cursor-pointer" onclick="location.href='{% url 'ddoksang:detail' nearby_cafe.id %}'">
+          {% if nearby_cafe.get_main_image %}
+            <img src="{{ nearby_cafe.get_main_image }}" alt="{{ nearby_cafe.cafe_name }}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0 shadow-sm">
+          {% else %}
+            <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+              <span class="text-gray-400 text-lg">🎂</span>
+            </div>
+          {% endif %}
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center space-x-2 mb-1.5">
+              <h4 class="text-sm font-semibold text-gray-900 truncate">{{ nearby_cafe.cafe_name }}</h4>
+              {% if nearby_cafe.is_related %}
+                <span class="related-badge flex-shrink-0">관련</span>
+              {% endif %}
+            </div>
+            <p class="text-xs text-gray-600 truncate mb-2">{{ nearby_cafe.artist.display_name }}{% if nearby_cafe.member %} - {{ nearby_cafe.member.member_name }}{% endif %}</p>
+            <div class="flex items-center space-x-2">
+              <span class="distance-badge">{{ nearby_cafe.distance|floatformat:1 }}km</span>
+              {% if nearby_cafe.duration %}
+                <span class="text-xs text-gray-500">🚶‍♂️ {{ nearby_cafe.duration }}분</span>
+              {% endif %}
+              {% if nearby_cafe.is_active %}
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">운영중</span>
+              {% elif nearby_cafe.days_until_start > 0 %}
+                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ nearby_cafe.days_until_start }}일 후</span>
+              {% else %}
+                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">종료</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
           </div>
         </div>
+      {% endfor %}
+      
+      {% comment %} 관련 카페와 일반 카페 구분 설명 {% endcomment %}
+      {% if nearby_cafes|length > 0 %}
+        <div class="mt-4 pt-3 border-t border-gray-100">
+          <p class="text-xs text-gray-500 flex items-center">
+            <span class="related-badge mr-2">관련</span>
+            같은 아티스트/멤버의 생일카페
+          </p>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="text-center py-6">
+        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+          <span class="text-gray-400 text-2xl">🔍</span>
+        </div>
+        <p class="text-sm text-gray-500">주변에 등록된 생일카페가 없습니다</p>
+        <p class="text-xs text-gray-400 mt-1">10km 반경 내 검색 결과</p>
       </div>
-    {% empty %}
-      <p class="text-center text-gray-500">주변에 등록된 생일카페가 없습니다</p>
-    {% endfor %}
+    {% endif %}
   </div>
 </div>

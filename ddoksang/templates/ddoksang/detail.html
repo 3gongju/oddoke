@@ -1,62 +1,184 @@
-{# templates/ddoksang/detail.html #}
 {% extends "ddoksang/base/ddoksang_base.html" %}
-{% load static filters %}
+
+{% load static %}
+{% load filters %} 
 
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block extra_css %}
-<link href="{% static 'css/ddoksang_detail.css' %}" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/ddoksang_detail.css' %}">
 {% endblock %}
 
-{% block ddoksang_content %}
-  {# 1. 상태 알림 배너 #}
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-white">
+  <!-- 상태 알림 배너 (미리보기/대기중일 때만 표시) -->
   {% include "ddoksang/components/detail/_status_banner.html" %}
 
-  {# 2. 헤더 이미지 슬라이드 #}
+  <!-- 개선된 헤더 이미지 섹션 - 포스터 친화적 -->
   {% include "ddoksang/components/detail/_image_header.html" %}
 
-  <div class="max-w-4xl mx-auto px-4 py-8">
-    <div class="lg:flex lg:space-x-8">
+  <!-- detail 페이지임을 표시 -->
+  <div id="page-identifier" data-page="detail" style="display: none;"></div>
+
+  <!-- 이미지 전체화면 모달 -->
+  <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
+    <div class="relative max-w-7xl max-h-full mx-4">
+      <!-- 닫기 버튼 -->
+      <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-colors z-10">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
       
-      {# 왼쪽 메인 컬럼 #}
-      <div class="flex-1 space-y-6">
+      <!-- 모달 이미지 -->
+      <img id="modalImage" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-lg">
+      
+      <!-- 이미지 정보 -->
+      <div id="modalImageInfo" class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+        <p id="modalImageTitle" class="font-medium"></p>
+        <p id="modalImageCaption" class="text-sm opacity-90 mt-1"></p>
+      </div>
+      
+      <!-- 이전/다음 버튼 (이미지가 2장 이상일 때) -->
+      {% if cafe.get_all_images|length > 1 %}
+        <button onclick="prevModalImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <button onclick="nextModalImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+        
+        <!-- 모달 이미지 카운터 -->
+        <div class="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg backdrop-blur-sm">
+          <span id="modalImageCounter">1</span> / {{ cafe.get_all_images|length }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 메인 컨텐츠 -->
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 왼쪽: 카페 상세 정보 -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- 기본 정보 카드 -->
         {% include "ddoksang/components/detail/_cafe_basic_info.html" %}
+
+        <!-- 지도 및 위치 -->
         {% include "ddoksang/components/detail/_cafe_map.html" %}
+
+        <!-- 이미지 갤러리 섹션 - 포스터 친화적 레이아웃 -->
         {% include "ddoksang/components/detail/_gallery_section.html" %}
       </div>
 
-      {# 오른쪽 사이드바 #}
-      <aside class="w-80 space-y-6">
-        {% include "ddoksang/components/detail/_nearby_cafes.html" %}
-        {% include "ddoksang/components/detail/_related_cafes.html" %}
-        {% include "ddoksang/components/detail/_share_section.html" %}
-      </aside>
+      <!-- 오른쪽: 사이드바 -->
+      <div class="space-y-6">
+        <!-- 빠른 정보 -->
+        <div class="bg-white rounded-2xl shadow-sm border p-6 sticky top-4">
+          <h3 class="font-bold text-gray-900 mb-4">📋 빠른 정보</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">상태</span>
+              {% with cafe|cafe_status as cafe_state %}
+              <span class="px-2 py-1 rounded text-xs font-medium
+                {% if cafe_state == 'ongoing' %}bg-green-100 text-green-800
+                {% elif cafe_state == 'upcoming' %}bg-blue-100 text-blue-800
+                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                {% if cafe_state == 'ongoing' %}진행중
+                {% elif cafe_state == 'upcoming' %}예정
+                {% else %}종료{% endif %}
+              </span>
+              {% endwith %}
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">이벤트 타입</span>
+              <span class="text-gray-900 font-medium">{{ cafe.get_cafe_type_display }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-600">조회수</span>
+              <span class="text-gray-900 font-medium">{{ cafe.view_count|default:0 }}</span>
+            </div>
+            {% if cafe.hashtags %}
+            <div>
+              <span class="text-gray-600 block mb-2">태그</span>
+              <div class="flex flex-wrap gap-1">
+                {% for tag in cafe.hashtags|split:" " %}
+                  {% if tag %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{{ tag }}</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
 
+        <!-- 주변 생일카페 -->
+        {% include "ddoksang/components/detail/_nearby_cafes.html" %}
+
+        <!-- 관련 카페 추가 (같은 아티스트/멤버의 다른 카페들) -->
+        {% include "ddoksang/components/detail/_related_cafes.html" %}
+
+        <!-- 공유하기 -->
+        {% include "ddoksang/components/detail/_share_section.html" %}
+      </div>
     </div>
   </div>
-{% endblock %}
-<!-- {# _cafe_map.html (또는 detail.html) 안에) #} -->
-<!-- ① Kakao SDK 로드 (HTML에서) -->
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+</div>
 
-<!-- ② JSON 데이터 덤프 (HTML에서) -->
+<!-- ========== 데이터 전달 섹션 ========== -->
+
+<!-- 카카오맵 API 로드 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+
+<!-- Django 데이터를 JavaScript 변수로 전달 -->
 <script id="cafe-data" type="application/json">
 {
-  "latitude": {{ cafe.latitude|default:"37.5665" }},
-  "longitude": {{ cafe.longitude|default:"126.9780" }},
-  "images": [
-    {% for image in cafe.get_all_images %}
-      {
-        "url":     "{{ image.url|escapejs }}",
-        "type":    "{{ image.type_display|escapejs }}",
-        "caption": "{{ image.caption|escapejs }}"
-      }{% if not forloop.last %},{% endif %}
-    {% endfor %}
-  ],
-
+    "latitude": {{ cafe.latitude|default:"37.5665" }},
+    "longitude": {{ cafe.longitude|default:"126.9780" }},
+    "name": "{{ cafe.cafe_name|escapejs }}",
+    "address": "{{ cafe.address|escapejs }}",
+    "id": {{ cafe.id }},
+    "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %},
+    "apiKey": "{{ kakao_api_key|escapejs }}"
 }
 </script>
 
-<!-- {# ③ 순수 JS 파일 로드 (HTML에서) #} -->
+<!-- 이미지 데이터를 JavaScript로 전달 -->
+<script id="image-data" type="application/json">
+[
+  {% for image in cafe.get_all_images %}
+  {
+    "url": "{{ image.url|escapejs }}",
+    "type": "{{ image.type_display|escapejs }}",
+    "caption": "{{ image.caption|escapejs }}",
+    "alt": "{{ image.caption|default:cafe.cafe_name|escapejs }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
+<!-- CSRF 토큰 -->
+{% csrf_token %}
+
+<!-- 사용자 데이터 전달 (숨겨진 div 방식) -->
+<div id="user-data" 
+     data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+     data-cafe-id="{{ cafe.id }}"
+     data-is-favorited="{% if is_favorited %}true{% else %}false{% endif %}"
+     style="display: none;">
+</div>
+
+<!-- ========== JavaScript 파일 로드 ========== -->
+
+<!-- 찜하기 기능 -->
+<script src="{% static 'js/favorite.js' %}"></script>
+
+<!-- 상세 페이지 메인 기능 -->
 <script src="{% static 'js/ddoksang_detail.js' %}"></script>
 
+{% endblock %}
