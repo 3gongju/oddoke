@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% load static %}
 {% load custom_filters %} 
@@ -225,25 +224,31 @@
     });
     
     // 마우스 나갈 때 원래 상태로
-    document.querySelector('.rating-stars').addEventListener('mouseleave', () => {
-      stars.forEach((s, i) => {
-        if (s.classList.contains('active')) {
-          s.style.color = '#fbbf24';
-        } else {
-          s.style.color = '#d1d5db';
-        }
-      });
-    });
+    const ratingStarsContainer = document.querySelector('.rating-stars');
+      if (ratingStarsContainer) {
+        ratingStarsContainer.addEventListener('mouseleave', () => {
+          stars.forEach((s, i) => {
+            if (s.classList.contains('active')) {
+              s.style.color = '#fbbf24';
+            } else {
+              s.style.color = '#d1d5db';
+            }
+          });
+        });
+      }
     
     // 폼 제출 전 검증
-    document.getElementById('reviewForm').addEventListener('submit', (e) => {
-      if (!ratingInput.value) {
-        e.preventDefault();
-        alert('별점을 선택해주세요!');
-        document.querySelector('.rating-stars').scrollIntoView({ behavior: 'smooth' });
+    const form = document.getElementById('reviewForm');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          const ratingInput = document.querySelector('input[name="rating"]');
+          if (!ratingInput.value) {
+            e.preventDefault();
+            alert('별점을 선택해주세요!');
+            document.querySelector('.rating-stars').scrollIntoView({ behavior: 'smooth' });
+          }
+        });
       }
-    });
-  });
 
   // 탭 전환 기능
   function showTab(tab) {
@@ -258,5 +263,6 @@
     event.target.classList.add('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-500');
     event.target.classList.remove('text-gray-500');
   }
+});
 </script>
 {% endblock %}

@@ -193,7 +193,6 @@ def follow_list(request, username):
     return JsonResponse({'users': user_data})
 
 @login_required
-@login_required
 def review_home(request, username):
     user_profile = get_object_or_404(User, username=username)
 
