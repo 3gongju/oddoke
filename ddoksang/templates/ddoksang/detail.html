@@ -3,7 +3,75 @@
 {% load static %}
 {% load filters %} 
 
-{% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
+{% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}  <!-- 헤더 갤러리용 이미지 모달 -->
+  <div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+    <!-- 모달 닫기 버튼 -->
+    <button onclick="closeImageModal()" 
+            class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-60">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+    
+    <!-- 이미지 카운터 -->
+    <div class="absolute top-4 left-4 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded-full">
+      <span id="modalImageCounter">1</span><span> / 1</span>
+    </div>
+    
+    <!-- 이전/다음 버튼 -->
+    <button onclick="prevModalImage()" 
+            class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    
+    <button onclick="nextModalImage()" 
+            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 transition-colors">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+    
+    <!-- 모달 콘텐츠 -->
+    <div class="max-w-4xl max-h-full p-4 flex flex-col items-center">
+      <!-- 이미지 -->
+      <img id="modalImage" src="" alt="" 
+           class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl">
+      
+      <!-- 이미지 정보 -->
+      <div class="mt-4 text-center">
+        <h3 id="modalImageTitle" class="text-white text-xl font-bold mb-2"></h3>
+        <p id="modalImageCaption" class="text-gray-300 text-sm max-w-lg"></p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript 데이터 (헤더 갤러리용) -->
+  <script id="image-data" type="application/json">
+    {% with all_images=cafe.get_all_images %}
+      [
+        {% for image in all_images %}
+          {
+            "url": "{{ image.url|escapejs }}",
+            "type_display": "{{ image.type_display|escapejs }}",
+            "caption": "{{ image.caption|default:""|escapejs }}",
+            "alt": "{{ image.caption|default:cafe.cafe_name|escapejs }}"
+          }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ]
+    {% endwith %}
+  </script>
+  
+  <!-- JavaScript 데이터 (포스터 전용 - 단순화) -->
+  <script id="cafe-data" type="application/json">
+    {
+      "name": "{{ cafe.cafe_name|escapejs }}",
+      "id": {{ cafe.id }}
+    }
+  </script>
+
+{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/ddoksang_detail.css' %}">
@@ -65,14 +133,14 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- 왼쪽: 카페 상세 정보 -->
       <div class="lg:col-span-2 space-y-6">
+        <!-- 포스터 섹션 - 최상단으로 이동 -->
+        {% include "ddoksang/components/detail/_poster_section.html" %}
+
         <!-- 기본 정보 카드 -->
         {% include "ddoksang/components/detail/_cafe_basic_info.html" %}
 
         <!-- 지도 및 위치 -->
         {% include "ddoksang/components/detail/_cafe_map.html" %}
-
-        <!-- 이미지 갤러리 섹션 - 포스터 친화적 레이아웃 -->
-        {% include "ddoksang/components/detail/_gallery_section.html" %}
       </div>
 
       <!-- 오른쪽: 사이드바 -->
@@ -83,16 +151,13 @@
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-gray-600">상태</span>
-              {% with cafe|cafe_status as cafe_state %}
-              <span class="px-2 py-1 rounded text-xs font-medium
-                {% if cafe_state == 'ongoing' %}bg-green-100 text-green-800
-                {% elif cafe_state == 'upcoming' %}bg-blue-100 text-blue-800
-                {% else %}bg-gray-100 text-gray-600{% endif %}">
-                {% if cafe_state == 'ongoing' %}진행중
-                {% elif cafe_state == 'upcoming' %}예정
-                {% else %}종료{% endif %}
-              </span>
-              {% endwith %}
+              {% if cafe.is_active %}
+                <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">진행중</span>
+              {% elif cafe.days_until_start > 0 %}
+                <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">예정</span>
+              {% else %}
+                <span class="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">종료</span>
+              {% endif %}
             </div>
             <div class="flex justify-between items-center">
               <span class="text-gray-600">이벤트 타입</span>
@@ -102,14 +167,12 @@
               <span class="text-gray-600">조회수</span>
               <span class="text-gray-900 font-medium">{{ cafe.view_count|default:0 }}</span>
             </div>
-            {% if cafe.hashtags %}
+            {% if cafe.hashtags_list %}
             <div>
               <span class="text-gray-600 block mb-2">태그</span>
               <div class="flex flex-wrap gap-1">
-                {% for tag in cafe.hashtags|split:" " %}
-                  {% if tag %}
-                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">{{ tag }}</span>
-                  {% endif %}
+                {% for tag in cafe.hashtags_list %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">#{{ tag }}</span>
                 {% endfor %}
               </div>
             </div>

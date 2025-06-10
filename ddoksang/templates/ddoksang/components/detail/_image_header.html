@@ -1,3 +1,4 @@
+<!-- ddoksang/templates/ddoksang/components/detail/_image_header.html -->
 <!-- 디테일 페이지 이미지 헤더 컴포넌트 -->
 
 <div class="relative">
@@ -21,14 +22,7 @@
                 <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
                      class="w-full h-full object-cover cursor-zoom-in">
               {% endif %}
-              
-              <!-- 이미지 정보 오버레이 -->
-              <div class="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-lg text-sm backdrop-blur-sm">
-                <span class="text-xs opacity-90">{{ image.type_display }}</span>
-                {% if image.caption %}
-                  <span class="block text-xs mt-0.5 opacity-75">{{ image.caption }}</span>
-                {% endif %}
-              </div>
+           
             </div>
           {% endfor %}
         </div>

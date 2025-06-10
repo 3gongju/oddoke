@@ -1,0 +1,90 @@
+<!-- ddoksang/templates/ddoksang/components/detail/_poster_section.html -->
+<!-- 단순한 포스터 이미지 표시 - 확대 기능 없음 -->
+
+{% with all_images=cafe.get_all_images %}
+  {% if all_images %}
+    <div class="bg-white rounded-2xl shadow-sm border p-6">
+      <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <span class="mr-2">🖼️</span> 포스터 & 이미지
+        <span class="ml-auto text-sm text-gray-500 font-normal">{{ all_images|length }}장</span>
+      </h2>
+      
+      {% if all_images|length == 1 %}
+        <!-- 1개 이미지: 중앙에 큰 포스터 -->
+        {% with image=all_images.0 %}
+          <div class="flex justify-center">
+            <div class="poster-single bg-gray-50 rounded-2xl overflow-hidden shadow-sm max-w-md w-full">
+              <!-- 포스터 비율 완전 유지 -->
+              <div class="w-full">
+                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                     class="w-full h-auto object-contain rounded-2xl">
+              </div>
+              
+              <!-- 간단한 정보만 표시 -->
+              {% if image.caption %}
+                <div class="p-4 bg-white">
+                  <p class="text-sm text-gray-600 text-center">{{ image.caption }}</p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endwith %}
+        
+      {% elif all_images|length == 2 %}
+        <!-- 2개 이미지: 나란히 배치 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% for image in all_images %}
+            <div class="poster-dual bg-gray-50 rounded-xl overflow-hidden shadow-sm">
+              <div class="w-full">
+                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                     class="w-full h-auto object-contain rounded-xl">
+              </div>
+              
+              {% if image.caption %}
+                <div class="p-3 bg-white">
+                  <p class="text-xs text-gray-600 text-center">{{ image.caption }}</p>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        
+      {% else %}
+        <!-- 3개 이상 이미지: 메인 1개 + 작은 이미지들 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- 첫 번째 이미지를 메인으로 (2칸 차지) -->
+          {% with main_image=all_images.0 %}
+            <div class="lg:col-span-2">
+              <div class="poster-main bg-gray-50 rounded-xl overflow-hidden shadow-sm">
+                <div class="w-full">
+                  <img src="{{ main_image.url }}" alt="{{ main_image.caption|default:cafe.cafe_name }}" 
+                       class="w-full h-auto object-contain rounded-xl">
+                </div>
+                
+                {% if main_image.caption %}
+                  <div class="p-4 bg-white">
+                    <p class="text-sm text-gray-600 text-center">{{ main_image.caption }}</p>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endwith %}
+          
+          <!-- 나머지 이미지들 (1칸 차지) -->
+          <div class="space-y-4">
+            {% for image in all_images %}
+              {% if not forloop.first %}
+                <div class="poster-sub bg-gray-50 rounded-lg overflow-hidden shadow-sm">
+                  <div class="w-full">
+                    <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                         class="w-full h-48 object-cover rounded-lg">
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endwith %}
