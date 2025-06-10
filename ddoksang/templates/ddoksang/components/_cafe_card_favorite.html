@@ -48,22 +48,27 @@
         </div>
       {% endif %}
 
-      <!-- 오버레이 텍스트 (고정 높이 및 텍스트 제한) -->
-      <div class="absolute bottom-0 left-0 right-0 p-4 text-white z-0">
-        <p class="text-sm opacity-90 truncate leading-tight">
-          {{ cafe.member.member_name|default:cafe.artist.display_name|truncatechars:15 }}{% if cafe.member %} ({{ cafe.artist.display_name|truncatechars:8 }}){% endif %}
-        </p>
-        <p class="text-xs opacity-75 mt-1 truncate leading-tight">
-          📍 {{ cafe.place_name|default:cafe.address|truncatechars:18 }}
-        </p>
-      </div>
+      <!-- 깔끔한 이미지 (텍스트 오버레이 제거) -->
     </div>
 
     <!-- 하단 정보 (고정 높이) -->
     <div class="bg-white p-4 h-32 flex flex-col justify-between">
-      <div class="flex-1">
-        <p class="text-base font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
+      <div class="flex-1 space-y-1">
+        <!-- 멤버명 (아티스트명) -->
+        <p class="text-sm text-gray-600 truncate leading-tight">
+          {{ cafe.member.member_name|default:cafe.artist.display_name|truncatechars:20 }}{% if cafe.member %} ({{ cafe.artist.display_name|truncatechars:10 }}){% endif %}
+        </p>
+        
+        <!-- 카페명 -->
+        <p class="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">
           {{ cafe.cafe_name }}
+        </p>
+      </div>
+      
+      <!-- 주소 정보 -->
+      <div class="mb-2">
+        <p class="text-xs text-gray-600 truncate">
+          📍 {{ cafe.place_name|default:cafe.address|truncatechars:25 }}
         </p>
       </div>
       
