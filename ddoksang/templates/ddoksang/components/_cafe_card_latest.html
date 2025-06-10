@@ -1,83 +1,87 @@
 {% comment %}
 =====================================
-최신 생일카페 카드 (cafe_card_latest.html)
-- 지역 기반 카드 구성
-- 하트 버튼: 이미지와 텍스트 사이에 위치
-- 상태 뱃지: 운영중 / 예정 / 종료
+최신 생일카페 카드 (개선된 포스터 버전)
+- 포스터 이미지에 최적화된 세로 비율
+- 이미지가 메인, 텍스트는 간결하게
+- 포스터 전체가 잘 보이도록 설계
 =====================================
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
-<a href="{% url 'ddoksang:detail' cafe.id %}" class="block group card-latest bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden">
+<a href="{% url 'ddoksang:detail' cafe.id %}" class="block group poster-card bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden">
 
-  <!-- 제목 -->
-  <div class="p-4 pb-2 text-center relative">
-    <h4 class="text-lg font-bold text-gray-900 line-clamp-2 leading-snug">
-      {{ cafe.cafe_name }}
-    </h4>
-  </div>
-
-  <!-- 이미지 -->
-  <div class="relative h-40 mx-4 rounded-lg overflow-hidden">
+  <!-- 포스터 이미지 메인 -->
+  <div class="relative poster-aspect overflow-hidden bg-gray-100">
     {% if cafe.get_main_image %}
       <img src="{{ cafe.get_main_image }}" 
            alt="{{ cafe.cafe_name }}" 
-           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+           class="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
            loading="lazy">
     {% else %}
-      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
-        <span class="text-orange-400 text-3xl">🎂</span>
+      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center">
+        <span class="text-orange-400 text-6xl mb-2">🎂</span>
+        <p class="text-orange-600 font-medium text-lg">{{ cafe.cafe_name }}</p>
       </div>
     {% endif %}
 
-    <!-- 상태 뱃지 -->
-    <div class="absolute top-2 right-2">
+    <!-- 상태 뱃지 (우상단) -->
+    <div class="absolute top-3 right-3">
       {% with cafe|cafe_status as cafe_state %}
         {% if cafe_state == 'ongoing' %}
-          <span class="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">운영중</span>
+          <span class="bg-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">운영중</span>
         {% elif cafe_state == 'upcoming' %}
-          <span class="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded-full">예정</span>
+          <span class="bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">예정</span>
         {% else %}
-          <span class="bg-gray-500 text-white text-xs px-2 py-1 rounded-full">종료</span>
+          <span class="bg-gray-500 text-white text-xs px-3 py-1.5 rounded-full shadow-lg">종료</span>
         {% endif %}
       {% endwith %}
     </div>
 
-    <!-- 찜 하트 버튼 -->
+    <!-- 찜 하트 버튼 (우하단) -->
     {% if user.is_authenticated and cafe.status == 'approved' %}
-      <div class="absolute bottom-2 right-2 z-40">
+      <div class="absolute bottom-3 right-3 z-40">
         <button 
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
-          class="w-10 h-10 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-all favorite-heart-btn"
+          class="w-12 h-12 bg-white bg-opacity-95 backdrop-blur-sm rounded-full flex items-center justify-center hover:scale-110 transition-all shadow-lg border border-gray-200"
           style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
           title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}">
-          <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
+          <span class="text-lg">{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
         </button>
       </div>
     {% endif %}
+
+    <!-- 그라데이션 오버레이 (하단) -->
+    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent h-20"></div>
   </div>
 
-  <!-- 멤버 정보 & 지역 -->
-  <div class="p-4 pt-6 space-y-3 text-center">
-    <div>
+  <!-- 카페 정보 (간결하게) -->
+  <div class="p-4 space-y-2">
+    <!-- 카페명 -->
+    <h4 class="font-bold text-lg text-gray-900 line-clamp-1 leading-tight">
+      {{ cafe.cafe_name }}
+    </h4>
+
+    <!-- 멤버/아티스트 정보 -->
+    <div class="flex items-center space-x-2">
       {% if cafe.member %}
-        <p class="text-base text-gray-900 font-bold leading-tight">
-          {{ cafe.member.member_name }}
-          <span class="text-sm text-gray-500 font-normal">({{ cafe.artist.display_name }})</span>
-        </p>
+        <span class="text-sm font-medium text-gray-700">{{ cafe.member.member_name }}</span>
+        <span class="text-xs text-gray-400">•</span>
+        <span class="text-sm text-gray-500">{{ cafe.artist.display_name }}</span>
       {% else %}
-        <h5 class="font-bold text-lg text-gray-900 leading-tight">
-          {{ cafe.artist.display_name }}
-        </h5>
-        <p class="text-sm text-gray-500 mt-1">아티스트 생일카페</p>
+        <span class="text-sm font-medium text-gray-700">{{ cafe.artist.display_name }}</span>
+        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">아티스트 생카</span>
       {% endif %}
     </div>
 
-    <div class="flex items-center justify-center text-sm text-gray-600">
-      <span class="w-4 text-center mr-2">📍</span>
+    <!-- 위치 정보 -->
+    <div class="flex items-center text-sm text-gray-600">
+      <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg>
       <span class="truncate">
         {% if cafe.road_address %}
           {% with cafe.road_address|split:" " as address_parts %}
@@ -92,72 +96,127 @@
         {% endif %}
       </span>
     </div>
+
+    <!-- 운영 기간 -->
+    {% if cafe.start_date and cafe.end_date %}
+    <div class="flex items-center text-sm text-gray-600">
+      <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+      </svg>
+      <span>{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
+      {% if cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
+        <span class="ml-2 text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded-full">{{ cafe.days_remaining }}일 남음</span>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
 </a>
 
 <style>
-.card-latest .line-clamp-2 {
+/* 포스터 카드 전용 스타일 */
+.poster-card {
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+  position: relative;
+}
+
+.poster-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+}
+
+.poster-card .line-clamp-1 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.card-latest:hover {
-  transform: translateY(-8px);
+/* 포스터 이미지가 완전히 보이도록 */
+.poster-card img {
+  transition: transform 0.5s ease;
 }
 
-.card-latest {
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
-  position: relative;
+.poster-card:hover img {
+  transform: scale(1.02);
 }
 
-.card-latest:hover {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-.card-latest button[data-favorite-btn]:hover {
-  transform: scale(1.1);
-}
-
-.card-latest button[data-favorite-btn]:active {
-  transform: scale(0.95);
-}
-
-.card-latest a {
+/* 찜 버튼 애니메이션 */
+.poster-card button[data-favorite-btn] {
   transition: all 0.3s ease;
 }
 
-.card-latest a:hover .group {
-  transform: translateY(-8px);
+.poster-card button[data-favorite-btn]:hover {
+  transform: scale(1.15);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-@media (max-width: 640px) {
-  .card-latest .p-5 {
-    padding: 1rem;
-  }
-
-  .card-latest h4,
-  .card-latest h5 {
-    font-size: 1.125rem;
-  }
-
-  .card-latest .h-48 {
-    height: 10rem;
-  }
-
-  .card-latest:hover {
-    transform: translateY(-4px);
-  }
+.poster-card button[data-favorite-btn]:active {
+  transform: scale(0.95);
 }
 
-.card-latest.loading {
+/* 상태 뱃지 호버 효과 */
+.poster-card span[class*="bg-green-500"],
+.poster-card span[class*="bg-blue-500"],
+.poster-card span[class*="bg-gray-500"] {
+  transition: all 0.3s ease;
+}
+
+.poster-card:hover span[class*="bg-green-500"],
+.poster-card:hover span[class*="bg-blue-500"],
+.poster-card:hover span[class*="bg-gray-500"] {
+  transform: scale(1.05);
+}
+
+/* 로딩 애니메이션 */
+.poster-card.loading {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: .7; }
+  50% { opacity: .8; }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  .poster-card {
+    margin-bottom: 1rem;
+  }
+  
+  .poster-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .poster-card .p-4 {
+    padding: 0.875rem;
+  }
+  
+  .poster-card h4 {
+    font-size: 1rem;
+    line-height: 1.375;
+  }
+}
+
+/* 포스터 비율 유지 (3:4 비율) */
+.poster-aspect {
+  aspect-ratio: 3 / 4;
+}
+
+/* Fallback for older browsers */
+@supports not (aspect-ratio: 3 / 4) {
+  .poster-aspect {
+    position: relative;
+    padding-bottom: 133.33%; /* 4/3 * 100% */
+    height: 0;
+  }
+  
+  .poster-aspect > * {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
 </style>
