@@ -18,7 +18,7 @@ _cafe_card_base.html - 공통 로직 분기
 - favorite: 찜한 카페용 (오버레이 스타일)
 - latest: 최신 카페용 (큰 텍스트)
 - default: 기본/검색용 (기존 스타일)
-- 없으면: default로 처리
+- 없으면: 기존 카드드로 처리
 {% endcomment %}
 
 {% if card_variant == 'favorite' %}
@@ -26,5 +26,5 @@ _cafe_card_base.html - 공통 로직 분기
 {% elif card_variant == 'latest' %}
   {% include 'ddoksang/components/_cafe_card_latest.html' %}
 {% else %}
-  {% include 'ddoksang/components/_cafe_card_default.html' %}
+  {% include 'ddoksang/components/_cafe_card.html' %}
 {% endif %}
