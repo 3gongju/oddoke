@@ -19,6 +19,7 @@ from ddokchat.models import ChatRoom
 from artist.models import Artist, Member
 from .models import User, MannerReview
 from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm
+from collections import Counter
 
 import uuid
 import requests
@@ -208,38 +209,64 @@ def review_home(request, username):
             review = form.save(commit=False)
             review.user = request.user
             review.target_user = user_profile
-
             chatroom_id = request.POST.get('chatroom_id')
+
             if chatroom_id:
                 try:
                     chatroom = ChatRoom.objects.get(id=chatroom_id)
-                    # ✅ 중복 확인
                     already_reviewed = MannerReview.objects.filter(
-                        user=request.user,
-                        target_user=user_profile,
-                        chatroom=chatroom
+                        user=request.user, target_user=user_profile, chatroom=chatroom
                     ).exists()
-
                     if already_reviewed:
                         form.add_error(None, "이미 이 채팅방에 대한 리뷰를 작성하셨습니다.")
-                        # 아래 return 문으로 넘어감
                     else:
                         review.chatroom = chatroom
                         review.save()
                         return redirect('accounts:review_home', username=username)
-
                 except ChatRoom.DoesNotExist:
                     form.add_error(None, "유효하지 않은 채팅방 정보입니다.")
-
     else:
         form = MannerReviewForm()
 
     reviews = MannerReview.objects.filter(target_user=user_profile).order_by('-created_at')
-    return render(request, 'accounts/review_home.html', {
+
+    # ✅ 상세 항목별 카운터 수집
+    rating_counter = Counter()
+    description_counter = Counter()
+    response_counter = Counter()
+    politeness_counter = Counter()
+    deal_again_counter = Counter()
+
+    for r in reviews:
+        rating_counter[f"{r.rating}"] += 1               # 문자열로 변환
+        description_counter[r.description_match] += 1   
+        response_counter[r.response_speed] += 1          
+        politeness_counter[r.politeness] += 1            
+        deal_again_counter[r.deal_again] += 1 
+
+    # ✅ 최대값 계산 (막대 너비 비율용)
+    max_counts = {
+        'rating': max(rating_counter.values(), default=1),
+        'description': max(description_counter.values(), default=1),
+        'response': max(response_counter.values(), default=1),
+        'politeness': max(politeness_counter.values(), default=1),
+        'deal_again': max(deal_again_counter.values(), default=1),
+    }
+
+    # ✅ JavaScript에서 사용할 수 있도록 JSON 변환
+    context = {
         'user_profile': user_profile,
         'form': form,
         'reviews': reviews,
-    })
+        'rating_counter': json.dumps(dict(rating_counter)),
+        'description_counter': json.dumps(dict(description_counter)),
+        'response_counter': json.dumps(dict(response_counter)),
+        'politeness_counter': json.dumps(dict(politeness_counter)),
+        'deal_again_counter': json.dumps(dict(deal_again_counter)),
+        'max_counts': max_counts,
+    }
+
+    return render(request, 'accounts/review_home.html', context)
 
 @login_required
 def mypage(request): 
