@@ -1,5 +1,6 @@
-{% block extra_css %}
-<style>
+/* static/css/ddoksang_detail.css */
+/* 덕생 상세 페이지 전용 스타일 */
+
 /* 포스터 갤러리 아이템 스타일 */
 .poster-gallery-item {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -235,7 +236,6 @@
     }
 }
 
-
 /* 접근성 개선 */
 .focus-visible:focus {
     outline: 2px solid #3b82f6;
@@ -306,5 +306,58 @@
 .drop-shadow-lg {
     filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.04)) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.1));
 }
-</style>
-{% endblock %}
+
+/* 토스트 메시지 스타일 */
+.toast-message {
+    backdrop-filter: blur(4px);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 갤러리 슬라이드 기본 스타일 */
+.gallery-slide {
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* 갤러리 도트 기본 스타일 */
+.gallery-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.gallery-dot:hover {
+    transform: scale(1.2);
+}
+
+/* 갤러리 네비게이션 버튼 */
+.gallery-nav-btn {
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.gallery-nav-btn:hover {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    transform: scale(1.05);
+}
+
+/* 이미지 갤러리 컨테이너 */
+#imageGallery {
+    overflow: hidden;
+}
+
+/* 반응형 그리드 클래스들 */
+.gallery-grid-mobile .grid {
+    grid-template-columns: 1fr;
+}
+
+.gallery-grid-tablet .grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.gallery-grid-desktop .grid {
+    grid-template-columns: repeat(3, 1fr);
+}

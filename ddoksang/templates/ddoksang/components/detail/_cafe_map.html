@@ -1,15 +1,25 @@
-<!-- 지도 렌더링 섹션 -->
- <div class="bg-white rounded-2xl shadow-sm border p-6">
-  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center"><span class="mr-2">🗺️</span>위치</h2>
+<!-- 지도 및 위치 섹션 -->
+
+<div class="bg-white rounded-2xl shadow-sm border p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+    <span class="mr-2">🗺️</span> 위치
+  </h2>
   <div class="rounded-lg overflow-hidden border">
     <div id="map" class="w-full h-64 bg-gray-100 flex items-center justify-center">
-      <p class="text-gray-500">지도를 로딩 중…</p>
+      <div class="text-gray-500 text-center">
+        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+        </svg>
+        <p class="text-sm">지도를 로딩 중...</p>
+      </div>
     </div>
   </div>
   <div class="mt-4 flex gap-2">
-    <button onclick="openKakaoMap()" class="flex-1 bg-yellow-400 text-yellow-900 py-2 rounded-lg">카카오맵에서 보기</button>
-    <button onclick="copyAddress()" class="px-4 py-2 border rounded-lg text-gray-700">주소 복사</button>
+    <button onclick="openKakaoMap()" class="flex-1 bg-yellow-400 text-yellow-900 py-2 px-4 rounded-lg font-medium hover:bg-yellow-500 transition-colors">
+      카카오맵에서 보기
+    </button>
+    <button onclick="copyAddress()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+      주소 복사
+    </button>
   </div>
 </div>
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
-<script id="cafe-data" type="application/json">…</script>
