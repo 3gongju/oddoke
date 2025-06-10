@@ -1,0 +1,21 @@
+<!-- 주변 생일카페 리스트 -->
+ <div id="nearbyCafeContainer" class="bg-white rounded-2xl shadow-sm border p-6">
+  <h3 class="font-bold text-gray-900 mb-4 flex items-center"><span class="mr-2">📍</span>주변 생일카페 <span class="ml-auto text-xs text-gray-500">{{ nearby_cafes|length }}개</span></h3>
+  <div class="space-y-3">
+    {% for cafe in nearby_cafes %}
+      <div class="nearby-cafe-card flex items-center p-3 rounded-lg cursor-pointer" onclick="location.href='{% url 'ddoksang:detail' cafe.id %}'">
+        {% if cafe.get_main_image %}<img…>{% else %}<div…>🎂</div>{% endif %}
+        <div class="flex-1 min-w-0">
+          <h4 class="text-sm truncate">{{ cafe.cafe_name }}</h4>
+          <p class="text-xs text-gray-600">{{ cafe.artist.display_name }}</p>
+          <div class="flex items-center space-x-2">
+            <span class="distance-badge">{{ cafe.distance|floatformat:1 }}km</span>
+            {% if cafe.duration %}<span class="text-xs">🚶‍♂️ {{ cafe.duration }}분</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center text-gray-500">주변에 등록된 생일카페가 없습니다</p>
+    {% endfor %}
+  </div>
+</div>

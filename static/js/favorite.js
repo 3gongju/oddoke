@@ -66,6 +66,18 @@ class UnifiedFavoriteManager {
                 } else {
                     this.removeCafeFromCarousel(cafeId);
                 }
+
+                // ✅ detail 페이지에서만 토스트 출력
+                const pageId = document.getElementById('page-identifier');
+                const isDetailPage = pageId && pageId.dataset.page === 'detail';
+
+                if (isDetailPage && typeof showToast === 'function') {
+                    const toastMessage = data.is_favorited ? '찜 완료!' : '찜 해제~';
+                    const toastType = data.is_favorited ? 'success' : 'warning';
+                    showToast(toastMessage, toastType);
+                }
+            
+                
             }
         } catch (err) {
             console.error('찜 오류:', err);
@@ -115,6 +127,7 @@ class UnifiedFavoriteManager {
         }
     }
 
+    
     addCardHtmlToCarousel(html, cafeId) {
         const favoriteCarousel = document.getElementById('favoriteCarousel');
         if (!favoriteCarousel) return;
