@@ -36,11 +36,48 @@
           <!-- 거래 완료 버튼 -->
           <div id="tradeStatusContainer">
             {% if room.is_fully_completed %}
+              <!-- ✅ 상황 1 -->
               <span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>
-            {% elif user == room.buyer and not room.buyer_completed %}
-              <button id="completeTradeBtn" class="...">거래 완료</button>
+
+            {% elif user.pk == room.buyer.pk %}
+              {% if not room.buyer_completed and not room.seller_completed %}
+                <!-- ✅ 상황 2 -->
+                <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
+                  거래 완료
+                </button>
+              {% elif not room.buyer_completed and room.seller_completed %}
+                <!-- ✅ 상황 5 -->
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-red-500">거래완료 버튼을 눌러주세요!</span>
+                  <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
+                    거래 완료
+                  </button>
+                </div>
+              {% elif room.buyer_completed and not room.seller_completed %}
+                <!-- ✅ 상황 6 -->
+                <span class="text-xs text-red-500 bg-gray-100 px-2 py-1 rounded">
+                  판매자의 거래 완료를 기다리는 중입니다.
+                </span>
+              {% endif %}
+
+            {% elif user.pk == room.seller.pk %}
+              {% if not room.seller_completed and not room.buyer_completed %}
+                <!-- ✅ 상황 3 -->
+                <span class="text-xs text-gray-400 px-2 py-1 rounded">거래 진행 중</span>
+              {% elif room.seller_completed and not room.buyer_completed %}
+                <!-- ✅ 상황 4 -->
+                <span class="text-xs text-gray-500 px-2 py-1 rounded">
+                  구매자의 거래 완료를 기다리는 중입니다.
+                </span>
+              {% elif room.buyer_completed and not room.seller_completed %}
+                <!-- ✅ 상황 7 -->
+                <span class="text-xs text-red-500 px-2 py-1 rounded">
+                  게시글로 돌아가 거래완료 버튼을 눌러주세요!
+                </span>
+              {% endif %}
+
             {% else %}
-              <span class="text-xs text-white bg-gray-800 px-2 py-1 rounded">상대방의 거래 완료를 기다리는 중입니다.</span>
+              <span class="text-xs text-gray-400 px-2 py-1 rounded">권한이 없습니다.</span>
             {% endif %}
           </div>
           <button class="p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-full transition-colors">
@@ -134,7 +171,7 @@
   <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
     <h2 class="text-lg font-bold mb-4">정말 거래를 완료하시겠습니까?</h2>
     <p class="text-sm text-gray-600 mb-6">
-      거래 완료 시 해당 판매자와의 채팅이 종료되며, 매너 리뷰를 작성하실 수 있습니다.
+      구매자, 판매자 모두 거래 완료 시 해당 채팅이 종료되며, 구매자는 매너 리뷰를 작성하실 수 있습니다.
     </p>
     <div class="flex justify-end gap-3">
       <button id="cancelBtn" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">취소</button>
