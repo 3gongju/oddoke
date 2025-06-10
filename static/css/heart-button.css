@@ -1,6 +1,6 @@
 /* 
 =====================================
-전역 하트 버튼 스타일 (큰 사이즈)
+전역 하트 버튼 스타일 (개선된 버전)
 static/css/heart-buttons.css 에 추가하거나 교체
 =====================================
 */
@@ -16,7 +16,7 @@ static/css/heart-buttons.css 에 추가하거나 교체
 /* 하트 아이콘 크기 강제 통일 (더 크게) */
 [data-favorite-btn] span,
 [data-favorite-btn] .favorite-icon {
-    font-size: 2rem !important; /* 32px로 확대 */
+    font-size: 1.75rem !important; /* 28px로 설정 */
     line-height: 1 !important;
     display: inline-block !important;
     vertical-align: middle !important;
@@ -24,15 +24,16 @@ static/css/heart-buttons.css 에 추가하거나 교체
 
 /* detail.html의 헤더 하트 버튼 (더 크게) */
 .favorite-button .favorite-icon {
-    font-size: 2.5rem !important; /* 40px - 헤더용은 더욱 크게 */
+    font-size: 2.25rem !important; /* 36px - 헤더용은 더욱 크게 */
     line-height: 1 !important;
 }
 
 /* 카드 내부의 하트 버튼 (latest, favorite 등) */
 .card-latest .heart-btn-large span,
 .card-favorite .favorite-heart-btn span,
-.heart-btn-large span {
-    font-size: 2rem !important; /* 32px로 통일 */
+.heart-btn-large span,
+.poster-card [data-favorite-btn] span {
+    font-size: 1.75rem !important; /* 28px로 통일 */
     line-height: 1 !important;
 }
 
@@ -51,20 +52,42 @@ static/css/heart-buttons.css 에 추가하거나 교체
     font-size: inherit !important;
 }
 
-/* 모바일에서는 살짝 작게 */
+/* 모바일에서는 적절한 크기로 */
 @media (max-width: 640px) {
     [data-favorite-btn] span,
     [data-favorite-btn] .favorite-icon {
-        font-size: 1.75rem !important; /* 28px */
+        font-size: 1.5rem !important; /* 24px */
     }
     
     .card-latest .heart-btn-large span,
     .card-favorite .favorite-heart-btn span,
-    .heart-btn-large span {
-        font-size: 1.75rem !important; /* 28px */
+    .heart-btn-large span,
+    .poster-card [data-favorite-btn] span {
+        font-size: 1.5rem !important; /* 24px */
     }
     
     .favorite-button .favorite-icon {
-        font-size: 2.25rem !important; /* 36px */
+        font-size: 2rem !important; /* 32px */
     }
 }
+
+/* 작은 모바일 기기 (375px 이하) */
+@media (max-width: 375px) {
+    [data-favorite-btn] span,
+    [data-favorite-btn] .favorite-icon {
+        font-size: 1.25rem !important; /* 20px */
+    }
+    
+    .card-latest .heart-btn-large span,
+    .card-favorite .favorite-heart-btn span,
+    .heart-btn-large span,
+    .poster-card [data-favorite-btn] span {
+        font-size: 1.25rem !important; /* 20px */
+    }
+    
+    .favorite-button .favorite-icon {
+        font-size: 1.75rem !important; /* 28px */
+    }
+}
+
+/* 매우 작
