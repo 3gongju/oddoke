@@ -1,1 +1,15 @@
 <!-- 지도 렌더링 섹션 -->
+ <div class="bg-white rounded-2xl shadow-sm border p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center"><span class="mr-2">🗺️</span>위치</h2>
+  <div class="rounded-lg overflow-hidden border">
+    <div id="map" class="w-full h-64 bg-gray-100 flex items-center justify-center">
+      <p class="text-gray-500">지도를 로딩 중…</p>
+    </div>
+  </div>
+  <div class="mt-4 flex gap-2">
+    <button onclick="openKakaoMap()" class="flex-1 bg-yellow-400 text-yellow-900 py-2 rounded-lg">카카오맵에서 보기</button>
+    <button onclick="copyAddress()" class="px-4 py-2 border rounded-lg text-gray-700">주소 복사</button>
+  </div>
+</div>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+<script id="cafe-data" type="application/json">…</script>

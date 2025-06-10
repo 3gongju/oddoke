@@ -1,1 +1,31 @@
 <!-- 승인 대기 / 관리자 승인 배너 -->
+{% if is_preview %}
+  <div class="bg-yellow-50 border-b border-yellow-200">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      {% if preview_type == 'user' %}
+        <div class="flex items-center space-x-2">
+          <span class="text-yellow-600">⏳</span>
+          <span class="text-yellow-800 font-medium">승인 대기 중인 글입니다</span>
+          <span class="text-sm text-yellow-600">관리자 승인 후 공개됩니다</span>
+        </div>
+      {% elif preview_type == 'admin' %}
+        <div class="flex items-center space-x-2">
+          <span class="text-orange-600">👤</span>
+          <span class="text-orange-800 font-medium">관리자 검토 중</span>
+          <span class="text-sm text-orange-600">승인/거절을 결정해주세요</span>
+        </div>
+        <div class="space-x-2">
+          <form method="post" action="{% url 'ddoksang:admin_approve_cafe' cafe.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" onclick="return confirm('승인하시겠습니까?')" class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full hover:bg-green-200">✅ 승인</button>
+          </form>
+          <form method="post" action="{% url 'ddoksang:admin_reject_cafe' cafe.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" onclick="return confirm('거절하시겠습니까?')" class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full hover:bg-red-200">❌ 거절</button>
+          </form>
+          <a href="{% url 'ddoksang:admin_dashboard' %}" class="text-sm bg-gray-100 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-200">대시보드로</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}

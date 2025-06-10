@@ -35,7 +35,28 @@
     </div>
   </div>
 {% endblock %}
+<!-- {# _cafe_map.html (또는 detail.html) 안에) #} -->
+<!-- ① Kakao SDK 로드 (HTML에서) -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
 
-{% block extra_js %}
+<!-- ② JSON 데이터 덤프 (HTML에서) -->
+<script id="cafe-data" type="application/json">
+{
+  "latitude": {{ cafe.latitude|default:"37.5665" }},
+  "longitude": {{ cafe.longitude|default:"126.9780" }},
+  "images": [
+    {% for image in cafe.get_all_images %}
+      {
+        "url":     "{{ image.url|escapejs }}",
+        "type":    "{{ image.type_display|escapejs }}",
+        "caption": "{{ image.caption|escapejs }}"
+      }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ],
+
+}
+</script>
+
+<!-- {# ③ 순수 JS 파일 로드 (HTML에서) #} -->
 <script src="{% static 'js/ddoksang_detail.js' %}"></script>
-{% endblock %}
+

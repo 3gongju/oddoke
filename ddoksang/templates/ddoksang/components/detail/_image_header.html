@@ -1,0 +1,58 @@
+<!-- 디테일 페이지 이미지 헤더 -->
+<div class="relative">
+  <div class="relative h-96 md:h-[500px] overflow-hidden">
+    {% with all_images=cafe.get_all_images %}
+      {% if all_images %}
+        <div id="imageGallery" class="relative w-full h-full">
+          {% for image in all_images %}
+            <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}" onclick="openImageModal({{ forloop.counter0 }})">
+              {% if image.type in 'poster main' %}
+                <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" class="max-w-full max-h-full object-contain cursor-zoom-in shadow-2xl rounded-lg">
+                </div>
+              {% else %}
+                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" class="w-full h-full object-cover cursor-zoom-in">
+              {% endif %}
+              <div class="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-lg text-sm backdrop-blur-sm">
+                <span class="text-xs opacity-90">{{ image.type_display }}</span>
+                {% if image.caption %}<span class="block text-xs mt-0.5 opacity-75">{{ image.caption }}</span>{% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        {% if all_images|length > 1 %}
+          <div class="absolute inset-x-0 bottom-4 flex justify-center space-x-2">
+            {% for image in all_images %}
+              <button onclick="showGalleryImage({{ forloop.counter0 }})" class="gallery-dot w-2 h-2 rounded-full transition-all {% if forloop.first %}bg-white{% else %}bg-white/50{% endif %}"></button>
+            {% endfor %}
+          </div>
+          <button onclick="prevGalleryImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50"><svg…/></button>
+          <button onclick="nextGalleryImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50"><svg…/></button>
+        {% endif %}
+      {% else %}
+        <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
+          <span class="text-white text-6xl">🏪</span>
+        </div>
+      {% endif %}
+    {% endwith %}
+  </div>
+  {% with main_image=cafe.get_all_images.0 %}
+    {% if main_image.type in 'poster main' %}
+      <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+    {% else %}
+      <div class="absolute inset-0 bg-black bg-opacity-30 pointer-events-none"></div>
+    {% endif %}
+  {% endwith %}
+
+  {# 찜하기 버튼 #}
+  {% if user.is_authenticated and cafe.status == 'approved' %}
+    <div class="absolute top-6 right-6 z-50">
+      <button data-favorite-btn data-cafe-id="{{ cafe.id }}"
+              class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 focus:outline-none {% if cafe.id in user_favorites %}favorited{% endif %}"
+              style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+              title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}">
+        <span class="favorite-icon">{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
+      </button>
+    </div>
+  {% endif %}
+</div>
