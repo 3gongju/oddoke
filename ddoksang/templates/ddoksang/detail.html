@@ -1,8 +1,320 @@
 {% extends "ddoksang/base/ddoksang_base.html" %}
+
 {% load static %}
 {% load filters %} 
 
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 포스터 갤러리 아이템 스타일 */
+.poster-gallery-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.poster-gallery-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 갤러리 썸네일 개선 */
+.gallery-thumbnail {
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.gallery-thumbnail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #3b82f6;
+}
+
+.gallery-thumbnail img {
+    transition: transform 0.2s ease;
+}
+
+.gallery-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+/* 포스터 섹션 구분 */
+.poster-section {
+    background: linear-gradient(135deg, #faf5ff, #f3f4f6);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.other-images-section {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+/* 타입별 인디케이터 색상 */
+.type-indicator-main { background: #ef4444; }
+.type-indicator-poster { background: #8b5cf6; }
+.type-indicator-menu { background: #f59e0b; }
+.type-indicator-interior { background: #10b981; }
+.type-indicator-exterior { background: #3b82f6; }
+.type-indicator-goods { background: #ec4899; }
+.type-indicator-event { background: #f97316; }
+.type-indicator-other { background: #6b7280; }
+
+/* 주변 카페 카드 개선 */
+.nearby-cafe-card {
+    transition: all 0.2s ease;
+    border: 1px solid #f3f4f6;
+}
+
+.nearby-cafe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border-color: #d1d5db;
+}
+
+/* 관련 카페 배지 */
+.related-badge {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.025em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.distance-badge {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #374151;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* 이미지 모달 개선 */
+#imageModal {
+    backdrop-filter: blur(8px);
+}
+
+#imageModal img {
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+}
+
+/* 찜하기 버튼 개선 */
+.favorite-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.favorite-button:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+
+.favorite-button:active {
+    transform: scale(0.95);
+}
+
+/* 포스터 이미지 특별 처리 */
+.poster-display {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* 이미지 타입 라벨 색상 */
+.type-label-main { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.type-label-poster { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.type-label-menu { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.type-label-interior { background: linear-gradient(135deg, #10b981, #059669); }
+.type-label-exterior { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.type-label-goods { background: linear-gradient(135deg, #ec4899, #db2777); }
+.type-label-event { background: linear-gradient(135deg, #f97316, #ea580c); }
+.type-label-other { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+/* 로딩 애니메이션 */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 터치 디바이스 최적화 */
+@media (pointer: coarse) {
+    .gallery-dot {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .gallery-thumbnail {
+        min-height: 120px;
+    }
+    
+    .poster-gallery-item {
+        min-height: 200px;
+    }
+    
+    .nearby-cafe-card {
+        min-height: 80px;
+    }
+    
+    .gallery-nav-btn {
+        padding: 12px;
+    }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .gallery-slide img {
+        cursor: default; /* 모바일에서는 확대 커서 제거 */
+    }
+    
+    .poster-gallery-item {
+        margin-bottom: 1rem;
+    }
+    
+    .poster-section,
+    .other-images-section {
+        padding: 16px;
+        margin-bottom: 1rem;
+    }
+    
+    .gallery-thumbnail {
+        aspect-ratio: 1; /* 모바일에서 정사각형 유지 */
+    }
+    
+    .nearby-cafe-card {
+        padding: 12px;
+    }
+    
+    .related-badge,
+    .distance-badge {
+        font-size: 0.6rem;
+        padding: 1px 4px;
+    }
+    
+    #imageModal .absolute.left-4,
+    #imageModal .absolute.right-4 {
+        display: none; /* 모바일에서는 좌우 버튼 숨기기 */
+    }
+    
+    /* 모바일에서 스와이프 제스처를 위한 영역 */
+    #imageModal img {
+        touch-action: pan-x;
+    }
+    
+    /* 모바일에서 갤러리 그리드 조정 */
+    .poster-section .grid {
+        grid-template-columns: 1fr; /* 모바일에서 포스터는 1열 */
+        gap: 1rem;
+    }
+    
+    .other-images-section .grid {
+        grid-template-columns: repeat(2, 1fr); /* 모바일에서 기타 이미지는 2열 */
+        gap: 0.75rem;
+    }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .poster-section .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .other-images-section .grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* 데스크톱 최적화 */
+@media (min-width: 1025px) {
+    .poster-section .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .other-images-section .grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+}
+
+
+/* 접근성 개선 */
+.focus-visible:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* 성능 최적화 */
+.will-change-transform {
+    will-change: transform;
+}
+
+.will-change-opacity {
+    will-change: opacity;
+}
+
+/* 이미지 로딩 실패 시 스타일 */
+.image-error {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+}
+
+/* 텍스트 말줄임표 */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 이미지 타입별 썸네일 스타일 */
+.image-type-poster {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+.image-type-main {
+    background: linear-gradient(135deg, #fef2f2, #fecaca);
+}
+
+.image-type-goods {
+    background: linear-gradient(135deg, #fdf2f8, #fbcfe8);
+}
+
+.image-type-menu {
+    background: linear-gradient(135deg, #fffbeb, #fed7aa);
+}
+
+.image-type-interior {
+    background: linear-gradient(135deg, #f0fdf4, #bbf7d0);
+}
+
+.image-type-exterior {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+}
+
+.image-type-event {
+    background: linear-gradient(135deg, #fff7ed, #fed7aa);
+}
+
+/* 그라데이션 오버레이 개선 */
+.bg-gradient-to-t {
+    background: linear-gradient(to top, var(--tw-gradient-stops));
+}
+
+/* 드롭 섀도우 개선 */
+.drop-shadow-lg {
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.04)) drop-shadow(0 4px 3px rgba(0, 0, 0, 0.1));
+}
+</style>
+{% endblock %}
 
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-white">
@@ -60,66 +372,159 @@
     </div>
   {% endif %}
 
-  <!-- ✅ 임시 디버깅 정보 (개발 중에만 표시) -->
-  {% if settings.DEBUG %}
-  <div style="background: #ffffcc; padding: 10px; margin: 10px; border: 1px solid #ccc;">
-    <strong>🔍 디버깅 정보:</strong><br>
-    API 키 존재: {% if kakao_api_key %}Yes ({{ kakao_api_key|slice:":10" }}...){% else %}No{% endif %}<br>
-    카페 좌표: {{ cafe.latitude|default:"None" }}, {{ cafe.longitude|default:"None" }}<br>
-    Preview 모드: {{ is_preview|yesno:"Yes,No" }}<br>
-    Preview 타입: {{ preview_type|default:"None" }}
-  </div>
-  {% endif %}
 
-  <!-- 헤더 이미지 섹션 -->
-  <div class="relative h-80 overflow-hidden">
-    {% if cafe.get_main_image %}
-      <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" 
-           class="w-full h-full object-cover">
-    {% else %}
-      <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
-        <span class="text-white text-6xl">🏪</span>
-      </div>
-    {% endif %}
-    
-    <!-- 오버레이 -->
-    <div class="absolute inset-0 bg-black bg-opacity-30"></div>
-    
-    <!-- 카페 기본 정보 -->
-    <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
-      <div class="max-w-4xl mx-auto">
-        <div class="flex items-center gap-3 mb-2">
-          <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
-            {% with cafe|cafe_status as cafe_state %}
-              {% if cafe_state == 'ongoing' %}🎉 진행중
-              {% elif cafe_state == 'upcoming' %}🔜 예정
-              {% else %}✅ 종료{% endif %}
-            {% endwith %}
-          </span>
-          <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
-            {{ cafe.get_cafe_type_display }}
-          </span>
+  <!-- ✅ 개선된 헤더 이미지 섹션 - 포스터 친화적 -->
+  <div class="relative">
+    <!-- 메인 이미지 영역 - 높이 증가 -->
+    <div class="relative h-96 md:h-[500px] overflow-hidden">
+      {% with all_images=cafe.get_all_images %}
+        {% if all_images %}
+          <div id="imageGallery" class="relative w-full h-full">
+            {% for image in all_images %}
+              <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}" 
+                   onclick="openImageModal({{ forloop.counter0 }})">
+                <!-- 포스터 타입에 따른 다른 표시 방식 -->
+                {% if image.type == 'poster' or image.type == 'main' %}
+                  <!-- 포스터나 메인 이미지는 contain으로 전체 보이기 -->
+                  <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                    <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                         class="max-w-full max-h-full object-contain cursor-zoom-in shadow-2xl rounded-lg">
+                  </div>
+                {% else %}
+                  <!-- 다른 이미지들은 cover로 화면 채우기 -->
+                  <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                       class="w-full h-full object-cover cursor-zoom-in">
+                {% endif %}
+                
+                <!-- 이미지 정보 오버레이 -->
+                <div class="absolute bottom-4 left-4 bg-black bg-opacity-60 text-white px-3 py-1 rounded-lg text-sm backdrop-blur-sm">
+                  <span class="text-xs opacity-90">{{ image.type_display }}</span>
+                  {% if image.caption %}
+                    <span class="block text-xs mt-0.5 opacity-75">{{ image.caption }}</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+
+          </div>
+          
+          <!-- 이미지 네비게이션 (2장 이상일 때만) -->
+          {% if all_images|length > 1 %}
+            <div class="absolute inset-x-0 bottom-4 flex justify-center space-x-2">
+              {% for image in all_images %}
+                <button onclick="showGalleryImage({{ forloop.counter0 }})" 
+                        class="gallery-dot w-2 h-2 rounded-full transition-all {% if forloop.first %}bg-white{% else %}bg-white/50{% endif %}">
+                </button>
+              {% endfor %}
+            </div>
+            
+            <!-- 좌우 화살표 -->
+            <button onclick="prevGalleryImage()" 
+                    class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <button onclick="nextGalleryImage()" 
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+
+          {% endif %}
+        {% else %}
+          <div class="w-full h-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center">
+            <span class="text-white text-6xl">🏪</span>
+          </div>
+        {% endif %}
+      {% endwith %}
+      
+      <!-- 오버레이 - 포스터 타입일 때는 약간 줄이기 -->
+      {% with main_image=cafe.get_all_images.0 %}
+        {% if main_image.type == 'poster' or main_image.type == 'main' %}
+          <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        {% else %}
+          <div class="absolute inset-0 bg-black bg-opacity-30 pointer-events-none"></div>
+
+        {% endif %}
+      {% endwith %}
+      
+      <!-- 카페 기본 정보 -->
+      <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
+              {% with cafe|cafe_status as cafe_state %}
+                {% if cafe_state == 'ongoing' %}🎉 진행중
+                {% elif cafe_state == 'upcoming' %}🔜 예정
+                {% else %}✅ 종료{% endif %}
+              {% endwith %}
+            </span>
+            <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm backdrop-blur-sm">
+              {{ cafe.get_cafe_type_display }}
+            </span>
+          </div>
+          <h1 class="text-3xl font-bold mb-2">{{ cafe.cafe_name }}</h1>
+          <p class="text-xl opacity-90">{{ cafe.artㅋist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
         </div>
-        <h1 class="text-3xl font-bold mb-2">{{ cafe.cafe_name }}</h1>
-        <p class="text-xl opacity-90">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
       </div>
-    </div>
-    
+      
     <!-- ✅ 통합된 찜하기 버튼 -->
     {% if user.is_authenticated and cafe.status == 'approved' %}
-    <div class="absolute top-6 right-6">
+    <div class="absolute top-6 right-6 z-50">
       <button 
         data-favorite-btn 
         data-cafe-id="{{ cafe.id }}" 
-        class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer"
-        title="{{ is_favorited|yesno:'찜 해제,찜하기' }}"
+        class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer {% if cafe.id in user_favorites %}favorited{% else %}not-favorited{% endif %}"
+        style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
+        title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
       >
-       <span class="favorite-icon text-2xl {{ is_favorited|yesno:'text-red-500,text-gray-400' }}">
-          {{ is_favorited|yesno:'♥,♡' }}
-        </span>
+        <span class="favorite-icon">{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
       </button>
     </div>
     {% endif %}
+    </div>
+  </div>
+
+  <!-- ✅ 이미지 전체화면 모달 -->
+  <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
+    <div class="relative max-w-7xl max-h-full mx-4">
+      <!-- 닫기 버튼 -->
+      <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-colors z-10">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+      
+      <!-- 모달 이미지 -->
+      <img id="modalImage" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-lg">
+      
+      <!-- 이미지 정보 -->
+      <div id="modalImageInfo" class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+        <p id="modalImageTitle" class="font-medium"></p>
+        <p id="modalImageCaption" class="text-sm opacity-90 mt-1"></p>
+      </div>
+      
+      <!-- 이전/다음 버튼 (이미지가 2장 이상일 때) -->
+      {% if cafe.get_all_images|length > 1 %}
+        <button onclick="prevModalImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <button onclick="nextModalImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+        
+        <!-- 모달 이미지 카운터 -->
+        <div class="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg backdrop-blur-sm">
+          <span id="modalImageCounter">1</span> / {{ cafe.get_all_images|length }}
+        </div>
+      {% endif %}
+    </div>
   </div>
 
   <!-- 메인 컨텐츠 -->
@@ -227,7 +632,6 @@
         </div>
         {% endif %}
 
-
         <!-- 지도 및 위치 -->
         <div class="bg-white rounded-2xl shadow-sm border p-6">
           <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
@@ -252,6 +656,95 @@
             </button>
           </div>
         </div>
+
+        <!-- ✅ 새로 추가: 이미지 갤러리 섹션 - 포스터 친화적 레이아웃 -->
+        {% with all_images=cafe.get_all_images %}
+          {% if all_images and all_images|length > 1 %}
+            <div class="bg-white rounded-2xl shadow-sm border p-6">
+              <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <span class="mr-2">🖼️</span> 이미지 갤러리
+                <span class="ml-auto text-sm text-gray-500 font-normal">{{ all_images|length }}장</span>
+              </h2>
+              
+              <!-- 포스터/메인 이미지들을 먼저 큰 사이즈로 표시 -->
+              {% if all_images %}
+                {% comment %}포스터와 메인 이미지 분리{% endcomment %}
+                <div class="poster-section mb-6">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                    포스터 & 메인 이미지
+                  </h3>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for image in all_images %}
+                      {% if image.type == 'poster' or image.type == 'main' %}
+                        <div class="poster-gallery-item relative group cursor-pointer rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm hover:shadow-lg transition-all duration-300"
+                             onclick="openImageModal({{ forloop.counter0 }})">
+                          <!-- 포스터는 세로형 비율로 표시 (3:4) -->
+                          <div class="aspect-[3/4] flex items-center justify-center p-4">
+                            <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                                 class="max-w-full max-h-full object-contain rounded-lg shadow-md transition-transform duration-300 group-hover:scale-105">
+                          </div>
+                          
+                          <!-- 호버 오버레이 -->
+                          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div class="bg-white bg-opacity-90 rounded-full p-3 shadow-lg">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <!-- 이미지 정보 카드 -->
+                          <div class="absolute bottom-3 left-3 right-3">
+                            <div class="bg-white bg-opacity-95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm">
+                              <div class="flex items-center justify-between mb-1">
+
+                              </div>
+                              {% if image.caption %}
+                                <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">{{ image.caption }}</p>
+                              {% endif %}
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+                
+                <!-- 나머지 이미지들 (포스터가 아닌 것들) -->
+                <div class="other-images-section">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  
+                  </h3>
+                  <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    {% for image in all_images %}
+                      {% if image.type != 'poster' and image.type != 'main' %}
+                        <div class="gallery-thumbnail relative group cursor-pointer rounded-lg overflow-hidden bg-gray-100 aspect-square"
+                             onclick="openImageModal({{ forloop.counter0 }})">
+                          <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                               class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110">
+                          
+                          <!-- 호버 오버레이 -->
+                          <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+                            <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <svg class="w-5 h-5 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endwith %}
       </div>
 
       <!-- 오른쪽: 사이드바 -->
@@ -295,27 +788,118 @@
             {% endif %}
           </div>
         </div>
+
+        <!-- ✅ 개선된 주변 생일카페 -->
         <div id="nearbyCafeContainer" class="bg-white rounded-2xl shadow-sm border p-6">
           <h3 class="font-bold text-gray-900 mb-4 flex items-center">
             <span class="mr-2">📍</span> 주변 생일카페
+            {% if nearby_cafes %}
+              <span class="ml-auto text-xs text-gray-500 font-normal">{{ nearby_cafes|length }}개</span>
+            {% endif %}
           </h3>
           <div id="nearbyCafeList" class="space-y-3">
             {% if nearby_cafes %}
-              {% for cafe in nearby_cafes %}
-                <div class="flex items-center space-x-3">
-                  <img src="{{ cafe.cafe_image.url }}" alt="{{ cafe.cafe_name }}" class="w-12 h-12 rounded-full">
-                  <div>
-                    <a href="{% url 'ddoksang:detail' cafe.id %}" class="text-gray-900 font-medium">{{ cafe.cafe_name }}</a>
-                    <p class="text-gray-600">{{ cafe.artist.display_name }}</p>
+              {% for nearby_cafe in nearby_cafes %}
+                <div class="nearby-cafe-card flex items-center space-x-3 p-3 rounded-lg cursor-pointer" onclick="location.href='{% url 'ddoksang:detail' nearby_cafe.id %}'">
+                  {% if nearby_cafe.get_main_image %}
+                    <img src="{{ nearby_cafe.get_main_image }}" alt="{{ nearby_cafe.cafe_name }}" class="w-14 h-14 rounded-lg object-cover flex-shrink-0 shadow-sm">
+                  {% else %}
+                    <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <span class="text-gray-400 text-lg">🎂</span>
+                    </div>
+                  {% endif %}
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                      <h4 class="text-sm font-semibold text-gray-900 truncate">{{ nearby_cafe.cafe_name }}</h4>
+                      {% if nearby_cafe.is_related %}
+                        <span class="related-badge flex-shrink-0">관련</span>
+                      {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-600 truncate mb-2">{{ nearby_cafe.artist.display_name }}{% if nearby_cafe.member %} - {{ nearby_cafe.member.member_name }}{% endif %}</p>
+                    <div class="flex items-center space-x-2">
+                      <span class="distance-badge">{{ nearby_cafe.distance|floatformat:1 }}km</span>
+                      {% if nearby_cafe.duration %}
+                        <span class="text-xs text-gray-500">🚶‍♂️ {{ nearby_cafe.duration }}분</span>
+                      {% endif %}
+                      {% if nearby_cafe.is_active %}
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">운영중</span>
+                      {% elif nearby_cafe.days_until_start > 0 %}
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ nearby_cafe.days_until_start }}일 후</span>
+                      {% else %}
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">종료</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
                   </div>
                 </div>
               {% endfor %}
+              
+              {% comment %} 관련 카페와 일반 카페 구분 설명 {% endcomment %}
+              {% if nearby_cafes|length > 0 %}
+                <div class="mt-4 pt-3 border-t border-gray-100">
+                  <p class="text-xs text-gray-500 flex items-center">
+                    <span class="related-badge mr-2">관련</span>
+                    같은 아티스트/멤버의 생일카페
+                  </p>
+                </div>
+              {% endif %}
             {% else %}
-              <p class="text-sm text-gray-500">주변에 등록된 생일카페가 없습니다.</p>
+              <div class="text-center py-6">
+                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span class="text-gray-400 text-2xl">🔍</span>
+                </div>
+                <p class="text-sm text-gray-500">주변에 등록된 생일카페가 없습니다</p>
+                <p class="text-xs text-gray-400 mt-1">10km 반경 내 검색 결과</p>
+              </div>
             {% endif %}
-
           </div>
         </div>
+
+        <!-- ✅ 관련 카페 추가 (같은 아티스트/멤버의 다른 카페들) -->
+        {% if related_cafes %}
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h3 class="font-bold text-gray-900 mb-4 flex items-center">
+            <span class="mr-2">🎭</span> {{ cafe.artist.display_name }}{% if cafe.member %} {{ cafe.member.member_name }}{% endif %}의 다른 생카
+            <span class="ml-auto text-xs text-gray-500 font-normal">{{ related_cafes|length }}개</span>
+          </h3>
+          <div class="grid grid-cols-1 gap-3">
+            {% for related_cafe in related_cafes %}
+              <div class="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onclick="location.href='{% url 'ddoksang:detail' related_cafe.id %}'">
+                {% if related_cafe.get_main_image %}
+                  <img src="{{ related_cafe.get_main_image }}" alt="{{ related_cafe.cafe_name }}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
+                {% else %}
+                  <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span class="text-gray-400 text-sm">🎂</span>
+                  </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-sm font-medium text-gray-900 truncate">{{ related_cafe.cafe_name }}</h4>
+                  <p class="text-xs text-gray-600">{{ related_cafe.start_date|date:"Y.m.d" }} - {{ related_cafe.end_date|date:"m.d" }}</p>
+                  <div class="flex items-center space-x-2 mt-1">
+                    {% if related_cafe.is_active %}
+                      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">운영중</span>
+                    {% elif related_cafe.days_until_start > 0 %}
+                      <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ related_cafe.days_until_start }}일 후</span>
+                    {% else %}
+                      <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">종료</span>
+                    {% endif %}
+                    <span class="text-xs text-gray-500">{{ related_cafe.get_cafe_type_display }}</span>
+                  </div>
+                </div>
+                <div class="flex-shrink-0">
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
 
         <div class="bg-white rounded-2xl shadow-sm border p-6">
           <h3 class="font-bold text-gray-900 mb-4">📤 공유하기</h3>
@@ -347,6 +931,370 @@
     "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %},
     "apiKey": "{{ kakao_api_key|escapejs }}"
 }
+</script>
+
+<!-- ✅ 이미지 갤러리 JavaScript -->
+<script>
+let currentImageIndex = 0;
+let currentModalIndex = 0;
+const totalImages = {{ cafe.get_all_images|length }};
+const imageData = [
+  {% for image in cafe.get_all_images %}
+  {
+    url: "{{ image.url|escapejs }}",
+    type: "{{ image.type_display|escapejs }}",
+    caption: "{{ image.caption|escapejs }}",
+    alt: "{{ image.caption|default:cafe.cafe_name|escapejs }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+
+function showGalleryImage(index) {
+    if (index < 0 || index >= totalImages) return;
+    
+    const slides = document.querySelectorAll('.gallery-slide');
+    const dots = document.querySelectorAll('.gallery-dot');
+    const counter = document.getElementById('imageCounter');
+    
+    // 모든 슬라이드 숨기기
+    slides.forEach(slide => slide.classList.remove('opacity-100'));
+    slides.forEach(slide => slide.classList.add('opacity-0'));
+    
+    // 모든 점 비활성화
+    dots.forEach(dot => dot.classList.remove('bg-white'));
+    dots.forEach(dot => dot.classList.add('bg-white/50'));
+    
+    // 현재 슬라이드와 점 활성화
+    if (slides[index]) {
+        slides[index].classList.remove('opacity-0');
+        slides[index].classList.add('opacity-100');
+    }
+    
+    if (dots[index]) {
+        dots[index].classList.remove('bg-white/50');
+        dots[index].classList.add('bg-white');
+    }
+    
+    // 카운터 업데이트
+    if (counter) {
+        counter.textContent = index + 1;
+    }
+    
+    currentImageIndex = index;
+}
+
+function nextGalleryImage() {
+    const nextIndex = (currentImageIndex + 1) % totalImages;
+    showGalleryImage(nextIndex);
+}
+
+function prevGalleryImage() {
+    const prevIndex = (currentImageIndex - 1 + totalImages) % totalImages;
+    showGalleryImage(prevIndex);
+}
+
+// ✅ 이미지 모달 기능
+function openImageModal(index = 0) {
+    if (totalImages === 0) return;
+    
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalImageTitle');
+    const modalCaption = document.getElementById('modalImageCaption');
+    const modalCounter = document.getElementById('modalImageCounter');
+    
+    if (!modal || !modalImage) return;
+    
+    // 모달 표시
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // 스크롤 방지
+    
+    // 이미지 로드
+    currentModalIndex = index;
+    updateModalImage();
+    
+    // ESC 키로 닫기
+    document.addEventListener('keydown', handleModalKeydown);
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // 스크롤 복원
+        document.removeEventListener('keydown', handleModalKeydown);
+    }
+}
+
+function updateModalImage() {
+    if (currentModalIndex < 0 || currentModalIndex >= totalImages) return;
+    
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalImageTitle');
+    const modalCaption = document.getElementById('modalImageCaption');
+    const modalCounter = document.getElementById('modalImageCounter');
+    
+    const image = imageData[currentModalIndex];
+    
+    if (modalImage) {
+        modalImage.src = image.url;
+        modalImage.alt = image.alt;
+    }
+    
+    if (modalTitle) {
+        modalTitle.textContent = image.type;
+    }
+    
+    if (modalCaption) {
+        modalCaption.textContent = image.caption || '';
+        modalCaption.style.display = image.caption ? 'block' : 'none';
+    }
+    
+    if (modalCounter) {
+        modalCounter.textContent = currentModalIndex + 1;
+    }
+}
+
+function nextModalImage() {
+    currentModalIndex = (currentModalIndex + 1) % totalImages;
+    updateModalImage();
+}
+
+function prevModalImage() {
+    currentModalIndex = (currentModalIndex - 1 + totalImages) % totalImages;
+    updateModalImage();
+}
+
+function handleModalKeydown(e) {
+    switch(e.key) {
+        case 'Escape':
+            closeImageModal();
+            break;
+        case 'ArrowLeft':
+            prevModalImage();
+            break;
+        case 'ArrowRight':
+            nextModalImage();
+            break;
+    }
+}
+
+// 모달 배경 클릭으로 닫기
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+});
+
+// 자동 슬라이드 (8초마다, 모달이 열려있지 않을 때만)
+if (totalImages > 1) {
+    setInterval(() => {
+        const modal = document.getElementById('imageModal');
+        if (!modal || modal.classList.contains('hidden')) {
+            nextGalleryImage();
+        }
+    }, 8000);
+}
+
+// 키보드 네비게이션 (갤러리용)
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('imageModal');
+    if (modal && !modal.classList.contains('hidden')) return; // 모달이 열려있으면 무시
+    
+    if (e.key === 'ArrowLeft') {
+        prevGalleryImage();
+    } else if (e.key === 'ArrowRight') {
+        nextGalleryImage();
+    }
+});
+
+// ✅ 모바일 스와이프 제스처 지원
+let touchStartX = 0;
+let touchEndX = 0;
+
+function handleGestureStart(e) {
+    touchStartX = e.changedTouches[0].screenX;
+}
+
+function handleGestureEnd(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleGesture();
+}
+
+function handleGesture() {
+    const swipeThreshold = 50; // 최소 스와이프 거리
+    const diff = touchStartX - touchEndX;
+    
+    if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+            // 왼쪽으로 스와이프 -> 다음 이미지
+            const modal = document.getElementById('imageModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                nextModalImage();
+            } else {
+                nextGalleryImage();
+            }
+        } else {
+            // 오른쪽으로 스와이프 -> 이전 이미지
+            const modal = document.getElementById('imageModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                prevModalImage();
+            } else {
+                prevGalleryImage();
+            }
+        }
+    }
+}
+
+// 갤러리와 모달에 터치 이벤트 추가
+document.addEventListener('DOMContentLoaded', function() {
+    const gallery = document.getElementById('imageGallery');
+    const modal = document.getElementById('imageModal');
+    
+    if (gallery) {
+        gallery.addEventListener('touchstart', handleGestureStart, { passive: true });
+        gallery.addEventListener('touchend', handleGestureEnd, { passive: true });
+    }
+    
+    if (modal) {
+        modal.addEventListener('touchstart', handleGestureStart, { passive: true });
+        modal.addEventListener('touchend', handleGestureEnd, { passive: true });
+        
+        // 모달 배경 클릭으로 닫기
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+});
+
+// ✅ 이미지 로드 실패 처리
+function handleImageError(img, fallbackSrc = null) {
+    if (fallbackSrc) {
+        img.src = fallbackSrc;
+    } else {
+        img.style.display = 'none';
+        const parent = img.parentElement;
+        if (parent) {
+            parent.innerHTML = `
+                <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span class="text-gray-400 text-2xl">🖼️</span>
+                </div>
+            `;
+        }
+    }
+}
+
+// 이미지 로드 최적화
+document.addEventListener('DOMContentLoaded', function() {
+    const images = document.querySelectorAll('img[src]');
+    images.forEach(img => {
+        img.addEventListener('error', function() {
+            handleImageError(this);
+        });
+        
+        // 로딩 상태 표시
+        img.addEventListener('load', function() {
+            this.classList.remove('loading-pulse');
+        });
+        
+        // 초기 로딩 상태
+        if (!img.complete) {
+            img.classList.add('loading-pulse');
+        }
+    });
+    
+    // ✅ 갤러리 썸네일에 타입별 스타일 적용
+    applyImageTypeStyles();
+});
+
+// ✅ 이미지 타입별 스타일 적용
+function applyImageTypeStyles() {
+    const thumbnails = document.querySelectorAll('.gallery-thumbnail');
+    thumbnails.forEach(thumbnail => {
+        const typeLabel = thumbnail.querySelector('[class*="type-label"]');
+        if (typeLabel) {
+            const typeText = typeLabel.textContent.toLowerCase();
+            
+            // 타입별 배경 그라데이션 적용
+            if (typeText.includes('메인')) {
+                typeLabel.className += ' type-label-main';
+            } else if (typeText.includes('포스터')) {
+                typeLabel.className += ' type-label-poster';
+                thumbnail.classList.add('poster-display');
+            } else if (typeText.includes('메뉴')) {
+                typeLabel.className += ' type-label-menu';
+            } else if (typeText.includes('내부')) {
+                typeLabel.className += ' type-label-interior';
+            } else if (typeText.includes('외부')) {
+                typeLabel.className += ' type-label-exterior';
+            } else if (typeText.includes('굿즈')) {
+                typeLabel.className += ' type-label-goods';
+            } else if (typeText.includes('이벤트')) {
+                typeLabel.className += ' type-label-event';
+            } else {
+                typeLabel.className += ' type-label-other';
+            }
+        }
+    });
+}
+
+// ✅ 갤러리 반응형 그리드 클래스 적용
+function updateGalleryGrid() {
+    const galleryGrid = document.querySelector('.grid.grid-cols-2');
+    if (!galleryGrid) return;
+    
+    const width = window.innerWidth;
+    
+    // 기존 그리드 클래스 제거
+    galleryGrid.classList.remove('gallery-grid-mobile', 'gallery-grid-tablet', 'gallery-grid-desktop');
+    
+    // 화면 크기에 따른 그리드 클래스 추가
+    if (width <= 768) {
+        galleryGrid.classList.add('gallery-grid-mobile');
+    } else if (width <= 1024) {
+        galleryGrid.classList.add('gallery-grid-tablet');
+    } else {
+        galleryGrid.classList.add('gallery-grid-desktop');
+    }
+}
+
+// 창 크기 변경 시 그리드 업데이트
+window.addEventListener('resize', updateGalleryGrid);
+
+// 초기 로드 시 그리드 설정
+document.addEventListener('DOMContentLoaded', updateGalleryGrid);
+
+// ✅ 갤러리 썸네일 lazy loading (성능 최적화)
+function initLazyLoading() {
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.classList.remove('loading-pulse');
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        });
+
+        // 갤러리 섹션의 이미지들에만 적용
+        const galleryImages = document.querySelectorAll('.gallery-thumbnail img[data-src]');
+        galleryImages.forEach(img => imageObserver.observe(img));
+    }
+}
+
+// 페이지 로드 후 lazy loading 초기화
+document.addEventListener('DOMContentLoaded', initLazyLoading);
 </script>
 
 <script>
@@ -578,7 +1526,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-
 // ✅ 디버깅 정보 출력
 console.log('Detail 페이지 JavaScript 로드됨');
 console.log('API 키 존재:', '{{ kakao_api_key }}' ? 'Yes' : 'No');
@@ -596,163 +1543,8 @@ console.log('카페 좌표:', {{ cafe.latitude|default:"null" }}, {{ cafe.longit
      style="display: none;">
 </div>
 
-<!-- 찜하기 스크립트 로드 -->
-<!-- <script src="{% static 'js/favorite.js' %}"></script> -->
 
-<!-- 찜하기 초기화 스크립트 (오류 방지 강화) -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM 로드 완료 - 찜하기 초기화 시작');
-    
-    // 숨겨진 div에서 데이터 가져오기
-    var userData = document.getElementById('user-data');
-    if (!userData) {
-        console.error('사용자 데이터를 찾을 수 없습니다.');
-        return;
-    }
-    
-    var userAuthenticated = userData.getAttribute('data-authenticated') === 'true';
-    var cafeId = userData.getAttribute('data-cafe-id');
-    var isFavorited = userData.getAttribute('data-is-favorited') === 'true';
-    
-    // body 데이터셋 설정
-    document.body.dataset.userAuthenticated = userAuthenticated ? 'true' : 'false';
-    
-    console.log('찜하기 데이터:', {
-        userAuthenticated: userAuthenticated,
-        cafeId: cafeId,
-        isFavorited: isFavorited,
-        favoriteManagerExists: !!window.favoriteManager
-    });
-    
-    // 사용자가 로그인한 경우에만 찜하기 기능 초기화
-    if (userAuthenticated) {
-        // FavoriteManager 로드 확인 (재시도 로직)
-        var initAttempts = 0;
-        var maxAttempts = 20; // 2초 대기
-        
-        function tryInitFavorite() {
-            initAttempts++;
-            
-            if (window.favoriteManager && typeof window.favoriteManager.setFavoriteState === 'function') {
-                try {
-                    // 찜하기 상태 저장
-                    window.favoriteManager.setFavoriteState(cafeId, isFavorited);
-                    
-                    // 모든 찜하기 버튼 상태 업데이트
-                    if (typeof window.favoriteManager.updateAllButtons === 'function') {
-                        window.favoriteManager.updateAllButtons(cafeId, isFavorited);
-                    }
-                    
-                    console.log('찜하기 시스템 초기화 완료');
-                } catch (error) {
-                    console.error('찜하기 초기화 오류:', error);
-                }
-            } else if (initAttempts < maxAttempts) {
-                console.log('FavoriteManager 로드 대기 중... (' + initAttempts + '/' + maxAttempts + ')');
-                setTimeout(tryInitFavorite, 100);
-            } else {
-                console.warn('FavoriteManager 로드 실패 - 찜하기 기능을 사용할 수 없습니다.');
-                
-                // 수동으로 간단한 찜하기 기능 구현
-                setupBasicFavorite();
-            }
-        }
-        
-        // 찜하기 초기화 시작
-        tryInitFavorite();
-    } else {
-        console.log('비로그인 사용자 - 찜하기 기능 비활성화');
-    }
-});
-
-// ✅ 기본 찜하기 기능 (FavoriteManager 실패 시 백업)
-function setupBasicFavorite() {
-    console.log('기본 찜하기 기능 활성화');
-    
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('[data-favorite-btn]') || e.target.closest('[data-favorite-btn]')) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            var btn = e.target.matches('[data-favorite-btn]') ? e.target : e.target.closest('[data-favorite-btn]');
-            var cafeId = btn.dataset.cafeId;
-            
-            if (cafeId) {
-                basicToggleFavorite(cafeId, btn);
-            }
-        }
-    });
-}
-
-// ✅ 기본 찜하기 토글 함수
-function basicToggleFavorite(cafeId, button) {
-    var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-    if (!csrfToken) {
-        console.error('CSRF 토큰을 찾을 수 없습니다.');
-        return;
-    }
-    
-    // 버튼 비활성화
-    button.disabled = true;
-    var originalContent = button.textContent;
-    button.textContent = '⏳';
-    
-    fetch('/ddoksang/cafe/' + cafeId + '/toggle-favorite/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // 버튼 상태 업데이트
-            button.textContent = data.is_favorited ? '♥' : '♡';
-            button.style.color = data.is_favorited ? '#ef4444' : '#6b7280';
-            
-            // 간단한 알림
-            showSimpleToast(data.message || (data.is_favorited ? '찜했어요!' : '찜 해제했어요!'));
-        } else {
-            throw new Error(data.error || '오류가 발생했습니다.');
-        }
-    })
-    .catch(error => {
-        console.error('찜하기 오류:', error);
-        button.textContent = originalContent;
-        showSimpleToast('오류가 발생했습니다.');
-    })
-    .finally(() => {
-        button.disabled = false;
-    });
-}
-
-// 간단한 토스트 메시지
-function showSimpleToast(message) {
-    var toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #333;
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        font-size: 14px;
-    `;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
-    }, 3000);
-}
-</script>
+<!-- 맨 아래 추가: favorite.js 수동 삽입 -->
+<script src="{% static 'js/favorite.js' %}"></script>
 
 {% endblock %}
