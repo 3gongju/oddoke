@@ -1,7 +1,6 @@
-
 {% extends 'base.html' %}
 {% load static %}
-
+{% load custom_filters %} 
 {% block body %}
 <div class="max-w-4xl mx-auto px-4 py-10">
   <!-- ✅ 프로필 상단 - 닉네임만 표시 -->
@@ -9,7 +8,7 @@
     <div class="flex items-center">
       <img src="{{ user_profile.profile_image.url }}" alt="프로필" class="w-16 h-16 rounded-full object-cover mr-4">
       <div>
-        <h2 class="text-xl font-bold">
+        <h2 class="text-xl font-bold text-gray-800">
           {% if user_profile.first_name %}
             {{ user_profile.first_name }}
           {% elif user_profile.last_name %}
@@ -20,87 +19,103 @@
             {{ user_profile.username }}
           {% endif %}
         </h2>
+        <p class="text-gray-600">매너 리뷰 통계</p>
       </div>
     </div>
   </div>
 
-  <!-- ✅ 리뷰 탭 영역 -->
-  <div class="bg-white rounded-lg shadow p-6">
-    <div class="flex space-x-6 mb-4 border-b pb-2">
-      <!-- <button class="tab-btn text-blue-600 font-semibold border-b-2 border-blue-500" onclick="showTab('write')">리뷰 쓰기</button> -->
-      <h2 class="text-lg font-semibold text-gray-800">구매자가 이렇게 평가했어요!</h2>
+  <!-- ✅ 리뷰 통계 영역 -->
+  <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+    <div class="flex space-x-6 mb-8 border-b border-gray-100 pb-6">
+      <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+        <span class="text-blue-500 mr-2">📊</span>
+        매너 리뷰 통계
+      </h2>
     </div>
 
-    
-    <!-- 내 리뷰 보기 영역 -->
-    <div id="tab-written" class="space-y-6">
-      {% for r in reviews %}
-      <div class="p-4 border rounded shadow">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center space-x-3">
-            <img src="{{ r.user.profile_image.url }}" alt="리뷰어" class="w-8 h-8 rounded-full object-cover">
-            <div>
-              <p class="font-medium text-sm">
-                {% if r.user.first_name %}
-                  {{ r.user.first_name }}
-                {% elif r.user.last_name %}
-                  {{ r.user.last_name }}
-                {% elif r.user.username|length > 20 %}
-                  닉네임 미설정
-                {% else %}
-                  {{ r.user.username }}
-                {% endif %}
-              </p>
-              <p class="text-xs text-gray-500">{{ r.created_at|date:"y/m/d A g:i" }}</p>
-            </div>
-          </div>
-          <div class="text-yellow-500 font-semibold">
-            {% for i in ""|ljust:r.rating %}★{% endfor %}
-            <span class="text-gray-600 text-sm ml-1">({{ r.rating }}점)</span>
-          </div>
+    <!-- 통계 카드들 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      
+      <!-- 전반적인 거래 만족도 -->
+      <div class="stats-card rounded-xl p-6 animate-fadeInUp">
+        <div class="flex items-center mb-4">
+          <div class="icon-wrapper rating-color">⭐</div>
+          <h3 class="text-lg font-semibold text-gray-700">거래 만족도</h3>
         </div>
-        
-        <div class="grid grid-cols-2 gap-2 text-sm">
-          <!-- <div class="bg-gray-50 px-3 py-2 rounded">
-            <span class="font-medium text-gray-700">약속 시간:</span>
-            <span class="text-gray-600">{{ r.punctuality }}</span>
-          </div> -->
-          <div class="bg-gray-50 px-3 py-2 rounded">
-            <span class="font-medium text-gray-700">상품 상태:</span>
-            <span class="text-gray-600">{{ r.description_match }}</span>
-          </div>
-          <div class="bg-gray-50 px-3 py-2 rounded">
-            <span class="font-medium text-gray-700">응답 속도:</span>
-            <span class="text-gray-600">{{ r.response_speed }}</span>
-          </div>
-          <div class="bg-gray-50 px-3 py-2 rounded">
-            <span class="font-medium text-gray-700">메시지 말투:</span>
-            <span class="text-gray-600">{{ r.politeness }}</span>
-          </div>
-        </div>
-        
-        <div class="mt-3 pt-3 border-t border-gray-100">
-          <span class="text-sm font-medium text-gray-700">재거래 의사:</span>
-          <span class="text-sm text-gray-600 ml-2">
-            {% if r.deal_again == 'O' %}
-              ✅ 재거래 하고 싶어요
-            {% else %}
-              ❌ 재거래는 어려울 것 같아요
-            {% endif %}
-          </span>
+        <div id="rating-stats" class="space-y-3">
+          <!-- 동적으로 생성됨 -->
         </div>
       </div>
-      {% empty %}
-      <div class="text-center py-12">
-        <img src="{% static 'image/ddok_black.png' %}" alt="리뷰 없음" class="w-16 h-16 mx-auto mb-4 opacity-50" />
-        <p class="text-sm text-gray-500">아직 작성된 리뷰가 없습니다.</p>
+
+      <!-- 상품 상태 일치 여부 -->
+      <div class="stats-card rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.1s">
+        <div class="flex items-center mb-4">
+          <div class="icon-wrapper description-color">📦</div>
+          <h3 class="text-lg font-semibold text-gray-700">상품 상태 일치도</h3>
+        </div>
+        <div id="description-stats" class="space-y-3">
+          <!-- 동적으로 생성됨 -->
+        </div>
       </div>
-      {% endfor %}
+
+      <!-- 응답 속도 -->
+      <div class="stats-card rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.2s">
+        <div class="flex items-center mb-4">
+          <div class="icon-wrapper response-color">💬</div>
+          <h3 class="text-lg font-semibold text-gray-700">응답 속도</h3>
+        </div>
+        <div id="response-stats" class="space-y-3">
+          <!-- 동적으로 생성됨 -->
+        </div>
+      </div>
+
+      <!-- 메시지 말투 -->
+      <div class="stats-card rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.3s">
+        <div class="flex items-center mb-4">
+          <div class="icon-wrapper politeness-color">🗣️</div>
+          <h3 class="text-lg font-semibold text-gray-700">메시지 말투</h3>
+        </div>
+        <div id="politeness-stats" class="space-y-3">
+          <!-- 동적으로 생성됨 -->
+        </div>
+      </div>
+
+      <!-- 재거래 의사 -->
+      <div class="stats-card rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.4s">
+        <div class="flex items-center mb-4">
+          <div class="icon-wrapper deal-color">🔄</div>
+          <h3 class="text-lg font-semibold text-gray-700">재거래 의사</h3>
+        </div>
+        <div id="deal-stats" class="space-y-3">
+          <!-- 동적으로 생성됨 -->
+        </div>
+      </div>
+
+      <!-- 전체 통계 요약 -->
+      <div class="stats-card rounded-xl p-6 animate-fadeInUp" style="animation-delay: 0.5s">
+        <div class="flex items-center mb-4">
+          <div class="icon-wrapper bg-gradient-to-br from-gray-200 to-gray-400">📈</div>
+          <h3 class="text-lg font-semibold text-gray-700">전체 통계</h3>
+        </div>
+        <div class="space-y-3">
+          <div class="stats-item">
+            <span class="stats-label">총 리뷰 수</span>
+            <span class="stats-value" id="total-reviews">0</span>
+          </div>
+          <div class="stats-item">
+            <span class="stats-label">평균 만족도</span>
+            <span class="stats-value" id="avg-rating">0.0</span>
+          </div>
+          <div class="stats-item">
+            <span class="stats-label">재거래 비율</span>
+            <span class="stats-value" id="deal-rate">0%</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-  
 <style>
   /* 별점 스타일 */
   .star.active {
@@ -148,89 +163,409 @@
   label:hover input[type="radio"] {
     border-color: #6b7280;
   }
+
+  /* 카드형 바 스타일 */
+  .stats-card {
+    background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+  }
+
+  .stats-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* 진행률 바 스타일 개선 */
+  .progress-item {
+    margin: 15px 0;
+  }
+  
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .progress-label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+  }
+  
+  .progress-value {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 18px;
+    background: #f3f4f6;
+    border-radius: 9px;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    border-radius: 9px;
+    transition: all 0.8s ease;
+    position: relative;
+  }
+
+  /* Legacy stats-bar 스타일 (호환성을 위해 유지) */
+  .stats-bar {
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .stats-bar-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    border-radius: 4px;
+    transition: width 0.8s ease-out;
+  }
+
+  .stats-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .stats-item:last-child {
+    border-bottom: none;
+  }
+
+  .stats-label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
+  }
+
+  .stats-value {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 16px;
+  }
+
+  /* 아이콘 스타일 */
+  .icon-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-right: 12px;
+  }
+
+  /* 각 섹션별 색상 */
+  .rating-color { background: linear-gradient(135deg, #fef3c7, #fbbf24); }
+  .description-color { background: linear-gradient(135deg, #d1fae5, #10b981); }
+  .response-color { background: linear-gradient(135deg, #dbeafe, #3b82f6); }
+  .politeness-color { background: linear-gradient(135deg, #e9d5ff, #8b5cf6); }
+  .deal-color { background: linear-gradient(135deg, #fed7aa, #f97316); }
+
+  /* 각 차트별 진행률 바 색상 */
+  .rating-fill {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+  }
+  
+  .description-fill {
+    background: linear-gradient(90deg, #10b981, #059669);
+  }
+  
+  .response-fill {
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  }
+  
+  .politeness-fill {
+    background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+  }
+  
+  .deal-again-fill {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+  }
+
+  /* Legacy 바 색상 */
+  .bar-rating { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+  .bar-description { background: linear-gradient(135deg, #10b981, #059669); }
+  .bar-response { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .bar-politeness { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+  .bar-deal { background: linear-gradient(135deg, #f97316, #ea580c); }
+
+  /* 빈 상태 스타일 */
+  .empty-state {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 16px;
+    padding: 40px 0;
+  }
+
+  /* 애니메이션 */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.6s ease-out;
+  }
 </style>
 
 <script>
-  // 별점 기능
-  document.addEventListener('DOMContentLoaded', function() {
-    const stars = document.querySelectorAll('.star');
-    const ratingInput = document.querySelector('input[name="rating"]');
-    const ratingText = document.getElementById('rating-text');
+// Django 템플릿에서 JavaScript로 데이터 전달
+const chartData = {
+  rating: {{ rating_counter|safe }},
+  description: {{ description_counter|safe }},
+  response: {{ response_counter|safe }},
+  politeness: {{ politeness_counter|safe }},
+  deal_again: {{ deal_again_counter|safe }}
+};
+
+// 라벨 포맷팅 함수
+function formatLabel(label) {
+  if (label === 'O') return '👍 예';
+  if (label === 'X') return '👎 아니오';
+  if (label === '1') return '⭐ 1점';
+  if (label === '2') return '⭐⭐ 2점';
+  if (label === '3') return '⭐⭐⭐ 3점';
+  if (label === '4') return '⭐⭐⭐⭐ 4점';
+  if (label === '5') return '⭐⭐⭐⭐⭐ 5점';
+  return label;
+}
+
+// 진행률 바 차트 그리기 함수 (개선된 버전)
+function drawProgressChart(containerId, data, chartType) {
+  const container = document.getElementById(containerId);
+  
+  // 컨테이너 클리어
+  container.innerHTML = '';
+  
+  // 데이터 처리
+  const labels = Object.keys(data);
+  const values = Object.values(data);
+  const maxValue = Math.max(...values, 1);
+  const totalValue = values.reduce((sum, val) => sum + val, 0);
+  
+  if (labels.length === 0 || totalValue === 0) {
+    // 데이터가 없을 때
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="text-4xl mb-2">📊</div>
+        <p>아직 리뷰가 없습니다</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // 각 항목에 대해 진행률 바 생성
+  labels.forEach((label, index) => {
+    const value = values[index];
+    const percentage = (value / maxValue) * 100;
+    const totalPercentage = totalValue > 0 ? (value / totalValue * 100) : 0;
     
-    const ratingTexts = {
-      1: '😞 별로예요 (1점)',
-      2: '🙁 아쉬워요 (2점)', 
-      3: '😐 보통이에요 (3점)',
-      4: '😊 좋아요! (4점)',
-      5: '🤩 최고예요! (5점)'
-    };
+    const progressItem = document.createElement('div');
+    progressItem.className = 'progress-item';
     
-    stars.forEach((star, index) => {
-      star.addEventListener('click', (e) => {
-        e.preventDefault();
-        const rating = index + 1;
-        
-        // 히든 input에 값 설정
-        ratingInput.value = rating;
-        
-        // 별점 시각적 업데이트
-        stars.forEach((s, i) => {
-          if (i <= index) {
-            s.classList.add('active');
-          } else {
-            s.classList.remove('active');
-          }
-        });
-        
-        // 텍스트 업데이트
-        ratingText.textContent = ratingTexts[rating];
+    const progressHeader = document.createElement('div');
+    progressHeader.className = 'progress-header';
+    
+    const progressLabel = document.createElement('div');
+    progressLabel.className = 'progress-label';
+    progressLabel.textContent = formatLabel(label);
+    
+    const progressValue = document.createElement('div');
+    progressValue.className = 'progress-value';
+    progressValue.textContent = value + '명';
+    
+    progressHeader.appendChild(progressLabel);
+    progressHeader.appendChild(progressValue);
+    
+    const progressBar = document.createElement('div');
+    progressBar.className = 'progress-bar';
+    
+    const progressFill = document.createElement('div');
+    progressFill.className = `progress-fill ${chartType}-fill`;
+    progressFill.style.width = '0%'; // 애니메이션을 위해 0%로 시작
+    
+    // 퍼센티지 표시 추가
+    const percentageText = document.createElement('div');
+    percentageText.className = 'text-xs text-gray-500 mt-1 text-right';
+    percentageText.textContent = totalPercentage.toFixed(1) + '%';
+    
+    progressBar.appendChild(progressFill);
+    progressItem.appendChild(progressHeader);
+    progressItem.appendChild(progressBar);
+    progressItem.appendChild(percentageText);
+    container.appendChild(progressItem);
+    
+    // 애니메이션 효과
+    setTimeout(() => {
+      progressFill.style.width = percentage + '%';
+    }, 100 * (index + 1));
+  });
+}
+
+// 전체 통계 계산 함수
+function updateOverallStats() {
+  const ratingValues = Object.values(chartData.rating);
+  const totalRatingReviews = ratingValues.reduce((sum, val) => sum + val, 0);
+  
+  // 전체 리뷰 수 (가장 많은 카테고리 기준)
+  const allTotals = [
+    Object.values(chartData.rating).reduce((sum, val) => sum + val, 0),
+    Object.values(chartData.description).reduce((sum, val) => sum + val, 0),
+    Object.values(chartData.response).reduce((sum, val) => sum + val, 0),
+    Object.values(chartData.politeness).reduce((sum, val) => sum + val, 0),
+    Object.values(chartData.deal_again).reduce((sum, val) => sum + val, 0)
+  ];
+  const totalReviews = Math.max(...allTotals);
+  
+  // 평균 만족도 계산
+  let weightedSum = 0;
+  Object.entries(chartData.rating).forEach(([rating, count]) => {
+    weightedSum += parseInt(rating) * count;
+  });
+  const avgRating = totalRatingReviews > 0 ? (weightedSum / totalRatingReviews).toFixed(1) : '0.0';
+  
+  // 재거래 비율 계산
+  const dealYes = chartData.deal_again['O'] || 0;
+  const dealTotal = Object.values(chartData.deal_again).reduce((sum, val) => sum + val, 0);
+  const dealRate = dealTotal > 0 ? ((dealYes / dealTotal) * 100).toFixed(1) : '0.0';
+  
+  document.getElementById('total-reviews').textContent = totalReviews + '건';
+  document.getElementById('avg-rating').textContent = avgRating + '점';
+  document.getElementById('deal-rate').textContent = dealRate + '%';
+}
+
+// 페이지 로드 후 실행
+document.addEventListener('DOMContentLoaded', function() {
+  // 각 카드 생성 (개선된 진행률 바 사용)
+  drawProgressChart('rating-stats', chartData.rating, 'rating');
+  drawProgressChart('description-stats', chartData.description, 'description');
+  drawProgressChart('response-stats', chartData.response, 'response');
+  drawProgressChart('politeness-stats', chartData.politeness, 'politeness');
+  drawProgressChart('deal-stats', chartData.deal_again, 'deal-again');
+  
+  // 전체 통계 업데이트
+  updateOverallStats();
+  
+  // 반응형 처리
+  window.addEventListener('resize', function() {
+    setTimeout(() => {
+      drawProgressChart('rating-stats', chartData.rating, 'rating');
+      drawProgressChart('description-stats', chartData.description, 'description');
+      drawProgressChart('response-stats', chartData.response, 'response');
+      drawProgressChart('politeness-stats', chartData.politeness, 'politeness');
+      drawProgressChart('deal-stats', chartData.deal_again, 'deal-again');
+    }, 100);
+  });
+});
+
+// 별점 기능 (기존 코드 유지)
+const stars = document.querySelectorAll('.star');
+const ratingInput = document.querySelector('input[name="rating"]');
+const ratingText = document.getElementById('rating-text');
+
+const ratingTexts = {
+  1: '😞 별로예요 (1점)',
+  2: '🙁 아쉬워요 (2점)', 
+  3: '😐 보통이에요 (3점)',
+  4: '😊 좋아요! (4점)',
+  5: '🤩 최고예요! (5점)'
+};
+
+if (stars.length > 0) {
+  stars.forEach((star, index) => {
+    star.addEventListener('click', (e) => {
+      e.preventDefault();
+      const rating = index + 1;
+      
+      if (ratingInput) ratingInput.value = rating;
+      
+      stars.forEach((s, i) => {
+        if (i <= index) {
+          s.classList.add('active');
+        } else {
+          s.classList.remove('active');
+        }
       });
       
-      // 호버 효과
-      star.addEventListener('mouseenter', () => {
-        stars.forEach((s, i) => {
-          if (i <= index) {
-            s.style.color = '#fbbf24';
-          } else {
-            s.style.color = '#d1d5db';
-          }
-        });
-      });
+      if (ratingText) {
+        ratingText.textContent = ratingTexts[rating];
+      }
     });
     
-    // 마우스 나갈 때 원래 상태로
-    document.querySelector('.rating-stars').addEventListener('mouseleave', () => {
+    star.addEventListener('mouseenter', () => {
       stars.forEach((s, i) => {
-        if (s.classList.contains('active')) {
+        if (i <= index) {
           s.style.color = '#fbbf24';
         } else {
           s.style.color = '#d1d5db';
         }
       });
     });
-    
-    // 폼 제출 전 검증
-    document.getElementById('reviewForm').addEventListener('submit', (e) => {
-      if (!ratingInput.value) {
-        e.preventDefault();
-        alert('별점을 선택해주세요!');
-        document.querySelector('.rating-stars').scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+const ratingStarsContainer = document.querySelector('.rating-stars');
+if (ratingStarsContainer) {
+  ratingStarsContainer.addEventListener('mouseleave', () => {
+    stars.forEach((s, i) => {
+      if (s.classList.contains('active')) {
+        s.style.color = '#fbbf24';
+      } else {
+        s.style.color = '#d1d5db';
       }
     });
   });
+}
 
-  // 탭 전환 기능
-  function showTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-    document.getElementById('tab-' + tab).classList.remove('hidden');
+const form = document.getElementById('reviewForm');
+if (form) {
+  form.addEventListener('submit', (e) => {
+    const ratingInput = document.querySelector('input[name="rating"]');
+    if (ratingInput && !ratingInput.value) {
+      e.preventDefault();
+      alert('별점을 선택해주세요!');
+      const ratingContainer = document.querySelector('.rating-stars');
+      if (ratingContainer) {
+        ratingContainer.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+}
 
-    // 탭 버튼 스타일
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.remove('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-500');
-      btn.classList.add('text-gray-500');
-    });
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  const tabContent = document.getElementById('tab-' + tab);
+  if (tabContent) tabContent.classList.remove('hidden');
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-500');
+    btn.classList.add('text-gray-500');
+  });
+  
+  if (event && event.target) {
     event.target.classList.add('text-blue-600', 'font-semibold', 'border-b-2', 'border-blue-500');
     event.target.classList.remove('text-gray-500');
   }
+}
 </script>
 {% endblock %}

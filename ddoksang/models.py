@@ -95,6 +95,15 @@ class BdayCafe(models.Model):
         if self.end_date > today:
             return (self.end_date - today).days
         return 0
+    
+    @property
+    def days_until_start(self):
+        """시작까지 남은 일수 계산"""
+        from datetime import date
+        today = date.today()
+        if self.start_date > today:
+            return (self.start_date - today).days
+        return 0
 
     def get_main_image(self):
         """대표 이미지 반환 (새로운 다중 이미지 시스템 우선)"""

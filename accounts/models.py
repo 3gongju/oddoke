@@ -25,6 +25,14 @@ class User(AbstractUser):
     is_verified_fandom = models.BooleanField(default=False)
     is_pending_verification = models.BooleanField(default=False)
     verification_failed = models.BooleanField(default=False)
+    
+    # 계좌 등록 관련 필드
+    bank_code = models.CharField(max_length=10, blank=True, null=True, verbose_name="은행 코드")
+    bank_name = models.CharField(max_length=50, blank=True, null=True, verbose_name="은행명")
+    account_number = models.CharField(max_length=20, blank=True, null=True, verbose_name="계좌번호")
+    account_holder = models.CharField(max_length=50, blank=True, null=True, verbose_name="예금주명")
+    is_account_verified = models.BooleanField(default=False, verbose_name="계좌 인증 여부")
+    account_registered_at = models.DateTimeField(blank=True, null=True, verbose_name="계좌 등록일")
 
 class MannerReview(models.Model):
     RATING_CHOICES = [(i, f'{i}점') for i in range(1, 6)]

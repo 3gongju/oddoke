@@ -74,7 +74,7 @@ ROOT_URLCONF = 'oddoke.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')], 
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -204,3 +204,10 @@ CACHES = {
         }
     }
 }
+
+# Mock 서비스 설정
+USE_MOCK_BANK_SERVICE = True  # Mock 서비스 사용 여부
+
+# 나중에 실제 API 사용시 설정
+# REAL_BANK_API_KEY = 'your_api_key_here'
+# USE_MOCK_BANK_SERVICE = False

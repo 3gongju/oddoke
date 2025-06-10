@@ -34,5 +34,10 @@ urlpatterns = [
     path('<username>/follow/', views.follow, name='follow'),
     path('<str:username>/follow-list/', views.follow_list, name='follow_list'),
     # 리뷰 페이지
-    path('<username>/reviews/', views.review_home, name='review_home'),  
+    path('<username>/reviews/', views.review_home, name='review_home'), 
+    # 🔹 추가: 계좌 관련 URL들
+    path('<str:username>/account/', views.account_verification, name='account_verification'),
+    path('<str:username>/account/modify/', views.account_modify, name='account_modify'),
+    path('<str:username>/account/delete/', views.account_delete, name='account_delete'),
+    path('<str:username>/account/status/', views.account_status, name='account_status'), 
 ]
