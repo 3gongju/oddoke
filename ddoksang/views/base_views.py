@@ -18,9 +18,6 @@ from artist.models import Artist, Member
 from .utils import get_user_favorites
 from ..utils.bday_utils import get_weekly_bday_artists
 
-
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -38,11 +35,17 @@ def home_view(request):
         end_date__gte=today
     ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')
 
-    # === 3. ✅ 최신 등록된 카페들 (모든 승인된 카페) ===
-    latest_cafes = BdayCafe.objects.filter(
-        status='approved'  # 운영 상태와 관계없이 승인된 모든 카페
+    # === 3. 최신 등록된 카페들 - 전체 개수도 확인 ===
+    latest_cafes_queryset = BdayCafe.objects.filter(
+        status='approved'
     ).select_related('artist', 'member').prefetch_related('images') \
-     .order_by('-created_at')[:6]  # 최신 등록 순으로 6개
+     .order_by('-created_at')
+    
+    # 전체 개수 확인
+    total_latest_cafes_count = latest_cafes_queryset.count()
+    
+    # 실제로는 6개만 가져오기
+    latest_cafes = latest_cafes_queryset[:6]
 
     # === 4. 사용자 찜 목록 ===
     my_favorite_cafes = []
@@ -58,7 +61,7 @@ def home_view(request):
             user=request.user,
             cafe__status='approved'
         ).select_related('cafe__artist', 'cafe__member') \
-        .order_by('-created_at')[:10]  # 찜한 카페도 최대 10개
+        .order_by('-created_at')[:10]
 
         my_favorite_cafes = [fav.cafe for fav in favorites]
 
@@ -68,15 +71,15 @@ def home_view(request):
     # === 6. 템플릿 컨텍스트 ===
     context = {
         'birthday_artists': birthday_artists,
-        'latest_cafes': latest_cafes,  # ✅ 모든 승인된 카페 중 최신 6개
-        'active_cafes': active_cafes,  # 지도용 (현재 운영중)
+        'latest_cafes': latest_cafes,
+        'total_latest_cafes_count': total_latest_cafes_count, 
+        'active_cafes': active_cafes,
         'my_favorite_cafes': my_favorite_cafes,
         'user_favorites': user_favorites,
-        **map_context,  # 지도 관련 컨텍스트 (현재 운영중인 카페들)
+        **map_context,
     }
     
     return render(request, 'ddoksang/home.html', context)
-
 
 def search_view(request):
     """통합 검색 페이지"""

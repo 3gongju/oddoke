@@ -312,3 +312,63 @@ def search_suggestions_api(request):
     except Exception as e:
         logger.error(f"검색 자동완성 API 오류: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+# 최신 카페 6개 이상 더보기로 전체 불러옴
+@require_GET
+def latest_cafes_api(request):
+    """최신 카페 더보기 API"""
+    try:
+        page = int(request.GET.get('page', 1))
+        per_page = int(request.GET.get('per_page', 6))
+        
+        # 제한값 검증
+        if page < 1 or per_page < 1 or per_page > 50:
+            return JsonResponse({'success': False, 'error': '잘못된 페이징 정보입니다.'})
+        
+        start = (page - 1) * per_page
+        end = start + per_page
+        
+        # 승인된 모든 카페를 최신순으로 가져오기
+        cafes = BdayCafe.objects.filter(
+            status='approved'
+        ).select_related('artist', 'member').order_by('-created_at')[start:end]
+        
+        total_count = BdayCafe.objects.filter(status='approved').count()
+        
+        # 데이터 직렬화
+        cafe_data = []
+        for cafe in cafes:
+            try:
+                cafe_data.append({
+                    'id': cafe.id,
+                    'cafe_name': cafe.cafe_name,
+                    'artist_name': cafe.artist.display_name if cafe.artist else '',
+                    'member_name': cafe.member.member_name if cafe.member else '',
+                    'main_image': cafe.get_main_image(),
+                    'place_name': cafe.place_name or '',
+                    'address': cafe.address or '',
+                    'start_date': cafe.start_date.isoformat() if cafe.start_date else '',
+                    'end_date': cafe.end_date.isoformat() if cafe.end_date else '',
+                    'is_active': cafe.is_active,
+                    'days_remaining': cafe.days_remaining,
+                    'special_benefits': cafe.special_benefits or '',
+                })
+            except Exception as e:
+                logger.warning(f"카페 {cafe.id} 데이터 처리 오류: {e}")
+                continue
+        
+        return JsonResponse({
+            'success': True,
+            'cafes': cafe_data,
+            'has_more': end < total_count,
+            'total': total_count,
+            'current_page': page,
+            'per_page': per_page
+        })
+        
+    except ValueError as e:
+        logger.warning(f"최신 카페 API 파라미터 오류: {e}")
+        return JsonResponse({'success': False, 'error': '잘못된 요청 파라미터입니다.'})
+    except Exception as e:
+        logger.error(f"최신 카페 API 오류: {e}")
+        return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})

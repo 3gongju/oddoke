@@ -36,6 +36,8 @@ urlpatterns = [
     path('api/nearby/', views.nearby_cafes_api, name='nearby_cafes_api'),
     path('api/map-data/', views.cafe_map_data_api, name='map_data_api'),
     path('api/search-suggestions/', views.search_suggestions_api, name='search_suggestions_api'),
+    path('api/latest-cafes/', views.latest_cafes_api, name='latest_cafes_api'),
+
     
     # === 관리자 기능 ===
     path('admin/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
