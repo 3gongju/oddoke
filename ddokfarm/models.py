@@ -118,7 +118,7 @@ class FarmSplitPost(FarmBasePost):
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
     images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
     checked_out_members = models.ManyToManyField(Member, blank=True, related_name="checked_out_split_posts")
-    push = models.CharField(max_length=20, choices=ALBUM_CHOICES)
+    push = models.CharField(max_length=20, choices=PUSH_CHOICES)
 
     @property
     def category_type(self):

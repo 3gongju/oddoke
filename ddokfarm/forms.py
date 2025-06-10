@@ -90,7 +90,7 @@ class FarmSplitPostForm(forms.ModelForm):
 
     class Meta:
         model = FarmSplitPost
-        fields = ['title', 'content', 'album', 'shipping_fee', 'where', 'when', 'failure', 'artist']
+        fields = ['title', 'content', 'album', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'push']
         widgets = {
             **common_widgets,
             'shipping_fee': forms.NumberInput(attrs={
