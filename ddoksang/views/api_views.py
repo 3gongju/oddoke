@@ -1,16 +1,18 @@
 # API 엔드포인트들
 
-from datetime import date
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET
-from django.core.paginator import Paginator
-from django.utils import timezone
-from django.db.models import Q
-import logging
+from datetime import date # 날짜 처리
+from django.http import JsonResponse # JSON 응답
+from django.shortcuts import get_object_or_404 # 객체 조회
+from django.views.decorators.http import require_GET # GET 데코레이터
+from django.core.paginator import Paginator # 페이지네이션
+from django.utils import timezone # 시간대 처리
+from django.db.models import Q # 쿼리 필터링
+import logging # 로깅깅
 
-from ..models import BdayCafe
-from .utils import DEFAULT_PAGE_SIZE, validate_coordinates, get_nearby_cafes
+from django.template.loader import render_to_string # HTML 렌더링
+
+from ..models import BdayCafe, CafeFavorite # 찜하기 기능용용
+from .utils import DEFAULT_PAGE_SIZE, validate_coordinates, get_nearby_cafes # 유틸리티 함수
 
 logger = logging.getLogger(__name__)
 
@@ -312,3 +314,62 @@ def search_suggestions_api(request):
     except Exception as e:
         logger.error(f"검색 자동완성 API 오류: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+# 최신 카페 6개 이상 더보기로 전체 불러옴
+@require_GET
+def latest_cafes_api(request):
+    """최신 카페 더보기 API - HTML 렌더링 방식"""
+    try:
+        page = int(request.GET.get('page', 1))
+        per_page = 6  # 페이지당 6개씩
+        
+        # 승인된 최신 카페들만 가져오기
+        cafes = BdayCafe.objects.filter(
+            status='approved'
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')
+        
+        paginator = Paginator(cafes, per_page)
+        
+        try:
+            page_obj = paginator.page(page)
+        except:
+            return JsonResponse({'error': 'Invalid page'}, status=400)
+        
+        # 사용자 찜 목록 가져오기
+        user_favorites = []
+        if request.user.is_authenticated:
+            user_favorites = list(
+                CafeFavorite.objects.filter(user=request.user)
+                .values_list('cafe_id', flat=True)
+            )
+        
+        # 템플릿에서 HTML 렌더링
+        html_content = ""
+        for cafe in page_obj:
+            cafe_html = render_to_string('ddoksang/components/_cafe_card_base.html', {
+                'cafe': cafe,
+                'card_variant': 'latest',
+                'user_favorites': user_favorites,
+                'user': request.user,
+            }, request=request)
+            
+            # div 래퍼로 감싸기
+            html_content += f'<div class="cafe-card-item w-full max-w-[175px] md:max-w-none">{cafe_html}</div>'
+        
+        return JsonResponse({
+            'success': True,
+            'html': html_content,  # 렌더링된 HTML
+            'has_next': page_obj.has_next(),
+            'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
+            'total_pages': paginator.num_pages,
+            'current_page': page_obj.number,
+            'total_count': paginator.count,
+            'cafes_count': len(page_obj),  # 현재 페이지 카페 수
+        })
+        
+    except ValueError as e:
+        logger.warning(f"Latest cafes API 파라미터 오류: {e}")
+        return JsonResponse({'success': False, 'error': '잘못된 요청 파라미터입니다.'})
+    except Exception as e:
+        logger.error(f"Latest cafes API 오류: {e}")
+        return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})

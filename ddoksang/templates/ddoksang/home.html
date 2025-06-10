@@ -170,7 +170,7 @@
 
 <!-- 덕생 my-cafes로 가는 링크 버튼 -->
 {% if user.is_authenticated %}
-  <div class="w-full px-4 sm:px-8 mb-18">
+  <div class="w-full px-4 sm:px-8 mb-12 sm:mb-16">  <!-- mb-18 → mb-12 sm:mb-16 -->
     <a href="{% url 'ddoksang:my_cafes' %}" 
        class="block w-full bg-black text-white text-base sm:text-lg py-4 sm:py-5 text-center font-semibold hover:bg-gray-800 transition-colors duration-200 shadow-lg">
       🗂 내 덕생 관리 (클릭!)
@@ -179,7 +179,7 @@
 {% endif %}
 
 <!-- 최신 등록된 생일카페 섹션 -->
-<section class="mt-8 py-4 sm:py-8 px-4">
+<section class="mt-16 sm:mt-20 py-8 sm:py-12 px-4">  
   <div class="max-w-7xl mx-auto"> <!-- 너비 통일 -->
     {% include 'ddoksang/components/_latest_cafe_section.html' %}
 

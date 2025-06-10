@@ -9,18 +9,27 @@
     </div>
     <a href="{% url 'ddoksang:search' %}?sort=latest" class="text-sm text-orange-600 hover:underline">
       전체 보기 &rarr;
-  </a>
+    </a>
   </div>
 
   {% if latest_cafes %}
-    <!-- 6개 카페 그리드 - 모바일에서 2열, 태블릿에서 2열, 데스크톱에서 3열 -->
+    <!-- 6개 카페 그리드 -->
     <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 lg:gap-6 px-4 justify-items-center" id="latestCafesGrid">
-      {% for cafe in latest_cafes|slice:":6" %}
+      {% for cafe in latest_cafes %}
         <div class="cafe-card-item w-full max-w-[175px] md:max-w-none">
           {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='latest' user_favorites=user_favorites %}
         </div>
       {% endfor %}
     </div>
+
+    <!-- 더보기 버튼 -->
+    {% if total_latest_cafes_count > 6 %}
+    <div class="text-center mt-6">
+      <button id="loadMoreBtn" class="bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium" data-page="2">
+        더보기
+      </button>
+    </div>
+    {% endif %}
 
   {% else %}
     <!-- 빈 상태 -->
@@ -36,17 +45,70 @@
   {% endif %}
 </section>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const cafesGrid = document.getElementById('latestCafesGrid');
+    
+    if (loadMoreBtn && cafesGrid) {
+        loadMoreBtn.addEventListener('click', function() {
+            const page = parseInt(this.dataset.page);
+            
+            // 로딩 상태
+            this.textContent = '로딩 중...';
+            this.disabled = true;
+            
+            // CSRF 토큰 가져오기
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/ddoksang/api/latest-cafes/?page=${page}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.html) {
+                    // 서버에서 렌더링된 HTML을 직접 추가
+                    cafesGrid.insertAdjacentHTML('beforeend', data.html);
+                    
+                    // 다음 페이지가 있으면 버튼 복원, 없으면 숨기기
+                    if (data.has_next) {
+                        this.dataset.page = data.next_page_number;
+                        this.textContent = '더보기';
+                        this.disabled = false;
+                    } else {
+                        this.style.display = 'none';
+                    }
+                } else {
+                    console.error('API 응답 오류:', data);
+                    this.textContent = '오류 발생';
+                    this.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('네트워크 오류:', error);
+                this.textContent = '오류 발생';
+                this.disabled = false;
+            });
+        });
+    }
+});
+</script>
+
 <style>
-/* 간단한 애니메이션 */
+/* 최소한의 스타일만 */
 .cafe-card-item {
     animation: fadeIn 0.5s ease forwards;
 }
 
-.cafe-card-item:nth-child(n+3) {
+.cafe-card-item:nth-child(n+7) {
     animation-delay: 0.1s;
 }
 
-.cafe-card-item:nth-child(n+5) {
+.cafe-card-item:nth-child(n+9) {
     animation-delay: 0.2s;
 }
 
@@ -58,14 +120,19 @@
 /* 모바일에서 카드 간격 최적화 */
 @media (max-width: 640px) {
   #latestCafesGrid {
-    gap: 0.5rem; /* 8px - 모바일에서 더 좁은 간격 */
+    gap: 0.5rem;
   }
 }
 
-/* 태블릿에서 간격 조정 */
 @media (min-width: 641px) and (max-width: 1023px) {
   #latestCafesGrid {
-    gap: 1rem; /* 16px */
+    gap: 1rem;
   }
+}
+
+/* 더보기 버튼 비활성화 상태 */
+#loadMoreBtn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
 }
 </style>

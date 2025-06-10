@@ -1,4 +1,6 @@
 from django.urls import path
+
+from ddoksang.views import api_views
 from . import views
 import ddoksang.views.cafe_views as cafe_views 
 
@@ -24,18 +26,18 @@ urlpatterns = [
     path('cafe/<int:cafe_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
 
 
-    
-
     # === 미리보기 ===
     path('preview/user/<int:cafe_id>/', views.user_preview_cafe, name='user_preview'),
     path('preview/admin/<int:cafe_id>/', views.admin_preview_cafe, name='admin_preview'),
     
     # === API 엔드포인트 ===
     path('api/cafes/', views.bday_cafe_list_api, name='cafe_list_api'),
+    path('api/latest-cafes/', api_views.latest_cafes_api,   name='latest_cafes_api'),  # 새로 추가
     path('api/cafe/<int:cafe_id>/quick/', views.cafe_quick_view, name='cafe_quick_api'),
     path('api/nearby/', views.nearby_cafes_api, name='nearby_cafes_api'),
     path('api/map-data/', views.cafe_map_data_api, name='map_data_api'),
     path('api/search-suggestions/', views.search_suggestions_api, name='search_suggestions_api'),
+
     
     # === 관리자 기능 ===
     path('admin/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
