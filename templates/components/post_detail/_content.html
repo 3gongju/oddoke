@@ -5,18 +5,26 @@
   <!-- 덕팜: 거래 완료 토글 버튼 -->
   {% if is_ddokfarm %}
     {% if request.user == post.user %}
-      <form action="{% url 'ddokfarm:mark_as_sold' category=category post_id=post.id %}" method="post" class="self-end mb-2">
-        {% csrf_token %}
-        <button type="submit"
-                class="px-3 py-1 text-sm rounded transition
-                      {% if post.is_sold %}
-                        bg-gray-300 hover:bg-gray-400 active:bg-gray-500 text-black
-                      {% else %}
-                        bg-black hover:bg-gray-800 active:bg-gray-700 text-white
-                      {% endif %}">
-          {% if post.is_sold %}거래중으로 변경{% else %}거래 완료로 변경{% endif %}
-        </button>
-      </form>
+      <div class="flex gap-2 self-end mb-2">
+        {% if category == 'split' %}
+          <a href="{% url 'ddokfarm:manage_split_applications' category=category post_id=post.id %}"
+            class="px-3 py-1 text-sm rounded bg-blue-500 hover:bg-blue-600 text-white">
+            참여자 관리
+          </a>
+        {% endif %}
+        <form action="{% url 'ddokfarm:mark_as_sold' category=category post_id=post.id %}" method="post" class="inline">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3 py-1 text-sm rounded transition
+                        {% if post.is_sold %}
+                          bg-gray-300 hover:bg-gray-400 active:bg-gray-500 text-black
+                        {% else %}
+                          bg-black hover:bg-gray-800 active:bg-gray-700 text-white
+                        {% endif %}">
+            {% if post.is_sold %}거래중으로 변경{% else %}거래 완료로 변경{% endif %}
+          </button>
+        </form>
+      </div>
     {% endif %}
   {% endif %}
 
@@ -49,10 +57,11 @@
 
   <!-- 정보 테이블 + 버튼 묶음 -->
   <div class="mt-auto space-y-4">
-    {% if member_prices %}
+
+    {% if category == 'split' %}
       {% include 'ddokfarm/components/post_detail/_splitprice_info.html' %}
     {% endif %}
-
+    
     {% if extra_partial %}
       {% include extra_partial %}
     {% endif %}

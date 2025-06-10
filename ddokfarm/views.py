@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.forms import modelformset_factory
+from django.utils import timezone
 from django import forms
 from operator import attrgetter
 from itertools import chain
@@ -20,6 +21,7 @@ from .models import (
     FarmSplitPost, 
     FarmPostImage,
     SplitPrice,
+    SplitApplication
 )
 from .forms import FarmCommentForm, SplitPriceForm
 from .utils import (
@@ -128,26 +130,46 @@ def post_detail(request, category, post_id):
     }
 
     if category == 'split':
-        member_prices = post.member_prices.select_related('member').all()
+        # 승인된 신청에서 멤버들을 가져와서 checked_out_members에 추가
+        approved_applications = SplitApplication.objects.filter(
+            post=post, 
+            status='approved'
+        ).prefetch_related('members')
+        
+        # 승인된 모든 멤버들을 checked_out_members에 추가
+        approved_member_ids = set()
+        for app in approved_applications:
+            for member in app.members.all():
+                approved_member_ids.add(member.id)
+        
+        # 기존 checked_out_members와 승인된 멤버들을 합침
+        manual_checked_out = post.checked_out_members.all()
+        all_checked_out_ids = set(manual_checked_out.values_list('id', flat=True)) | approved_member_ids
+        
+        # 전체 멤버 가격 정보
+        all_member_prices = post.member_prices.select_related('member').all()
+        
+        # 잔여 멤버 (가격이 있지만 마감되지 않은 멤버들)
+        participating_member_prices = all_member_prices.exclude(member_id__in=all_checked_out_ids)
+        participating_members = [sp.member for sp in participating_member_prices]
+        
+        # 마감된 멤버들 (수동 마감 + 승인된 신청)
+        checked_out_members = Member.objects.filter(id__in=all_checked_out_ids).distinct()
 
-        prices = [sp.price for sp in member_prices if sp.price]
-
-        # 최소~최대 가격
+        # 가격 범위 계산 (잔여 멤버들만)
+        prices = [sp.price for sp in participating_member_prices if sp.price]
         if prices:
             min_price = min(prices)
             max_price = max(prices)
-
-        participating_members_with_price = [(sp.member, sp.price) for sp in member_prices]
-        participating_members = [sp.member for sp in member_prices]
-        checked_out_members = post.checked_out_members.all() if hasattr(post, 'checked_out_members') else []
+        else:
+            min_price = max_price = 0
 
         context.update({
-            'member_prices': member_prices,
+            'member_prices': participating_member_prices,  # 잔여 멤버의 가격만
             'min_price': min_price,
             'max_price': max_price,
-            'participating_members_with_price': participating_members_with_price,
-            'participating_members': participating_members,
-            'checked_out_members': checked_out_members,
+            'participating_members': participating_members,  # 잔여 멤버들
+            'checked_out_members': checked_out_members,  # 마감된 멤버들
         })
     else:
         context['members'] = post.members.all()
@@ -160,17 +182,24 @@ def post_create(request):
     favorite_artists = Artist.objects.filter(followers=request.user)
     raw_category = request.POST.get('category') or request.GET.get('category') or 'sell'
     category = raw_category.split('?')[0]
-    selected_artist_id = request.GET.get('artist')
     form_class = get_post_form(category)
 
     if not form_class:
         raise Http404("존재하지 않는 카테고리입니다.")
 
+    default_artist_id = int(request.GET.get('artist')) if request.GET.get('artist') else (
+        favorite_artists[0].id if favorite_artists.exists() else None
+    )
+
+    selected_artist_id = default_artist_id
     selected_member_ids = []
 
     if request.method == 'POST':
-        selected_artist_id = request.POST.get('artist') or selected_artist_id
-        selected_member_ids = list(map(int, request.POST.getlist('members'))) if request.POST.getlist('members') else []
+        print("[디버그] POST 데이터:", request.POST)
+        selected_member_ids = list(set(map(int, request.POST.getlist('members'))))
+        print("[디버그] 실제로 체크된 멤버:", selected_member_ids)
+
+        selected_artist_id = request.POST.get('artist') or request.GET.get('artist') or default_artist_id
         image_files = request.FILES.getlist('images')
         form = form_class(request.POST, request.FILES)
 
@@ -184,11 +213,6 @@ def post_create(request):
                 queryset=SplitPrice.objects.none(),
                 initial=initial_data
             )
-            for formset_form in formset.forms:
-                member_id = str(formset_form.initial['member'])
-                if member_id in request.POST.getlist('members'):
-                    formset_form.fields['price'].required = False
-                    formset_form.fields['price'].widget.attrs.pop('required', None)
         else:
             formset = None
 
@@ -203,14 +227,22 @@ def post_create(request):
                 post.save()
 
                 if category == 'split' and formset:
-                    for sp_form in formset.forms:
+                    for idx, sp_form in enumerate(formset.forms):
                         member_field = sp_form.cleaned_data.get('member')
-                        if member_field:
-                            member_id = member_field.id
-                            if member_id not in selected_member_ids and sp_form.cleaned_data.get('price'):
-                                sp_instance = sp_form.save(commit=False)
-                                sp_instance.post = post
-                                sp_instance.save()
+                        price_field = sp_form.cleaned_data.get('price')
+                        if not member_field:
+                            member_id = sp_form.initial.get('member')
+                            if member_id:
+                                member_field = Member.objects.get(id=member_id)
+
+                        print(f"[디버그] 폼셋 idx={idx}, 멤버={member_field}, 가격={price_field}, 체크됨={member_field.id in selected_member_ids if member_field else None}")
+
+                        if member_field and member_field.id not in selected_member_ids and price_field:
+                            sp_instance = sp_form.save(commit=False)
+                            sp_instance.post = post
+                            sp_instance.member = member_field
+                            sp_instance.save()
+
                     post.checked_out_members.set(selected_member_ids)
                 else:
                     post.members.set(selected_member_ids)
@@ -224,19 +256,14 @@ def post_create(request):
                         object_id=post.id,
                         is_representative=(idx == 0)
                     )
-                return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
+                return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
     else:
         form = form_class()
         formset = None
-        selected_member_ids = []
 
-    default_artist_id = int(selected_artist_id) if selected_artist_id else (
-        favorite_artists[0].id if favorite_artists.exists() else None
-    )
     selected_members = []
     formset_with_names = None
-
     if category == 'split' and default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
         initial_data = [{'member': m.id} for m in selected_members]
@@ -292,7 +319,7 @@ def load_split_members_and_prices(request):
         {
             'formset': formset,
             'formset_with_names': formset_with_names,
-            'selected_member_ids': [],  # ✅ split 진입 시 무조건 빈 리스트로 넘김
+            'selected_member_ids': [],  # ✅ 빈 리스트 (아무도 체크되지 않은 상태)
         },
         request=request
     )
@@ -533,7 +560,7 @@ def comment_create(request, category, post_id):
         # ✅ AJAX 요청일 경우, HTML 조각 반환
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             html = render_to_string(
-                "components/post_detail/_comment_item.html",
+                "components/post_detail/_comment_list.html",
                 {
                     "comment": comment,
                     "is_reply": bool(parent_id),
@@ -639,3 +666,118 @@ def get_members_by_artist(request, artist_id):
     ]
     
     return JsonResponse({"members": member_data})
+
+# 분철 참여 신청
+@login_required
+@require_POST
+def split_application(request, category, post_id):
+    if category != 'split':
+        return JsonResponse({'success': False, 'message': '분철 게시글이 아닙니다.'}, status=400)
+    
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    selected_member_ids = request.POST.getlist('selected_members')
+    
+    if not selected_member_ids:
+        return JsonResponse({'success': False, 'message': '멤버를 선택해주세요.'}, status=400)
+    
+    # 이미 마감된 멤버인지 확인
+    selected_members = Member.objects.filter(id__in=selected_member_ids)
+    
+    # 승인된 신청에서 마감된 멤버들 확인
+    approved_applications = SplitApplication.objects.filter(
+        post=post, 
+        status='approved'
+    ).prefetch_related('members')
+    
+    approved_member_ids = set()
+    for app in approved_applications:
+        for member in app.members.all():
+            approved_member_ids.add(member.id)
+    
+    # 수동 마감 + 승인된 신청 멤버들
+    manual_checked_out = post.checked_out_members.values_list('id', flat=True)
+    all_checked_out_ids = set(manual_checked_out) | approved_member_ids
+    
+    # 선택한 멤버 중 마감된 멤버가 있는지 확인
+    conflicting_members = selected_members.filter(id__in=all_checked_out_ids)
+    if conflicting_members.exists():
+        return JsonResponse({
+            'success': False, 
+            'message': f'{", ".join(conflicting_members.values_list("member_name", flat=True))} 멤버는 이미 마감되었습니다.'
+        })
+    
+    # 항상 새로운 신청 생성 (기존 신청 확인 로직 제거)
+    application = SplitApplication.objects.create(
+        post=post, 
+        user=request.user,
+        status='pending'
+    )
+    application.members.set(selected_members)
+    
+    return JsonResponse({
+        'success': True, 
+        'message': f'{len(selected_member_ids)}명의 멤버 신청이 완료되었습니다. 총대의 승인을 기다려주세요.'
+    })
+
+@login_required
+def manage_split_applications(request, category, post_id):
+    if category != 'split':
+        raise Http404("분철 게시글이 아닙니다.")
+    
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    
+    # 작성자만 접근 가능
+    if request.user != post.user:
+        context = {
+            'title': '접근 권한 없음',
+            'message': '참여자 관리 권한이 없습니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
+    
+    # 최신 신청순으로 정렬
+    applications = SplitApplication.objects.filter(post=post).prefetch_related('members', 'user').order_by('-created_at')
+    
+    # 상태별 개수 계산
+    pending_count = applications.filter(status='pending').count()
+    approved_count = applications.filter(status='approved').count()
+    rejected_count = applications.filter(status='rejected').count()
+    
+    context = {
+        'post': post,
+        'category': category,
+        'applications': applications,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'rejected_count': rejected_count,
+    }
+    
+    return render(request, 'ddokfarm/manage_applications.html', context)
+
+@login_required
+@require_POST
+def update_application_status(request, category, post_id):
+    if category != 'split':
+        return JsonResponse({'success': False, 'message': '분철 게시글이 아닙니다.'}, status=400)
+    
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    
+    if request.user != post.user:
+        return JsonResponse({'success': False, 'message': '권한이 없습니다.'}, status=403)
+    
+    application_id = request.POST.get('application_id')
+    status = request.POST.get('status')
+    
+    if status not in ['approved', 'rejected']:
+        return JsonResponse({'success': False, 'message': '유효하지 않은 상태입니다.'}, status=400)
+    
+    application = get_object_or_404(SplitApplication, id=application_id, post=post)
+    
+    # 상태만 변경 (checked_out_members는 detail 뷰에서 자동으로 처리)
+    application.status = status
+    application.save()
+    
+    return JsonResponse({
+        'success': True, 
+        'message': f'신청이 {"승인" if status == "approved" else "반려"}되었습니다.'
+    })

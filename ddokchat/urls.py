@@ -18,4 +18,7 @@ urlpatterns = [
 
     # 내 채팅방 목록
     path('my/', views.my_chatrooms, name='my_chatrooms'),
+
+    # 분철 참여자와의 채팅
+    path('start-split/<int:post_id>/<int:user_id>/', views.get_or_create_split_chatroom, name='start_split_chat'),
 ]

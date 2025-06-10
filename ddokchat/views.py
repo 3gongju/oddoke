@@ -13,6 +13,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_POST
 from django.core.files.storage import default_storage
 from django.urls import reverse
+from django.contrib.auth import get_user_model
 # Create your views here.
 
 # 채팅방.
@@ -37,6 +38,24 @@ def chat_room(request, room_id):
 
     messages = Message.objects.filter(room=room).select_related('sender').order_by('timestamp')  # 메시지 순서대로 정렬
     
+    # 분철 관련 정보 추가
+    split_info = None
+    if hasattr(room.post, 'category_type') and room.post.category_type == 'split':
+        from ddokfarm.models import SplitApplication
+        application = SplitApplication.objects.filter(
+            post=room.post,
+            user=room.buyer,
+            status='approved'
+        ).prefetch_related('members').first()
+        
+        if application:
+            split_info = {
+                'applied_members': application.members.all(),
+                'total_price': sum(
+                    room.post.member_prices.filter(member__in=application.members.all()).values_list('price', flat=True)
+                )
+            }
+
     context = {
         'room': room,
         'messages': messages,
@@ -44,6 +63,7 @@ def chat_room(request, room_id):
         'form': MannerReviewForm(),
         'has_already_reviewed': has_already_reviewed,
         'is_fully_completed': room.is_fully_completed,
+        'split_info': split_info,
     }
 
     return render(request, 'ddokchat/chat_room.html', context)
@@ -154,3 +174,40 @@ def complete_trade(request, room_id):
         'is_fully_completed': is_fully_completed,
         'is_buyer': is_buyer,
     })
+
+# 분철 참여자와의 채팅방 생성/연결
+@login_required
+def get_or_create_split_chatroom(request, post_id, user_id):
+    
+    User = get_user_model()
+    
+    # 1. 분철 게시글과 참여자 확인
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    participant = get_object_or_404(User, id=user_id)
+    
+    # 2. 권한 확인: 게시글 작성자만 접근 가능
+    if request.user != post.user:
+        return redirect('ddokfarm:post_detail', category='split', post_id=post_id)
+    
+    # 3. 해당 사용자가 실제로 승인된 참여자인지 확인
+    from ddokfarm.models import SplitApplication
+    approved_application = SplitApplication.objects.filter(
+        post=post,
+        user=participant,
+        status='approved'
+    ).exists()
+    
+    if not approved_application:
+        return redirect('ddokfarm:manage_split_applications', category='split', post_id=post_id)
+    
+    # 4. 채팅방 생성/연결
+    content_type = ContentType.objects.get_for_model(post)
+    
+    room, created = ChatRoom.objects.get_or_create(
+        content_type=content_type,
+        object_id=post.id,
+        buyer=participant,  # 참여자를 buyer로
+        seller=request.user,  # 총대(게시글 작성자)를 seller로
+    )
+    
+    return redirect('ddokchat:chat_room', room_id=room.id)

@@ -41,7 +41,7 @@
               </tr>
             {% endif %}
           {% elif category == 'split' %}
-          <tr>
+            <tr>
               <th class="text-left py-2 text-gray-700">가격</th>
               <td class="text-right py-2 text-gray-800">
                 {% if min_price == max_price %}
@@ -51,24 +51,6 @@
                 {% endif %}
               </td>
             </tr>
-          <tr>
-            <th class="text-left py-2 text-gray-700">잔여</th>
-            <td class="text-right py-2 text-gray-800">
-                {% for member in participating_members %}
-                  {{ member.member_name }}
-                {% endfor %}
-              </td>
-            </tr>
-            {% if checked_out_members %}
-            <tr>
-              <th class="text-left py-2 text-gray-700">마감</th>
-              <td class="text-right py-2 text-gray-800">
-              {% for member in checked_out_members %}
-                {{ member.member_name }}
-              {% endfor %}
-              </td>
-            </tr>
-            {% endif %}
             <tr>
               <th class="text-left py-2 text-gray-700">앨범 포함 여부</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_album_display }}</td>

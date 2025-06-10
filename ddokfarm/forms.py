@@ -86,6 +86,7 @@ class FarmRentalPostForm(forms.ModelForm):
 class FarmSplitPostForm(forms.ModelForm):
     album = custom_choice_field(FarmSplitPost.ALBUM_CHOICES, label='앨범 포함 여부')
     failure = custom_choice_field(FarmSplitPost.FAILURE_CHOICES, label='무산 여부')
+    push = custom_choice_field(FarmSplitPost.PUSH_CHOICES, label='밀어내기')
 
     class Meta:
         model = FarmSplitPost
@@ -128,3 +129,4 @@ class SplitPriceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['price'].required = False
+        self.fields['member'].disabled = False
