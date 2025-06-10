@@ -8,6 +8,7 @@ _cafe_card.html - 최적화된 버전
 - 이중 레이어 이미지 처리
 - 새로운 날짜 로직 적용 (시작 D-X / 종료 D-X)
 - 통일된 디자인
+- 상태 뱃지 항상 표시
 {% endcomment %}
 
 {% load static %}
@@ -37,7 +38,6 @@ _cafe_card.html - 최적화된 버전
       {% if cafe_state == 'ended' %}
         <div class="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-20">
           <div class="text-white text-center">
-
             <p class="text-sm font-medium">Closed</p>
           </div>
         </div>
@@ -85,14 +85,13 @@ _cafe_card.html - 최적화된 버전
           {% endif %}
         {% endif %}
 
-        {% if show_status_badge %}
-          {% if cafe_state == 'ongoing' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✨ 운영중</span>
-          {% elif cafe_state == 'upcoming' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">🔜 예정</span>
-          {% else %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">🏁 종료</span>
-          {% endif %}
+        <!-- 상태 뱃지 (항상 표시) -->
+        {% if cafe_state == 'ongoing' %}
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-green-500 text-white">운영중</span>
+        {% elif cafe_state == 'upcoming' %}
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-blue-500 text-white">예정</span>
+        {% else %}
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-gray-500 text-white">종료</span>
         {% endif %}
 
         {% if show_type_badge %}
@@ -134,7 +133,7 @@ _cafe_card.html - 최적화된 버전
       <span class="truncate">{{ cafe.place_name|default:cafe.address|truncatechars:35 }}</span>
     </div>
 
-<!-- 새로운 날짜 로직 적용 -->
+    <!-- 새로운 날짜 로직 적용 -->
     <div class="flex items-center text-sm text-gray-600 mb-3">
       <div class="flex items-center">
         <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
