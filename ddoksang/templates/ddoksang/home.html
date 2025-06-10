@@ -170,12 +170,21 @@
 
 <!-- 덕생 my-cafes로 가는 링크 버튼 -->
 {% if user.is_authenticated %}
-  <div class="w-full px-4 sm:px-8 mb-12 sm:mb-16">  <!-- mb-18 → mb-12 sm:mb-16 -->
-    <a href="{% url 'ddoksang:my_cafes' %}" 
-       class="block w-full bg-black text-white text-base sm:text-lg py-4 sm:py-5 text-center font-semibold hover:bg-gray-800 transition-colors duration-200 shadow-lg">
-      🗂 내 덕생 관리 (클릭!)
-    </a>
-  </div>
+  <section class="py-4 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-gray-900 rounded-full mb-3">
+          <span class="text-xl">🗂</span>
+        </div>
+        <h3 class="text-lg font-bold text-gray-900 mb-2">내 덕생 관리</h3>
+        <p class="text-gray-600 mb-4 text-sm">등록한 생일카페와 찜한 카페를 확인하고 관리하세요</p>
+        <a href="{% url 'ddoksang:my_cafes' %}" 
+           class="inline-block bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
+          관리하러 가기
+        </a>
+      </div>
+    </div>
+  </section>
 {% endif %}
 
 <!-- 최신 등록된 생일카페 섹션 -->
