@@ -108,11 +108,8 @@ class DdoksangHome {
                         this.mapManager.moveToLocation(lat, lng, 5);
                         this.highlightCafeCard(cafeId);
                         const cafeData = this.cafesData.find(c => c.id == cafeId);
-                        if (cafeData && window.DdoksangModals) {
-                            setTimeout(() => {
-                                window.DdoksangModals.showCafeInfo(cafeData);
-                            }, 500);
-                        }
+                        
+                        
                     }
                 }
             }
