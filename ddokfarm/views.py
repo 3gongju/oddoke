@@ -114,10 +114,7 @@ def post_detail(request, category, post_id):
     post.refresh_from_db(fields=['view_count'])
 
     comment_qs = get_post_comments(post)
-    # 최상위 댓글과 고아 대댓글 모두 가져오기
-    comments = comment_qs.filter(
-        Q(parent__isnull=True) | Q(parent__is_deleted=True)
-    ).select_related('user').prefetch_related('replies__user').order_by('created_at')
+    comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
     total_comment_count = comment_qs.count()
     comment_form = FarmCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
