@@ -89,6 +89,34 @@
         </div>
         {% endif %}
 
+        <!-- 선착순 특전 -->
+        {% if cafe.perks_priority %}
+        <div class="mb-2">
+        <p class="text-xs font-semibold text-gray-600 mb-1">🏃 선착순 특전</p>
+        <div class="flex flex-wrap gap-2">
+            {% for perk in cafe.perks_priority|split:"," %}
+            <span class="text-xs px-2 py-1 rounded-full border bg-orange-100 text-orange-800 border-orange-200">
+            #{{ perk|strip }}
+            </span>
+            {% endfor %}
+        </div>
+        </div>
+        {% endif %}
+
+        <!-- 기타 특전 -->
+        {% if cafe.perks_extra %}
+        <div class="mb-2">
+        <p class="text-xs font-semibold text-gray-600 mb-1">✨ 기타 특전</p>
+        <div class="flex flex-wrap gap-2">
+            {% for perk in cafe.perks_extra|split:"," %}
+            <span class="text-xs px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200">
+            #{{ perk|strip }}
+            </span>
+            {% endfor %}
+        </div>
+        </div>
+        {% endif %}
+
 
         <!-- 📝 설명 -->
         {% if cafe.event_description %}
@@ -128,28 +156,18 @@
       {% endif %}
     </div>
 
-    <!-- 버튼 영역 -->
-    <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-12">
-    <a href="{% url 'ddoksang:user_preview' cafe.id %}"
-        class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-        내 카페 미리보기
-    </a>
-    <a href="{% url 'ddoksang:my_cafes' %}"
-        class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-        내 등록 현황 보기
-    </a>
-    <a href="{% url 'ddoksang:create' %}"
-        class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-        다른 생일카페 등록하기
-    </a>
+    <!--  버튼 -->
+    <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-8">
+      <a href="{% url 'ddoksang:user_preview' cafe.id %}" class="btn-primary w-full sm:w-auto">내 카페 미리보기</a>
+      <a href="{% url 'ddoksang:my_cafes' %}" class="btn-primary w-full sm:w-auto">내 등록 현황 보기</a>
+      <a href="{% url 'ddoksang:create' %}" class="btn-primary w-full sm:w-auto">다른 생일카페 등록하기</a>
     </div>
 
-    <!-- 홈으로 안내 -->
-    <div class="text-center text-sm text-gray-600 mb-20 p-6 bg-gray-50 rounded-xl border border-gray-200">
-    <p class="mb-2">문의사항은 <span class="font-semibold text-gray-800">관리자</span>에게 연락해주세요.</p>
-    <a href="{% url 'ddoksang:home' %}" class="underline font-medium hover:text-gray-800">홈으로 돌아가기</a>
+    <!--  홈으로 안내 -->
+    <div class="text-center text-sm text-gray-600 mb-10">
+      문의사항은 <span class="font-semibold text-gray-800">관리자</span>에게 연락해주세요. <br />
+      <a href="{% url 'ddoksang:home' %}" class="underline font-medium hover:text-gray-800">홈으로 돌아가기</a>
     </div>
-
 
   </div>
 </div>
