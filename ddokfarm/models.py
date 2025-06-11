@@ -7,13 +7,13 @@ from artist.models import Artist, Member
 class FarmBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
-    # image = models.ImageField(upload_to='ddokfarm/image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
     is_sold = models.BooleanField(default=False) # 판매 완료 여부
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
+    view_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         abstract = True
