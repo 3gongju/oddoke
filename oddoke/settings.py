@@ -205,6 +205,15 @@ CACHES = {
     }
 }
 
+
+# 더치트 API 설정
+DUTCHEAT_API_KEY = os.getenv('DUTCHEAT_API_KEY', 'test_api_key')
+DUTCHEAT_API_URL = os.getenv('DUTCHEAT_API_URL', 'https://api.dutcheat.com')
+
+# Mock 서비스 사용 여부 (개발/테스트용)
+USE_MOCK_BANK_SERVICE = True  # 실제 운영시에는 False로 변경
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -252,8 +261,6 @@ LOGGING = {
 # logs 디렉토리 생성
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 
-# Mock 서비스 설정
-USE_MOCK_BANK_SERVICE = True  # Mock 서비스 사용 여부
 
 # 나중에 실제 API 사용시 설정
 # REAL_BANK_API_KEY = 'your_api_key_here'

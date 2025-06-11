@@ -833,7 +833,7 @@ def naver_callback(request):
         return redirect('accounts:login')
 
 def naver_logout(request):
-    """네이버 완전 로그아웃 - 세션 정리 포함"""
+    """네이버 완전 로그아웃 - 세션 정리 포함..."""
     auth_logout(request)
     request.session.flush()
     return redirect('/')

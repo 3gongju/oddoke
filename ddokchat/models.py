@@ -32,12 +32,31 @@ class ChatRoom(models.Model):
 
 
 class Message(models.Model):
+    MESSAGE_TYPES = [
+        ('text', '텍스트'),
+        ('image', '이미지'),
+        ('account_info', '계좌정보'),  # 새로 추가
+    ]
+    
     room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    content = models.TextField()
-    image = models.ImageField(upload_to='chat_images/', blank=True, null=True) # 채팅방 이미지
+    content = models.TextField(blank=True, null=True)  # 텍스트 메시지용
+    image = models.ImageField(upload_to='chat_images/', blank=True, null=True)  # 이미지용
+    message_type = models.CharField(max_length=20, choices=MESSAGE_TYPES, default='text')  # 새로 추가
+    
+    # 계좌 정보 메시지용 필드들 (새로 추가)
+    account_bank_name = models.CharField(max_length=50, blank=True, null=True)
+    account_number = models.CharField(max_length=20, blank=True, null=True)
+    account_holder = models.CharField(max_length=50, blank=True, null=True)
+    account_bank_code = models.CharField(max_length=10, blank=True, null=True)
+    
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"[{self.timestamp}] {self.sender.username}: {self.content}"
+        if self.message_type == 'account_info':
+            return f"{self.sender.username}의 계좌정보: {self.account_bank_name}"
+        elif self.image:
+            return f"{self.sender.username}의 이미지"
+        else:
+            return f"{self.sender.username}: {self.content[:50]}"

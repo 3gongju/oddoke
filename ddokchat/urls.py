@@ -19,6 +19,12 @@ urlpatterns = [
     # 내 채팅방 목록
     path('my/', views.my_chatrooms, name='my_chatrooms'),
 
+    # 계좌정보 확인 /더치트 사기조회
+    path('send-account/<int:room_id>/', views.send_account_info, name='send_account_info'),
+    path('check-fraud/', views.check_account_fraud, name='check_account_fraud'),
+    path('copy-account/', views.copy_account_log, name='copy_account_log'),
+
     # 분철 참여자와의 채팅
     path('start-split/<int:post_id>/<int:user_id>/', views.get_or_create_split_chatroom, name='start_split_chat'),
+
 ]
