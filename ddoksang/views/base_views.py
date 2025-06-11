@@ -1,7 +1,8 @@
 # ddoksang/views/base_views.py
-# 기본 뷰들 (홈, 상세보기, 검색, 지도) - 새로운 레이아웃 적용
+# 홈 뷰 업데이트 - BdayCafe 모델에 맞춘 JSON 데이터 제공
 
 import logging
+import json
 from datetime import timedelta, date
 
 from django.shortcuts import render, get_object_or_404
@@ -11,11 +12,15 @@ from django.db.models import Q, F
 from django.views.decorators.cache import cache_page
 from django.core.paginator import Paginator
 from django.core.cache import cache
+from django.conf import settings
+from ddoksang.models import BdayCafe, CafeFavorite
+
+
+from ddoksang.utils.favorite_utils import get_user_favorites
 
 from ..models import BdayCafe, CafeFavorite
 from ..utils.map_utils import get_map_context, get_nearby_cafes
 from artist.models import Artist, Member
-from .utils import get_user_favorites
 from ..utils.bday_utils import get_weekly_bday_artists
 
 logger = logging.getLogger(__name__)
@@ -26,6 +31,7 @@ def home_view(request):
     today = timezone.now().date()
     today_str = today.strftime('%m-%d')
 
+    # === 1. 이번 주 생일 아티스트 ===
     birthday_artists = get_weekly_bday_artists
 
     # === 2. 현재 운영중인 생일카페들 (지도용) ===
@@ -62,10 +68,54 @@ def home_view(request):
 
         my_favorite_cafes = [fav.cafe for fav in favorites]
 
-    # === 5. 지도 관련 컨텍스트 생성 (현재 운영중인 카페들만) ===
+    # === 5. 지도용 JSON 데이터 생성 (현재 운영중인 카페들만) ===
+    cafes_json_data = []
+    for cafe in active_cafes:
+        cafe_data = {
+            'id': cafe.id,
+            'cafe_name': cafe.cafe_name,
+            'name': cafe.cafe_name,  # 하위 호환성
+            'latitude': float(cafe.latitude),
+            'longitude': float(cafe.longitude),
+            'address': cafe.address,
+            'road_address': cafe.road_address or '',
+            
+            # 아티스트/멤버 정보
+            'artist_name': cafe.artist.display_name if cafe.artist else '',
+            'artist': {
+                'display_name': cafe.artist.display_name if cafe.artist else '',
+                'id': cafe.artist.id if cafe.artist else None
+            },
+            'member_name': cafe.member.member_name if cafe.member else '',
+            'member': {
+                'member_name': cafe.member.member_name if cafe.member else '',
+                'id': cafe.member.id if cafe.member else None
+            } if cafe.member else None,
+            
+            # 운영 정보
+            'start_date': cafe.start_date.isoformat(),
+            'end_date': cafe.end_date.isoformat(),
+            'status': cafe.status,
+            'is_active': cafe.is_active,
+            
+            # 이미지 정보
+            'main_image': cafe.get_main_image(),
+            'main_image_url': cafe.get_main_image(),
+            'image_url': cafe.get_main_image(),  # 하위 호환성
+            
+            # 추가 정보
+            'cafe_type': cafe.cafe_type,
+            'special_benefits': cafe.special_benefits or '',
+            'event_description': cafe.event_description or '',
+            'view_count': cafe.view_count,
+            'created_at': cafe.created_at.isoformat(),
+        }
+        cafes_json_data.append(cafe_data)
+
+    # === 6. 지도 관련 컨텍스트 생성 (현재 운영중인 카페들만) ===
     map_context = get_map_context(cafes_queryset=active_cafes)
 
-    # === 6. 템플릿 컨텍스트 ===
+    # === 7. 템플릿 컨텍스트 ===
     context = {
         'birthday_artists': birthday_artists,
         'latest_cafes': latest_cafes,  # 모든 승인된 카페 중 최신 6개
@@ -73,6 +123,12 @@ def home_view(request):
         'active_cafes': active_cafes,  # 지도용 (현재 운영중)
         'my_favorite_cafes': my_favorite_cafes,
         'user_favorites': user_favorites,
+        
+        # 지도 관련
+        'cafes_json': cafes_json_data,  # JavaScript에서 사용할 JSON 데이터
+        'total_cafes': len(cafes_json_data),  # 운영중인 카페 수
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        
         **map_context,  # 지도 관련 컨텍스트 (현재 운영중인 카페들)
     }
     
@@ -121,6 +177,11 @@ def search_view(request):
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
     
+    # 지도 관련 컨텍스트
+    map_context = {
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+    }
+    
     context = {
         'results': results,
         'query': query,
@@ -128,6 +189,7 @@ def search_view(request):
         'user_favorites': user_favorites,
         'current_status': status_filter,  # 템플릿에서 사용
         'current_sort': sort_order,
+        **map_context,
     }
     return render(request, 'ddoksang/search.html', context)
 
@@ -182,7 +244,9 @@ def cafe_detail_view(request, cafe_id):
     user_favorites = get_user_favorites(request.user)
     
     # 지도 관련 컨텍스트 생성
-    map_context = get_map_context()
+    map_context = {
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+    }
     
     context = {
         'cafe': cafe,
@@ -216,6 +280,9 @@ def map_view(request):
     
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
+    
+    # 추가: 카카오맵 API 키
+    map_context['kakao_api_key'] = getattr(settings, 'KAKAO_MAP_API_KEY', '')
     
     context = {
         'active_cafes': active_cafes,
