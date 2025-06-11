@@ -1,17 +1,22 @@
-# ddoksang/views/api_views.py
 # API 뷰들 - map_utils 사용으로 중복 제거
 
 from datetime import date
 import logging
-
+from django.contrib.auth.decorators import login_required
+from arrow import now
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_http_methods, require_GET
+from django.views.decorators.http import require_GET
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.conf import settings
+from difflib import SequenceMatcher
+
+from django.http import JsonResponse
+from difflib import SequenceMatcher
+from ddoksang.models import BdayCafe
 
 from ddoksang.models import BdayCafe, CafeFavorite
 from ddoksang.utils.map_utils import (
@@ -20,6 +25,7 @@ from ddoksang.utils.map_utils import (
     filter_operating_cafes,
     is_valid_coordinates
 )
+from ddoksang.views.decorators import admin_required
 
 logger = logging.getLogger(__name__)
 
@@ -233,7 +239,7 @@ def latest_cafes_api(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-# ✅ 추가: 카페 상세 정보 API (모달용)
+#  추가: 카페 상세 정보 API (모달용)
 @require_GET
 def cafe_detail_api(request, cafe_id):
     """카페 상세 정보 API (모달 전용)"""
@@ -287,3 +293,69 @@ def cafe_detail_api(request, cafe_id):
     except Exception as e:
         logger.error(f"카페 상세 API 오류: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+# @require_GET
+# @login_required
+# def check_duplicate_cafe(request):
+#     """
+#     artist_id + member_id가 같고 cafe_name이 70% 이상 유사하면 중복으로 간주
+#     요청 파라미터: ?artist_id=<int>&member_id=<int>&cafe_name=<str>
+#     """
+#     artist_id = request.GET.get('artist_id')
+#     member_id = request.GET.get('member_id')
+#     cafe_name = request.GET.get('cafe_name', '').strip()
+
+#     if not (artist_id and member_id and cafe_name):
+#         return JsonResponse({'error': '필수 정보 누락'}, status=400)
+
+#     def normalize(text):
+#         return text.replace(' ', '').lower()
+
+#     threshold = 0.7  # 유사도 70% 기준
+
+#     existing_cafes = BdayCafe.objects.filter(
+#         artist_id=artist_id,
+#         member_id=member_id,
+#         is_deleted=False
+#     ).values_list('cafe_name', flat=True)
+
+#     for existing_name in existing_cafes:
+#         similarity = SequenceMatcher(None, normalize(cafe_name), normalize(existing_name)).ratio()
+#         if similarity >= threshold:
+#             return JsonResponse({'exists': True})
+
+#     return JsonResponse({'exists': False})
+
+
+
+def normalize(text):
+    return ''.join(text.lower().split())
+
+def check_duplicate_cafe(request):
+    artist_id = request.GET.get('artist_id')
+    member_id = request.GET.get('member_id')
+    cafe_name = request.GET.get('cafe_name', '')
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if not (artist_id and cafe_name and start_date and end_date):
+        return JsonResponse({'exists': False})
+
+    normalized_name = normalize(cafe_name)
+
+    filters = {
+        'artist_id': artist_id,
+        'start_date__lte': end_date,
+        'end_date__gte': start_date,
+    }
+    if member_id:
+        filters['member_id'] = member_id
+
+    existing = BdayCafe.objects.filter(**filters)
+
+    for cafe in existing:
+        name_similarity = SequenceMatcher(None, normalize(cafe.cafe_name), normalized_name).ratio()
+        if name_similarity > 0.65:
+            return JsonResponse({'exists': True})
+
+    return JsonResponse({'exists': False})
