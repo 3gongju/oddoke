@@ -237,25 +237,29 @@
         </div>
 
 
-
         <!-- 액션 버튼들 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <button onclick="history.back()" 
+                    class="btn-secondary">
+                ← 뒤로가기
+            </button>
+            
             <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
-               class="btn-primary">
+            class="btn-primary">
                 내 카페 미리보기
             </a>
             
             <a href="{% url 'ddoksang:my_cafes' %}" 
-               class="btn-primary">
+            class="btn-primary">
                 내 등록 현황 보기
             </a>
 
             <a href="{% url 'ddoksang:create' %}" 
-               class="btn-primary">
+            class="btn-primary">
                 다른 생일카페 등록하기
             </a>
         </div>
-
+       
         <!-- 추가 안내 -->
         <div class="text-center">
             <div class="bg-yellow-50 rounded-xl p-6 shadow-lg border border-yellow-200 mb-6">
