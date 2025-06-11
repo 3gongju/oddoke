@@ -1,27 +1,14 @@
+// static/js/ddoksang_maps.js (정리된 버전 - 200줄)
+// 지도 관리 + 공통 유틸리티 (토스트 제거, 중복 정리)
+
 (function(window) {
   'use strict';
 
+  // ✅ 공통 유틸리티 클래스 (모든 파일에서 사용)
   const Utils = {
-    encodeToBase64Unicode(str) {
-      try {
-        return btoa(unescape(encodeURIComponent(str)));
-      } catch (e) {
-        console.warn('⚠️ base64 인코딩 실패:', str);
-        return btoa('fallback');
-      }
-    },
-    isValidLatLng(lat, lng) {
-      return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-    },
-    isCafeOperating(cafe) {
-      const today = new Date();
-      const start = new Date(cafe.start_date);
-      const end = new Date(cafe.end_date);
-      end.setHours(23, 59, 59, 999); // 종료일 마지막 시간까지 포함
-      return today >= start && today <= end;
-    },
+    // 거리 계산
     calculateDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371000; // 지구 반지름 (미터)
+      const R = 6371000;
       const rad = Math.PI / 180;
       const dLat = (lat2 - lat1) * rad;
       const dLng = (lng2 - lng1) * rad;
@@ -32,6 +19,31 @@
       return Math.round(R * c);
     },
 
+    // 좌표 유효성 검사
+    isValidLatLng(lat, lng) {
+      return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    },
+
+    // 카페 운영 상태 확인
+    isCafeOperating(cafe) {
+      const today = new Date();
+      const start = new Date(cafe.start_date);
+      const end = new Date(cafe.end_date);
+      end.setHours(23, 59, 59, 999);
+      return today >= start && today <= end;
+    },
+
+    // Base64 인코딩
+    encodeToBase64Unicode(str) {
+      try {
+        return btoa(unescape(encodeURIComponent(str)));
+      } catch (e) {
+        console.warn('⚠️ base64 인코딩 실패:', str);
+        return btoa('fallback');
+      }
+    },
+
+    // 주변 카페 찾기
     findNearbyCafes(lat, lng, cafes, radiusKm = 3) {
       return cafes.filter(cafe => {
         const cafeLat = parseFloat(cafe.latitude || cafe.lat);
@@ -47,12 +59,12 @@
         return {
           ...cafe,
           distance: dist,
-          walkTime: Math.round(dist / 80) // 평균 도보 속도 80m/분
+          walkTime: Math.round(dist / 80)
         };
       }).sort((a, b) => a.distance - b.distance);
     },
 
-    // ✅ 커스텀 마커 이미지 생성
+    // 커스텀 마커 이미지 생성
     createCafeMarkerImage() {
       const svgString = `
         <svg xmlns='http://www.w3.org/2000/svg' width='32' height='40' viewBox='0 0 32 40'>
@@ -68,6 +80,7 @@
     }
   };
 
+  // ✅ 지도 관리 클래스 (간소화)
   class MapManager {
     constructor(containerId) {
       this.containerId = containerId;
@@ -89,62 +102,45 @@
         };
         
         this.map = new kakao.maps.Map(container, options);
+        this.initClusterer();
         
-        // 클러스터러 초기화
-        this.clusterer = new kakao.maps.MarkerClusterer({
-          map: this.map,
-          averageCenter: true,
-          minLevel: 6,
-          disableClickZoom: true,
-          styles: [
-            {
-              width: '40px',
-              height: '40px',
-              background: 'rgba(59, 130, 246, 0.8)',
-              borderRadius: '50%',
-              color: '#fff',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              lineHeight: '40px'
-            },
-            {
-              width: '50px',
-              height: '50px',
-              background: 'rgba(147, 51, 234, 0.8)',
-              borderRadius: '50%',
-              color: '#fff',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              lineHeight: '50px'
-            },
-            {
-              width: '60px',
-              height: '60px',
-              background: 'rgba(239, 68, 68, 0.8)',
-              borderRadius: '50%',
-              color: '#fff',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: '18px',
-              lineHeight: '60px'
-            }
-          ]
-        });
-
-        // 클러스터 클릭 이벤트
-        kakao.maps.event.addListener(this.clusterer, 'clusterclick', (cluster) => {
-          const level = this.map.getLevel() - 2;
-          this.map.setLevel(level, { anchor: cluster.getCenter() });
-        });
-
-        console.log('✅ 지도 및 클러스터러 초기화 완료');
+        console.log('✅ 지도 초기화 완료');
         return true;
       } catch (e) {
         console.error('❌ 지도 초기화 실패:', e);
         return false;
       }
+    }
+
+    initClusterer() {
+      this.clusterer = new kakao.maps.MarkerClusterer({
+        map: this.map,
+        averageCenter: true,
+        minLevel: 6,
+        disableClickZoom: true,
+        styles: [
+          {
+            width: '40px', height: '40px', background: 'rgba(59, 130, 246, 0.8)',
+            borderRadius: '50%', color: '#fff', textAlign: 'center',
+            fontWeight: 'bold', fontSize: '14px', lineHeight: '40px'
+          },
+          {
+            width: '50px', height: '50px', background: 'rgba(147, 51, 234, 0.8)',
+            borderRadius: '50%', color: '#fff', textAlign: 'center',
+            fontWeight: 'bold', fontSize: '16px', lineHeight: '50px'
+          },
+          {
+            width: '60px', height: '60px', background: 'rgba(239, 68, 68, 0.8)',
+            borderRadius: '50%', color: '#fff', textAlign: 'center',
+            fontWeight: 'bold', fontSize: '18px', lineHeight: '60px'
+          }
+        ]
+      });
+
+      kakao.maps.event.addListener(this.clusterer, 'clusterclick', (cluster) => {
+        const level = this.map.getLevel() - 2;
+        this.map.setLevel(level, { anchor: cluster.getCenter() });
+      });
     }
 
     moveToLocation(lat, lng, level = 5) {
@@ -157,14 +153,11 @@
     addUserLocationMarker(lat, lng) {
       if (!this.map) return;
 
-      // 기존 사용자 위치 마커 제거
       if (this.userLocationMarker) {
         this.userLocationMarker.setMap(null);
       }
 
       const position = new kakao.maps.LatLng(lat, lng);
-      
-      // 사용자 위치 마커 이미지 생성
       const imageSrc = 'data:image/svg+xml;base64,' + Utils.encodeToBase64Unicode(`
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
           <circle cx="10" cy="10" r="8" fill="#3b82f6" stroke="white" stroke-width="2"/>
@@ -175,10 +168,7 @@
       const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
 
       this.userLocationMarker = new kakao.maps.Marker({
-        position,
-        map: this.map,
-        image: markerImage,
-        title: '내 위치'
+        position, map: this.map, image: markerImage, title: '내 위치'
       });
     }
 
@@ -186,12 +176,10 @@
       if (!this.clusterer || !this.map) return false;
       
       if (this.isClusteringEnabled) {
-        // 클러스터링 비활성화
         this.clusterer.clear();
         this.markers.forEach(marker => marker.setMap(this.map));
         this.isClusteringEnabled = false;
       } else {
-        // 클러스터링 활성화
         this.markers.forEach(marker => marker.setMap(null));
         this.clusterer.addMarkers(this.markers);
         this.isClusteringEnabled = true;
@@ -208,9 +196,7 @@
 
       console.log(`🗺️ ${cafes.length}개 카페 마커 생성 시작`);
       
-      // 기존 마커 정리
       this.clearMarkers();
-      
       const markerImage = Utils.createCafeMarkerImage();
       let successCount = 0;
       
@@ -220,7 +206,7 @@
           const lng = parseFloat(cafe.longitude || cafe.lng);
           
           if (!Utils.isValidLatLng(lat, lng)) {
-            console.warn(`⚠️ 카페 ${index}: 잘못된 좌표 (${lat}, ${lng})`, cafe);
+            console.warn(`⚠️ 카페 ${index}: 잘못된 좌표 (${lat}, ${lng})`);
             return null;
           }
 
@@ -231,10 +217,9 @@
             title: cafe.name || cafe.cafe_name || `생일카페 ${index + 1}`
           });
 
-          // ✅ 마커 클릭 이벤트 등록
           if (onMarkerClick && typeof onMarkerClick === 'function') {
             kakao.maps.event.addListener(marker, 'click', () => {
-              console.log('🎯 마커 클릭 이벤트:', cafe.name || cafe.cafe_name);
+              console.log('🎯 마커 클릭:', cafe.name || cafe.cafe_name);
               onMarkerClick(cafe);
             });
           }
@@ -242,21 +227,19 @@
           successCount++;
           return marker;
         } catch (error) {
-          console.error(`❌ 카페 ${index} 마커 생성 실패:`, error, cafe);
+          console.error(`❌ 카페 ${index} 마커 생성 실패:`, error);
           return null;
         }
       }).filter(Boolean);
 
       console.log(`✅ 마커 생성 완료: ${successCount}/${cafes.length}개`);
 
-      // 클러스터러에 마커 추가
       if (this.isClusteringEnabled) {
         this.clusterer.addMarkers(this.markers);
       } else {
         this.markers.forEach(marker => marker.setMap(this.map));
       }
 
-      // 첫 번째 유효한 마커 위치로 지도 중심 이동
       if (this.markers.length > 0) {
         const firstPosition = this.markers[0].getPosition();
         this.map.setCenter(firstPosition);
@@ -275,7 +258,7 @@
     }
   }
 
-  // ✅ 주변 카페 리스트 표시 함수
+  // ✅ 주변 카페 리스트 표시 (간소화)
   function displayNearbyCafes(cafes, containerId, onCafeClick) {
     const container = document.getElementById(containerId);
     if (!container) {
@@ -319,68 +302,22 @@
 
     container.innerHTML = cafeItemsHTML;
 
-    // 클릭 이벤트 등록
     if (onCafeClick && typeof onCafeClick === 'function') {
       container.querySelectorAll('.nearby-cafe-item').forEach(item => {
         item.addEventListener('click', () => {
           const cafeId = item.dataset.cafeId;
           const cafe = cafes.find(c => c.id == cafeId);
-          if (cafe) {
-            onCafeClick(cafe);
-          }
+          if (cafe) onCafeClick(cafe);
         });
       });
     }
-  }
-
-  function showToast(message, type = 'info') {
-    // 개선된 토스트 시스템 사용
-    if (window.ddoksangToast) {
-      return window.ddoksangToast.show(message, type);
-    }
-    
-    // Fallback: 기존 간단한 토스트
-    const toast = document.createElement('div');
-    toast.className = 'ddoksang-toast fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-white text-sm font-medium shadow-lg transition-all duration-300';
-    
-    const colors = {
-      success: 'bg-green-500',
-      error: 'bg-red-500',
-      warning: 'bg-yellow-500',
-      info: 'bg-blue-500'
-    };
-    toast.classList.add(colors[type] || colors.info);
-    
-    toast.textContent = message;
-    toast.style.opacity = '0';
-    toast.style.transform = 'translate(-50%, 20px)';
-
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.style.opacity = '1';
-      toast.style.transform = 'translate(-50%, 0)';
-    });
-
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      toast.style.transform = 'translate(-50%, 20px)';
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.parentNode.removeChild(toast);
-        }
-      }, 300);
-    }, 3000);
   }
 
   // 전역 노출
   window.DdoksangMap = {
     MapManager,
     Utils,
-    showToast,
     displayNearbyCafes
   };
-
-  console.log('✅ DdoksangMap 모듈 로드 완료 (마커 클릭 이벤트 수정)');
 
 })(window);
