@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load member_images %}
 
 {% block body %}
 <div class="min-h-screen bg-gray-50">
@@ -95,7 +96,6 @@
                class="flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md">
               <span class="mr-2">⚙️</span> 설정
             </a>
-            </a>
             
             {% if user.is_authenticated %}
               <a href="{% url 'accounts:profile' request.user.username %}" 
@@ -170,39 +170,50 @@
       </div>
     </div>
 
-    <!-- 🎨 최애 멤버 섹션 -->
+    <!-- 🎨 최애 멤버 섹션 (멤버 개별 이미지 적용) -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold text-gray-800">
+        <h2 class="text-2xl font-bold text-gray-800 mb-8">
           최애 ❤
         </h2>
         
         {% if favorite_members %}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {% for member in favorite_members %}
               {% if member.matched_artist %}
-                <div class="group cursor-pointer bg-gradient-to-br from-pink-50 to-purple-50 p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-pink-100"
+                <div class="group cursor-pointer bg-gradient-to-br from-pink-50 to-purple-50 p-4 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-pink-100"
                      data-member-name="{{ member.member_name }}"
                      data-artist-id="{{ member.matched_artist.id }}"
                      onclick="openArtistModalFromMember(this)">
                   
-                  <div class="flex items-center space-x-3 mb-3">
-                    {% for artist in member.filtered_artists %}
-                      <img src="{% static artist.logo %}" 
-                           alt="{{ artist.display_name }}"
-                           class="w-8 h-8 rounded-full shadow-md border-2 border-white">
-                    {% endfor %}
+                  <!-- 멤버 개별 이미지 -->
+                  <div class="flex justify-center mb-4">
+                    <div class="relative">
+                      <div class="w-20 h-20 rounded-full overflow-hidden shadow-lg border-3 border-white bg-white">
+                        <img src="{% member_image member.member_name member.matched_artist.display_name %}" 
+                             alt="{{ member.member_name }}"
+                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                             onerror="this.src='{% static 'image/default_member.svg' %}'">
+                      </div>
+                      <!-- 하트 표시 -->
+                      <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                        <span class="text-white text-xs">♥</span>
+                      </div>
+                    </div>
                   </div>
                   
-                  <h3 class="text-xl font-bold text-gray-800 group-hover:text-pink-600 transition-colors mb-2">
-                    {{ member.member_name }}
-                  </h3>
-                  
-                  <p class="text-sm text-gray-600">
-                    {% for artist in member.filtered_artists %}
-                      {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                  </p>
+                  <!-- 멤버 정보 -->
+                  <div class="text-center">
+                    <h3 class="text-lg font-bold text-gray-800 group-hover:text-pink-600 transition-colors mb-2">
+                      {{ member.member_name }}
+                    </h3>
+                    
+                    <p class="text-sm text-gray-600 mb-2">
+                      {% for artist in member.filtered_artists %}
+                        {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
+                      {% endfor %}
+                    </p>
+                  </div>
                 </div>
               {% endif %}
             {% endfor %}
@@ -359,7 +370,7 @@
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-bold text-gray-800">
-          📌 나의 덕팜 활동
+          📌 나의 덕담 활동
         </h2>
 
         <!-- 덕담 탭 네비게이션 -->
