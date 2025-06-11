@@ -114,7 +114,10 @@ def post_detail(request, category, post_id):
     post.refresh_from_db(fields=['view_count'])
 
     comment_qs = get_post_comments(post)
-    comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
+    # 최상위 댓글과 고아 대댓글 모두 가져오기
+    comments = comment_qs.filter(
+        Q(parent__isnull=True) | Q(parent__is_deleted=True)
+    ).select_related('user').prefetch_related('replies__user').order_by('created_at')
     total_comment_count = comment_qs.count()
     comment_form = FarmCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
@@ -590,7 +593,10 @@ def comment_delete(request, category, post_id, comment_id):
     if request.user != comment.user:
         return HttpResponseForbidden()
 
-    comment.delete()
+    # 실제 삭제 대신 삭제 표시
+    comment.is_deleted = True
+    comment.content = "삭제된 댓글입니다"
+    comment.save()
 
     # ✅ AJAX 요청이면 HTML 반환 대신 204 응답
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
