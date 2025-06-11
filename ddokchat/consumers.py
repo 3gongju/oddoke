@@ -34,7 +34,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         seller = await self.get_chatroom_seller(room_id)
 
-        print(message_type, current_user, room_id, seller)
+        print(f"WebSocket 메시지 수신: type={message_type}, user={current_user}, room_id={room_id}")
         
         is_seller = True if current_user == seller else False
 
@@ -95,14 +95,38 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'sender_id': sender_id
                 }
             )
-        
 
+        # ✅ 계좌정보 메시지 처리 추가
+        elif message_type == 'account_info':
+            print(f"계좌정보 메시지 처리 시작: {data}")
+            try:
+                account_info = data['account_info']
+                sender_id = data['sender_id']
+                
+                # 계좌정보 메시지를 DB에 저장
+                await self.save_account_message(sender_id, self.room_id, account_info)
+                
+                # 그룹의 모든 사용자에게 전송
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'account_info_message',
+                        'account_info': account_info,
+                        'sender_id': sender_id,
+                        'is_read': False,
+                    }
+                )
+                print("계좌정보 메시지 그룹 전송 완료")
+                
+            except Exception as e:
+                print(f"계좌정보 처리 오류: {str(e)}")
+        else:
+            print(f"알 수 없는 메시지 타입: {message_type}")
 
     # 모든 사용자에게 메시지 보내기
     async def chat_message(self, event):
         sender = await self.get_username(event['sender_id'])
         is_read = event.get('is_read', False)
-
 
         await self.send(text_data=json.dumps({
             'type': 'chat_message',
@@ -111,12 +135,51 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'is_read': is_read,
         }))
 
+    # ✅ 계좌정보 메시지 전송
+    async def account_info_message(self, event):
+        try:
+            sender = await self.get_username(event['sender_id'])
+            print(f"계좌정보 메시지 클라이언트 전송: sender={sender}, account_info={event['account_info']}")
+            
+            await self.send(text_data=json.dumps({
+                'type': 'account_info',
+                'account_info': event['account_info'],
+                'sender': sender,
+                'is_read': event.get('is_read', False),
+            }))
+            print("계좌정보 메시지 클라이언트 전송 완료")
+            
+        except Exception as e:
+            print(f"계좌정보 메시지 전송 오류: {str(e)}")
+
     # 메시지 DB에 저장
     @database_sync_to_async
     def save_message(self, sender_id, room_id, message):
         sender = User.objects.get(id=sender_id)
         room = ChatRoom.objects.get(id=room_id)
         Message.objects.create(room=room, sender=sender, content=message)
+
+    # ✅ 계좌정보 메시지 DB에 저장
+    @database_sync_to_async
+    def save_account_message(self, sender_id, room_id, account_info):
+        try:
+            sender = User.objects.get(id=sender_id)
+            room = ChatRoom.objects.get(id=room_id)
+            
+            # 계좌정보를 텍스트 형태로 저장
+            message_content = f"💳 계좌정보\n은행: {account_info['bank_name']}\n계좌번호: {account_info['account_number']}\n예금주: {account_info['account_holder']}"
+            
+            message = Message.objects.create(
+                room=room, 
+                sender=sender, 
+                content=message_content
+            )
+            print(f"계좌정보 메시지 DB 저장 완료: {message.id}")
+            return message
+            
+        except Exception as e:
+            print(f"계좌정보 메시지 저장 오류: {str(e)}")
+            raise
 
     # 사용자 이름 가져오기
     @database_sync_to_async
@@ -127,8 +190,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def get_chatroom_seller(self, room_id):
         return ChatRoom.objects.get(id=room_id).seller
 
-
-    # # DB에서 읽음 처리
+    # DB에서 읽음 처리
     @database_sync_to_async
     def mark_all_as_read(self):
         from .models import Message
@@ -137,7 +199,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             is_read=False
         ).exclude(sender=self.scope['user']).update(is_read=True)
     
-
     # 읽음 결과 전송하고 JS에서 처리
     async def read_update(self, event):
         await self.send(text_data=json.dumps({
