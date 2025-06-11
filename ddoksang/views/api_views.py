@@ -558,7 +558,7 @@ def check_duplicate_cafe(request):
                 # 카페 정보 생성에 실패해도 기본 결과는 반환
                 result['similar_cafes'] = []
         
-        # 디버깅용 정보 (개발 환경에서만)
+        # 디버깅용 정보 (개발 환경에서)
         if getattr(settings, 'DEBUG', False):
             result['debug'] = {
                 'normalized_input': normalized_input_name,
