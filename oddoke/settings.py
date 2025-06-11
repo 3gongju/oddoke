@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'ddoksang',
     'ddokchat',
     'channels',
-
+    'notifications',
     'faq',
 ]
 

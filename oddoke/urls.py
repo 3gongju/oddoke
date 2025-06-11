@@ -16,5 +16,6 @@ urlpatterns = [
     path('ddoksang/', include('ddoksang.urls')),       # 생일 카페, 투어 플랜 등
     path('ddokchat/', include('ddokchat.urls')),        # 채팅
     path('faq/', include('faq.urls')),                 # faq
+    path('notifications/', include('notifications.urls')), # 알림
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
