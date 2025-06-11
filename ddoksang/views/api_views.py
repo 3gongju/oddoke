@@ -345,7 +345,7 @@ def check_duplicate_cafe(request):
         # 삭제되지 않은 카페만 (is_deleted 필드가 있는 경우)
         if hasattr(BdayCafe, 'is_deleted'):
             filters['is_deleted'] = False
-        
+        ㅔ
         # 멤버가 지정된 경우 추가
         if member_id:
             filters['member_id'] = member_id

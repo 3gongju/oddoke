@@ -1,7 +1,18 @@
-// 생카 등록 페이지 전용 JavaScript (최종 완전 버전)
+// static/js/ddoksang_create.js (모듈화된 최적화 버전)
 
-document.addEventListener('DOMContentLoaded', function () {
-    
+document.addEventListener('DOMContentLoaded', function() {
+    // 의존성 확인
+    if (!window.DdoksangFormUtils || !window.DdoksangMapUtils || !window.DdoksangImageUtils) {
+        console.error('필수 유틸리티 모듈이 로드되지 않았습니다.');
+        return;
+    }
+
+    // 전역 참조
+    const FormUtils = window.DdoksangFormUtils;
+    const MapUtils = window.DdoksangMapUtils;
+    const ImageUtils = window.DdoksangImageUtils;
+
+    // 상태 변수
     const steps = document.querySelectorAll(".step");
     const progressBar = document.getElementById("progressBar");
     const nextBtn = document.getElementById("nextBtn");
@@ -10,166 +21,36 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentStep = 0;
     let duplicateChecked = false;
     let isDuplicate = false;
-    let map = null;
-    let ps = null;
-    let marker = null;
 
     console.log(`총 ${totalSteps}개 단계 발견`);
 
-    // 초기화 함수들 호출
-    initializeDatePickers();
-    initializeAutocomplete();
-    initializeImageUpload();
-    initializeMapSearch();
-    initializeFormSubmit();
-    initDuplicateChecker();
-    showStep(currentStep);
+    // 초기화
+    init();
 
-    // 버튼 이벤트 리스너
-    if (nextBtn) nextBtn.addEventListener("click", () => moveStep(1));
-    if (prevBtn) prevBtn.addEventListener("click", () => moveStep(-1));
+    function init() {
+        initializeDatePickers();
+        initializeAutocomplete();
+        initializeImageUpload();
+        initializeMapSearch();
+        initializeFormSubmit();
+        initDuplicateChecker();
+        setupEventListeners();
+        showStep(currentStep);
+    }
 
-    //  전역 함수: clearSelection (HTML onclick에서 호출)
-    window.clearSelection = function() {
-        console.log('선택 취소');
-        
-        const searchEl = document.getElementById("artist-member-search");
-        const artistIdEl = document.getElementById("check_artist_id");
-        const memberIdEl = document.getElementById("check_member_id");
-        const selectedEl = document.getElementById("selected-artist");
-        const warningEl = document.getElementById("duplicate-warning");
-        const successEl = document.getElementById("duplicate-success");
-        
-        if (searchEl) searchEl.value = "";
-        if (artistIdEl) artistIdEl.value = "";
-        if (memberIdEl) memberIdEl.value = "";
-        if (selectedEl) selectedEl.classList.add("hidden");
-        if (warningEl) warningEl.classList.add("hidden");
-        if (successEl) successEl.classList.add("hidden");
-        
-        duplicateChecked = false;
-        isDuplicate = false;
-        
-        if (typeof window.checkDuplicateBtnState === 'function') {
-            window.checkDuplicateBtnState();
-        }
-    };
+    function setupEventListeners() {
+        if (nextBtn) nextBtn.addEventListener("click", () => moveStep(1));
+        if (prevBtn) prevBtn.addEventListener("click", () => moveStep(-1));
+    }
 
-    //  전역 함수: clearFinalSelection (HTML onclick에서 호출)
-    window.clearFinalSelection = function() {
-        console.log('최종 선택 취소');
-        
-        const searchEl = document.getElementById("final-artist-member-search");
-        const artistIdEl = document.getElementById("final_artist_id");
-        const memberIdEl = document.getElementById("final_member_id");
-        const selectedEl = document.getElementById("final-selected-artist");
-        const confirmBtn = document.getElementById("confirm-new-artist-btn");
-        
-        if (searchEl) searchEl.value = "";
-        if (artistIdEl) artistIdEl.value = "";
-        if (memberIdEl) memberIdEl.value = "";
-        if (selectedEl) selectedEl.classList.add("hidden");
-        if (confirmBtn) confirmBtn.disabled = true;
-    };
-
-    //  전역 함수: useSelectedArtist (기존 정보 그대로 사용)
-    window.useSelectedArtist = function() {
-        console.log('기존 아티스트 정보 사용');
-        
-        // 중복 확인에서 선택한 데이터 가져오기
-        const checkSearchEl = document.getElementById("artist-member-search");
-        const checkArtistIdEl = document.getElementById("check_artist_id");
-        const checkMemberIdEl = document.getElementById("check_member_id");
-        
-        if (!checkSearchEl || !checkArtistIdEl) {
-            alert('중복 확인 데이터를 찾을 수 없습니다.');
-            return;
-        }
-        
-        const searchText = checkSearchEl.value;
-        const artistId = checkArtistIdEl.value;
-        const memberId = checkMemberIdEl.value || '';
-        
-        // Step 1 hidden field에 복사
-        const finalArtistIdEl = document.getElementById("final_artist_id");
-        const finalMemberIdEl = document.getElementById("final_member_id");
-        
-        if (finalArtistIdEl) finalArtistIdEl.value = artistId;
-        if (finalMemberIdEl) finalMemberIdEl.value = memberId;
-        
-        console.log('기존 데이터 사용 완료:', { searchText, artistId, memberId });
-        
-        // 자동으로 다음 단계로 이동
-        setTimeout(() => {
-            currentStep = 2;
-            showStep(currentStep);
-        }, 300);
-    };
-
-    //  전역 함수: showArtistSearch (검색창 표시)
-    window.showArtistSearch = function() {
-        console.log('아티스트 검색 모드 전환');
-        
-        const confirmMode = document.getElementById('step1-confirm-mode');
-        const searchMode = document.getElementById('step1-search-mode');
-        
-        if (confirmMode) confirmMode.classList.add('hidden');
-        if (searchMode) searchMode.classList.remove('hidden');
-        
-        // 검색창 초기화 및 포커스
-        const searchInput = document.getElementById('final-artist-member-search');
-        if (searchInput) {
-            searchInput.value = '';
-            searchInput.focus();
-        }
-        
-        // autocomplete 초기화
-        setTimeout(() => initStep1Autocomplete(), 100);
-    };
-
-    //  전역 함수: cancelArtistSearch (검색 취소)
-    window.cancelArtistSearch = function() {
-        console.log('아티스트 검색 취소');
-        
-        const confirmMode = document.getElementById('step1-confirm-mode');
-        const searchMode = document.getElementById('step1-search-mode');
-        
-        if (searchMode) searchMode.classList.add('hidden');
-        if (confirmMode) confirmMode.classList.remove('hidden');
-        
-        // 검색 결과 초기화
-        clearFinalSelection();
-    };
-
-    //  전역 함수: confirmNewArtist (새 아티스트 선택 완료)
-    window.confirmNewArtist = function() {
-        const finalArtistId = getValue('final_artist_id');
-        
-        if (!finalArtistId) {
-            alert('아티스트를 선택해주세요.');
-            return;
-        }
-        
-        console.log('새 아티스트 선택 완료');
-        
-        // 자동으로 다음 단계로 이동
-        setTimeout(() => {
-            currentStep = 2;
-            showStep(currentStep);
-        }, 300);
-    };
-
-    //  전역 함수: removeImage (HTML onclick에서 호출)
-    window.removeImage = function (index) {
-        const input = document.getElementById("images");
-        if (!input) return;
-        
-        const dt = new DataTransfer();
-        Array.from(input.files).forEach((file, i) => {
-            if (i !== index) dt.items.add(file);
-        });
-        input.files = dt.files;
-        handleImagePreview();
+    // 단계별 검증 규칙
+    const stepValidationRules = {
+        1: ['final_artist_id'],
+        2: ['cafe_name', 'address', 'latitude', 'longitude'],
+        3: ['start_date', 'end_date'],
+        4: ['event_description'],
+        5: [], // 선택사항
+        6: []  // 선택사항
     };
 
     function showStep(index) {
@@ -183,522 +64,344 @@ document.addEventListener('DOMContentLoaded', function () {
             progressBar.style.width = `${(index / (totalSteps - 1)) * 100}%`;
         }
 
-        // Step 0 (중복 확인)에서는 이전/다음 버튼 숨김
-        if (index === 0) {
+        updateNavigationButtons(index);
+        addStepValidationListeners(index);
+        updateNextButtonState();
+
+        // 지도 초기화 (Step 2)
+        if (index === 2 && !MapUtils.map) {
+            setTimeout(() => MapUtils.initMap(), 100);
+        }
+    }
+
+    function updateNavigationButtons(index) {
+        const isFirstStep = index === 0;
+        const isLastStep = index === totalSteps - 1;
+
+        // Step 0에서는 버튼 숨김
+        if (isFirstStep) {
             if (prevBtn) prevBtn.classList.add("hidden");
             if (nextBtn) nextBtn.classList.add("hidden");
         } else {
             if (prevBtn) {
                 prevBtn.classList.remove("hidden");
-                prevBtn.disabled = index === 1; // Step 1에서는 이전 버튼 비활성화
+                FormUtils.updateButtonState('prevBtn', true);
             }
             if (nextBtn) {
                 nextBtn.classList.remove("hidden");
-                nextBtn.textContent = index === totalSteps - 1 ? "제출하기" : "다음";
+                nextBtn.textContent = isLastStep ? "제출하기" : "다음";
             }
-        }
-
-        // 지도가 있는 step에서 지도 초기화 (Step 2는 카페 정보에서 지도)
-        if (index === 2 && !map) {
-            setTimeout(() => initializeMap(), 100);
         }
     }
 
     function moveStep(direction) {
         console.log(`Step 이동: ${direction}, 현재: ${currentStep}`);
         
-        // Step 0에서 Step 1로: 중복 확인 완료 체크 및 미리보기 설정
-        if (direction === 1 && currentStep === 0) {
-            if (!duplicateChecked) {
-                alert("중복 확인을 먼저 해주세요.");
-                return;
-            }
-            if (isDuplicate) {
-                alert("중복된 생카가 존재합니다. 다른 정보로 입력해주세요.");
-                return;
-            }
-            
-            // Step 1에 간소화 모드 설정
-            setupStep1Preview();
-        }
-
-        // Step 1에서 Step 2로는 버튼 클릭으로 자동 이동되므로 여기서는 처리하지 않음
-        // Step 2로 들어갈 때만 카페명 복사
-        if (currentStep + direction === 2) {
-            copyFinalDataToForm();
-        }
-
-        // 마지막 단계에서 제출
-        if (direction === 1 && currentStep === totalSteps - 1) {
-            const form = document.getElementById("multiStepForm");
-            if (form) {
-                console.log('폼 제출');
-                form.submit();
-            }
+        if (direction === -1 && currentStep > 1) {
+            currentStep -= 1;
+            showStep(currentStep);
             return;
         }
 
-        currentStep += direction;
-        showStep(currentStep);
+        if (direction === 1) {
+            // Step 0에서 Step 1로: 중복 확인
+            if (currentStep === 0) {
+                if (!duplicateChecked || isDuplicate) {
+                    FormUtils.showToast(isDuplicate ? 
+                        "중복된 생카가 존재합니다. 다른 정보로 입력해주세요." : 
+                        "중복 확인을 먼저 해주세요.", 'warning');
+                    return;
+                }
+                setupStep1Preview();
+            }
+
+            // 현재 단계 검증
+            if (!validateCurrentStep()) return;
+
+            // Step 2로 들어갈 때 데이터 복사
+            if (currentStep + direction === 2) {
+                copyDataToForm();
+            }
+
+            // 마지막 단계에서 제출
+            if (currentStep === totalSteps - 1) {
+                document.getElementById("multiStepForm")?.submit();
+                return;
+            }
+
+            currentStep += direction;
+            showStep(currentStep);
+        }
+    }
+
+    function validateCurrentStep() {
+        const rules = stepValidationRules[currentStep];
+        if (!rules) return true;
+
+        // 필수 필드 검증
+        const validation = FormUtils.validateRequired(rules);
+        if (!validation.valid) {
+            FormUtils.showToast(`${getFieldLabel(validation.field)}을(를) 입력해주세요.`, 'warning');
+            return false;
+        }
+
+        // Step 3 날짜 검증
+        if (currentStep === 3) {
+            const dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
+            if (!dateValidation.valid) {
+                FormUtils.showToast(dateValidation.message, 'warning');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function getFieldLabel(fieldId) {
+        const labels = {
+            'final_artist_id': '아티스트',
+            'cafe_name': '생카명',
+            'address': '주소',
+            'start_date': '시작일',
+            'end_date': '종료일',
+            'event_description': '이벤트 설명'
+        };
+        return labels[fieldId] || fieldId;
+    }
+
+    function addStepValidationListeners(stepIndex) {
+        const stepElement = document.getElementById(`step-${stepIndex}`);
+        if (!stepElement || stepElement.hasAttribute('data-listeners-added')) return;
+        
+        stepElement.setAttribute('data-listeners-added', 'true');
+        
+        const rules = stepValidationRules[stepIndex];
+        if (rules) {
+            rules.forEach(fieldId => {
+                const element = document.getElementById(fieldId);
+                if (element) {
+                    element.addEventListener('input', updateNextButtonState);
+                    element.addEventListener('change', updateNextButtonState);
+                }
+            });
+        }
+
+        // 지도 검색 필드 특별 처리
+        if (stepIndex === 2) {
+            const placeInput = document.getElementById('place-search');
+            if (placeInput) {
+                placeInput.addEventListener('input', updateNextButtonState);
+            }
+        }
+    }
+
+    function updateNextButtonState() {
+        if (!nextBtn || currentStep === 0) return;
+        
+        const rules = stepValidationRules[currentStep];
+        const isValid = rules ? FormUtils.validateRequired(rules, false).valid : true;
+        
+        FormUtils.updateButtonState('nextBtn', isValid);
+        console.log(`Step ${currentStep} 버튼 상태:`, isValid);
     }
 
     function setupStep1Preview() {
-        console.log('Step 1 간소화 모드 설정');
-        
-        // 확인 모드 표시, 검색 모드 숨김
-        const confirmMode = document.getElementById('step1-confirm-mode');
-        const searchMode = document.getElementById('step1-search-mode');
-        
-        if (confirmMode) confirmMode.classList.remove('hidden');
-        if (searchMode) searchMode.classList.add('hidden');
-        
-        console.log('Step 1 간소화 모드 설정 완료');
+        FormUtils.toggleClass('step1-confirm-mode', 'hidden', false);
+        FormUtils.toggleClass('step1-search-mode', 'hidden', true);
     }
 
-    function validateStep1Selection() {
-        return true; // 버튼 클릭으로 이미 검증됨
+    function copyDataToForm() {
+        const cafeName = FormUtils.getValue('check_cafe_name');
+        FormUtils.setValue('cafe_name', cafeName);
     }
 
-    function copyFinalDataToForm() {
-        console.log('최종 선택 데이터를 폼으로 복사');
-        
-        // Step 1에서 최종 선택된 데이터는 이미 hidden field에 있음
-        // 중복 확인에서 입력한 카페명만 Step 2 폼에 복사
-        const cafeName = getValue('check_cafe_name');
-        setElementValue('cafe_name', cafeName);
-        
-        console.log('최종 데이터 복사 완료:', { cafeName });
-    }
-
-    // Step 1 전용 autocomplete 초기화
-    function initStep1Autocomplete() {
-        console.log('Step 1 Autocomplete 초기화');
-        
-        if (typeof initAutocomplete === 'function') {
-            try {
-                initAutocomplete('final-artist-member-search', 'final-artist-member-results', {
-                    showBirthday: true,
-                    showArtistTag: true,
-                    submitOnSelect: false,
-                    artistOnly: false,
-                    apiUrl: '/artist/autocomplete/',
-                    onSelect: function (result) {
-                        console.log('Step 1에서 아티스트 선택됨:', result);
-                        selectFinalArtist({
-                            member_name: result.name,
-                            artist_display: result.artist || result.artist_name,
-                            artist_id: result.artist_id,
-                            member_id: result.id || result.member_id,
-                            bday: result.birthday ? formatBirthday(result.birthday) : ''
-                        });
-                    }
-                });
-            } catch (error) {
-                console.warn('Step 1 Autocomplete 초기화 실패:', error);
-            }
-        }
-    }
-
-    function selectFinalArtist(item) {
-        console.log('selectFinalArtist 호출:', item);
-        
-        const resultsEl = document.getElementById("final-artist-member-results");
-        const searchEl = document.getElementById("final-artist-member-search");
-        const artistIdEl = document.getElementById("final_artist_id");
-        const memberIdEl = document.getElementById("final_member_id");
-        const selectedTextEl = document.getElementById("final-selected-artist-text");
-        const selectedEl = document.getElementById("final-selected-artist");
-        
-        // 그룹 전체인지 개별 멤버인지 판단
-        const isGroup = !item.member_id || item.member_id === item.artist_id || 
-                       item.member_name === item.artist_display;
-        
-        let displayText;
-        if (isGroup) {
-            // 그룹 전체 선택
-            displayText = `${item.artist_display} (그룹 전체)`;
-        } else {
-            // 개별 멤버 선택
-            displayText = `${item.member_name} (${item.artist_display})`;
-        }
-        
-        if (resultsEl) resultsEl.classList.add("hidden");
-        if (searchEl) searchEl.value = displayText;
-        if (artistIdEl) artistIdEl.value = item.artist_id || '';
-        if (memberIdEl) memberIdEl.value = isGroup ? '' : (item.member_id || '');
-        if (selectedTextEl) selectedTextEl.textContent = `✓ ${displayText} 선택됨`;
-        if (selectedEl) selectedEl.classList.remove("hidden");
-    }
-
-    function getValue(id) {
-        const el = document.getElementById(id);
-        return el ? el.value.trim() : '';
-    }
-
-    function setElementText(id, text) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = text || '';
-    }
-
-    function setElementValue(id, value) {
-        const el = document.getElementById(id);
-        if (el) el.value = value || '';
-    }
-
-    function extractArtistName(text) {
-        if (!text) return '';
-        const match = text.match(/\(([^)]+)\)/);
-        return match ? match[1] : '';
-    }
-
-    function extractMemberName(text) {
-        if (!text) return '';
-        
-        const cleanText = text.replace(/✓\s*/, '').trim();
-        const memberName = cleanText.split('(')[0].trim();
-        const artistName = extractArtistName(text);
-        
-        // 멤버명과 아티스트명이 같으면 그룹 전체 선택
-        if (memberName === artistName) {
-            return '그룹 전체';
-
-        }
-        
-        return memberName;
-    }
-
-    //  중복 확인 로직
+    // 중복 확인 로직
     function initDuplicateChecker() {
-        console.log('중복 확인 초기화');
         const checkBtn = document.getElementById('check-duplicate-btn');
-        if (!checkBtn) {
-            console.warn('중복 확인 버튼을 찾을 수 없습니다');
-            return;
+        if (!checkBtn) return;
+
+        function updateDuplicateBtn() {
+            const required = ['check_artist_id', 'check_cafe_name', 'check_start_date', 'check_end_date'];
+            const validation = FormUtils.validateRequired(required, false);
+            FormUtils.updateButtonState('check-duplicate-btn', validation.valid);
         }
 
-        function checkDuplicateBtnState() {
-            const artistIdEl = document.getElementById('check_artist_id');
-            const cafeNameEl = document.getElementById('check_cafe_name');
-            const startDateEl = document.getElementById('check_start_date');
-            const endDateEl = document.getElementById('check_end_date');
-            
-            const artistId = artistIdEl?.value?.trim() || '';
-            const cafeName = cafeNameEl?.value?.trim() || '';
-            const startDate = startDateEl?.value?.trim() || '';
-            const endDate = endDateEl?.value?.trim() || '';
+        // 전역 함수로 설정
+        window.checkDuplicateBtnState = updateDuplicateBtn;
 
-            const allFilled = artistId && cafeName && startDate && endDate;
-            
-            if (checkBtn) {
-                checkBtn.disabled = !allFilled;
-                checkBtn.classList.toggle('bg-blue-600', allFilled);
-                checkBtn.classList.toggle('bg-gray-500', !allFilled);
-                checkBtn.classList.toggle('hover:bg-blue-700', allFilled);
-                checkBtn.classList.toggle('opacity-50', !allFilled);
-            }
-            
-            console.log('필드 확인:', { artistId, cafeName, startDate, endDate, allFilled });
-        }
-
-        // 전역으로 할당하여 다른 함수에서도 접근 가능
-        window.checkDuplicateBtnState = checkDuplicateBtnState;
-
-        // 입력 필드 변경 시 버튼 상태 업데이트
+        // 입력 필드 이벤트 리스너
         ['check_cafe_name', 'check_start_date', 'check_end_date'].forEach(id => {
             const element = document.getElementById(id);
             if (element) {
-                element.addEventListener('input', checkDuplicateBtnState);
-                element.addEventListener('change', checkDuplicateBtnState);
+                element.addEventListener('input', updateDuplicateBtn);
+                element.addEventListener('change', updateDuplicateBtn);
             }
         });
 
-        // 중복 확인 버튼 클릭 이벤트
-        checkBtn.addEventListener('click', function() {
-            console.log('중복 확인 버튼 클릭');
-            
-            const artistIdEl = document.getElementById('check_artist_id');
-            const memberIdEl = document.getElementById('check_member_id');
-            const cafeNameEl = document.getElementById('check_cafe_name');
-            const startDateEl = document.getElementById('check_start_date');
-            const endDateEl = document.getElementById('check_end_date');
-            
-            if (!artistIdEl || !cafeNameEl || !startDateEl || !endDateEl) {
-                alert('필수 입력 필드를 찾을 수 없습니다.');
-                return;
-            }
+        // 중복 확인 버튼 클릭
+        checkBtn.addEventListener('click', async function() {
+            const data = {
+                artist_id: FormUtils.getValue('check_artist_id'),
+                member_id: FormUtils.getValue('check_member_id'),
+                cafe_name: FormUtils.getValue('check_cafe_name'),
+                start_date: FormUtils.getValue('check_start_date'),
+                end_date: FormUtils.getValue('check_end_date')
+            };
 
-            const artistId = artistIdEl.value;
-            const memberId = memberIdEl?.value || '';
-            const cafeName = cafeNameEl.value.trim();
-            const startDate = startDateEl.value;
-            const endDate = endDateEl.value;
-
-            if (!artistId || !cafeName || !startDate || !endDate) {
-                alert('모든 정보를 입력해주세요.');
+            if (!data.artist_id || !data.cafe_name || !data.start_date || !data.end_date) {
+                FormUtils.showToast('모든 정보를 입력해주세요.', 'warning');
                 return;
             }
 
             // 로딩 상태
             checkBtn.disabled = true;
             checkBtn.textContent = '확인 중...';
+            checkBtn.className = checkBtn.className.replace(/bg-\w+-\d+/, 'bg-gray-600');
 
-            const url = `/ddoksang/cafe/check-duplicate/?artist_id=${artistId}&member_id=${memberId}` +
-                        `&cafe_name=${encodeURIComponent(cafeName)}&start_date=${startDate}&end_date=${endDate}`;
+            try {
+                const url = `/ddoksang/cafe/check-duplicate/?` + 
+                    Object.entries(data).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                duplicateChecked = true;
+                isDuplicate = result.exists;
 
-            console.log('중복 확인 API 호출:', url);
+                FormUtils.toggleClass('duplicate-warning', 'hidden', !result.exists);
+                FormUtils.toggleClass('duplicate-success', 'hidden', result.exists);
 
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    console.log('중복 확인 결과:', data);
-                    
-                    const warningBox = document.getElementById('duplicate-warning');
-                    const successBox = document.getElementById('duplicate-success');
-                    
-                    duplicateChecked = true;
-                    isDuplicate = data.exists;
-
-                    if (data.exists) {
-                        if (warningBox) warningBox.classList.remove('hidden');
-                        if (successBox) successBox.classList.add('hidden');
-                    } else {
-                        if (warningBox) warningBox.classList.add('hidden');
-                        if (successBox) successBox.classList.remove('hidden');
-                        
-                        // 중복이 없으면 1.5초 후 다음 단계로 자동 이동
-                        setTimeout(() => {
-                            console.log('다음 단계로 자동 이동');
-                            currentStep = 1;
-                            showStep(currentStep);
-                        }, 1500);
-                    }
-                })
-                .catch(error => {
-                    console.error('중복 확인 오류:', error);
-                    alert('중복 확인 중 오류가 발생했습니다. 다시 시도해주세요.');
-                })
-                .finally(() => {
-                    checkBtn.disabled = false;
-                    checkBtn.textContent = '중복 확인하기';
-                });
+                if (!result.exists) {
+                    FormUtils.showToast('중복되지 않습니다!', 'success');
+                    setTimeout(() => {
+                        currentStep = 1;
+                        showStep(currentStep);
+                    }, 1500);
+                } else {
+                    FormUtils.showToast('유사한 생카가 발견되었습니다.', 'warning');
+                }
+            } catch (error) {
+                console.error('중복 확인 오류:', error);
+                FormUtils.showToast('중복 확인 중 오류가 발생했습니다.', 'warning');
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.textContent = '중복 확인하기';
+                updateDuplicateBtn();
+            }
         });
 
-        // 초기 상태 체크
-        checkDuplicateBtnState();
+        updateDuplicateBtn();
     }
 
     // 날짜 선택기 초기화
     function initializeDatePickers() {
-        console.log('날짜 선택기 초기화');
-        
-        if (typeof flatpickr !== 'undefined') {
-            // 중복 확인용 날짜 선택기
-            flatpickr("#check_start_date", { 
-                dateFormat: "Y-m-d",
-                onChange: function() {
-                    if (typeof window.checkDuplicateBtnState === 'function') {
-                        window.checkDuplicateBtnState();
-                    }
-                }
-            });
-            flatpickr("#check_end_date", { 
-                dateFormat: "Y-m-d",
-                onChange: function() {
-                    if (typeof window.checkDuplicateBtnState === 'function') {
-                        window.checkDuplicateBtnState();
-                    }
-                }
-            });
+        if (typeof flatpickr === 'undefined') return;
 
-            // 실제 폼용 날짜 선택기
-            flatpickr("#start_date", {
-                dateFormat: "Y-m-d",
-                defaultDate: new Date(),
-                onChange: function (selectedDates, dateStr) {
-                    const endPickerEl = document.querySelector('#end_date');
-                    if (endPickerEl && endPickerEl._flatpickr) {
-                        const endPicker = endPickerEl._flatpickr;
-                        endPicker.set('minDate', dateStr);
-                        if (endPicker.selectedDates[0] && endPicker.selectedDates[0] < selectedDates[0]) {
-                            endPicker.setDate(dateStr);
-                        }
-                    }
-                }
-            });
+        // 중복 확인용
+        flatpickr("#check_start_date", { 
+            dateFormat: "Y-m-d",
+            onChange: () => window.checkDuplicateBtnState?.()
+        });
+        flatpickr("#check_end_date", { 
+            dateFormat: "Y-m-d",
+            onChange: () => window.checkDuplicateBtnState?.()
+        });
 
-            flatpickr("#end_date", {
-                dateFormat: "Y-m-d",
-                defaultDate: new Date(),
-                onChange: function (selectedDates, dateStr) {
-                    const startPickerEl = document.querySelector('#start_date');
-                    if (startPickerEl && startPickerEl._flatpickr) {
-                        startPickerEl._flatpickr.set('maxDate', dateStr);
-                    }
-                }
-            });
-        } else {
-            console.warn('flatpickr 라이브러리를 찾을 수 없습니다');
-        }
+        // 실제 폼용
+        flatpickr("#start_date", {
+            dateFormat: "Y-m-d",
+            defaultDate: new Date(),
+            onChange: () => updateNextButtonState()
+        });
+        flatpickr("#end_date", {
+            dateFormat: "Y-m-d", 
+            defaultDate: new Date(),
+            onChange: () => updateNextButtonState()
+        });
     }
 
-    // Autocomplete 초기화 (Step 0용)
+    // Autocomplete 초기화
     function initializeAutocomplete() {
-        console.log('Step 0 Autocomplete 초기화');
-        
-        if (typeof initAutocomplete === 'function') {
-            try {
-                initAutocomplete('artist-member-search', 'artist-member-results', {
-                    showBirthday: true,
-                    showArtistTag: false,
-                    submitOnSelect: false,
-                    artistOnly: false,
-                    apiUrl: '/artist/autocomplete/',
-                    onSelect: function (result) {
-                        console.log('Step 0에서 아티스트 선택됨:', result);
-                        selectArtist({
-                            member_name: result.name,
-                            artist_display: result.artist || result.artist_name,
-                            artist_id: result.artist_id,
-                            member_id: result.id || result.member_id,
-                            bday: result.birthday ? formatBirthday(result.birthday) : ''
-                        });
-                    }
-                });
-            } catch (error) {
-                console.warn('Step 0 Autocomplete 초기화 실패:', error);
-            }
-        } else {
-            console.warn('initAutocomplete 함수를 찾을 수 없습니다');
-        }
+        if (typeof initAutocomplete !== 'function') return;
+
+        const autocompleteConfig = {
+            showBirthday: true,
+            showArtistTag: false,
+            submitOnSelect: false,
+            artistOnly: false,
+            apiUrl: '/artist/autocomplete/'
+        };
+
+        // Step 0용
+        initAutocomplete('artist-member-search', 'artist-member-results', {
+            ...autocompleteConfig,
+            onSelect: (result) => selectArtist(result, 'check')
+        });
     }
 
-    function selectArtist(item) {
-        console.log('selectArtist 호출:', item);
-        
-        const resultsEl = document.getElementById("artist-member-results");
-        const searchEl = document.getElementById("artist-member-search");
-        const artistIdEl = document.getElementById("check_artist_id");
-        const memberIdEl = document.getElementById("check_member_id");
-        const selectedTextEl = document.getElementById("selected-artist-text");
-        const selectedEl = document.getElementById("selected-artist");
-        
-        // 그룹 전체인지 개별 멤버인지 판단
-        const isGroup = !item.member_id || item.member_id === item.artist_id || 
-                       item.member_name === item.artist_display;
-        
-        let displayText;
-        if (isGroup) {
-            // 그룹 전체 선택
-            displayText = `${item.artist_display} (그룹 전체)`;
-        } else {
-            // 개별 멤버 선택
-            displayText = `${item.member_name} (${item.artist_display})`;
-        }
-        
-        if (resultsEl) resultsEl.classList.add("hidden");
-        if (searchEl) searchEl.value = displayText;
-        if (artistIdEl) artistIdEl.value = item.artist_id || '';
-        if (memberIdEl) memberIdEl.value = isGroup ? '' : (item.member_id || '');
-        if (selectedTextEl) selectedTextEl.textContent = `✓ ${displayText} 선택됨`;
-        if (selectedEl) selectedEl.classList.remove("hidden");
-        
-        // 중복 확인 버튼 상태 업데이트
-        if (typeof window.checkDuplicateBtnState === 'function') {
-            window.checkDuplicateBtnState();
-        }
-    }
+    function selectArtist(result, prefix) {
+        const data = FormUtils.normalizeArtistData({
+            member_name: result.name,
+            artist_display: result.artist || result.artist_name,
+            artist_id: result.artist_id,
+            member_id: result.id || result.member_id
+        });
 
-    function formatBirthday(birthday) {
-        const date = new Date(birthday);
-        return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        // 폼 필드 업데이트
+        FormUtils.setValue(`${prefix}_artist_id`, data.artistId);
+        FormUtils.setValue(`${prefix}_member_id`, data.memberId);
+        FormUtils.setValue(`artist-member-search`, data.displayText);
+        FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
+        
+        // UI 업데이트
+        FormUtils.toggleClass('artist-member-results', 'hidden', true);
+        FormUtils.toggleClass('selected-artist', 'hidden', false);
+        
+        if (prefix === 'check') {
+            window.checkDuplicateBtnState?.();
+        } else {
+            updateNextButtonState();
+        }
     }
 
     // 이미지 업로드 초기화
     function initializeImageUpload() {
-        console.log('이미지 업로드 초기화');
-        
         const imageInput = document.getElementById("images");
-        if (!imageInput) return;
+        const uploadArea = document.querySelector('label[for="images"]')?.parentElement;
         
-        const uploadLabel = document.querySelector('label[for="images"]');
-        if (!uploadLabel) return;
-        
-        const uploadArea = uploadLabel.parentElement;
+        if (!imageInput || !uploadArea) return;
 
+        ImageUtils.setupDragAndDrop(uploadArea.id || 'image-upload-area', 'images');
         imageInput.addEventListener("change", handleImagePreview);
-
-        // 드래그 앤 드롭 지원
-        uploadArea.addEventListener('dragover', e => {
-            e.preventDefault();
-            uploadArea.classList.add('border-blue-400', 'bg-blue-50');
-        });
-
-        uploadArea.addEventListener('dragleave', e => {
-            e.preventDefault();
-            uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
-        });
-
-        uploadArea.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadArea.classList.remove('border-blue-400', 'bg-blue-50');
-
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            if (files.length) {
-                const dt = new DataTransfer();
-                files.forEach(f => dt.items.add(f));
-                imageInput.files = dt.files;
-                handleImagePreview();
-            }
-        });
     }
 
-    function handleImagePreview() {
+    async function handleImagePreview() {
         const input = document.getElementById("images");
         const preview = document.getElementById("image-preview");
         if (!input || !preview) return;
         
         preview.innerHTML = "";
 
-        if (input.files.length > 5) {
-            alert("최대 5개의 이미지만 업로드할 수 있습니다.");
+        const validation = FormUtils.validateImageFiles(Array.from(input.files));
+        if (!validation.valid) {
+            FormUtils.showToast(validation.message, 'warning');
             input.value = "";
             return;
         }
 
-        Array.from(input.files).forEach((file, i) => {
-            if (file.size > 5 * 1024 * 1024) {
-                alert(`${file.name}: 파일 크기가 5MB를 초과합니다.`);
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = e => {
-                const div = document.createElement("div");
-                div.className = "relative";
-                div.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview ${i + 1}" class="w-full h-32 object-cover rounded border">
-                    <div class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">${i === 0 ? '대표' : i + 1}</div>
-                    <button type="button" onclick="removeImage(${i})" class="absolute top-2 right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full">×</button>
-                `;
-                preview.appendChild(div);
-            };
-            reader.readAsDataURL(file);
-        });
+        for (let i = 0; i < input.files.length; i++) {
+            const previewElement = await ImageUtils.createPreview(input.files[i], i, i === 0);
+            preview.appendChild(previewElement);
+        }
     }
 
     // 지도 검색 초기화
     function initializeMapSearch() {
-        console.log('지도 검색 초기화');
-        
         const searchBtn = document.getElementById("searchBtn");
         const placeInput = document.getElementById("place-search");
 
         if (searchBtn) {
+            searchBtn.className = "bg-gray-900 text-white px-4 rounded hover:bg-gray-800 transition-colors";
             searchBtn.addEventListener('click', searchPlace);
         }
         if (placeInput) {
@@ -711,71 +414,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function initializeMap() {
-        console.log('지도 초기화');
-        
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer) return;
-        
-        if (typeof kakao === 'undefined' || !kakao.maps) {
-            console.warn('Kakao Maps API를 찾을 수 없습니다');
-            return;
-        }
-        
-        try {
-            const mapOption = {
-                center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
-                level: 3
-            };
-
-            map = new kakao.maps.Map(mapContainer, mapOption);
-            
-            // 지도 로딩 완료 후 placeholder 숨기기
-            const placeholder = document.getElementById('mapPlaceholder');
-            if (placeholder) {
-                placeholder.style.display = 'none';
-            }
-            
-            console.log('지도 초기화 완료');
-        } catch (error) {
-            console.error('지도 초기화 실패:', error);
-        }
-    }
-
     function searchPlace() {
-        console.log('장소 검색');
-        
-        if (!map) initializeMap();
-        
-        if (!ps && typeof kakao !== 'undefined' && kakao.maps) {
-            ps = new kakao.maps.services.Places();
-            marker = new kakao.maps.Marker({ map });
-        }
-
-        const placeInput = document.getElementById("place-search");
-        const keyword = placeInput?.value?.trim();
+        const keyword = FormUtils.getValue('place-search');
         if (!keyword) {
-            alert('검색어를 입력해주세요.');
+            FormUtils.showToast('검색어를 입력해주세요.', 'warning');
             return;
         }
 
-        if (!ps) {
-            alert('지도 서비스를 사용할 수 없습니다.');
-            return;
-        }
+        if (!MapUtils.map) MapUtils.initMap();
 
-        ps.keywordSearch(keyword, (data, status) => {
+        MapUtils.searchPlaces(keyword, (success, data) => {
             const results = document.getElementById('place-results');
             if (!results) return;
             
-            if (status === kakao.maps.services.Status.OK) {
+            if (success) {
                 results.innerHTML = '';
                 results.classList.remove('hidden');
                 
                 data.forEach(place => {
                     const li = document.createElement('li');
                     li.textContent = `${place.place_name} (${place.road_address_name || place.address_name})`;
-                    li.className = 'px-4 py-2 cursor-pointer hover:bg-gray-200 border-b last:border-none text-sm';
+                    li.className = 'px-4 py-2 cursor-pointer hover:bg-gray-100 border-b last:border-none text-sm';
                     li.addEventListener('click', () => selectPlace(place));
                     results.appendChild(li);
                 });
@@ -787,15 +446,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function selectPlace(place) {
-        console.log('장소 선택:', place);
+        MapUtils.selectPlace(place);
         
-        if (!map || !marker) return;
-        
-        const latlng = new kakao.maps.LatLng(place.y, place.x);
-        map.setCenter(latlng);
-        marker.setPosition(latlng);
-
-        // 선택된 장소 표시
+        // 선택된 장소 UI 업데이트
         const selectedPlace = document.getElementById('selected-place');
         if (selectedPlace) {
             selectedPlace.innerHTML = `
@@ -811,44 +464,24 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedPlace.classList.remove('hidden');
         }
 
-        // 폼 필드 업데이트
-        const fields = {
-            "place_name": place.place_name,
-            "address": place.address_name,
-            "road_address": place.road_address_name || '',
-            "latitude": place.y,
-            "longitude": place.x,
-            "kakao_place_id": place.id
-        };
-
-        Object.entries(fields).forEach(([id, value]) => {
-            setElementValue(id, value);
-        });
-
         // 검색 결과 숨기기
-        const placeResults = document.getElementById('place-results');
-        if (placeResults) {
-            placeResults.classList.add('hidden');
-        }
+        FormUtils.toggleClass('place-results', 'hidden', true);
+        updateNextButtonState();
     }
 
     // 폼 제출 초기화
     function initializeFormSubmit() {
-        console.log('폼 제출 초기화');
-        
         const form = document.getElementById('multiStepForm');
         if (!form) return;
         
-        form.addEventListener('submit', function () {
-            console.log('폼 제출 처리');
-            
-            // 모든 입력 필드 활성화 (disabled 해제)
-            const allInputs = this.querySelectorAll('input, textarea, select');
-            allInputs.forEach(input => input.disabled = false);
+        form.addEventListener('submit', function() {
+            // 모든 입력 필드 활성화
+            this.querySelectorAll('input, textarea, select').forEach(input => {
+                input.disabled = false;
+            });
 
-            // X(트위터) 사용자명을 URL로 변환
-            const xUsernameInput = document.querySelector('[name="x_username"]');
-            const xUsername = xUsernameInput?.value?.trim();
+            // X 사용자명을 URL로 변환
+            const xUsername = FormUtils.getValue('x_username');
             if (xUsername) {
                 const xInput = document.createElement('input');
                 xInput.type = 'hidden';
@@ -858,4 +491,48 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // 전역 함수들 (HTML onclick에서 사용)
+    window.clearSelection = () => {
+        ['artist-member-search', 'check_artist_id', 'check_member_id'].forEach(id => {
+            FormUtils.setValue(id, '');
+        });
+        ['selected-artist', 'duplicate-warning', 'duplicate-success'].forEach(id => {
+            FormUtils.toggleClass(id, 'hidden', true);
+        });
+        duplicateChecked = false;
+        isDuplicate = false;
+        window.checkDuplicateBtnState?.();
+    };
+
+    window.removeImage = (index) => {
+        ImageUtils.removeImageAt('images', index);
+        handleImagePreview();
+    };
+
+    window.useSelectedArtist = () => {
+        const artistId = FormUtils.getValue('check_artist_id');
+        const memberId = FormUtils.getValue('check_member_id');
+        
+        FormUtils.setValue('final_artist_id', artistId);
+        FormUtils.setValue('final_member_id', memberId);
+        
+        setTimeout(() => {
+            currentStep = 2;
+            showStep(currentStep);
+        }, 300);
+    };
+
+    window.showArtistSearch = () => {
+        FormUtils.toggleClass('step1-confirm-mode', 'hidden', true);
+        FormUtils.toggleClass('step1-search-mode', 'hidden', false);
+        document.getElementById('final-artist-member-search')?.focus();
+        updateNextButtonState();
+    };
+
+    window.cancelArtistSearch = () => {
+        FormUtils.toggleClass('step1-search-mode', 'hidden', true);
+        FormUtils.toggleClass('step1-confirm-mode', 'hidden', false);
+        updateNextButtonState();
+    };
 });
