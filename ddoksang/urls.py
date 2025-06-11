@@ -43,6 +43,7 @@ urlpatterns = [
     path('cafe/check-duplicate/', api_views.check_duplicate_cafe, name='check_duplicate_cafe'),
 
 
+
     
     # === 관리자 기능 ===
     path('admin/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),

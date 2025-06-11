@@ -35,13 +35,6 @@
       <label class="block text-sm font-medium mb-2">생카명</label>
       <input type="text" name="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
 
-
-      <!-- 중복 경고 메세지 삽입  -->
-      <div id="duplicate-warning" class="mt-3 p-3 bg-red-100 border border-red-300 text-red-700 rounded hidden">
-       유사한 이름의 생일카페가 이미 등록되어 있습니다. 중복 등록은 피해 주세요!
-      </div>
-
-
       <label class="block text-sm font-medium mb-2">이벤트 유형</label>
       <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
         <option value="bday">생일</option>
@@ -175,12 +168,13 @@
       <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </div>
 
-<!-- 네비게이션 버튼 -->
+    <!-- 네비게이션 버튼 -->
     <div id="navigationButtons" class="mt-8 flex justify-between">
       <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">이전</button>
       <button type="button" id="nextBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">다음</button>
     </div>
-
+  </form>
+</section>
 
 <!-- Styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

@@ -1,4 +1,4 @@
-<div id="step-1" class="step">
+<div id="step-0" class="step">
   <h2 class="text-lg font-semibold mb-4">이미 등록된 생카인지 확인해 주세요</h2>
 
   <!-- 아티스트/멤버명 검색 -->
@@ -7,8 +7,8 @@
     <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
     <ul id="artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
   </div>
-  <input type="hidden" name="artist_id" id="artist_id">
-  <input type="hidden" name="member_id" id="member_id">
+  <input type="hidden" name="check_artist_id" id="check_artist_id">
+  <input type="hidden" name="check_member_id" id="check_member_id">
   <div id="selected-artist" class="mb-4 p-2 border rounded bg-blue-50 hidden">
     <div class="flex items-center justify-between">
       <p class="font-medium text-blue-800" id="selected-artist-text"></p>
@@ -35,5 +35,10 @@
   <!-- 결과 -->
   <div id="duplicate-warning" class="mt-4 hidden text-sm text-red-600 font-medium">
     ⚠️ 해당 멤버로 유사한 생카가 이미 등록되어 있습니다.
+  </div>
+  
+  <!-- 성공 메시지 -->
+  <div id="duplicate-success" class="mt-4 hidden text-sm text-green-600 font-medium">
+    ✅ 중복되지 않습니다. 계속 진행하세요!
   </div>
 </div>
