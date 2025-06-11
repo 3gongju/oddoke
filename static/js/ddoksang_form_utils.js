@@ -39,8 +39,14 @@ window.DdoksangFormUtils = {
 
         const styles = this.getButtonStyles();
         button.disabled = !isEnabled;
-        button.className = button.className.replace(/bg-\w+-\d+|text-\w+-\d+|hover:bg-\w+-\d+|cursor-\w+/g, '');
-        button.className += ' ' + (isEnabled ? styles.active : styles.disabled);
+        
+        // 기존 스타일 클래스 제거
+        button.className = button.className.replace(/bg-gray-\d+|text-gray-\d+|hover:bg-gray-\d+|cursor-\w+/g, '').trim();
+        
+        // 새 스타일 클래스 추가
+        const baseClasses = button.className;
+        const newStyle = isEnabled ? styles.active : styles.disabled;
+        button.className = `${baseClasses} ${newStyle}`.trim();
     },
 
     // 폼 검증 관련
@@ -132,13 +138,13 @@ window.DdoksangFormUtils = {
     }
 };
 
-// 지도 관련 유틸리티 (기존 ddoksang_maps.js와 연동)
+// 지도 관련 유틸리티
 window.DdoksangMapUtils = {
     map: null,
     ps: null,
     marker: null,
 
-    // 지도 초기화 (기존 코드 재사용)
+    // 지도 초기화
     initMap(containerId = 'map', options = {}) {
         const container = document.getElementById(containerId);
         if (!container || typeof kakao === 'undefined') return null;

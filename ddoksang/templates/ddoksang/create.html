@@ -312,11 +312,25 @@
 <!-- 중복 확인용 날짜 선택기 초기화 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎯 추가 스크립트 초기화');
+  
   // 중복 확인 단계의 날짜 선택기 초기화
   if (typeof flatpickr !== 'undefined') {
     flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
     flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
+    console.log('📅 중복 확인용 날짜 선택기 초기화 완료');
   }
+  
+  // 디버깅용 전역 함수
+  window.debugDdoksang = function() {
+    console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
+    console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
+    console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
+    console.log('DdoksangImageUtils:', !!window.DdoksangImageUtils);
+    console.log('ddoksangApp:', window.ddoksangApp);
+    console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
+    console.log('=======================================');
+  };
 });
 </script>
 
