@@ -18,11 +18,13 @@ import json
 import logging
 from django.template.loader import render_to_string
 
+from ddoksang.utils.favorite_utils import get_user_favorites
+
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
 from ..forms import BdayCafeForm, BdayCafeImageForm
 from ..utils.map_utils import get_map_context, get_nearby_cafes  # 유틸리티 사용
 from artist.models import Artist, Member
-from .utils import get_user_favorites
+
 
 logger = logging.getLogger(__name__)
 
