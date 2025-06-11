@@ -1,5 +1,3 @@
-// ✅ static/js/favorite.js (최종 확정본 - 중복 제거 + 크기 유지 + 정확한 제거 + 중복 삽입 방지)
-
 class UnifiedFavoriteManager {
     constructor() {
         this.isSubmitting = false;
@@ -68,6 +66,18 @@ class UnifiedFavoriteManager {
                 } else {
                     this.removeCafeFromCarousel(cafeId);
                 }
+
+                // ✅ detail 페이지에서만 토스트 출력
+                const pageId = document.getElementById('page-identifier');
+                const isDetailPage = pageId && pageId.dataset.page === 'detail';
+
+                if (isDetailPage && typeof showToast === 'function') {
+                    const toastMessage = data.is_favorited ? '찜 완료!' : '찜 해제~';
+                    const toastType = data.is_favorited ? 'success' : 'warning';
+                    showToast(toastMessage, toastType);
+                }
+            
+                
             }
         } catch (err) {
             console.error('찜 오류:', err);
@@ -79,11 +89,45 @@ class UnifiedFavoriteManager {
 
     updateAllButtons(cafeId, isFavorited) {
         document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`).forEach(button => {
-            button.textContent = isFavorited ? '♥' : '♡';
-            button.style.color = isFavorited ? '#ef4444' : '#6b7280';
+            // ✅ 하트 아이콘 업데이트 (크기 유지)
+            this.updateButtonIcon(button, isFavorited);
+            
+            // ✅ 색상 업데이트
+            if (button.style) {
+                button.style.color = isFavorited ? '#ef4444' : '#6b7280';
+            }
+            
+            // ✅ 클래스 기반 스타일링도 지원
+            if (isFavorited) {
+                button.classList.add('favorited');
+                button.classList.remove('not-favorited');
+            } else {
+                button.classList.add('not-favorited');
+                button.classList.remove('favorited');
+            }
         });
     }
 
+    updateButtonIcon(button, isFavorited) {
+        // ✅ span 태그 안의 하트만 변경 (크기 유지)
+        const heartSpan = button.querySelector('span');
+        const heartIcon = button.querySelector('.favorite-icon');
+        
+        const newIcon = isFavorited ? '♥' : '♡';
+        
+        if (heartSpan) {
+            heartSpan.textContent = newIcon;
+        } else if (heartIcon) {
+            heartIcon.textContent = newIcon;
+        } else {
+            // ✅ span이 없으면 버튼 전체 텍스트 변경 (하지만 기존 클래스 유지)
+            const originalClasses = button.className;
+            button.textContent = newIcon;
+            button.className = originalClasses;
+        }
+    }
+
+    
     addCardHtmlToCarousel(html, cafeId) {
         const favoriteCarousel = document.getElementById('favoriteCarousel');
         if (!favoriteCarousel) return;
@@ -124,12 +168,36 @@ class UnifiedFavoriteManager {
     setButtonsLoading(buttons, isLoading) {
         buttons.forEach(button => {
             button.disabled = isLoading;
-            button.textContent = isLoading ? '⏳' : (this.favoriteStates.get(button.dataset.cafeId) ? '♥' : '♡');
+            
+            if (isLoading) {
+                // ✅ 로딩 상태: 원래 클래스 유지하면서 아이콘만 변경
+                const heartSpan = button.querySelector('span');
+                const heartIcon = button.querySelector('.favorite-icon');
+                
+                if (heartSpan) {
+                    heartSpan.textContent = '⏳';
+                } else if (heartIcon) {
+                    heartIcon.textContent = '⏳';
+                } else {
+                    const originalClasses = button.className;
+                    button.textContent = '⏳';
+                    button.className = originalClasses;
+                }
+            } else {
+                // ✅ 로딩 완료: 원래 상태로 복원
+                const isFavorited = this.favoriteStates.get(button.dataset.cafeId);
+                this.updateButtonIcon(button, isFavorited);
+            }
         });
     }
 
     getCSRFToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    }
+
+    // ✅ 외부에서 호출할 수 있는 상태 설정 함수
+    setFavoriteState(cafeId, isFavorited) {
+        this.favoriteStates.set(cafeId.toString(), isFavorited);
     }
 }
 

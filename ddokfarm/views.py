@@ -5,14 +5,25 @@ from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, F
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
+from django.forms import modelformset_factory
+from django.utils import timezone
+from django import forms
 from operator import attrgetter
 from itertools import chain
 from artist.models import Member, Artist
-from .models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost, FarmPostImage
-from .forms import FarmCommentForm
+from .models import (
+    FarmComment, 
+    FarmSellPost, 
+    FarmRentalPost, 
+    FarmSplitPost, 
+    FarmPostImage,
+    SplitPrice,
+    SplitApplication
+)
+from .forms import FarmCommentForm, SplitPriceForm
 from .utils import (
     get_post_model,
     get_post_form,
@@ -46,7 +57,10 @@ def index(request):
 
         sell_results = FarmSellPost.objects.filter(common_filter).distinct()
         rental_results = FarmRentalPost.objects.filter(common_filter).distinct()
-        split_results = FarmSplitPost.objects.filter(common_filter).distinct()
+
+        # ✅ SplitPost는 member_prices로 member를 찾아야 함
+        split_filter = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
+        split_results = FarmSplitPost.objects.filter(split_filter).distinct()
 
         posts = sorted(
             chain(sell_results, rental_results, split_results),
@@ -93,6 +107,12 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
+
+    # ✅ 조회수 증가 로직 (접근할 때마다 무조건 증가)
+    model.objects.filter(id=post_id).update(view_count=F('view_count') + 1)
+    # post 객체 새로고침하여 최신 view_count 반영
+    post.refresh_from_db(fields=['view_count'])
+
     comment_qs = get_post_comments(post)
     comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
     total_comment_count = comment_qs.count()
@@ -109,32 +129,98 @@ def post_detail(request, category, post_id):
         'comment_form': comment_form,
         'is_liked': is_liked,
         'artist': post.artist,
-        'members': post.members.all(),
         'app_name': 'ddokfarm',
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokfarm:comment_delete',
-        "is_owner": is_owner,  # ✅ 로그인한 사용자가 판매자인지 여부
+        'is_owner': is_owner,
     }
+
+    if category == 'split':
+        # 승인된 신청에서 멤버들을 가져와서 checked_out_members에 추가
+        approved_applications = SplitApplication.objects.filter(
+            post=post, 
+            status='approved'
+        ).prefetch_related('members')
+        
+        # 승인된 모든 멤버들을 checked_out_members에 추가
+        approved_member_ids = set()
+        for app in approved_applications:
+            for member in app.members.all():
+                approved_member_ids.add(member.id)
+        
+        # 기존 checked_out_members와 승인된 멤버들을 합침
+        manual_checked_out = post.checked_out_members.all()
+        all_checked_out_ids = set(manual_checked_out.values_list('id', flat=True)) | approved_member_ids
+        
+        # 전체 멤버 가격 정보
+        all_member_prices = post.member_prices.select_related('member').all()
+        
+        # 잔여 멤버 (가격이 있지만 마감되지 않은 멤버들)
+        participating_member_prices = all_member_prices.exclude(member_id__in=all_checked_out_ids)
+        participating_members = [sp.member for sp in participating_member_prices]
+        
+        # 마감된 멤버들 (수동 마감 + 승인된 신청)
+        checked_out_members = Member.objects.filter(id__in=all_checked_out_ids).distinct()
+
+        # 가격 범위 계산 (잔여 멤버들만)
+        prices = [sp.price for sp in participating_member_prices if sp.price]
+        if prices:
+            min_price = min(prices)
+            max_price = max(prices)
+        else:
+            min_price = max_price = 0
+
+        context.update({
+            'member_prices': participating_member_prices,  # 잔여 멤버의 가격만
+            'min_price': min_price,
+            'max_price': max_price,
+            'participating_members': participating_members,  # 잔여 멤버들
+            'checked_out_members': checked_out_members,  # 마감된 멤버들
+        })
+    else:
+        context['members'] = post.members.all()
 
     return render(request, 'ddokfarm/detail.html', context)
 
-# 게시글 작성
+# 게시글 작성하기
 @login_required
 def post_create(request):
     favorite_artists = Artist.objects.filter(followers=request.user)
+    raw_category = request.POST.get('category') or request.GET.get('category') or 'sell'
+    category = raw_category.split('?')[0]
+    form_class = get_post_form(category)
+
+    if not form_class:
+        raise Http404("존재하지 않는 카테고리입니다.")
+
+    default_artist_id = int(request.GET.get('artist')) if request.GET.get('artist') else (
+        favorite_artists[0].id if favorite_artists.exists() else None
+    )
+
+    selected_artist_id = default_artist_id
+    selected_member_ids = []
 
     if request.method == 'POST':
-        category = request.POST.get('category')
-        selected_artist_id = request.POST.get('artist')
-        selected_member_ids = list(map(int, request.POST.getlist('members')))
-        image_files = request.FILES.getlist('images')  # 여러 이미지 받기
+        selected_member_ids = list(set(map(int, request.POST.getlist('members'))))
 
-        form_class = get_post_form(category)
-        if not form_class:
-            raise Http404("존재하지 않는 카테고리입니다.")
-
+        selected_artist_id = request.POST.get('artist') or request.GET.get('artist') or default_artist_id
+        image_files = request.FILES.getlist('images')
         form = form_class(request.POST, request.FILES)
-        if form.is_valid():
+
+        if category == 'split' and selected_artist_id:
+            selected_members = Member.objects.filter(artist_name__id=selected_artist_id).distinct()
+            initial_data = [{'member': m.id} for m in selected_members]
+            SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=len(initial_data), can_delete=False)
+            formset = SplitPriceFormSet(
+                request.POST,
+                prefix='splitprice',
+                queryset=SplitPrice.objects.none(),
+                initial=initial_data
+            )
+        else:
+            formset = None
+
+        if form.is_valid() and (formset.is_valid() if formset else True):
             if not image_files:
                 form.add_error(None, "이미지는 최소 1장 이상 업로드해야 합니다.")
             else:
@@ -143,9 +229,27 @@ def post_create(request):
                 if selected_artist_id:
                     post.artist_id = selected_artist_id
                 post.save()
-                post.members.set(selected_member_ids)
-                form.save_m2m()
 
+                if category == 'split' and formset:
+                    for idx, sp_form in enumerate(formset.forms):
+                        member_field = sp_form.cleaned_data.get('member')
+                        price_field = sp_form.cleaned_data.get('price')
+                        if not member_field:
+                            member_id = sp_form.initial.get('member')
+                            if member_id:
+                                member_field = Member.objects.get(id=member_id)
+
+                        if member_field and member_field.id not in selected_member_ids and price_field:
+                            sp_instance = sp_form.save(commit=False)
+                            sp_instance.post = post
+                            sp_instance.member = member_field
+                            sp_instance.save()
+
+                    post.checked_out_members.set(selected_member_ids)
+                else:
+                    post.members.set(selected_member_ids)
+
+                form.save_m2m()
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
                     FarmPostImage.objects.create(
@@ -156,28 +260,28 @@ def post_create(request):
                     )
 
                 return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
-
     else:
-        raw_category = request.GET.get('category') or 'sell'
-        category = raw_category.split('?')[0]
-
-        selected_artist_id = None
-        selected_member_ids = []
-        form_class = get_post_form(category)
-        if not form_class:
-            raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
-
-    default_artist_id = int(selected_artist_id) if selected_artist_id else (
-        favorite_artists[0].id if favorite_artists.exists() else None
-    )
+        formset = None
 
     selected_members = []
-    if default_artist_id:
+    formset_with_names = None
+    if category == 'split' and default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
+        initial_data = [{'member': m.id} for m in selected_members]
+        SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=len(initial_data), can_delete=False)
+        formset = SplitPriceFormSet(
+            queryset=SplitPrice.objects.none(),
+            initial=initial_data,
+            prefix='splitprice'
+        )
+        member_names = [m.member_name for m in selected_members]
+        formset_with_names = zip(formset, member_names)
 
     context = {
         'form': form,
+        'formset': formset,
+        'formset_with_names': formset_with_names,
         'category': category,
         'sorted_artists': favorite_artists,
         'default_artist_id': default_artist_id,
@@ -190,8 +294,42 @@ def post_create(request):
         'mode': 'create',
         'categories': get_ddokfarm_categories(),
     }
-
     return render(request, 'ddokfarm/create.html', context)
+
+# 분철 폼셋
+@login_required
+def load_split_members_and_prices(request):
+    artist_id = request.GET.get('artist_id')
+    if not artist_id:
+        return JsonResponse({'error': '아티스트 ID가 필요합니다.'}, status=400)
+
+    members = Member.objects.filter(artist_name__id=artist_id).distinct()
+    initial_data = [{'member': m.id} for m in members]
+
+    SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=len(initial_data), can_delete=False)
+    formset = SplitPriceFormSet(
+        queryset=SplitPrice.objects.none(),
+        initial=initial_data,
+        prefix='splitprice'
+    )
+
+    member_names = [m.member_name for m in members]
+    formset_with_names = zip(formset, member_names)
+
+    formset_html = render_to_string(
+        'ddokfarm/components/post_form/_splitprice_formset.html',
+        {
+            'formset': formset,
+            'formset_with_names': formset_with_names,
+            'selected_member_ids': [],  # ✅ 빈 리스트 (아무도 체크되지 않은 상태)
+        },
+        request=request
+    )
+
+    return JsonResponse({
+        'members': [{'id': m.id, 'name': m.member_name} for m in members],
+        'formset_html': formset_html,
+    })
 
 # 아티스트 검색
 @login_required
@@ -236,21 +374,62 @@ def post_edit(request, category, post_id):
         return render(request, 'ddokfarm/error_message.html', context)
 
     if request.method == 'POST':
-        form = form_class(request.POST, request.FILES, instance=post)
-        image_files = request.FILES.getlist('images')  # 새 이미지 받기
-        removed_ids = request.POST.get('removed_image_ids', '').split(',')
-        removed_ids = [int(id) for id in removed_ids if id.isdigit()]  # 삭제할 ID만 정수로 처리
+        # ✅ artist 수정 불가: 기존 artist로 강제 세팅
+        post_data = request.POST.copy()
+        post_data['artist'] = post.artist.id
 
-        if form.is_valid():
+        form = form_class(post_data, request.FILES, instance=post)
+        image_files = request.FILES.getlist('images')
+        removed_ids = post_data.get('removed_image_ids', '').split(',')
+        removed_ids = [int(id) for id in removed_ids if id.isdigit()]
+        selected_member_ids = list(map(int, post_data.getlist('members')))
+
+        if category == 'split':
+            selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+            splitprice_dict = {sp.member_id: sp for sp in post.member_prices.all()}
+
+            formset_with_names = []
+            for member in selected_members:
+                sp_instance = splitprice_dict.get(member.id)
+                sp_form = SplitPriceForm(
+                    post_data,
+                    prefix=f'splitprice-{member.id}',
+                    instance=sp_instance
+                )
+                sp_form.fields['member'].initial = member.id
+
+                # ✅ 체크된 멤버는 price.required=False
+                if str(member.id) in post_data.getlist('members'):
+                    sp_form.fields['price'].required = False
+                    sp_form.fields['price'].widget.attrs.pop('required', None)
+
+                formset_with_names.append((sp_form, member.member_name))
+
+            # ✅ dummy formset for management_form
+            SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=0, can_delete=False)
+            dummy_formset = SplitPriceFormSet(queryset=SplitPrice.objects.none(), prefix='splitprice')
+        else:
+            formset_with_names = None
+            dummy_formset = None
+
+        formset_valid = all(form.is_valid() for form, _ in formset_with_names) if formset_with_names else True
+
+        if form.is_valid() and formset_valid:
             post = form.save(commit=False)
-            artist_id = request.POST.get('artist')
-            member_ids = request.POST.getlist('members')
-
-            if artist_id:
-                post.artist_id = artist_id
-
             post.save()
-            post.members.set(member_ids)
+
+            if category == 'split' and formset_with_names:
+                post.member_prices.all().delete()
+                for sp_form, _ in formset_with_names:
+                    member_id = sp_form.cleaned_data.get('member').id
+                    if member_id not in selected_member_ids:
+                        if sp_form.cleaned_data.get('price'):
+                            sp_instance = sp_form.save(commit=False)
+                            sp_instance.post = post
+                            sp_instance.save()
+                post.checked_out_members.set(selected_member_ids)
+            else:
+                post.members.set(selected_member_ids)
 
             if removed_ids:
                 post.images.filter(id__in=removed_ids).delete()
@@ -265,21 +444,43 @@ def post_edit(request, category, post_id):
                         is_representative=(idx == 0)
                     )
 
+            form.save_m2m()
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
     else:
         form = form_class(instance=post)
 
-    existing_images = []
-    for img in post.images.all():
-        existing_images.append({
-            "id": img.id,
-            "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"
-        })
+        if category == 'split':
+            selected_members = Member.objects.filter(artist_name=post.artist).distinct()
+            splitprice_dict = {sp.member_id: sp for sp in post.member_prices.all()}
 
+            formset_with_names = []
+            for member in selected_members:
+                sp_instance = splitprice_dict.get(member.id)
+                sp_form = SplitPriceForm(
+                    prefix=f'splitprice-{member.id}',
+                    instance=sp_instance
+                )
+                sp_form.fields['member'].initial = member.id
+                formset_with_names.append((sp_form, member.member_name))
+
+            # ✅ dummy formset for management_form
+            SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=0, can_delete=False)
+            dummy_formset = SplitPriceFormSet(queryset=SplitPrice.objects.none(), prefix='splitprice')
+        else:
+            formset_with_names = None
+            dummy_formset = None
+
+    existing_images = [
+        {"id": img.id, "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"}
+        for img in post.images.all()
+    ]
     sorted_artists = Artist.objects.order_by('display_name')
     selected_members = Member.objects.filter(artist_name=post.artist).distinct()
-    selected_member_ids = list(post.members.values_list('id', flat=True))
+    selected_member_ids = (
+        list(post.checked_out_members.values_list('id', flat=True))
+        if category == 'split' else list(post.members.values_list('id', flat=True))
+    )
     selected_artist_id = post.artist.id if post.artist else None
 
     context = {
@@ -290,6 +491,8 @@ def post_edit(request, category, post_id):
         'selected_members': selected_members,
         'selected_member_ids': selected_member_ids,
         'selected_artist_id': selected_artist_id,
+        'formset_with_names': formset_with_names,
+        'formset': dummy_formset,
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         'mode': 'edit',
@@ -359,7 +562,7 @@ def comment_create(request, category, post_id):
         # ✅ AJAX 요청일 경우, HTML 조각 반환
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             html = render_to_string(
-                "components/post_detail/_comment_item.html",
+                "components/post_detail/_comment_list.html",
                 {
                     "comment": comment,
                     "is_reply": bool(parent_id),
@@ -465,3 +668,148 @@ def get_members_by_artist(request, artist_id):
     ]
     
     return JsonResponse({"members": member_data})
+
+# 분철 참여 신청
+@login_required
+@require_POST
+def split_application(request, category, post_id):
+    if category != 'split':
+        return JsonResponse({'success': False, 'message': '분철 게시글이 아닙니다.'}, status=400)
+    
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    selected_member_ids = request.POST.getlist('selected_members')
+    
+    if not selected_member_ids:
+        return JsonResponse({'success': False, 'message': '멤버를 선택해주세요.'}, status=400)
+    
+    # 이미 마감된 멤버인지 확인
+    selected_members = Member.objects.filter(id__in=selected_member_ids)
+    
+    # 승인된 신청에서 마감된 멤버들 확인
+    approved_applications = SplitApplication.objects.filter(
+        post=post, 
+        status='approved'
+    ).prefetch_related('members')
+    
+    approved_member_ids = set()
+    for app in approved_applications:
+        for member in app.members.all():
+            approved_member_ids.add(member.id)
+    
+    # 수동 마감 + 승인된 신청 멤버들
+    manual_checked_out = post.checked_out_members.values_list('id', flat=True)
+    all_checked_out_ids = set(manual_checked_out) | approved_member_ids
+    
+    # 선택한 멤버 중 마감된 멤버가 있는지 확인
+    conflicting_members = selected_members.filter(id__in=all_checked_out_ids)
+    if conflicting_members.exists():
+        return JsonResponse({
+            'success': False, 
+            'message': f'{", ".join(conflicting_members.values_list("member_name", flat=True))} 멤버는 이미 마감되었습니다.'
+        })
+    
+    # 항상 새로운 신청 생성 (기존 신청 확인 로직 제거)
+    application = SplitApplication.objects.create(
+        post=post, 
+        user=request.user,
+        status='pending'
+    )
+    application.members.set(selected_members)
+    
+    return JsonResponse({
+        'success': True, 
+        'message': f'{len(selected_member_ids)}명의 멤버 신청이 완료되었습니다. 총대의 승인을 기다려주세요.'
+    })
+
+# ddokfarm/views.py - manage_split_applications 함수 개선
+# ddokfarm/views.py - manage_split_applications 함수 개선 (채팅 섹션만)
+
+@login_required
+def manage_split_applications(request, category, post_id):
+    if category != 'split':
+        raise Http404("분철 게시글이 아닙니다.")
+    
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    
+    # 작성자만 접근 가능
+    if request.user != post.user:
+        context = {
+            'title': '접근 권한 없음',
+            'message': '참여자 관리 권한이 없습니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
+    
+    # 최신 신청순으로 정렬 (기존과 동일)
+    applications = SplitApplication.objects.filter(post=post).prefetch_related('members', 'user').order_by('-created_at')
+    
+    # 상태별 개수 계산 (기존과 동일)
+    pending_count = applications.filter(status='pending').count()
+    approved_count = applications.filter(status='approved').count()
+    rejected_count = applications.filter(status='rejected').count()
+    
+    # ✅ 새로 추가: 승인된 참여자들을 사용자별로 그룹화 (채팅용)
+    approved_users_for_chat = {}
+    for app in applications.filter(status='approved'):
+        user_id = app.user.id
+        if user_id not in approved_users_for_chat:
+            approved_users_for_chat[user_id] = {
+                'user': app.user,
+                'approved_members': set(),
+                'latest_approved_date': app.created_at,
+            }
+        
+        # 승인된 멤버들 추가
+        member_names = app.members.values_list('member_name', flat=True)
+        approved_users_for_chat[user_id]['approved_members'].update(member_names)
+        
+        # 가장 최근 승인일 업데이트
+        if app.created_at > approved_users_for_chat[user_id]['latest_approved_date']:
+            approved_users_for_chat[user_id]['latest_approved_date'] = app.created_at
+    
+    # 최신 승인일 순으로 정렬
+    approved_users_list = sorted(
+        approved_users_for_chat.values(),
+        key=lambda x: x['latest_approved_date'],
+        reverse=True
+    )
+    
+    context = {
+        'post': post,
+        'category': category,
+        'applications': applications,  # 기존 전체 히스토리
+        'approved_users_for_chat': approved_users_list,  # ✅ 새로 추가: 채팅용 그룹화된 사용자
+        'pending_count': pending_count,
+        'approved_count': len(approved_users_list),  # ✅ 참여자 수 기준으로 변경
+        'rejected_count': rejected_count,
+    }
+    
+    return render(request, 'ddokfarm/manage_applications.html', context)
+
+@login_required
+@require_POST
+def update_application_status(request, category, post_id):
+    if category != 'split':
+        return JsonResponse({'success': False, 'message': '분철 게시글이 아닙니다.'}, status=400)
+    
+    post = get_object_or_404(FarmSplitPost, id=post_id)
+    
+    if request.user != post.user:
+        return JsonResponse({'success': False, 'message': '권한이 없습니다.'}, status=403)
+    
+    application_id = request.POST.get('application_id')
+    status = request.POST.get('status')
+    
+    if status not in ['approved', 'rejected']:
+        return JsonResponse({'success': False, 'message': '유효하지 않은 상태입니다.'}, status=400)
+    
+    application = get_object_or_404(SplitApplication, id=application_id, post=post)
+    
+    # 상태만 변경 (checked_out_members는 detail 뷰에서 자동으로 처리)
+    application.status = status
+    application.save()
+    
+    return JsonResponse({
+        'success': True, 
+        'message': f'신청이 {"승인" if status == "approved" else "반려"}되었습니다.'
+    })

@@ -37,6 +37,14 @@ urlpatterns = [
     # 아티스트 검색
     path('ajax/search_artists/', views.search_artists, name='search_artists'),
 
+    # 분철 폼셋
+    path('ajax/load_split_members_and_prices/', views.load_split_members_and_prices, name='load_split_members_and_prices'),
+
+    # 분철 참여 신청
+    path('<str:category>/<int:post_id>/split-application/', views.split_application, name='split_application'),
+    path('<str:category>/<int:post_id>/manage-applications/', views.manage_split_applications, name='manage_split_applications'),
+    path('<str:category>/<int:post_id>/update-application-status/', views.update_application_status, name='update_application_status'),
+
     # 판매
     path('sell/', views.sell_index, name='sell_index'),
 
@@ -45,18 +53,4 @@ urlpatterns = [
 
     # 분철
     path('split/', views.split_index, name='split_index'),
-
-    # path('', views.index, name='post_index'),
-    # path('create/', views.create, name='create'),
-    # path('<int:post_id>/', views.detail, name='detail'),
-    # path('<int:post_id>/update/', views.update, name='update'),
-    # path('<int:post_id>/delete/', views.delete, name='delete'),
-    # path('<int:post_id>/mark_as_sold/', views.mark_as_sold, name='mark_as_sold'),
-    
-    # # 찜하기 URL
-    # path('<int:post_id>/like/', views.toggle_like, name='toggle_like'),
-
-    # # 댓글 관련 URL
-    # path('<int:post_id>/comments/create/', views.comment_create, name='comment_create'),
-    # path('<int:post_id>/comments/<int:id>/delete/', views.comment_delete, name='comment_delete'),
 ]

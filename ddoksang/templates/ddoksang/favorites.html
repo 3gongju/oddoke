@@ -5,74 +5,67 @@
 {% block title %}내 찜 목록 - 덕생{% endblock %}
 
 {% block body %}
-<section class="max-w-7xl mx-auto px-4 py-10" id="favoritesSection">
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">💕 내가 찜한 덕의 생카</h2>
-      <p class="text-gray-600 text-sm sm:text-base">찜한 아티스트/멤버들의 생일카페를 모아봤어요!</p>
-    </div>
-    <a href="{% url 'ddoksang:home' %}" class="text-pink-600 hover:underline text-sm sm:text-base">홈으로 &rarr;</a>
-  </div>
 
+<!-- 찜한 생카 상단 배너 (모노톤 & 채워진 하트) -->
+<section class="w-full bg-white py-12 sm:py-20 border-b border-gray-100 mb-12">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+
+    <!-- 하트 -->
+    <div class="w-12 h-12 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
+      <svg class="w-7 h-7 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
+                2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09 
+                C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5 
+                c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </div>
+
+
+    <!-- 타이틀 -->
+    <h1 class="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight mb-3">내 찜한 생일카페</h1>
+
+    <!-- 설명 -->
+    <p class="text-gray-500 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+      내가 찜한 생일카페들을 한눈에 모아볼 수 있어요.<br class="hidden sm:block">
+      다시 방문하거나 정리하고 싶은 카페를 확인해보세요.
+    </p>
+  </div>
+</section>
+
+
+
+<!-- 찜한 생일카페 목록 --> 
+<section class="max-w-6xl mx-auto px-4 sm:px-6 pt-8">   
   {% if favorites %}
-    <div id="favoriteCarousel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-      {% for favorite in favorites %}
-        <div class="flex-shrink-0" data-cafe-id="{{ favorite.cafe.id }}">
-          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite.cafe show_favorite_btn=True user_favorites=user_favorites %}
-        </div>
-      {% endfor %}
+    <!-- 총 개수 표시 -->
+    <div class="mb-8 text-align-left">       
+      <p class="text-sm text-gray-500 mb-2">총 {{ favorites.count }}개의 생일카페를 찜했어요</p>     
     </div>
     
-    <!-- 총 개수 표시 -->
-    <div class="mt-8 text-center">
-      <p class="text-sm text-gray-500">총 {{ favorites.count }}개의 생일카페를 찜했어요</p>
+    <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">       
+      {% for favorite in favorites %}         
+        <div class="flex-shrink-0" data-cafe-id="{{ favorite.cafe.id }}">           
+          {% include 'ddoksang/components/_cafe_card.html' with cafe=favorite.cafe show_favorite_btn=False %}         
+        </div>       
+      {% endfor %}     
+    </div>      
+    
+    <div class="mt-24 text-center">    
+      <a href="{% url 'ddoksang:home' %}" class="inline-block mt-2 text-blue-600 hover:underline text-sm">         
+        ← 덕생 홈으로 돌아가기       
+      </a>    
     </div>
+
   {% else %}
-    <div class="text-center py-16">
-      <div class="text-6xl mb-4">💔</div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
-      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
-      <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
+    <div class="text-center py-20">
+      <div class="text-5xl mb-4">♡</div>
+      <h3 class="text-base font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
+      <p class="text-gray-600 mb-6 text-sm">마음에 드는 생카를 찜해보세요!</p>
+      <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors text-sm">
         생일카페 둘러보기
       </a>
     </div>
   {% endif %}
 </section>
 
-<!-- CSRF 토큰 -->
-{% csrf_token %}
-
-<!-- 통합 찜하기 시스템 로드 -->
-
-<!-- 페이지별 초기화 -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 찜하기 상태 변경 콜백 등록
-    if (window.favoriteManager) {
-        window.favoriteManager.onFavoriteChange((cafeId, isFavorited) => {
-            console.log(`카페 ${cafeId} 찜하기 상태 변경: ${isFavorited}`);
-            
-            // 찜 해제 시 페이지에서 해당 카드 제거
-            if (!isFavorited) {
-                const card = document.querySelector(`[data-cafe-id="${cafeId}"]`);
-                if (card) {
-                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.8)';
-                    
-                    setTimeout(() => {
-                        card.remove();
-                        
-                        // 카드가 모두 제거되면 빈 상태 표시
-                        const carousel = document.getElementById('favoriteCarousel');
-                        if (carousel && carousel.children.length === 0) {
-                            window.location.reload(); // 빈 상태 UI로 새로고침
-                        }
-                    }, 300);
-                }
-            }
-        });
-    }
-});
-</script>
 {% endblock %}

@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'ddoksang',
     'ddokchat',
     'channels',
-
+    'notifications',
     'faq',
 ]
 
@@ -205,6 +205,7 @@ CACHES = {
     }
 }
 
+
 # 더치트 API 설정
 DUTCHEAT_API_KEY = os.getenv('DUTCHEAT_API_KEY', 'test_api_key')
 DUTCHEAT_API_URL = os.getenv('DUTCHEAT_API_URL', 'https://api.dutcheat.com')
@@ -213,6 +214,55 @@ DUTCHEAT_API_URL = os.getenv('DUTCHEAT_API_URL', 'https://api.dutcheat.com')
 USE_MOCK_BANK_SERVICE = True  # 실제 운영시에는 False로 변경
 
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'ddoksang': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# logs 디렉토리 생성
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
+
+
 # 나중에 실제 API 사용시 설정
 # REAL_BANK_API_KEY = 'your_api_key_here'
 # USE_MOCK_BANK_SERVICE = False
+

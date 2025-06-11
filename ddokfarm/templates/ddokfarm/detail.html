@@ -7,6 +7,7 @@
   <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">
 
     {% include 'components/post_detail/_artist_tags.html' %}
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <!-- 이미지 (2/3) -->
       <div class="md:col-span-2">
@@ -16,13 +17,17 @@
       <!-- 콘텐츠 (1/3) -->
       <div class="h-full">
         {% include 'components/post_detail/_content.html' with is_ddokfarm=True is_owner=is_owner extra_partial='ddokfarm/components/post_detail/_extra_info.html' buttons_partial='ddokfarm/components/post_detail/_buttons.html' %}
-
       </div>
     </div>
+
     {% include 'components/post_detail/_like_comment_info.html' %}
 
     <div class="comment-section mt-8">
-      {% include "components/post_detail/_comment_list.html" %}
+      <div class="comment-list space-y-4">
+        {% for comment in comments %}
+          {% include "components/post_detail/_comment_list.html" with comment=comment is_reply=False %}
+        {% endfor %}
+      </div>
       {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=None %}
     </div>
 
@@ -30,14 +35,9 @@
 </div>
 
 <script>
-  // 대댓글 폼 토글
-  function showReplyForm(commentId) {
-    const form = document.getElementById(`reply-form-${commentId}`);
-    if (form) {
-      form.classList.toggle('hidden');
-    }
-  }
-
+  // ✅ CSRF 토큰을 전역 변수로 설정
+  window.csrfToken = "{{ csrf_token }}";
+  
   document.addEventListener('DOMContentLoaded', function () {
     // 좋아요 기능
     const likeButtons = [
@@ -85,17 +85,19 @@
     });
 
     // 이미지 캐러셀 초기화 (Swiper)
-    new Swiper('.swiper-container', {
-      loop: true,
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-      },
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-    });
+    if (typeof Swiper !== 'undefined') {
+      new Swiper('.swiper-container', {
+        loop: true,
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+      });
+    }
   });
 </script>
 

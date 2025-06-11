@@ -8,16 +8,16 @@
   </div>
 
   {% if my_favorite_cafes %}
-    <div class="relative px-4">
+    <!-- 상단 패딩 추가로 호버 시 잘림 방지, 하단 여백도 추가 -->
+    <div class="relative px-4 pt-2 pb-12">
       <div class="swiper favorites-swiper">
         <div class="swiper-wrapper" id="favoriteCarousel">
           {% for cafe in my_favorite_cafes %}
             <div class="swiper-slide" data-cafe-id="{{ cafe.id }}">
-              {% include 'ddoksang/components/_cafe_card.html' with cafe=cafe show_favorite_btn=True user_favorites=user_favorites show_status_badge=True %}
+              {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='favorite' user_favorites=user_favorites show_status_badge=True %}
             </div>
           {% endfor %}
         </div>
-        <div class="swiper-pagination favorites-pagination"></div>
       </div>
     </div>
   {% else %}
@@ -48,11 +48,6 @@ function initFavoritesSwiper() {
     const swiper = new Swiper('.favorites-swiper', {
         slidesPerView: 'auto',
         spaceBetween: 20,
-        pagination: {
-            el: '.favorites-pagination',
-            clickable: true,
-            dynamicBullets: true,
-        },
         loop: false,
         mousewheel: { forceToAxis: true },
         keyboard: { enabled: true },
@@ -60,10 +55,26 @@ function initFavoritesSwiper() {
         touchAngle: 45,
         grabCursor: true,
         lazy: { loadPrevNext: true },
+        slidesOffsetBefore: 0,
+        slidesOffsetAfter: 20,
+        centeredSlides: false,
+        freeMode: false,
         breakpoints: {
-            640: { slidesPerView: 'auto', spaceBetween: 20 },
-            1024: { slidesPerView: 'auto', spaceBetween: 24 },
-            1280: { slidesPerView: 'auto', spaceBetween: 24 },
+            640: { 
+                slidesPerView: 'auto', 
+                spaceBetween: 20,
+                slidesOffsetAfter: 20
+            },
+            1024: { 
+                slidesPerView: 'auto', 
+                spaceBetween: 24,
+                slidesOffsetAfter: 24
+            },
+            1280: { 
+                slidesPerView: 'auto', 
+                spaceBetween: 24,
+                slidesOffsetAfter: 24
+            },
         },
         on: {
             init: function() {
@@ -85,46 +96,52 @@ function updateFavoritesSwiper() {
 
 <style>
 .favorites-swiper {
-    padding: 0 0 50px 0;
+  /* 호버 효과가 잘리지 않도록 상단 여백 추가 */
+  padding-top: 8px;
+  margin-top: -8px;
+  /* 우측 여백 추가로 마지막 카드 잘림 방지 */
+  padding-right: 20px;
+  margin-right: -20px;
 }
+
 .favorites-swiper .swiper-slide {
-    width: 260px !important;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
+  width: 260px !important;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
+
 .favorites-swiper .swiper-slide:hover {
-    transform: translateY(-4px);
+  transform: translateY(-4px);
 }
-.favorites-pagination {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 20px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+
+/* 스와이프 안내 텍스트 */
+.favorites-swiper::after {
+  content: '← 좌우로 스와이프하세요 →';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #9ca3af;
+  z-index: 20;
+  white-space: nowrap;
+  text-align: center;
 }
-.favorites-pagination .swiper-pagination-bullet {
-    width: 8px;
-    height: 8px;
-    background: #d1d5db;
-    opacity: 1;
-    transition: all 0.2s ease;
+
+@media (min-width: 768px) {
+  .favorites-swiper::after {
+    content: '← 드래그하거나 스와이프하여 더 많은 카페를 확인하세요 →';
+    font-size: 13px;
+    color: #6b7280;
+    bottom: -35px;
+  }
 }
-.favorites-pagination .swiper-pagination-bullet-active {
-    background: #ec4899;
-    transform: scale(1.2);
-}
-@media (max-width: 640px) {
-    .favorites-swiper::before {
-        content: '← 좌우로 스와이프하세요 →';
-        position: absolute;
-        top: -30px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 12px;
-        color: #9ca3af;
-        z-index: 10;
-    }
+
+@media (max-width: 767px) {
+  .favorites-swiper::after {
+    content: '← 스와이프 →';
+    font-size: 11px;
+    bottom: -25px;
+  }
 }
 </style>

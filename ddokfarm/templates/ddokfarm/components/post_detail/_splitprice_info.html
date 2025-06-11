@@ -1,0 +1,243 @@
+{# 분철 멤버별 가격 #}
+{% load humanize %}
+<div class="border-t p-2 text-sm">
+  <h2 class="font-bold mb-3 text-gray-800">📊 분철 현황</h2>
+
+  <!-- 잔여 멤버 -->
+  {% if participating_members %}
+    <div class="mb-3">
+      <div class="flex items-center mb-2">
+        <span class="inline-flex items-center text-sm font-semibold text-green-700">
+          <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+          잔여
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        {% for member in participating_members %}
+          <span class="inline-block bg-green-50 border border-green-200 text-green-800 rounded-full px-3 py-1 text-xs font-medium">
+            {{ member.member_name }}
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- 마감 멤버 -->
+  <div class="mb-3">
+    <div class="flex items-center mb-2">
+      <span class="inline-flex items-center text-sm font-semibold text-gray-600">
+        <span class="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
+        마감
+      </span>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {% if checked_out_members %}
+        {% for member in checked_out_members %}
+          <span class="inline-block bg-gray-50 border border-gray-200 text-gray-700 rounded-full px-3 py-1 text-xs font-medium">
+            {{ member.member_name }}
+          </span>
+        {% endfor %}
+      {% else %}
+        <span class="text-gray-500 text-xs">없음</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 참여 신청하기 버튼 또는 마감 메시지 -->
+  <div class="mt-3 pt-2 border-t border-gray-200">
+    {% if participating_members %}
+      <button id="splitPriceBtn" 
+              class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200 text-sm">
+        💰 참여 신청하기
+      </button>
+    {% else %}
+      <div class="w-full bg-gray-100 text-gray-500 font-medium py-2 px-3 rounded-lg text-center text-sm">
+        🔒 모든 멤버가 마감되었습니다
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- 참여 신청 모달 (잔여 멤버가 있을 때만) -->
+{% if participating_members %}
+  <div id="splitPriceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+      <!-- 모달 헤더 -->
+      <div class="bg-blue-600 text-white px-6 py-4 rounded-t-xl flex justify-between items-center flex-shrink-0">
+        <h3 class="text-lg font-semibold">💰 분철 참여 신청</h3>
+        <button id="closePriceModal" class="text-white hover:text-gray-300 text-xl">×</button>
+      </div>
+
+      <!-- 모달 내용 (스크롤 가능) -->
+      <div class="flex-1 overflow-y-auto">
+        <div class="p-6">
+          {% if member_prices %}
+            <div class="mb-4">
+              <p class="text-sm text-gray-600 mb-3">원하는 멤버를 클릭해주세요 (복수 선택 가능)</p>
+            </div>
+            
+            <form id="splitApplicationForm">
+              {% csrf_token %}
+              <div class="overflow-hidden rounded-lg border border-gray-200">
+                <table class="w-full">
+                  <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">멤버</th>
+                      <th class="px-4 py-3 text-right text-sm font-medium text-gray-700">가격</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    {% for sp in member_prices %}
+                      <tr class="member-row cursor-pointer transition-colors duration-200 hover:bg-blue-50" 
+                          data-member-id="{{ sp.member.id }}" 
+                          data-member-name="{{ sp.member.member_name }}"
+                          data-price="{{ sp.price }}">
+                        <td class="px-4 py-3 text-sm text-gray-800 font-medium">{{ sp.member.member_name }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800 text-right font-medium">{{ sp.price|intcomma }}원</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </form>
+          {% else %}
+            <div class="text-center py-8">
+              <p class="text-gray-500">참여 가능한 멤버가 없습니다.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 모달 푸터 -->
+      <div class="bg-gray-50 px-6 py-4 rounded-b-xl flex-shrink-0">
+        {% if member_prices %}
+          <button id="submitApplicationBtn" 
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled>
+            신청하기
+          </button>
+        {% else %}
+          <button id="closePriceModalBtn" 
+                  class="w-full bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
+            닫기
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript (잔여 멤버가 있을 때만) -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const splitPriceBtn = document.getElementById('splitPriceBtn');
+    const splitPriceModal = document.getElementById('splitPriceModal');
+    const closePriceModal = document.getElementById('closePriceModal');
+    const submitApplicationBtn = document.getElementById('submitApplicationBtn');
+    
+    let selectedMembers = new Set(); // 선택된 멤버 ID들
+
+    // 모달 열기
+    splitPriceBtn?.addEventListener('click', function() {
+      splitPriceModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+
+    // 모달 닫기 함수
+    function closeModal() {
+      splitPriceModal.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+      // 선택 상태 초기화
+      selectedMembers.clear();
+      document.querySelectorAll('.member-row').forEach(row => {
+        row.classList.remove('bg-blue-100', 'border-blue-300');
+        row.classList.add('hover:bg-blue-50');
+      });
+      updateSubmitButton();
+    }
+
+    // 모달 닫기 이벤트
+    closePriceModal?.addEventListener('click', closeModal);
+
+    // 모달 배경 클릭 시 닫기
+    splitPriceModal?.addEventListener('click', function(e) {
+      if (e.target === splitPriceModal) {
+        closeModal();
+      }
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !splitPriceModal.classList.contains('hidden')) {
+        closeModal();
+      }
+    });
+
+    // 행 클릭 이벤트
+    document.querySelectorAll('.member-row').forEach(row => {
+      row.addEventListener('click', function() {
+        const memberId = this.dataset.memberId;
+        
+        if (selectedMembers.has(memberId)) {
+          // 선택 해제
+          selectedMembers.delete(memberId);
+          this.classList.remove('bg-blue-100', 'border-blue-300');
+          this.classList.add('hover:bg-blue-50');
+        } else {
+          // 선택
+          selectedMembers.add(memberId);
+          this.classList.add('bg-blue-100', 'border-blue-300');
+          this.classList.remove('hover:bg-blue-50');
+        }
+        
+        updateSubmitButton();
+      });
+    });
+
+    // 신청하기 버튼 활성화/비활성화
+    function updateSubmitButton() {
+      if (submitApplicationBtn) {
+        submitApplicationBtn.disabled = selectedMembers.size === 0;
+      }
+    }
+
+    // 신청하기 버튼 클릭
+    submitApplicationBtn?.addEventListener('click', function() {
+      if (selectedMembers.size === 0) {
+        alert('멤버를 선택해주세요.');
+        return;
+      }
+
+      // 서버로 신청 데이터 전송
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+      selectedMembers.forEach(id => formData.append('selected_members', id));
+
+      fetch(`{% url 'ddokfarm:split_application' category=category post_id=post.id %}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('신청이 완료되었습니다!');
+          closeModal();
+          // 페이지 새로고침하여 업데이트된 상태 반영
+          location.reload();
+        } else {
+          alert(data.message || '신청 중 오류가 발생했습니다.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('신청 중 오류가 발생했습니다.');
+      });
+    });
+
+    // 초기 버튼 상태 설정
+    updateSubmitButton();
+  });
+  </script>
+{% endif %}

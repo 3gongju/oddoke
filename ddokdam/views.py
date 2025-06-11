@@ -5,7 +5,7 @@ from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from django.db.models import Q
+from django.db.models import Q, F
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from operator import attrgetter
@@ -87,6 +87,12 @@ def post_detail(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
+
+    # ✅ 조회수 증가 로직 (접근할 때마다 무조건 증가)
+    model.objects.filter(id=post_id).update(view_count=F('view_count') + 1)
+    # post 객체 새로고침하여 최신 view_count 반영
+    post.refresh_from_db(fields=['view_count'])
+
     comment_qs = get_post_comments(post)
     comments = comment_qs.filter(parent__isnull=True).select_related('user').prefetch_related('replies__user')
     total_comment_count = comment_qs.count()
@@ -349,7 +355,7 @@ def comment_create(request, category, post_id):
 
         if request.headers.get("x-requested-with") == "XMLHttpRequest":
             html = render_to_string(
-                "components/post_detail/_comment_item.html",  # 동일 템플릿 사용
+                "components/post_detail/_comment_list.html",  # 동일 템플릿 사용
                 {
                     "comment": comment,
                     "is_reply": bool(parent_id),

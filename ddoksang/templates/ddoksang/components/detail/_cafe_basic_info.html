@@ -1,0 +1,106 @@
+<!-- ddoksang/templates/ddoksang/components/detail/_cafe_basic_info.html -->
+<!-- 카페 기본 정보: 주소, 운영기간, 특전, 설명, 출처 -->
+
+<!-- 기본 정보 카드 -->
+<div class="bg-white rounded-2xl shadow-sm border p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+    <span class="mr-2">📍</span> 카페 정보
+  </h2>
+  
+  <div class="space-y-4">
+    <!-- 주소 -->
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">주소</p>
+        {% if cafe.place_name %}
+           <p class="text-sm text-gray-900 font-semibold">{{ cafe.place_name }}</p>
+        {% endif %}
+        <p class="text-gray-600">{{ cafe.address }}</p>
+        {% if cafe.road_address %}
+          <p class="text-sm text-gray-500">(도로명) {{ cafe.road_address }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 운영 기간 -->
+    <div class="flex items-start gap-3">
+      <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">운영 기간</p>
+        <p class="text-gray-600">{{ cafe.start_date|date:"Y년 m월 d일" }} - {{ cafe.end_date|date:"Y년 m월 d일" }}</p>
+        
+        <!-- 남은 일수 계산 (모델 프로퍼티 사용) -->
+        {% if cafe.days_until_start > 0 %}
+          <p class="text-sm text-blue-600 font-medium">{{ cafe.days_until_start }}일 후 시작</p>
+        {% elif cafe.days_remaining > 0 %}
+          <p class="text-sm text-green-600 font-medium">{{ cafe.days_remaining }}일 남음</p>
+        {% elif cafe.days_remaining == 0 %}
+          <p class="text-sm text-yellow-500 font-medium">오늘 마지막!</p>
+        {% else %}
+          <p class="text-sm text-gray-500">종료됨</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 특전 정보 -->
+{% if cafe.special_benefits %}
+<div class="bg-white rounded-2xl shadow-sm border p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+    <span class="mr-2">🎁</span> 특전 정보
+  </h2>
+  <div class="flex flex-wrap gap-2">
+    {% for benefit in cafe.special_benefits_list %}
+      <span class="px-3 py-1 bg-black text-white rounded-full text-sm">
+        {{ benefit }}
+      </span>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- 이벤트 설명 -->
+{% if cafe.event_description %}
+<div class="bg-white rounded-2xl shadow-sm border p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+    <span class="mr-2">📝</span> 이벤트 설명
+  </h2>
+  <div class="prose prose-sm max-w-none">
+    <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ cafe.event_description }}</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- 출처 정보 -->
+{% if cafe.x_source %}
+<div class="bg-white rounded-2xl shadow-sm border p-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+    <span class="mr-2">🔗</span> 출처
+  </h2>
+  <div class="space-y-3">
+    <a href="{{ cafe.x_source }}" target="_blank" rel="noopener noreferrer"
+      class="flex items-center gap-3 p-3 bg-black rounded-lg hover:bg-gray-100 transition-colors">
+      <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-white">X (클릭시 해당 X 계정으로 이동)</p>
+        <p class="text-sm text-white">{{ cafe.x_source }}</p>
+      </div>
+    </a>
+  </div>
+</div>
+{% endif %}

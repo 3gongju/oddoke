@@ -7,14 +7,13 @@ from artist.models import Artist, Member
 class FarmBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
-    # image = models.ImageField(upload_to='ddokfarm/image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
     is_sold = models.BooleanField(default=False) # 판매 완료 여부
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
-    members = models.ManyToManyField(Member, blank=True)
+    view_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         abstract = True
@@ -49,6 +48,7 @@ class FarmMarketPost(FarmBasePost):
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES) # 상태
     shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES)  # 배송방법
     location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
+    members = models.ManyToManyField(Member, blank=True)
 
     class Meta:
         abstract = True
@@ -94,16 +94,10 @@ class FarmRentalPost(FarmMarketPost):
             return main_img.image.url
         return None
 
-
 class FarmSplitPost(FarmBasePost):
     ALBUM_CHOICES = [
         ('include', '포함'),
         ('not_include', '미포함'),
-    ]
-
-    OPENED_CHOICES = [
-        ('opende', '개봉'),
-        ('unopened', '미개봉'),
     ]
 
     FAILURE_CHOICES = [
@@ -112,14 +106,19 @@ class FarmSplitPost(FarmBasePost):
         ('split', 'N빵'),
     ]
 
+    PUSH_CHOICES = [
+        ('yes', '가능'),
+        ('no', '불가능'),
+    ]
+
     album = models.CharField(max_length=20, choices=ALBUM_CHOICES)
-    opened = models.CharField(max_length=20, choices=OPENED_CHOICES)
     shipping_fee = models.PositiveIntegerField()
     where = models.CharField(max_length=100)
     when = models.DateField()
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
     images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
-    # 멤버별 가격 설정 필드 연결 필요
+    checked_out_members = models.ManyToManyField(Member, blank=True, related_name="checked_out_split_posts")
+    push = models.CharField(max_length=20, choices=PUSH_CHOICES)
 
     @property
     def category_type(self):
@@ -130,6 +129,30 @@ class FarmSplitPost(FarmBasePost):
         if main_img:
             return main_img.image.url
         return None
+
+# 멤버별 가격 설정 필드
+class SplitPrice(models.Model):
+    post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, related_name='member_prices')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    price = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('post', 'member')
+
+# 분철 참여 관리
+class SplitApplication(models.Model):
+    STATUS_CHOICES = [
+        ('pending', '대기중'),
+        ('approved', '승인됨'),
+        ('rejected', '반려됨'),
+    ]
+    
+    post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, related_name='applications')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    members = models.ManyToManyField(Member)  # 신청한 멤버들
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
         
 # 대댓글 기능 수정 
 class FarmComment(models.Model):

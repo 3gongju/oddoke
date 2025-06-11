@@ -1,272 +1,289 @@
-# API 엔드포인트들
+# ddoksang/views/api_views.py
+# API 뷰들 - map_utils 사용으로 중복 제거
 
 from datetime import date
+import logging
+
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_http_methods, require_GET
 from django.core.paginator import Paginator
 from django.utils import timezone
 from django.db.models import Q
-import logging
+from django.template.loader import render_to_string
+from django.conf import settings
 
-from ..models import BdayCafe
-from .utils import DEFAULT_PAGE_SIZE, validate_coordinates, get_nearby_cafes
+from ddoksang.models import BdayCafe, CafeFavorite
+from ddoksang.utils.map_utils import (
+    serialize_cafe_for_map, 
+    get_nearby_cafes, 
+    filter_operating_cafes,
+    is_valid_coordinates
+)
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PAGE_SIZE = getattr(settings, 'DEFAULT_PAGE_SIZE', 10)
+MAX_NEARBY_CAFES = getattr(settings, 'MAX_NEARBY_CAFES', 20)
 
-def cafe_quick_view(request, cafe_id):
-    try:
-        cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
-        data = {
-            'success': True,
-            'cafe': {
-                'id': cafe.id,
-                'name': cafe.cafe_name,
-                'artist': cafe.artist.display_name,
-                'member': cafe.member.member_name if cafe.member else '',
-                'start_date': cafe.start_date.strftime('%m.%d'),
-                'end_date': cafe.end_date.strftime('%m.%d'),
-                'address': cafe.address or '',
-                'main_image': cafe.get_main_image() if hasattr(cafe, 'get_main_image') else '',
-                'is_active': cafe.start_date <= date.today() <= cafe.end_date,
-            }
-        }
-        return JsonResponse(data)
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-        
-    except BdayCafe.DoesNotExist:
-        return JsonResponse({'success': False, 'error': '카페를 찾을 수 없습니다.'})
-    except Exception as e:
-        logger.error(f"카페 빠른 보기 오류: {e}")
-        return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})
 
 @require_GET
 def bday_cafe_list_api(request):
-    """생일카페 목록 API"""
+    """현재 운영중인 생일카페 목록 API"""
     try:
-        page = int(request.GET.get('page', 1))
-        limit = int(request.GET.get('limit', DEFAULT_PAGE_SIZE))
-        search = request.GET.get('search', '').strip()
-        artist_id = request.GET.get('artist_id', '')
-        status_filter = request.GET.get('status', 'active')
-        sort_by = request.GET.get('sort', 'latest')
+        # 현재 운영중인 카페들만 가져오기
+        cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
+        operating_cafes = filter_operating_cafes(cafes)
         
-        # 제한값 검증
-        if page < 1 or limit < 1 or limit > 50:
-            return JsonResponse({'success': False, 'error': '잘못된 페이징 정보입니다.'})
-        
-        today = timezone.now().date()
-        
-        # 기본 쿼리
-        cafes = BdayCafe.objects.filter(
-            status='approved'
-        ).select_related('artist', 'member')
-        
-        # 상태별 필터링
-        if status_filter == 'active':
-            cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
-        elif status_filter == 'upcoming':
-            cafes = cafes.filter(start_date__gt=today)
-        elif status_filter == 'ended':
-            cafes = cafes.filter(end_date__lt=today)
-        
-        # 검색 필터링
-        if search:
-            cafes = cafes.filter(
-                Q(artist__display_name__icontains=search) |
-                Q(member__member_name__icontains=search) 
-            )
-        
-        # 아티스트 필터링
-        if artist_id:
-            cafes = cafes.filter(artist_id=artist_id)
-        
-        # 정렬
-        if sort_by == 'popularity':
-            cafes = cafes.order_by('-view_count', '-created_at')
-        elif sort_by == 'ending_soon':
-            cafes = cafes.filter(end_date__gte=today).order_by('end_date')
-        else:  # latest
-            cafes = cafes.order_by('-created_at')
-        
-        # 페이징 처리
-        paginator = Paginator(cafes, limit)
-        cafes_page = paginator.get_page(page)
-        
-        # 데이터 직렬화
-        cafes_data = []
-        for cafe in cafes_page:
-            try:
-                cafes_data.append({
-                    'id': cafe.id,
-                    'name': cafe.cafe_name,
-                    'artist': cafe.artist.display_name,
-                    'member': cafe.member.member_name if cafe.member else None,
-                    'start_date': cafe.start_date.strftime('%Y.%m.%d'),
-                    'end_date': cafe.end_date.strftime('%Y.%m.%d'),
-                    'address': cafe.address,
-                    'main_image': cafe.get_main_image(),
-                    'is_active': cafe.is_active,
-                    'days_remaining': cafe.days_remaining,
-                    'view_count': cafe.view_count,
-                    'special_benefits': cafe.special_benefits,
-                })
-            except Exception as e:
-                logger.warning(f"카페 {cafe.id} 데이터 처리 오류: {e}")
-                continue
+        # map_utils의 serialize 함수 사용
+        data = []
+        for cafe in operating_cafes:
+            cafe_data = serialize_cafe_for_map(cafe)
+            if cafe_data:
+                data.append(cafe_data)
         
         return JsonResponse({
-            'success': True,
-            'cafes': cafes_data,
-            'pagination': {
-                'current_page': cafes_page.number,
-                'total_pages': paginator.num_pages,
-                'has_next': cafes_page.has_next(),
-                'has_previous': cafes_page.has_previous(),
-                'total_count': paginator.count,
-            }
+            'success': True, 
+            'cafes': data, 
+            'total': len(data)
         })
         
-    except ValueError as e:
-        logger.warning(f"API 파라미터 오류: {e}")
-        return JsonResponse({'success': False, 'error': '잘못된 요청 파라미터입니다.'})
     except Exception as e:
         logger.error(f"카페 목록 API 오류: {e}")
-        return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_GET
+def cafe_quick_view(request, cafe_id):
+    """카페 빠른 조회 API (모달용)"""
+    try:
+        cafe = get_object_or_404(
+            BdayCafe.objects.select_related('artist', 'member').prefetch_related('images'), 
+            id=cafe_id, 
+            status='approved'
+        )
+        
+        # map_utils의 serialize 함수 사용하고 추가 정보 포함
+        data = serialize_cafe_for_map(cafe)
+        if data:
+            data.update({
+                'road_address': cafe.road_address,
+                'hashtags': cafe.hashtags,
+                'event_description': cafe.event_description,
+                'cafe_type_display': cafe.get_cafe_type_display(),
+                'days_remaining': cafe.days_remaining,
+                'days_until_start': cafe.days_until_start,
+            })
+        
+        return JsonResponse({'success': True, 'cafe': data})
+        
+    except Exception as e:
+        logger.error(f"카페 빠른 조회 오류: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 
 @require_GET
 def nearby_cafes_api(request):
-    """주변 생일카페 API"""
+    """주변 카페 검색 API"""
     try:
-        lat = request.GET.get('lat')
-        lng = request.GET.get('lng')
-        offset = int(request.GET.get('offset', 0))
-        limit = int(request.GET.get('limit', DEFAULT_PAGE_SIZE))
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+        radius_km = int(request.GET.get('radius', 3000)) / 1000  # 미터를 킬로미터로 변환
         
-        # 좌표 유효성 검증
-        is_valid, result = validate_coordinates(lat, lng)
-        if not is_valid:
-            return JsonResponse({'success': False, 'error': result})
+        if not is_valid_coordinates(lat, lng):
+            return JsonResponse({'success': False, 'error': '유효하지 않은 좌표입니다.'}, status=400)
         
-        lat, lng = result
+        # 현재 운영중인 카페들만 검색
+        cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
+        operating_cafes = filter_operating_cafes(cafes)
         
-        # 제한값 검증
-        if offset < 0 or limit < 1 or limit > 50:
-            return JsonResponse({'success': False, 'error': '잘못된 페이징 정보입니다.'})
-        
-        # 전체 주변 카페 조회
-        from .utils import MAX_NEARBY_CAFES
-        all_nearby = get_nearby_cafes(lat, lng, radius_km=10, limit=MAX_NEARBY_CAFES)
-        
-        # 페이징 처리
-        paginated_cafes = all_nearby[offset:offset + limit]
-        
-        cafes_data = []
-        for cafe in paginated_cafes:
-            try:
-                cafes_data.append({
-                    'id': cafe.id,
-                    'name': cafe.cafe_name,
-                    'artist': cafe.artist.display_name,
-                    'member': cafe.member.member_name if cafe.member else None,
-                    'distance': round(cafe.distance, 1),
-                    'duration': cafe.duration,
-                    'main_image': cafe.get_main_image(),
-                    'start_date': cafe.start_date.strftime('%m.%d'),
-                    'end_date': cafe.end_date.strftime('%m.%d'),
-                    'is_active': cafe.is_active,
-                    'days_remaining': cafe.days_remaining,
-                    'special_benefits': cafe.special_benefits,
-                })
-            except Exception as e:
-                logger.warning(f"카페 {cafe.id} 데이터 처리 오류: {e}")
-                continue
+        # map_utils의 get_nearby_cafes 함수 사용
+        nearby_cafes = get_nearby_cafes(
+            user_lat=lat,
+            user_lng=lng,
+            cafes_queryset=operating_cafes,
+            radius_km=radius_km,
+            limit=MAX_NEARBY_CAFES
+        )
         
         return JsonResponse({
-            'success': True,
-            'cafes': cafes_data,
-            'has_more': len(all_nearby) > offset + limit,
-            'total': len(all_nearby)
+            'success': True, 
+            'cafes': nearby_cafes, 
+            'radius': radius_km * 1000,  # 다시 미터로 변환해서 응답
+            'user_location': {'lat': lat, 'lng': lng}
         })
         
-    except ValueError as e:
-        logger.warning(f"API 파라미터 오류: {e}")
-        return JsonResponse({'success': False, 'error': '잘못된 요청 파라미터입니다.'})
+    except (ValueError, TypeError) as e:
+        logger.error(f"주변 카페 API 파라미터 오류: {e}")
+        return JsonResponse({'success': False, 'error': '잘못된 파라미터입니다.'}, status=400)
     except Exception as e:
         logger.error(f"주변 카페 API 오류: {e}")
-        return JsonResponse({'success': False, 'error': '서버 오류가 발생했습니다.'})
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-# 지도 데이터 API
-@require_GET  
+
+@require_GET
 def cafe_map_data_api(request):
-    """카페 지도 데이터 API"""
+    """지도용 카페 데이터 API"""
     try:
-        # 승인된 카페만 가져오기
+        # 현재 운영중인 카페들만
         cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
+        operating_cafes = filter_operating_cafes(cafes)
         
-        map_data = []
-        for cafe in cafes:
-            cafe_data = cafe.get_kakao_map_data()
-            if cafe_data:  # 유효한 좌표가 있는 경우만
-                map_data.append(cafe_data)
+        # map_utils의 serialize 함수 사용
+        data = []
+        for cafe in operating_cafes:
+            cafe_data = serialize_cafe_for_map(cafe)
+            if cafe_data:
+                data.append(cafe_data)
         
         return JsonResponse({
-            'success': True,
-            'data': map_data,
-            'count': len(map_data)
+            'success': True, 
+            'cafes': data, 
+            'total': len(data),
+            'generated_at': timezone.now().isoformat()
         })
         
     except Exception as e:
         logger.error(f"지도 데이터 API 오류: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-# 검색 자동완성 API
+
 @require_GET
 def search_suggestions_api(request):
     """검색 자동완성 API"""
     try:
-        query = request.GET.get('q', '').strip()
-        
-        if len(query) < 2:
+        q = request.GET.get('q', '').strip()
+        if len(q) < 2:
             return JsonResponse({'success': True, 'suggestions': []})
         
-        # 아티스트명과 카페명에서 검색
+        # 승인된 카페에서 아티스트/멤버명으로 검색
+        cafes = BdayCafe.objects.filter(
+            Q(artist__display_name__icontains=q) | Q(member__member_name__icontains=q), 
+            status='approved'
+        ).select_related('artist', 'member')[:10]
+        
         suggestions = []
-        
-        # 아티스트명 검색
-        artist_cafes = BdayCafe.objects.filter(
-            artist__display_name__icontains=query,
-            status='approved'
-        ).values_list('artist__display_name', flat=True).distinct()[:5]
-        
-        for artist in artist_cafes:
+        for cafe in cafes:
             suggestions.append({
-                'type': 'artist',
-                'text': artist,
-                'label': f'아티스트: {artist}'
+                'id': cafe.id,
+                'cafe_name': cafe.cafe_name,
+                'artist_name': cafe.artist.display_name if cafe.artist else '',
+                'member_name': cafe.member.member_name if cafe.member else '',
+                'address': cafe.address,
+                'is_active': cafe.is_active,
             })
         
-        # 카페명 검색
-        cafe_names = BdayCafe.objects.filter(
-            cafe_name__icontains=query,
-            status='approved'
-        ).values_list('cafe_name', flat=True).distinct()[:5]
-        
-        for cafe_name in cafe_names:
-            suggestions.append({
-                'type': 'cafe',
-                'text': cafe_name,
-                'label': f'카페: {cafe_name}'
-            })
-        
-        return JsonResponse({
-            'success': True,
-            'suggestions': suggestions[:10]  # 최대 10개
-        })
+        return JsonResponse({'success': True, 'suggestions': suggestions})
         
     except Exception as e:
         logger.error(f"검색 자동완성 API 오류: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_GET
+def latest_cafes_api(request):
+    """최신 카페 목록 API (더보기 기능용)"""
+    try:
+        page = int(request.GET.get('page', 1))
+        per_page = 6
+
+        # 승인된 모든 카페 (운영 상태 무관)
+        cafes = BdayCafe.objects.filter(
+            status='approved'
+        ).select_related('artist', 'member').prefetch_related('images').order_by('-created_at')
+
+        paginator = Paginator(cafes, per_page)
+        page_obj = paginator.get_page(page)
+
+        # 사용자 찜 목록
+        user_favorites = []
+        if request.user.is_authenticated:
+            user_favorites = list(
+                CafeFavorite.objects.filter(user=request.user)
+                .values_list('cafe_id', flat=True)
+            )
+
+        # 템플릿 렌더링
+        html_content = ""
+        for cafe in page_obj:
+            cafe_html = render_to_string('ddoksang/components/_cafe_card_base.html', {
+                'cafe': cafe,
+                'card_variant': 'latest',
+                'user_favorites': user_favorites,
+                'user': request.user,
+            }, request=request)
+            html_content += f'<div class="cafe-card-item w-full max-w-[175px] md:max-w-none">{cafe_html}</div>'
+
+        return JsonResponse({
+            'success': True,
+            'html': html_content,
+            'has_next': page_obj.has_next(),
+            'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
+            'total_pages': paginator.num_pages,
+            'current_page': page_obj.number,
+            'total_count': paginator.count,
+            'cafes_count': len(page_obj),
+        })
+        
+    except ValueError as e:
+        logger.error(f"Latest cafes API 파라미터 오류: {e}")
+        return JsonResponse({'success': False, 'error': '잘못된 페이지 번호입니다.'}, status=400)
+    except Exception as e:
+        logger.error(f"Latest cafes API 오류: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ✅ 추가: 카페 상세 정보 API (모달용)
+@require_GET
+def cafe_detail_api(request, cafe_id):
+    """카페 상세 정보 API (모달 전용)"""
+    try:
+        cafe = get_object_or_404(
+            BdayCafe.objects.select_related('artist', 'member').prefetch_related('images'),
+            id=cafe_id,
+            status='approved'
+        )
+        
+        # 기본 정보
+        data = serialize_cafe_for_map(cafe)
+        if not data:
+            return JsonResponse({'success': False, 'error': '카페 정보 처리 실패'}, status=500)
+        
+        # 상세 정보 추가
+        data.update({
+            'road_address': cafe.road_address,
+            'phone': getattr(cafe, 'phone', ''),
+            'website': getattr(cafe, 'website', ''),
+            'hashtags': cafe.hashtags,
+            'hashtags_list': cafe.hashtags.split('#') if cafe.hashtags else [],
+            'cafe_type_display': cafe.get_cafe_type_display(),
+            'days_remaining': cafe.days_remaining,
+            'days_until_start': cafe.days_until_start,
+            'special_benefits_list': cafe.special_benefits.split(',') if cafe.special_benefits else [],
+            
+            # 이미지 목록
+            'images': [
+                {
+                    'url': img.image.url,
+                    'type': img.image_type,
+                    'is_main': img.is_main,
+                    'caption': getattr(img, 'caption', ''),
+                } for img in cafe.images.all()
+            ] if hasattr(cafe, 'images') else [],
+        })
+        
+        # 찜 상태 (로그인된 사용자만)
+        is_favorited = False
+        if request.user.is_authenticated:
+            is_favorited = CafeFavorite.objects.filter(
+                user=request.user, 
+                cafe=cafe
+            ).exists()
+        
+        data['is_favorited'] = is_favorited
+        
+        return JsonResponse({'success': True, 'cafe': data})
+        
+    except Exception as e:
+        logger.error(f"카페 상세 API 오류: {e}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

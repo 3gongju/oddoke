@@ -18,11 +18,13 @@ import json
 import logging
 from django.template.loader import render_to_string
 
+from ddoksang.utils.favorite_utils import get_user_favorites
+
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
 from ..forms import BdayCafeForm, BdayCafeImageForm
 from ..utils.map_utils import get_map_context, get_nearby_cafes  # 유틸리티 사용
 from artist.models import Artist, Member
-from .utils import get_user_favorites
+
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +227,7 @@ def my_cafes(request):
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
 
-    # 통계 계산 - 🔧 검색어가 있으면 해당 결과 기준으로 계산
+    # 통계 계산 - 검색어가 있으면 해당 결과 기준으로 계산
     base_cafes = BdayCafe.objects.filter(submitted_by=request.user)
     
     # 검색어가 있다면 검색 결과 기준으로 통계 계산
@@ -358,29 +360,33 @@ def toggle_favorite(request, cafe_id):
         )
         
         if not created:
+            # 찜 해제
             favorite.delete()
             is_favorited = False
             message = "찜 목록에서 제거했어요!"
+            card_html = None  # 찜 해제 시에는 HTML 불필요
         else:
+            # 찜 추가
             is_favorited = True
             message = "찜 목록에 추가했어요!"
-
+            
+            # ✅ 찜 추가 시에만 HTML 조각 렌더링
+            card_html = render_to_string(
+                'ddoksang/components/_cafe_card_base.html',
+                {
+                    'cafe': cafe,
+                    'card_variant': 'favorite',  # 📌 찜한 카페용 오버레이 스타일
+                    'user': request.user,
+                    'user_favorites': get_user_favorites(request.user),
+                    'show_favorite_btn': True,
+                    'show_status_badge': True,
+                },
+                request=request
+            )
+        
         # 캐시 무효화
         cache_key = f"user_favorites_{request.user.id}"
         cache.delete(cache_key)
-
-       # ✅ HTML 조각 렌더링
-        card_html = render_to_string(
-            'ddoksang/components/_cafe_card.html',
-            {
-                'cafe': cafe,
-                'user': request.user,
-                'user_favorites': get_user_favorites(request.user),
-                'show_favorite_btn': True,
-                'show_status_badge': True,
-            },
-            request=request
-        )
 
         return JsonResponse({
             'success': True,
@@ -397,8 +403,7 @@ def toggle_favorite(request, cafe_id):
             'error': '처리 중 오류가 발생했습니다.'
         }, status=500)
 
-    
-# 찜한 카페 목록 페이지 뷰도 수정
+
 @login_required
 def favorites_view(request):
     """찜한 카페 목록 페이지"""
@@ -418,6 +423,7 @@ def favorites_view(request):
     }
     
     return render(request, 'ddoksang/favorites.html', context)
+
 
 
 @login_required

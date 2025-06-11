@@ -11,9 +11,11 @@
   <!--  커스텀 스크롤 제거용 CSS 연결 -->
   <link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
 
+  <!--  하트 버튼 통일 CSS 추가 -->
+  <!-- <link rel="stylesheet" href="{% static 'css/heart-buttons.css' %}"> -->
+
   <!-- Swiper CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-
 
   {% block head %}{% endblock %}
 </head>
@@ -31,6 +33,18 @@
       </div>
       <div class="flex items-center space-x-2">
         {% if request.user.is_authenticated %}
+          <!-- 알림 버튼 -->
+          <div class="relative">
+            <a href="/notifications/" class="relative inline-flex items-center justify-center p-2 text-gray-700 hover:text-primary transition-colors">
+              <div class="text-xl">📬</div>
+              <!-- 알림 개수 배지 -->
+              <span id="notification-badge" 
+                    class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center hidden border-2 border-white">
+                0
+              </span>
+            </a>
+          </div>
+          
           <span class="text-sm text-gray-700">
             👤 
             {% if request.user.first_name %}
@@ -116,14 +130,12 @@
   </div>
 </div>
 
-
 <!-- ✅ 모든 페이지에 적용되는 하단 여유 공간 -->
 <div class="h-48"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <!-- ✅ 좋아요 하트 비동기 처리 -->
-
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".like-toggle").forEach(btn => {
@@ -144,6 +156,47 @@
         .catch(error => console.error("에러:", error));
       });
     });
+  });
+</script>
+
+<!-- ✅ 알림 개수 업데이트 스크립트 -->
+<script>
+  // 알림 개수 업데이트 함수
+  function updateNotificationCount() {
+    {% if request.user.is_authenticated %}
+      fetch('/notifications/unread-count/')
+        .then(response => response.json())
+        .then(data => {
+          const badge = document.getElementById('notification-badge');
+          if (badge) {
+            badge.textContent = data.unread_count;
+            if (data.unread_count > 0) {
+              badge.classList.remove('hidden');
+              // 99+ 처리
+              if (data.unread_count > 99) {
+                badge.textContent = '99+';
+                badge.classList.add('px-1'); // 더 넓게
+              }
+            } else {
+              badge.classList.add('hidden');
+            }
+          }
+        })
+        .catch(error => console.error('알림 개수 업데이트 에러:', error));
+    {% endif %}
+  }
+
+  // 페이지 로드 시 알림 개수 업데이트
+  document.addEventListener('DOMContentLoaded', function() {
+    updateNotificationCount();
+    
+    // 3분마다 알림 개수 업데이트
+    setInterval(updateNotificationCount, 180000);
+  });
+
+  // 알림 페이지에서 돌아왔을 때 업데이트
+  window.addEventListener('focus', function() {
+    updateNotificationCount();
   });
 </script>
 

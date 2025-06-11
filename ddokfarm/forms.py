@@ -1,5 +1,6 @@
 from django import forms
-from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
+from django.forms import modelformset_factory, HiddenInput
+from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice
 
 COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400'
 COMMON_RADIO_CLASS = 'space-y-2'
@@ -29,9 +30,6 @@ common_widgets = {
         'id': 'id_artist',
         'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400'
     }),
-    'members': forms.CheckboxSelectMultiple(attrs={
-        'class': 'space-y-2'
-    }),
 }
 
 market_widgets = {
@@ -42,6 +40,9 @@ market_widgets = {
     'location': forms.TextInput(attrs={
         'class': COMMON_INPUT_CLASS,
         'placeholder': '직거래 희망 장소를 입력하세요',
+    }),
+    'members': forms.CheckboxSelectMultiple(attrs={
+        'class': 'space-y-2'
     }),
 }
 
@@ -84,12 +85,12 @@ class FarmRentalPostForm(forms.ModelForm):
 
 class FarmSplitPostForm(forms.ModelForm):
     album = custom_choice_field(FarmSplitPost.ALBUM_CHOICES, label='앨범 포함 여부')
-    opened = custom_choice_field(FarmSplitPost.OPENED_CHOICES, label='앨범 개봉 여부')
     failure = custom_choice_field(FarmSplitPost.FAILURE_CHOICES, label='무산 여부')
+    push = custom_choice_field(FarmSplitPost.PUSH_CHOICES, label='밀어내기')
 
     class Meta:
         model = FarmSplitPost
-        fields = ['title', 'content', 'album', 'opened', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'members']
+        fields = ['title', 'content', 'album', 'shipping_fee', 'where', 'when', 'failure', 'artist', 'push']
         widgets = {
             **common_widgets,
             'shipping_fee': forms.NumberInput(attrs={
@@ -113,3 +114,19 @@ class FarmCommentForm(forms.ModelForm):
         widgets = {
             'parent': forms.HiddenInput()
         }
+
+class SplitPriceForm(forms.ModelForm):
+    class Meta:
+        model = SplitPrice
+        fields = ('member', 'price')
+        widgets = {
+            'member': forms.HiddenInput(),
+            'price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded',
+                'placeholder': '가격을 입력하세요',
+            }),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['price'].required = False
+        self.fields['member'].disabled = False

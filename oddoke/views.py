@@ -4,6 +4,8 @@ from django.shortcuts import render
 from artist.models import Artist, Member
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
+from ddoksang.utils.bday_utils import get_weekly_bday_artists
+
 
 
 def group_artists(artists, group_size=5):
@@ -78,6 +80,7 @@ def main(request):
         post.category = 'bdaycafe'
 
     # 6) 주간 생일 멤버
+    birthday_artists = get_weekly_bday_artists()
 
     return render(request, 'main/home.html', {
         'raw_favs': raw_favs,
@@ -91,6 +94,8 @@ def main(request):
         'latest_community_posts': latest_community_posts,
         'latest_manner_posts': latest_manner_posts,
         'latest_bdaycafe_posts': latest_bdaycafe_posts,
+        
+        'birthday_artists': birthday_artists,
 
     })
 
