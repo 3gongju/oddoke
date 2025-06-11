@@ -1,137 +1,154 @@
+<!-- ddoksang/templates/ddoksang/components/create/_duplicate_check_step.html -->
 <div id="step-0" class="step">
-  <!-- 헤더 섹션 -->
-  <div class="text-center mb-8">
-    <div class="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
-      <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-    </div>
-    <h2 class="text-xl font-bold text-gray-900 mb-2">중복 확인</h2>
-    <p class="text-gray-600 text-sm leading-relaxed">이미 등록된 생카인지 확인해 주세요.<br>중복 등록을 방지하여 더 나은 서비스를 제공합니다.</p>
-  </div>
+  <!-- 기본 중복 확인 폼 -->
+  <div id="duplicate-check-form">
+    <h2 class="text-lg font-semibold mb-6">생카 중복 확인</h2>
+    <p class="text-sm text-gray-600 mb-6">먼저 동일한 생카가 이미 등록되어 있는지 확인해보세요.</p>
 
-  <!-- 폼 컨테이너 -->
-  <div class="bg-gray-50 rounded-xl p-6 space-y-6">
+    <!-- 아티스트/멤버명 검색 -->
+    <label class="block text-sm font-medium mb-1">아티스트/멤버명</label>
+    <div class="relative mb-4">
+      <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
+      <ul id="artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
+    </div>
     
-    <!-- 아티스트/멤버 선택 -->
-    <div class="space-y-3">
-      <div class="flex items-center space-x-2">
-        <span class="text-sm font-semibold text-gray-900">01</span>
-        <label class="text-sm font-medium text-gray-900">아티스트/멤버</label>
-      </div>
-      <div class="relative">
-        <input type="text" id="artist-member-search" 
-               class="w-full bg-white border-0 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-gray-50 transition-all" 
-               placeholder="검색할 아티스트나 멤버명을 입력하세요" 
-               autocomplete="off" required>
-        <ul id="artist-member-results" class="absolute z-10 w-full bg-white border border-gray-200 mt-2 rounded-lg shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
-      </div>
-      
-      <!-- 선택된 아티스트 표시 -->
-      <div id="selected-artist" class="hidden">
-        <div class="bg-white rounded-lg p-4 border border-blue-200">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-              <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <div>
-                <p class="font-medium text-gray-900" id="selected-artist-text"></p>
-                <p class="text-xs text-gray-500">선택된 아티스트/멤버</p>
-              </div>
-            </div>
-            <button type="button" onclick="clearSelection()" 
-                    class="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors">
-              변경
-            </button>
-          </div>
+    <!-- 선택된 아티스트 표시 -->
+    <div id="selected-artist" class="mb-4 p-3 border rounded bg-green-50 hidden">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="font-medium text-green-800" id="selected-artist-text"></p>
+          <p class="text-sm text-green-600">선택된 아티스트/멤버입니다</p>
         </div>
+        <button type="button" onclick="clearSelection()" class="text-green-600 hover:text-green-800 text-sm">변경</button>
       </div>
     </div>
 
-    <!-- 카페명 -->
-    <div class="space-y-3">
-      <div class="flex items-center space-x-2">
-        <span class="text-sm font-semibold text-gray-900">02</span>
-        <label class="text-sm font-medium text-gray-900">카페명</label>
-      </div>
-      <input type="text" id="check_cafe_name" 
-             class="w-full bg-white border-0 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-gray-50 transition-all" 
-             placeholder="생일카페 이름을 입력하세요 (예: Happy JAKE Day)" required>
-    </div>
+    <!-- 생카명 입력 -->
+    <label class="block text-sm font-medium mb-1">생카명</label>
+    <input type="text" id="check_cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
 
     <!-- 운영 기간 -->
-    <div class="space-y-3">
-      <div class="flex items-center space-x-2">
-        <span class="text-sm font-semibold text-gray-900">03</span>
-        <label class="text-sm font-medium text-gray-900">운영 기간</label>
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div>
+        <label class="block text-sm font-medium mb-1">시작일</label>
+        <input type="text" id="check_start_date" class="w-full border rounded px-4 py-2" placeholder="YYYY-MM-DD" required>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <input type="text" id="check_start_date" 
-                 class="w-full bg-white border-0 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-gray-50 transition-all" 
-                 placeholder="시작일">
-          <p class="text-xs text-gray-500 px-1">시작일</p>
-        </div>
-        <div class="space-y-1">
-          <input type="text" id="check_end_date" 
-                 class="w-full bg-white border-0 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:ring-offset-gray-50 transition-all" 
-                 placeholder="종료일">
-          <p class="text-xs text-gray-500 px-1">종료일</p>
-        </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">종료일</label>
+        <input type="text" id="check_end_date" class="w-full border rounded px-4 py-2" placeholder="YYYY-MM-DD" required>
       </div>
     </div>
 
     <!-- 중복 확인 버튼 -->
-    <div class="pt-2">
-      <button type="button" id="check-duplicate-btn" 
-              class="w-full px-6 py-4 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed transition-all font-medium text-sm tracking-wide" 
-              disabled>
-        중복 확인하기
-      </button>
-    </div>
+    <button type="button" id="check-duplicate-btn" class="w-full px-6 py-3 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed font-medium transition-colors" disabled>
+      중복 확인하기
+    </button>
   </div>
 
-  <!-- 결과 메시지 -->
-  <div class="mt-6 space-y-3">
-    <!-- 경고 메시지 -->
-    <div id="duplicate-warning" class="hidden">
-      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <svg class="w-5 h-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-medium text-red-800">중복된 생카가 발견되었습니다</h4>
-            <p class="text-sm text-red-700 mt-1">해당 멤버로 유사한 생카가 이미 등록되어 있습니다. 다른 정보로 입력해주세요.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- 중복 카페 발견 시 표시되는 섹션 -->
+  <div id="duplicate-cafes-section" class="hidden">
     
-    <!-- 성공 메시지 -->
-    <div id="duplicate-success" class="hidden">
-      <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-        <div class="flex items-start space-x-3">
-          <div class="flex-shrink-0">
-            <svg class="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+    <!-- 경고 메시지  -->
+    <!-- 중복 카페 발견 시 표시되는 섹션 -->
+    <div class="flex justify-center mb-8">
+      <div class="bg-gray-900 text-white rounded-lg px-6 py-5 max-w-md w-full text-center shadow-md">
+        <div class="flex items-center justify-center gap-2 mb-3">
+          <div class="w-7 h-7 bg-yellow-100 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
+              </path>
             </svg>
           </div>
-          <div>
-            <h4 class="text-sm font-medium text-green-800">중복되지 않습니다!</h4>
-            <p class="text-sm text-green-700 mt-1">새로운 생카를 등록할 수 있습니다. 잠시 후 다음 단계로 자동 이동합니다.</p>
-          </div>
+          <span class="text-sm font-semibold">유사한 생일카페가 발견되었습니다</span>
         </div>
+        <p class="text-sm text-gray-300 leading-snug">
+          아래 생일카페 중 <strong>같은 카페</strong>가 있다면 확인해주세요.
+        </p>
+      </div>
+    </div>
+
+
+
+    <!-- 중복 카페 카드 목록 -->
+    <div class="flex justify-center mt-12 mb-0">
+      <div class="w-full max-w-md">
+        <div id="duplicate-cafes-grid" class="space-y-6">
+          <!-- 동적으로 카드 삽입 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 선택 버튼 -->
+    <div class="flex justify-center mt-8 mb-12">
+      <div class="flex flex-col sm:flex-row gap-4 max-w-md w-full">
+        <button type="button" id="confirm-duplicate-btn"
+          class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 font-medium transition-colors">
+           네, 위 카페 중 하나입니다
+        </button>
+        <button type="button" id="deny-duplicate-btn"
+          class="flex-1 px-4 py-2 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 font-medium transition-colors">
+           아니요, 다른 카페입니다
+        </button>
+      </div>
+    </div>
+
+
+  </div>
+
+
+    <!-- 카페 선택 안내 -->
+    <div id="select-cafe-instruction" class="text-center text-gray-600 hidden">
+      <div class="max-w-md mx-auto bg-gray-50 rounded-lg p-4">
+        <p class="text-sm">위의 "네" 버튼을 클릭하기 전에 해당하는 카페를 클릭해서 선택해주세요.</p>
       </div>
     </div>
   </div>
 
-  <!-- Hidden inputs -->
-  <input type="hidden" name="check_artist_id" id="check_artist_id">
-  <input type="hidden" name="check_member_id" id="check_member_id">
+  <!-- 중복 없음 성공 메시지 -->
+
+
+  <!-- 중복 경고 메시지 -->
+  <div id="duplicate-warning" class="mt-6 p-4 border rounded bg-red-50 border-red-200 hidden">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+      </svg>
+      <span class="font-medium text-red-800">유사한 생카가 발견되었습니다. 다른 정보로 시도해주세요.</span>
+    </div>
+  </div>
+
+  <!-- Hidden fields for selected artist/member -->
+  <input type="hidden" id="check_artist_id">
+  <input type="hidden" id="check_member_id">
+  <input type="hidden" id="selected_duplicate_cafe_id">
 </div>
+
+<style>
+  /* 카페 카드 선택 효과 */
+  .duplicate-cafe-card {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 2px solid transparent;
+  }
+  
+  .duplicate-cafe-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  .duplicate-cafe-card.selected {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+  }
+  
+  .duplicate-cafe-card .selected-indicator {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  .duplicate-cafe-card.selected .selected-indicator {
+    opacity: 1;
+  }
+</style>
