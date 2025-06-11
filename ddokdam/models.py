@@ -6,15 +6,14 @@ from artist.models import Artist, Member
 
 class DamBasePost(models.Model):
     title = models.CharField(max_length=100)
-    content = models.TextField()
-    # image = models.ImageField(upload_to='ddokdam/image')
-    
+    content = models.TextField() 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="liked_%(class)s", blank=True)
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
     members = models.ManyToManyField(Member, blank=True)
+    view_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         abstract = True

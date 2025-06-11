@@ -1,5 +1,10 @@
 {# components/post_detail/_like_comment_info.html #}
 <div class="flex justify-end items-center space-x-4 my-4">
+  <!-- 조회수 -->
+  <div class="flex items-center space-x-1">
+    <span>👥</span>
+    <span>{{ post.view_count|default:0 }}</span>
+  </div>
   <!-- 댓글 아이콘 + 숫자 -->
   <div class="flex items-center space-x-1">
     <span>💬</span>
