@@ -336,8 +336,10 @@ def check_duplicate_cafe(request):
         # 기본 필터: 같은 아티스트 + 기간 겹침
         filters = {
             'artist_id': artist_id,
-            'start_date__lte': end_date_obj,  # 시작일이 검사 종료일 이전
-            'end_date__gte': start_date_obj,  # 종료일이 검사 시작일 이후 (기간 겹침)
+            # 'start_date__lte': end_date_obj,  # 시작일이 검사 종료일 이전
+            # 'end_date__gte': start_date_obj,  # 종료일이 검사 시작일 이후 (기간 겹침)
+            'start_date': start_date_obj,
+            'end_date': end_date_obj,
         }
         
         # 삭제되지 않은 카페만 (is_deleted 필드가 있는 경우)
@@ -360,7 +362,7 @@ def check_duplicate_cafe(request):
         
         # 유사한 이름의 카페 찾기
         similar_cafes = []
-        similarity_threshold = 0.65  # 65% 이상 유사하면 중복으로 간주
+        similarity_threshold = 0.75  # 75% 이상 유사하면 중복으로 간주
         
         for cafe in existing_cafes:
             normalized_existing_name = normalize_name(cafe.cafe_name)
@@ -369,12 +371,13 @@ def check_duplicate_cafe(request):
             if normalized_input_name == normalized_existing_name:
                 similar_cafes.append(cafe)
                 continue
-                
+            
+            #  단어를 포함할 경우 같은 카페라고 인식할 확률이 높아 주석처리로 삭제    
             # 2. 포함 관계 확인 (한 쪽이 다른 쪽을 포함)
-            if (normalized_input_name in normalized_existing_name or 
-                normalized_existing_name in normalized_input_name):
-                similar_cafes.append(cafe)
-                continue
+            # if (normalized_input_name in normalized_existing_name or 
+            #     normalized_existing_name in normalized_input_name):
+            #     similar_cafes.append(cafe)
+            #     continue
                 
             # 3. 유사도 확인
             similarity = SequenceMatcher(None, normalized_input_name, normalized_existing_name).ratio()
@@ -389,24 +392,6 @@ def check_duplicate_cafe(request):
             'message': '유사한 생일카페가 발견되었습니다.' if exists else '중복되지 않습니다.'
         }
         
-        # 디버깅 정보 (개발 모드에서만)
-        if getattr(settings, 'DEBUG', False):
-            result['debug'] = {
-                'checked_artist_id': artist_id,
-                'checked_member_id': member_id,
-                'checked_cafe_name': cafe_name,
-                'checked_period': f"{start_date} ~ {end_date}",
-                'found_cafes_count': len(similar_cafes),
-                'found_cafes': [
-                    {
-                        'id': cafe.id,
-                        'cafe_name': cafe.cafe_name,
-                        'start_date': str(cafe.start_date),
-                        'end_date': str(cafe.end_date),
-                        'similarity': SequenceMatcher(None, normalize_name(cafe_name), normalize_name(cafe.cafe_name)).ratio()
-                    } for cafe in similar_cafes[:3]  # 최대 3개만 표시
-                ]
-            }
         
         logger.info(f"중복 확인: {cafe_name} ({'중복' if exists else '신규'})")
         return JsonResponse(result)

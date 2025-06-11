@@ -54,7 +54,7 @@
         </div>
       </div>
 
-      <!-- ✅ 카페 목록 - 컴포넌트 사용으로 변경 -->
+      <!-- 카페 목록 - 컴포넌트 사용으로 변경 -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for cafe in results %}
           {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='default' show_status_badge=True show_favorite_btn=True user_favorites=user_favorites show_benefits=True %}
