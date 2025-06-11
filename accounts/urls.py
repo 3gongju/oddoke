@@ -20,6 +20,9 @@ urlpatterns = [
     path('naver/callback/', views.naver_callback, name='naver_callback'),
     path('naver/logout/', views.naver_logout, name='naver_logout'),  # 선택사항
 
+    # 소셜 로그인 추가 정보 입력
+    path('social/complete/', views.social_signup_complete, name='social_signup_complete'),
+
     # mypage
     path('my/', views.mypage, name='mypage'),
     # my -> 프로필 관리

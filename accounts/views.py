@@ -1,3 +1,11 @@
+import json
+import os
+import time
+from itertools import chain
+from collections import Counter
+from PIL import Image, ExifTags
+from dotenv import load_dotenv
+
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -10,23 +18,14 @@ from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
-from itertools import chain
-from PIL import Image, ExifTags
-from dotenv import load_dotenv
+
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
 from .models import User, MannerReview
-from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm
-from collections import Counter
-from .services import get_bank_service
-
-import uuid
-import requests
-import json
-import os
-import time
+from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, SocialSignupCompleteForm
+from .services import get_bank_service, KakaoAuthService, NaverAuthService
 
 load_dotenv()
 
@@ -483,205 +482,149 @@ def upload_fandom_card(request, username):
         messages.success(request, '🎫 공식 팬덤 인증 확인 중입니다. (3일 소요)')
         return redirect('accounts:edit_profile', username=username)
 
-# 카카오 로그인 관련 뷰
+@login_required
+def social_signup_complete(request):
+    """소셜 로그인 후 추가 정보 입력 페이지 (필수)"""
+    
+    # 이미 프로필을 완성한 사용자는 메인 페이지로 리다이렉트
+    if request.user.social_signup_completed:
+        return redirect('/')
+    
+    # 소셜 로그인 사용자가 아니면 메인 페이지로 리다이렉트
+    if not request.user.is_temp_username:
+        return redirect('/')
+    
+    if request.method == 'POST':
+        form = SocialSignupCompleteForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f'🎉 환영합니다, {user.username}님! 어덕해를 시작해보세요!')
+            return redirect('/')
+        else:
+            # 폼 에러가 있으면 에러 메시지 표시
+            messages.error(request, '입력 정보를 다시 확인해주세요.')
+    else:
+        form = SocialSignupCompleteForm(instance=request.user)
+    
+    return render(request, 'accounts/social_signup_complete.html', {
+        'form': form
+    })
+
+# @login_required
+# def social_complete_skip(request):
+#     """소셜 가입 프로필 설정 건너뛰기"""
+#     if request.method == 'POST':
+#         user = request.user
+        
+#         # 🔥 기본 username 설정 (임시에서 실제로 변경)
+#         if user.is_temp_username:
+#             # 고유한 기본 username 생성
+#             base_username = None
+#             if user.username.startswith('temp_kakao_'):
+#                 base_username = '카카오사용자'
+#             elif user.username.startswith('temp_naver_'):
+#                 base_username = '네이버사용자'
+#             else:
+#                 base_username = '새로운사용자'
+            
+#             # 중복되지 않는 username 생성
+#             final_username = base_username
+#             counter = 1
+#             while User.objects.filter(username=final_username).exclude(id=user.id).exists():
+#                 final_username = f'{base_username}{counter}'
+#                 counter += 1
+            
+#             user.username = final_username
+#             user.is_temp_username = False
+        
+#         user.social_signup_completed = True
+#         user.save()
+        
+#         return JsonResponse({'success': True})
+    
+#     return JsonResponse({'success': False})
+
+# ======================
+# 카카오 로그인
+# ======================
 def kakao_login(request):
-    client_id = os.getenv('KAKAO_REST_API_KEY')
-    redirect_uri = os.getenv('KAKAO_OAUTH_REDIRECT_URI')
-    
-    kakao_auth_url = (
-        f"https://kauth.kakao.com/oauth/authorize"
-        f"?client_id={client_id}"
-        f"&redirect_uri={redirect_uri}"
-        f"&response_type=code"
-        f"&scope=profile_nickname"
-        f"&prompt=login"
-    )
-    
-    return redirect(kakao_auth_url)
-
-def kakao_logout(request):
-    """카카오 로그아웃 + 일반 로그아웃"""
-    client_id = os.getenv('KAKAO_REST_API_KEY')
-    logout_redirect_uri = os.getenv('KAKAO_OAUTH_LOGOUT_REDIRECT_URI')
-    
-    auth_logout(request)
-    
-    kakao_logout_url = (
-        f"https://kauth.kakao.com/oauth/logout"
-        f"?client_id={client_id}"
-        f"&logout_redirect_uri={logout_redirect_uri}"
-    )
-    
-    return redirect(kakao_logout_url)
-
-def logout_complete(request):
-    return redirect('/')
+    """카카오 로그인 페이지로 리다이렉트"""
+    service = KakaoAuthService()
+    auth_url = service.get_auth_url()
+    return redirect(auth_url)
 
 def kakao_callback(request):
-    code = request.GET.get('code')
+    """카카오 로그인 콜백 처리"""
+    print("=== 카카오 콜백 디버깅 ===")
     
+    code = request.GET.get('code')
     if not code:
         messages.error(request, '카카오 로그인에 실패했습니다.')
         return redirect('accounts:login')
     
-    client_id = os.getenv('KAKAO_REST_API_KEY')
-    client_secret = os.getenv('KAKAO_OAUTH_SECRET_ID')
-    redirect_uri = os.getenv('KAKAO_OAUTH_REDIRECT_URI')
-    
-    token_url = 'https://kauth.kakao.com/oauth/token'
-    token_data = {
-        'grant_type': 'authorization_code',
-        'client_id': client_id,
-        'client_secret': client_secret,
-        'redirect_uri': redirect_uri,
-        'code': code,
-    }
+    service = KakaoAuthService()
     
     try:
-        token_response = requests.post(token_url, data=token_data)
-        token_json = token_response.json()
+        user = service.handle_callback(code)
+        print(f"🔍 생성된 사용자: {user.username}")
+        print(f"🔍 사용자 이메일: {user.email}")
+        print(f"🔍 임시 사용자명 여부: {user.is_temp_username}")
         
-        if 'access_token' not in token_json:
-            messages.error(request, '카카오 토큰 발급에 실패했습니다.')
+        # 이메일 기반 인증 (패스워드 없이)
+        from django.contrib.auth import authenticate
+        authenticated_user = authenticate(
+            request, 
+            email=user.email, 
+            password=None
+        )
+        print(f"🔍 인증 결과: {authenticated_user}")
+        
+        if authenticated_user:
+            auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
+            print(f"🔍 로그인 성공: {request.user.is_authenticated}")
+            
+            # 신규 사용자면 프로필 완성 페이지로 리다이렉트
+            if not authenticated_user.social_signup_completed:
+                print("🔍 신규 사용자 → 프로필 완성 페이지로")
+                return redirect('accounts:social_signup_complete')
+            
+            next_url = request.GET.get('next') or '/'
+            return redirect(next_url)
+        else:
+            print("❌ 인증 실패!")
+            messages.error(request, '카카오 로그인 인증에 실패했습니다.')
             return redirect('accounts:login')
         
-        access_token = token_json['access_token']
-        
-        # 카카오 사용자 정보 요청
-        user_url = 'https://kapi.kakao.com/v2/user/me'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        user_response = requests.get(user_url, headers=headers)
-        user_json = user_response.json()
-        
-        # 사용자 정보 추출
-        kakao_id = user_json.get('id')
-        kakao_account = user_json.get('kakao_account', {})
-        profile = kakao_account.get('profile', {})
-        
-        email = kakao_account.get('email')
-        
-        # 닉네임 추출
-        nickname = None
-        if profile and 'nickname' in profile:
-            nickname = profile['nickname']
-        else:
-            properties = user_json.get('properties', {})
-            nickname = properties.get('nickname')
-        
-        if not nickname:
-            nickname = f'kakao_user_{kakao_id}'
-        
-        # 사용자 생성 또는 로그인
-        user = None
-        username = f'kakao_{kakao_id}'
-        
-        # 1. 카카오 ID로 먼저 찾기 (기존 사용자)
-        try:
-            user = User.objects.get(username=username)
-            
-            # ✅ 기존 사용자의 경우 커스텀 닉네임 보존
-            # 닉네임이 비어있거나 기본값인 경우에만 업데이트
-            if not user.first_name or user.first_name == f'kakao_user_{kakao_id}':
-                if nickname and nickname != f'kakao_user_{kakao_id}':
-                    user.first_name = nickname
-                    user.save()
-                
-        except User.DoesNotExist:
-            # 2. 이메일로 찾기 (이메일이 있는 경우만)
-            if email:
-                try:
-                    user = User.objects.get(email=email)
-                    # 기존 사용자를 카카오 계정과 연결
-                    user.username = username
-                    # 닉네임은 기존 값이 있으면 유지
-                    if not user.first_name:
-                        user.first_name = nickname
-                    user.save()
-                except User.DoesNotExist:
-                    pass
-            
-            # 3. 새 사용자 생성
-            if not user:
-                try:
-                    # 고유한 이메일 생성
-                    if not email:
-                        timestamp = int(time.time())
-                        email = f'kakao_{kakao_id}_{timestamp}@kakao.local'
-                    
-                    # 이메일 중복 체크
-                    original_email = email
-                    counter = 1
-                    while User.objects.filter(email=email).exists():
-                        if '@kakao.local' in original_email:
-                            base_email = original_email.replace('@kakao.local', '')
-                            email = f'{base_email}_{counter}@kakao.local'
-                        else:
-                            name, domain = original_email.split('@')
-                            email = f'{name}_{counter}@{domain}'
-                        counter += 1
-                        if counter > 10:
-                            email = f'kakao_{kakao_id}_{int(time.time())}_{counter}@kakao.local'
-                            break
-                    
-                    user = User.objects.create_user(
-                        username=username,
-                        email=email,
-                        password=None
-                    )
-                    user.first_name = nickname
-                    user.save()
-                    
-                except Exception as create_error:
-                    # 마지막 수단: 완전히 고유한 이메일로 재시도
-                    try:
-                        unique_email = f'kakao_{kakao_id}_{int(time.time())}_{hash(str(kakao_id)) % 10000}@kakao.local'
-                        user = User.objects.create_user(
-                            username=username,
-                            email=unique_email,
-                            password=None
-                        )
-                        user.first_name = nickname
-                        user.save()
-                    except Exception as final_error:
-                        messages.error(request, '사용자 생성 중 오류가 발생했습니다.')
-                        return redirect('accounts:login')
-        
-        # 로그인 처리
-        auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        
-        # next 파라미터 확인
-        next_url = request.GET.get('next') or '/'
-        return redirect(next_url)
-        
-    except requests.RequestException as e:
-        messages.error(request, '카카오 서버와의 통신 중 오류가 발생했습니다.')
-        return redirect('accounts:login')
     except Exception as e:
-        messages.error(request, '카카오 로그인 처리 중 오류가 발생했습니다.')
+        print(f"❌ 전체 에러: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, f'카카오 로그인 처리 중 오류가 발생했습니다: {str(e)}')
         return redirect('accounts:login')
+
+def kakao_logout(request):
+    """카카오 로그아웃 + 일반 로그아웃"""
+    service = KakaoAuthService()
     
+    # 일반 로그아웃 먼저 처리
+    auth_logout(request)
     
-# 네이버 로그인 함수
+    # 카카오 로그아웃 URL로 리다이렉트
+    logout_url = service.get_logout_url()
+    return redirect(logout_url)
+
+# ======================
+# 네이버 로그인
+# ======================
 def naver_login(request):
-    """네이버 로그인 URL로 리다이렉트"""
-    client_id = os.getenv('NAVER_OAUTH_CLIENT_ID')
-    redirect_uri = os.getenv('NAVER_OAUTH_REDIRECT_URI')
-    state = uuid.uuid4().hex
+    """네이버 로그인 페이지로 리다이렉트"""
+    service = NaverAuthService()
+    auth_url, state = service.get_auth_url()
     
     # 세션에 state 저장 (보안을 위해)
     request.session['naver_state'] = state
     
-    naver_auth_url = (
-        f"https://nid.naver.com/oauth2.0/authorize"
-        f"?response_type=code"
-        f"&client_id={client_id}"
-        f"&redirect_uri={redirect_uri}"
-        f"&state={state}"
-        f"&auth_type=reauthenticate"
-        f"&prompt=consent"
-    )
-    
-    return redirect(naver_auth_url)
+    return redirect(auth_url)
 
 def naver_callback(request):
     """네이버 로그인 콜백 처리"""
@@ -699,147 +642,57 @@ def naver_callback(request):
         return redirect('accounts:login')
     
     # State 검증 (CSRF 방지)
+    service = NaverAuthService()
     session_state = request.session.get('naver_state')
-    if state != session_state:
+    
+    if not service.validate_state(state, session_state):
         messages.error(request, '보안 검증에 실패했습니다.')
         return redirect('accounts:login')
     
-    # 네이버 토큰 요청
-    client_id = os.getenv('NAVER_OAUTH_CLIENT_ID')
-    client_secret = os.getenv('NAVER_OAUTH_SECRET_ID')
-    
-    token_url = 'https://nid.naver.com/oauth2.0/token'
-    token_data = {
-        'grant_type': 'authorization_code',
-        'client_id': client_id,
-        'client_secret': client_secret,
-        'code': code,
-        'state': state,
-    }
-    
     try:
-        token_response = requests.post(token_url, data=token_data)
-        token_json = token_response.json()
+        user = service.handle_callback(code, state)
         
-        if 'access_token' not in token_json:
-            messages.error(request, '네이버 토큰 발급에 실패했습니다.')
-            return redirect('accounts:login')
+        # 이메일 기반 인증 (패스워드 없이)
+        from django.contrib.auth import authenticate
+        authenticated_user = authenticate(
+            request, 
+            email=user.email, 
+            password=None
+        )
         
-        access_token = token_json['access_token']
-        
-        # 네이버 사용자 정보 요청
-        user_url = 'https://openapi.naver.com/v1/nid/me'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        user_response = requests.get(user_url, headers=headers)
-        user_json = user_response.json()
-        
-        # 네이버 API 응답 확인
-        if user_json.get('resultcode') != '00':
-            messages.error(request, '네이버 사용자 정보 조회에 실패했습니다.')
-            return redirect('accounts:login')
-        
-        # 사용자 정보 추출
-        response_data = user_json.get('response', {})
-        naver_id = response_data.get('id')
-        email = response_data.get('email')
-        nickname = response_data.get('nickname', f'naver_user_{naver_id}')
-        name = response_data.get('name', '')
-        
-        # 사용자 생성 또는 로그인
-        user = None
-        username = f'naver_{naver_id}'
-        
-        # 1. 네이버 ID로 먼저 찾기 (기존 사용자)
-        try:
-            user = User.objects.get(username=username)
+        if authenticated_user:
+            auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
             
-            # ✅ 기존 사용자의 경우 커스텀 닉네임 보존
-            # 닉네임이 비어있거나 기본값인 경우에만 업데이트
-            if not user.first_name or user.first_name == f'naver_user_{naver_id}':
-                if nickname and nickname != f'naver_user_{naver_id}':
-                    user.first_name = nickname
-                    if name:
-                        user.last_name = name
-                    user.save()
-                
-        except User.DoesNotExist:
-            # 2. 이메일로 찾기 (이메일이 있는 경우)
-            if email:
-                try:
-                    user = User.objects.get(email=email)
-                    # 기존 사용자를 네이버 계정과 연결
-                    user.username = username
-                    # 닉네임은 기존 값이 있으면 유지
-                    if not user.first_name:
-                        user.first_name = nickname
-                    if name and not user.last_name:
-                        user.last_name = name
-                    user.save()
-                except User.DoesNotExist:
-                    pass
+            # 세션에서 state 제거
+            if 'naver_state' in request.session:
+                del request.session['naver_state']
+            
+            # 🔥 신규 사용자면 프로필 완성 페이지로 리다이렉트
+            if not authenticated_user.social_signup_completed:
+                return redirect('accounts:social_signup_complete')
+            
+            # 기존 사용자면 next 파라미터 확인 후 리다이렉트
+            next_url = request.GET.get('next') or '/'
+            return redirect(next_url)
+        else:
+            messages.error(request, '네이버 로그인 인증에 실패했습니다.')
+            return redirect('accounts:login')
         
-        # 3. 새 사용자 생성
-        if not user:
-            try:
-                # 고유한 이메일 생성
-                if not email:
-                    timestamp = int(time.time())
-                    email = f'naver_{naver_id}_{timestamp}@naver.local'
-                
-                # 이메일 중복 체크
-                original_email = email
-                counter = 1
-                while User.objects.filter(email=email).exists():
-                    if '@naver.local' in original_email:
-                        base_email = original_email.replace('@naver.local', '')
-                        email = f'{base_email}_{counter}@naver.local'
-                    else:
-                        name_part, domain = original_email.split('@')
-                        email = f'{name_part}_{counter}@{domain}'
-                    counter += 1
-                    if counter > 10:
-                        email = f'naver_{naver_id}_{int(time.time())}_{counter}@naver.local'
-                        break
-                
-                user = User.objects.create_user(
-                    username=username,
-                    email=email,
-                    password=None
-                )
-                user.first_name = nickname
-                if name:
-                    user.last_name = name
-                user.save()
-            except Exception as create_error:
-                messages.error(request, '사용자 생성 중 오류가 발생했습니다.')
-                return redirect('accounts:login')
-        
-        # 로그인 처리
-        auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-        
-        # 세션에서 state 제거
-        if 'naver_state' in request.session:
-            del request.session['naver_state']
-        
-        # next 파라미터 확인
-        next_url = request.GET.get('next') or '/'
-        return redirect(next_url)
-        
-    except requests.RequestException as e:
-        messages.error(request, '네이버 서버와의 통신 중 오류가 발생했습니다.')
-        return redirect('accounts:login')
     except Exception as e:
-        messages.error(request, '네이버 로그인 처리 중 오류가 발생했습니다.')
+        messages.error(request, f'네이버 로그인 처리 중 오류가 발생했습니다: {str(e)}')
         return redirect('accounts:login')
 
 def naver_logout(request):
-    """네이버 완전 로그아웃 - 세션 정리 포함..."""
+    """네이버 완전 로그아웃 - 세션 정리 포함"""
     auth_logout(request)
     request.session.flush()
     return redirect('/')
 
+# ======================
+# 스마트 로그아웃 (기존 함수 개선)
+# ======================
 def smart_logout(request):
-    """스마트 로그아웃 - 사용자 타입에 따라 자동 선택"""
+    """사용자 타입에 따라 적절한 로그아웃 방식 선택"""
     if not request.user.is_authenticated:
         return redirect('/')
     
@@ -850,7 +703,7 @@ def smart_logout(request):
     elif username.startswith('naver_'):
         return naver_logout(request)
     else:
-        return logout(request)
+        return logout(request)  # 기존 logout 함수 호출
 
 
 @login_required
