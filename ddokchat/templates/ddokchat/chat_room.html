@@ -130,11 +130,11 @@
                 <div class="flex space-x-2 mt-3">
                   <button onclick="copyAccountNumber('{{ message.account_number }}')" 
                           class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                    📋 계좌번호 복사
+                    계좌번호 복사
                   </button>
                   <button onclick="checkFraudHistory('{{ message.account_bank_code }}', '{{ message.account_number }}', '{{ message.account_holder }}')" 
                           class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                    🔍 신고 이력 조회
+                    신고이력 조회
                   </button>
                 </div>
               </div>
@@ -745,7 +745,7 @@
             </button>
             <button onclick="checkFraudHistory('${accountInfo.bank_code || ''}', '${accountInfo.account_number}', '${accountInfo.account_holder}')" 
                     class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-              신고 이력 조회
+              신고이력 조회
             </button>
           </div>
         `;
