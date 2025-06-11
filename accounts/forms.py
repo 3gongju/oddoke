@@ -1,3 +1,4 @@
+import re
 from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
@@ -18,8 +19,40 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
+        if not username:
+            raise forms.ValidationError("닉네임을 입력해주세요.")
+        
+        # 앞뒤 공백 제거
+        username = username.strip()
+        
+        # 길이 검증
+        if len(username) < 2:
+            raise forms.ValidationError("닉네임은 최소 2자 이상이어야 합니다.")
+        
+        if len(username) > 20:
+            raise forms.ValidationError("닉네임은 최대 20자까지 입력 가능합니다.")
+        
+        # 🔥 공백 관련 검증
+        if username.startswith(' ') or username.endswith(' '):
+            raise forms.ValidationError("닉네임 앞뒤에 공백은 사용할 수 없습니다.")
+        
+        # 연속된 공백 금지
+        if '  ' in username:  # 공백 2개 이상 연속
+            raise forms.ValidationError("연속된 공백은 사용할 수 없습니다.")
+        
+        # 한글, 영문, 숫자, 단일 공백만 허용
+        import re
+        if not re.match(r'^[가-힣a-zA-Z0-9\s]+$', username):
+            raise forms.ValidationError("닉네임은 한글, 영문, 숫자, 공백만 사용 가능합니다.")
+        
+        # 🔥 임시 username 패턴 금지
+        if username.startswith(('temp_kakao_', 'temp_naver_')):
+            raise forms.ValidationError("사용할 수 없는 닉네임 형식입니다.")
+        
+        # 기존 username 중복 검사
         if User.objects.filter(username=username).exists():
-            raise forms.ValidationError("이미 사용 중인 사용자명입니다.")
+            raise forms.ValidationError("이미 사용 중인 닉네임입니다.")
+        
         return username
 
     def clean(self):
@@ -67,18 +100,83 @@ class EmailAuthenticationForm(forms.Form):
     def get_user(self):
         return self.user
 
-# 추가 로그인폼
-# class CustomAuthenticationForm(AuthenticationForm):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.fields['username'].widget.attrs.update({
-#             'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
-#             'placeholder': '아이디 또는 이메일을 입력하세요'
-#         })
-#         self.fields['password'].widget.attrs.update({
-#             'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
-#             'placeholder': '비밀번호를 입력하세요'
-#         })
+# 소셜 로그인 후 추가 정보 입력 폼
+class SocialSignupCompleteForm(forms.ModelForm):   
+    username = forms.CharField(
+        max_length=20,
+        label="닉네임",
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '다른 사용자들에게 보여질 닉네임을 입력하세요',
+            'required': True
+        }),
+        help_text="2-20자의 한글, 영문, 숫자를 사용할 수 있습니다."
+    )
+    
+    profile_image = forms.ImageField(
+        required=False,
+        label="프로필 이미지",
+        widget=forms.FileInput(attrs={
+            'class': 'hidden',
+            'accept': 'image/*',
+            'id': 'profile-image-input'
+        }),
+        help_text="프로필 이미지를 설정해주세요."
+    )
+    
+    class Meta:
+        model = User
+        fields = ['username', 'profile_image']  # 🔥 bio 제거
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not username:
+            raise forms.ValidationError("닉네임을 입력해주세요.")
+        
+        # 앞뒤 공백 제거
+        username = username.strip()
+        
+        # 길이 검증
+        if len(username) < 2:
+            raise forms.ValidationError("닉네임은 최소 2자 이상이어야 합니다.")
+        
+        if len(username) > 20:
+            raise forms.ValidationError("닉네임은 최대 20자까지 입력 가능합니다.")
+        
+        # 🔥 공백 관련 검증
+        if username.startswith(' ') or username.endswith(' '):
+            raise forms.ValidationError("닉네임 앞뒤에 공백은 사용할 수 없습니다.")
+        
+        # 연속된 공백 금지
+        if '  ' in username:  # 공백 2개 이상 연속
+            raise forms.ValidationError("연속된 공백은 사용할 수 없습니다.")
+        
+        # 한글, 영문, 숫자, 단일 공백만 허용
+        import re
+        if not re.match(r'^[가-힣a-zA-Z0-9\s]+$', username):
+            raise forms.ValidationError("닉네임은 한글, 영문, 숫자, 공백만 사용 가능합니다.")
+        
+        # 🔥 임시 username 패턴 금지
+        if username.startswith(('temp_kakao_', 'temp_naver_')):
+            raise forms.ValidationError("사용할 수 없는 닉네임 형식입니다.")
+        
+        # 🔥 기존 username 중복 검사 (현재 사용자 제외)
+        existing_users = User.objects.filter(username=username).exclude(id=self.instance.id if self.instance else None)
+        if existing_users.exists():
+            raise forms.ValidationError("이미 사용 중인 닉네임입니다.")
+        
+        return username
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        # 🔥 임시 username에서 실제 username으로 변경
+        user.is_temp_username = False
+        user.is_profile_completed = True
+        user.social_signup_completed = True
+        
+        if commit:
+            user.save()
+        return user
 
 class MannerReviewForm(forms.ModelForm):
     class Meta:

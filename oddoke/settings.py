@@ -156,7 +156,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 # 이메일 가입
 AUTHENTICATION_BACKENDS = [
-    'accounts.backends.EmailBackend',  # 경로는 실제 코드 경로에 맞게!
+    'accounts.backends.EmailBackend',
 ]
 
 # 메일 서버 설정

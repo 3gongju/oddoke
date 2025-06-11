@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
+  <div class="w-full max-w-md">
+    
+    <!-- 환영 메시지 -->
+    <div class="text-center mb-8">
+      <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+        <span class="text-3xl text-white">🎉</span>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-800 mb-3">환영합니다!</h1>
+      <p class="text-gray-600 leading-relaxed">
+        {% if user.username|slice:":11" == "temp_kakao_" %}
+          카카오 로그인이 완료되었습니다.<br>
+        {% elif user.username|slice:":11" == "temp_naver_" %}
+          네이버 로그인이 완료되었습니다.<br>
+        {% endif %}
+        프로필을 설정해서 어덕해를 시작해보세요!
+      </p>
+    </div>
+
+    <!-- 프로필 설정 폼 -->
+    <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+      
+      <!-- 에러 메시지 -->
+      {% if form.errors %}
+        <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              <p class="text-red-700 text-sm">{{ error }}</p>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- 프로필 이미지 업로드 -->
+        <div class="text-center">
+          <label class="block text-sm font-semibold text-gray-700 mb-4">프로필 이미지</label>
+          
+          <!-- 이미지 미리보기 -->
+          <div class="relative inline-block">
+            <div class="w-24 h-24 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow" 
+                 onclick="document.getElementById('profile-image-input').click()">
+              <img id="image-preview" 
+                   src="{% static 'image/ddok_logo.png' %}" 
+                   alt="프로필 미리보기" 
+                   class="w-full h-full object-cover">
+            </div>
+            
+            <!-- 카메라 아이콘 -->
+            <div class="absolute bottom-0 right-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white cursor-pointer hover:bg-blue-600 transition-colors"
+                 onclick="document.getElementById('profile-image-input').click()">
+              <span class="text-white text-sm">📷</span>
+            </div>
+          </div>
+          
+          {{ form.profile_image }}
+          <p class="text-xs text-gray-500 mt-2">{{ form.profile_image.help_text }}</p>
+        </div>
+
+        <!-- 닉네임 입력 -->
+        <div>
+          <label for="{{ form.username.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+            {{ form.username.label }} <span class="text-red-500">*</span>
+          </label>
+          {{ form.username }}
+          {% if form.username.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.username.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <p class="text-xs text-gray-500 mt-1">{{ form.username.help_text }}</p>
+        </div>
+
+        <!-- 자기소개 -->
+        <div>
+          <label for="{{ form.bio.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+            {{ form.bio.label }}
+          </label>
+          {{ form.bio }}
+          <div class="flex justify-between items-center mt-1">
+            <p class="text-xs text-gray-500">{{ form.bio.help_text }}</p>
+            <span id="bio-count" class="text-xs text-gray-400 font-mono">0/150</span>
+          </div>
+        </div>
+
+        <!-- 안내 메시지 -->
+        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-8">
+          <div class="flex items-start space-x-3">
+            <div class="text-xl">💡</div>
+            <div>
+              <h4 class="font-semibold text-blue-800 mb-3">프로필 설정 안내</h4>
+              <ul class="text-sm text-blue-700 space-y-2 leading-relaxed">
+                <li class="flex items-start space-x-2">
+                  <span class="text-blue-500 mt-1">•</span>
+                  <span>닉네임은 다른 사용자들에게 표시되는 이름입니다.</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <span class="text-blue-500 mt-1">•</span>
+                  <span>프로필 이미지는 선택사항이지만 설정하시면 더 친근해 보여요.</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <span class="text-blue-500 mt-1">•</span>
+                  <span>나중에 마이페이지에서 언제든 변경할 수 있습니다.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 버튼 그룹 -->
+        <div class="flex justify-center pt-4">
+          <button type="submit" 
+                  class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
+            프로필 완성하고 시작하기
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 하단 링크 -->
+    <div class="text-center mt-8">
+      <p class="text-sm text-gray-500">
+        문제가 있나요? 
+        <a href="{% url 'accounts:logout' %}" class="text-blue-600 hover:text-blue-800 font-medium underline">
+          다시 로그인하기
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 이미지 미리보기
+  document.getElementById('profile-image-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('image-preview');
+    
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // 폼 제출 시 검증
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const username = document.getElementById('{{ form.username.id_for_label }}').value.trim();
+    
+    if (!username) {
+      e.preventDefault();
+      alert('닉네임을 입력해주세요!');
+      document.getElementById('{{ form.username.id_for_label }}').focus();
+      return false;
+    }
+    
+    if (username.length < 2) {
+      e.preventDefault();
+      alert('닉네임은 최소 2자 이상 입력해주세요!');
+      document.getElementById('{{ form.username.id_for_label }}').focus();
+      return false;
+    }
+  });
+</script>
+
+{% endblock %}
