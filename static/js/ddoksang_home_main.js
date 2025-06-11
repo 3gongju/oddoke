@@ -1,5 +1,5 @@
 // static/js/ddoksang_home_main.js
-// 홈페이지 메인 로직 - BdayCafe 모델 지원
+// 홈페이지 메인 로직 - 마커 클릭과 사이드바 연동 수정
 
 class DdoksangHome {
     constructor() {
@@ -19,6 +19,7 @@ class DdoksangHome {
             await this.loadCafesData();
             this.initializeUI();
             this.setupEventListeners();
+            this.setupSidebarEvents(); // 사이드바 이벤트 추가
             console.log('✅ 덕생 홈페이지 초기화 완료');
         } catch (error) {
             console.error('❌ 홈페이지 초기화 실패:', error);
@@ -78,8 +79,9 @@ class DdoksangHome {
                 }
             }
             if (this.mapManager && this.cafesData.length > 0) {
+                // ✅ 마커 클릭 시 모달 표시하도록 수정
                 await this.mapManager.loadCafes(this.cafesData, (cafe) => {
-                    this.handleCafeClick(cafe);
+                    this.handleMarkerClick(cafe);
                 });
             }
             this.updateCafeCount();
@@ -87,6 +89,88 @@ class DdoksangHome {
             console.error('❌ 카페 데이터 로드 실패:', error);
             this.showError('카페 정보를 불러오는 중 오류가 발생했습니다.');
         }
+    }
+
+    // ✅ 마커 클릭 핸들러 - 모달 표시
+    handleMarkerClick(cafe) {
+        console.log('🎯 마커 클릭:', cafe.name || cafe.cafe_name);
+        
+        // 모달 표시
+        if (window.DdoksangModals && window.DdoksangModals.showCafeInfo) {
+            window.DdoksangModals.showCafeInfo(cafe);
+        } else {
+            // fallback - 상세 페이지로 이동
+            this.handleCafeClick(cafe);
+        }
+    }
+
+    // ✅ 사이드바 카드 클릭 핸들러 - 지도 이동
+    handleSidebarCardClick(cafe) {
+        console.log('📌 사이드바 카드 클릭:', cafe.name || cafe.cafe_name);
+        
+        const lat = parseFloat(cafe.latitude || cafe.lat);
+        const lng = parseFloat(cafe.longitude || cafe.lng);
+        
+        if (!isNaN(lat) && !isNaN(lng) && this.mapManager) {
+            // 지도 이동
+            this.mapManager.moveToLocation(lat, lng, 5);
+            
+            // 시각적 피드백
+            this.highlightCafeCard(cafe.id);
+            
+            // 토스트 메시지
+            this.showSuccess(`${cafe.name || cafe.cafe_name} 위치로 이동했습니다.`);
+        } else {
+            console.error('❌ 잘못된 좌표:', { lat, lng, cafe });
+            this.showError('위치 정보가 올바르지 않습니다.');
+        }
+    }
+
+    // ✅ 카페 카드 하이라이트 효과
+    highlightCafeCard(cafeId) {
+        const card = document.querySelector(`[data-cafe-id="${cafeId}"]`);
+        if (card) {
+            card.classList.add('ring-2', 'ring-blue-400', 'ring-opacity-75');
+            setTimeout(() => {
+                card.classList.remove('ring-2', 'ring-blue-400', 'ring-opacity-75');
+            }, 2000);
+        }
+    }
+
+    // ✅ 사이드바 이벤트 설정
+    setupSidebarEvents() {
+        console.log('🔗 사이드바 이벤트 설정');
+        
+        // 사이드바 카드 클릭 이벤트 (이벤트 위임 방식)
+        document.addEventListener('click', (e) => {
+            const cafeCard = e.target.closest('.cafe-card-mini');
+            if (cafeCard) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // 상세보기 버튼이 아닌 경우에만 지도 이동
+                if (!e.target.closest('a[href*="/ddoksang/detail/"]')) {
+                    const lat = parseFloat(cafeCard.dataset.cafeLat);
+                    const lng = parseFloat(cafeCard.dataset.cafeLng);
+                    const cafeId = cafeCard.dataset.cafeId;
+                    
+                    if (!isNaN(lat) && !isNaN(lng)) {
+                        this.mapManager.moveToLocation(lat, lng, 5);
+                        this.highlightCafeCard(cafeId);
+                        
+                        // 해당 카페 데이터 찾아서 모달 표시 (선택사항)
+                        const cafeData = this.cafesData.find(c => c.id == cafeId);
+                        if (cafeData && window.DdoksangModals) {
+                            setTimeout(() => {
+                                window.DdoksangModals.showCafeInfo(cafeData);
+                            }, 500); // 지도 이동 후 모달 표시
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ 사이드바 이벤트 설정 완료');
     }
 
     initializeUI() {
@@ -284,10 +368,11 @@ class DdoksangHome {
             return;
         }
         window.DdoksangMap.displayNearbyCafes(cafes, 'nearbyList', (cafe) => {
-            this.handleCafeClick(cafe);
+            this.handleMarkerClick(cafe); // 마커 클릭과 동일하게 모달 표시
         });
     }
 
+    // ✅ 페이지 이동용 (상세보기 버튼 등)
     handleCafeClick(cafe) {
         if (cafe.id) {
             window.location.href = `/ddoksang/cafe/${cafe.id}/`;
@@ -340,7 +425,7 @@ class DdoksangHome {
 
 window.ddoksangHome = new DdoksangHome();
 
-
+// ✅ 전역 함수들 (하위 호환성)
 window.showCafeModal = function(cafe) {
     console.log('📱 카페 모달 호출:', cafe);
     if (window.DdoksangModals && window.DdoksangModals.showCafeInfo) {
@@ -350,4 +435,12 @@ window.showCafeModal = function(cafe) {
     }
 };
 
-console.log('✅ DdoksangHome 클래스 로드 완료 (BdayCafe 모델 지원)');
+// ✅ 지도 이동 함수 (사이드바에서 사용)
+window.moveToLocationHome = function(lat, lng) {
+    console.log('🗺️ 지도 이동 요청:', lat, lng);
+    if (window.ddoksangHome && window.ddoksangHome.mapManager) {
+        window.ddoksangHome.mapManager.moveToLocation(lat, lng, 5);
+    }
+};
+
+console.log('✅ DdoksangHome 클래스 로드 완료 (마커/사이드바 연동 수정)');

@@ -1,255 +1,236 @@
-"""
-지도 관련 유틸리티 함수들을 중앙화한 모듈
-- 좌표 유효성 검사
-- 거리 계산
-- 카페 → 지도용 JSON 변환
-- 템플릿 컨텍스트 구성
-"""
+# ddoksang/utils/map_utils.py
+# 지도 관련 유틸리티 함수들 통합
 
-import json
 import math
+import json
 import logging
-from typing import List, Dict, Optional, Tuple, Any
 from datetime import date
-
+from typing import List, Dict, Any, Optional, Union
+from django.db import models
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from ddoksang.models import BdayCafe
 
 logger = logging.getLogger(__name__)
 
-# =====================
-# 상수 정의
-# =====================
-KOREA_BOUNDS = {
-    'lat_min': 33.0,
-    'lat_max': 43.0,
-    'lng_min': 124.0,
-    'lng_max': 132.0
-}
+def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """두 지점 간의 거리를 계산 (하버사인 공식, 미터 단위)"""
+    R = 6371000  # 지구 반지름 (미터)
+    
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+    delta_lat = math.radians(lat2 - lat1)
+    delta_lng = math.radians(lng2 - lng1)
+    
+    a = (math.sin(delta_lat / 2) ** 2 + 
+         math.cos(lat1_rad) * math.cos(lat2_rad) * 
+         math.sin(delta_lng / 2) ** 2)
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    return R * c
 
-DEFAULT_CENTER = {
-    'lat': 37.5665,
-    'lng': 126.9780
-}
+
+def is_valid_coordinates(lat: Union[str, float, None], lng: Union[str, float, None]) -> bool:
+    """좌표 유효성 검사"""
+    try:
+        lat_f = float(lat) if lat is not None else None
+        lng_f = float(lng) if lng is not None else None
+        
+        if lat_f is None or lng_f is None:
+            return False
+            
+        return (-90 <= lat_f <= 90) and (-180 <= lng_f <= 180)
+    except (ValueError, TypeError):
+        return False
 
 
-# =====================
-# 클래스 구현부
-# =====================
-class MapDataGenerator:
-    @staticmethod
-    def validate_coordinates(latitude: Any, longitude: Any) -> Tuple[bool, Optional[Tuple[float, float]]]:
+def get_nearby_cafes(
+    user_lat: float, 
+    user_lng: float, 
+    cafes_queryset, 
+    radius_km: float = 5.0, 
+    limit: int = 20,
+    exclude_id: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """주변 카페 검색"""
+    
+    nearby_cafes = []
+    
+    for cafe in cafes_queryset:
+        # 제외할 카페 ID가 있는 경우 건너뛰기
+        if exclude_id and cafe.id == exclude_id:
+            continue
+            
+        # 좌표 유효성 검사
+        if not is_valid_coordinates(cafe.latitude, cafe.longitude):
+            continue
+            
         try:
-            lat = float(latitude)
-            lng = float(longitude)
-
-            if not (-90 <= lat <= 90 and -180 <= lng <= 180):
-                return False, None
-            if not (KOREA_BOUNDS['lat_min'] <= lat <= KOREA_BOUNDS['lat_max'] and 
-                    KOREA_BOUNDS['lng_min'] <= lng <= KOREA_BOUNDS['lng_max']):
-                logger.warning(f"좌표가 한국 범위를 벗어남: {lat}, {lng}")
-                return False, None
-
-            return True, (lat, lng)
-
-        except (ValueError, TypeError) as e:
-            logger.warning(f"좌표 변환 오류: {e}")
-            return False, None
-
-    @staticmethod
-    def cafe_to_map_data(cafe) -> Optional[Dict]:
-        try:
-            is_valid, coords = MapDataGenerator.validate_coordinates(cafe.latitude, cafe.longitude)
-            if not is_valid:
-                return None
-            lat, lng = coords
-
-            main_image_url = None
-            try:
-                if hasattr(cafe, 'get_main_image') and callable(cafe.get_main_image):
-                    main_image_url = cafe.get_main_image()
-                elif hasattr(cafe, 'images') and cafe.images.exists():
-                    main_image_url = cafe.images.first().image.url
-                elif hasattr(cafe, 'main_image') and cafe.main_image:
-                    main_image_url = cafe.main_image.url
-            except Exception as e:
-                logger.warning(f"카페 {cafe.id} 이미지 처리 오류: {e}")
-
-            return {
-                'id': cafe.id,
-                'name': cafe.cafe_name,
-                'cafe_name': cafe.cafe_name,
-                'place_name': getattr(cafe, 'place_name', '') or cafe.cafe_name,
-                'artist': getattr(cafe.artist, 'display_name', '') if cafe.artist else '',
-                'member': getattr(cafe.member, 'member_name', '') if cafe.member else '',
-                'latitude': lat,
-                'longitude': lng,
-                'address': cafe.address or '',
-                'road_address': getattr(cafe, 'road_address', '') or '',
-                'place_url': f'https://map.kakao.com/link/map/{cafe.cafe_name},{lat},{lng}',
-                'start_date': cafe.start_date.strftime('%Y-%m-%d') if cafe.start_date else '',
-                'end_date': cafe.end_date.strftime('%Y-%m-%d') if cafe.end_date else '',
-                'cafe_type': cafe.get_cafe_type_display() if hasattr(cafe, 'get_cafe_type_display') else '',
-                'special_benefits': cafe.special_benefits or '',
-                'days_remaining': getattr(cafe, 'days_remaining', 0),
-                'main_image': main_image_url,
-                'is_active': getattr(cafe, 'is_active', False),
-                'view_count': getattr(cafe, 'view_count', 0),
-                'images': cafe.get_all_images() if hasattr(cafe, 'get_all_images') else [],
-            }
-
-        except Exception as e:
-            logger.error(f"카페 {getattr(cafe, 'id', 'unknown')} 지도 데이터 변환 오류: {e}")
-            return None
-
-    @staticmethod
-    def cafes_to_map_json(cafes_queryset, ensure_ascii=False) -> str:
-        map_data = []
-        for cafe in cafes_queryset:
-            data = MapDataGenerator.cafe_to_map_data(cafe)
-            if data:
-                map_data.append(data)
-
-        try:
-            return json.dumps(map_data, ensure_ascii=ensure_ascii, cls=DjangoJSONEncoder)
-        except Exception as e:
-            logger.error(f"JSON 직렬화 오류: {e}")
-            return "[]"
-
-    @staticmethod
-    def get_active_cafes_map_data(status='approved', today=None) -> str:
-        if today is None:
-            today = date.today()
-
-        cafes = BdayCafe.objects.filter(
-            status=status,
-            start_date__lte=today,
-            end_date__gte=today
-        ).select_related('artist', 'member').prefetch_related('images')
-
-        return MapDataGenerator.cafes_to_map_json(cafes)
+            cafe_lat = float(cafe.latitude)
+            cafe_lng = float(cafe.longitude)
+            
+            # 거리 계산
+            distance_m = calculate_distance(user_lat, user_lng, cafe_lat, cafe_lng)
+            distance_km = distance_m / 1000
+            
+            # 반경 내에 있는 카페만 포함
+            if distance_km <= radius_km:
+                cafe_data = {
+                    'id': cafe.id,
+                    'cafe_name': cafe.cafe_name,
+                    'artist': cafe.artist.display_name if cafe.artist else '',
+                    'member': cafe.member.member_name if cafe.member else '',
+                    'address': cafe.address,
+                    'latitude': cafe_lat,
+                    'longitude': cafe_lng,
+                    'distance': round(distance_km, 2),
+                    'distance_m': round(distance_m),
+                    'walk_time': round(distance_m / 80),  # 평균 도보 속도 80m/분
+                    'main_image': cafe.get_main_image() if hasattr(cafe, 'get_main_image') else None,
+                    'is_active': cafe.is_active if hasattr(cafe, 'is_active') else False,
+                    'days_remaining': cafe.days_remaining if hasattr(cafe, 'days_remaining') else 0,
+                    'days_until_start': cafe.days_until_start if hasattr(cafe, 'days_until_start') else 0,
+                    'start_date': cafe.start_date.isoformat() if cafe.start_date else None,
+                    'end_date': cafe.end_date.isoformat() if cafe.end_date else None,
+                }
+                
+                # 같은 아티스트/멤버인지 확인 (관련 카페 표시용)
+                # cafe_data['is_related'] = (
+                #     cafe.artist == original_cafe.artist or 
+                #     (cafe.member and original_cafe.member and cafe.member == original_cafe.member)
+                # ) if original_cafe else False
+                
+                nearby_cafes.append(cafe_data)
+                
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.warning(f"카페 {cafe.id} 주변 검색 처리 오류: {e}")
+            continue
+    
+    # 거리순으로 정렬 후 제한
+    nearby_cafes.sort(key=lambda x: x['distance'])
+    return nearby_cafes[:limit]
 
 
-class DistanceCalculator:
-    @staticmethod
-    def haversine_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
-        try:
-            R = 6371000
-            lat1_rad, lng1_rad = math.radians(lat1), math.radians(lng1)
-            lat2_rad, lng2_rad = math.radians(lat2), math.radians(lng2)
-            dlat = lat2_rad - lat1_rad
-            dlng = lng2_rad - lng1_rad
-
-            a = math.sin(dlat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlng / 2) ** 2
-            return R * (2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)))
-        except (ValueError, TypeError):
-            return float('inf')
-
-    @staticmethod
-    def calculate_walk_time(distance_meters: float, walking_speed_kmh: float = 4.0) -> int:
-        if distance_meters <= 0:
-            return 0
-        speed_m_per_min = (walking_speed_kmh * 1000) / 60
-        return max(1, int(round(distance_meters / speed_m_per_min)))
-
-    @staticmethod
-    def get_nearby_cafes(user_lat: float, user_lng: float, cafes_queryset, radius_km=10, limit=10, exclude_id=None):
-        try:
-            user_lat = float(user_lat)
-            user_lng = float(user_lng)
-        except (ValueError, TypeError):
-            return []
-
-        lat_range = radius_km / 111.0
-        lng_range = radius_km / (111.0 * math.cos(math.radians(user_lat)))
-
-        cafes = cafes_queryset.filter(
-            latitude__range=(user_lat - lat_range, user_lat + lat_range),
-            longitude__range=(user_lng - lng_range, user_lng + lng_range)
-        )
-        if exclude_id:
-            cafes = cafes.exclude(id=exclude_id)
-
-        results = []
-        for cafe in cafes:
-            try:
-                dist = DistanceCalculator.haversine_distance(user_lat, user_lng, cafe.latitude, cafe.longitude)
-                if dist <= radius_km * 1000:
-                    cafe.distance = dist / 1000
-                    cafe.duration = DistanceCalculator.calculate_walk_time(dist)
-                    results.append(cafe)
-            except:
-                continue
-
-        results.sort(key=lambda x: x.distance)
-        return results[:limit]
-
-
-class MapConfigManager:
-    @staticmethod
-    def get_kakao_api_key() -> str:
-        return getattr(settings, 'KAKAO_MAP_API_KEY', '')
-
-    @staticmethod
-    def get_default_map_config() -> Dict:
+def serialize_cafe_for_map(cafe) -> Dict[str, Any]:
+    """카페 객체를 지도용 JSON으로 직렬화"""
+    try:
         return {
-            'center': DEFAULT_CENTER,
-            'level': 8,
-            'mobile_level': 9,
-            'api_key': MapConfigManager.get_kakao_api_key(),
+            'id': cafe.id,
+            'cafe_name': cafe.cafe_name,
+            'name': cafe.cafe_name,  # 하위 호환성
+            'latitude': float(cafe.latitude),
+            'longitude': float(cafe.longitude),
+            'address': cafe.address,
+            'road_address': cafe.road_address or '',
+            
+            # 아티스트/멤버 정보
+            'artist_name': cafe.artist.display_name if cafe.artist else '',
+            'artist': {
+                'display_name': cafe.artist.display_name if cafe.artist else '',
+                'id': cafe.artist.id if cafe.artist else None
+            },
+            'member_name': cafe.member.member_name if cafe.member else '',
+            'member': {
+                'member_name': cafe.member.member_name if cafe.member else '',
+                'id': cafe.member.id if cafe.member else None
+            } if cafe.member else None,
+            
+            # 운영 정보
+            'start_date': cafe.start_date.isoformat(),
+            'end_date': cafe.end_date.isoformat(),
+            'status': cafe.status,
+            'is_active': cafe.is_active,
+            
+            # 이미지 정보
+            'main_image': cafe.get_main_image() if hasattr(cafe, 'get_main_image') else None,
+            'main_image_url': cafe.get_main_image() if hasattr(cafe, 'get_main_image') else None,
+            'image_url': cafe.get_main_image() if hasattr(cafe, 'get_main_image') else None,  # 하위 호환성
+            
+            # 추가 정보
+            'cafe_type': cafe.cafe_type,
+            'special_benefits': cafe.special_benefits or '',
+            'event_description': cafe.event_description or '',
+            'view_count': cafe.view_count,
+            'created_at': cafe.created_at.isoformat(),
         }
-
-    @staticmethod
-    def get_context_for_template(cafes_queryset=None, user_location=None, **extra_context) -> Dict:
-        context = {
-            'kakao_api_key': MapConfigManager.get_kakao_api_key(),
-            'KAKAO_MAP_API_KEY': MapConfigManager.get_kakao_api_key(),
-            'map_config': MapConfigManager.get_default_map_config(),
-        }
-
-        if cafes_queryset is not None:
-            cafes_json = MapDataGenerator.cafes_to_map_json(cafes_queryset)
-            context.update({
-                'cafes_json': cafes_json,
-                'total_cafes': cafes_queryset.count() if hasattr(cafes_queryset, 'count') else len(cafes_queryset),
-                'bday_cafes_json': cafes_json,
-                'total_bday_cafes': cafes_queryset.count(),
-            })
-
-        if user_location:
-            context['user_location'] = user_location
-
-        context.update(extra_context)
-        return context
+    except Exception as e:
+        logger.error(f"카페 {cafe.id} 직렬화 오류: {e}")
+        return None
 
 
-# =====================
-# 함수 레벨 래퍼들 (사용 편의성)
-# =====================
+def get_map_context(cafes_queryset=None) -> Dict[str, Any]:
+    """지도 관련 컨텍스트 생성"""
+    
+    # 기본 지도 설정
+    context = {
+        'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'default_center': {'lat': 37.5665, 'lng': 126.9780},  # 서울 시청
+        'default_zoom': 8,
+    }
+    
+    # 카페 데이터가 제공된 경우
+    if cafes_queryset is not None:
+        cafes_json_data = []
+        valid_cafes_count = 0
+        
+        for cafe in cafes_queryset:
+            # 좌표 유효성 검사
+            if not is_valid_coordinates(cafe.latitude, cafe.longitude):
+                logger.warning(f"카페 {cafe.id}: 잘못된 좌표 ({cafe.latitude}, {cafe.longitude})")
+                continue
+                
+            cafe_data = serialize_cafe_for_map(cafe)
+            if cafe_data:
+                cafes_json_data.append(cafe_data)
+                valid_cafes_count += 1
+        
+        # JSON 직렬화
+        try:
+            cafes_json = json.dumps(cafes_json_data, cls=DjangoJSONEncoder, ensure_ascii=False)
+        except Exception as e:
+            logger.error(f"카페 데이터 JSON 직렬화 오류: {e}")
+            cafes_json = '[]'
+        
+        context.update({
+            'cafes_json': cafes_json,
+            'total_cafes': valid_cafes_count,
+            'cafes_data': cafes_json_data,  # 템플릿에서 직접 사용 가능
+        })
+        
+        logger.info(f"지도 컨텍스트 생성 완료: {valid_cafes_count}개 카페")
+    
+    return context
 
-def validate_coordinates(latitude, longitude):
-    return MapDataGenerator.validate_coordinates(latitude, longitude)
 
-def calculate_distance(lat1, lng1, lat2, lng2):
-    return DistanceCalculator.haversine_distance(lat1, lng1, lat2, lng2)
+def filter_operating_cafes(cafes_queryset, reference_date: Optional[date] = None):
+    """현재 운영중인 카페만 필터링"""
+    if reference_date is None:
+        reference_date = date.today()
+    
+    return cafes_queryset.filter(
+        start_date__lte=reference_date,
+        end_date__gte=reference_date
+    )
 
-def get_nearby_cafes(user_lat, user_lng, cafes_queryset=None, radius_km=10, limit=10, exclude_id=None):
-    if cafes_queryset is None:
-        today = date.today()
-        cafes_queryset = BdayCafe.objects.filter(
-            status='approved',
-            start_date__lte=today,
-            end_date__gte=today
-        ).select_related('artist', 'member').prefetch_related('images')
 
-    return DistanceCalculator.get_nearby_cafes(user_lat, user_lng, cafes_queryset, radius_km, limit, exclude_id)
+def get_cafe_status(cafe, reference_date: Optional[date] = None) -> str:
+    """카페 운영 상태 반환 ('upcoming', 'ongoing', 'ended')"""
+    if reference_date is None:
+        reference_date = date.today()
+    
+    if cafe.start_date > reference_date:
+        return 'upcoming'
+    elif cafe.end_date >= reference_date:
+        return 'ongoing'
+    else:
+        return 'ended'
 
-def get_map_context(cafes_queryset=None, **kwargs):
-    return MapConfigManager.get_context_for_template(cafes_queryset, **kwargs)
 
-def cafes_to_map_json(cafes_queryset, ensure_ascii=False):
-    return MapDataGenerator.cafes_to_map_json(cafes_queryset, ensure_ascii)
+# 하위 호환성을 위한 별칭
+def haversine_distance(lat1, lng1, lat2, lng2):
+    """하위 호환성을 위한 별칭"""
+    return calculate_distance(lat1, lng1, lat2, lng2)
 
-def cafe_to_map_data(cafe):
-    return MapDataGenerator.cafe_to_map_data(cafe)
+
+def find_nearby_cafes(*args, **kwargs):
+    """하위 호환성을 위한 별칭"""
+    return get_nearby_cafes(*args, **kwargs)

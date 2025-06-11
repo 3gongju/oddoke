@@ -230,33 +230,94 @@
 <script src="{% static 'js/ddoksang_home_modals.js' %}"></script>
 <script src="{% static 'js/ddoksang_home_location.js' %}"></script>
 
-<!-- 최소한의 초기화 스크립트 -->
+<!-- ✅ 수정된 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log(' 덕생 홈페이지 로드 완료');
+    console.log('🏠 덕생 홈페이지 로드 완료');
     
-    // 메인 앱 초기화
+    // ✅ 메인 앱 초기화 (수정됨)
     if (window.ddoksangHome) {
         window.ddoksangHome.init().then(() => {
-            console.log(' 홈페이지 초기화 성공');
+            console.log('✅ 홈페이지 초기화 성공');
+            
+            // ✅ 초기화 완료 후 추가 설정
+            console.log('🎯 마커 클릭 → 모달 표시');
+            console.log('📌 사이드바 카드 클릭 → 지도 이동');
+            
         }).catch(error => {
-            console.error(' 홈페이지 초기화 실패:', error);
+            console.error('❌ 홈페이지 초기화 실패:', error);
         });
     } else {
-        console.error(' ddoksangHome 인스턴스를 찾을 수 없습니다');
+        console.error('❌ ddoksangHome 인스턴스를 찾을 수 없습니다');
     }
     
-    // 위치 관리 초기화
+    // ✅ 위치 관리 초기화 (기존 유지)
     if (window.DdoksangLocation) {
         window.DdoksangLocation.init();
     } else {
-        console.error(' DdoksangLocation 클래스를 찾을 수 없습니다');
+        console.error('❌ DdoksangLocation 클래스를 찾을 수 없습니다');
     }
     
-    // 모달 시스템 초기화
+    // ✅ 모달 시스템 초기화 (기존 유지)
     if (window.DdoksangModals) {
         window.DdoksangModals.init();
     }
+    
+    // ✅ 찜하기 기능 초기화 (추가)
+    if (window.Ddoksang && window.Ddoksang.favoriteManager) {
+        // 찜하기 버튼이 있는 경우에만 초기화
+        if (document.querySelector('[data-favorite-btn]')) {
+            new window.Ddoksang.FavoriteManager();
+            console.log('✅ 찜하기 기능 초기화');
+        }
+    }
+    
+    // ✅ 생일 아티스트 슬라이더 초기화 (기존 유지)
+    if (typeof initBirthdayNavigation === 'function') {
+        setTimeout(() => {
+            initBirthdayNavigation();
+            console.log('✅ 생일 아티스트 슬라이더 초기화');
+        }, 100);
+    }
 });
+
+// ✅ 전역 함수 설정 (하위 호환성)
+window.moveToLocationHome = function(lat, lng) {
+    console.log('🗺️ moveToLocationHome 호출:', lat, lng);
+    if (window.ddoksangHome && window.ddoksangHome.mapManager) {
+        window.ddoksangHome.mapManager.moveToLocation(lat, lng, 5);
+    } else {
+        console.warn('⚠️ ddoksangHome.mapManager를 찾을 수 없습니다');
+    }
+};
+
+window.showCafeInfoModal = function(cafe) {
+    console.log('📱 showCafeInfoModal 호출:', cafe);
+    if (window.DdoksangModals && window.DdoksangModals.showCafeInfo) {
+        window.DdoksangModals.showCafeInfo(cafe);
+    } else {
+        console.warn('⚠️ DdoksangModals를 찾을 수 없습니다');
+    }
+};
+
+window.closeCafeInfoModal = function(event) {
+    if (window.DdoksangModals && window.DdoksangModals.closeCafeInfo) {
+        window.DdoksangModals.closeCafeInfo(event);
+    }
+};
+
+// ✅ 디버깅용 전역 함수
+window.debugDdoksang = function() {
+    console.log('=== 덕생 홈페이지 디버깅 정보 ===');
+    console.log('ddoksangHome:', window.ddoksangHome);
+    console.log('DdoksangModals:', window.DdoksangModals);
+    console.log('DdoksangLocation:', window.DdoksangLocation);
+    console.log('DdoksangMap:', window.DdoksangMap);
+    console.log('카페 데이터 수:', window.ddoksangHome?.cafesData?.length || 0);
+    console.log('지도 초기화 상태:', !!window.ddoksangHome?.mapManager?.map);
+    console.log('================================');
+};
+
+console.log('✅ 홈페이지 스크립트 로드 완료 (마커 클릭 & 사이드바 연동)');
 </script>
 {% endblock %}
