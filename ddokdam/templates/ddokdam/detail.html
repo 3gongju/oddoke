@@ -33,51 +33,49 @@
 </div>
 
 <script>
-  function showReplyForm(commentId) {
-    const form = document.getElementById(`reply-form-${commentId}`);
-    if (form) {
-      form.classList.toggle('hidden');
+  // ✅ CSRF 토큰을 전역 변수로 설정
+  window.csrfToken = "{{ csrf_token }}";
+  
+  document.addEventListener('DOMContentLoaded', function () {
+    const likeButton = document.getElementById('like-button');
+    const likeCount = document.getElementById('like-count');
+    const csrfToken = "{{ csrf_token }}";
+
+    if (likeButton) {
+      likeButton.addEventListener('click', function () {
+        fetch("{% url 'ddokdam:like_post' category=category post_id=post.id %}", {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(res => res.json())
+        .then(data => {
+          likeButton.dataset.liked = data.liked ? "true" : "false";
+          likeButton.textContent = data.liked ? "❤️" : "🤍";
+          if (likeCount) {
+            likeCount.textContent = data.like_count;
+          }
+        });
+      });
     }
-  }
-document.addEventListener('DOMContentLoaded', function () {
-  const likeButton = document.getElementById('like-button');
-  const likeCount = document.getElementById('like-count');
-  const csrfToken = "{{ csrf_token }}";
 
-  if (!likeButton) return;
-
-  likeButton.addEventListener('click', function () {
-    fetch("{% url 'ddokdam:like_post' category=category post_id=post.id %}", {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken,
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      likeButton.dataset.liked = data.liked ? "true" : "false";
-      likeButton.textContent = data.liked ? "❤️" : "🤍";
-      if (likeCount) {
-        likeCount.textContent = data.like_count;
-      }
-    });
+    // 이미지 캐러셀 초기화 (Swiper)
+    if (typeof Swiper !== 'undefined') {
+      new Swiper('.swiper-container', {
+        loop: true,
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+      });
+    }
   });
-
-  // 이미지 캐러셀 초기화 (Swiper)
-  new Swiper('.swiper-container', {
-    loop: true,
-    pagination: {
-      el: '.swiper-pagination',
-      clickable: true,
-    },
-    navigation: {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev',
-    },
-  });
-});
-
 </script>
 
 <!-- ✅ 댓글 비동기 처리 스크립트 추가 -->

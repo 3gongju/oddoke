@@ -20,6 +20,7 @@
 
   <p class="text-gray-700 mt-1">{{ comment.content }}</p>
 
+  {# ✅ 최상위 댓글에만 답글 버튼과 대댓글 목록 표시 #}
   {% if not is_reply %}
     <div class="text-sm text-gray-500 mt-1">
       <a href="javascript:void(0);" class="reply-toggle-btn" data-comment-id="{{ comment.id }}">댓글</a>
@@ -28,8 +29,27 @@
       {% include "components/post_detail/_comment_form.html" with action_url=comment_create_url parent_id=comment.id %}
     </div>
 
+    {# ✅ 대댓글들을 표시 - 재귀 호출 없이 단순 반복만 #}
     {% for reply in comment.replies.all %}
-      {% include "components/post_detail/_comment_list.html" with comment=reply is_reply=True %}
+      <div class="comment-item mt-2 ml-6 py-2 border-t text-sm">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-2">
+            {% include 'components/post_detail/_user_profile.html' with user=reply.user %}
+            <span class="text-gray-400 text-xs">· {{ reply.created_at|naturaltime }}</span>
+          </div>
+          {% if reply.user == request.user %}
+            {% url comment_delete_url_name category=category post_id=post.id comment_id=reply.id as delete_url %}
+            <a href="javascript:void(0);"
+              class="text-red-500 text-sm hover:underline delete-comment-btn"
+              data-comment-id="{{ reply.id }}"
+              data-delete-url="{{ delete_url }}">
+              삭제
+            </a>
+          {% endif %}
+        </div>
+        <p class="text-gray-700 mt-1">{{ reply.content }}</p>
+        {# ✅ 대댓글에는 답글 버튼 없음 - 1단계만 허용 #}
+      </div>
     {% endfor %}
   {% endif %}
 </div>
