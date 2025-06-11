@@ -1,0 +1,211 @@
+<!-- notifications/templates/notifications/notification_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">알림</h1>
+            {% if page_obj.object_list %}
+                <form method="post" action="{% url 'notifications:mark_all_read' %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors">
+                        모두 읽음
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if page_obj.object_list %}
+            <div class="bg-white shadow rounded-lg">
+                {% for notification in page_obj %}
+                    <div class="border-b border-gray-200 last:border-b-0 p-4 {% if not notification.is_read %}bg-blue-50{% endif %}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3">
+                                    <!-- 알림 아이콘 -->
+                                    <div class="flex-shrink-0">
+                                        {% if notification.notification_type == 'comment' %}
+                                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                <span class="text-green-600 text-sm">💬</span>
+                                            </div>
+                                        {% elif notification.notification_type == 'like' %}
+                                            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                                <span class="text-red-600 text-sm">❤️</span>
+                                            </div>
+                                        {% elif notification.notification_type == 'follow' %}
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <span class="text-blue-600 text-sm">👤</span>
+                                            </div>
+                                        {% elif notification.notification_type == 'chat' %}
+                                            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                                                <span class="text-yellow-600 text-sm">💌</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                                <span class="text-gray-600 text-sm">🔔</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- 알림 내용 (클릭 가능) -->
+                                    <div class="flex-1">
+                                        <a href="{% url 'notifications:goto_content' notification.id %}" 
+                                           class="block hover:bg-gray-50 p-2 rounded transition-colors">
+                                            <p class="text-gray-900 {% if not notification.is_read %}font-semibold{% endif %}">
+                                                {{ notification.message }}
+                                            </p>
+                                            <p class="text-sm text-gray-500 mt-1">
+                                                {{ notification.created_at|date:"Y년 m월 d일 H:i" }}
+                                            </p>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 액션 버튼들 -->
+                            <div class="flex items-center space-x-2 ml-4">
+                                {% if not notification.is_read %}
+                                    <form method="post" action="{% url 'notifications:mark_read' notification.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-blue-600 hover:text-blue-800 text-sm">
+                                            읽음
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <form method="post" action="{% url 'notifications:delete_notification' notification.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 hover:text-red-800 text-sm" onclick="return confirm('정말 삭제하시겠습니까?')">
+                                        삭제
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- 페이지네이션 -->
+            {% if page_obj.has_other_pages %}
+                <div class="mt-6 flex justify-center">
+                    <nav class="flex space-x-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 rounded-md">
+                                이전
+                            </a>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <span class="px-3 py-2 bg-blue-500 text-white rounded-md">{{ num }}</span>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <a href="?page={{ num }}" class="px-3 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:bg-gray-50 rounded-md">
+                                다음
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">🔔</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">알림이 없습니다</h3>
+                <p class="text-gray-500">새로운 알림이 오면 여기에 표시됩니다.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// 알림 개수 업데이트 함수 (네비게이션 바 배지용)
+function updateNotificationCount() {
+    fetch('{% url "notifications:unread_count" %}')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notification-badge');
+            if (badge) {
+                badge.textContent = data.unread_count;
+                if (data.unread_count > 0) {
+                    badge.classList.remove('hidden');
+                    if (data.unread_count > 99) {
+                        badge.textContent = '99+';
+                        badge.classList.add('px-1');
+                    }
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        })
+        .catch(error => console.error('알림 개수 업데이트 에러:', error));
+}
+
+// AJAX로 알림 읽음 처리
+document.addEventListener('DOMContentLoaded', function() {
+    // 읽음 버튼 클릭 시
+    document.querySelectorAll('form[action*="/read/"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 해당 알림 스타일 변경
+                    const notificationDiv = this.closest('.border-b');
+                    notificationDiv.classList.remove('bg-blue-50');
+                    notificationDiv.querySelector('p').classList.remove('font-semibold');
+                    this.remove(); // 읽음 버튼 제거
+                    
+                    // 네비게이션 바 배지 업데이트
+                    updateNotificationCount();
+                }
+            })
+            .catch(error => console.error('에러:', error));
+        });
+    });
+
+    // 모두 읽음 버튼 클릭 시
+    const markAllForm = document.querySelector('form[action*="mark-all-read"]');
+    if (markAllForm) {
+        markAllForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 페이지 새로고침
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('에러:', error));
+        });
+    }
+});
+</script>
+{% endblock %}

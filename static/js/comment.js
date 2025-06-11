@@ -1,3 +1,26 @@
+// ✅ 댓글 스크롤 함수 (알림에서 올 때)
+function scrollToCommentFromNotification() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const commentId = urlParams.get('scroll_to_comment');
+  
+  if (commentId) {
+    const commentElement = document.querySelector(`#comment-${commentId}`);
+    
+    if (commentElement) {
+      setTimeout(() => {
+        commentElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 500);
+      
+      // URL에서 파라미터 제거
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }
+}
+
 // ✅ CSRF 토큰 가져오는 함수
 function getCsrfToken() {
   const tokenInput = document.querySelector("[name=csrfmiddlewaretoken]");
@@ -52,26 +75,23 @@ async function refreshCommentSection() {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
       
-      // 새로운 댓글 섹션 가져오기
       const newCommentSection = doc.querySelector('.comment-section');
       const currentCommentSection = document.querySelector('.comment-section');
       
       if (newCommentSection && currentCommentSection) {
         currentCommentSection.innerHTML = newCommentSection.innerHTML;
         
-        // ✅ CSRF 토큰 다시 설정 (새로 로드된 HTML에서)
         const newCsrfToken = doc.querySelector("[name=csrfmiddlewaretoken]");
         if (newCsrfToken && newCsrfToken.value) {
           window.csrfToken = newCsrfToken.value;
         }
         
-        // 이벤트 다시 바인딩
         bindAllEvents();
+        scrollToCommentFromNotification();
       }
     }
   } catch (error) {
     console.error('댓글 영역 새로고침 실패:', error);
-    // 실패하면 전체 페이지 새로고침
     window.location.reload();
   }
 }
@@ -82,7 +102,6 @@ async function handleCommentSubmit(e) {
   
   const form = e.target;
   const url = form.getAttribute("action");
-  
   const csrfToken = getCsrfToken();
   
   if (!csrfToken) {
@@ -105,7 +124,6 @@ async function handleCommentSubmit(e) {
     });
 
     if (response.ok) {
-      // ✅ 댓글 작성 후 댓글 영역만 새로고침
       await refreshCommentSection();
     } else {
       alert(`댓글 등록에 실패했습니다. (${response.status})`);
@@ -138,7 +156,6 @@ function bindDeleteButtons(scope = document) {
         });
 
         if (response.ok) {
-          // ✅ 삭제 후 댓글 영역만 새로고침
           await refreshCommentSection();
         } else {
           alert("댓글 삭제에 실패했습니다.");
@@ -152,9 +169,7 @@ function bindDeleteButtons(scope = document) {
 
 // ✅ 모든 이벤트 바인딩
 function bindAllEvents() {
-  // 댓글 폼 바인딩
   document.querySelectorAll("form[id^='comment-form']").forEach(form => {
-    // 기존 이벤트 제거
     form.removeAttribute('data-bound');
     if (!form.hasAttribute('data-bound')) {
       form.setAttribute('data-bound', 'true');
@@ -162,10 +177,10 @@ function bindAllEvents() {
     }
   });
 
-  // 삭제 버튼 바인딩
   bindDeleteButtons();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   bindAllEvents();
+  scrollToCommentFromNotification();
 });
