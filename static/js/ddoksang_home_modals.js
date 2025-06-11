@@ -1,4 +1,3 @@
-// static/js/ddoksang_home_modals.js (정리된 버전 - 120줄)
 // 카페 정보 모달 관리 (중복 제거, 간소화)
 
 class DdoksangModals {

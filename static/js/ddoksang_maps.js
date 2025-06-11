@@ -1,10 +1,9 @@
-// static/js/ddoksang_maps.js (정리된 버전 - 200줄)
 // 지도 관리 + 공통 유틸리티 (토스트 제거, 중복 정리)
 
 (function(window) {
   'use strict';
 
-  // ✅ 공통 유틸리티 클래스 (모든 파일에서 사용)
+  // 공통 유틸리티 클래스 (모든 파일에서 사용)
   const Utils = {
     // 거리 계산
     calculateDistance(lat1, lng1, lat2, lng2) {
