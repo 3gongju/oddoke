@@ -3,6 +3,8 @@ from django.urls import path
 from ddoksang.views import api_views
 from . import views
 import ddoksang.views.cafe_views as cafe_views 
+from ddoksang.views import api_views
+
 
 app_name = 'ddoksang'
 
@@ -32,11 +34,14 @@ urlpatterns = [
     
     # === API 엔드포인트 ===
     path('api/cafes/', views.bday_cafe_list_api, name='cafe_list_api'),
-    path('api/latest-cafes/', api_views.latest_cafes_api,   name='latest_cafes_api'),  # 새로 추가
+    path('api/latest-cafes/', api_views.latest_cafes_api,   name='latest_cafes_api'), 
     path('api/cafe/<int:cafe_id>/quick/', views.cafe_quick_view, name='cafe_quick_api'),
     path('api/nearby/', views.nearby_cafes_api, name='nearby_cafes_api'),
     path('api/map-data/', views.cafe_map_data_api, name='map_data_api'),
     path('api/search-suggestions/', views.search_suggestions_api, name='search_suggestions_api'),
+    # path('cafe/check-duplicate/', api_views.check_duplicate_cafe, name='check_duplicate_cafe'), # 카페 create 하기 전 중복 검사 단계
+    path('cafe/check-duplicate/', api_views.check_duplicate_cafe, name='check_duplicate_cafe'),
+
 
     
     # === 관리자 기능 ===

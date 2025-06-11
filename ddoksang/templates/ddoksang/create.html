@@ -5,7 +5,7 @@
 {% block body %}
 <section class="max-w-4xl mx-auto px-4 py-10">
   <h1 class="text-2xl font-bold mb-6">🎁 생카 등록하기</h1>
-  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생카페 정보를 등록해주세요!</p>
+  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생카 정보를 등록해주세요!</p>
 
   <!-- Progress Bar -->
   <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
@@ -15,34 +15,32 @@
   <form method="POST" enctype="multipart/form-data" id="multiStepForm" action="{% url 'ddoksang:create' %}">
     {% csrf_token %}
 
-    <!-- STEP 1: 아티스트/멤버 검색 -->
-    <div id="step-1" class="step">
-      <label class="block text-sm font-medium mb-2">아티스트/멤버명 검색</label>
-      <div class="relative">
-        <input type="text" id="artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
-        <ul id="artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
-      </div>
-      
-      <input type="hidden" name="artist_id" id="artist_id">
-      <input type="hidden" name="member_id" id="member_id">
-      
-      <!-- 선택된 아티스트 표시 -->
-      <div id="selected-artist" class="mt-2 p-2 border rounded bg-blue-50 hidden">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-medium text-blue-800" id="selected-artist-text"></p>
-          </div>
-          <button type="button" onclick="clearSelection()" class="text-blue-600 hover:text-blue-800 text-sm">변경</button>
-        </div>
+    <!-- STEP 0: 중복 확인 -->
+    {% include "ddoksang/components/create/_duplicate_check_step.html" %}
+
+    <!-- STEP 1: 아티스트/멤버 요약 -->
+    <div id="step-1" class="step hidden">
+      <h2 class="text-lg font-semibold mb-4">선택된 아티스트/멤버 확인</h2>
+      <div class="p-3 border rounded bg-blue-50 mb-4">
+        <p class="text-sm text-blue-800">선택된 아티스트: <span id="summary-artist-name"></span></p>
+        <p class="text-sm text-blue-800">선택된 멤버: <span id="summary-member-name"></span></p>
       </div>
 
-      
+      <input type="hidden" name="artist_id" id="register_artist_id">
+      <input type="hidden" name="member_id" id="register_member_id">
     </div>
 
     <!-- STEP 2: 카페 정보 -->
     <div id="step-2" class="step hidden">
       <label class="block text-sm font-medium mb-2">생카명</label>
       <input type="text" name="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
+
+
+      <!-- 중복 경고 메세지 삽입  -->
+      <div id="duplicate-warning" class="mt-3 p-3 bg-red-100 border border-red-300 text-red-700 rounded hidden">
+       유사한 이름의 생일카페가 이미 등록되어 있습니다. 중복 등록은 피해 주세요!
+      </div>
+
 
       <label class="block text-sm font-medium mb-2">이벤트 유형</label>
       <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
@@ -177,13 +175,12 @@
       <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
     </div>
 
-    <!-- 네비게이션 버튼 -->
-    <div class="mt-8 flex justify-between">
+<!-- 네비게이션 버튼 -->
+    <div id="navigationButtons" class="mt-8 flex justify-between">
       <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">이전</button>
       <button type="button" id="nextBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">다음</button>
     </div>
-  </form>
-</section>
+
 
 <!-- Styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -215,4 +212,8 @@
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script src="{% static 'js/ddoksang_create.js' %}"></script>
+<script>
+  flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
+  flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
+</script>
 {% endblock %}
