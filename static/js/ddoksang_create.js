@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (nextBtn) nextBtn.addEventListener("click", () => moveStep(1));
     if (prevBtn) prevBtn.addEventListener("click", () => moveStep(-1));
 
-    // 🔥 전역 함수: clearSelection (HTML onclick에서 호출)
+    //  전역 함수: clearSelection (HTML onclick에서 호출)
     window.clearSelection = function() {
         console.log('선택 취소');
         
@@ -57,7 +57,111 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // 🔥 전역 함수: removeImage (HTML onclick에서 호출)
+    //  전역 함수: clearFinalSelection (HTML onclick에서 호출)
+    window.clearFinalSelection = function() {
+        console.log('최종 선택 취소');
+        
+        const searchEl = document.getElementById("final-artist-member-search");
+        const artistIdEl = document.getElementById("final_artist_id");
+        const memberIdEl = document.getElementById("final_member_id");
+        const selectedEl = document.getElementById("final-selected-artist");
+        const confirmBtn = document.getElementById("confirm-new-artist-btn");
+        
+        if (searchEl) searchEl.value = "";
+        if (artistIdEl) artistIdEl.value = "";
+        if (memberIdEl) memberIdEl.value = "";
+        if (selectedEl) selectedEl.classList.add("hidden");
+        if (confirmBtn) confirmBtn.disabled = true;
+    };
+
+    //  전역 함수: useSelectedArtist (기존 정보 그대로 사용)
+    window.useSelectedArtist = function() {
+        console.log('기존 아티스트 정보 사용');
+        
+        // 중복 확인에서 선택한 데이터 가져오기
+        const checkSearchEl = document.getElementById("artist-member-search");
+        const checkArtistIdEl = document.getElementById("check_artist_id");
+        const checkMemberIdEl = document.getElementById("check_member_id");
+        
+        if (!checkSearchEl || !checkArtistIdEl) {
+            alert('중복 확인 데이터를 찾을 수 없습니다.');
+            return;
+        }
+        
+        const searchText = checkSearchEl.value;
+        const artistId = checkArtistIdEl.value;
+        const memberId = checkMemberIdEl.value || '';
+        
+        // Step 1 hidden field에 복사
+        const finalArtistIdEl = document.getElementById("final_artist_id");
+        const finalMemberIdEl = document.getElementById("final_member_id");
+        
+        if (finalArtistIdEl) finalArtistIdEl.value = artistId;
+        if (finalMemberIdEl) finalMemberIdEl.value = memberId;
+        
+        console.log('기존 데이터 사용 완료:', { searchText, artistId, memberId });
+        
+        // 자동으로 다음 단계로 이동
+        setTimeout(() => {
+            currentStep = 2;
+            showStep(currentStep);
+        }, 300);
+    };
+
+    //  전역 함수: showArtistSearch (검색창 표시)
+    window.showArtistSearch = function() {
+        console.log('아티스트 검색 모드 전환');
+        
+        const confirmMode = document.getElementById('step1-confirm-mode');
+        const searchMode = document.getElementById('step1-search-mode');
+        
+        if (confirmMode) confirmMode.classList.add('hidden');
+        if (searchMode) searchMode.classList.remove('hidden');
+        
+        // 검색창 초기화 및 포커스
+        const searchInput = document.getElementById('final-artist-member-search');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        
+        // autocomplete 초기화
+        setTimeout(() => initStep1Autocomplete(), 100);
+    };
+
+    //  전역 함수: cancelArtistSearch (검색 취소)
+    window.cancelArtistSearch = function() {
+        console.log('아티스트 검색 취소');
+        
+        const confirmMode = document.getElementById('step1-confirm-mode');
+        const searchMode = document.getElementById('step1-search-mode');
+        
+        if (searchMode) searchMode.classList.add('hidden');
+        if (confirmMode) confirmMode.classList.remove('hidden');
+        
+        // 검색 결과 초기화
+        clearFinalSelection();
+    };
+
+    //  전역 함수: confirmNewArtist (새 아티스트 선택 완료)
+    window.confirmNewArtist = function() {
+        const finalArtistId = getValue('final_artist_id');
+        
+        if (!finalArtistId) {
+            alert('아티스트를 선택해주세요.');
+            return;
+        }
+        
+        console.log('새 아티스트 선택 완료');
+        
+        // 자동으로 다음 단계로 이동
+        setTimeout(() => {
+            currentStep = 2;
+            showStep(currentStep);
+        }, 300);
+    };
+
+    //  전역 함수: removeImage (HTML onclick에서 호출)
     window.removeImage = function (index) {
         const input = document.getElementById("images");
         if (!input) return;
@@ -105,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function moveStep(direction) {
         console.log(`Step 이동: ${direction}, 현재: ${currentStep}`);
         
-        // Step 0에서 Step 1로: 중복 확인 완료 체크 (실제로는 자동 이동)
+        // Step 0에서 Step 1로: 중복 확인 완료 체크 및 미리보기 설정
         if (direction === 1 && currentStep === 0) {
             if (!duplicateChecked) {
                 alert("중복 확인을 먼저 해주세요.");
@@ -115,11 +219,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert("중복된 생카가 존재합니다. 다른 정보로 입력해주세요.");
                 return;
             }
+            
+            // Step 1에 간소화 모드 설정
+            setupStep1Preview();
         }
 
-        // Step 1에서 Step 2로: 데이터 복사
-        if (direction === 1 && currentStep === 1) {
-            copyDataToNextSteps();
+        // Step 1에서 Step 2로는 버튼 클릭으로 자동 이동되므로 여기서는 처리하지 않음
+        // Step 2로 들어갈 때만 카페명 복사
+        if (currentStep + direction === 2) {
+            copyFinalDataToForm();
         }
 
         // 마지막 단계에서 제출
@@ -136,25 +244,92 @@ document.addEventListener('DOMContentLoaded', function () {
         showStep(currentStep);
     }
 
-    function copyDataToNextSteps() {
-        console.log('데이터 복사 중...');
+    function setupStep1Preview() {
+        console.log('Step 1 간소화 모드 설정');
         
-        // 중복 확인 단계에서 입력한 데이터
-        const artistText = getValue('artist-member-search');
-        const artistId = getValue('check_artist_id');
-        const memberId = getValue('check_member_id');
+        // 확인 모드 표시, 검색 모드 숨김
+        const confirmMode = document.getElementById('step1-confirm-mode');
+        const searchMode = document.getElementById('step1-search-mode');
+        
+        if (confirmMode) confirmMode.classList.remove('hidden');
+        if (searchMode) searchMode.classList.add('hidden');
+        
+        console.log('Step 1 간소화 모드 설정 완료');
+    }
+
+    function validateStep1Selection() {
+        return true; // 버튼 클릭으로 이미 검증됨
+    }
+
+    function copyFinalDataToForm() {
+        console.log('최종 선택 데이터를 폼으로 복사');
+        
+        // Step 1에서 최종 선택된 데이터는 이미 hidden field에 있음
+        // 중복 확인에서 입력한 카페명만 Step 2 폼에 복사
         const cafeName = getValue('check_cafe_name');
-
-        // Step 1: 요약 정보 표시
-        setElementText('summary-artist-name', extractArtistName(artistText));
-        setElementText('summary-member-name', extractMemberName(artistText));
-        setElementValue('register_artist_id', artistId);
-        setElementValue('register_member_id', memberId);
-
-        // Step 2: 카페명 자동 복사
         setElementValue('cafe_name', cafeName);
         
-        console.log('데이터 복사 완료:', { artistId, memberId, cafeName });
+        console.log('최종 데이터 복사 완료:', { cafeName });
+    }
+
+    // Step 1 전용 autocomplete 초기화
+    function initStep1Autocomplete() {
+        console.log('Step 1 Autocomplete 초기화');
+        
+        if (typeof initAutocomplete === 'function') {
+            try {
+                initAutocomplete('final-artist-member-search', 'final-artist-member-results', {
+                    showBirthday: true,
+                    showArtistTag: true,
+                    submitOnSelect: false,
+                    artistOnly: false,
+                    apiUrl: '/artist/autocomplete/',
+                    onSelect: function (result) {
+                        console.log('Step 1에서 아티스트 선택됨:', result);
+                        selectFinalArtist({
+                            member_name: result.name,
+                            artist_display: result.artist || result.artist_name,
+                            artist_id: result.artist_id,
+                            member_id: result.id || result.member_id,
+                            bday: result.birthday ? formatBirthday(result.birthday) : ''
+                        });
+                    }
+                });
+            } catch (error) {
+                console.warn('Step 1 Autocomplete 초기화 실패:', error);
+            }
+        }
+    }
+
+    function selectFinalArtist(item) {
+        console.log('selectFinalArtist 호출:', item);
+        
+        const resultsEl = document.getElementById("final-artist-member-results");
+        const searchEl = document.getElementById("final-artist-member-search");
+        const artistIdEl = document.getElementById("final_artist_id");
+        const memberIdEl = document.getElementById("final_member_id");
+        const selectedTextEl = document.getElementById("final-selected-artist-text");
+        const selectedEl = document.getElementById("final-selected-artist");
+        
+        // 그룹 전체인지 개별 멤버인지 판단
+        const isGroup = !item.member_id || item.member_id === item.artist_id || 
+                       item.member_name === item.artist_display;
+        
+        let displayText;
+        if (isGroup) {
+            // 그룹 전체 선택
+            displayText = `${item.artist_display} (그룹 전체)`;
+        } else {
+            // 개별 멤버 선택
+            displayText = `${item.member_name} (${item.artist_display})`;
+        }
+        
+        if (resultsEl) resultsEl.classList.add("hidden");
+        if (searchEl) searchEl.value = displayText;
+        if (artistIdEl) artistIdEl.value = item.artist_id || '';
+        if (memberIdEl) memberIdEl.value = isGroup ? '' : (item.member_id || '');
+        if (selectedTextEl) selectedTextEl.textContent = `✓ ${displayText} 선택됨`;
+        if (selectedEl) selectedEl.classList.remove("hidden");
     }
 
     function getValue(id) {
@@ -180,10 +355,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function extractMemberName(text) {
         if (!text) return '';
-        return text.replace(/✓\s*/, '').split('(')[0].trim();
+        
+        const cleanText = text.replace(/✓\s*/, '').trim();
+        const memberName = cleanText.split('(')[0].trim();
+        const artistName = extractArtistName(text);
+        
+        // 멤버명과 아티스트명이 같으면 그룹 전체 선택
+        if (memberName === artistName) {
+            return '그룹 전체';
+
+        }
+        
+        return memberName;
     }
 
-    // 🔥 중복 확인 로직
+    //  중복 확인 로직
     function initDuplicateChecker() {
         console.log('중복 확인 초기화');
         const checkBtn = document.getElementById('check-duplicate-btn');
@@ -362,9 +548,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Autocomplete 초기화
+    // Autocomplete 초기화 (Step 0용)
     function initializeAutocomplete() {
-        console.log('Autocomplete 초기화');
+        console.log('Step 0 Autocomplete 초기화');
         
         if (typeof initAutocomplete === 'function') {
             try {
@@ -375,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     artistOnly: false,
                     apiUrl: '/artist/autocomplete/',
                     onSelect: function (result) {
-                        console.log('아티스트 선택됨:', result);
+                        console.log('Step 0에서 아티스트 선택됨:', result);
                         selectArtist({
                             member_name: result.name,
                             artist_display: result.artist || result.artist_name,
@@ -386,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             } catch (error) {
-                console.warn('Autocomplete 초기화 실패:', error);
+                console.warn('Step 0 Autocomplete 초기화 실패:', error);
             }
         } else {
             console.warn('initAutocomplete 함수를 찾을 수 없습니다');
@@ -403,14 +589,27 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedTextEl = document.getElementById("selected-artist-text");
         const selectedEl = document.getElementById("selected-artist");
         
+        // 그룹 전체인지 개별 멤버인지 판단
+        const isGroup = !item.member_id || item.member_id === item.artist_id || 
+                       item.member_name === item.artist_display;
+        
+        let displayText;
+        if (isGroup) {
+            // 그룹 전체 선택
+            displayText = `${item.artist_display} (그룹 전체)`;
+        } else {
+            // 개별 멤버 선택
+            displayText = `${item.member_name} (${item.artist_display})`;
+        }
+        
         if (resultsEl) resultsEl.classList.add("hidden");
-        if (searchEl) searchEl.value = `${item.member_name} (${item.artist_display})`;
+        if (searchEl) searchEl.value = displayText;
         if (artistIdEl) artistIdEl.value = item.artist_id || '';
-        if (memberIdEl) memberIdEl.value = item.member_id || '';
-        if (selectedTextEl) selectedTextEl.textContent = `✓ ${item.member_name} (${item.artist_display}) 선택됨`;
+        if (memberIdEl) memberIdEl.value = isGroup ? '' : (item.member_id || '');
+        if (selectedTextEl) selectedTextEl.textContent = `✓ ${displayText} 선택됨`;
         if (selectedEl) selectedEl.classList.remove("hidden");
         
-        // 아티스트 선택 후 중복 확인 버튼 상태 업데이트
+        // 중복 확인 버튼 상태 업데이트
         if (typeof window.checkDuplicateBtnState === 'function') {
             window.checkDuplicateBtnState();
         }
