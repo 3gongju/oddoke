@@ -1,5 +1,3 @@
-# API 뷰들 - map_utils 사용으로 중복 제거
-
 from datetime import date
 import logging
 from django.contrib.auth.decorators import login_required
@@ -16,9 +14,9 @@ from difflib import SequenceMatcher
 
 from django.http import JsonResponse
 from difflib import SequenceMatcher
-from ddoksang.models import BdayCafe
+from ddoksang.models import BdayCafe, CafeFavorite  
+from artist.models import Artist, Member 
 
-from ddoksang.models import BdayCafe, CafeFavorite
 from ddoksang.utils.map_utils import (
     serialize_cafe_for_map, 
     get_nearby_cafes, 
@@ -302,9 +300,13 @@ def normalize(text):
 @require_GET
 def check_duplicate_cafe(request):
     """
-    생일카페 중복 확인 API - 중복 카페 정보도 함께 반환
+    생일카페 중복 확인 API - 안전한 버전
     """
     try:
+        # 로그 설정
+        import logging
+        logger = logging.getLogger(__name__)
+        
         artist_id = request.GET.get('artist_id')
         member_id = request.GET.get('member_id', '')
         cafe_name = request.GET.get('cafe_name', '').strip()
@@ -324,13 +326,26 @@ def check_duplicate_cafe(request):
         # artist_id 유효성 검증
         try:
             artist_id = int(artist_id)
+            # Artist 모델 import 확인
             from artist.models import Artist
-            Artist.objects.get(id=artist_id)
-        except (ValueError, Artist.DoesNotExist):
-            logger.warning(f"유효하지 않은 artist_id: {artist_id}")
+            artist = Artist.objects.get(id=artist_id)
+        except (ValueError, TypeError):
+            logger.warning(f"artist_id 타입 오류: {artist_id}")
             return JsonResponse({
                 'exists': False,
-                'error': '유효하지 않은 아티스트입니다.'
+                'error': '올바르지 않은 아티스트 ID 형식입니다.'
+            })
+        except Artist.DoesNotExist:
+            logger.warning(f"존재하지 않는 artist_id: {artist_id}")
+            return JsonResponse({
+                'exists': False,
+                'error': '존재하지 않는 아티스트입니다.'
+            })
+        except Exception as e:
+            logger.error(f"아티스트 조회 오류: {e}")
+            return JsonResponse({
+                'exists': False,
+                'error': '아티스트 정보를 확인할 수 없습니다.'
             })
         
         # member_id 유효성 검증 (선택사항)
@@ -338,9 +353,15 @@ def check_duplicate_cafe(request):
             try:
                 member_id = int(member_id)
                 from artist.models import Member
-                Member.objects.get(id=member_id, artist_id=artist_id)
-            except (ValueError, Member.DoesNotExist):
-                logger.warning(f"유효하지 않은 member_id: {member_id}")
+                member = Member.objects.get(id=member_id, artist_id=artist_id)
+            except (ValueError, TypeError):
+                logger.warning(f"member_id 타입 오류: {member_id}")
+                member_id = None
+            except Member.DoesNotExist:
+                logger.warning(f"존재하지 않는 member_id: {member_id}")
+                member_id = None
+            except Exception as e:
+                logger.warning(f"멤버 조회 오류: {e}")
                 member_id = None
         else:
             member_id = None
@@ -363,28 +384,35 @@ def check_duplicate_cafe(request):
                 'exists': False,
                 'error': '날짜 형식이 올바르지 않습니다. (YYYY-MM-DD)'
             })
-        
-        from django.db.models import Q
-        from difflib import SequenceMatcher
+        except Exception as e:
+            logger.error(f"날짜 처리 오류: {e}")
+            return JsonResponse({
+                'exists': False,
+                'error': '날짜 처리 중 오류가 발생했습니다.'
+            })
         
         # 기본 필터: 같은 아티스트 + 정확한 날짜 일치
-        filters = Q(
-            artist_id=artist_id,
-            start_date=start_date_obj,
-            end_date=end_date_obj
-        )
-        
-        # 멤버가 지정된 경우 추가
-        if member_id:
-            filters = filters & Q(member_id=member_id)
-        
-        # 삭제되지 않은 카페만
-        filters = filters & ~Q(status='rejected')
-        
-        # 해당 조건의 카페들 조회
         try:
+            from django.db.models import Q
+            
+            filters = Q(
+                artist_id=artist_id,
+                start_date=start_date_obj,
+                end_date=end_date_obj
+            )
+            
+            # 멤버가 지정된 경우 추가
+            if member_id:
+                filters = filters & Q(member_id=member_id)
+            
+            # 삭제되지 않은 카페만
+            filters = filters & ~Q(status='rejected')
+            
+            # 해당 조건의 카페들 조회
             existing_cafes = BdayCafe.objects.filter(filters).select_related('artist', 'member').prefetch_related('images')
-            logger.info(f"조건에 맞는 기존 카페 수: {existing_cafes.count()}")
+            existing_cafes_list = list(existing_cafes)  # 쿼리셋을 리스트로 변환
+            logger.info(f"조건에 맞는 기존 카페 수: {len(existing_cafes_list)}")
+            
         except Exception as e:
             logger.error(f"데이터베이스 쿼리 오류: {e}")
             return JsonResponse({
@@ -395,8 +423,11 @@ def check_duplicate_cafe(request):
         # 카페명 유사성 검사
         def normalize_name(name):
             import re
-            normalized = re.sub(r'[^\w\s]', '', name.lower())
-            return ''.join(normalized.split())
+            try:
+                normalized = re.sub(r'[^\w\s]', '', name.lower())
+                return ''.join(normalized.split())
+            except Exception:
+                return name.lower().replace(' ', '')
         
         normalized_input_name = normalize_name(cafe_name)
         logger.info(f"정규화된 입력 카페명: '{normalized_input_name}'")
@@ -405,23 +436,37 @@ def check_duplicate_cafe(request):
         similar_cafes = []
         similarity_threshold = 0.8
         
-        for cafe in existing_cafes:
-            normalized_existing_name = normalize_name(cafe.cafe_name)
-            logger.debug(f"비교: '{normalized_input_name}' vs '{normalized_existing_name}'")
+        try:
+            from difflib import SequenceMatcher
             
-            # 1. 완전 일치 확인
-            if normalized_input_name == normalized_existing_name:
-                logger.info(f"완전 일치 발견: {cafe.cafe_name}")
-                similar_cafes.append(cafe)
-                continue
+            for cafe in existing_cafes_list:
+                normalized_existing_name = normalize_name(cafe.cafe_name)
+                logger.debug(f"비교: '{normalized_input_name}' vs '{normalized_existing_name}'")
                 
-            # 2. 유사도 확인
-            similarity = SequenceMatcher(None, normalized_input_name, normalized_existing_name).ratio()
-            logger.debug(f"유사도: {similarity:.2f}")
+                # 1. 완전 일치 확인
+                if normalized_input_name == normalized_existing_name:
+                    logger.info(f"완전 일치 발견: {cafe.cafe_name}")
+                    similar_cafes.append(cafe)
+                    continue
+                    
+                # 2. 유사도 확인
+                try:
+                    similarity = SequenceMatcher(None, normalized_input_name, normalized_existing_name).ratio()
+                    logger.debug(f"유사도: {similarity:.2f}")
+                    
+                    if similarity >= similarity_threshold:
+                        logger.info(f"유사한 카페 발견: {cafe.cafe_name} (유사도: {similarity:.2f})")
+                        similar_cafes.append(cafe)
+                except Exception as e:
+                    logger.warning(f"유사도 계산 오류: {e}")
+                    continue
             
-            if similarity >= similarity_threshold:
-                logger.info(f"유사한 카페 발견: {cafe.cafe_name} (유사도: {similarity:.2f})")
-                similar_cafes.append(cafe)
+        except Exception as e:
+            logger.error(f"유사성 검사 오류: {e}")
+            return JsonResponse({
+                'exists': False,
+                'error': '유사성 검사 중 오류가 발생했습니다.'
+            }, status=500)
         
         # 결과 반환
         exists = len(similar_cafes) > 0
@@ -432,71 +477,110 @@ def check_duplicate_cafe(request):
             'similar_count': len(similar_cafes)
         }
         
-        # ✅ 중복 카페 정보 추가
+        # ✅ 중복 카페 정보 추가 (안전하게 처리)
         if exists:
-            # 사용자 찜 목록 확인 (로그인된 경우)
-            user_favorites = []
-            if request.user.is_authenticated:
-                user_favorites = list(
-                    CafeFavorite.objects.filter(user=request.user)
-                    .values_list('cafe_id', flat=True)
-                )
-            
-            similar_cafes_data = []
-            for cafe in similar_cafes:
-                # 카페 상태 계산
-                today = timezone.now().date()
-                if cafe.start_date <= today <= cafe.end_date:
-                    cafe_state = 'ongoing'
-                elif cafe.start_date > today:
-                    cafe_state = 'upcoming'
-                else:
-                    cafe_state = 'ended'
+            try:
+                # 사용자 찜 목록 확인 (로그인된 경우)
+                user_favorites = []
+                if hasattr(request, 'user') and request.user.is_authenticated:
+                    try:
+                        user_favorites = list(
+                            CafeFavorite.objects.filter(user=request.user)
+                            .values_list('cafe_id', flat=True)
+                        )
+                    except Exception as e:
+                        logger.warning(f"사용자 찜 목록 조회 실패: {e}")
+                        user_favorites = []
                 
-                # 대표 이미지
-                main_image = None
-                if cafe.images.exists():
-                    main_image = cafe.images.first().image.url
+                similar_cafes_data = []
                 
-                cafe_data = {
-                    'id': cafe.id,
-                    'cafe_name': cafe.cafe_name,
-                    'artist_name': cafe.artist.display_name if cafe.artist else '',
-                    'member_name': cafe.member.member_name if cafe.member else '',
-                    'start_date': cafe.start_date.strftime('%Y년 %m월 %d일'),
-                    'end_date': cafe.end_date.strftime('%Y년 %m월 %d일'),
-                    'address': cafe.address,
-                    'place_name': cafe.place_name or cafe.address,
-                    'status': cafe.status,
-                    'status_display': cafe.get_status_display(),
-                    'cafe_state': cafe_state,
-                    'main_image': main_image,
-                    'is_favorited': cafe.id in user_favorites,
-                    'detail_url': f'/ddoksang/cafe/{cafe.id}/',
-                }
+                for cafe in similar_cafes:
+                    try:
+                        # 카페 상태 계산
+                        from django.utils import timezone
+                        today = timezone.now().date()
+                        
+                        if cafe.start_date <= today <= cafe.end_date:
+                            cafe_state = 'ongoing'
+                        elif cafe.start_date > today:
+                            cafe_state = 'upcoming'
+                        else:
+                            cafe_state = 'ended'
+                        
+                        # 대표 이미지
+                        main_image = None
+                        try:
+                            if hasattr(cafe, 'images') and cafe.images.exists():
+                                main_image = cafe.images.first().image.url
+                        except Exception as e:
+                            logger.warning(f"이미지 URL 처리 오류: {e}")
+                        
+                        cafe_data = {
+                            'id': cafe.id,
+                            'cafe_name': cafe.cafe_name,
+                            'artist_name': cafe.artist.display_name if cafe.artist else '',
+                            'member_name': cafe.member.member_name if cafe.member else '',
+                            'start_date': cafe.start_date.strftime('%Y년 %m월 %d일'),
+                            'end_date': cafe.end_date.strftime('%Y년 %m월 %d일'),
+                            'address': cafe.address or '',
+                            'place_name': getattr(cafe, 'place_name', None) or cafe.address or '',
+                            'status': cafe.status,
+                            'status_display': cafe.get_status_display(),
+                            'cafe_state': cafe_state,
+                            'main_image': main_image,
+                            'is_favorited': cafe.id in user_favorites,
+                            'detail_url': f'/ddoksang/cafe/{cafe.id}/',
+                        }
+                        
+                        # 남은 일수 계산
+                        try:
+                            if cafe_state == 'upcoming':
+                                days_until_start = (cafe.start_date - today).days
+                                if days_until_start <= 7:
+                                    cafe_data['days_until_start'] = days_until_start
+                            elif cafe_state == 'ongoing':
+                                days_remaining = (cafe.end_date - today).days
+                                if days_remaining <= 7:
+                                    cafe_data['days_remaining'] = days_remaining
+                        except Exception as e:
+                            logger.warning(f"날짜 계산 오류: {e}")
+                        
+                        similar_cafes_data.append(cafe_data)
+                        
+                    except Exception as e:
+                        logger.error(f"카페 데이터 처리 오류 (cafe_id: {cafe.id}): {e}")
+                        continue
                 
-                # 남은 일수 계산
-                if cafe_state == 'upcoming':
-                    days_until_start = (cafe.start_date - today).days
-                    if days_until_start <= 7:
-                        cafe_data['days_until_start'] = days_until_start
-                elif cafe_state == 'ongoing':
-                    days_remaining = (cafe.end_date - today).days
-                    if days_remaining <= 7:
-                        cafe_data['days_remaining'] = days_remaining
+                result['similar_cafes'] = similar_cafes_data
                 
-                similar_cafes_data.append(cafe_data)
-            
-            result['similar_cafes'] = similar_cafes_data
+            except Exception as e:
+                logger.error(f"중복 카페 정보 생성 오류: {e}")
+                # 카페 정보 생성에 실패해도 기본 결과는 반환
+                result['similar_cafes'] = []
         
-  
+        # 디버깅용 정보 (개발 환경에서만)
+        if getattr(settings, 'DEBUG', False):
+            result['debug'] = {
+                'normalized_input': normalized_input_name,
+                'total_checked': len(existing_cafes_list),
+                'similar_cafes_debug': [
+                    {
+                        'id': cafe.id,
+                        'name': cafe.cafe_name,
+                        'normalized': normalize_name(cafe.cafe_name)
+                    } for cafe in similar_cafes
+                ]
+            }
         
         logger.info(f"중복 확인 결과: {cafe_name} -> {'중복' if exists else '신규'} (유사 카페: {len(similar_cafes)}개)")
         return JsonResponse(result)
         
     except Exception as e:
+        # 최상위 예외 처리
+        import logging
+        logger = logging.getLogger(__name__)
         logger.error(f"중복 확인 API 예상치 못한 오류: {e}", exc_info=True)
         return JsonResponse({
             'exists': False,
-            'error': f'서버 내부 오류가 발생했습니다.'
+            'error': f'서버 내부 오류가 발생했습니다. 관리자에게 문의해주세요.'
         }, status=500)
