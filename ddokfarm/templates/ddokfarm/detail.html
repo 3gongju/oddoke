@@ -35,14 +35,9 @@
 </div>
 
 <script>
-  // 대댓글 폼 토글
-  function showReplyForm(commentId) {
-    const form = document.getElementById(`reply-form-${commentId}`);
-    if (form) {
-      form.classList.toggle('hidden');
-    }
-  }
-
+  // ✅ CSRF 토큰을 전역 변수로 설정
+  window.csrfToken = "{{ csrf_token }}";
+  
   document.addEventListener('DOMContentLoaded', function () {
     // 좋아요 기능
     const likeButtons = [
@@ -90,17 +85,19 @@
     });
 
     // 이미지 캐러셀 초기화 (Swiper)
-    new Swiper('.swiper-container', {
-      loop: true,
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-      },
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-    });
+    if (typeof Swiper !== 'undefined') {
+      new Swiper('.swiper-container', {
+        loop: true,
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+      });
+    }
   });
 </script>
 
