@@ -117,7 +117,7 @@ class DdoksangHome {
     }
 
     initializeUI() {
-        this.initializeAutocomplete();
+   
     }
 
     initializeAutocomplete() {
@@ -154,18 +154,6 @@ class DdoksangHome {
         }
     }
 
-    searchPlaces(keyword, container, places) {
-        places.keywordSearch(keyword, (result, status) => {
-            if (status === kakao.maps.services.Status.OK) {
-                this.displaySearchSuggestions(result.slice(0, 5), container);
-            } else {
-                container.classList.add('hidden');
-            }
-        }, {
-            location: this.mapManager ? this.mapManager.map.getCenter() : new kakao.maps.LatLng(37.5665, 126.9780),
-            radius: 10000
-        });
-    }
 
     displaySearchSuggestions(places, container) {
         const suggestionsHTML = places.map(place => `
