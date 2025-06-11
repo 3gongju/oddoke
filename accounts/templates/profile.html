@@ -262,21 +262,40 @@
   </div>
 </div>
 
-<!-- Follow Modal -->
-<div id="followModal" class="modal-overlay">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="followModalTitle" class="modal-title">팔로워</h3>
-      <button onclick="closeFollowModal()" class="modal-close">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
-    <div class="modal-body">
-      <ul id="followModalList" class="follow-list">
-        <!-- JS로 추가됨 -->
-      </ul>
+<!-- 🎨 Fixed Follow Modal -->
+<div id="followModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-100">
+        <h3 id="followModalTitle" class="text-xl font-bold text-gray-900">팔로워</h3>
+        <button onclick="closeFollowModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="p-6 max-h-96 overflow-y-auto">
+        <ul id="followModalList" class="space-y-4">
+          <!-- JS로 추가됨 -->
+        </ul>
+        
+        <!-- 로딩 상태 -->
+        <div id="modalLoading" class="text-center py-8 hidden">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+          <p class="text-gray-500 mt-2">로딩 중...</p>
+        </div>
+        
+        <!-- 빈 상태 -->
+        <div id="modalEmpty" class="text-center py-8 hidden">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl text-gray-400">👥</span>
+          </div>
+          <p class="text-gray-500">목록이 비어있습니다</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -350,58 +369,31 @@
     pointer-events: none;
   }
 
-  /* Modal */
-  .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm justify-center items-center z-50;
-    display: none;
+  /* Modal Animation */
+  #followModal.show #modalContent {
+    transform: scale(1);
+    opacity: 1;
   }
 
-  .modal-overlay.flex {
-    display: flex;
-  }
-
-  .modal-content {
-    @apply bg-white rounded-3xl shadow-2xl w-96 max-h-96 overflow-hidden;
-  }
-
-  .modal-header {
-    @apply flex items-center justify-between p-6 border-b border-gray-100;
-  }
-
-  .modal-title {
-    @apply text-xl font-bold text-gray-900;
-  }
-
-  .modal-close {
-    @apply text-gray-400 hover:text-gray-600 transition-colors duration-200;
-  }
-
-  .modal-body {
-    @apply p-6 max-h-80 overflow-y-auto;
-  }
-
-  .follow-list {
-    @apply space-y-4;
-  }
-
-  .follow-list li {
+  /* Follow List Styles */
+  .follow-list-item {
     @apply flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200;
   }
 
-  .follow-list .user-info {
+  .user-info {
     @apply flex items-center gap-3;
   }
 
-  .follow-list .user-avatar {
-    @apply w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold;
+  .user-avatar {
+    @apply w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg;
   }
 
-  .follow-list .user-name {
-    @apply font-semibold text-gray-900;
+  .user-name {
+    @apply font-semibold text-gray-900 text-lg;
   }
 
-  .follow-list .view-profile {
-    @apply text-purple-500 hover:text-purple-700 font-semibold text-sm transition-colors duration-200;
+  .view-profile {
+    @apply text-purple-500 hover:text-purple-700 font-semibold text-sm px-4 py-2 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200;
   }
 
   /* Animations */
@@ -419,60 +411,143 @@
   .post-card {
     animation: fadeInUp 0.3s ease forwards;
   }
-
-  /* Responsive */
-  @media (max-width: 640px) {
-    .modal-content {
-      @apply w-11/12 max-w-sm;
-    }
-  }
 </style>
 
 <script>
-  // Modal functionality
+  // 🎨 Fixed Modal functionality
   const followModal = document.getElementById("followModal");
   const followModalTitle = document.getElementById("followModalTitle");
   const followModalList = document.getElementById("followModalList");
+  const modalContent = document.getElementById("modalContent");
+  const modalLoading = document.getElementById("modalLoading");
+  const modalEmpty = document.getElementById("modalEmpty");
 
+  // 팔로워 버튼 클릭
   document.getElementById("followerBtn").addEventListener("click", () => {
     fetchFollowList("followers");
   });
 
+  // 팔로잉 버튼 클릭
   document.getElementById("followingBtn").addEventListener("click", () => {
     fetchFollowList("followings");
   });
 
   function fetchFollowList(type) {
+    // 모달 제목 설정
     followModalTitle.textContent = type === "followers" ? "팔로워 목록" : "팔로잉 목록";
+    
+    // 모달 표시
+    showFollowModal();
+    
+    // 로딩 상태 표시
+    showModalLoading();
+    
+    // 데이터 가져오기
     fetch(`/accounts/{{ user_profile.username }}/follow-list/?type=${type}`)
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => {
-        followModalList.innerHTML = "";
-        data.users.forEach(user => {
-          const li = document.createElement('li');
-          li.innerHTML = `
-            <div class="user-info">
-              <div class="user-avatar">
-                ${user.username.charAt(0).toUpperCase()}
-              </div>
-              <span class="user-name">${user.username}</span>
-            </div>
-            <a href="/accounts/profile/${user.username}/" class="view-profile">보기</a>
-          `;
-          followModalList.appendChild(li);
-        });
-        followModal.classList.remove("hidden");
-        followModal.classList.add("flex");
+        hideModalLoading();
+        displayFollowList(data.users);
       })
       .catch(error => {
         console.error('팔로우 목록 로드 실패:', error);
+        hideModalLoading();
+        showModalError();
       });
   }
 
-  function closeFollowModal() {
-    followModal.classList.add("hidden");
-    followModal.classList.remove("flex");
+  function showFollowModal() {
+    followModal.classList.remove("hidden");
+    // 애니메이션을 위한 약간의 지연
+    setTimeout(() => {
+      followModal.classList.add("show");
+    }, 10);
   }
+
+  function closeFollowModal() {
+    followModal.classList.remove("show");
+    setTimeout(() => {
+      followModal.classList.add("hidden");
+      clearModalContent();
+    }, 300);
+  }
+
+  function showModalLoading() {
+    followModalList.classList.add("hidden");
+    modalEmpty.classList.add("hidden");
+    modalLoading.classList.remove("hidden");
+  }
+
+  function hideModalLoading() {
+    modalLoading.classList.add("hidden");
+  }
+
+  function displayFollowList(users) {
+    followModalList.innerHTML = "";
+    
+    if (users.length === 0) {
+      modalEmpty.classList.remove("hidden");
+      return;
+    }
+    
+    followModalList.classList.remove("hidden");
+    
+    users.forEach(user => {
+      const li = document.createElement('li');
+      li.className = 'follow-list-item';
+      li.innerHTML = `
+        <div class="user-info">
+          <div class="user-avatar">
+            ${getInitials(user.username)}
+          </div>
+          <span class="user-name">${user.username}</span>
+        </div>
+        <a href="/accounts/profile/${user.username}/" class="view-profile">프로필 보기</a>
+      `;
+      followModalList.appendChild(li);
+    });
+  }
+
+  function showModalError() {
+    followModalList.innerHTML = `
+      <div class="text-center py-8">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="text-2xl text-red-500">⚠️</span>
+        </div>
+        <p class="text-red-500">데이터를 불러오는데 실패했습니다</p>
+      </div>
+    `;
+    followModalList.classList.remove("hidden");
+  }
+
+  function clearModalContent() {
+    followModalList.innerHTML = "";
+    modalEmpty.classList.add("hidden");
+  }
+
+  function getInitials(username) {
+    if (!username) return '?';
+    return username.charAt(0).toUpperCase();
+  }
+
+  // 모달 외부 클릭시 닫기
+  followModal.addEventListener('click', (e) => {
+    if (e.target === followModal) {
+      closeFollowModal();
+    }
+  });
+
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !followModal.classList.contains('hidden')) {
+      closeFollowModal();
+    }
+  });
 
   // Category filtering
   const categoryTabs = document.querySelectorAll('.category-tab');
@@ -549,13 +624,6 @@
     document.querySelectorAll('.post-card').forEach(card => {
       observer.observe(card);
     });
-  });
-
-  // Close modal when clicking outside
-  followModal.addEventListener('click', (e) => {
-    if (e.target === followModal) {
-      closeFollowModal();
-    }
   });
 </script>
 
