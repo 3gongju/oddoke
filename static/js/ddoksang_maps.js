@@ -101,6 +101,26 @@
       this.isClusteringEnabled = true;
     }
 
+    addUserLocationMarker(lat, lng) {
+    if (this.userLocationMarker) {
+        this.userLocationMarker.setMap(null);
+    }
+
+    const position = new kakao.maps.LatLng(lat, lng);
+
+    const imageSrc = '/static/image/ddok_circle_red.png';//  원하는 위치 아이콘으로 교체 가능 (내 위치를 나타내는 마커)
+    const imageSize = new kakao.maps.Size(66, 66);
+    const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    this.userLocationMarker = new kakao.maps.Marker({
+        position,
+        map: this.map,
+        image: markerImage,
+        title: '내 위치'
+    });
+}
+
+
     async init(center = { lat: 37.5665, lng: 126.9780 }, level = 6) {
       const container = document.getElementById(this.containerId);
       if (!container) return false;
