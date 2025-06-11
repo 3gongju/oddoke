@@ -48,14 +48,15 @@ class Message(models.Model):
     account_bank_name = models.CharField(max_length=50, blank=True, null=True)
     account_number = models.CharField(max_length=20, blank=True, null=True)
     account_holder = models.CharField(max_length=50, blank=True, null=True)
+    account_bank_code = models.CharField(max_length=10, blank=True, null=True)
     
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     def __str__(self):
         if self.message_type == 'account_info':
-            return f"[{self.timestamp}] {self.sender.username}: 계좌정보 전송"
-        elif self.message_type == 'image':
-            return f"[{self.timestamp}] {self.sender.username}: 이미지 전송"
+            return f"{self.sender.username}의 계좌정보: {self.account_bank_name}"
+        elif self.image:
+            return f"{self.sender.username}의 이미지"
         else:
-            return f"[{self.timestamp}] {self.sender.username}: {self.content}"
+            return f"{self.sender.username}: {self.content[:50]}"

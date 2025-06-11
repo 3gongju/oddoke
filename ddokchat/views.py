@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import ChatRoom
-from accounts.models import MannerReview
+from accounts.models import MannerReview, User
 from accounts.forms import MannerReviewForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
@@ -191,6 +191,17 @@ def send_account_info(request, room_id):
                 'error': '계좌 정보를 먼저 등록해주세요.'
             })
         
+        # ✅ 데이터베이스에 계좌정보 메시지 저장
+        message = Message.objects.create(
+            room=room,
+            sender=request.user,
+            message_type='account_info',
+            account_bank_name=user.bank_name,
+            account_number=user.account_number,
+            account_holder=user.account_holder,
+            account_bank_code=user.bank_code or '',
+        )
+        
         # 계좌정보 구성
         account_info = {
             'bank_name': user.bank_name,
@@ -205,11 +216,11 @@ def send_account_info(request, room_id):
         })
         
     except Exception as e:
+        print(f"send_account_info 에러: {e}")  # 디버깅용
         return JsonResponse({
             'success': False,
             'error': f'서버 오류가 발생했습니다: {str(e)}'
         })
-
 
 @require_POST
 @login_required
