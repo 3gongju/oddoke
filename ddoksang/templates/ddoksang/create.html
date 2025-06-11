@@ -9,7 +9,7 @@
 
   <!-- Progress Bar -->
   <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
-    <div id="progressBar" class="bg-blue-600 h-2 w-0 transition-width duration-300"></div>
+    <div id="progressBar" class="bg-gray-900 h-2 w-0 transition-width duration-300"></div>
   </div>
 
   <form method="POST" enctype="multipart/form-data" id="multiStepForm" action="{% url 'ddoksang:create' %}">
@@ -25,8 +25,8 @@
       <!-- 간단한 확인 메시지 -->
       <div id="step1-confirm-mode" class="text-center">
         <div class="mb-6">
-          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
@@ -35,10 +35,10 @@
         </div>
         
         <div class="flex gap-4 justify-center">
-          <button type="button" onclick="useSelectedArtist()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+          <button type="button" onclick="useSelectedArtist()" class="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium transition-colors">
             이 정보 그대로 사용하기
           </button>
-          <button type="button" onclick="showArtistSearch()" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium">
+          <button type="button" onclick="showArtistSearch()" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors">
             수정하기
           </button>
         </div>
@@ -53,7 +53,6 @@
         <div class="relative mb-4">
           <input type="text" id="final-artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
           <ul id="final-artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
-          
         </div>
         
         <!-- 선택된 아티스트 표시 -->
@@ -69,10 +68,10 @@
         
         <!-- 확인/취소 버튼 -->
         <div class="flex gap-3 justify-end">
-          <button type="button" onclick="cancelArtistSearch()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+          <button type="button" onclick="cancelArtistSearch()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
             취소
           </button>
-          <button type="button" onclick="confirmNewArtist()" id="confirm-new-artist-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50" disabled>
+          <button type="button" onclick="confirmNewArtist()" id="confirm-new-artist-btn" class="px-4 py-2 bg-gray-400 text-gray-200 rounded cursor-not-allowed" disabled>
             선택 완료
           </button>
         </div>
@@ -85,8 +84,10 @@
 
     <!-- STEP 2: 카페 정보 -->
     <div id="step-2" class="step hidden">
+      <h2 class="text-lg font-semibold mb-6">카페 정보</h2>
+      
       <label class="block text-sm font-medium mb-2">생카명</label>
-      <input type="text" name="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
+      <input type="text" name="cafe_name" id="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
 
       <label class="block text-sm font-medium mb-2">이벤트 유형</label>
       <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
@@ -100,7 +101,7 @@
       <label class="block text-sm font-medium mb-2">주소 검색</label>
       <div class="flex gap-2 mb-2">
         <input type="text" id="place-search" class="flex-grow border rounded px-4 py-2" placeholder="주소명을 입력하세요" autocomplete="off" required>
-        <button type="button" id="searchBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">검색</button>
+        <button type="button" id="searchBtn" class="bg-gray-900 text-white px-4 rounded hover:bg-gray-800 transition-colors">검색</button>
       </div>
 
       <!-- 지도 컨테이너 -->
@@ -130,6 +131,8 @@
 
     <!-- STEP 3: 일정 -->
     <div id="step-3" class="step hidden">
+      <h2 class="text-lg font-semibold mb-6">운영 기간</h2>
+      
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-2">시작일</label>
@@ -144,6 +147,8 @@
 
     <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
+      <h2 class="text-lg font-semibold mb-6">특전 및 이벤트 정보</h2>
+      
       <label class="block text-sm font-medium mb-4">🎁 특전 정보</label>
 
       <!-- 일반 특전 -->
@@ -186,11 +191,13 @@
       </div>
 
       <label class="block text-sm font-medium mb-2">이벤트 설명</label>
-      <textarea name="event_description" class="w-full border rounded p-3" rows="4" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
+      <textarea name="event_description" id="event_description" class="w-full border rounded p-3" rows="4" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
     </div>
 
     <!-- STEP 5: 출처 정보 -->
     <div id="step-5" class="step hidden">
+      <h2 class="text-lg font-semibold mb-6">출처 정보 (선택사항)</h2>
+      
       <label class="block text-sm font-medium mb-2">X 계정</label>
       <div class="flex items-center mb-4">
         <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l">@</span>
@@ -201,9 +208,11 @@
 
     <!-- STEP 6: 이미지 업로드 -->
     <div id="step-6" class="step hidden">
-      <label class="block text-sm font-medium mb-4">생일카페 이미지 업로드</label>
+      <h2 class="text-lg font-semibold mb-6">이미지 업로드 (선택사항)</h2>
       
-      <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+      <label class="block text-sm font-medium mb-4">생일카페 이미지</label>
+      
+      <div id="image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
         <input type="file" name="images" id="images" multiple accept="image/*" class="hidden">
         <label for="images" class="cursor-pointer">
           <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
@@ -211,7 +220,7 @@
           </svg>
           <div class="mt-4">
             <p class="text-sm text-gray-600">
-              <span class="font-medium text-blue-600 hover:text-blue-500">클릭하여 이미지 선택</span> 또는 드래그하여 업로드
+              <span class="font-medium text-gray-900 hover:text-gray-700">클릭하여 이미지 선택</span> 또는 드래그하여 업로드
             </p>
             <p class="text-xs text-gray-500">PNG, JPG, JPEG 파일만 업로드 가능 (최대 5개, 각 5MB 이하)</p>
           </div>
@@ -223,8 +232,8 @@
 
     <!-- 네비게이션 버튼 -->
     <div id="navigationButtons" class="mt-8 flex justify-between">
-      <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">이전</button>
-      <button type="button" id="nextBtn" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">다음</button>
+      <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors hidden">이전</button>
+      <button type="button" id="nextBtn" class="px-6 py-2 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed hidden">다음</button>
     </div>
   </form>
 </section>
@@ -240,7 +249,7 @@
     transition: all 0.2s;
   }
   input[type="checkbox"]:checked + .perk-btn {
-    background-color: #3b82f6;
+    background-color: #111827;
     color: white;
     border-radius: 4px;
     transform: scale(0.95);
@@ -249,20 +258,80 @@
     background-color: #f3f4f6;
   }
   input[type="checkbox"]:checked + .perk-btn:hover {
-    background-color: #2563eb !important;
+    background-color: #374151 !important;
     color: white !important;
+  }
+
+  /* 진행바 애니메이션 */
+  #progressBar {
+    transition: width 0.3s ease-in-out;
+  }
+
+  /* 단계별 페이드 인 효과 */
+  .step {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 폼 필드 포커스 스타일 */
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
+  }
+
+  /* 반응형 버튼 스타일 */
+  @media (max-width: 640px) {
+    #navigationButtons {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    #navigationButtons button {
+      width: 100%;
+    }
   }
 </style>
 
-<!-- Scripts -->
+<!-- Scripts - 모듈화된 구조에 맞는 로드 순서 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
-<script src="{% static 'js/autocomplete.js' %}"></script>
-<script src="{% static 'js/ddoksang_create.js' %}"></script>
-<script>
-  flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
-  flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
-</script>
 
+<!-- 유틸리티 모듈들 먼저 로드 -->
+<script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
+<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
+<script src="{% static 'js/autocomplete.js' %}"></script>
+
+<!-- 메인 create 스크립트 마지막에 로드 -->
+<script src="{% static 'js/ddoksang_create.js' %}"></script>
+
+<!-- 중복 확인용 날짜 선택기 초기화 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎯 추가 스크립트 초기화');
+  
+  // 중복 확인 단계의 날짜 선택기 초기화
+  if (typeof flatpickr !== 'undefined') {
+    flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
+    flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
+    console.log('📅 중복 확인용 날짜 선택기 초기화 완료');
+  }
+  
+  // 디버깅용 전역 함수
+  window.debugDdoksang = function() {
+    console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
+    console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
+    console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
+    console.log('DdoksangImageUtils:', !!window.DdoksangImageUtils);
+    console.log('ddoksangApp:', window.ddoksangApp);
+    console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
+    console.log('=======================================');
+  };
+});
+</script>
 
 {% endblock %}
