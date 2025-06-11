@@ -678,72 +678,62 @@
       console.log('1. 전체 data:', data);
       console.log('2. data.sender:', data.sender);
       console.log('3. currentUser:', currentUser);
-      console.log('4. typeof data.sender:', typeof data.sender);
-      console.log('5. typeof currentUser:', typeof currentUser);
-      console.log('6. data.sender === currentUser:', data.sender === currentUser);
-      console.log('7. data.sender == currentUser:', data.sender == currentUser);
       
       const accountInfo = data.account_info;
       console.log('8. accountInfo:', accountInfo);
       
-      // ✅ 원래 로직
-      const isMine = data.sender === currentUser;
-      console.log('9. isMine (원래):', isMine);
+      // ✅ 위치용: 원래 로직 (송신자는 오른쪽, 수신자는 왼쪽)
+      const isMineForPosition = data.sender === currentUser;
+      console.log('9. isMineForPosition (위치용):', isMineForPosition);
       
-      // ✅ 강제로 false 설정 (임시 테스트)
-      const isMineForced = false;
-      console.log('10. isMineForced:', isMineForced);
-      
-      // ✅ 테스트를 위해 강제로 false 사용
-      const finalIsMine = isMineForced; // 임시로 이것 사용
-      console.log('11. finalIsMine:', finalIsMine);
+      // ✅ 버튼용: 강제로 false (항상 버튼 표시)
+      const isMineForButton = false;
+      console.log('10. isMineForButton (버튼용):', isMineForButton);
       
       const messageContainer = document.createElement("div");
-      messageContainer.className = `flex ${finalIsMine ? 'justify-end' : 'justify-start'} mb-2`;
+      // 위치는 원래 로직 사용
+      messageContainer.className = `flex ${isMineForPosition ? 'justify-end' : 'justify-start'} mb-2`;
 
-      // ✅ 버튼 HTML - 무조건 생성하도록 수정
+      // 버튼은 강제로 false 사용 (항상 표시)
       let buttonsHtml = '';
-      if (!finalIsMine) {
+      if (!isMineForButton) {  // 항상 true이므로 항상 버튼 생성
         buttonsHtml = `
           <div class="flex space-x-2 mt-3">
             <button onclick="copyAccountNumber('${accountInfo.account_number}')" 
                     class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-              📋 계좌번호 복사
+              계좌번호 복사
             </button>
             <button onclick="checkFraudHistory('${accountInfo.bank_code || ''}', '${accountInfo.account_number}', '${accountInfo.account_holder}')" 
                     class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-              🔍 신고 이력 조회
+              신고 이력 조회
             </button>
           </div>
         `;
         console.log('12. 버튼 HTML 생성됨!');
-      } else {
-        console.log('12. 내 메시지이므로 버튼 없음');
       }
       
       console.log('13. buttonsHtml 길이:', buttonsHtml.length);
-      console.log('14. buttonsHtml 내용:', buttonsHtml);
 
       const fullHTML = `
         <div class="max-w-xs">
-          <div class="${finalIsMine ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-4 py-3 rounded-2xl shadow-sm">
+          <div class="${isMineForPosition ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-4 py-3 rounded-2xl shadow-sm">
             <div class="space-y-3">
               <div class="flex items-center space-x-2 mb-2">
                 <span class="text-lg">💳</span>
                 <span class="font-semibold">계좌정보</span>
               </div>
               
-              <div class="bg-${finalIsMine ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2">
+              <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2">
                 <div class="flex justify-between">
-                  <span class="text-sm ${finalIsMine ? 'text-gray-300' : 'text-gray-600'}">은행</span>
+                  <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">은행</span>
                   <span class="font-medium">${accountInfo.bank_name}</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-sm ${finalIsMine ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
+                  <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
                   <span class="font-mono">${accountInfo.account_number}</span>
                 </div>
                 <div class="flex justify-between">
-                  <span class="text-sm ${finalIsMine ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
+                  <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
                   <span class="font-medium">${accountInfo.account_holder}</span>
                 </div>
               </div>
@@ -751,8 +741,8 @@
               ${buttonsHtml}
             </div>
           </div>
-          <div class="flex ${finalIsMine ? 'justify-end' : 'justify-start'} items-center gap-1 mt-1">
-            ${finalIsMine && !data.is_read ? '<span class="text-xs text-red-500 font-semibold unread-label">안읽음</span><span class="text-xs text-gray-400">•</span>' : ''}
+          <div class="flex ${isMineForPosition ? 'justify-end' : 'justify-start'} items-center gap-1 mt-1">
+            ${isMineForPosition && !data.is_read ? '<span class="text-xs text-red-500 font-semibold unread-label">안읽음</span><span class="text-xs text-gray-400">•</span>' : ''}
             <span class="text-xs text-gray-400">${new Date().toLocaleTimeString('ko-KR', {
               hour: '2-digit',
               minute: '2-digit',
@@ -762,23 +752,8 @@
         </div>
       `;
       
-      console.log('15. 최종 HTML 길이:', fullHTML.length);
-      
       messageContainer.innerHTML = fullHTML;
-      
-      console.log('16. messageContainer 생성 완료');
-      console.log('17. messageContainer.innerHTML:', messageContainer.innerHTML);
-      
       chatLog.appendChild(messageContainer);
-      console.log('18. 채팅창에 추가 완료');
-      
-      // ✅ DOM에 실제로 추가되었는지 확인
-      const addedButtons = messageContainer.querySelectorAll('button');
-      console.log('19. 추가된 버튼 개수:', addedButtons.length);
-      addedButtons.forEach((btn, index) => {
-        console.log(`20. 버튼 ${index + 1}:`, btn.textContent.trim());
-      });
-      
       scrollToBottom();
       console.log('=== 계좌정보 디버깅 끝 ===');
     }
