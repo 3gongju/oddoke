@@ -1,8 +1,6 @@
-// static/js/ddoksang_create.js
 // 생카 등록 페이지 전용 JavaScript (최종 완전 버전)
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('생카 등록 페이지 로드됨');
     
     const steps = document.querySelectorAll(".step");
     const progressBar = document.getElementById("progressBar");
