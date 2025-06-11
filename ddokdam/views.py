@@ -382,7 +382,10 @@ def comment_delete(request, category, post_id, comment_id):
     if request.user != comment.user:
         return HttpResponseForbidden()
 
-    comment.delete()
+    # 실제 삭제 대신 삭제 표시
+    comment.is_deleted = True
+    comment.content = "삭제된 댓글입니다"
+    comment.save()
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return HttpResponse(status=204)
