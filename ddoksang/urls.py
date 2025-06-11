@@ -39,7 +39,6 @@ urlpatterns = [
     path('api/nearby/', views.nearby_cafes_api, name='nearby_cafes_api'),
     path('api/map-data/', views.cafe_map_data_api, name='map_data_api'),
     path('api/search-suggestions/', views.search_suggestions_api, name='search_suggestions_api'),
-    # path('cafe/check-duplicate/', api_views.check_duplicate_cafe, name='check_duplicate_cafe'), # 카페 create 하기 전 중복 검사 단계
     path('cafe/check-duplicate/', api_views.check_duplicate_cafe, name='check_duplicate_cafe'),
 
 

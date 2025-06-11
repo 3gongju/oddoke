@@ -1,184 +1,115 @@
-// static/js/ddoksang_create.js (수정된 모듈화 버전)
+// static/js/ddoksang_create.js (간결한 버전 - 유틸리티 활용)
 
-// 단계별 검증 규칙 (전역 범위)
+// 단계별 검증 규칙
 const stepValidationRules = {
     1: ['final_artist_id'],
     2: ['cafe_name', 'address', 'latitude', 'longitude'],
     3: ['start_date', 'end_date'],
     4: ['event_description'],
     5: [], // 선택사항
-    6: ['images']  // 이미지 필수
+    6: ['images']
 };
 
-// 전역 함수들 먼저 정의 (HTML onclick에서 사용)
+// 전역 함수들 (HTML onclick 용)
 window.clearSelection = function() {
-    console.log('clearSelection 호출');
-    
-    if (window.DdoksangFormUtils) {
-        const FormUtils = window.DdoksangFormUtils;
-        FormUtils.setValue('artist-member-search', '');
-        FormUtils.setValue('check_artist_id', '');
-        FormUtils.setValue('check_member_id', '');
-        FormUtils.toggleClass('selected-artist', 'hidden', true);
-        FormUtils.toggleClass('duplicate-warning', 'hidden', true);
-        FormUtils.toggleClass('duplicate-success', 'hidden', true);
-    }
+    const FormUtils = window.DdoksangFormUtils;
+    FormUtils.setValue('artist-member-search', '');
+    FormUtils.setValue('check_artist_id', '');
+    FormUtils.setValue('check_member_id', '');
+    FormUtils.toggleClass('selected-artist', 'hidden', true);
+    FormUtils.toggleClass('duplicate-warning', 'hidden', true);
+    FormUtils.toggleClass('duplicate-success', 'hidden', true);
     
     if (window.ddoksangApp) {
         window.ddoksangApp.duplicateChecked = false;
         window.ddoksangApp.isDuplicate = false;
     }
-    
-    if (window.checkDuplicateBtnState) {
-        window.checkDuplicateBtnState();
-    }
+    if (window.checkDuplicateBtnState) window.checkDuplicateBtnState();
 };
 
 window.useSelectedArtist = function() {
-    console.log('useSelectedArtist 호출');
-    
-    if (!window.DdoksangFormUtils || !window.ddoksangApp) return;
-    
     const FormUtils = window.DdoksangFormUtils;
-    const artistId = FormUtils.getValue('check_artist_id');
-    const memberId = FormUtils.getValue('check_member_id');
+    FormUtils.setValue('final_artist_id', FormUtils.getValue('check_artist_id'));
+    FormUtils.setValue('final_member_id', FormUtils.getValue('check_member_id'));
     
-    FormUtils.setValue('final_artist_id', artistId);
-    FormUtils.setValue('final_member_id', memberId);
-    
-    setTimeout(() => {
-        if (window.ddoksangApp) {
-            window.ddoksangApp.moveToStep(2);
-        }
-    }, 300);
+    setTimeout(() => window.ddoksangApp?.moveToStep(2), 300);
 };
 
 window.showArtistSearch = function() {
-    console.log('showArtistSearch 호출');
-    
-    if (!window.DdoksangFormUtils) return;
-    
     const FormUtils = window.DdoksangFormUtils;
     FormUtils.toggleClass('step1-confirm-mode', 'hidden', true);
     FormUtils.toggleClass('step1-search-mode', 'hidden', false);
-    
-    const searchInput = document.getElementById('final-artist-member-search');
-    if (searchInput) searchInput.focus();
-    
-    if (window.ddoksangApp) {
-        window.ddoksangApp.updateNextButtonState();
-    }
+    document.getElementById('final-artist-member-search')?.focus();
+    window.ddoksangApp?.updateNextButtonState();
 };
 
 window.cancelArtistSearch = function() {
-    console.log('cancelArtistSearch 호출');
-    
-    if (!window.DdoksangFormUtils) return;
-    
     const FormUtils = window.DdoksangFormUtils;
     FormUtils.toggleClass('step1-search-mode', 'hidden', true);
     FormUtils.toggleClass('step1-confirm-mode', 'hidden', false);
-    
-    if (window.ddoksangApp) {
-        window.ddoksangApp.updateNextButtonState();
-    }
+    window.ddoksangApp?.updateNextButtonState();
 };
 
 window.confirmNewArtist = function() {
-    console.log('confirmNewArtist 호출');
-    
-    if (!window.DdoksangFormUtils) return;
-    
     const finalArtistId = window.DdoksangFormUtils.getValue('final_artist_id');
     if (!finalArtistId) {
         alert('아티스트를 선택해주세요.');
         return;
     }
-    
-    setTimeout(() => {
-        if (window.ddoksangApp) {
-            window.ddoksangApp.moveToStep(2);
-        }
-    }, 300);
+    setTimeout(() => window.ddoksangApp?.moveToStep(2), 300);
 };
 
 window.removeImage = function(index) {
-    console.log('removeImage 호출:', index);
-    
-    if (window.DdoksangImageUtils && window.ddoksangApp) {
-        window.DdoksangImageUtils.removeImageAt('images', index);
-        window.ddoksangApp.handleImagePreview();
-    }
+    window.DdoksangImageUtils?.removeImageAt('images', index);
+    window.ddoksangApp?.handleImagePreview();
 };
 
 window.clearFinalSelection = function() {
-    console.log('clearFinalSelection 호출');
-    
-    if (!window.DdoksangFormUtils) return;
-    
     const FormUtils = window.DdoksangFormUtils;
     FormUtils.setValue('final-artist-member-search', '');
     FormUtils.setValue('final_artist_id', '');
     FormUtils.setValue('final_member_id', '');
     FormUtils.toggleClass('final-selected-artist', 'hidden', true);
     FormUtils.updateButtonState('confirm-new-artist-btn', false);
-    
-    if (window.ddoksangApp) {
-        window.ddoksangApp.updateNextButtonState();
-    }
+    window.ddoksangApp?.updateNextButtonState();
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 덕생 등록 페이지 초기화 시작');
+    console.log('🚀 덕생 등록 페이지 초기화');
     
     // 의존성 확인
-    if (!window.DdoksangFormUtils || !window.DdoksangMapUtils || !window.DdoksangImageUtils) {
-        console.error('❌ 필수 유틸리티 모듈이 로드되지 않았습니다.');
-        console.log('Available modules:', {
-            FormUtils: !!window.DdoksangFormUtils,
-            MapUtils: !!window.DdoksangMapUtils,
-            ImageUtils: !!window.DdoksangImageUtils
-        });
+    const { DdoksangFormUtils: FormUtils, DdoksangMapUtils: MapUtils, DdoksangImageUtils: ImageUtils } = window;
+    if (!FormUtils || !MapUtils || !ImageUtils) {
+        console.error('❌ 필수 유틸리티 모듈 누락');
         return;
     }
 
-    // 전역 참조
-    const FormUtils = window.DdoksangFormUtils;
-    const MapUtils = window.DdoksangMapUtils;
-    const ImageUtils = window.DdoksangImageUtils;
-
-    // 상태 변수
+    // DOM 요소
     const steps = document.querySelectorAll(".step");
     const progressBar = document.getElementById("progressBar");
     const nextBtn = document.getElementById("nextBtn");
     const prevBtn = document.getElementById("prevBtn");
     const totalSteps = steps.length;
+    
+    // 상태 변수
     let currentStep = 0;
     let duplicateChecked = false;
     let isDuplicate = false;
 
-    console.log(`📋 총 ${totalSteps}개 단계 발견`);
-
-    // 전역 앱 객체 생성
+    // 전역 앱 객체
     window.ddoksangApp = {
-        currentStep: currentStep,
-        duplicateChecked: duplicateChecked,
-        isDuplicate: isDuplicate,
-        showStep: showStep,
-        moveToStep: function(step) {
-            currentStep = step;
-            this.currentStep = step;
-            showStep(step);
-        },
-        updateNextButtonState: updateNextButtonState,
-        handleImagePreview: handleImagePreview
+        currentStep: 0,
+        duplicateChecked: false,
+        isDuplicate: false,
+        moveToStep: (step) => { currentStep = step; showStep(step); },
+        updateNextButtonState,
+        handleImagePreview
     };
 
     // 초기화
     init();
 
     function init() {
-        console.log('🔧 초기화 시작');
         setupEventListeners();
         initializeDatePickers();
         initializeAutocomplete();
@@ -186,39 +117,21 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeMapSearch();
         initializeFormSubmit();
         initDuplicateChecker();
-        showStep(currentStep);
-        console.log('✅ 초기화 완료');
+        showStep(0);
     }
 
     function setupEventListeners() {
-        if (nextBtn) {
-            nextBtn.addEventListener("click", () => {
-                console.log('▶️ 다음 버튼 클릭');
-                moveStep(1);
-            });
-        }
-        if (prevBtn) {
-            prevBtn.addEventListener("click", () => {
-                console.log('◀️ 이전 버튼 클릭');
-                moveStep(-1);
-            });
-        }
+        nextBtn?.addEventListener("click", () => moveStep(1));
+        prevBtn?.addEventListener("click", () => moveStep(-1));
     }
 
     function showStep(index) {
-        console.log(`📄 Step ${index} 표시`);
-        
         currentStep = index;
         window.ddoksangApp.currentStep = index;
         
-        steps.forEach((step, i) => {
-            step.classList.toggle("hidden", i !== index);
-        });
-
-        if (progressBar) {
-            progressBar.style.width = `${(index / (totalSteps - 1)) * 100}%`;
-        }
-
+        steps.forEach((step, i) => step.classList.toggle("hidden", i !== index));
+        if (progressBar) progressBar.style.width = `${(index / (totalSteps - 1)) * 100}%`;
+        
         updateNavigationButtons(index);
         addStepValidationListeners(index);
         updateNextButtonState();
@@ -233,38 +146,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const isFirstStep = index === 0;
         const isLastStep = index === totalSteps - 1;
 
-        // Step 0에서는 버튼 숨김
         if (isFirstStep) {
-            if (prevBtn) prevBtn.classList.add("hidden");
-            if (nextBtn) nextBtn.classList.add("hidden");
+            // Step 0: 모든 버튼 숨김
+            prevBtn?.classList.add("hidden");
+            nextBtn?.classList.add("hidden");
         } else {
-            if (prevBtn) {
-                prevBtn.classList.remove("hidden");
-                FormUtils.updateButtonState('prevBtn', true);
-            }
-            if (nextBtn) {
-                nextBtn.classList.remove("hidden");
-                nextBtn.textContent = isLastStep ? "제출하기" : "다음";
-            }
+            // Step 1 이상: 버튼들 표시
+            prevBtn?.classList.remove("hidden");
+            nextBtn?.classList.remove("hidden");
+            
+            if (nextBtn) nextBtn.textContent = isLastStep ? "제출하기" : "다음";
+            FormUtils.updateButtonState('prevBtn', true);
         }
     }
 
     function moveStep(direction) {
-        console.log(`🔄 Step 이동: ${direction}, 현재: ${currentStep}`);
-        
-        if (direction === -1 && currentStep > 1) {
-            currentStep -= 1;
-            window.ddoksangApp.currentStep = currentStep;
-            showStep(currentStep);
-            return;
+        if (direction === -1) {
+            // 이전 버튼 처리
+            if (currentStep === 1) {
+                // Step 1에서 Step 0로: 중복 확인 단계로 돌아가기
+                FormUtils.showToast('중복 확인 단계로 돌아갑니다.', 'info');
+                resetDuplicateCheck();
+                showStep(0);
+                return;
+            } else if (currentStep > 1) {
+                showStep(currentStep - 1);
+                return;
+            }
         }
 
         if (direction === 1) {
-            // Step 0에서 Step 1로: 중복 확인
+            // Step 0에서 Step 1로: 중복 확인 필요
             if (currentStep === 0) {
                 if (!duplicateChecked || isDuplicate) {
                     FormUtils.showToast(isDuplicate ? 
-                        "중복된 생카가 존재합니다. 다른 정보로 입력해주세요." : 
+                        "중복된 생카가 존재합니다." : 
                         "중복 확인을 먼저 해주세요.", 'warning');
                     return;
                 }
@@ -285,9 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            currentStep += direction;
-            window.ddoksangApp.currentStep = currentStep;
-            showStep(currentStep);
+            showStep(currentStep + 1);
         }
     }
 
@@ -295,23 +209,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const rules = stepValidationRules[currentStep];
         if (!rules) return true;
 
-        // 일반 필수 필드 검증
-        const validation = FormUtils.validateRequired(rules.filter(field => field !== 'images'));
-        if (!validation.valid) {
-            FormUtils.showToast(`${getFieldLabel(validation.field)}을(를) 입력해주세요.`, 'warning');
-            return false;
+        // 일반 필드 검증
+        const normalFields = rules.filter(field => field !== 'images');
+        if (normalFields.length > 0) {
+            const validation = FormUtils.validateRequired(normalFields);
+            if (!validation.valid) {
+                FormUtils.showToast(`${getFieldLabel(validation.field)}을(를) 입력해주세요.`, 'warning');
+                return false;
+            }
         }
 
-        // 이미지 파일 검증 (Step 6)
+        // 이미지 검증
         if (rules.includes('images')) {
             const imageInput = document.getElementById('images');
-            if (!imageInput || !imageInput.files || imageInput.files.length === 0) {
+            if (!imageInput?.files?.length) {
                 FormUtils.showToast('최소 1개의 이미지를 업로드해주세요.', 'warning');
                 return false;
             }
         }
 
-        // Step 3 날짜 검증
+        // 날짜 검증
         if (currentStep === 3) {
             const dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
             if (!dateValidation.valid) {
@@ -341,31 +258,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         stepElement.setAttribute('data-listeners-added', 'true');
         
-        const rules = stepValidationRules[stepIndex];
-        if (rules) {
-            rules.forEach(fieldId => {
-                const element = document.getElementById(fieldId);
-                if (element) {
-                    element.addEventListener('input', updateNextButtonState);
-                    element.addEventListener('change', updateNextButtonState);
-                }
-            });
-        }
+        stepValidationRules[stepIndex]?.forEach(fieldId => {
+            const element = document.getElementById(fieldId);
+            if (element) {
+                element.addEventListener('input', updateNextButtonState);
+                element.addEventListener('change', updateNextButtonState);
+            }
+        });
 
-        // 지도 검색 필드 특별 처리 (Step 2)
+        // 특별 처리
         if (stepIndex === 2) {
-            const placeInput = document.getElementById('place-search');
-            if (placeInput) {
-                placeInput.addEventListener('input', updateNextButtonState);
-            }
+            document.getElementById('place-search')?.addEventListener('input', updateNextButtonState);
         }
-
-        // 이미지 업로드 필드 특별 처리 (Step 6)
         if (stepIndex === 6) {
-            const imageInput = document.getElementById('images');
-            if (imageInput) {
-                imageInput.addEventListener('change', updateNextButtonState);
-            }
+            document.getElementById('images')?.addEventListener('change', updateNextButtonState);
         }
     }
 
@@ -375,28 +281,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const rules = stepValidationRules[currentStep];
         let isValid = true;
 
-        if (rules && rules.length > 0) {
-            // 일반 필드 검증
+        if (rules?.length > 0) {
             const normalFields = rules.filter(field => field !== 'images');
             if (normalFields.length > 0) {
                 isValid = FormUtils.validateRequired(normalFields, false).valid;
             }
 
-            // 이미지 검증 (Step 6)
             if (rules.includes('images')) {
                 const imageInput = document.getElementById('images');
-                const hasImages = imageInput && imageInput.files && imageInput.files.length > 0;
-                isValid = isValid && hasImages;
+                isValid = isValid && imageInput?.files?.length > 0;
             }
         }
         
         FormUtils.updateButtonState('nextBtn', isValid);
-        console.log(`🔘 Step ${currentStep} 버튼 상태:`, isValid);
     }
 
-    // 제출 확인 모달 표시
     function showSubmitConfirmModal() {
-        // 모달 HTML 생성
         const modalHTML = `
             <div id="submitConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                 <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
@@ -409,44 +309,30 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h3 class="text-lg font-bold text-gray-900 mb-2">생카 등록 완료</h3>
                         <p class="text-gray-600 mb-6">모든 내용을 확인하셨나요?<br>등록하시겠습니까?</p>
                         <div class="flex gap-3">
-                            <button id="cancelSubmit" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-                                취소
-                            </button>
-                            <button id="confirmSubmit" class="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
-                                등록하기
-                            </button>
+                            <button id="cancelSubmit" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">취소</button>
+                            <button id="confirmSubmit" class="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">등록하기</button>
                         </div>
                     </div>
                 </div>
             </div>
         `;
 
-        // 모달을 body에 추가
         document.body.insertAdjacentHTML('beforeend', modalHTML);
-
-        // 이벤트 리스너 추가
         document.getElementById('cancelSubmit').addEventListener('click', closeSubmitModal);
         document.getElementById('confirmSubmit').addEventListener('click', function() {
             closeSubmitModal();
             document.getElementById("multiStepForm")?.submit();
         });
-
-        // ESC 키로 모달 닫기
         document.addEventListener('keydown', handleModalEscape);
     }
 
     function closeSubmitModal() {
-        const modal = document.getElementById('submitConfirmModal');
-        if (modal) {
-            modal.remove();
-            document.removeEventListener('keydown', handleModalEscape);
-        }
+        document.getElementById('submitConfirmModal')?.remove();
+        document.removeEventListener('keydown', handleModalEscape);
     }
 
     function handleModalEscape(e) {
-        if (e.key === 'Escape') {
-            closeSubmitModal();
-        }
+        if (e.key === 'Escape') closeSubmitModal();
     }
 
     function setupStep1Preview() {
@@ -455,111 +341,305 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function copyDataToForm() {
-        const cafeName = FormUtils.getValue('check_cafe_name');
-        FormUtils.setValue('cafe_name', cafeName);
-        console.log('📋 데이터 복사:', cafeName);
+        FormUtils.setValue('cafe_name', FormUtils.getValue('check_cafe_name'));
     }
 
-    // 중복 확인 로직
+    // 중복 확인 상태 초기화 (Step 1에서 Step 0로 돌아갈 때)
+    function resetDuplicateCheck() {
+        console.log('🔄 중복 확인 상태 초기화');
+        
+        // 상태 변수 초기화
+        duplicateChecked = false;
+        isDuplicate = false;
+        window.ddoksangApp.duplicateChecked = false;
+        window.ddoksangApp.isDuplicate = false;
+        
+        // UI 초기화
+        const duplicateForm = document.getElementById('duplicate-check-form');
+        const duplicateSection = document.getElementById('duplicate-cafes-section');
+        const successMsg = document.getElementById('duplicate-success');
+        const warningMsg = document.getElementById('duplicate-warning');
+        
+        // 중복 확인 폼 다시 보이기
+        if (duplicateForm) {
+            duplicateForm.style.display = 'block';
+        }
+        
+        // 제목, 설명, 프로그레스바 다시 보이기
+        const section = document.querySelector('section.max-w-4xl');
+        if (section) {
+            const title = section.querySelector('h1');
+            const description = section.querySelector('p');
+            const progressBar = section.querySelector('.w-full.bg-gray-200.rounded-full');
+            
+            if (title) title.style.display = 'block';
+            if (description) description.style.display = 'block';
+            if (progressBar) progressBar.style.display = 'block';
+        }
+        
+        // 중복 결과 섹션들 숨기기
+        if (duplicateSection) {
+            duplicateSection.classList.add('hidden');
+        }
+        if (successMsg) {
+            successMsg.classList.add('hidden');
+        }
+        if (warningMsg) {
+            warningMsg.classList.add('hidden');
+        }
+        
+        // 선택된 중복 카페 ID 초기화
+        FormUtils.setValue('selected_duplicate_cafe_id', '');
+        
+        // 중복 확인 버튼 상태 업데이트
+        if (window.checkDuplicateBtnState) {
+            window.checkDuplicateBtnState();
+        }
+        
+        console.log('✅ 중복 확인 상태 초기화 완료');
+    }
+
+    // === 중복 확인 로직 ===
     function initDuplicateChecker() {
-        console.log('🔍 중복 확인 초기화');
         const checkBtn = document.getElementById('check-duplicate-btn');
         if (!checkBtn) return;
 
         function updateDuplicateBtn() {
             const required = ['check_artist_id', 'check_cafe_name', 'check_start_date', 'check_end_date'];
-            const validation = FormUtils.validateRequired(required, false);
-            FormUtils.updateButtonState('check-duplicate-btn', validation.valid);
+            FormUtils.updateButtonState('check-duplicate-btn', FormUtils.validateRequired(required, false).valid);
         }
 
-        // 전역 함수로 설정
         window.checkDuplicateBtnState = updateDuplicateBtn;
 
-        // 입력 필드 이벤트 리스너
         ['check_cafe_name', 'check_start_date', 'check_end_date'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener('input', updateDuplicateBtn);
-                element.addEventListener('change', updateDuplicateBtn);
-            }
+            document.getElementById(id)?.addEventListener('input', updateDuplicateBtn);
+            document.getElementById(id)?.addEventListener('change', updateDuplicateBtn);
         });
 
-        // 중복 확인 버튼 클릭
-        checkBtn.addEventListener('click', async function() {
-            console.log('🔍 중복 확인 시작');
-            
-            const data = {
-                artist_id: FormUtils.getValue('check_artist_id'),
-                member_id: FormUtils.getValue('check_member_id'),
-                cafe_name: FormUtils.getValue('check_cafe_name'),
-                start_date: FormUtils.getValue('check_start_date'),
-                end_date: FormUtils.getValue('check_end_date')
-            };
-
-            if (!data.artist_id || !data.cafe_name || !data.start_date || !data.end_date) {
-                FormUtils.showToast('모든 정보를 입력해주세요.', 'warning');
-                return;
-            }
-
-            // 로딩 상태
-            checkBtn.disabled = true;
-            checkBtn.textContent = '확인 중...';
-            checkBtn.className = checkBtn.className.replace(/bg-gray-\d+/, 'bg-gray-600');
-
-            try {
-                const url = `/ddoksang/cafe/check-duplicate/?` + 
-                    Object.entries(data).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
-                
-                console.log('🌐 중복 확인 요청:', url);
-                
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                console.log('📨 중복 확인 응답:', result);
-                
-                duplicateChecked = true;
-                isDuplicate = result.exists;
-                
-                // 전역 상태 업데이트
-                window.ddoksangApp.duplicateChecked = duplicateChecked;
-                window.ddoksangApp.isDuplicate = isDuplicate;
-
-                FormUtils.toggleClass('duplicate-warning', 'hidden', !result.exists);
-                FormUtils.toggleClass('duplicate-success', 'hidden', result.exists);
-
-                if (!result.exists) {
-                    FormUtils.showToast('중복되지 않습니다!', 'success');
-                    setTimeout(() => {
-                        currentStep = 1;
-                        window.ddoksangApp.currentStep = currentStep;
-                        showStep(currentStep);
-                    }, 1500);
-                } else {
-                    FormUtils.showToast('유사한 생카가 발견되었습니다.', 'warning');
-                }
-            } catch (error) {
-                console.error('❌ 중복 확인 오류:', error);
-                FormUtils.showToast(`중복 확인 중 오류가 발생했습니다: ${error.message}`, 'warning');
-            } finally {
-                checkBtn.disabled = false;
-                checkBtn.textContent = '중복 확인하기';
-                updateDuplicateBtn();
-            }
-        });
-
+        setupDuplicateSelectionButtons();
+        checkBtn.addEventListener('click', performDuplicateCheck);
         updateDuplicateBtn();
     }
 
-    // 날짜 선택기 초기화
-    function initializeDatePickers() {
-        console.log('📅 날짜 선택기 초기화');
+    async function performDuplicateCheck() {
+        const checkBtn = document.getElementById('check-duplicate-btn');
+        const data = {
+            artist_id: FormUtils.getValue('check_artist_id'),
+            member_id: FormUtils.getValue('check_member_id'),
+            cafe_name: FormUtils.getValue('check_cafe_name'),
+            start_date: FormUtils.getValue('check_start_date'),
+            end_date: FormUtils.getValue('check_end_date')
+        };
+
+        if (!data.artist_id || !data.cafe_name || !data.start_date || !data.end_date) {
+            FormUtils.showToast('모든 정보를 입력해주세요.', 'warning');
+            return;
+        }
+
+        // 로딩 상태
+        checkBtn.disabled = true;
+        checkBtn.textContent = '확인 중...';
+
+        try {
+            const url = `/ddoksang/cafe/check-duplicate/?` + 
+                Object.entries(data).map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const result = await response.json();
+            if (result.error) throw new Error(result.error);
+            
+            handleDuplicateCheckResult(result);
+            
+        } catch (error) {
+            console.error('❌ 중복 확인 오류:', error);
+            FormUtils.showToast(`중복 확인 중 오류: ${error.message}`, 'warning');
+            hideDuplicateCheckForm();
+            showErrorMessage(error.message);
+        } finally {
+            checkBtn.disabled = false;
+            checkBtn.textContent = '중복 확인하기';
+            window.checkDuplicateBtnState?.();
+        }
+    }
+
+    function handleDuplicateCheckResult(result) {
+        duplicateChecked = true;
+        isDuplicate = result.exists;
         
+        window.ddoksangApp.duplicateChecked = duplicateChecked;
+        window.ddoksangApp.isDuplicate = isDuplicate;
+
+        hideDuplicateCheckForm();
+
+        if (result.exists && result.similar_cafes?.length > 0) {
+            showDuplicateCafes(result.similar_cafes);
+            FormUtils.showToast(`${result.similar_cafes.length}개의 유사한 생카가 발견되었습니다.`, 'warning');
+        } else {
+            FormUtils.toggleClass('duplicate-success', 'hidden', false);
+            FormUtils.showToast('중복되지 않습니다!', 'success');
+            setTimeout(() => showStep(1), 1500);
+        }
+    }
+
+    function hideDuplicateCheckForm() {
+        const form = document.getElementById('duplicate-check-form');
+        if (form) form.style.display = 'none';
+        
+        // 제목, 설명, 프로그레스바도 숨기기
+        const section = document.querySelector('section.max-w-4xl');
+        if (section) {
+            const title = section.querySelector('h1');
+            const description = section.querySelector('p');
+            const progressBar = section.querySelector('.w-full.bg-gray-200.rounded-full');
+            
+            if (title) title.style.display = 'none';
+            if (description) description.style.display = 'none';
+            if (progressBar) progressBar.style.display = 'none';
+        }
+    }
+
+    function showErrorMessage(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'mt-6 p-4 border rounded bg-red-50 border-red-200';
+        errorDiv.innerHTML = `
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <div>
+                    <span class="font-medium text-red-800">오류가 발생했습니다</span>
+                    <p class="text-sm text-red-600 mt-1">${message}</p>
+                    <button type="button" onclick="location.reload()" class="mt-2 text-sm text-red-600 underline hover:text-red-800">다시 시도하기</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('step-0')?.appendChild(errorDiv);
+    }
+
+    function showDuplicateCafes(cafes) {
+        const section = document.getElementById('duplicate-cafes-section');
+        const grid = document.getElementById('duplicate-cafes-grid');
+        if (!section || !grid) return;
+        
+        grid.innerHTML = '';
+        cafes.forEach(cafe => {
+            const cardElement = createDuplicateCafeCard(cafe);
+            grid.appendChild(cardElement);
+        });
+        section.classList.remove('hidden');
+    }
+
+    function createDuplicateCafeCard(cafe) {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'duplicate-cafe-card relative w-full max-w-sm mx-auto mb-6';
+        cardDiv.dataset.cafeId = cafe.id;
+        
+        let statusBadge = '';
+        let statusClass = '';
+        if (cafe.cafe_state === 'ongoing') {
+            statusBadge = '운영중'; statusClass = 'bg-green-500';
+        } else if (cafe.cafe_state === 'upcoming') {
+            statusBadge = '예정'; statusClass = 'bg-blue-500';
+        } else {
+            statusBadge = '종료'; statusClass = 'bg-gray-500';
+        }
+        
+        let daysInfo = '';
+        if (cafe.days_until_start && cafe.days_until_start <= 7) {
+            daysInfo = `<span class="text-blue-600 font-medium text-xs bg-blue-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">시작 D-${cafe.days_until_start}</span>`;
+        } else if (cafe.days_remaining && cafe.days_remaining <= 7) {
+            daysInfo = `<span class="text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">종료 D-${cafe.days_remaining}</span>`;
+        }
+        
+        cardDiv.innerHTML = `
+            <div class="relative overflow-hidden rounded-2xl border border-gray-200 transition-all duration-300 h-80 bg-white shadow-sm">
+                ${cafe.cafe_state === 'ended' ? '<div class="absolute inset-0 bg-gray-900/40 backdrop-blur-[1px] z-30 rounded-2xl pointer-events-none"></div>' : ''}
+                
+                <div class="selected-indicator absolute top-3 left-3 z-40 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                
+                <div class="relative h-48">
+                    ${cafe.main_image ? 
+                        `<img src="${cafe.main_image}" alt="${cafe.cafe_name}" class="w-full h-full object-cover" loading="lazy">` :
+                        `<div class="w-full h-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
+                            <span class="text-pink-400 text-4xl">🎂</span>
+                        </div>`
+                    }
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-0"></div>
+                    <div class="absolute -bottom-3 right-3 z-40">
+                        <span class="${statusClass} text-white text-xs font-medium px-2 py-1 rounded-full">${statusBadge}</span>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 h-32 flex flex-col justify-between">
+                    <div class="flex-1 space-y-1">
+                        <p class="text-sm text-gray-600 truncate leading-tight">
+                            ${cafe.member_name ? `${cafe.member_name} (${cafe.artist_name})` : cafe.artist_name}
+                        </p>
+                        <p class="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">
+                            ${cafe.cafe_name}
+                        </p>
+                    </div>
+                    <div class="mb-2">
+                        <p class="text-xs text-gray-600 truncate">📍 ${cafe.place_name}</p>
+                    </div>
+                    <div class="flex items-center justify-between text-sm text-gray-600 mt-auto">
+                        <span class="truncate">${cafe.start_date} - ${cafe.end_date}</span>
+                        ${daysInfo}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        cardDiv.addEventListener('click', () => selectDuplicateCafe(cafe.id, cardDiv));
+        return cardDiv;
+    }
+
+    function selectDuplicateCafe(cafeId, cardElement) {
+        document.querySelectorAll('.duplicate-cafe-card.selected').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        cardElement.classList.add('selected');
+        FormUtils.setValue('selected_duplicate_cafe_id', cafeId);
+        FormUtils.toggleClass('select-cafe-instruction', 'hidden', false);
+    }
+
+    function setupDuplicateSelectionButtons() {
+        document.getElementById('confirm-duplicate-btn')?.addEventListener('click', () => {
+            const selectedCafeId = FormUtils.getValue('selected_duplicate_cafe_id');
+            if (!selectedCafeId) {
+                FormUtils.showToast('먼저 해당하는 카페를 선택해주세요.', 'warning');
+                FormUtils.toggleClass('select-cafe-instruction', 'hidden', false);
+                return;
+            }
+            
+            FormUtils.showToast('선택하신 카페 페이지로 이동합니다.', 'info');
+            setTimeout(() => {
+                window.location.href = `/ddoksang/cafe/${selectedCafeId}/`;
+            }, 1000);
+        });
+        
+        document.getElementById('deny-duplicate-btn')?.addEventListener('click', () => {
+            duplicateChecked = true;
+            isDuplicate = false;
+            window.ddoksangApp.duplicateChecked = duplicateChecked;
+            window.ddoksangApp.isDuplicate = isDuplicate;
+            
+            FormUtils.showToast('새로운 생카 등록을 진행합니다.', 'success');
+            setTimeout(() => showStep(1), 1000);
+        });
+    }
+
+    // === 기타 초기화 함수들 ===
+    function initializeDatePickers() {
         if (typeof flatpickr === 'undefined') return;
 
-        // 중복 확인용
         flatpickr("#check_start_date", { 
             dateFormat: "Y-m-d",
             onChange: () => window.checkDuplicateBtnState?.()
@@ -568,8 +648,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dateFormat: "Y-m-d",
             onChange: () => window.checkDuplicateBtnState?.()
         });
-
-        // 실제 폼용
         flatpickr("#start_date", {
             dateFormat: "Y-m-d",
             defaultDate: new Date(),
@@ -582,10 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Autocomplete 초기화
     function initializeAutocomplete() {
-        console.log('🔤 자동완성 초기화');
-        
         if (typeof initAutocomplete !== 'function') return;
 
         const autocompleteConfig = {
@@ -596,13 +671,11 @@ document.addEventListener('DOMContentLoaded', function() {
             apiUrl: '/artist/autocomplete/'
         };
 
-        // Step 0용
         initAutocomplete('artist-member-search', 'artist-member-results', {
             ...autocompleteConfig,
             onSelect: (result) => selectArtist(result, 'check')
         });
 
-        // Step 1용 (final-artist-member-search)
         initAutocomplete('final-artist-member-search', 'final-artist-member-results', {
             ...autocompleteConfig,
             onSelect: (result) => selectFinalArtist(result)
@@ -610,8 +683,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function selectArtist(result, prefix) {
-        console.log('🎭 아티스트 선택:', result);
-        
         const data = FormUtils.normalizeArtistData({
             member_name: result.name,
             artist_display: result.artist || result.artist_name,
@@ -619,13 +690,11 @@ document.addEventListener('DOMContentLoaded', function() {
             member_id: result.id || result.member_id
         });
 
-        // 폼 필드 업데이트
         FormUtils.setValue(`${prefix}_artist_id`, data.artistId);
         FormUtils.setValue(`${prefix}_member_id`, data.memberId);
         FormUtils.setValue(`artist-member-search`, data.displayText);
         FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
         
-        // UI 업데이트
         FormUtils.toggleClass('artist-member-results', 'hidden', true);
         FormUtils.toggleClass('selected-artist', 'hidden', false);
         
@@ -637,8 +706,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function selectFinalArtist(result) {
-        console.log('🎭 Step 1에서 최종 아티스트 선택:', result);
-        
         const data = FormUtils.normalizeArtistData({
             member_name: result.name,
             artist_display: result.artist || result.artist_name,
@@ -646,26 +713,17 @@ document.addEventListener('DOMContentLoaded', function() {
             member_id: result.id || result.member_id
         });
 
-        // Step 1 final 필드 업데이트
         FormUtils.setValue('final_artist_id', data.artistId);
         FormUtils.setValue('final_member_id', data.memberId);
         FormUtils.setValue('final-artist-member-search', data.displayText);
         FormUtils.setText('final-selected-artist-text', `✓ ${data.displayText} 선택됨`);
         
-        // UI 업데이트
         FormUtils.toggleClass('final-artist-member-results', 'hidden', true);
         FormUtils.toggleClass('final-selected-artist', 'hidden', false);
-        
-        // "선택 완료" 버튼 활성화
         FormUtils.updateButtonState('confirm-new-artist-btn', true);
-        
-        console.log('✅ Step 1 아티스트 선택 완료');
     }
 
-    // 이미지 업로드 초기화
     function initializeImageUpload() {
-        console.log('🖼️ 이미지 업로드 초기화');
-        
         const imageInput = document.getElementById("images");
         const uploadArea = document.querySelector('label[for="images"]')?.parentElement;
         
@@ -695,25 +753,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 지도 검색 초기화
     function initializeMapSearch() {
-        console.log('🗺️ 지도 검색 초기화');
-        
         const searchBtn = document.getElementById("searchBtn");
         const placeInput = document.getElementById("place-search");
 
-        if (searchBtn) {
-            searchBtn.className = "bg-gray-900 text-white px-4 rounded hover:bg-gray-800 transition-colors";
-            searchBtn.addEventListener('click', searchPlace);
-        }
-        if (placeInput) {
-            placeInput.addEventListener("keydown", e => {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    searchPlace();
-                }
-            });
-        }
+        searchBtn?.addEventListener('click', searchPlace);
+        placeInput?.addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                searchPlace();
+            }
+        });
     }
 
     function searchPlace() {
@@ -748,11 +798,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function selectPlace(place) {
-        console.log('📍 장소 선택:', place);
-        
         MapUtils.selectPlace(place);
         
-        // 선택된 장소 UI 업데이트
         const selectedPlace = document.getElementById('selected-place');
         if (selectedPlace) {
             selectedPlace.innerHTML = `
@@ -768,27 +815,19 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedPlace.classList.remove('hidden');
         }
 
-        // 검색 결과 숨기기
         FormUtils.toggleClass('place-results', 'hidden', true);
         updateNextButtonState();
     }
 
-    // 폼 제출 초기화
     function initializeFormSubmit() {
-        console.log('📝 폼 제출 초기화');
-        
         const form = document.getElementById('multiStepForm');
         if (!form) return;
         
         form.addEventListener('submit', function() {
-            console.log('📨 폼 제출 처리');
-            
-            // 모든 입력 필드 활성화
             this.querySelectorAll('input, textarea, select').forEach(input => {
                 input.disabled = false;
             });
 
-            // X 사용자명을 URL로 변환
             const xUsername = FormUtils.getValue('x_username');
             if (xUsername) {
                 const xInput = document.createElement('input');
@@ -799,5 +838,56 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
+    // CSS 스타일 추가
+    const additionalCSS = `
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .duplicate-cafe-card {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        
+        .duplicate-cafe-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .duplicate-cafe-card.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .duplicate-cafe-card .selected-indicator {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .duplicate-cafe-card.selected .selected-indicator {
+            opacity: 1;
+        }
+        
+        /* 카드 컨테이너 중앙 정렬 강화 */
+        #duplicate-cafes-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+    `;
+
+    if (!document.querySelector('#duplicate-check-styles')) {
+        const style = document.createElement('style');
+        style.id = 'duplicate-check-styles';
+        style.textContent = additionalCSS;
+        document.head.appendChild(style);
+    }
 });
