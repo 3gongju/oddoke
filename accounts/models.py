@@ -7,58 +7,58 @@ from datetime import timedelta
 from .utils import AccountEncryption, AddressEncryption
 
 class User(AbstractUser):
-   email = models.EmailField(unique=True, error_messages={
+    email = models.EmailField(unique=True, error_messages={
        'unique': "이미 사용중인 이메일입니다."
-   })
-   username = models.CharField(max_length=20, unique=True, error_messages={
+    })
+    username = models.CharField(max_length=20, unique=True, error_messages={
        'unique': "이미 사용 중인 닉네임입니다."
-   })
+    })
    
-   profile_image = ResizedImageField(
+    profile_image = ResizedImageField(
        size=[500, 500],
        crop=['middle', 'center'],
        upload_to='profile',
-   )
-   followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
-   bio = models.TextField(blank=True, null=True)
+    )
+    followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
+    bio = models.TextField(blank=True, null=True)
    
-   # 소셜 로그인 관련
-   is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
-   social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
-   is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
+    # 소셜 로그인 관련
+    is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
+    social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
+    is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
    
-   # 🔥 소셜 로그인 ID 저장 필드 추가
+    # 🔥 소셜 로그인 ID 저장 필드 추가
     kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
     naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
 
-    # 편의 메서드들
-   def get_fandom_profile(self):
+   # 편의 메서드들
+    def get_fandom_profile(self):
        try:
            return self.fandom_profile
        except FandomProfile.DoesNotExist:
            return None
    
-   def get_or_create_fandom_profile(self):
+    def get_or_create_fandom_profile(self):
        profile, created = FandomProfile.objects.get_or_create(user=self)
        return profile
    
-   def get_bank_profile(self):
+    def get_bank_profile(self):
        try:
            return self.bank_profile
        except BankProfile.DoesNotExist:
            return None
    
-   def get_or_create_bank_profile(self):
+    def get_or_create_bank_profile(self):
        profile, created = BankProfile.objects.get_or_create(user=self)
        return profile
        
-   def get_address_profile(self):
+    def get_address_profile(self):
        try:
            return self.address_profile
        except AddressProfile.DoesNotExist:
            return None
    
-   def get_or_create_address_profile(self):
+    def get_or_create_address_profile(self):
        profile, created = AddressProfile.objects.get_or_create(user=self)
        return profile
 
@@ -85,8 +85,8 @@ class User(AbstractUser):
         # 🔥 4순위: 기본적으로 username 반환
         return self.username
    
-   @property
-   def is_social_user(self):
+    @property
+    def is_social_user(self):
        return self.username.startswith(('temp_kakao_', 'temp_naver_'))
 
 class FandomProfile(models.Model):
