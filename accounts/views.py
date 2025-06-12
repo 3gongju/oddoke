@@ -24,7 +24,7 @@ from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, Dam
 from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
 from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile
-from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, SocialSignupCompleteForm
+from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm
 from .services import KakaoAuthService, NaverAuthService
 
 load_dotenv()
@@ -400,8 +400,11 @@ def edit_profile(request, username):
             messages.success(request, "소개가 수정되었습니다.")
             return redirect('accounts:edit_profile', username=request.user.username)
 
+    fandom_profile = user_profile.get_fandom_profile()
+
     context = {
         'user_profile': user_profile,
+        'fandom_profile': fandom_profile,
         'artist_list': Artist.objects.all(),  # 🔹 아티스트 목록 전달
     }
     return render(request, 'accounts/edit_profile.html', context)
@@ -433,6 +436,9 @@ def upload_fandom_card(request, username):
     if request.method == 'POST':
         image = request.FILES.get('fandom_card')
         artist_id = request.POST.get('artist_id')
+        # 🔥 인증 기간 필드 추가
+        verification_start_date = request.POST.get('verification_start_date')
+        verification_end_date = request.POST.get('verification_end_date')
 
         if not image:
             messages.error(request, '이미지를 업로드해주세요.')
@@ -440,30 +446,59 @@ def upload_fandom_card(request, username):
 
         try:
             img = Image.open(image)
-            # ... EXIF 처리 코드는 동일 ...
+            
+            # EXIF 데이터로 회전 정보 확인 및 수정
+            try:
+                for orientation in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[orientation] == 'Orientation':
+                        break
+                
+                exif = img._getexif()
+                if exif is not None:
+                    orientation_value = exif.get(orientation)
+                    if orientation_value == 3:
+                        img = img.rotate(180, expand=True)
+                    elif orientation_value == 6:
+                        img = img.rotate(270, expand=True)
+                    elif orientation_value == 8:
+                        img = img.rotate(90, expand=True)
+            except (AttributeError, KeyError, TypeError):
+                pass
+            
+            # 🔥 이미지 비율 계산 (누락된 부분 추가)
+            width, height = img.size
+            uploaded_ratio = width / height if height > 0 else 0
+            
+            # ✅ 비율 체크
+            # expected_ratio = 1278 / 590  # 약 2.17
+            # tolerance = 0.2
+            # lower_bound = expected_ratio * (1 - tolerance)
+            # upper_bound = expected_ratio * (1 + tolerance)
 
-        except Exception:
-            messages.error(request, '이미지를 처리할 수 없습니다.')
+            # if not (lower_bound <= uploaded_ratio <= upper_bound):
+            #     messages.error(
+            #         request,
+            #         f'⚠️ 이미지 비율이 예시와 다릅니다. 세로 기준 약 2.17:1 (±20%) 이내로 맞춰주세요. '
+            #         f'→ 현재: {uploaded_ratio:.3f}:1'
+            #     )
+            #     return redirect('accounts:edit_profile', username=username)
+
+        except Exception as e:
+            messages.error(request, f'이미지를 처리할 수 없습니다: {str(e)}')
             return redirect('accounts:edit_profile', username=username)
 
-        # ✅ 비율 체크 (동일)
-        expected_ratio = 1278 / 590
-        tolerance = 0.2
-        lower_bound = expected_ratio * (1 - tolerance)
-        upper_bound = expected_ratio * (1 + tolerance)
-
-        if not (lower_bound <= uploaded_ratio <= upper_bound):
-            messages.error(
-                request,
-                f'⚠️ 이미지 비율이 예시와 다릅니다. 세로 기준 약 2.17:1 (±20%) 이내로 맞춰주세요. '
-                f'→ 현재: {uploaded_ratio:.3f}:1'
-            )
-            return redirect('accounts:edit_profile', username=username)
-
-        # 🔥 새로운 방식: FandomProfile에 저장
+        # 🔥 FandomProfile에 저장 (인증 기간 포함)
         fandom_profile = user.get_or_create_fandom_profile()
         fandom_profile.fandom_card = image
         fandom_profile.fandom_artist = get_object_or_404(Artist, id=artist_id)
+        
+        # 🔥 인증 기간 설정
+        from datetime import datetime
+        if verification_start_date:
+            fandom_profile.verification_start_date = datetime.strptime(verification_start_date, '%Y-%m-%d').date()
+        if verification_end_date:
+            fandom_profile.verification_end_date = datetime.strptime(verification_end_date, '%Y-%m-%d').date()
+        
         fandom_profile.is_verified_fandom = False
         fandom_profile.is_pending_verification = True
         fandom_profile.verification_failed = False
@@ -491,14 +526,23 @@ def account_registration(request, username):
         return redirect('accounts:mypage')
     
     if request.method == 'POST':
+        print("🔍 POST 요청 받음")
         form = BankAccountForm(request.POST)
+        print(f"🔍 폼 데이터: {request.POST}")
+        
         if form.is_valid():
+            print("🔍 폼 유효성 검사 통과")
+            print(f"🔍 cleaned_data: {form.cleaned_data}")
             try:
                 bank_profile = form.save(user_profile)
+                print(f"🔍 저장 성공: {bank_profile}")
                 messages.success(request, '✅ 계좌 정보가 등록되었습니다!')
                 return redirect('accounts:mypage')
             except Exception as e:
+                print(f"🔍 저장 실패: {str(e)}")
                 messages.error(request, f'계좌 등록 중 오류가 발생했습니다: {str(e)}')
+        else:
+            print(f"🔍 폼 에러: {form.errors}")
     else:
         form = BankAccountForm()
     
