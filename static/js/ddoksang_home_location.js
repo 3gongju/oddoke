@@ -1,4 +1,4 @@
-// 위치 권한 및 요청 관리 - 콘솔 로그 제거 버전
+// 위치 권한 및 요청 관리 - 브라우저 위치 권한 팝업 우선 호출 버전
 
 class DdoksangLocation {
     static modalShown = false;
@@ -61,8 +61,7 @@ class DdoksangLocation {
 
         try {
             if (!navigator.geolocation) throw new Error('이 브라우저에서는 위치 서비스를 지원하지 않습니다');
-            const permissionState = await this.checkBrowserPermission();
-            if (permissionState === 'denied') throw new Error('PERMISSION_DENIED');
+            
             const position = await new Promise((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: false,
@@ -70,16 +69,21 @@ class DdoksangLocation {
                     maximumAge: 600000
                 });
             });
+            
             const { latitude: lat, longitude: lng } = position.coords;
+            
             if (window.ddoksangHome?.mapManager) {
                 window.ddoksangHome.mapManager.moveToLocation(lat, lng, 6);
                 window.ddoksangHome.mapManager.addUserLocationMarker(lat, lng);
             }
+            
             if (window.ddoksangToast) {
                 window.ddoksangToast.success('내 위치를 찾았습니다! 📍');
             }
+            
             myLocationBtn.innerHTML = originalText;
             return { lat, lng };
+            
         } catch (error) {
             myLocationBtn.innerHTML = originalText;
             await this.handleLocationError(error);
@@ -92,15 +96,15 @@ class DdoksangLocation {
         let actionMessage = '';
         let resetConsent = false;
 
-        if (error.message === 'PERMISSION_DENIED' || error.code === 1) {
+        if (error.code === 1) { // PERMISSION_DENIED
             errorMessage = '위치 권한이 거부되었습니다.';
             actionMessage = '브라우저 설정에서 위치 권한을 허용해주세요.';
             resetConsent = true;
             this.showPermissionGuide();
-        } else if (error.code === 2) {
+        } else if (error.code === 2) { // POSITION_UNAVAILABLE
             errorMessage = '위치 정보를 사용할 수 없습니다.';
             actionMessage = 'GPS가 꺼져있거나 실내에서는 위치를 찾기 어려울 수 있습니다.';
-        } else if (error.code === 3) {
+        } else if (error.code === 3) { // TIMEOUT
             errorMessage = '위치 정보 요청 시간이 초과되었습니다.';
             actionMessage = '네트워크 상태를 확인하고 다시 시도해주세요.';
         } else {
@@ -124,28 +128,30 @@ class DdoksangLocation {
         }
     }
 
+    // ✅ 수정된 메인 함수: 브라우저 위치 권한 팝업을 우선으로 호출
     static async handleMyLocationClick() {
         try {
             const permissionState = await this.checkBrowserPermission();
+            
+            // ✅ 1. 권한이 이미 거부된 경우에만 가이드 표시
             if (permissionState === 'denied') {
                 this.showPermissionGuide();
                 return;
             }
-            const consent = this.getLocationConsent();
-            if (consent === 'allowed' || permissionState === 'granted') {
-                await this.requestUserLocation();
-            } else if (consent === 'denied' && permissionState === 'prompt') {
-                if (!this.modalShown && confirm('위치 기반 서비스를 사용하시겠습니까?')) {
-                    this.showLocationModal();
+            
+            // ✅ 2. 권한 상태에 관계없이 브라우저 위치 API 호출 시도
+            // (브라우저가 자동으로 권한 요청 팝업을 띄움)
+            await this.requestUserLocation();
+            
+        } catch (error) {
+            // ✅ 3. 실패한 경우에만 에러 처리
+            console.warn('위치 요청 실패:', error);
+            
+            // 권한이 거부된 경우가 아니라면 일반 에러 메시지만 표시
+            if (error.code !== 1) {
+                if (window.ddoksangToast) {
+                    window.ddoksangToast.error('위치 서비스를 사용할 수 없습니다.');
                 }
-            } else {
-                if (!this.modalShown) {
-                    this.showLocationModal();
-                }
-            }
-        } catch {
-            if (window.ddoksangToast) {
-                window.ddoksangToast.error('위치 서비스를 사용할 수 없습니다.');
             }
         }
     }
@@ -161,14 +167,10 @@ class DdoksangLocation {
 
     static init() {
         if (this.isInitialized) return;
+        
+        // ✅ 자동 모달 표시 제거 - 사용자가 버튼을 클릭할 때만 권한 요청
         const consent = this.getLocationConsent();
-        if (!consent && !this.modalShown) {
-            setTimeout(() => {
-                if (!this.modalShown && !this.getLocationConsent()) {
-                    this.showLocationModal();
-                }
-            }, 2000);
-        }
+        
         this.setupModalEventListeners();
         this.setupMyLocationButton();
         this.setupGlobalEventListeners();
