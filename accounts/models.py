@@ -39,13 +39,34 @@ class User(AbstractUser):
     # 소셜 로그인 관련
     is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
     social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
-    is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")  # 🔥 추가
+    is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")  
+
+    # 🔥 소셜 로그인 ID 저장 필드 추가
+    kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
+    naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
+
     
     @property
     def display_name(self):
-        """화면에 표시할 이름 반환 (이제 username 통일)"""
+        """화면에 표시할 이름 반환"""
+        # 🔥 소셜 가입이 완료된 경우 username 우선 사용
+        if self.social_signup_completed and not self.is_temp_username:
+            return self.username
+        
+        # first_name이 있으면 우선 사용
+        if self.first_name and self.first_name.strip():
+            return self.first_name
+        
+        # 임시 사용자명인 경우
         if self.is_temp_username:
-            return "새로운 사용자"  # 임시 사용자명인 경우
+            if self.username.startswith('temp_kakao_'):
+                return "카카오 사용자"
+            elif self.username.startswith('temp_naver_'):
+                return "네이버 사용자"
+            else:
+                return "새로운 사용자"
+        
+        # 기본적으로 username 반환
         return self.username
     
     @property
@@ -70,7 +91,7 @@ class MannerReview(models.Model):
     def __str__(self):
         return f"{self.user} → {self.target_user} ({self.rating}점)"
 
-def default_profile_image():
-    return 'profile/default.png'
+# def default_profile_image():
+#     return 'profile/default.png'
 
-profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
+# profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
