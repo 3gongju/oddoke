@@ -367,15 +367,32 @@ def edit_profile(request, username):
         new_bio = request.POST.get("bio")
         new_first_name = request.POST.get("first_name")  # 닉네임 추가
 
-        # 닉네임 수정
+        # 🔥 닉네임 수정 (first_name 필드에 저장)
         if new_first_name and new_first_name != request.user.first_name:
+            # 기본 유효성 검사
+            new_first_name = new_first_name.strip()
+            
+            if len(new_first_name) < 2:
+                messages.error(request, "닉네임은 최소 2자 이상이어야 합니다.")
+                return redirect('accounts:edit_profile', username=request.user.username)
+            
+            if len(new_first_name) > 20:
+                messages.error(request, "닉네임은 최대 20자까지 입력 가능합니다.")
+                return redirect('accounts:edit_profile', username=request.user.username)
+            
+            # 🔥 소셜 로그인 사용자는 first_name을 닉네임으로 사용
             request.user.first_name = new_first_name
             request.user.save()
             messages.success(request, "닉네임이 수정되었습니다.")
             return redirect('accounts:edit_profile', username=request.user.username)
 
-        # 기존 프로필 이름 수정
+        # 🔥 일반 사용자용 username 변경 (소셜 로그인 사용자에게는 권장하지 않음)
         if new_username and new_username != request.user.username:
+            # 소셜 로그인 사용자는 username 변경 제한
+            if request.user.social_signup_completed or request.user.is_temp_username:
+                messages.warning(request, "소셜 로그인 사용자는 위의 '닉네임' 필드를 이용해주세요.")
+                return redirect('accounts:edit_profile', username=request.user.username)
+                
             if User.objects.filter(username=new_username).exists():
                 messages.error(request, "이미 존재하는 사용자 이름입니다.")
             else:

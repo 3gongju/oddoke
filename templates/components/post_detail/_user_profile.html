@@ -3,14 +3,14 @@
 {% load static %}
 <a href="{% url 'accounts:profile' user.username %}">
   {% if user.profile_image and user.profile_image.name %}
-    <img src="{{ user.profile_image.url }}" alt="{{ user.username }}" class="w-8 h-8 rounded-full object-cover" />
+    <img src="{{ user.profile_image.url }}" alt="{{ user.display_name }}" class="w-8 h-8 rounded-full object-cover" />
   {% else %}
     <img src="{% static 'image/ddok_logo.png' %}" alt="기본 프로필" class="w-8 h-8 rounded-full object-cover" />
   {% endif %}
 </a>
 
 <a href="{% url 'accounts:profile' user.username %}" class="font-semibold inline-flex items-center space-x-1 relative group">
-  <span>{{ user.username }}</span>
+  <span>{{ user.display_name }}</span>
 
   {% if user.is_verified_fandom %}
     <span class="ml-1 text-pink-500 text-sm cursor-pointer relative">

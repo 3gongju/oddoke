@@ -49,15 +49,15 @@ class User(AbstractUser):
     @property
     def display_name(self):
         """화면에 표시할 이름 반환"""
-        # 🔥 소셜 가입이 완료된 경우 username 우선 사용
-        if self.social_signup_completed and not self.is_temp_username:
-            return self.username
-        
-        # first_name이 있으면 우선 사용
+        # 🔥 1순위: first_name이 있으면 우선 사용 (프로필 관리에서 변경한 닉네임)
         if self.first_name and self.first_name.strip():
             return self.first_name
         
-        # 임시 사용자명인 경우
+        # 🔥 2순위: 소셜 가입이 완료되고 임시 사용자명이 아닌 경우 username 사용
+        if self.social_signup_completed and not self.is_temp_username:
+            return self.username
+        
+        # 🔥 3순위: 임시 사용자명인 경우 (아직 프로필 완성하지 않은 경우)
         if self.is_temp_username:
             if self.username.startswith('temp_kakao_'):
                 return "카카오 사용자"
@@ -66,7 +66,7 @@ class User(AbstractUser):
             else:
                 return "새로운 사용자"
         
-        # 기본적으로 username 반환
+        # 🔥 4순위: 기본적으로 username 반환
         return self.username
     
     @property
