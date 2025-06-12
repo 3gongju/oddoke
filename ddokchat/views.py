@@ -180,179 +180,6 @@ def complete_trade(request, room_id):
         'is_buyer': is_buyer,
     })
 
-
-
-#계좌 정보 메시지 전송 & 더치트 
-
-@require_POST
-@login_required
-def send_account_info(request, room_id):
-    """계좌정보 전송"""
-    try:
-        room = get_object_or_404(ChatRoom, id=room_id)
-        
-        # 채팅방 참여자 확인
-        if request.user not in [room.buyer, room.seller]:
-            return JsonResponse({
-                'success': False,
-                'error': '채팅방 참여자만 계좌정보를 보낼 수 있습니다.'
-            })
-        
-        # 거래 완료 상태 확인
-        if room.is_fully_completed:
-            return JsonResponse({
-                'success': False,
-                'error': '이미 완료된 거래입니다.'
-            })
-        
-        # 🔥 BankProfile에서 계좌정보 확인 (수정된 부분)
-        user = request.user
-        bank_profile = user.get_bank_profile()
-        
-        if not bank_profile or not all([bank_profile.bank_name, bank_profile.account_number, bank_profile.account_holder]):
-            return JsonResponse({
-                'success': False,
-                'redirect_to_mypage': True,
-                'error': '계좌 정보를 먼저 등록해주세요.'
-            })
-        
-        # 🔥 BankProfile 데이터로 메시지 저장 (수정된 부분)
-        message = Message.objects.create(
-            room=room,
-            sender=request.user,
-            message_type='account_info',
-            account_bank_name=bank_profile.bank_name,
-            account_number=bank_profile.account_number,  # 이미 복호화됨
-            account_holder=bank_profile.account_holder,
-            account_bank_code=bank_profile.bank_code or '',
-        )
-        
-        # 🔥 계좌정보 구성 (수정된 부분)
-        account_info = {
-            'bank_name': bank_profile.bank_name,
-            'bank_code': bank_profile.bank_code or '',
-            'account_number': bank_profile.account_number,  # 이미 복호화됨
-            'account_holder': bank_profile.account_holder,
-        }
-        
-        return JsonResponse({
-            'success': True,
-            'account_info': account_info
-        })
-        
-    except Exception as e:
-        print(f"send_account_info 에러: {e}")  # 디버깅용
-        return JsonResponse({
-            'success': False,
-            'error': f'서버 오류가 발생했습니다: {str(e)}'
-        })
-
-@require_POST
-@login_required
-def check_account_fraud(request):
-    """계좌 사기 이력 조회"""
-    try:
-        data = json.loads(request.body)
-        bank_code = data.get('bank_code')
-        account_number = data.get('account_number')
-        account_holder = data.get('account_holder')
-        
-        # 입력값 검증
-        if not all([account_number, account_holder]):
-            return JsonResponse({
-                'success': False,
-                'error': '계좌번호와 예금주를 모두 입력해주세요.'
-            })
-        
-        # 🔥 더치트 서비스 사용 (실제 서비스 연동)
-        try:
-            dutcheat_service = get_dutcheat_service()
-            result = dutcheat_service.check_account_fraud_history(
-                bank_code=bank_code,
-                account_number=account_number,
-                account_holder=account_holder
-            )
-            
-            if result.get('success'):
-                return JsonResponse({
-                    'success': True,
-                    'has_reports': result.get('has_reports', False),
-                    'report_count': result.get('report_count', 0),
-                    'reports': result.get('reports', []),
-                    'last_updated': result.get('last_updated', '')
-                })
-            else:
-                # 더치트 서비스 실패 시 더미 데이터로 폴백
-                return _get_dummy_fraud_data(account_number)
-                
-        except Exception as e:
-            print(f"더치트 서비스 오류: {e}")
-            # 서비스 오류 시 더미 데이터로 폴백
-            return _get_dummy_fraud_data(account_number)
-        
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'success': False,
-            'error': '잘못된 요청 형식입니다.'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': f'조회 중 오류가 발생했습니다: {str(e)}'
-        })
-
-def _get_dummy_fraud_data(account_number):
-    """더미 사기 신고 데이터 반환 (폴백용)"""
-    dummy_reports = []
-    
-    # 테스트용: 특정 계좌번호에 대해서만 신고 내역 있는 것으로 처리
-    if '1111' in account_number:
-        dummy_reports = [
-            {
-                'report_type': '입금 후 연락두절',
-                'description': '상품을 보내지 않고 연락이 되지 않습니다.',
-                'status': '확인됨',
-                'report_date': '2024-11-15',
-                'amount': 150000
-            },
-            {
-                'report_type': '가짜 상품 판매',
-                'description': '정품이라고 했는데 가짜 상품을 보냈습니다.',
-                'status': '조사중',
-                'report_date': '2024-11-10',
-                'amount': 89000
-            }
-        ]
-    
-    return JsonResponse({
-        'success': True,
-        'has_reports': len(dummy_reports) > 0,
-        'report_count': len(dummy_reports),
-        'reports': dummy_reports,
-        'last_updated': '2024-11-20 15:30'
-    })
-
-@require_POST
-@login_required
-def copy_account_log(request):
-    """계좌번호 복사 로그 기록"""
-    try:
-        data = json.loads(request.body)
-        account_number = data.get('account_number')
-        
-        # 로그 기록 (실제로는 데이터베이스에 저장)
-        print(f"사용자 {request.user.username}이 계좌번호 {account_number}를 복사했습니다.")
-        
-        return JsonResponse({
-            'success': True
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        })
-
 # 분철 참여자와의 채팅방 생성/연결
 @login_required
 def get_or_create_split_chatroom(request, post_id, user_id):
@@ -389,4 +216,177 @@ def get_or_create_split_chatroom(request, post_id, user_id):
     )
     
     return redirect('ddokchat:chat_room', room_id=room.id)
+
+#계좌 정보 메시지 전송 & 더치트 
+
+# @require_POST
+# @login_required
+# def send_account_info(request, room_id):
+#     """계좌정보 전송"""
+#     try:
+#         room = get_object_or_404(ChatRoom, id=room_id)
+        
+#         # 채팅방 참여자 확인
+#         if request.user not in [room.buyer, room.seller]:
+#             return JsonResponse({
+#                 'success': False,
+#                 'error': '채팅방 참여자만 계좌정보를 보낼 수 있습니다.'
+#             })
+        
+#         # 거래 완료 상태 확인
+#         if room.is_fully_completed:
+#             return JsonResponse({
+#                 'success': False,
+#                 'error': '이미 완료된 거래입니다.'
+#             })
+        
+#         # 🔥 BankProfile에서 계좌정보 확인 (수정된 부분)
+#         user = request.user
+#         bank_profile = user.get_bank_profile()
+        
+#         if not bank_profile or not all([bank_profile.bank_name, bank_profile.account_number, bank_profile.account_holder]):
+#             return JsonResponse({
+#                 'success': False,
+#                 'redirect_to_mypage': True,
+#                 'error': '계좌 정보를 먼저 등록해주세요.'
+#             })
+        
+#         # 🔥 BankProfile 데이터로 메시지 저장 (수정된 부분)
+#         message = Message.objects.create(
+#             room=room,
+#             sender=request.user,
+#             message_type='account_info',
+#             account_bank_name=bank_profile.bank_name,
+#             account_number=bank_profile.account_number,  # 이미 복호화됨
+#             account_holder=bank_profile.account_holder,
+#             account_bank_code=bank_profile.bank_code or '',
+#         )
+        
+#         # 🔥 계좌정보 구성 (수정된 부분)
+#         account_info = {
+#             'bank_name': bank_profile.bank_name,
+#             'bank_code': bank_profile.bank_code or '',
+#             'account_number': bank_profile.account_number,  # 이미 복호화됨
+#             'account_holder': bank_profile.account_holder,
+#         }
+        
+#         return JsonResponse({
+#             'success': True,
+#             'account_info': account_info
+#         })
+        
+#     except Exception as e:
+#         print(f"send_account_info 에러: {e}")  # 디버깅용
+#         return JsonResponse({
+#             'success': False,
+#             'error': f'서버 오류가 발생했습니다: {str(e)}'
+#         })
+
+# @require_POST
+# @login_required
+# def check_account_fraud(request):
+#     """계좌 사기 이력 조회"""
+#     try:
+#         data = json.loads(request.body)
+#         bank_code = data.get('bank_code')
+#         account_number = data.get('account_number')
+#         account_holder = data.get('account_holder')
+        
+#         # 입력값 검증
+#         if not all([account_number, account_holder]):
+#             return JsonResponse({
+#                 'success': False,
+#                 'error': '계좌번호와 예금주를 모두 입력해주세요.'
+#             })
+        
+#         # 🔥 더치트 서비스 사용 (실제 서비스 연동)
+#         try:
+#             dutcheat_service = get_dutcheat_service()
+#             result = dutcheat_service.check_account_fraud_history(
+#                 bank_code=bank_code,
+#                 account_number=account_number,
+#                 account_holder=account_holder
+#             )
+            
+#             if result.get('success'):
+#                 return JsonResponse({
+#                     'success': True,
+#                     'has_reports': result.get('has_reports', False),
+#                     'report_count': result.get('report_count', 0),
+#                     'reports': result.get('reports', []),
+#                     'last_updated': result.get('last_updated', '')
+#                 })
+#             else:
+#                 # 더치트 서비스 실패 시 더미 데이터로 폴백
+#                 return _get_dummy_fraud_data(account_number)
+                
+#         except Exception as e:
+#             print(f"더치트 서비스 오류: {e}")
+#             # 서비스 오류 시 더미 데이터로 폴백
+#             return _get_dummy_fraud_data(account_number)
+        
+#     except json.JSONDecodeError:
+#         return JsonResponse({
+#             'success': False,
+#             'error': '잘못된 요청 형식입니다.'
+#         })
+#     except Exception as e:
+#         return JsonResponse({
+#             'success': False,
+#             'error': f'조회 중 오류가 발생했습니다: {str(e)}'
+#         })
+
+# def _get_dummy_fraud_data(account_number):
+#     """더미 사기 신고 데이터 반환 (폴백용)"""
+#     dummy_reports = []
+    
+#     # 테스트용: 특정 계좌번호에 대해서만 신고 내역 있는 것으로 처리
+#     if '1111' in account_number:
+#         dummy_reports = [
+#             {
+#                 'report_type': '입금 후 연락두절',
+#                 'description': '상품을 보내지 않고 연락이 되지 않습니다.',
+#                 'status': '확인됨',
+#                 'report_date': '2024-11-15',
+#                 'amount': 150000
+#             },
+#             {
+#                 'report_type': '가짜 상품 판매',
+#                 'description': '정품이라고 했는데 가짜 상품을 보냈습니다.',
+#                 'status': '조사중',
+#                 'report_date': '2024-11-10',
+#                 'amount': 89000
+#             }
+#         ]
+    
+#     return JsonResponse({
+#         'success': True,
+#         'has_reports': len(dummy_reports) > 0,
+#         'report_count': len(dummy_reports),
+#         'reports': dummy_reports,
+#         'last_updated': '2024-11-20 15:30'
+#     })
+
+# @require_POST
+# @login_required
+# def copy_account_log(request):
+#     """계좌번호 복사 로그 기록"""
+#     try:
+#         data = json.loads(request.body)
+#         account_number = data.get('account_number')
+        
+#         # 로그 기록 (실제로는 데이터베이스에 저장)
+#         print(f"사용자 {request.user.username}이 계좌번호 {account_number}를 복사했습니다.")
+        
+#         return JsonResponse({
+#             'success': True
+#         })
+        
+#     except Exception as e:
+#         return JsonResponse({
+#             'success': False,
+#             'error': str(e)
+#         })
+
+
 
