@@ -206,15 +206,19 @@
       <p class="text-xs text-gray-500 mb-4">예: @oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
     </div>
 
-    <!-- STEP 6: 이미지 업로드 -->
+
+        <!-- STEP 6: 이미지 업로드 -->
     <div id="step-6" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">이미지 업로드 (선택사항)</h2>
+      <h2 class="text-lg font-semibold mb-6">이미지 업로드</h2>
       
-      <label class="block text-sm font-medium mb-4">생일카페 이미지</label>
+      <label class="block text-sm font-medium mb-4">생일카페 이미지 (최대 10장)</label>
       
-      <div id="image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-        <input type="file" name="images" id="images" multiple accept="image/*" class="hidden">
-        <label for="images" class="cursor-pointer">
+      <!-- 파일 입력 (숨김) -->
+      <input type="file" name="images" id="image-upload" multiple accept="image/*" class="hidden">
+      
+      <!-- 업로드 영역 -->
+      <div id="image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors mb-4">
+        <label for="image-upload" class="cursor-pointer block">
           <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -222,12 +226,19 @@
             <p class="text-sm text-gray-600">
               <span class="font-medium text-gray-900 hover:text-gray-700">클릭하여 이미지 선택</span> 또는 드래그하여 업로드
             </p>
-            <p class="text-xs text-gray-500">PNG, JPG, JPEG 파일만 업로드 가능 (최대 5개, 각 5MB 이하)</p>
+            <p class="text-xs text-gray-500">PNG, JPG, JPEG 파일만 업로드 가능 (최대 10개, 각 5MB 이하)</p>
           </div>
         </label>
       </div>
 
-      <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+      <!-- 파일 개수 표시 -->
+      <div id="file-count" class="text-sm text-gray-600 mb-4">선택된 파일 없음</div>
+      
+      <!-- 이미지 미리보기 컨테이너 -->
+      <div id="image-preview-container" class="hidden">
+        <h4 class="text-sm font-medium text-gray-700 mb-3">이미지 미리보기 (드래그해서 순서 변경)</h4>
+        <div id="image-preview-list" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+      </div>
     </div>
 
     <!-- 네비게이션 버튼 -->
@@ -297,44 +308,141 @@
   }
 </style>
 
-<!-- Scripts - 모듈화된 구조에 맞는 로드 순서 -->
+<!-- Scripts - 순서 중요 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <!-- 유틸리티 모듈들 먼저 로드 -->
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
-<script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 메인 create 스크립트 마지막에 로드 -->
-<script src="{% static 'js/ddoksang_create.js' %}"></script>
+<!-- 자동완성 스크립트를 일반 script로 로드 -->
+<script src="{% static 'js/autocomplete.js' %}"></script>
 
 <!-- 중복 확인용 날짜 선택기 초기화 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎯 추가 스크립트 초기화');
   
-  // 중복 확인 단계의 날짜 선택기 초기화
+  // 날짜 선택기 초기화
   if (typeof flatpickr !== 'undefined') {
     flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
     flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
-    console.log('📅 중복 확인용 날짜 선택기 초기화 완료');
+    console.log('📅 날짜 선택기 초기화 완료');
   }
-  
-  // 디버깅용 전역 함수
-  window.debugDdoksang = function() {
-    console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
-    console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
-    console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
-    console.log('DdoksangImageUtils:', !!window.DdoksangImageUtils);
-    console.log('ddoksangApp:', window.ddoksangApp);
-    console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
-    console.log('=======================================');
-  };
+
+  //  자동완성 즉시 초기화 (중복 확인 단계용)
+  if (typeof initAutocomplete === 'function') {
+    console.log(' 자동완성 초기화 시작...');
+    
+    // 중복 확인 단계 자동완성
+    initAutocomplete('artist-member-search', 'artist-member-results', {
+      showBirthday: true,
+      showArtistTag: true,
+      submitOnSelect: false,
+      artistOnly: false,
+      apiUrl: '/artist/autocomplete/',
+      onSelect: function(result) {
+        console.log(' 아티스트 선택:', result);
+        selectArtistForDuplicateCheck(result);
+      }
+    });
+    
+    console.log(' 자동완성 초기화 완료');
+  } else {
+    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다!');
+  }
+
+  // 아티스트 선택 함수
+  function selectArtistForDuplicateCheck(result) {
+    const FormUtils = window.DdoksangFormUtils;
+    if (!FormUtils) {
+      console.error('DdoksangFormUtils를 찾을 수 없습니다');
+      return;
+    }
+
+    // 데이터 정규화
+    const data = FormUtils.normalizeArtistData({
+      member_name: result.name,
+      artist_display: result.artist || result.artist_name,
+      artist_id: result.artist_id,
+      member_id: result.id || result.member_id
+    });
+
+    // 폼 필드 업데이트
+    FormUtils.setValue('check_artist_id', data.artistId);
+    FormUtils.setValue('check_member_id', data.memberId);
+    FormUtils.setValue('artist-member-search', data.displayText);
+    FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
+    
+    // UI 업데이트
+    FormUtils.toggleClass('artist-member-results', 'hidden', true);
+    FormUtils.toggleClass('selected-artist', 'hidden', false);
+    
+    // 중복 확인 버튼 상태 업데이트
+    if (window.checkDuplicateBtnState) {
+      window.checkDuplicateBtnState();
+    }
+    
+    console.log('폼 데이터 업데이트 완료:', data);
+  }
+
+  // 전역 함수로 설정 (다른 스크립트에서 사용할 수 있도록)
+  window.selectArtistForDuplicateCheck = selectArtistForDuplicateCheck;
 });
 </script>
 
+<!-- 메인 create 스크립트를 모듈로 로드 -->
+<script type="module">
+  import { setupDdoksangImageUpload } from "{% static 'js/ddoksang_image_upload.js' %}";
+  
+  // 전역에서 접근 가능하도록 설정
+  window.setupDdoksangImageUpload = setupDdoksangImageUpload;
+  
+  // 메인 스크립트 동적 로드
+  const script = document.createElement('script');
+  script.type = 'module';
+  script.src = "{% static 'js/ddoksang_create.js' %}";
+  script.onload = function() {
+    console.log('🚀 ddoksang_create.js 로드 완료');
+  };
+  script.onerror = function() {
+    console.error('❌ ddoksang_create.js 로드 실패');
+  };
+  document.head.appendChild(script);
+</script>
 
+<!-- 디버깅용 전역 함수 -->
+<script>
+window.debugDdoksang = function() {
+  console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
+  console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
+  console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
+  console.log('setupDdoksangImageUpload:', !!window.setupDdoksangImageUpload);
+  console.log('initAutocomplete:', !!window.initAutocomplete);
+  console.log('ddoksangApp:', window.ddoksangApp);
+  console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
+  console.log('selectArtistForDuplicateCheck:', typeof window.selectArtistForDuplicateCheck);
+  console.log('=======================================');
+};
 
+// 자동완성 재초기화 함수
+window.restartAutocomplete = function() {
+  if (typeof initAutocomplete === 'function') {
+    console.log(' 자동완성 재초기화...');
+    initAutocomplete('artist-member-search', 'artist-member-results', {
+      showBirthday: true,
+      showArtistTag: false,
+      submitOnSelect: false,
+      artistOnly: false,
+      apiUrl: '/artist/autocomplete/',
+      onSelect: window.selectArtistForDuplicateCheck
+    });
+    console.log('✅ 재초기화 완료');
+  } else {
+    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
+  }
+};
+</script>
 
 {% endblock %}
