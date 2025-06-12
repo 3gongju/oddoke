@@ -30,7 +30,12 @@ SECRET_KEY = 'django-insecure-2*cvgp4g-ut870+fv-u#9v*#lr$#$7ip&h=4yjc-k&)g3s(5g2
 DEBUG = True
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.compute.amazonaws.com',
+    'oddoke.com',
+    ]
 
 
 # Application definition
@@ -142,6 +147,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+STATIC_ROOT = BASE_DIR / 'collectstatic'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
