@@ -1,4 +1,3 @@
-
 // 새로운 이미지 업로드 모듈 import
 import { setupDdoksangImageUpload } from './ddoksang_image_upload.js';
 
@@ -26,7 +25,8 @@ window.clearSelection = function() {
         window.ddoksangApp.duplicateChecked = false;
         window.ddoksangApp.isDuplicate = false;
     }
-    if (window.checkDuplicateBtnState) window.checkDuplicateBtnState();
+    // ✅ 수정된 함수명
+    if (window.updateDuplicateButtonState) window.updateDuplicateButtonState();
 };
 
 window.useSelectedArtist = function() {
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStep = 0;
     let duplicateChecked = false;
     let isDuplicate = false;
-    let imageUploadModule = null; // 이미지 업로드 모듈 인스턴스
+    let imageUploadModule = null;
 
     // 전역 앱 객체
     window.ddoksangApp = {
@@ -111,10 +111,10 @@ document.addEventListener('DOMContentLoaded', function() {
         setupEventListeners();
         initializeDatePickers();
         initializeAutocomplete();
-        initializeImageUpload(); // 새로운 모듈 사용
+        initializeImageUpload();
         initializeMapSearch();
         initializeFormSubmit();
-        initDuplicateChecker();
+        initDuplicateChecker(); // ✅ 수정된 중복 확인 초기화
         showStep(0);
     }
 
@@ -134,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function() {
         addStepValidationListeners(index);
         updateNextButtonState();
 
-        // 지도 초기화 (Step 2)
         if (index === 2 && !MapUtils.map) {
             setTimeout(() => MapUtils.initMap(), 100);
         }
@@ -199,7 +198,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const rules = stepValidationRules[currentStep];
         if (!rules) return true;
 
-        // 일반 필드 검증
         const normalFields = rules.filter(field => field !== 'images');
         if (normalFields.length > 0) {
             const validation = FormUtils.validateRequired(normalFields);
@@ -209,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // 이미지 검증 (Step 6)
         if (rules.includes('images')) {
             if (!imageUploadModule || imageUploadModule.getFileCount() === 0) {
                 FormUtils.showToast('최소 1개의 이미지를 업로드해주세요.', 'warning');
@@ -217,7 +214,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // 날짜 검증
         if (currentStep === 3) {
             const dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
             if (!dateValidation.valid) {
@@ -249,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         stepValidationRules[stepIndex]?.forEach(fieldId => {
             const element = document.getElementById(fieldId);
-            if (element && fieldId !== 'images') { // 이미지는 별도 처리
+            if (element && fieldId !== 'images') {
                 element.addEventListener('input', updateNextButtonState);
                 element.addEventListener('change', updateNextButtonState);
             }
@@ -272,7 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = FormUtils.validateRequired(normalFields, false).valid;
             }
 
-            // 이미지 검증
             if (rules.includes('images')) {
                 isValid = isValid && imageUploadModule && imageUploadModule.getFileCount() > 0;
             }
@@ -361,64 +356,49 @@ document.addEventListener('DOMContentLoaded', function() {
         
         FormUtils.setValue('selected_duplicate_cafe_id', '');
         
-        if (window.checkDuplicateBtnState) {
-            window.checkDuplicateBtnState();
+        // ✅ 수정된 함수명
+        if (window.updateDuplicateButtonState) {
+            window.updateDuplicateButtonState();
         }
     }
 
-    // === 새로운 이미지 업로드 초기화 ===
-    function initializeImageUpload() {
-        try {
-            // 새로운 이미지 업로드 모듈 사용
-            imageUploadModule = setupDdoksangImageUpload({
-                fileInputId: "image-upload",
-                fileCountId: "file-count",
-                previewContainerId: "image-preview-container", 
-                previewListId: "image-preview-list",
-                formId: "multiStepForm",
-                maxFiles: 10,
-                maxSizeMB: 5
-            });
-            
-            // 전역 앱 객체에 모듈 인스턴스 저장
-            window.ddoksangApp.imageUploadModule = imageUploadModule;
-            
-            console.log('✅ 이미지 업로드 모듈 초기화 완료');
-        } catch (error) {
-            console.error('❌ 이미지 업로드 모듈 초기화 실패:', error);
-            
-            // 폴백: 기본 이미지 업로드 처리
-            const imageInput = document.getElementById("image-upload");
-            if (imageInput) {
-                imageInput.addEventListener("change", function() {
-                    updateNextButtonState();
-                });
-            }
-        }
-    }
-
-    // === 기타 초기화 함수들 (중복 확인, 날짜, 자동완성, 지도, 폼) ===
+    // === ✅ 수정된 중복 확인 로직 ===
     function initDuplicateChecker() {
         const checkBtn = document.getElementById('check-duplicate-btn');
         if (!checkBtn) return;
 
-        function updateDuplicateBtn() {
+        // ✅ 통일된 함수명 사용
+        function updateDuplicateButtonState() {
             const required = ['check_artist_id', 'check_cafe_name', 'check_start_date', 'check_end_date'];
-            FormUtils.updateButtonState('check-duplicate-btn', FormUtils.validateRequired(required, false).valid);
+            const values = {};
+            let isValid = true;
+
+            required.forEach(id => {
+                const element = document.getElementById(id);
+                const value = element ? element.value.trim() : '';
+                values[id] = value;
+                if (!value) isValid = false;
+            });
+
+            console.log('중복 확인 필드 값:', values);
+            FormUtils.updateButtonState('check-duplicate-btn', isValid);
         }
 
-        window.checkDuplicateBtnState = updateDuplicateBtn;
+        // ✅ 전역 함수로 등록
+        window.updateDuplicateButtonState = updateDuplicateButtonState;
 
+        // 입력 필드 이벤트 리스너 추가
         ['check_cafe_name', 'check_start_date', 'check_end_date'].forEach(id => {
-            document.getElementById(id)?.addEventListener('input', updateDuplicateBtn);
-            document.getElementById(id)?.addEventListener('change', updateDuplicateBtn);
+            document.getElementById(id)?.addEventListener('input', updateDuplicateButtonState);
+            document.getElementById(id)?.addEventListener('change', updateDuplicateButtonState);
         });
 
         setupDuplicateSelectionButtons();
         checkBtn.addEventListener('click', performDuplicateCheck);
-        updateDuplicateBtn();
+        updateDuplicateButtonState(); // 초기 상태 체크
     }
 
+    // ✅ 수정된 중복 확인 실행 함수
     async function performDuplicateCheck() {
         const checkBtn = document.getElementById('check-duplicate-btn');
         const data = {
@@ -457,7 +437,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             checkBtn.disabled = false;
             checkBtn.textContent = '중복 확인하기';
-            window.checkDuplicateBtnState?.();
+            // ✅ 수정된 함수명
+            window.updateDuplicateButtonState?.();
         }
     }
 
