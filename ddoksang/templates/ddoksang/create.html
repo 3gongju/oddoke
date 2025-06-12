@@ -207,19 +207,20 @@
     </div>
 
 
-<!-- Step 6: 이미지 업로드 (개선된 UI) -->
+    <!-- Step 6: 이미지 업로드 (개선된 UI) -->
     <div id="step-6" class="step hidden">
       <div class="text-center mb-8">
         <h2 class="text-lg font-semibold mb-4">이미지 업로드</h2>
         <p class="text-sm text-gray-600">생일카페 이미지를 업로드해주세요</p>
       </div>
 
-      <!-- 이미지 업로드 섹션 -->
-      <div class="max-w-md mx-auto">
+      <!-- 이미지 업로드 전체를 감싸는 container -->
+      <div id="image-upload-container" class="max-w-md mx-auto">
+
         <!-- 숨겨진 파일 input -->
         <input type="file" id="image-upload" name="images" multiple accept="image/*" class="hidden">
 
-        <!-- 커스텀 버튼 (가운데 정렬) -->
+        <!-- 커스텀 버튼 -->
         <div class="text-center mb-4">
           <label for="image-upload"
                 class="inline-block cursor-pointer px-6 py-3 text-sm text-white bg-black rounded-lg shadow hover:bg-gray-800 transition font-medium">
@@ -227,7 +228,7 @@
           </label>
         </div>
 
-        <!-- 선택된 파일 개수 표시 (가운데 정렬) -->
+        <!-- 선택된 파일 개수 표시 -->
         <div class="text-center mb-6">
           <span id="file-count" class="text-sm text-gray-500">선택된 파일 없음</span>
         </div>
@@ -240,7 +241,7 @@
           </div>
         </div>
 
-        <!-- 업로드 안내 (가운데 정렬) -->
+        <!-- 업로드 안내 -->
         <div class="text-xs text-gray-500 text-center">
           <div class="bg-gray-50 rounded-lg p-4">
             <ul class="space-y-1">
@@ -252,31 +253,23 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 드래그 앤 드롭 스타일 -->
       <style>
-        /* 드래그 중인 요소 */
         .sortable-ghost {
           opacity: 0.5;
         }
-        
-        /* 드래그 대상 위치 */
         .sortable-chosen {
           transform: scale(1.05);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        
-        /* 드래그 애니메이션 */
         .sortable-drag {
           opacity: 0.8;
           transform: rotate(5deg);
         }
-        
-        /* 드래그 핸들 호버 효과 */
         #image-preview-list .relative:hover [data-drag-handle] {
           opacity: 1;
         }
-        
         #image-preview-list [data-drag-handle] {
           opacity: 0.7;
           transition: opacity 0.2s;
