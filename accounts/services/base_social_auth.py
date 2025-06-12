@@ -43,33 +43,67 @@ class BaseSocialAuthService(ABC):
         nickname = user_data['nickname']
         name = user_data.get('name', '')
         
-        # 🔥 임시 username 생성 (나중에 사용자가 변경할 예정)
-        temp_username = f'temp_{self.provider_name}_{social_id}'
+        print(f"🔍 소셜 로그인 처리: {self.provider_name}_id = {social_id}")
+        
         user = None
         
-        # 1. 임시 username으로 기존 사용자 찾기
+        # 🔥 1. 소셜 ID로 기존 사용자 찾기 (프로필 완성 여부 관계없이)
         try:
-            user = User.objects.get(username=temp_username)
-            # 기존 사용자 정보 업데이트 (필요시)
-            if self._should_update_nickname(user, nickname):
-                # 임시 사용자는 username 업데이트하지 않음
-                pass  # 사용자가 직접 설정할 때까지 대기
+            if self.provider_name == 'kakao':
+                user = User.objects.get(kakao_id=social_id)
+            elif self.provider_name == 'naver':
+                user = User.objects.get(naver_id=social_id)
+            
+            if user:
+                print(f"✅ 기존 소셜 사용자 찾음:")
+                print(f"   - username: {user.username}")
+                print(f"   - 소셜 가입 완료: {user.social_signup_completed}")
+                print(f"   - 임시 사용자명: {user.is_temp_username}")
+                return user
                 
         except User.DoesNotExist:
-            # 2. 이메일로 기존 사용자 찾기 (이메일이 있는 경우)
-            if email and not email.endswith('.local'):
-                try:
-                    user = User.objects.get(email=email)
-                    # 🔥 기존 일반 계정을 소셜 계정으로 연결하지 않음
-                    # 대신 새 계정 생성 (이메일 중복 방지 처리)
-                    user = None  # 새 계정 생성하도록 설정
-                except User.DoesNotExist:
-                    pass
+            print(f"🔍 소셜 ID로 기존 사용자 없음")
             
-            # 3. 새 사용자 생성
-            if not user:
-                user = self._create_new_temp_user(temp_username, email, nickname, name, social_id)
+        # 🔥 2. 임시 username으로 기존 사용자 찾기 (하위 호환성)
+        temp_username = f'temp_{self.provider_name}_{social_id}'
+        try:
+            user = User.objects.get(username=temp_username)
+            print(f"✅ 임시 username으로 기존 사용자 찾음: {user.username}")
+            
+            # 🔥 소셜 ID 필드 업데이트 (기존 사용자의 경우)
+            if self.provider_name == 'kakao' and not user.kakao_id:
+                user.kakao_id = social_id
+                user.save()
+                print(f"🔄 카카오 ID 필드 업데이트: {social_id}")
+            elif self.provider_name == 'naver' and not user.naver_id:
+                user.naver_id = social_id
+                user.save()
+                print(f"🔄 네이버 ID 필드 업데이트: {social_id}")
+                
+            return user
+            
+        except User.DoesNotExist:
+            print(f"🔍 임시 username으로도 기존 사용자 없음")
+            
+        # 3. 이메일로 기존 사용자 찾기 (실제 이메일이 있는 경우)
+        if email and not email.endswith('.local'):
+            try:
+                existing_user = User.objects.get(email=email)
+                print(f"🔍 동일한 이메일의 기존 사용자 발견: {existing_user.username}")
+                
+                # 🔥 기존 일반 계정이 있다면 소셜 로그인과 연결하지 않음
+                if not existing_user.username.startswith(('temp_kakao_', 'temp_naver_')) and not existing_user.social_signup_completed:
+                    print(f"❌ 기존 일반 계정과 동일한 이메일: {email}")
+                    raise Exception(f'이미 {email}로 가입된 계정이 있습니다. 일반 로그인을 이용해주세요.')
+                    
+                return existing_user
+                    
+            except User.DoesNotExist:
+                pass
         
+        # 4. 새 사용자 생성
+        print(f"🆕 새로운 소셜 사용자 생성: {temp_username}")
+        user = self._create_new_temp_user(temp_username, email, nickname, name, social_id)
         return user
     
     def _should_update_nickname(self, user, new_nickname):
@@ -108,7 +142,17 @@ class BaseSocialAuthService(ABC):
             user.is_temp_username = True  # 임시 사용자명 표시
             user.social_signup_completed = False  # 아직 가입 완료 안 됨
             user.is_active = True  # 소셜 로그인 사용자는 바로 활성화
+            
+            # 🔥 소셜 ID 저장
+            if self.provider_name == 'kakao':
+                user.kakao_id = social_id
+            elif self.provider_name == 'naver':
+                user.naver_id = social_id
+                
             user.save()
+            print(f"✅ 새 소셜 사용자 생성 완료:")
+            print(f"   - username: {user.username}")
+            print(f"   - {self.provider_name}_id: {social_id}")
             return user
             
         except Exception as e:
@@ -123,6 +167,13 @@ class BaseSocialAuthService(ABC):
             user.is_temp_username = True
             user.social_signup_completed = False
             user.is_active = True
+            
+            # 🔥 소셜 ID 저장
+            if self.provider_name == 'kakao':
+                user.kakao_id = social_id
+            elif self.provider_name == 'naver':
+                user.naver_id = social_id
+                
             user.save()
             return user
     

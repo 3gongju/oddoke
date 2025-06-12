@@ -7,67 +7,87 @@ from datetime import timedelta
 from .utils import AccountEncryption, AddressEncryption
 
 class User(AbstractUser):
-   email = models.EmailField(unique=True, error_messages={
+    email = models.EmailField(unique=True, error_messages={
        'unique': "이미 사용중인 이메일입니다."
-   })
-   username = models.CharField(max_length=20, unique=True, error_messages={
+    })
+    username = models.CharField(max_length=20, unique=True, error_messages={
        'unique': "이미 사용 중인 닉네임입니다."
-   })
+    })
    
-   profile_image = ResizedImageField(
+    profile_image = ResizedImageField(
        size=[500, 500],
        crop=['middle', 'center'],
        upload_to='profile',
-   )
-   followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
-   bio = models.TextField(blank=True, null=True)
+    )
+    followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
+    bio = models.TextField(blank=True, null=True)
    
-   # 소셜 로그인 관련
-   is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
-   social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
-   is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
+    # 소셜 로그인 관련
+    is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
+    social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
+    is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
    
+    # 🔥 소셜 로그인 ID 저장 필드 추가
+    kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
+    naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
+
    # 편의 메서드들
-   def get_fandom_profile(self):
+    def get_fandom_profile(self):
        try:
            return self.fandom_profile
        except FandomProfile.DoesNotExist:
            return None
    
-   def get_or_create_fandom_profile(self):
+    def get_or_create_fandom_profile(self):
        profile, created = FandomProfile.objects.get_or_create(user=self)
        return profile
    
-   def get_bank_profile(self):
+    def get_bank_profile(self):
        try:
            return self.bank_profile
        except BankProfile.DoesNotExist:
            return None
    
-   def get_or_create_bank_profile(self):
+    def get_or_create_bank_profile(self):
        profile, created = BankProfile.objects.get_or_create(user=self)
        return profile
        
-   def get_address_profile(self):
+    def get_address_profile(self):
        try:
            return self.address_profile
        except AddressProfile.DoesNotExist:
            return None
    
-   def get_or_create_address_profile(self):
+    def get_or_create_address_profile(self):
        profile, created = AddressProfile.objects.get_or_create(user=self)
        return profile
 
-   @property
-   def display_name(self):
-       if self.is_temp_username:
-           return "새로운 사용자"
-       return self.username
+    @property
+    def display_name(self):
+        """화면에 표시할 이름 반환"""
+        # 🔥 1순위: first_name이 있으면 우선 사용 (프로필 관리에서 변경한 닉네임)
+        if self.first_name and self.first_name.strip():
+            return self.first_name
+        
+        # 🔥 2순위: 소셜 가입이 완료되고 임시 사용자명이 아닌 경우 username 사용
+        if self.social_signup_completed and not self.is_temp_username:
+            return self.username
+        
+        # 🔥 3순위: 임시 사용자명인 경우 (아직 프로필 완성하지 않은 경우)
+        if self.is_temp_username:
+            if self.username.startswith('temp_kakao_'):
+                return "카카오 사용자"
+            elif self.username.startswith('temp_naver_'):
+                return "네이버 사용자"
+            else:
+                return "새로운 사용자"
+        
+        # 🔥 4순위: 기본적으로 username 반환
+        return self.username
    
-   @property
-   def is_social_user(self):
+    @property
+    def is_social_user(self):
        return self.username.startswith(('temp_kakao_', 'temp_naver_'))
-
 
 class FandomProfile(models.Model):
    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
@@ -275,4 +295,4 @@ class MannerReview(models.Model):
 def default_profile_image():
    return 'profile/default.png'
 
-profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
+# profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)

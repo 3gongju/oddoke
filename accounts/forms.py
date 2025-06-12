@@ -168,14 +168,28 @@ class SocialSignupCompleteForm(forms.ModelForm):
         return username
     
     def save(self, commit=True):
+        print("🔄 SocialSignupCompleteForm save 메서드 호출됨")
         user = super().save(commit=False)
+        
         # 🔥 임시 username에서 실제 username으로 변경
-        user.is_temp_username = False
+        old_username = user.username
+        new_username = self.cleaned_data['username']
+        
+        print(f"🔄 사용자명 변경: {old_username} → {new_username}")
+        
+        user.username = new_username  # 실제 닉네임으로 변경
+        user.is_temp_username = False  # 더 이상 임시가 아님
         user.is_profile_completed = True
-        user.social_signup_completed = True
+        user.social_signup_completed = True  # 🔥 가입 완료 표시
         
         if commit:
             user.save()
+            print(f"✅ 소셜 가입 완료 저장됨:")
+            print(f"   - username: {user.username}")
+            print(f"   - is_temp_username: {user.is_temp_username}")
+            print(f"   - social_signup_completed: {user.social_signup_completed}")
+            print(f"   - is_profile_completed: {user.is_profile_completed}")
+        
         return user
 
 class MannerReviewForm(forms.ModelForm):
