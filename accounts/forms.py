@@ -168,14 +168,28 @@ class SocialSignupCompleteForm(forms.ModelForm):
         return username
     
     def save(self, commit=True):
+        print("🔄 SocialSignupCompleteForm save 메서드 호출됨")
         user = super().save(commit=False)
+        
         # 🔥 임시 username에서 실제 username으로 변경
-        user.is_temp_username = False
+        old_username = user.username
+        new_username = self.cleaned_data['username']
+        
+        print(f"🔄 사용자명 변경: {old_username} → {new_username}")
+        
+        user.username = new_username  # 실제 닉네임으로 변경
+        user.is_temp_username = False  # 더 이상 임시가 아님
         user.is_profile_completed = True
-        user.social_signup_completed = True
+        user.social_signup_completed = True  # 🔥 가입 완료 표시
         
         if commit:
             user.save()
+            print(f"✅ 소셜 가입 완료 저장됨:")
+            print(f"   - username: {user.username}")
+            print(f"   - is_temp_username: {user.is_temp_username}")
+            print(f"   - social_signup_completed: {user.social_signup_completed}")
+            print(f"   - is_profile_completed: {user.is_profile_completed}")
+        
         return user
 
 class MannerReviewForm(forms.ModelForm):
@@ -338,20 +352,20 @@ class AddressForm(forms.ModelForm):
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
             'placeholder': '우편번호',
-            'readonly': True
+            'readonly': True  # 검색으로만 입력 가능
         }),
         label="우편번호"
     )
     
     jibun_address = forms.CharField(
         max_length=200,
+        required=False,  # 선택사항
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
             'placeholder': '지번주소',
-            'readonly': True
+            'readonly': True  # 검색으로만 입력 가능
         }),
-        label="지번주소",
-        required=False
+        label="지번주소"
     )
     
     road_address = forms.CharField(
@@ -359,7 +373,7 @@ class AddressForm(forms.ModelForm):
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
             'placeholder': '도로명주소',
-            'readonly': True
+            'readonly': True  # 검색으로만 입력 가능
         }),
         label="도로명주소"
     )
@@ -379,7 +393,7 @@ class AddressForm(forms.ModelForm):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'readonly': True
+            'readonly': True  # 검색으로만 입력 가능
         }),
         label="건물명"
     )
@@ -398,6 +412,18 @@ class AddressForm(forms.ModelForm):
         model = AddressProfile
         fields = ['postal_code', 'jibun_address', 'road_address', 'detail_address', 'building_name', 'sido', 'sigungu']
     
+    def clean_postal_code(self):
+        postal_code = self.cleaned_data.get('postal_code')
+        if not postal_code:
+            raise forms.ValidationError("우편번호를 입력해주세요.")
+        return postal_code
+    
+    def clean_road_address(self):
+        road_address = self.cleaned_data.get('road_address')
+        if not road_address:
+            raise forms.ValidationError("도로명주소를 입력해주세요.")
+        return road_address
+    
     def clean_detail_address(self):
         detail_address = self.cleaned_data.get('detail_address', '')
         if detail_address:
@@ -405,6 +431,17 @@ class AddressForm(forms.ModelForm):
             if len(detail_address) > 200:
                 raise forms.ValidationError("상세주소는 최대 200자까지 입력 가능합니다.")
         return detail_address
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        postal_code = cleaned_data.get('postal_code')
+        road_address = cleaned_data.get('road_address')
+        
+        # 기본 주소 정보가 모두 입력되었는지 확인
+        if not postal_code or not road_address:
+            raise forms.ValidationError("주소 검색을 통해 기본 주소 정보를 입력해주세요.")
+        
+        return cleaned_data
     
     def save(self, user):
         """사용자와 연결해서 저장"""

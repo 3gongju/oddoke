@@ -13,32 +13,48 @@
         <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <span class="text-3xl text-red-600">⚠️</span>
         </div>
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">계좌정보 삭제</h1>
-        <p class="text-gray-600">정말로 등록된 계좌정보를 삭제하시겠습니까?</p>
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">주소정보 삭제</h1>
+        <p class="text-gray-600">정말로 등록된 주소정보를 삭제하시겠습니까?</p>
       </div>
 
-      <!-- 📋 현재 등록된 계좌 정보 -->
+      <!-- 📋 현재 등록된 주소 정보 -->
       <div class="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-200">
-        <h3 class="font-bold text-gray-800 mb-4">현재 등록된 계좌정보</h3>
+        <h3 class="font-bold text-gray-800 mb-4">현재 등록된 주소정보</h3>
         <div class="space-y-3">
           <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">은행</span>
-            <span class="font-semibold text-gray-800">{{ bank_profile.bank_name }}</span>
+            <span class="text-gray-600 font-medium">우편번호</span>
+            <span class="font-semibold text-gray-800">{{ address_profile.postal_code }}</span>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">계좌번호</span>
-            <span class="font-mono font-semibold text-gray-800">
-              {{ bank_profile.get_masked_account_number }}
-            </span>
+          <div class="flex justify-between items-start">
+            <span class="text-gray-600 font-medium">도로명주소</span>
+            <span class="font-semibold text-gray-800 text-right break-all">{{ address_profile.road_address }}</span>
           </div>
+          {% if address_profile.jibun_address %}
+          <div class="flex justify-between items-start">
+            <span class="text-gray-600 font-medium">지번주소</span>
+            <span class="font-semibold text-gray-800 text-right break-all">{{ address_profile.jibun_address }}</span>
+          </div>
+          {% endif %}
+          {% if address_profile.detail_address %}
+          <div class="flex justify-between items-start">
+            <span class="text-gray-600 font-medium">상세주소</span>
+            <span class="font-semibold text-gray-800 text-right break-all">{{ address_profile.detail_address }}</span>
+          </div>
+          {% endif %}
+          {% if address_profile.building_name %}
           <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">예금주</span>
-            <span class="font-semibold text-gray-800">{{ bank_profile.account_holder }}</span>
+            <span class="text-gray-600 font-medium">건물명</span>
+            <span class="font-semibold text-gray-800">{{ address_profile.building_name }}</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between items-center">
+            <span class="text-gray-600 font-medium">지역</span>
+            <span class="font-semibold text-gray-800">{{ address_profile.sido }} {{ address_profile.sigungu }}</span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-gray-600 font-medium">등록일</span>
             <span class="font-semibold text-gray-800">
-              {{ bank_profile.created_at|date:"Y년 m월 d일" }}
+              {{ address_profile.created_at|date:"Y년 m월 d일" }}
             </span>
           </div>
         </div>
@@ -53,7 +69,7 @@
             <ul class="text-sm text-red-700 space-y-2 leading-relaxed">
               <li class="flex items-start space-x-2">
                 <span class="text-red-500 mt-1">•</span>
-                <span>삭제된 계좌정보는 복구할 수 없습니다</span>
+                <span>삭제된 주소정보는 복구할 수 없습니다</span>
               </li>
               <li class="flex items-start space-x-2">
                 <span class="text-red-500 mt-1">•</span>
@@ -61,7 +77,7 @@
               </li>
               <li class="flex items-start space-x-2">
                 <span class="text-red-500 mt-1">•</span>
-                <span>새로운 거래를 위해서는 계좌를 다시 등록해야 합니다</span>
+                <span>새로운 거래를 위해서는 주소를 다시 등록해야 합니다</span>
               </li>
               <li class="flex items-start space-x-2">
                 <span class="text-red-500 mt-1">•</span>
@@ -82,7 +98,7 @@
         <form method="POST" class="flex-1">
           {% csrf_token %}
           <button type="submit" 
-                  onclick="return confirm('정말로 계좌정보를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')"
+                  onclick="return confirm('정말로 주소정보를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')"
                   class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105">
             <span class="mr-2">🗑️</span> 삭제하기
           </button>
@@ -96,14 +112,14 @@
         <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <span class="text-2xl text-blue-600">💡</span>
         </div>
-        <h3 class="text-lg font-bold text-gray-800 mb-3">계좌 재등록 안내</h3>
+        <h3 class="text-lg font-bold text-gray-800 mb-3">주소 재등록 안내</h3>
         <p class="text-gray-600 text-sm leading-relaxed">
-          계좌정보를 삭제한 후 다시 거래를 원하신다면<br>
-          언제든지 새로운 계좌를 등록할 수 있습니다.
+          주소정보를 삭제한 후 다시 거래를 원하신다면<br>
+          언제든지 새로운 주소를 등록할 수 있습니다.
         </p>
-        <a href="{% url 'accounts:account_registration' user_profile.username %}" 
+        <a href="{% url 'accounts:address_registration' user_profile.username %}" 
            class="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors mt-4">
-          <span class="mr-2">💳</span> 새 계좌 등록하기
+          <span class="mr-2">🏠</span> 새 주소 등록하기
         </a>
       </div>
     </div>

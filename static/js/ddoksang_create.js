@@ -258,23 +258,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateNextButtonState() {
         if (!nextBtn || currentStep === 0) return;
-        
+
         const rules = stepValidationRules[currentStep];
         let isValid = true;
 
         if (rules?.length > 0) {
             const normalFields = rules.filter(field => field !== 'images');
             if (normalFields.length > 0) {
-                isValid = FormUtils.validateRequired(normalFields, false).valid;
+                const validation = FormUtils.validateRequired(normalFields, false);
+                console.log('🧪 필수 필드 유효성 결과:', validation);
+                isValid = validation.valid;
             }
 
             if (rules.includes('images')) {
-                isValid = isValid && imageUploadModule && imageUploadModule.getFileCount() > 0;
+                const uploader = window.ddoksangApp?.imageUploadModule;
+                const count = uploader?.getFileCount?.() || 0;
+                console.log('🖼️ 업로드된 이미지 개수:', count);
+                isValid = isValid && count > 0;
             }
         }
-        
+
+        console.log('🚦 버튼 활성화 여부:', isValid);
         FormUtils.updateButtonState('nextBtn', isValid);
     }
+
 
     function showSubmitConfirmModal() {
         const modalHTML = `

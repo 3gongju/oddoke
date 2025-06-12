@@ -31,7 +31,7 @@ def home_view(request):
     """홈 뷰 - 지도 + 현재 운영중인 카페 리스트 + 생일 멤버"""
     today = timezone.now().date()
 
-    # === 1. 이번 주 생일 아티스트 ===
+    # === 1. 이번  생일 아티스트 ===
     birthday_artists = get_weekly_bday_artists
 
     # === 2. 현재 운영중인 생일카페들 (지도용) ===

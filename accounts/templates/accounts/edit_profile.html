@@ -6,13 +6,13 @@
   <h2 class="text-2xl font-bold mb-6">프로필 관리</h2>
 
   <!-- 성공/에러 메시지 -->
-  <!-- {% if messages %}
+  {% if messages %}
     {% for message in messages %}
       <div class="mb-4 p-3 rounded {% if message.tags == 'success' %}bg-green-100 text-green-700 border border-green-200{% else %}bg-red-100 text-red-700 border border-red-200{% endif %}">
         {{ message }}
       </div>
     {% endfor %}
-  {% endif %} -->
+  {% endif %}
 
   <!-- ✅ 프로필 헤더 -->
   <div class="flex items-center space-x-4 mb-8 p-4 bg-gray-50 rounded-lg">
@@ -25,15 +25,7 @@
     {% endif %}
     <div class="flex-1">
       <h3 class="text-lg font-bold text-gray-800">
-        {% if user_profile.first_name %}
-          {{ user_profile.first_name }}
-        {% elif user_profile.username|slice:":6" == "kakao_" %}
-          카카오 사용자
-        {% elif user_profile.username|slice:":6" == "naver_" %}
-          네이버 사용자
-        {% else %}
-          {{ user_profile.username }}
-        {% endif %}
+        {{ user_profile.display_name }}
       </h3>
       
       <!-- 소셜 로그인 뱃지 -->
@@ -59,20 +51,25 @@
   <!-- ✅ 수정 가능한 정보들 -->
   <div class="space-y-6">
     
-    <!-- ✅ 닉네임 수정 -->
+    <!-- ✅ 닉네임 수정 (개선된 버전) -->
     <div class="border border-gray-200 rounded-lg p-4">
       <div id="nickname-display" class="flex justify-between items-start">
         <div class="flex-1">
-          <label class="block text-sm font-semibold text-gray-700 mb-1">닉네임</label>
-          <p class="text-lg font-medium text-gray-900" id="current-nickname">
-            {% if user_profile.first_name %}
-              {{ user_profile.first_name }}
-            {% else %}
-              {% if user_profile.username|slice:":6" == "kakao_" %}카카오 사용자{% elif user_profile.username|slice:":6" == "naver_" %}네이버 사용자{% else %}{{ user_profile.username }}{% endif %}
+          <label class="block text-sm font-semibold text-gray-700 mb-1">
+            닉네임
+            {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
+              <span class="text-blue-600 text-xs">(소셜 로그인)</span>
             {% endif %}
+          </label>
+          <p class="text-lg font-medium text-gray-900" id="current-nickname">
+            {{ user_profile.display_name }}
           </p>
           <p class="text-xs text-gray-500 mt-1">
-            다른 사용자들에게 표시되는 이름입니다
+            {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
+              이 닉네임이 게시글과 댓글에 표시됩니다
+            {% else %}
+              다른 사용자들에게 표시되는 이름입니다
+            {% endif %}
           </p>
         </div>
         <button id="edit-nickname-btn" class="ml-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
@@ -87,16 +84,20 @@
         {% csrf_token %}
         <div class="mt-3 space-y-3">
           <input type="text" id="new-nickname" name="first_name" 
-                 value="{{ user.first_name }}"
+                 value="{{ user_profile.first_name|default:'' }}"
                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
-                 placeholder="새 닉네임을 입력하세요">
+                 placeholder="{% if user_profile.social_signup_completed or user_profile.is_temp_username %}새로운 닉네임을 입력하세요{% else %}닉네임을 입력하세요{% endif %}">
           
           <div class="bg-blue-50 p-3 rounded-lg">
             <p class="text-xs text-blue-700">
               💡 <strong>닉네임 설정 팁</strong><br>
               • 2-20자의 한글, 영문, 숫자 사용 가능<br>
               • 언제든 변경할 수 있습니다<br>
-              • 다른 사용자들이 쉽게 기억할 수 있는 이름을 추천해요
+              {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
+                • 변경한 닉네임이 모든 게시글과 댓글에 즉시 반영됩니다
+              {% else %}
+                • 다른 사용자들이 쉽게 기억할 수 있는 이름을 추천해요
+              {% endif %}
             </p>
           </div>
           
@@ -113,6 +114,59 @@
         </div>
       </form>
     </div>
+
+    <!-- ✅ 프로필 이름 수정 (일반 사용자만) -->
+    {% if not user_profile.social_signup_completed and not user_profile.is_temp_username %}
+    <div class="border border-gray-200 rounded-lg p-4">
+      <div id="username-display" class="flex justify-between items-start">
+        <div class="flex-1">
+          <label class="block text-sm font-semibold text-gray-700 mb-1">프로필 이름</label>
+          <p class="text-lg font-medium text-gray-900" id="current-username">
+            {{ user_profile.username }}
+          </p>
+          <p class="text-xs text-gray-500 mt-1">
+            프로필 URL에 사용되는 이름입니다 (일반 회원가입 사용자)
+          </p>
+        </div>
+        <button id="edit-username-btn" class="ml-4 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition">
+          수정
+        </button>
+      </div>
+
+      <!-- ✅ 프로필 이름 수정 폼 -->
+      <form method="POST" id="username-edit-form"
+            action="{% url 'accounts:edit_profile' user_profile.username %}"
+            style="display: none;">
+        {% csrf_token %}
+        <div class="mt-3 space-y-3">
+          <input type="text" id="new-username" name="username" 
+                 value="{{ user_profile.username }}"
+                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" 
+                 placeholder="새로운 프로필 이름을 입력하세요">
+          
+          <div class="bg-green-50 p-3 rounded-lg">
+            <p class="text-xs text-green-700">
+              💡 <strong>프로필 이름 안내</strong><br>
+              • 프로필 URL에 사용됩니다 (예: /accounts/profile/새이름/)<br>
+              • 중복되지 않는 고유한 이름이어야 합니다<br>
+              • 영문, 숫자, 특수문자 사용 가능
+            </p>
+          </div>
+          
+          <div class="flex space-x-2">
+            <button type="button" id="cancel-username-btn"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+              취소
+            </button>
+            <button type="submit" id="save-username-btn"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+              저장
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    {% endif %}
 
     <!-- ✅ 소개글 수정 -->
     <div class="border border-gray-200 rounded-lg p-4">
@@ -182,6 +236,12 @@
           <span class="text-gray-600">가입일</span>
           <span class="font-medium">{{ user_profile.date_joined|date:"Y년 m월 d일" }}</span>
         </div>
+        {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
+        <div class="flex justify-between">
+          <span class="text-gray-600">표시 방식</span>
+          <span class="font-medium text-blue-600">닉네임 우선 사용</span>
+        </div>
+        {% endif %}
       </div>
     </div>
 
@@ -189,61 +249,150 @@
     <div class="border border-blue-200 bg-blue-50 rounded-lg p-4 mt-6" id="fandom-auth">
       <h3 class="text-sm font-bold text-blue-700 mb-2">🎫 공식 팬덤 인증</h3>
 
-      {% if user_profile.is_verified_fandom %}
-        <p class="text-green-600 font-semibold mb-2">✅ 인증 완료된 팬덤: {{ user_profile.fandom_artist.fandom }}</p>
-      {% elif user_profile.is_pending_verification %}
-        <p class="text-yellow-600 mb-2">⏳ 인증 요청 접수 완료 (3일 이내 승인 예정)</p>
-      {% elif user_profile.verification_failed %}
-        <p class="text-red-600 mb-2">❌ 인증에 실패했습니다. 다시 시도해주세요.</p>
+      <!-- 🔥 fandom_profile 사용하도록 수정 -->
+      {% if fandom_profile %}
+        {% if fandom_profile.is_verified_fandom %}
+          <p class="text-green-600 font-semibold mb-2">✅ 인증 완료된 팬덤: {{ fandom_profile.fandom_artist.display_name }}</p>
+        {% elif fandom_profile.is_pending_verification %}
+          <p class="text-yellow-600 mb-2">⏳ 인증 요청 접수 완료 (3일 이내 승인 예정)</p>
+        {% elif fandom_profile.verification_failed %}
+          <p class="text-red-600 mb-2">❌ 인증에 실패했습니다. 다시 시도해주세요.</p>
+        {% else %}
+          <p class="text-gray-600 text-sm mb-4">예시 이미지를 참고해 팬클럽 카드를 업로드해 주세요.</p>
+        {% endif %}
       {% else %}
-        <p class="text-gray-600 text-sm mb-4">예시 이미지를 참고해 팬클럽 카드를 업로드해 주세요. </p>
+        <p class="text-gray-600 text-sm mb-4">예시 이미지를 참고해 팬클럽 카드를 업로드해 주세요.</p>
       {% endif %}
 
-      <form method="POST" enctype="multipart/form-data"
-            action="{% url 'accounts:upload_fandom_card' user_profile.username %}"
-            class="space-y-4">
-        {% csrf_token %}
+      <!-- 🔥 인증 완료된 경우가 아닐 때만 폼 표시 -->
+      {% if not fandom_profile or not fandom_profile.is_verified_fandom %}
+        <form method="POST" enctype="multipart/form-data"
+              action="{% url 'accounts:upload_fandom_card' user_profile.username %}"
+              class="space-y-4">
+          {% csrf_token %}
 
-        <!-- 예시 이미지 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">예시 이미지</label>
-          <img src="{% static 'image/fandom_example.png' %}"
-                alt="예시 이미지"
-                class="max-w-full h-auto rounded border shadow"
-                style="max-height: 250px;" />
+          <!-- 예시 이미지 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">예시 이미지</label>
+            <div class="bg-white p-4 rounded border">
+              <img src="{% static 'image/fandom_example.png' %}"
+                  alt="예시 이미지"
+                  class="max-w-full h-auto rounded border shadow mx-auto"
+                  style="max-height: 200px;" />
+              <p class="text-xs text-gray-500 mt-2 text-center">
+                위와 같은 형태의 팬클럽 멤버십 카드를 업로드해주세요
+              </p>
+            </div>
+          </div>
+
+          <!-- 팬덤 선택 -->
+          <div>
+            <label for="artist_id" class="block text-sm font-medium text-gray-700 mb-1">
+              팬덤 선택
+            </label>
+            <select name="artist_id" id="artist_id" 
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">팬덤을 선택해주세요</option>
+              {% for artist in artist_list %}
+                <option value="{{ artist.id }}">{{ artist.display_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 🔥 인증 기간 필드 추가 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="verification_start_date" class="block text-sm font-medium text-gray-700 mb-1">
+                인증 시작일
+              </label>
+              <input type="date" name="verification_start_date" id="verification_start_date"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <p class="text-xs text-gray-500 mt-1">팬클럽 가입일 또는 카드 발급일</p>
+            </div>
+            
+            <div>
+              <label for="verification_end_date" class="block text-sm font-medium text-gray-700 mb-1">
+                인증 만료일
+              </label>
+              <input type="date" name="verification_end_date" id="verification_end_date"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <p class="text-xs text-gray-500 mt-1">팬클럽 유효기간 만료일</p>
+            </div>
+          </div>
+
+          <!-- 이미지 업로드 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              회원카드 스크린샷 업로드
+            </label>
+            <input type="file" name="fandom_card" id="fandom-card-input" accept="image/*"
+                  class="block w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+            <p class="text-xs text-gray-500 mt-1">
+              JPG, PNG 파일만 업로드 가능합니다. (최대 5MB) - 선택사항
+            </p>
+          </div>
+
+          <!-- 미리보기 -->
+          <div id="fandom-card-preview-container" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-2">미리보기</label>
+            <div class="bg-gray-50 p-4 rounded-lg border">
+              <img id="fandom-card-preview"
+                  src="#"
+                  alt="미리보기"
+                  class="max-w-full h-auto rounded border shadow mx-auto"
+                  style="max-height: 200px;" />
+            </div>
+          </div>
+
+          <!-- 주의사항 -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-sm font-semibold text-blue-800 mb-2">💡 팬덤 인증 안내</h4>
+            <ul class="text-xs text-blue-700 space-y-1">
+              <li class="flex items-start space-x-2">
+                <span class="text-blue-500 mt-1">•</span>
+                <span>팬덤 인증은 선택사항입니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-blue-500 mt-1">•</span>
+                <span>정식 팬클럽 멤버십 카드만 인증 가능합니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-blue-500 mt-1">•</span>
+                <span>개인정보는 가려서 업로드해주세요</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-blue-500 mt-1">•</span>
+                <span>인증 심사는 최대 3일 소요됩니다</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 제출 버튼 -->
+          <div class="pt-2">
+            <button type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-3 rounded-lg transition-colors duration-200">
+              <span class="mr-2">🎫</span> 팬덤 인증 신청하기 (선택)
+            </button>
+          </div>
+        </form>
+      {% else %}
+        <!-- 인증 완료된 경우 -->
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-green-800 font-semibold">인증이 완료되었습니다! 🎉</p>
+              <p class="text-green-600 text-sm">
+                {{ fandom_profile.fandom_artist.display_name }} 공식 팬으로 인증되었습니다.
+              </p>
+            </div>
+            {% if fandom_profile.fandom_card %}
+              <img src="{{ fandom_profile.fandom_card.url }}" 
+                  alt="인증 카드" 
+                  class="w-16 h-16 object-cover rounded border">
+            {% endif %}
+          </div>
         </div>
-
-        <!-- 팬덤 선택 -->
-        <div>
-          <label for="artist_id" class="block text-sm font-medium text-gray-700">팬덤 선택</label>
-          <select name="artist_id" required class="w-full border rounded px-3 py-2 mt-1">
-            {% for artist in artist_list %}
-              <option value="{{ artist.id }}">{{ artist.display_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!--이미지 업로드 -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700">회원카드 스크린샷 업로드</label>
-          <input type="file" name="fandom_card" id="fandom-card-input" accept="image/*"
-                class="block w-full mt-1 border border-gray-300 rounded" required />
-        </div>
-
-        <!-- 미리보기 -->
-        <div id="fandom-card-preview-container" class="hidden mt-2">
-          <label class="block text-xs text-gray-600">미리보기</label>
-          <img id="fandom-card-preview"
-                src="#"
-                class="max-w-full h-auto rounded border shadow"
-                style="max-height: 250px;" />
-
-        </div>
-
-      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            인증 요청
-      </button>      
-      </form>
+      {% endif %}
     </div>
 
 
@@ -273,6 +422,12 @@
     const nicknameEditBtn = document.getElementById("edit-nickname-btn");
     const nicknameCancelBtn = document.getElementById("cancel-nickname-btn");
 
+    // ✅ 프로필 이름 수정 (일반 사용자)
+    const usernameDisplay = document.getElementById("username-display");
+    const usernameForm = document.getElementById("username-edit-form");
+    const usernameEditBtn = document.getElementById("edit-username-btn");
+    const usernameCancelBtn = document.getElementById("cancel-username-btn");
+
     // ✅ 소개글 수정
     const bioDisplay = document.getElementById("bio-display");
     const bioForm = document.getElementById("bio-edit-form");
@@ -281,6 +436,7 @@
     const bioTextarea = document.getElementById("new-bio");
     const bioCount = document.getElementById("bio-count");
 
+    // 닉네임 수정 이벤트
     if (nicknameEditBtn && nicknameCancelBtn) {
       nicknameEditBtn.addEventListener("click", function () {
         nicknameDisplay.style.display = "none";
@@ -294,6 +450,21 @@
       });
     }
 
+    // 프로필 이름 수정 이벤트 (일반 사용자)
+    if (usernameEditBtn && usernameCancelBtn) {
+      usernameEditBtn.addEventListener("click", function () {
+        usernameDisplay.style.display = "none";
+        usernameForm.style.display = "block";
+        document.getElementById("new-username").focus();
+      });
+
+      usernameCancelBtn.addEventListener("click", function () {
+        usernameForm.style.display = "none";
+        usernameDisplay.style.display = "flex";
+      });
+    }
+
+    // 소개글 수정 이벤트
     if (bioEditBtn && bioCancelBtn) {
       bioEditBtn.addEventListener("click", function () {
         bioDisplay.style.display = "none";
