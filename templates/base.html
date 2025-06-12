@@ -25,12 +25,19 @@
 <nav class="bg-white shadow sticky top-0 z-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between h-16 items-center">
+      <!-- 왼쪽: 로고 -->
       <div class="flex items-center space-x-4">
         <a href="/" class="text-xl font-bold text-primary">어덕해</a>
-        <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
-        <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
-        <a href="/ddoksang/" class="hover:text-primary text-sm font-medium">덕생</a>
+        
+        <!-- 데스크톱 메뉴 (md 이상에서만 표시) -->
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
+          <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
+          <a href="/ddoksang/" class="hover:text-primary text-sm font-medium">덕생</a>
+        </div>
       </div>
+      
+      <!-- 오른쪽: 사용자 메뉴 + 햄버거 버튼 -->
       <div class="flex items-center space-x-2">
         {% if request.user.is_authenticated %}
           <!-- 알림 버튼 -->
@@ -45,26 +52,68 @@
             </a>
           </div>
           
-          <span class="text-sm text-gray-700">
+          <!-- 데스크톱 사용자 메뉴 -->
+          <div class="hidden md:flex items-center space-x-2">
+            <span class="text-sm text-gray-700">
+              👤 
+              {% if request.user.first_name %}
+                {{ request.user.first_name }}
+              {% elif request.user.username|slice:":10" == "naver_" %}
+                네이버 사용자
+              {% elif request.user.username|slice:":10" == "kakao_" %}
+                카카오 사용자
+              {% else %}
+                {{ request.user.username }}
+              {% endif %}
+              님
+            </span>
+            <a href="/ddokchat/my/" class="text-sm text-gray-700 hover:text-primary">내채팅방</a>
+            <a href="{% url 'accounts:mypage' %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
+            <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
+          </div>
+          
+          <!-- 모바일 사용자 정보 (사용자명만 간략히) -->
+          <span class="md:hidden text-sm text-gray-700">
             👤 
             {% if request.user.first_name %}
-              {{ request.user.first_name }}
+              {{ request.user.first_name|slice:":4" }}
             {% elif request.user.username|slice:":10" == "naver_" %}
-              네이버 사용자
+              네이버
             {% elif request.user.username|slice:":10" == "kakao_" %}
-              카카오 사용자
+              카카오
             {% else %}
-              {{ request.user.username }}
+              {{ request.user.username|slice:":4" }}
             {% endif %}
-            님
           </span>
-          <a href="/ddokchat/my/" class="text-sm text-gray-700 hover:text-primary">내채팅방</a>
-          <a href="{% url 'accounts:mypage' %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
-          <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
         {% else %}
           <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary">로그인</a>
         {% endif %}
+        
+        <!-- 햄버거 버튼 (모바일에서만 표시, 맨 오른쪽) -->
+        <button id="hamburger-btn" class="flex flex-col justify-center items-center w-6 h-6 focus:outline-none md:hidden ml-2">
+          <span class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
+          <span class="block w-5 h-0.5 bg-gray-700 mt-1 transition-all duration-300"></span>
+          <span class="block w-5 h-0.5 bg-gray-700 mt-1 transition-all duration-300"></span>
+        </button>
       </div>
+    </div>
+  </div>
+  
+  <!-- 모바일 메뉴 (햄버거 클릭 시 표시) -->
+  <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200 hidden">
+    <div class="px-4 py-3 space-y-3">
+      <!-- 메인 메뉴 -->
+      <a href="/ddokfarm/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">덕팜</a>
+      <a href="/ddokdam/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">덕담</a>
+      <a href="/ddoksang/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">덕생</a>
+      
+      {% if request.user.is_authenticated %}
+        <hr class="my-2">
+        <!-- 사용자 메뉴 -->
+        <a href="/ddokchat/my/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">내채팅방</a>
+        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">마이페이지</a>
+        <a href="/accounts/logout/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">로그아웃</a>
+      {% endif %}
     </div>
   </div>
 </nav>
@@ -197,6 +246,57 @@
   // 알림 페이지에서 돌아왔을 때 업데이트
   window.addEventListener('focus', function() {
     updateNotificationCount();
+  });
+</script>
+
+<!-- ✅ 햄버거 메뉴 토글 스크립트 -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const hamburgerLines = hamburgerBtn?.querySelectorAll('span');
+
+    if (hamburgerBtn && mobileMenu && hamburgerLines) {
+      hamburgerBtn.addEventListener('click', function() {
+        // 메뉴 토글
+        mobileMenu.classList.toggle('hidden');
+        
+        // 햄버거 아이콘 애니메이션
+        if (mobileMenu.classList.contains('hidden')) {
+          // 메뉴 닫힘: 원래 햄버거 모양
+          hamburgerLines[0].style.transform = 'rotate(0deg) translateY(0px)';
+          hamburgerLines[1].style.opacity = '1';
+          hamburgerLines[2].style.transform = 'rotate(0deg) translateY(0px)';
+        } else {
+          // 메뉴 열림: X 모양
+          hamburgerLines[0].style.transform = 'rotate(45deg) translateY(6px)';
+          hamburgerLines[1].style.opacity = '0';
+          hamburgerLines[2].style.transform = 'rotate(-45deg) translateY(-6px)';
+        }
+      });
+
+      // 메뉴 외부 클릭 시 닫기
+      document.addEventListener('click', function(event) {
+        if (!hamburgerBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
+          mobileMenu.classList.add('hidden');
+          // 햄버거 아이콘 원래대로
+          hamburgerLines[0].style.transform = 'rotate(0deg) translateY(0px)';
+          hamburgerLines[1].style.opacity = '1';
+          hamburgerLines[2].style.transform = 'rotate(0deg) translateY(0px)';
+        }
+      });
+
+      // 창 크기 변경 시 모바일 메뉴 숨김
+      window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) { // md 브레이크포인트
+          mobileMenu.classList.add('hidden');
+          // 햄버거 아이콘 원래대로
+          hamburgerLines[0].style.transform = 'rotate(0deg) translateY(0px)';
+          hamburgerLines[1].style.opacity = '1';
+          hamburgerLines[2].style.transform = 'rotate(0deg) translateY(0px)';
+        }
+      });
+    }
   });
 </script>
 
