@@ -213,6 +213,12 @@ DUTCHEAT_API_URL = os.getenv('DUTCHEAT_API_URL', 'https://api.dutcheat.com')
 # Mock 서비스 사용 여부 (개발/테스트용)
 USE_MOCK_BANK_SERVICE = True  # 실제 운영시에는 False로 변경
 
+# 암호화 키 설정
+ACCOUNT_ENCRYPTION_KEY = os.getenv('ACCOUNT_ENCRYPTION_KEY')
+
+if not ACCOUNT_ENCRYPTION_KEY:
+    raise ValueError("ACCOUNT_ENCRYPTION_KEY 환경변수가 설정되지 않았습니다.")
+
 
 LOGGING = {
     'version': 1,

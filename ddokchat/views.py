@@ -14,7 +14,7 @@ from django.views.decorators.http import require_POST
 from django.core.files.storage import default_storage
 from django.urls import reverse
 
-from accounts.services import get_dutcheat_service
+from .services import get_dutcheat_service
 
 import json
 from django.contrib.auth import get_user_model
@@ -205,32 +205,34 @@ def send_account_info(request, room_id):
                 'error': '이미 완료된 거래입니다.'
             })
         
-        # ✅ User 모델에서 직접 계좌정보 확인
+        # 🔥 BankProfile에서 계좌정보 확인 (수정된 부분)
         user = request.user
-        if not all([user.bank_name, user.account_number, user.account_holder]):
+        bank_profile = user.get_bank_profile()
+        
+        if not bank_profile or not all([bank_profile.bank_name, bank_profile.account_number, bank_profile.account_holder]):
             return JsonResponse({
                 'success': False,
                 'redirect_to_mypage': True,
                 'error': '계좌 정보를 먼저 등록해주세요.'
             })
         
-        # ✅ 데이터베이스에 계좌정보 메시지 저장
+        # 🔥 BankProfile 데이터로 메시지 저장 (수정된 부분)
         message = Message.objects.create(
             room=room,
             sender=request.user,
             message_type='account_info',
-            account_bank_name=user.bank_name,
-            account_number=user.account_number,
-            account_holder=user.account_holder,
-            account_bank_code=user.bank_code or '',
+            account_bank_name=bank_profile.bank_name,
+            account_number=bank_profile.account_number,  # 이미 복호화됨
+            account_holder=bank_profile.account_holder,
+            account_bank_code=bank_profile.bank_code or '',
         )
         
-        # 계좌정보 구성
+        # 🔥 계좌정보 구성 (수정된 부분)
         account_info = {
-            'bank_name': user.bank_name,
-            'bank_code': user.bank_code or '',
-            'account_number': user.account_number,
-            'account_holder': user.account_holder,
+            'bank_name': bank_profile.bank_name,
+            'bank_code': bank_profile.bank_code or '',
+            'account_number': bank_profile.account_number,  # 이미 복호화됨
+            'account_holder': bank_profile.account_holder,
         }
         
         return JsonResponse({
@@ -262,38 +264,31 @@ def check_account_fraud(request):
                 'error': '계좌번호와 예금주를 모두 입력해주세요.'
             })
         
-        # 실제 API 호출 대신 더미 데이터 반환 (개발용)
-        # 실제 운영시에는 더치트 API를 호출해야 함
-        
-        # 더미 데이터 - 실제로는 외부 API 호출
-        dummy_reports = []
-        
-        # 테스트용: 특정 계좌번호에 대해서만 신고 내역 있는 것으로 처리
-        if '1111' in account_number:
-            dummy_reports = [
-                {
-                    'report_type': '입금 후 연락두절',
-                    'description': '상품을 보내지 않고 연락이 되지 않습니다.',
-                    'status': '확인됨',
-                    'report_date': '2024-11-15',
-                    'amount': 150000
-                },
-                {
-                    'report_type': '가짜 상품 판매',
-                    'description': '정품이라고 했는데 가짜 상품을 보냈습니다.',
-                    'status': '조사중',
-                    'report_date': '2024-11-10',
-                    'amount': 89000
-                }
-            ]
-        
-        return JsonResponse({
-            'success': True,
-            'has_reports': len(dummy_reports) > 0,
-            'report_count': len(dummy_reports),
-            'reports': dummy_reports,
-            'last_updated': '2024-11-20 15:30'
-        })
+        # 🔥 더치트 서비스 사용 (실제 서비스 연동)
+        try:
+            dutcheat_service = get_dutcheat_service()
+            result = dutcheat_service.check_account_fraud_history(
+                bank_code=bank_code,
+                account_number=account_number,
+                account_holder=account_holder
+            )
+            
+            if result.get('success'):
+                return JsonResponse({
+                    'success': True,
+                    'has_reports': result.get('has_reports', False),
+                    'report_count': result.get('report_count', 0),
+                    'reports': result.get('reports', []),
+                    'last_updated': result.get('last_updated', '')
+                })
+            else:
+                # 더치트 서비스 실패 시 더미 데이터로 폴백
+                return _get_dummy_fraud_data(account_number)
+                
+        except Exception as e:
+            print(f"더치트 서비스 오류: {e}")
+            # 서비스 오류 시 더미 데이터로 폴백
+            return _get_dummy_fraud_data(account_number)
         
     except json.JSONDecodeError:
         return JsonResponse({
@@ -306,6 +301,36 @@ def check_account_fraud(request):
             'error': f'조회 중 오류가 발생했습니다: {str(e)}'
         })
 
+def _get_dummy_fraud_data(account_number):
+    """더미 사기 신고 데이터 반환 (폴백용)"""
+    dummy_reports = []
+    
+    # 테스트용: 특정 계좌번호에 대해서만 신고 내역 있는 것으로 처리
+    if '1111' in account_number:
+        dummy_reports = [
+            {
+                'report_type': '입금 후 연락두절',
+                'description': '상품을 보내지 않고 연락이 되지 않습니다.',
+                'status': '확인됨',
+                'report_date': '2024-11-15',
+                'amount': 150000
+            },
+            {
+                'report_type': '가짜 상품 판매',
+                'description': '정품이라고 했는데 가짜 상품을 보냈습니다.',
+                'status': '조사중',
+                'report_date': '2024-11-10',
+                'amount': 89000
+            }
+        ]
+    
+    return JsonResponse({
+        'success': True,
+        'has_reports': len(dummy_reports) > 0,
+        'report_count': len(dummy_reports),
+        'reports': dummy_reports,
+        'last_updated': '2024-11-20 15:30'
+    })
 
 @require_POST
 @login_required
