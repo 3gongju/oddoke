@@ -1,4 +1,6 @@
-// static/js/ddoksang_create.js (간결한 버전 - 유틸리티 활용)
+
+// 새로운 이미지 업로드 모듈 import
+import { setupDdoksangImageUpload } from './ddoksang_image_upload.js';
 
 // 단계별 검증 규칙
 const stepValidationRules = {
@@ -7,7 +9,7 @@ const stepValidationRules = {
     3: ['start_date', 'end_date'],
     4: ['event_description'],
     5: [], // 선택사항
-    6: ['images']
+    6: ['images'] // 이미지 검증은 별도 처리
 };
 
 // 전역 함수들 (HTML onclick 용)
@@ -59,11 +61,6 @@ window.confirmNewArtist = function() {
     setTimeout(() => window.ddoksangApp?.moveToStep(2), 300);
 };
 
-window.removeImage = function(index) {
-    window.DdoksangImageUtils?.removeImageAt('images', index);
-    window.ddoksangApp?.handleImagePreview();
-};
-
 window.clearFinalSelection = function() {
     const FormUtils = window.DdoksangFormUtils;
     FormUtils.setValue('final-artist-member-search', '');
@@ -78,8 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 덕생 등록 페이지 초기화');
     
     // 의존성 확인
-    const { DdoksangFormUtils: FormUtils, DdoksangMapUtils: MapUtils, DdoksangImageUtils: ImageUtils } = window;
-    if (!FormUtils || !MapUtils || !ImageUtils) {
+    const { DdoksangFormUtils: FormUtils, DdoksangMapUtils: MapUtils } = window;
+    if (!FormUtils || !MapUtils) {
         console.error('❌ 필수 유틸리티 모듈 누락');
         return;
     }
@@ -95,6 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStep = 0;
     let duplicateChecked = false;
     let isDuplicate = false;
+    let imageUploadModule = null; // 이미지 업로드 모듈 인스턴스
 
     // 전역 앱 객체
     window.ddoksangApp = {
@@ -103,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         isDuplicate: false,
         moveToStep: (step) => { currentStep = step; showStep(step); },
         updateNextButtonState,
-        handleImagePreview
+        imageUploadModule: null
     };
 
     // 초기화
@@ -113,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setupEventListeners();
         initializeDatePickers();
         initializeAutocomplete();
-        initializeImageUpload();
+        initializeImageUpload(); // 새로운 모듈 사용
         initializeMapSearch();
         initializeFormSubmit();
         initDuplicateChecker();
@@ -147,11 +145,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const isLastStep = index === totalSteps - 1;
 
         if (isFirstStep) {
-            // Step 0: 모든 버튼 숨김
             prevBtn?.classList.add("hidden");
             nextBtn?.classList.add("hidden");
         } else {
-            // Step 1 이상: 버튼들 표시
             prevBtn?.classList.remove("hidden");
             nextBtn?.classList.remove("hidden");
             
@@ -162,9 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function moveStep(direction) {
         if (direction === -1) {
-            // 이전 버튼 처리
             if (currentStep === 1) {
-                // Step 1에서 Step 0로: 중복 확인 단계로 돌아가기
                 FormUtils.showToast('중복 확인 단계로 돌아갑니다.', 'info');
                 resetDuplicateCheck();
                 showStep(0);
@@ -176,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (direction === 1) {
-            // Step 0에서 Step 1로: 중복 확인 필요
             if (currentStep === 0) {
                 if (!duplicateChecked || isDuplicate) {
                     FormUtils.showToast(isDuplicate ? 
@@ -187,15 +180,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 setupStep1Preview();
             }
 
-            // 현재 단계 검증
             if (!validateCurrentStep()) return;
 
-            // Step 2로 들어갈 때 데이터 복사
             if (currentStep + direction === 2) {
                 copyDataToForm();
             }
 
-            // 마지막 단계에서 제출
             if (currentStep === totalSteps - 1) {
                 showSubmitConfirmModal();
                 return;
@@ -219,10 +209,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // 이미지 검증
+        // 이미지 검증 (Step 6)
         if (rules.includes('images')) {
-            const imageInput = document.getElementById('images');
-            if (!imageInput?.files?.length) {
+            if (!imageUploadModule || imageUploadModule.getFileCount() === 0) {
                 FormUtils.showToast('최소 1개의 이미지를 업로드해주세요.', 'warning');
                 return false;
             }
@@ -260,18 +249,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         stepValidationRules[stepIndex]?.forEach(fieldId => {
             const element = document.getElementById(fieldId);
-            if (element) {
+            if (element && fieldId !== 'images') { // 이미지는 별도 처리
                 element.addEventListener('input', updateNextButtonState);
                 element.addEventListener('change', updateNextButtonState);
             }
         });
 
-        // 특별 처리
         if (stepIndex === 2) {
             document.getElementById('place-search')?.addEventListener('input', updateNextButtonState);
-        }
-        if (stepIndex === 6) {
-            document.getElementById('images')?.addEventListener('change', updateNextButtonState);
         }
     }
 
@@ -287,9 +272,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = FormUtils.validateRequired(normalFields, false).valid;
             }
 
+            // 이미지 검증
             if (rules.includes('images')) {
-                const imageInput = document.getElementById('images');
-                isValid = isValid && imageInput?.files?.length > 0;
+                isValid = isValid && imageUploadModule && imageUploadModule.getFileCount() > 0;
             }
         }
         
@@ -344,28 +329,21 @@ document.addEventListener('DOMContentLoaded', function() {
         FormUtils.setValue('cafe_name', FormUtils.getValue('check_cafe_name'));
     }
 
-    // 중복 확인 상태 초기화 (Step 1에서 Step 0로 돌아갈 때)
     function resetDuplicateCheck() {
         console.log('🔄 중복 확인 상태 초기화');
         
-        // 상태 변수 초기화
         duplicateChecked = false;
         isDuplicate = false;
         window.ddoksangApp.duplicateChecked = false;
         window.ddoksangApp.isDuplicate = false;
         
-        // UI 초기화
         const duplicateForm = document.getElementById('duplicate-check-form');
         const duplicateSection = document.getElementById('duplicate-cafes-section');
         const successMsg = document.getElementById('duplicate-success');
         const warningMsg = document.getElementById('duplicate-warning');
         
-        // 중복 확인 폼 다시 보이기
-        if (duplicateForm) {
-            duplicateForm.style.display = 'block';
-        }
+        if (duplicateForm) duplicateForm.style.display = 'block';
         
-        // 제목, 설명, 프로그레스바 다시 보이기
         const section = document.querySelector('section.max-w-4xl');
         if (section) {
             const title = section.querySelector('h1');
@@ -377,29 +355,49 @@ document.addEventListener('DOMContentLoaded', function() {
             if (progressBar) progressBar.style.display = 'block';
         }
         
-        // 중복 결과 섹션들 숨기기
-        if (duplicateSection) {
-            duplicateSection.classList.add('hidden');
-        }
-        if (successMsg) {
-            successMsg.classList.add('hidden');
-        }
-        if (warningMsg) {
-            warningMsg.classList.add('hidden');
-        }
+        if (duplicateSection) duplicateSection.classList.add('hidden');
+        if (successMsg) successMsg.classList.add('hidden');
+        if (warningMsg) warningMsg.classList.add('hidden');
         
-        // 선택된 중복 카페 ID 초기화
         FormUtils.setValue('selected_duplicate_cafe_id', '');
         
-        // 중복 확인 버튼 상태 업데이트
         if (window.checkDuplicateBtnState) {
             window.checkDuplicateBtnState();
         }
-        
-        console.log('✅ 중복 확인 상태 초기화 완료');
     }
 
-    // === 중복 확인 로직 ===
+    // === 새로운 이미지 업로드 초기화 ===
+    function initializeImageUpload() {
+        try {
+            // 새로운 이미지 업로드 모듈 사용
+            imageUploadModule = setupDdoksangImageUpload({
+                fileInputId: "image-upload",
+                fileCountId: "file-count",
+                previewContainerId: "image-preview-container", 
+                previewListId: "image-preview-list",
+                formId: "multiStepForm",
+                maxFiles: 10,
+                maxSizeMB: 5
+            });
+            
+            // 전역 앱 객체에 모듈 인스턴스 저장
+            window.ddoksangApp.imageUploadModule = imageUploadModule;
+            
+            console.log('✅ 이미지 업로드 모듈 초기화 완료');
+        } catch (error) {
+            console.error('❌ 이미지 업로드 모듈 초기화 실패:', error);
+            
+            // 폴백: 기본 이미지 업로드 처리
+            const imageInput = document.getElementById("image-upload");
+            if (imageInput) {
+                imageInput.addEventListener("change", function() {
+                    updateNextButtonState();
+                });
+            }
+        }
+    }
+
+    // === 기타 초기화 함수들 (중복 확인, 날짜, 자동완성, 지도, 폼) ===
     function initDuplicateChecker() {
         const checkBtn = document.getElementById('check-duplicate-btn');
         if (!checkBtn) return;
@@ -436,7 +434,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // 로딩 상태
         checkBtn.disabled = true;
         checkBtn.textContent = '확인 중...';
 
@@ -487,7 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('duplicate-check-form');
         if (form) form.style.display = 'none';
         
-        // 제목, 설명, 프로그레스바도 숨기기
         const section = document.querySelector('section.max-w-4xl');
         if (section) {
             const title = section.querySelector('h1');
@@ -636,7 +632,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // === 기타 초기화 함수들 ===
     function initializeDatePickers() {
         if (typeof flatpickr === 'undefined') return;
 
@@ -721,36 +716,6 @@ document.addEventListener('DOMContentLoaded', function() {
         FormUtils.toggleClass('final-artist-member-results', 'hidden', true);
         FormUtils.toggleClass('final-selected-artist', 'hidden', false);
         FormUtils.updateButtonState('confirm-new-artist-btn', true);
-    }
-
-    function initializeImageUpload() {
-        const imageInput = document.getElementById("images");
-        const uploadArea = document.querySelector('label[for="images"]')?.parentElement;
-        
-        if (!imageInput || !uploadArea) return;
-
-        ImageUtils.setupDragAndDrop(uploadArea.id || 'image-upload-area', 'images');
-        imageInput.addEventListener("change", handleImagePreview);
-    }
-
-    async function handleImagePreview() {
-        const input = document.getElementById("images");
-        const preview = document.getElementById("image-preview");
-        if (!input || !preview) return;
-        
-        preview.innerHTML = "";
-
-        const validation = FormUtils.validateImageFiles(Array.from(input.files));
-        if (!validation.valid) {
-            FormUtils.showToast(validation.message, 'warning');
-            input.value = "";
-            return;
-        }
-
-        for (let i = 0; i < input.files.length; i++) {
-            const previewElement = await ImageUtils.createPreview(input.files[i], i, i === 0);
-            preview.appendChild(previewElement);
-        }
     }
 
     function initializeMapSearch() {
@@ -875,7 +840,6 @@ document.addEventListener('DOMContentLoaded', function() {
             opacity: 1;
         }
         
-        /* 카드 컨테이너 중앙 정렬 강화 */
         #duplicate-cafes-grid {
             display: flex;
             flex-direction: column;

@@ -285,7 +285,6 @@ class DdoksangModals {
      * 모달 초기화
      */
     static init() {
-        console.log('📱 모달 시스템 초기화');
         
         // ESC 키로 모달 닫기
         document.addEventListener('keydown', (e) => {
