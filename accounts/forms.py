@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, MannerReview
+from .models import User, MannerReview, BankProfile, AddressProfile
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -284,7 +284,7 @@ class BankAccountForm(forms.ModelForm):
     )
     
     class Meta:
-        model = User
+        model = BankProfile
         fields = ['bank_code', 'account_number', 'account_holder']
     
     def clean_account_number(self):
@@ -335,3 +335,123 @@ class BankAccountForm(forms.ModelForm):
             raise forms.ValidationError("모든 필드를 입력해주세요.")
         
         return cleaned_data
+    
+    def save(self, user):
+        """사용자와 연결해서 저장"""
+        bank_profile = user.get_or_create_bank_profile()
+        bank_profile.bank_code = self.cleaned_data['bank_code']
+        bank_profile.bank_name = dict(self.BANK_CHOICES)[self.cleaned_data['bank_code']]
+        bank_profile.account_number = self.cleaned_data['account_number']
+        bank_profile.account_holder = self.cleaned_data['account_holder']
+        bank_profile.save()
+        return bank_profile
+
+class AddressForm(forms.ModelForm):
+    postal_code = forms.CharField(
+        max_length=10,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '우편번호',
+            'readonly': True  # 검색으로만 입력 가능
+        }),
+        label="우편번호"
+    )
+    
+    jibun_address = forms.CharField(
+        max_length=200,
+        required=False,  # 선택사항
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '지번주소',
+            'readonly': True  # 검색으로만 입력 가능
+        }),
+        label="지번주소"
+    )
+    
+    road_address = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '도로명주소',
+            'readonly': True  # 검색으로만 입력 가능
+        }),
+        label="도로명주소"
+    )
+    
+    detail_address = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '상세주소를 입력하세요 (동, 호수 등)',
+        }),
+        label="상세주소"
+    )
+    
+    building_name = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'readonly': True  # 검색으로만 입력 가능
+        }),
+        label="건물명"
+    )
+    
+    sido = forms.CharField(
+        max_length=20,
+        widget=forms.HiddenInput()
+    )
+    
+    sigungu = forms.CharField(
+        max_length=50,
+        widget=forms.HiddenInput()
+    )
+    
+    class Meta:
+        model = AddressProfile
+        fields = ['postal_code', 'jibun_address', 'road_address', 'detail_address', 'building_name', 'sido', 'sigungu']
+    
+    def clean_postal_code(self):
+        postal_code = self.cleaned_data.get('postal_code')
+        if not postal_code:
+            raise forms.ValidationError("우편번호를 입력해주세요.")
+        return postal_code
+    
+    def clean_road_address(self):
+        road_address = self.cleaned_data.get('road_address')
+        if not road_address:
+            raise forms.ValidationError("도로명주소를 입력해주세요.")
+        return road_address
+    
+    def clean_detail_address(self):
+        detail_address = self.cleaned_data.get('detail_address', '')
+        if detail_address:
+            detail_address = detail_address.strip()
+            if len(detail_address) > 200:
+                raise forms.ValidationError("상세주소는 최대 200자까지 입력 가능합니다.")
+        return detail_address
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        postal_code = cleaned_data.get('postal_code')
+        road_address = cleaned_data.get('road_address')
+        
+        # 기본 주소 정보가 모두 입력되었는지 확인
+        if not postal_code or not road_address:
+            raise forms.ValidationError("주소 검색을 통해 기본 주소 정보를 입력해주세요.")
+        
+        return cleaned_data
+    
+    def save(self, user):
+        """사용자와 연결해서 저장"""
+        address_profile = user.get_or_create_address_profile()
+        address_profile.postal_code = self.cleaned_data['postal_code']
+        address_profile.jibun_address = self.cleaned_data.get('jibun_address', '')
+        address_profile.road_address = self.cleaned_data['road_address']
+        address_profile.detail_address = self.cleaned_data.get('detail_address', '')
+        address_profile.building_name = self.cleaned_data.get('building_name', '')
+        address_profile.sido = self.cleaned_data['sido']
+        address_profile.sigungu = self.cleaned_data['sigungu']
+        address_profile.save()
+        return address_profile

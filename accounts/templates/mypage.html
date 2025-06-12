@@ -64,11 +64,11 @@
               </div>
 
               <!-- 팬덤 인증 상태 -->
-              {% if user_profile.is_verified_fandom %}
+              {% if fandom_profile and fandom_profile.is_verified_fandom %}
                 <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold border-2 border-green-200 shadow-sm">
-                  <span class="mr-2">🎖</span> {{ user_profile.fandom_artist.fandom }} 공식 팬
+                  <span class="mr-2">🎖</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
                 </div>
-              {% elif user_profile.is_pending_verification %}
+              {% elif fandom_profile.is_pending_verification %}
                 <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 font-medium border-2 border-yellow-200 shadow-sm">
                   <span class="mr-2">⏳</span> 팬덤 인증 확인 중 (3일 소요)
                 </div>
@@ -453,14 +453,14 @@
       </div>
     </div>
 
-    <!-- 🎨 계좌정보 섹션 -->
+<!-- 🎨 계좌정보 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h3 class="text-2xl font-bold mb-8 text-gray-800 flex items-center">
           <span class="mr-3">💳</span> 계좌정보
         </h3>
         
-        {% if user_profile.is_account_verified %}
+        {% if bank_profile %}
           <!-- ✅ 등록된 계좌 정보 표시 -->
           <div class="space-y-6">
             <!-- 계좌 상태 -->
@@ -470,12 +470,12 @@
                   <span class="text-green-600 text-xl">✅</span>
                 </div>
                 <div>
-                  <h4 class="font-bold text-green-800">계좌 인증 완료</h4>
-                  <p class="text-green-600 text-sm">안전한 거래가 가능합니다</p>
+                  <h4 class="font-bold text-green-800">계좌 등록 완료</h4>
+                  <p class="text-green-600 text-sm">거래에서 계좌 정보를 공유할 수 있습니다</p>
                 </div>
               </div>
               <span class="px-4 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
-                인증완료
+                등록완료
               </span>
             </div>
             
@@ -483,31 +483,25 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                 <h5 class="font-semibold text-gray-700 mb-2">은행명</h5>
-                <p class="text-xl font-bold text-gray-800">{{ user_profile.bank_name }}</p>
+                <p class="text-xl font-bold text-gray-800">{{ bank_profile.bank_name }}</p>
               </div>
               
               <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                 <h5 class="font-semibold text-gray-700 mb-2">계좌번호</h5>
                 <p class="text-xl font-bold text-gray-800 font-mono">
-                  {% if user_profile.account_number|length > 4 %}
-                    ****{{ user_profile.account_number|slice:"-4:" }}
-                  {% else %}
-                    ****
-                  {% endif %}
+                  {{ bank_profile.get_masked_account_number }}
                 </p>
               </div>
               
               <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                 <h5 class="font-semibold text-gray-700 mb-2">예금주</h5>
-                <p class="text-xl font-bold text-gray-800">{{ user_profile.account_holder }}</p>
+                <p class="text-xl font-bold text-gray-800">{{ bank_profile.account_holder }}</p>
               </div>
               
               <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
                 <h5 class="font-semibold text-gray-700 mb-2">등록일</h5>
                 <p class="text-xl font-bold text-gray-800">
-                  {% if user_profile.account_registered_at %}
-                    {{ user_profile.account_registered_at|date:"Y.m.d" }}
-                  {% endif %}
+                  {{ bank_profile.created_at|date:"Y.m.d" }}
                 </p>
               </div>
             </div>
@@ -533,7 +527,7 @@
             </div>
             <h4 class="text-xl font-bold text-gray-800 mb-3">계좌가 등록되지 않았습니다</h4>
             <p class="text-gray-600 mb-6 leading-relaxed">
-              안전한 거래를 위해 본인 명의의 계좌를 등록해주세요.<br>
+              거래 시 계좌 정보를 공유하기 위해 계좌를 등록해주세요.<br>
               계좌 정보는 암호화되어 안전하게 보관됩니다.
             </p>
             
@@ -546,7 +540,7 @@
                   <ul class="text-sm text-blue-700 space-y-1">
                     <li class="flex items-center space-x-2">
                       <span class="text-blue-500">•</span>
-                      <span>신뢰할 수 있는 거래 파트너로 인식</span>
+                      <span>채팅에서 계좌 정보 간편 공유</span>
                     </li>
                     <li class="flex items-center space-x-2">
                       <span class="text-blue-500">•</span>
@@ -561,9 +555,124 @@
               </div>
             </div>
             
-            <a href="{% url 'accounts:account_verification' user_profile.username %}"
+            <a href="{% url 'accounts:account_registration' user_profile.username %}"
                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
               <span class="mr-3">💳</span> 계좌 등록하기
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 🎨 주소정보 섹션 (계좌정보 섹션 다음에 추가) -->
+    <div class="mb-12">
+      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        <h3 class="text-2xl font-bold mb-8 text-gray-800 flex items-center">
+          <span class="mr-3">🏠</span> 주소정보
+        </h3>
+        
+        {% if address_profile %}
+          <!-- ✅ 등록된 주소 정보 표시 -->
+          <div class="space-y-6">
+            <!-- 주소 상태 -->
+            <div class="flex items-center justify-between p-6 bg-green-50 rounded-2xl border border-green-200">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <span class="text-green-600 text-xl">✅</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-green-800">주소 등록 완료</h4>
+                  <p class="text-green-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
+                </div>
+              </div>
+              <span class="px-4 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
+                등록완료
+              </span>
+            </div>
+            
+            <!-- 주소 정보 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                <h5 class="font-semibold text-gray-700 mb-2">우편번호</h5>
+                <p class="text-xl font-bold text-gray-800">{{ address_profile.postal_code }}</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                <h5 class="font-semibold text-gray-700 mb-2">지역</h5>
+                <p class="text-xl font-bold text-gray-800">{{ address_profile.sido }} {{ address_profile.sigungu }}</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200 md:col-span-2">
+                <h5 class="font-semibold text-gray-700 mb-2">기본 주소</h5>
+                <p class="text-lg font-bold text-gray-800 break-all">
+                  {{ address_profile.get_masked_address }}
+                </p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+                <h5 class="font-semibold text-gray-700 mb-2">등록일</h5>
+                <p class="text-xl font-bold text-gray-800">
+                  {{ address_profile.created_at|date:"Y.m.d" }}
+                </p>
+              </div>
+            </div>
+            
+            <!-- 관리 버튼들 -->
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
+              <a href="{% url 'accounts:address_modify' user_profile.username %}"
+                class="flex-1 flex items-center justify-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors">
+                <span class="mr-2">✏️</span> 주소정보 수정
+              </a>
+              <a href="{% url 'accounts:address_delete' user_profile.username %}"
+                class="flex-1 flex items-center justify-center px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
+                <span class="mr-2">🗑️</span> 주소정보 삭제
+              </a>
+            </div>
+          </div>
+          
+        {% else %}
+          <!-- ❌ 미등록 상태 -->
+          <div class="text-center py-12">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span class="text-4xl text-gray-400">🏠</span>
+            </div>
+            <h4 class="text-xl font-bold text-gray-800 mb-3">주소가 등록되지 않았습니다</h4>
+            <p class="text-gray-600 mb-6 leading-relaxed">
+              거래 시 배송 주소를 공유하기 위해 주소를 등록해주세요.<br>
+              주소 정보는 암호화되어 안전하게 보관됩니다.
+            </p>
+            
+            <!-- 등록 안내 -->
+            <div class="bg-green-50 rounded-2xl p-6 mb-6 border border-green-200">
+              <div class="flex items-start space-x-3">
+                <div class="text-2xl">💡</div>
+                <div class="text-left">
+                  <h5 class="font-bold text-green-800 mb-2">주소 등록 혜택</h5>
+                  <ul class="text-sm text-green-700 space-y-1">
+                    <li class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>채팅에서 배송 주소 간편 공유</span>
+                    </li>
+                    <li class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>빠르고 안전한 거래 진행 가능</span>
+                    </li>
+                    <li class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>거래 상대방의 신뢰도 증가</span>
+                    </li>
+                    <li class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>마스킹된 주소로 개인정보 보호</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <a href="{% url 'accounts:address_registration' user_profile.username %}"
+              class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-bold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
+              <span class="mr-3">🏠</span> 주소 등록하기
             </a>
           </div>
         {% endif %}

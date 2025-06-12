@@ -37,7 +37,7 @@ class BdayCafeImageForm(forms.ModelForm):
         model = BdayCafeImage
         fields = ['image', 'image_type', 'caption', 'order', 'is_main']
         widgets = {
-            'caption': forms.TextInput(attrs={'placeholder': '이미지 설명 (선택사항)'}),
+            'caption': forms.TextInput(attrs={'placeholder': '이미지 설명'}),
             'order': forms.NumberInput(attrs={'min': 0}),
         }
 

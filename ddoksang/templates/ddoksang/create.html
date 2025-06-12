@@ -206,28 +206,82 @@
       <p class="text-xs text-gray-500 mb-4">예: @oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
     </div>
 
-    <!-- STEP 6: 이미지 업로드 -->
+
+<!-- Step 6: 이미지 업로드 (개선된 UI) -->
     <div id="step-6" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">이미지 업로드 (선택사항)</h2>
-      
-      <label class="block text-sm font-medium mb-4">생일카페 이미지</label>
-      
-      <div id="image-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-        <input type="file" name="images" id="images" multiple accept="image/*" class="hidden">
-        <label for="images" class="cursor-pointer">
-          <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div class="mt-4">
-            <p class="text-sm text-gray-600">
-              <span class="font-medium text-gray-900 hover:text-gray-700">클릭하여 이미지 선택</span> 또는 드래그하여 업로드
-            </p>
-            <p class="text-xs text-gray-500">PNG, JPG, JPEG 파일만 업로드 가능 (최대 5개, 각 5MB 이하)</p>
-          </div>
-        </label>
+      <div class="text-center mb-8">
+        <h2 class="text-lg font-semibold mb-4">이미지 업로드</h2>
+        <p class="text-sm text-gray-600">생일카페 이미지를 업로드해주세요</p>
       </div>
 
-      <div id="image-preview" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4"></div>
+      <!-- 이미지 업로드 섹션 -->
+      <div class="max-w-md mx-auto">
+        <!-- 숨겨진 파일 input -->
+        <input type="file" id="image-upload" name="images" multiple accept="image/*" class="hidden">
+
+        <!-- 커스텀 버튼 (가운데 정렬) -->
+        <div class="text-center mb-4">
+          <label for="image-upload"
+                class="inline-block cursor-pointer px-6 py-3 text-sm text-white bg-black rounded-lg shadow hover:bg-gray-800 transition font-medium">
+            이미지 선택
+          </label>
+        </div>
+
+        <!-- 선택된 파일 개수 표시 (가운데 정렬) -->
+        <div class="text-center mb-6">
+          <span id="file-count" class="text-sm text-gray-500">선택된 파일 없음</span>
+        </div>
+
+        <!-- 이미지 미리보기 -->
+        <div id="image-preview-container" class="hidden">
+          <div class="mb-4">
+            <h3 class="text-sm font-medium text-gray-700 mb-3 text-center">미리보기</h3>
+            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4" id="image-preview-list"></div>
+          </div>
+        </div>
+
+        <!-- 업로드 안내 (가운데 정렬) -->
+        <div class="text-xs text-gray-500 text-center">
+          <div class="bg-gray-50 rounded-lg p-4">
+            <ul class="space-y-1">
+              <li>• 첫 번째 이미지가 대표 이미지로 설정됩니다</li>
+              <li>• JPG, PNG, GIF 형식만 업로드 가능합니다</li>
+              <li>• 파일당 최대 5MB까지 업로드할 수 있습니다</li>
+              <li>• 최대 10장까지 업로드할 수 있습니다</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 드래그 앤 드롭 스타일 -->
+      <style>
+        /* 드래그 중인 요소 */
+        .sortable-ghost {
+          opacity: 0.5;
+        }
+        
+        /* 드래그 대상 위치 */
+        .sortable-chosen {
+          transform: scale(1.05);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 드래그 애니메이션 */
+        .sortable-drag {
+          opacity: 0.8;
+          transform: rotate(5deg);
+        }
+        
+        /* 드래그 핸들 호버 효과 */
+        #image-preview-list .relative:hover [data-drag-handle] {
+          opacity: 1;
+        }
+        
+        #image-preview-list [data-drag-handle] {
+          opacity: 0.7;
+          transition: opacity 0.2s;
+        }
+      </style>
     </div>
 
     <!-- 네비게이션 버튼 -->
@@ -235,6 +289,7 @@
       <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors hidden">이전</button>
       <button type="button" id="nextBtn" class="px-6 py-2 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed hidden">다음</button>
     </div>
+
   </form>
 </section>
 
@@ -297,44 +352,122 @@
   }
 </style>
 
-<!-- Scripts - 모듈화된 구조에 맞는 로드 순서 -->
+<!-- Scripts - 순서 중요 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <!-- 유틸리티 모듈들 먼저 로드 -->
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
-<script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
-<script src="{% static 'js/autocomplete.js' %}"></script>
-
-<!-- 메인 create 스크립트 마지막에 로드 -->
+<script src="{% static 'js/ddoksang_image_upload.js' %}"></script>
 <script src="{% static 'js/ddoksang_create.js' %}"></script>
+
+<!-- 자동완성 스크립트를 일반 script로 로드 -->
+<script src="{% static 'js/autocomplete.js' %}"></script>
 
 <!-- 중복 확인용 날짜 선택기 초기화 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎯 추가 스크립트 초기화');
   
-  // 중복 확인 단계의 날짜 선택기 초기화
+  // 날짜 선택기 초기화
   if (typeof flatpickr !== 'undefined') {
     flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
     flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
-    console.log('📅 중복 확인용 날짜 선택기 초기화 완료');
+    console.log('📅 날짜 선택기 초기화 완료');
   }
-  
-  // 디버깅용 전역 함수
-  window.debugDdoksang = function() {
-    console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
-    console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
-    console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
-    console.log('DdoksangImageUtils:', !!window.DdoksangImageUtils);
-    console.log('ddoksangApp:', window.ddoksangApp);
-    console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
-    console.log('=======================================');
-  };
+
+  //  자동완성 즉시 초기화 (중복 확인 단계용)
+  if (typeof initAutocomplete === 'function') {
+    console.log(' 자동완성 초기화 시작...');
+    
+    // 중복 확인 단계 자동완성
+    initAutocomplete('artist-member-search', 'artist-member-results', {
+      showBirthday: true,
+      showArtistTag: true,
+      submitOnSelect: false,
+      artistOnly: false,
+      apiUrl: '/artist/autocomplete/',
+      onSelect: function(result) {
+        console.log(' 아티스트 선택:', result);
+        selectArtistForDuplicateCheck(result);
+      }
+    });
+    
+    console.log(' 자동완성 초기화 완료');
+  } else {
+    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다!');
+  }
+
+  // 아티스트 선택 함수
+  function selectArtistForDuplicateCheck(result) {
+    const FormUtils = window.DdoksangFormUtils;
+    if (!FormUtils) {
+      console.error('DdoksangFormUtils를 찾을 수 없습니다');
+      return;
+    }
+
+    // 데이터 정규화
+    const data = FormUtils.normalizeArtistData({
+      member_name: result.name,
+      artist_display: result.artist || result.artist_name,
+      artist_id: result.artist_id,
+      member_id: result.id || result.member_id
+    });
+
+    // 폼 필드 업데이트
+    FormUtils.setValue('check_artist_id', data.artistId);
+    FormUtils.setValue('check_member_id', data.memberId);
+    FormUtils.setValue('artist-member-search', data.displayText);
+    FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
+    
+    // UI 업데이트
+    FormUtils.toggleClass('artist-member-results', 'hidden', true);
+    FormUtils.toggleClass('selected-artist', 'hidden', false);
+    
+    // 중복 확인 버튼 상태 업데이트
+    if (window.checkDuplicateBtnState) {
+      window.checkDuplicateBtnState();
+    }
+    
+    console.log('폼 데이터 업데이트 완료:', data);
+  }
+
+  // 전역 함수로 설정 (다른 스크립트에서 사용할 수 있도록)
+  window.selectArtistForDuplicateCheck = selectArtistForDuplicateCheck;
 });
 </script>
 
+<!-- 디버깅용 전역 함수 -->
+<script>
+window.debugDdoksang = function() {
+  console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
+  console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
+  console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
+  console.log('setupDdoksangImageUpload:', !!window.setupDdoksangImageUpload);
+  console.log('initAutocomplete:', !!window.initAutocomplete);
+  console.log('ddoksangApp:', window.ddoksangApp);
+  console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
+  console.log('selectArtistForDuplicateCheck:', typeof window.selectArtistForDuplicateCheck);
+  console.log('=======================================');
+};
 
-
+// 자동완성 재초기화 함수
+window.restartAutocomplete = function() {
+  if (typeof initAutocomplete === 'function') {
+    console.log(' 자동완성 재초기화...');
+    initAutocomplete('artist-member-search', 'artist-member-results', {
+      showBirthday: true,
+      showArtistTag: true,
+      submitOnSelect: false,
+      artistOnly: false,
+      apiUrl: '/artist/autocomplete/',
+      onSelect: window.selectArtistForDuplicateCheck
+    });
+    console.log('✅ 재초기화 완료');
+  } else {
+    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
+  }
+};
+</script>
 
 {% endblock %}

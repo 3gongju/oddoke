@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+    
+    <!-- 🎨 헤더 -->
+    <div class="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-gray-100">
+      <div class="text-center">
+        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="text-3xl text-white">💳</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">
+          {% if is_modify %}계좌정보 수정{% else %}계좌 등록{% endif %}
+        </h1>
+        <p class="text-gray-600">
+          {% if is_modify %}
+            기존 계좌정보를 새로운 정보로 변경합니다.
+          {% else %}
+            안전한 거래를 위해 본인 명의의 계좌를 등록해주세요.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <!-- 🎨 계좌 등록 폼 -->
+    <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+      
+      <!-- ✅ 계좌 등록 폼 -->
+      <form method="POST" id="accountForm" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- 🏦 은행 선택 -->
+        <div class="space-y-2">
+          <label for="{{ form.bank_code.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+            {{ form.bank_code.label }} <span class="text-red-500">*</span>
+          </label>
+          {{ form.bank_code }}
+          {% if form.bank_code.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.bank_code.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <p class="text-xs text-gray-500">거래하실 은행을 선택해주세요.</p>
+        </div>
+
+        <!-- 💳 계좌번호 -->
+        <div class="space-y-2">
+          <label for="{{ form.account_number.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+            {{ form.account_number.label }} <span class="text-red-500">*</span>
+          </label>
+          {{ form.account_number }}
+          {% if form.account_number.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.account_number.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <p class="text-xs text-gray-500">하이픈(-) 없이 숫자만 입력해주세요. (예: 1234567890)</p>
+        </div>
+
+        <!-- 👤 예금주명 -->
+        <div class="space-y-2">
+          <label for="{{ form.account_holder.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+            {{ form.account_holder.label }} <span class="text-red-500">*</span>
+          </label>
+          {{ form.account_holder }}
+          {% if form.account_holder.errors %}
+            <div class="text-red-500 text-sm mt-1">
+              {% for error in form.account_holder.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <p class="text-xs text-gray-500">통장에 기재된 예금주명을 정확히 입력해주세요.</p>
+        </div>
+
+        <!-- ⚠️ 보안 안내 -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
+          <div class="flex items-start space-x-3">
+            <div class="text-2xl">🔒</div>
+            <div>
+              <h4 class="font-bold text-yellow-800 mb-2">보안 안내사항</h4>
+              <ul class="text-sm text-yellow-700 space-y-1 leading-relaxed">
+                <li class="flex items-start space-x-2">
+                  <span class="text-yellow-500 mt-1">•</span>
+                  <span>본인 명의의 계좌만 등록 가능합니다</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <span class="text-yellow-500 mt-1">•</span>
+                  <span>계좌정보는 암호화되어 안전하게 저장됩니다</span>
+                </li>
+                <!-- <li class="flex items-start space-x-2">
+                  <span class="text-yellow-500 mt-1">•</span>
+                  <span>거래 완료 후 계좌정보는 언제든 삭제할 수 있습니다</span>
+                </li>
+                <li class="flex items-start space-x-2">
+                  <span class="text-yellow-500 mt-1">•</span>
+                  <span>계좌 정보는 거래 상대방에게 공개되지 않습니다</span>
+                </li> -->
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 📝 폼 에러 메시지 -->
+        {% if form.non_field_errors %}
+          <div class="bg-red-50 border border-red-200 rounded-2xl p-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-red-500 text-lg">⚠️</span>
+              <div>
+                {% for error in form.non_field_errors %}
+                  <p class="text-red-700 font-medium">{{ error }}</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- 🔘 버튼 그룹 -->
+        <div class="flex space-x-4 pt-6">
+          <a href="{% url 'accounts:mypage' %}" 
+             class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-2xl transition-all duration-200 text-center">
+            <span class="mr-2">←</span> 취소
+          </a>
+          <button type="submit" id="submitBtn"
+                  class="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
+            <span class="mr-2">💳</span>
+            {% if is_modify %}계좌정보 수정{% else %}계좌 등록{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 🎨 지원 은행 목록 -->
+    <div class="bg-white rounded-3xl shadow-xl p-8 mt-8 border border-gray-100">
+      <h3 class="text-xl font-bold text-gray-800 mb-6">🏦 지원하는 은행</h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">KB국민은행</p>
+          <p class="text-xs text-gray-500 mt-1">(004)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">신한은행</p>
+          <p class="text-xs text-gray-500 mt-1">(088)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">우리은행</p>
+          <p class="text-xs text-gray-500 mt-1">(020)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">IBK기업은행</p>
+          <p class="text-xs text-gray-500 mt-1">(003)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">NH농협은행</p>
+          <p class="text-xs text-gray-500 mt-1">(011)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">KEB하나은행</p>
+          <p class="text-xs text-gray-500 mt-1">(081)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">카카오뱅크</p>
+          <p class="text-xs text-gray-500 mt-1">(090)</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-200 hover:shadow-md transition-shadow">
+          <p class="text-sm font-semibold text-gray-800">토스뱅크</p>
+          <p class="text-xs text-gray-500 mt-1">(092)</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 mt-4 text-center">
+        총 23개 은행을 지원합니다
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- 📱 JavaScript -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('accountForm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // 계좌번호 입력 시 숫자만 허용
+    const accountNumberInput = document.getElementById('{{ form.account_number.id_for_label }}');
+    if (accountNumberInput) {
+      accountNumberInput.addEventListener('input', function(e) {
+        // 숫자가 아닌 문자 제거
+        this.value = this.value.replace(/[^0-9]/g, '');
+      });
+    }
+    
+    // 예금주명 입력 시 한글/영문만 허용
+    const accountHolderInput = document.getElementById('{{ form.account_holder.id_for_label }}');
+    if (accountHolderInput) {
+      accountHolderInput.addEventListener('input', function(e) {
+        // 한글, 영문, 공백만 허용
+        this.value = this.value.replace(/[^가-힣a-zA-Z\s]/g, '');
+      });
+    }
+
+    // 폼 제출 시 간단한 검증
+    form.addEventListener('submit', function(e) {
+      const bankCode = document.getElementById('{{ form.bank_code.id_for_label }}').value;
+      const accountNumber = document.getElementById('{{ form.account_number.id_for_label }}').value;
+      const accountHolder = document.getElementById('{{ form.account_holder.id_for_label }}').value;
+      
+      if (!bankCode || !accountNumber || !accountHolder) {
+        e.preventDefault();
+        alert('모든 필드를 입력해주세요.');
+        return;
+      }
+      
+      // 계좌번호 숫자 검증
+      const cleanNumber = accountNumber.replace(/[^0-9]/g, '');
+      if (cleanNumber.length < 8) {
+        e.preventDefault();
+        alert('계좌번호를 확인해주세요. (최소 8자리)');
+        return;
+      }
+    });
+  });
+</script>
+
+{% endblock %}

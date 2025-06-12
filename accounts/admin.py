@@ -1,72 +1,99 @@
+# accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, MannerReview
+from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile
 from django.utils.html import format_html
 
 # Register your models here.
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    # ✅ 계좌정보 필드 추가
+    # ✅ User 모델에 실제 있는 필드들만 사용
     list_display = (
-        'username', 'email', 'is_verified_fandom',
-        'is_pending_verification', 'verification_failed',
-        'fandom_preview', 'bank_name', 'account_number', 'is_account_verified'
+        'username', 'email', 'is_active', 'date_joined',
+        'is_temp_username', 'social_signup_completed'
     )
     
-    # ✅ 계좌 관련 필터 추가
+    # ✅ User 모델의 실제 필드들로 필터 수정
     list_filter = (
-        'is_verified_fandom', 'is_pending_verification',
-        'verification_failed', 'fandom_artist', 'is_account_verified'
+        'is_active', 'is_staff', 'is_superuser', 
+        'is_temp_username', 'social_signup_completed', 'date_joined'
     )
     
-    # ✅ 계좌 관련 검색 필드 추가
-    search_fields = ('username', 'email', 'account_holder', 'account_number')
+    # ✅ User 모델의 실제 필드들로 검색 수정
+    search_fields = ('username', 'email', 'first_name', 'last_name')
     
     ordering = ('-date_joined',)
-    readonly_fields = ['fandom_card_preview']  # ✅ 보기 전용 필드 설정
 
-    # ✅ 계좌정보 섹션 추가
+    # ✅ User 모델의 실제 필드들로 fieldsets 수정
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('팬덤 인증 정보', {
+        ('소셜 로그인 정보', {
             'fields': (
-                'fandom_card',
-                'fandom_card_preview',
-                'fandom_artist',
-                'is_verified_fandom',
-                'is_pending_verification',
-                'verification_failed',
+                'is_temp_username',
+                'social_signup_completed', 
+                'is_profile_completed',
             ),
         }),
-        ('계좌 정보', {
+        ('프로필 정보', {
             'fields': (
-                'bank_code',
-                'bank_name', 
-                'account_number',
-                'account_holder',
-                'is_account_verified',
-                'account_registered_at',
+                'profile_image',
+                'bio',
             ),
-            'classes': ('collapse',),  # 접을 수 있도록 설정
         }),
     )
 
-    def fandom_preview(self, obj):
-        if obj.fandom_card:
-            return format_html('<img src="{}" width="50" />', obj.fandom_card.url)
-        return '없음'
-    fandom_preview.short_description = '팬덤 카드 썸네일'
+@admin.register(FandomProfile)
+class FandomProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'fandom_artist', 'is_verified_fandom', 
+        'is_pending_verification', 'verification_failed',
+        'verification_start_date', 'verification_end_date'
+    )
+    
+    list_filter = (
+        'is_verified_fandom', 'is_pending_verification', 
+        'verification_failed', 'fandom_artist'
+    )
+    
+    search_fields = ('user__username', 'user__email', 'fandom_artist__name')
+    
+    readonly_fields = ['fandom_card_preview', 'applied_at', 'verified_at', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('기본 정보', {
+            'fields': ('user', 'fandom_artist')
+        }),
+        ('인증 이미지', {
+            'fields': ('fandom_card', 'fandom_card_preview')
+        }),
+        ('인증 상태', {
+            'fields': (
+                'is_verified_fandom', 'is_pending_verification', 
+                'verification_failed'
+            )
+        }),
+        ('인증 기간', {
+            'fields': ('verification_start_date', 'verification_end_date')
+        }),
+        ('기록', {
+            'fields': ('applied_at', 'verified_at', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
     def fandom_card_preview(self, obj):
         if obj.fandom_card:
             return format_html('<img src="{}" width="250" />', obj.fandom_card.url)
         return '업로드된 카드 없음'
+    fandom_card_preview.short_description = '팬덤 카드 미리보기'
 
     @admin.action(description="✅ 공식 팬덤 인증 승인")
     def approve_fandom(self, request, queryset):
+        from django.utils import timezone
         updated = queryset.update(
             is_verified_fandom=True,
             is_pending_verification=False,
-            verification_failed=False
+            verification_failed=False,
+            verified_at=timezone.now()
         )
         self.message_user(request, f"{updated}명의 유저가 공식 팬덤으로 인증되었습니다.")
 
@@ -79,16 +106,102 @@ class UserAdmin(BaseUserAdmin):
         )
         self.message_user(request, f"{updated}명의 유저가 인증에서 제외되었습니다.")
 
-    # ✅ 계좌 관련 액션 추가
-    @admin.action(description="💳 계좌 인증 승인")
-    def approve_account(self, request, queryset):
-        updated = queryset.update(is_account_verified=True)
-        self.message_user(request, f"{updated}명의 유저 계좌가 인증되었습니다.")
+    actions = ['approve_fandom', 'reject_fandom']
 
-    @admin.action(description="❌ 계좌 인증 취소")
-    def revoke_account(self, request, queryset):
-        updated = queryset.update(is_account_verified=False)
-        self.message_user(request, f"{updated}명의 유저 계좌 인증이 취소되었습니다.")
+@admin.register(BankProfile)
+class BankProfileAdmin(admin.ModelAdmin):
+    # 🔥 BankProfile 모델에 실제 있는 필드들만 사용
+    list_display = (
+        'user', 'bank_name', 'masked_account_number', 
+        'account_holder', 'created_at'
+    )
+    
+    # 🔥 BankProfile 모델의 실제 필드들로 필터 수정
+    list_filter = ('bank_name', 'created_at', 'updated_at')
+    
+    search_fields = ('user__username', 'user__email', 'account_holder')
+    
+    # 🔥 BankProfile 모델의 실제 필드들로 readonly_fields 수정
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('사용자', {
+            'fields': ('user',)
+        }),
+        ('계좌 정보', {
+            'fields': ('bank_code', 'bank_name', 'account_holder')
+        }),
+        ('기록', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
-    # ✅ 액션 목록에 계좌 관련 액션 추가
-    actions = ['approve_fandom', 'reject_fandom', 'approve_account', 'revoke_account']
+    def masked_account_number(self, obj):
+        return obj.get_masked_account_number()
+    masked_account_number.short_description = '계좌번호'
+
+@admin.register(AddressProfile)
+class AddressProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'sido', 'sigungu', 'masked_address', 'created_at'
+    )
+    
+    list_filter = ('sido', 'sigungu', 'created_at')
+    
+    search_fields = ('user__username', 'user__email', 'sido', 'sigungu')
+    
+    readonly_fields = ['created_at', 'updated_at']
+    
+    fieldsets = (
+        ('사용자', {
+            'fields': ('user',)
+        }),
+        ('지역 정보', {
+            'fields': ('sido', 'sigungu')
+        }),
+        ('상세 주소', {
+            'fields': ('full_address_display',),
+            'description': '보안을 위해 상세 주소는 읽기 전용으로 표시됩니다.'
+        }),
+        ('기록', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def masked_address(self, obj):
+        return obj.get_masked_address()
+    masked_address.short_description = '주소'
+
+    def full_address_display(self, obj):
+        """관리자용 전체 주소 표시 (보안상 마스킹)"""
+        return obj.get_masked_address()
+    full_address_display.short_description = '전체 주소'
+
+@admin.register(MannerReview)
+class MannerReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'target_user', 'rating', 'deal_again', 'created_at'
+    )
+    
+    list_filter = ('rating', 'deal_again', 'created_at')
+    
+    search_fields = ('user__username', 'target_user__username')
+    
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('기본 정보', {
+            'fields': ('user', 'target_user', 'chatroom')
+        }),
+        ('평가 내용', {
+            'fields': (
+                'rating', 'description_match', 'response_speed', 
+                'politeness', 'deal_again'
+            )
+        }),
+        ('기록', {
+            'fields': ('created_at',)
+        }),
+    )
