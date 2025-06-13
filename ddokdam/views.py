@@ -88,9 +88,7 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    # ✅ 조회수 증가 로직 (접근할 때마다 무조건 증가)
     model.objects.filter(id=post_id).update(view_count=F('view_count') + 1)
-    # post 객체 새로고침하여 최신 view_count 반영
     post.refresh_from_db(fields=['view_count'])
 
     comment_qs = get_post_comments(post)
@@ -99,6 +97,7 @@ def post_detail(request, category, post_id):
     comment_form = DamCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokdam:comment_create', kwargs={'category': category, 'post_id': post_id})
+    is_owner = request.user == post.user
 
     context = {
         'post': post,
@@ -112,6 +111,7 @@ def post_detail(request, category, post_id):
         'app_name': 'ddokdam',
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokdam:comment_delete',
+        'is_owner': is_owner,
     }
 
     return render(request, 'ddokdam/detail.html', context)
@@ -125,9 +125,8 @@ def post_create(request):
     if request.method == 'POST':
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
-        selected_member_ids = list(map(int, request.POST.getlist('members')))
-        image_files = request.FILES.getlist('images')  # ✅ 여러 이미지 받기
-
+        selected_member_ids = list(set(map(int, request.POST.getlist('members'))))
+        image_files = request.FILES.getlist('images')
         form_class = get_post_form(category)
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
@@ -166,7 +165,7 @@ def post_create(request):
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
-    default_artist_id = int(selected_artist_id) if selected_artist_id else (
+    default_artist_id = int(request.GET.get('artist')) if request.GET.get('artist') else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )
 
