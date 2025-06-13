@@ -1,13 +1,14 @@
-// ddoksang_create.js - 최종 수정본
+// ddoksang_create.js - 이미지 업로드 코드 제거된 정리 버전
+// 🔧 이미지 업로드는 ddoksang_image_upload.js에서 전담 처리
 
-// 단계별 검증 규칙
+// 단계별 검증 규칙 (이미지 제외)
 const stepValidationRules = {
     1: ['final_artist_id'],
     2: ['cafe_name', 'address', 'latitude', 'longitude'],
     3: ['start_date', 'end_date'],
     4: ['event_description'],
     5: [], // 선택사항
-    6: ['images'] // 이미지 검증은 별도 처리
+    6: [] // 이미지는 별도 모듈에서 처리
 };
 
 // 전역 함수들 (HTML onclick 용)
@@ -71,7 +72,7 @@ window.clearFinalSelection = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ 의존성 확인을 DOMContentLoaded 안으로 이동
+    // ✅ 의존성 확인
     const { DdoksangFormUtils: FormUtils, DdoksangMapUtils: MapUtils } = window;
     if (!FormUtils || !MapUtils) {
         console.error('❌ 필수 유틸리티를 찾을 수 없습니다');
@@ -89,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentStep = 0;
     let duplicateChecked = false;
     let isDuplicate = false;
-    let imageUploadModule = null;
 
     // 전역 앱 객체
     window.ddoksangApp = {
@@ -97,8 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         duplicateChecked: false,
         isDuplicate: false,
         moveToStep: (step) => { currentStep = step; showStep(step); },
-        updateNextButtonState,
-        imageUploadModule: null
+        updateNextButtonState
     };
 
     // 초기화
@@ -108,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupEventListeners();
         initializeDatePickers();
         initializeAutocomplete();
-        initializeImageUpload();
         initializeMapSearch();
         initializeFormSubmit();
         initDuplicateChecker();
@@ -139,12 +137,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (index === 3) {
             setTimeout(() => {
                 updateDurationDisplay();
-                // 날짜 필드에 값이 있다면 flatpickr 다시 설정
                 const startDate = FormUtils.getValue('start_date');
                 const endDate = FormUtils.getValue('end_date');
                 if (startDate && endDate && window.DdoksangDateUtils) {
-                    // 날짜 선택기 재초기화 (값이 있는 상태에서)
                     console.log('✅ 기존 날짜 값으로 선택기 업데이트:', { startDate, endDate });
+                }
+            }, 100);
+        }
+
+        // 🔧 Step 6에서 이미지 업로드 모듈 상태 확인
+        if (index === 6) {
+            setTimeout(() => {
+                if (window.ddoksangImageUploader?.isInitialized) {
+                    console.log('✅ 이미지 업로드 모듈 사용 가능');
+                } else {
+                    console.warn('⚠️ 이미지 업로드 모듈이 초기화되지 않았습니다.');
+                    // 재초기화 시도
+                    if (window.initDdoksangImageUpload) {
+                        window.initDdoksangImageUpload();
+                    }
                 }
             }, 100);
         }
@@ -205,9 +216,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!validateCurrentStep()) return;
 
-            // ✅ Step 1에서 Step 2로 이동할 때는 데이터 복사하지 않음
-            // 데이터 복사는 handleDuplicateCheckResult에서 중복 없음 확인 시에만 처리
-
             if (currentStep === totalSteps - 1) {
                 showSubmitConfirmModal();
                 return;
@@ -221,9 +229,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const rules = stepValidationRules[currentStep];
         if (!rules) return true;
 
-        const normalFields = rules.filter(field => field !== 'images');
-        if (normalFields.length > 0) {
-            const validation = FormUtils.validateRequired(normalFields);
+        // 일반 필드 검증
+        if (rules.length > 0) {
+            const validation = FormUtils.validateRequired(rules);
             if (!validation.valid) {
                 const fieldLabel = getFieldLabel(validation.field);
                 FormUtils.showToast(msg('FORM_VALIDATION', 'REQUIRED_FIELD', {field: fieldLabel}), 'warning');
@@ -231,25 +239,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        if (rules.includes('images')) {
-            if (!imageUploadModule || imageUploadModule.getFileCount() === 0) {
-                FormUtils.showToast(msg('FORM_VALIDATION', 'IMAGE_REQUIRED'), 'warning');
+        // 🔧 Step 6 이미지 검증 (별도 모듈에서)
+        if (currentStep === 6) {
+            if (window.ddoksangImageUploader?.isInitialized) {
+                const fileCount = window.ddoksangImageUploader.getFileCount();
+                if (fileCount === 0) {
+                    FormUtils.showToast(msg('FORM_VALIDATION', 'IMAGE_REQUIRED'), 'warning');
+                    return false;
+                }
+            } else {
+                FormUtils.showToast('이미지 업로드 모듈이 초기화되지 않았습니다.', 'error');
                 return false;
             }
         }
 
-        // ✅ Step 3 날짜 검증 개선 (DdoksangDateUtils 우선 사용)
+        // ✅ Step 3 날짜 검증 개선
         if (currentStep === 3) {
             let dateValidation;
             
             if (window.DdoksangDateUtils) {
-                // 새로운 날짜 유틸리티 사용 (토스트 자동 표시)
                 dateValidation = window.DdoksangDateUtils.validateDateRange('start_date', 'end_date', true);
                 if (!dateValidation.valid) {
-                    return false; // 토스트는 이미 DdoksangDateUtils에서 표시됨
+                    return false;
                 }
             } else {
-                // fallback: 기존 FormUtils 사용
                 dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
                 if (!dateValidation.valid) {
                     FormUtils.showToast(msg('FORM_VALIDATION', 'DATE_RANGE_ERROR'), 'warning');
@@ -273,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         stepValidationRules[stepIndex]?.forEach(fieldId => {
             const element = document.getElementById(fieldId);
-            if (element && fieldId !== 'images') {
+            if (element) {
                 element.addEventListener('input', updateNextButtonState);
                 element.addEventListener('change', updateNextButtonState);
             }
@@ -291,16 +304,17 @@ document.addEventListener('DOMContentLoaded', function() {
         let isValid = true;
 
         if (rules?.length > 0) {
-            const normalFields = rules.filter(field => field !== 'images');
-            if (normalFields.length > 0) {
-                const validation = FormUtils.validateRequired(normalFields, false);
-                isValid = validation.valid;
-            }
+            const validation = FormUtils.validateRequired(rules, false);
+            isValid = validation.valid;
+        }
 
-            if (rules.includes('images')) {
-                const uploader = window.ddoksangApp?.imageUploadModule;
-                const count = uploader?.getFileCount?.() || 0;
-                isValid = isValid && count > 0;
+        // 🔧 Step 6에서 이미지 개수 확인 (별도 모듈에서)
+        if (currentStep === 6) {
+            if (window.ddoksangImageUploader?.isInitialized) {
+                const fileCount = window.ddoksangImageUploader.getFileCount();
+                isValid = isValid && fileCount > 0;
+            } else {
+                isValid = false;
             }
         }
 
@@ -326,9 +340,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ✅ 날짜 선택기 초기화 함수 (DdoksangDateUtils 사용)
+    // ✅ 날짜 선택기 초기화 함수
     function initializeDatePickers() {
-        // 의존성 확인
         if (typeof flatpickr === 'undefined' || !window.DdoksangDateUtils) {
             console.warn('날짜 선택기 초기화 실패: 의존성 누락');
             return;
@@ -338,7 +351,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 중복 확인용 날짜 선택기 (Step 0)
         const duplicatePickers = DateUtils.initDuplicateCheckPickers(() => {
-            // 중복 확인 버튼 상태 업데이트
             if (window.updateDuplicateButtonState) {
                 window.updateDuplicateButtonState();
             }
@@ -346,10 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // 생성 폼용 날짜 선택기 (Step 3)
         const createPickers = DateUtils.initCreateFormPickers(() => {
-            // 다음 버튼 상태 업데이트
             updateNextButtonState();
-            
-            // 운영 기간 표시 업데이트
             updateDurationDisplay();
         });
 
@@ -604,7 +613,6 @@ document.addEventListener('DOMContentLoaded', function() {
             showDuplicateCafes(result.similar_cafes);
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'DUPLICATE_FOUND', {count: result.similar_cafes.length}), 'warning');
         } else {
-            // ✅ 중복이 없을 때만 데이터를 미리 복사 (사용자가 입력한 정보 재사용)
             copyDataToForm();
             console.log('✅ 중복 없음 확인 - 입력 정보 복사 완료');
             
@@ -761,9 +769,6 @@ document.addEventListener('DOMContentLoaded', function() {
             window.ddoksangApp.duplicateChecked = duplicateChecked;
             window.ddoksangApp.isDuplicate = isDuplicate;
             
-            // ✅ "다른 카페입니다"를 선택했으므로 데이터 복사하지 않음
-            // 사용자가 새로운 카페 정보를 입력해야 함
-            
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'REGISTER_NEW_CAFE'), 'success');
             setTimeout(() => showStep(1), 1000);
         });
@@ -837,25 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateNextButtonState();
     }
 
-    function initializeImageUpload() {
-        const imageContainer = document.getElementById('image-upload-container');
-        if (imageContainer && window.setupDdoksangImageUpload) {
-            try {
-                imageUploadModule = window.setupDdoksangImageUpload({
-                    fileInputId: "image-upload",
-                    fileCountId: "file-count", 
-                    previewContainerId: "image-upload-container",
-                    previewListId: "image-preview-list",
-                    formId: "multiStepForm",
-                    maxFiles: 10,
-                    maxSizeMB: 5
-                });
-                window.ddoksangApp.imageUploadModule = imageUploadModule;
-            } catch (error) {
-                console.error('❌ 이미지 업로드 모듈 초기화 실패:', error);
-            }
-        }
-    }
+    // 🔧 이미지 업로드 관련 코드 제거 - ddoksang_image_upload.js에서 전담
 
     function initializeMapSearch() {
         const searchBtn = document.getElementById("searchBtn");
@@ -1015,31 +1002,6 @@ document.addEventListener('DOMContentLoaded', function() {
             transform: none !important;
             box-shadow: none !important;
         }
-        
-        #check-duplicate-btn.loading {
-            background-color: #6b7280 !important;
-            cursor: wait !important;
-            position: relative;
-        }
-        
-        #check-duplicate-btn.loading::after {
-            content: '';
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 1rem;
-            height: 1rem;
-            border: 2px solid #ffffff;
-            border-top: 2px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: translateY(-50%) rotate(0deg); }
-            100% { transform: translateY(-50%) rotate(360deg); }
-        }
     `;
 
     if (!document.querySelector('#duplicate-check-styles')) {
@@ -1048,4 +1010,13 @@ document.addEventListener('DOMContentLoaded', function() {
         style.textContent = additionalCSS;
         document.head.appendChild(style);
     }
+
+    // 🔧 이미지 업로드 모듈과의 연동을 위한 글로벌 함수
+    window.ddoksangApp.triggerImageValidation = function() {
+        if (currentStep === 6) {
+            updateNextButtonState();
+        }
+    };
+
+    console.log('✅ ddoksang_create.js 초기화 완료 (이미지 업로드 제외)');
 });
