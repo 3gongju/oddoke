@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-3xl mx-auto px-4">
+    
+    <!-- 헤더 -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8 border border-gray-100">
+      <div class="text-center">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">계정 정보</h1>
+        <p class="text-sm sm:text-base text-gray-600">
+          가입 정보 및 로그인 방식을 확인하세요
+        </p>
+      </div>
+    </div>
+
+    <!-- 계정 정보 카드 -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
+      <h3 class="text-xl font-bold text-gray-800 mb-6">내 계정 정보</h3>
+      
+      <div class="space-y-6">
+        <!-- 기본 정보 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+            <h5 class="font-semibold text-gray-700 mb-3">표시 이름</h5>
+            <p class="text-xl font-bold text-gray-800">
+              {% if user_profile.first_name %}
+                {{ user_profile.first_name }}
+              {% elif user_profile.username|slice:":6" == "kakao_" %}
+                카카오 사용자
+              {% elif user_profile.username|slice:":6" == "naver_" %}
+                네이버 사용자
+              {% else %}
+                {{ user_profile.username }}
+              {% endif %}
+            </p>
+            <p class="text-sm text-gray-500 mt-2">다른 사용자들에게 표시되는 이름</p>
+          </div>
+          
+          <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+            <h5 class="font-semibold text-gray-700 mb-3">프로필 ID</h5>
+            <p class="text-xl font-bold text-gray-800 font-mono break-all">{{ user_profile.username }}</p>
+            <p class="text-sm text-gray-500 mt-2">프로필 URL에 사용되는 고유 ID</p>
+          </div>
+        </div>
+
+        <!-- 로그인 정보 -->
+        <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+          <h5 class="font-semibold text-gray-700 mb-4">로그인 정보</h5>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span class="text-sm text-gray-600">로그인 방식</span>
+              <div class="mt-2">
+                {% if user_profile.username|slice:":6" == "kakao_" %}
+                  <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                    <span class="mr-2">💬</span> 카카오 소셜 로그인
+                  </span>
+                {% elif user_profile.username|slice:":6" == "naver_" %}
+                  <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                    <span class="mr-2">N</span> 네이버 소셜 로그인
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                    이메일 로그인
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div>
+              <span class="text-sm text-gray-600">가입일</span>
+              <p class="text-lg font-bold text-gray-800 mt-2">
+                {{ user_profile.date_joined|date:"Y년 m월 d일" }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 계정 상태 -->
+        <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+          <h5 class="font-semibold text-gray-700 mb-4">계정 상태</h5>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span class="text-green-600 text-xl">✓</span>
+              </div>
+              <p class="text-sm font-semibold text-green-800">활성화됨</p>
+              <p class="text-xs text-green-600">정상 이용 가능</p>
+            </div>
+            
+            <div class="text-center">
+              {% if user_profile.email %}
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span class="text-green-600 text-xl">✓</span>
+                </div>
+                <p class="text-sm font-semibold text-green-800">이메일 인증</p>
+                <p class="text-xs text-green-600">인증 완료</p>
+              {% else %}
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span class="text-gray-600 text-xl">-</span>
+                </div>
+                <p class="text-sm font-semibold text-gray-600">이메일 미등록</p>
+                <p class="text-xs text-gray-500">소셜 로그인</p>
+              {% endif %}
+            </div>
+            
+            <div class="text-center">
+              {% if user_profile.social_signup_completed %}
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span class="text-green-600 text-xl">✓</span>
+                </div>
+                <p class="text-sm font-semibold text-green-800">프로필 완성</p>
+                <p class="text-xs text-green-600">설정 완료</p>
+              {% else %}
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span class="text-yellow-600 text-xl">⏳</span>
+                </div>
+                <p class="text-sm font-semibold text-yellow-800">프로필 미완성</p>
+                <p class="text-xs text-yellow-600">추가 설정 필요</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- 관리자 정보 (관리자만 표시) -->
+        {% if user.is_superuser %}
+        <div class="bg-red-50 rounded-2xl p-6 border border-red-200">
+          <h5 class="font-semibold text-red-700 mb-4">관리자 정보</h5>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <span class="text-sm text-red-600">이메일</span>
+              <p class="text-lg font-mono text-red-800 mt-2 break-all">
+                {{ user_profile.email|default:"미등록" }}
+              </p>
+            </div>
+            <div>
+              <span class="text-sm text-red-600">권한</span>
+              <p class="text-lg font-bold text-red-800 mt-2">
+                {% if user_profile.is_superuser %}
+                  최고 관리자
+                {% elif user_profile.is_staff %}
+                  운영진
+                {% else %}
+                  일반 사용자
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- 안내사항 -->
+        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+          <h5 class="font-semibold text-blue-800 mb-4">계정 관리 안내</h5>
+          <ul class="text-sm text-blue-700 space-y-2">
+            <li class="flex items-start space-x-2">
+              <span class="text-blue-500 mt-1">•</span>
+              <span>닉네임과 소개글은 '회원 정보 수정'에서 변경할 수 있습니다</span>
+            </li>
+            <li class="flex items-start space-x-2">
+              <span class="text-blue-500 mt-1">•</span>
+              <span>소셜 로그인 계정은 비밀번호 변경이 불가능합니다</span>
+            </li>
+            <li class="flex items-start space-x-2">
+              <span class="text-blue-500 mt-1">•</span>
+              <span>프로필 ID는 URL에 사용되므로 신중하게 변경해주세요</span>
+            </li>
+            <li class="flex items-start space-x-2">
+              <span class="text-blue-500 mt-1">•</span>
+              <span>계정 관련 문의사항은 고객센터를 이용해주세요</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 통계 정보 -->
+        <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+          <h5 class="font-semibold text-gray-700 mb-4">이용 통계</h5>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <p class="text-2xl font-bold text-gray-800">
+                {{ user_profile.date_joined|timesince|cut:"," }}
+              </p>
+              <p class="text-sm text-gray-600">이용 기간</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-800">
+                {{ user_profile.followers.count }}
+              </p>
+              <p class="text-sm text-gray-600">팔로워</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-800">
+                {{ user_profile.followings.count }}
+              </p>
+              <p class="text-sm text-gray-600">팔로잉</p>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-800">
+                {{ user_profile.followed_artists.count }}
+              </p>
+              <p class="text-sm text-gray-600">찜한 덕</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 버튼 -->
+    <div class="mt-8 text-center">
+      <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+         class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-md">
+        설정으로 돌아가기
+      </a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

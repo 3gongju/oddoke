@@ -447,7 +447,7 @@ def edit_profile_info(request, username):
         'fandom_profile': fandom_profile,
         'artist_list': Artist.objects.all(),  # 🔹 아티스트 목록 전달
     }
-    return render(request, 'accounts/edit_profile.html', context)
+    return render(request, 'accounts/edit_profile_info.html', context)
 
 
 @login_required

@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen bg-gray-50 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+    
+    <!-- 헤더 -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8 border border-gray-100">
+      <div class="text-center">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">공식 팬덤 인증</h1>
+        <p class="text-sm sm:text-base text-gray-600">
+          공식 팬클럽 멤버십을 인증받아 특별한 혜택을 누려보세요
+        </p>
+      </div>
+    </div>
+
+    <!-- 인증 상태 표시 -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8 border border-gray-100">
+      {% if fandom_profile and fandom_profile.is_verified_fandom %}
+        <!-- 인증 완료 -->
+        <div class="text-center">
+          <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl text-green-600">✓</span>
+          </div>
+          <h3 class="text-xl font-bold text-green-800 mb-3">인증 완료!</h3>
+          <p class="text-green-600 mb-4">
+            {{ fandom_profile.fandom_artist.display_name }} 공식 팬으로 인증되었습니다.
+          </p>
+          
+          {% if fandom_profile.fandom_card %}
+            <div class="bg-green-50 rounded-2xl p-6 border border-green-200 mb-6">
+              <h4 class="font-bold text-green-800 mb-3">인증된 카드</h4>
+              <img src="{{ fandom_profile.fandom_card.url }}" 
+                   alt="인증 카드" 
+                   class="max-w-full h-auto rounded-lg border shadow mx-auto"
+                   style="max-height: 300px;">
+            </div>
+          {% endif %}
+          
+          <div class="bg-green-50 rounded-2xl p-6 border border-green-200">
+            <h4 class="font-bold text-green-800 mb-3">인증 정보</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="font-medium text-green-700">아티스트:</span>
+                <span class="text-green-800 ml-2">{{ fandom_profile.fandom_artist.display_name }}</span>
+              </div>
+              <div>
+                <span class="font-medium text-green-700">인증일:</span>
+                <span class="text-green-800 ml-2">{{ fandom_profile.verified_at|date:"Y.m.d"|default:"확인 중" }}</span>
+              </div>
+              {% if fandom_profile.verification_start_date %}
+              <div>
+                <span class="font-medium text-green-700">시작일:</span>
+                <span class="text-green-800 ml-2">{{ fandom_profile.verification_start_date|date:"Y.m.d" }}</span>
+              </div>
+              {% endif %}
+              {% if fandom_profile.verification_end_date %}
+              <div>
+                <span class="font-medium text-green-700">만료일:</span>
+                <span class="text-green-800 ml-2">{{ fandom_profile.verification_end_date|date:"Y.m.d" }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+      {% elif fandom_profile and fandom_profile.is_pending_verification %}
+        <!-- 심사 중 -->
+        <div class="text-center">
+          <div class="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl text-yellow-600">⏳</span>
+          </div>
+          <h3 class="text-xl font-bold text-yellow-800 mb-3">인증 심사 중</h3>
+          <p class="text-yellow-600 mb-6">
+            팬덤 인증 요청이 접수되었습니다.<br>
+            3일 이내에 승인 결과를 알려드리겠습니다.
+          </p>
+          
+          {% if fandom_profile.fandom_card %}
+            <div class="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
+              <h4 class="font-bold text-yellow-800 mb-3">제출된 카드</h4>
+              <img src="{{ fandom_profile.fandom_card.url }}" 
+                   alt="제출 카드" 
+                   class="max-w-full h-auto rounded-lg border shadow mx-auto"
+                   style="max-height: 300px;">
+            </div>
+          {% endif %}
+        </div>
+        
+      {% elif fandom_profile and fandom_profile.verification_failed %}
+        <!-- 인증 실패 -->
+        <div class="text-center mb-8">
+          <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl text-red-600">✗</span>
+          </div>
+          <h3 class="text-xl font-bold text-red-800 mb-3">인증 실패</h3>
+          <p class="text-red-600 mb-6">
+            제출해주신 자료로는 인증이 어려웠습니다.<br>
+            다시 시도해주세요.
+          </p>
+        </div>
+        
+      {% else %}
+        <!-- 미인증 상태 -->
+        <div class="text-center mb-8">
+          <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-3xl text-gray-600">🎫</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800 mb-3">팬덤 인증하기</h3>
+          <p class="text-gray-600 mb-6">
+            공식 팬클럽 멤버십 카드를 업로드하여<br>
+            팬덤 인증을 받아보세요!
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- 인증 폼 (미인증 또는 실패 시에만 표시) -->
+    {% if not fandom_profile or not fandom_profile.is_verified_fandom and not fandom_profile.is_pending_verification %}
+      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
+        <form method="POST" enctype="multipart/form-data"
+              action="{% url 'accounts:upload_fandom_card' user_profile.username %}"
+              class="space-y-6">
+          {% csrf_token %}
+
+          <!-- 예시 이미지 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">예시 이미지</label>
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+              <img src="{% static 'image/fandom_example.png' %}"
+                  alt="예시 이미지"
+                  class="max-w-full h-auto rounded-lg border shadow mx-auto"
+                  style="max-height: 200px;" />
+              <p class="text-xs text-gray-500 mt-3 text-center">
+                위와 같은 형태의 팬클럽 멤버십 카드를 업로드해주세요
+              </p>
+            </div>
+          </div>
+
+          <!-- 팬덤 선택 -->
+          <div>
+            <label for="artist_id" class="block text-sm font-medium text-gray-700 mb-2">
+              팬덤 선택 <span class="text-red-500">*</span>
+            </label>
+            <select name="artist_id" id="artist_id" 
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    required>
+              <option value="">팬덤을 선택해주세요</option>
+              {% for artist in artist_list %}
+                <option value="{{ artist.id }}">{{ artist.display_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 인증 기간 필드 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="verification_start_date" class="block text-sm font-medium text-gray-700 mb-2">
+                인증 시작일
+              </label>
+              <input type="date" name="verification_start_date" id="verification_start_date"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+              <p class="text-xs text-gray-500 mt-1">팬클럽 가입일 또는 카드 발급일</p>
+            </div>
+            
+            <div>
+              <label for="verification_end_date" class="block text-sm font-medium text-gray-700 mb-2">
+                인증 만료일
+              </label>
+              <input type="date" name="verification_end_date" id="verification_end_date"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+              <p class="text-xs text-gray-500 mt-1">팬클럽 유효기간 만료일</p>
+            </div>
+          </div>
+
+          <!-- 이미지 업로드 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              회원카드 스크린샷 업로드 <span class="text-red-500">*</span>
+            </label>
+            <input type="file" name="fandom_card" id="fandom-card-input" accept="image/*"
+                  class="block w-full mt-1 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  required />
+            <p class="text-xs text-gray-500 mt-1">
+              JPG, PNG 파일만 업로드 가능합니다. (최대 5MB)
+            </p>
+          </div>
+
+          <!-- 미리보기 -->
+          <div id="fandom-card-preview-container" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-2">미리보기</label>
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+              <img id="fandom-card-preview"
+                  src="#"
+                  alt="미리보기"
+                  class="max-w-full h-auto rounded-lg border shadow mx-auto"
+                  style="max-height: 200px;" />
+            </div>
+          </div>
+
+          <!-- 주의사항 -->
+          <div class="bg-purple-50 border border-purple-200 rounded-2xl p-6">
+            <h4 class="text-sm font-semibold text-purple-800 mb-3">팬덤 인증 안내</h4>
+            <ul class="text-xs text-purple-700 space-y-2">
+              <li class="flex items-start space-x-2">
+                <span class="text-purple-500 mt-1">•</span>
+                <span>팬덤 인증은 선택사항입니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-purple-500 mt-1">•</span>
+                <span>정식 팬클럽 멤버십 카드만 인증 가능합니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-purple-500 mt-1">•</span>
+                <span>개인정보는 가려서 업로드해주세요</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-purple-500 mt-1">•</span>
+                <span>인증 심사는 최대 3일 소요됩니다</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 제출 버튼 -->
+          <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+            <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+               class="flex-1 px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-center">
+              설정으로 돌아가기
+            </a>
+            <button type="submit" 
+                    class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors duration-200">
+              팬덤 인증 신청하기
+            </button>
+          </div>
+        </form>
+      </div>
+    {% else %}
+      <!-- 인증 완료/심사 중일 때 돌아가기 버튼 -->
+      <div class="text-center">
+        <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+           class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-md">
+          설정으로 돌아가기
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("fandom-card-input");
+    const preview = document.getElementById("fandom-card-preview");
+    const container = document.getElementById("fandom-card-preview-container");
+
+    if (input) {
+      input.addEventListener("change", function () {
+        const file = this.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            preview.src = e.target.result;
+            container.classList.remove("hidden");
+          };
+          reader.readAsDataURL(file);
+        } else {
+          container.classList.add("hidden");
+        }
+      });
+    }
+  });
+</script>
+
+{% endblock %}
