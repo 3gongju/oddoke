@@ -463,9 +463,6 @@
             <!-- 계좌 상태 -->
             <div class="flex items-center justify-between p-6 bg-green-50 rounded-2xl border border-green-200">
               <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span class="text-green-600 text-xl"></span>
-                </div>
                 <div>
                   <h4 class="font-bold text-green-800">계좌 등록 완료</h4>
                   <p class="text-green-600 text-sm">거래에서 계좌 정보를 공유할 수 있습니다</p>
@@ -519,8 +516,8 @@
         {% else %}
           <!-- ❌ 미등록 상태 -->
           <div class="text-center py-12">
-            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span class="text-4xl text-gray-400"></span>
+            <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
             </div>
             <h4 class="text-xl font-bold text-gray-800 mb-3">계좌가 등록되지 않았습니다</h4>
             <p class="text-gray-600 mb-6 leading-relaxed">
@@ -574,9 +571,6 @@
             <!-- 주소 상태 -->
             <div class="flex items-center justify-between p-6 bg-green-50 rounded-2xl border border-green-200">
               <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span class="text-green-600 text-xl"></span>
-                </div>
                 <div>
                   <h4 class="font-bold text-green-800">주소 등록 완료</h4>
                   <p class="text-green-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
@@ -630,8 +624,8 @@
         {% else %}
           <!-- ❌ 미등록 상태 -->
           <div class="text-center py-12">
-            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span class="text-4xl text-gray-400"></span>
+            <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
             </div>
             <h4 class="text-xl font-bold text-gray-800 mb-3">주소가 등록되지 않았습니다</h4>
             <p class="text-gray-600 mb-6 leading-relaxed">
