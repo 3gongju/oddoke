@@ -1,4 +1,3 @@
-// static/js/ddoksang_form_utils.js
 // 덕생 폼 관련 재사용 가능한 유틸리티 함수들
 
 window.DdoksangFormUtils = {
@@ -64,24 +63,8 @@ window.DdoksangFormUtils = {
         return { valid: true };
     },
 
-    // 날짜 검증
-    validateDateRange(startDateId, endDateId) {
-        const startDate = this.getValue(startDateId);
-        const endDate = this.getValue(endDateId);
-        
-        if (!startDate || !endDate) {
-            return { valid: false, message: '시작일과 종료일을 모두 선택해주세요.' };
-        }
-
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-
-        if (start > end) {
-            return { valid: false, message: '종료일은 시작일보다 늦어야 합니다.' };
-        }
-
-        return { valid: true };
-    },
+    // ✅ 날짜 검증 제거 - DdoksangDateUtils로 이동됨
+    // validateDateRange 함수는 이제 window.DdoksangDateUtils.validateDateRange 사용
 
     // 생일 날짜 포맷팅
     formatBirthday(birthday) {
@@ -135,10 +118,35 @@ window.DdoksangFormUtils = {
         }
 
         return { valid: true };
+    },
+
+    // ✅ 호환성을 위한 날짜 검증 래퍼 함수 (기존 코드와의 호환성 유지)
+    validateDateRange(startDateId, endDateId) {
+        // DdoksangDateUtils가 있으면 사용, 없으면 기본 검증
+        if (window.DdoksangDateUtils) {
+            return window.DdoksangDateUtils.validateDateRange(startDateId, endDateId, false);
+        }
+        
+        // fallback 검증 (DdoksangDateUtils가 없을 때)
+        const startDate = this.getValue(startDateId);
+        const endDate = this.getValue(endDateId);
+        
+        if (!startDate || !endDate) {
+            return { valid: false, message: '시작일과 종료일을 모두 선택해주세요.' };
+        }
+
+        const start = new Date(startDate + 'T00:00:00');
+        const end = new Date(endDate + 'T00:00:00');
+
+        if (start > end) {
+            return { valid: false, message: '종료일은 시작일보다 늦어야 합니다.' };
+        }
+
+        return { valid: true };
     }
 };
 
-// 지도 관련 유틸리티
+// 지도 관련 유틸리티 (기존 유지)
 window.DdoksangMapUtils = {
     map: null,
     ps: null,
@@ -203,7 +211,7 @@ window.DdoksangMapUtils = {
     }
 };
 
-// 이미지 업로드 유틸리티
+// 이미지 업로드 유틸리티 (기존 유지)
 window.DdoksangImageUtils = {
     // 드래그 앤 드롭 설정
     setupDragAndDrop(containerId, inputId) {
@@ -277,3 +285,4 @@ window.DdoksangImageUtils = {
         input.dispatchEvent(new Event('change'));
     }
 };
+
