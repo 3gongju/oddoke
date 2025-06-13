@@ -3,20 +3,18 @@
 {% load member_images %}
 
 {% block body %}
-<div class="min-h-screen bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="min-h-screen bg-white">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
 
-    <!-- 프로필 헤더 - 현대적 카드 디자인 -->
-    <div class="relative mb-12">
-      <!-- 배경 그라디언트 -->
-      <div class="absolute inset-0 bg-gray-800 rounded-3xl"></div>
-      <div class="relative bg-white p-8 rounded-3xl shadow-2xl border border-gray-200">
-        <div class="flex flex-col lg:flex-row items-start gap-8">
+    <!-- 프로필 헤더 - 반응형 -->
+    <div class="mb-6 lg:mb-12">
+      <div class="bg-white p-4 sm:p-6 lg:p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
           
           <!-- 프로필 이미지 섹션 -->
-          <div class="flex flex-col items-center space-y-4">
+          <div class="flex flex-col items-center sm:items-start">
             <div class="relative">
-              <div class="w-32 h-32 rounded-full bg-gray-300 p-1 shadow-2xl">
+              <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-gray-100 p-0.5">
                 <div class="w-full h-full rounded-full overflow-hidden bg-white">
                   {% if user_profile.profile_image and user_profile.profile_image.name %}
                     <img src="{{ user_profile.profile_image.url }}"
@@ -30,170 +28,154 @@
                 </div>
               </div>
               <!-- 온라인 상태 표시 -->
-              <div class="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
+              <div class="absolute bottom-0 right-0 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
           </div>
           
           <!-- 프로필 정보 -->
-          <div class="flex-1 space-y-4">
+          <div class="flex-1 min-w-0 w-full sm:w-auto">
             <!-- 닉네임과 뱃지 -->
-            <div class="space-y-3">
-              <div class="flex items-center space-x-4 flex-wrap">
-                <h1 class="text-3xl font-bold text-gray-800">
-                  {% if user_profile.first_name %}
-                    {{ user_profile.first_name }}
-                  {% elif user_profile.username|slice:":6" == "kakao_" %}
-                    카카오 사용자
-                  {% elif user_profile.username|slice:":6" == "naver_" %}
-                    네이버 사용자
-                  {% else %}
-                    {{ user_profile.username }}
-                  {% endif %}
-                </h1>
+            <div class="mb-3 sm:mb-4">
+              <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                {% if user_profile.first_name %}
+                  {{ user_profile.first_name }}
+                {% elif user_profile.username|slice:":6" == "kakao_" %}
+                  카카오 사용자
+                {% elif user_profile.username|slice:":6" == "naver_" %}
+                  네이버 사용자
+                {% else %}
+                  {{ user_profile.username }}
+                {% endif %}
+              </h1>
 
-                <!-- 소셜 로그인 뱃지 -->
+              <!-- 소셜 로그인 뱃지 -->
+              <div class="flex items-center gap-2 mt-2">
                 {% if user_profile.username|slice:":6" == "kakao_" %}
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 border-2 border-yellow-200 shadow-sm">
-                    <span class="mr-2 text-lg">💬</span> 카카오
+                  <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                    💬 카카오
                   </span>
                 {% elif user_profile.username|slice:":6" == "naver_" %}
-                  <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 border-2 border-green-200 shadow-sm">
-                    <span class="mr-2 font-bold">N</span> 네이버
+                  <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                    N 네이버
                   </span>
                 {% endif %}
               </div>
-
-              <!-- 팬덤 인증 상태 -->
-              {% if fandom_profile and fandom_profile.is_verified_fandom %}
-                <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold border-2 border-green-200 shadow-sm">
-                  <span class="mr-2">✓</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
-                </div>
-              {% elif fandom_profile.is_pending_verification %}
-                <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 font-medium border-2 border-yellow-200 shadow-sm">
-                  <span class="mr-2">⏳</span> 팬덤 인증 확인 중 (3일 소요)
-                </div>
-              {% else %}
-                <a href="{% url 'accounts:settings_main' user_profile.username %}#fandom-auth"
-                  class="inline-flex items-center px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transform hover:scale-105 transition-all duration-200 shadow-lg">
-                  <span class="mr-2">🎫</span> 공식 팬덤 인증하기
-                </a>
-              {% endif %}
             </div>
             
             <!-- 소개글 -->
-            <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <div class="bg-gray-50 rounded-lg p-3 sm:p-4 text-sm sm:text-base">
               {% if user_profile.bio %}
-                <p class="text-gray-700 text-lg leading-relaxed">{{ user_profile.bio }}</p>
+                <p class="text-gray-700 line-clamp-2 sm:line-clamp-3">{{ user_profile.bio }}</p>
               {% else %}
-                <p class="text-gray-400 italic">소개글을 작성해보세요!</p>
+                <p class="text-gray-400">소개글을 작성해보세요!</p>
               {% endif %}
             </div>
           </div>
           
           <!-- 액션 버튼들 -->
-          <div class="flex flex-col space-y-3 min-w-[160px]">
+          <div class="flex sm:flex-col gap-2 w-full sm:w-auto sm:min-w-[140px] lg:min-w-[160px]">
             <a href="{% url 'accounts:settings_main' user_profile.username %}" 
-               class="flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md">
+               class="flex-1 sm:flex-initial flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors">
                설정
             </a>
             
             {% if user.is_authenticated %}
               <a href="{% url 'accounts:profile' request.user.username %}" 
-                 class="flex items-center justify-center px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 shadow-md">
+                 class="flex-1 sm:flex-initial flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
                  공개 프로필
               </a>
             {% endif %}
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 찜한 아티스트 섹션 -->
-    <div class="mb-12">
-      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <div class="flex justify-between items-center mb-8">
-          <h2 class="text-2xl font-bold text-gray-800">
-            내가 찜한 덕
-          </h2>
-          <a href="{% url 'artist:index' %}" 
-             class="flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors group">
-            찜덕 하러 가기
-            <svg class="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-            </svg>
-          </a>
-        </div>
-        
-        <div class="relative">
-          <div id="favArtistSlider" class="flex overflow-x-auto space-x-6 pb-4 scrollbar-hide">
-            {% for artist in favorite_artists %}
-              <div class="min-w-[140px] text-center transform hover:scale-105 transition-transform duration-200">
-                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-md hover:shadow-lg transition-shadow">
-                  <img src="{% static artist.logo %}" 
-                       alt="{{ artist.display_name }}"
-                       data-artist-id="{{ artist.id }}" 
-                       data-artist-name="{{ artist.display_name }}"
-                       class="artist-logo w-20 h-20 mx-auto cursor-pointer rounded-full shadow-lg border-4 border-white">
-                  <p class="mt-3 text-sm font-semibold text-gray-700">{{ artist.display_name }}</p>
-                </div>
-              </div>
-            {% empty %}
-              <div class="flex flex-col items-center py-16 w-full">
-                <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6 mx-auto">
-                  <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
-                </div>
-                <p class="text-gray-600 text-center text-lg">
-                  아직 찜한 덕이 없어요!<br>
-                </p>
-              </div>
-            {% endfor %}
-          </div>
-          
-          {% if favorite_artists %}
-            <button onclick="scrollSlider('favArtistSlider', -1)" 
-                    class="absolute left-0 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 p-3 shadow-lg rounded-full border border-gray-200 transition-all duration-200 hover:scale-110">
-              <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-            </button>
-            <button onclick="scrollSlider('favArtistSlider', 1)" 
-                    class="absolute right-0 top-1/2 -translate-y-1/2 bg-white hover:bg-gray-50 p-3 shadow-lg rounded-full border border-gray-200 transition-all duration-200 hover:scale-110">
-              <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-              </svg>
-            </button>
+        <!-- 팬덤 인증 상태 -->
+        <div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+          {% if fandom_profile and fandom_profile.is_verified_fandom %}
+            <div class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-200">
+              <span class="mr-2">✓</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
+            </div>
+          {% elif fandom_profile.is_pending_verification %}
+            <div class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full bg-yellow-50 text-yellow-700 text-sm font-medium border border-yellow-200">
+              <span class="mr-2">⏳</span> 팬덤 인증 확인 중
+            </div>
+          {% else %}
+            <a href="{% url 'accounts:settings_main' user_profile.username %}#fandom-auth"
+              class="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
+              <span class="mr-2">🎫</span> 공식 팬덤 인증하기
+            </a>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- 최애 멤버 섹션 (멤버 개별 이미지 적용) -->
-    <div class="mb-12">
-      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold text-gray-800 mb-8">
+    <!-- 찜한 아티스트 섹션 -->
+    <div class="mb-6 lg:mb-12">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-gray-100">
+        <div class="flex justify-between items-center mb-4 sm:mb-6">
+          <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+            내가 찜한 덕
+          </h2>
+          <a href="{% url 'artist:index' %}" 
+             class="text-blue-600 hover:text-blue-800 text-sm sm:text-base font-medium">
+            찜덕 하러 가기 →
+          </a>
+        </div>
+        
+        <div class="relative">
+          <div id="favArtistSlider" class="flex overflow-x-auto space-x-3 sm:space-x-4 lg:space-x-6 pb-2 scrollbar-hide">
+            {% for artist in favorite_artists %}
+              <div class="min-w-[80px] sm:min-w-[100px] lg:min-w-[120px] text-center">
+                <div class="bg-white border border-gray-200 rounded-xl p-2 sm:p-3 lg:p-4 hover:shadow-sm transition-shadow">
+                  <img src="{% static artist.logo %}" 
+                       alt="{{ artist.display_name }}"
+                       data-artist-id="{{ artist.id }}" 
+                       data-artist-name="{{ artist.display_name }}"
+                       class="artist-logo w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto cursor-pointer rounded-full border-2 border-white">
+                  <p class="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-gray-700 truncate">{{ artist.display_name }}</p>
+                </div>
+              </div>
+            {% empty %}
+              <div class="flex flex-col items-center py-8 sm:py-12 lg:py-16 w-full">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4 sm:mb-6">
+                  <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 opacity-50" />
+                </div>
+                <p class="text-gray-600 text-center text-sm sm:text-base lg:text-lg">
+                  아직 찜한 덕이 없어요!
+                </p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 최애 멤버 섹션 -->
+    <div class="mb-6 lg:mb-12">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-gray-100">
+        <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
           최애
         </h2>
         
         {% if favorite_members %}
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
             {% for member in favorite_members %}
               {% if member.matched_artist %}
-                <div class="group cursor-pointer bg-gradient-to-br from-pink-50 to-purple-50 p-4 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-pink-100"
+                <div class="group cursor-pointer bg-white p-3 sm:p-4 rounded-xl border border-gray-200 hover:shadow-sm transition-all duration-200"
                      data-member-name="{{ member.member_name }}"
                      data-artist-id="{{ member.matched_artist.id }}"
                      onclick="openArtistModalFromMember(this)">
                   
                   <!-- 멤버 개별 이미지 -->
-                  <div class="flex justify-center mb-4">
+                  <div class="flex justify-center mb-2 sm:mb-3">
                     <div class="relative">
-                      <div class="w-20 h-20 rounded-full overflow-hidden shadow-lg border-3 border-white bg-white">
+                      <div class="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden bg-gray-100">
                         <img src="{% member_image member.member_name member.matched_artist.display_name %}" 
                              alt="{{ member.member_name }}"
-                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                             class="w-full h-full object-cover"
                              onerror="this.src='{% static 'image/default_member.svg' %}'">
                       </div>
                       <!-- 하트 표시 -->
-                      <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-lg">
+                      <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
                         <span class="text-white text-xs">♥</span>
                       </div>
                     </div>
@@ -201,11 +183,11 @@
                   
                   <!-- 멤버 정보 -->
                   <div class="text-center">
-                    <h3 class="text-lg font-bold text-gray-800 group-hover:text-pink-600 transition-colors mb-2">
+                    <h3 class="text-sm sm:text-base font-bold text-gray-800 truncate mb-1">
                       {{ member.member_name }}
                     </h3>
                     
-                    <p class="text-sm text-gray-600 mb-2">
+                    <p class="text-xs sm:text-sm text-gray-600 truncate">
                       {% for artist in member.filtered_artists %}
                         {{ artist.display_name }}{% if not forloop.last %}, {% endif %}
                       {% endfor %}
@@ -216,132 +198,135 @@
             {% endfor %}
           </div>
         {% else %}
-          <div class="text-center py-16">
-            <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-              <img src="{% static 'image/ddok_black.png' %}" alt="최애 없음" class="w-12 h-12 opacity-50" />
+          <div class="text-center py-8 sm:py-12 lg:py-16">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <img src="{% static 'image/ddok_black.png' %}" alt="최애 없음" class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 opacity-50" />
             </div>
-            <p class="text-gray-600 text-lg">아티스트를 눌러서 최애 멤버를 선택해보세요!</p>
+            <p class="text-gray-600 text-sm sm:text-base lg:text-lg">아티스트를 눌러서 최애 멤버를 선택해보세요!</p>
           </div>
         {% endif %}
       </div>
     </div>
 
     <!-- 덕팜 활동 섹션 -->
-    <div class="mb-12">
-      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold text-gray-800">
+    <div class="mb-6 lg:mb-12">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-gray-100">
+        <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
           나의 덕팜 활동
         </h2>
 
         <!-- 덕팜 탭 네비게이션 -->
-        <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
-          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
+        <div class="flex bg-gray-100 rounded-xl p-1 mb-4 sm:mb-6">
+          <button class="tab-btn farm-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" 
                   onclick="showFarmTab('written')">
-            내가 쓴 글
+            <span class="hidden sm:inline">내가 쓴 글</span>
+            <span class="sm:hidden">내 글</span>
           </button>
-          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+          <button class="tab-btn farm-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showFarmTab('commented')">
-            내가 쓴 댓글
+            <span class="hidden sm:inline">내가 쓴 댓글</span>
+            <span class="sm:hidden">내 댓글</span>
           </button>
-          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+          <button class="tab-btn farm-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showFarmTab('liked')">
-            찜한 글
+            <span class="hidden sm:inline">찜한 글</span>
+            <span class="sm:hidden">찜</span>
           </button>
-
-          <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+          <button class="tab-btn farm-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showFarmTab('reviewed')">
-            내가 쓴 리뷰
+            <span class="hidden sm:inline">내가 쓴 리뷰</span>
+            <span class="sm:hidden">내 리뷰</span>
           </button>
         </div>
 
         <!-- 덕팜 탭 콘텐츠 -->
         <div id="farm-tab-written" class="tab-content">
           {% if farm_posts %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for post in farm_posts %}
-                <div class="p-5 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-black hover:text-gray-700 font-semibold text-lg transition-colors">
+                    class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
                     [덕팜] {{ post.title }}
                   </a>
-                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 글이 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
 
         <div id="farm-tab-commented" class="tab-content hidden">
           {% if farm_comments %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for comment in farm_comments %}
-                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-gray-800 hover:text-black font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ comment.post.title }}
                   </a>
-                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">{{ comment.content|truncatewords:15 }}</p>
-                  <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-green-600 font-medium text-sm sm:text-base mt-1 sm:mt-2 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 댓글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
 
         <div id="farm-tab-liked" class="tab-content hidden">
           {% if liked_farm_posts %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for post in liked_farm_posts %}
-                <div class="p-5 bg-white rounded-2xl border border-gray-300 hover:shadow-md transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-gray-800 hover:text-black font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ post.title }}
                   </a>
-                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">찜한 글이 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">찜한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
 
         <div id="farm-tab-reviewed" class="tab-content hidden">
           {% if my_reviews %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for r in my_reviews %}
-                <div class="p-5 bg-gradient-to-r from-white to-gray-50 rounded-2xl border border-gray-300 shadow-sm">
-                  <p class="text-gray-900 font-semibold">- 판매자 : {{ r.target_user.first_name|default:r.target_user.username }}</p>
-                  <p class="text-gray-800 font-semibold mt-1">- 평점 : {{ r.rating }}점</p>
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200">
+                  <p class="text-gray-900 font-medium text-sm sm:text-base">판매자: {{ r.target_user.first_name|default:r.target_user.username }}</p>
+                  <p class="text-gray-800 font-medium text-sm sm:text-base mt-1">평점: {{ r.rating }}점</p>
 
-                  <div class="grid grid-cols-2 gap-2 text-sm mt-3">
-                    <div class="bg-gray-100 px-3 py-2 rounded">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm mt-2 sm:mt-3">
+                    <div class="bg-gray-50 px-2 sm:px-3 py-1 sm:py-2 rounded">
                       <span class="font-medium text-gray-900">상품 상태:</span>
                       <span class="text-gray-700">{{ r.description_match }}</span>
                     </div>
-                    <div class="bg-gray-100 px-3 py-2 rounded">
+                    <div class="bg-gray-50 px-2 sm:px-3 py-1 sm:py-2 rounded">
                       <span class="font-medium text-gray-900">응답 속도:</span>
                       <span class="text-gray-700">{{ r.response_speed }}</span>
                     </div>
-                    <div class="bg-gray-100 px-3 py-2 rounded">
+                    <div class="bg-gray-50 px-2 sm:px-3 py-1 sm:py-2 rounded">
                       <span class="font-medium text-gray-900">메시지 말투:</span>
                       <span class="text-gray-700">{{ r.politeness }}</span>
                     </div>
                   </div>
 
-                  <div class="mt-3 pt-3 border-t border-gray-200 text-sm">
+                  <div class="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100 text-xs sm:text-sm">
                     <span class="font-medium text-gray-900">재거래 의사:</span>
-                    <span class="text-gray-700 ml-2">
+                    <span class="text-gray-700 ml-1 sm:ml-2">
                       {% if r.deal_again == 'O' %}
                         재거래 하고 싶어요
                       {% else %}
@@ -350,13 +335,13 @@
                     </span>
                   </div>
 
-                  <p class="text-sm text-gray-500 mt-2">{{ r.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ r.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">아직 작성한 리뷰가 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">아직 작성한 리뷰가 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -364,23 +349,23 @@
     </div>
 
     <!-- 덕담 활동 섹션 -->
-    <div class="mb-12">
-      <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-        <h2 class="text-2xl font-bold text-gray-800">
+    <div class="mb-6 lg:mb-12">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-gray-100">
+        <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
           나의 덕담 활동
         </h2>
 
         <!-- 덕담 탭 네비게이션 -->
-        <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
-          <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
+        <div class="flex bg-gray-100 rounded-xl p-1 mb-4 sm:mb-6">
+          <button class="tab-btn dam-tab-btn flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" 
                   onclick="showDamTab('written')">
             내가 쓴 글
           </button>
-          <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+          <button class="tab-btn dam-tab-btn flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showDamTab('commented')">
             내가 쓴 댓글
           </button>
-          <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
+          <button class="tab-btn dam-tab-btn flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showDamTab('liked')">
             찜한 글
           </button>
@@ -389,61 +374,61 @@
         <!-- 덕담 탭 콘텐츠 -->
         <div id="dam-tab-written" class="tab-content">
           {% if dam_posts %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for post in dam_posts %}
-                <div class="p-5 bg-white rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-black hover:text-gray-700 font-semibold text-lg transition-colors">
+                    class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
                     [덕담] {{ post.title }}
                   </a>
-                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 글이 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
 
         <div id="dam-tab-commented" class="tab-content hidden">
           {% if dam_comments %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for comment in dam_comments %}
-                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-gray-800 hover:text-black font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ comment.post.title }}
                   </a>
-                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">{{ comment.content|truncatewords:15 }}</p>
-                  <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-green-600 font-medium text-sm sm:text-base mt-1 sm:mt-2 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 댓글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
 
         <div id="dam-tab-liked" class="tab-content hidden">
           {% if liked_dam_posts %}
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               {% for post in liked_dam_posts %}
-                <div class="p-5 bg-white rounded-2xl border border-gray-300 hover:shadow-md transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-gray-800 hover:text-black font-semibold transition-colors">
+                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ post.title }}
                   </a>
-                  <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
-            <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">찜한 글이 없습니다.</p>
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">찜한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -452,14 +437,14 @@
 
     <!-- 모달 -->
     <div id="memberModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
-      <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
-        <div class="p-6 border-b border-gray-200">
-          <h3 class="text-xl font-bold text-gray-800">멤버 선택</h3>
+      <div class="bg-white rounded-2xl shadow-2xl max-w-sm sm:max-w-md w-full mx-4 max-h-[70vh] sm:max-h-[80vh] overflow-hidden">
+        <div class="p-4 sm:p-6 border-b border-gray-200">
+          <h3 class="text-lg sm:text-xl font-bold text-gray-800">멤버 선택</h3>
         </div>
-        <div id="memberListArea" class="max-h-96 overflow-y-auto p-6"></div>
-        <div class="p-6 border-t border-gray-200">
+        <div id="memberListArea" class="max-h-80 sm:max-h-96 overflow-y-auto p-4 sm:p-6"></div>
+        <div class="p-4 sm:p-6 border-t border-gray-200">
           <button onclick="closeModal()" 
-                  class="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-2xl transition-colors">
+                  class="w-full px-4 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-lg transition-colors">
             닫기
           </button>
         </div>
@@ -478,8 +463,8 @@
       
       .tab-btn.active {
         background: white;
-        color: #4f46e5;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        color: #111827;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
       }
       
       .tab-btn:not(.active) {
@@ -487,8 +472,22 @@
       }
       
       .tab-btn:not(.active):hover {
-        color: #4f46e5;
+        color: #111827;
         background: rgba(255,255,255,0.5);
+      }
+
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
       }
     </style>
 
@@ -498,7 +497,7 @@
 
       function scrollSlider(id, direction) {
         const slider = document.getElementById(id);
-        const scrollAmount = 300;
+        const scrollAmount = window.innerWidth < 640 ? 200 : 300;
         slider.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
       }
 
@@ -509,10 +508,10 @@
 
       function showFarmTab(tabId) {
         document.querySelectorAll('.farm-tab-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+          btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
           btn.classList.add('text-gray-600');
         });
-        event.target.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+        event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
         event.target.classList.remove('text-gray-600');
         document.querySelectorAll('[id^="farm-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`farm-tab-${tabId}`).classList.remove('hidden');
@@ -520,10 +519,10 @@
 
       function showDamTab(tabId) {
         document.querySelectorAll('.dam-tab-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+          btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
           btn.classList.add('text-gray-600');
         });
-        event.target.classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
+        event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
         event.target.classList.remove('text-gray-600');
         document.querySelectorAll('[id^="dam-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`dam-tab-${tabId}`).classList.remove('hidden');
@@ -583,9 +582,9 @@
 
       // 페이지 로드 시 각각의 첫 번째 탭 활성화
       document.addEventListener('DOMContentLoaded', function() {
-        document.querySelector('.farm-tab-btn').classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
-        document.querySelector('.dam-tab-btn').classList.add('active', 'bg-white', 'text-indigo-600', 'shadow-sm');
-    });
+        document.querySelector('.farm-tab-btn').classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+        document.querySelector('.dam-tab-btn').classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+      });
     </script>
   </div>
 </div>
