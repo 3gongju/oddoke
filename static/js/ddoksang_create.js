@@ -1,3 +1,5 @@
+// ddoksang_create.js - 최종 수정본
+
 // 단계별 검증 규칙
 const stepValidationRules = {
     1: ['final_artist_id'],
@@ -52,7 +54,6 @@ window.cancelArtistSearch = function() {
 window.confirmNewArtist = function() {
     const finalArtistId = window.DdoksangFormUtils.getValue('final_artist_id');
     if (!finalArtistId) {
-        // ✅ 중앙화된 메시지 사용 필요 (alert는 일단 유지)
         alert('아티스트를 선택해주세요.');
         return;
     }
@@ -70,10 +71,10 @@ window.clearFinalSelection = function() {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // 의존성 확인
+    // ✅ 의존성 확인을 DOMContentLoaded 안으로 이동
     const { DdoksangFormUtils: FormUtils, DdoksangMapUtils: MapUtils } = window;
     if (!FormUtils || !MapUtils) {
+        console.error('❌ 필수 유틸리티를 찾을 수 없습니다');
         return;
     }
 
@@ -133,6 +134,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (index === 2 && !MapUtils.map) {
             setTimeout(() => MapUtils.initMap(), 100);
         }
+
+        // ✅ Step 3에서 날짜가 이미 입력되어 있다면 기간 표시 업데이트
+        if (index === 3) {
+            setTimeout(() => {
+                updateDurationDisplay();
+                // 날짜 필드에 값이 있다면 flatpickr 다시 설정
+                const startDate = FormUtils.getValue('start_date');
+                const endDate = FormUtils.getValue('end_date');
+                if (startDate && endDate && window.DdoksangDateUtils) {
+                    // 날짜 선택기 재초기화 (값이 있는 상태에서)
+                    console.log('✅ 기존 날짜 값으로 선택기 업데이트:', { startDate, endDate });
+                }
+            }, 100);
+        }
     }
 
     function updateNavigationButtons(index) {
@@ -146,7 +161,17 @@ document.addEventListener('DOMContentLoaded', function() {
             prevBtn?.classList.remove("hidden");
             nextBtn?.classList.remove("hidden");
             
-            if (nextBtn) nextBtn.textContent = isLastStep ? "제출하기" : "다음";
+            // ✅ 마지막 단계에서 체크 아이콘으로 변경
+            if (nextBtn) {
+                if (isLastStep) {
+                    nextBtn.title = "제출하기";
+                    nextBtn.innerHTML = "✓";
+                } else {
+                    nextBtn.title = "다음 단계";
+                    nextBtn.innerHTML = "&gt;";
+                }
+            }
+            
             FormUtils.updateButtonState('prevBtn', true);
         }
     }
@@ -180,9 +205,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!validateCurrentStep()) return;
 
-            if (currentStep + direction === 2) {
-                copyDataToForm();
-            }
+            // ✅ Step 1에서 Step 2로 이동할 때는 데이터 복사하지 않음
+            // 데이터 복사는 handleDuplicateCheckResult에서 중복 없음 확인 시에만 처리
 
             if (currentStep === totalSteps - 1) {
                 showSubmitConfirmModal();
@@ -201,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (normalFields.length > 0) {
             const validation = FormUtils.validateRequired(normalFields);
             if (!validation.valid) {
-                // ✅ 중앙화된 메시지 사용
                 const fieldLabel = getFieldLabel(validation.field);
                 FormUtils.showToast(msg('FORM_VALIDATION', 'REQUIRED_FIELD', {field: fieldLabel}), 'warning');
                 return false;
@@ -210,18 +233,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (rules.includes('images')) {
             if (!imageUploadModule || imageUploadModule.getFileCount() === 0) {
-                // ✅ 중앙화된 메시지 사용
                 FormUtils.showToast(msg('FORM_VALIDATION', 'IMAGE_REQUIRED'), 'warning');
                 return false;
             }
         }
 
+        // ✅ Step 3 날짜 검증 개선 (DdoksangDateUtils 우선 사용)
         if (currentStep === 3) {
-            const dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
-            if (!dateValidation.valid) {
-                // ✅ 중앙화된 메시지 사용
-                FormUtils.showToast(msg('FORM_VALIDATION', 'DATE_RANGE_ERROR'), 'warning');
-                return false;
+            let dateValidation;
+            
+            if (window.DdoksangDateUtils) {
+                // 새로운 날짜 유틸리티 사용 (토스트 자동 표시)
+                dateValidation = window.DdoksangDateUtils.validateDateRange('start_date', 'end_date', true);
+                if (!dateValidation.valid) {
+                    return false; // 토스트는 이미 DdoksangDateUtils에서 표시됨
+                }
+            } else {
+                // fallback: 기존 FormUtils 사용
+                dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
+                if (!dateValidation.valid) {
+                    FormUtils.showToast(msg('FORM_VALIDATION', 'DATE_RANGE_ERROR'), 'warning');
+                    return false;
+                }
             }
         }
 
@@ -229,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getFieldLabel(fieldId) {
-        // ✅ 중앙화된 메시지 사용
         return msg('FIELD_LABELS', fieldId) || fieldId;
     }
 
@@ -273,6 +305,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         FormUtils.updateButtonState('nextBtn', isValid);
+    }
+
+    // ✅ 운영 기간 표시 업데이트 함수
+    function updateDurationDisplay() {
+        const startDate = document.getElementById('start_date')?.value;
+        const endDate = document.getElementById('end_date')?.value;
+        const durationDisplay = document.getElementById('duration-display');
+        
+        if (!durationDisplay || !startDate || !endDate) return;
+        
+        try {
+            if (window.DdoksangDateUtils) {
+                const days = window.DdoksangDateUtils.getDaysDifference(startDate, endDate);
+                durationDisplay.textContent = `총 ${days}일간 운영`;
+                durationDisplay.classList.remove('hidden');
+            }
+        } catch (error) {
+            durationDisplay.classList.add('hidden');
+        }
+    }
+
+    // ✅ 날짜 선택기 초기화 함수 (DdoksangDateUtils 사용)
+    function initializeDatePickers() {
+        // 의존성 확인
+        if (typeof flatpickr === 'undefined' || !window.DdoksangDateUtils) {
+            console.warn('날짜 선택기 초기화 실패: 의존성 누락');
+            return;
+        }
+
+        const DateUtils = window.DdoksangDateUtils;
+
+        // 중복 확인용 날짜 선택기 (Step 0)
+        const duplicatePickers = DateUtils.initDuplicateCheckPickers(() => {
+            // 중복 확인 버튼 상태 업데이트
+            if (window.updateDuplicateButtonState) {
+                window.updateDuplicateButtonState();
+            }
+        });
+
+        // 생성 폼용 날짜 선택기 (Step 3)
+        const createPickers = DateUtils.initCreateFormPickers(() => {
+            // 다음 버튼 상태 업데이트
+            updateNextButtonState();
+            
+            // 운영 기간 표시 업데이트
+            updateDurationDisplay();
+        });
+
+        // 전역 참조 저장
+        window.ddoksangApp.datePickers = {
+            duplicate: duplicatePickers,
+            create: createPickers
+        };
+
+        console.log('✅ 날짜 선택기 초기화 완료');
     }
 
     function showSubmitConfirmModal() {
@@ -320,7 +407,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function copyDataToForm() {
+        // ✅ 중복 확인에서 입력한 모든 정보를 실제 폼으로 복사
         FormUtils.setValue('cafe_name', FormUtils.getValue('check_cafe_name'));
+        FormUtils.setValue('start_date', FormUtils.getValue('check_start_date'));
+        FormUtils.setValue('end_date', FormUtils.getValue('check_end_date'));
+        
+        console.log('✅ 중복 확인 데이터 복사 완료:', {
+            cafe_name: FormUtils.getValue('check_cafe_name'),
+            start_date: FormUtils.getValue('check_start_date'),
+            end_date: FormUtils.getValue('check_end_date')
+        });
     }
 
     function resetDuplicateCheck() {
@@ -445,7 +541,6 @@ document.addEventListener('DOMContentLoaded', function() {
             end_date: FormUtils.getValue('check_end_date')
         };
 
-        // ✅ 중앙화된 메시지 사용
         if (!data.artist_id || !data.cafe_name || !data.start_date || !data.end_date) {
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'VALIDATION_ERROR'), 'warning');
             return;
@@ -455,7 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const originalDisabled = checkBtn.disabled;
         
         checkBtn.disabled = true;
-        // ✅ 중앙화된 메시지 사용
         checkBtn.textContent = msg('DUPLICATE_CHECK', 'CHECKING_DUPLICATE');
         checkBtn.className = checkBtn.className
             .replace(/bg-gray-\d+|hover:bg-gray-\d+/g, '')
@@ -483,9 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
             handleDuplicateCheckResult(result);
             
         } catch (error) {
-            // ✅ 중앙화된 메시지 사용 (일부 하드코딩 유지 - 동적 에러 메시지)
             FormUtils.showToast(`중복 확인 중 오류: ${error.message}`, 'error');
-            
             hideDuplicateCheckForm();
             showErrorMessage(error.message);
             
@@ -510,11 +602,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (result.exists && result.similar_cafes?.length > 0) {
             showDuplicateCafes(result.similar_cafes);
-            // ✅ 중앙화된 메시지 사용
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'DUPLICATE_FOUND', {count: result.similar_cafes.length}), 'warning');
         } else {
+            // ✅ 중복이 없을 때만 데이터를 미리 복사 (사용자가 입력한 정보 재사용)
+            copyDataToForm();
+            console.log('✅ 중복 없음 확인 - 입력 정보 복사 완료');
+            
             FormUtils.toggleClass('duplicate-success', 'hidden', false);
-            // ✅ 중앙화된 메시지 사용
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'NO_DUPLICATE'), 'success');
             setTimeout(() => showStep(1), 1500);
         }
@@ -650,13 +744,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('confirm-duplicate-btn')?.addEventListener('click', () => {
             const selectedCafeId = FormUtils.getValue('selected_duplicate_cafe_id');
             if (!selectedCafeId) {
-                // ✅ 중앙화된 메시지 사용
                 FormUtils.showToast(msg('DUPLICATE_CHECK', 'SELECT_CAFE_FIRST'), 'warning');
                 FormUtils.toggleClass('select-cafe-instruction', 'hidden', false);
                 return;
             }
             
-            // ✅ 중앙화된 메시지 사용
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'REDIRECTING_TO_CAFE'), 'info');
             setTimeout(() => {
                 window.location.href = `/ddoksang/cafe/${selectedCafeId}/`;
@@ -669,32 +761,11 @@ document.addEventListener('DOMContentLoaded', function() {
             window.ddoksangApp.duplicateChecked = duplicateChecked;
             window.ddoksangApp.isDuplicate = isDuplicate;
             
-            // ✅ 중앙화된 메시지 사용
+            // ✅ "다른 카페입니다"를 선택했으므로 데이터 복사하지 않음
+            // 사용자가 새로운 카페 정보를 입력해야 함
+            
             FormUtils.showToast(msg('DUPLICATE_CHECK', 'REGISTER_NEW_CAFE'), 'success');
             setTimeout(() => showStep(1), 1000);
-        });
-    }
-
-    function initializeDatePickers() {
-        if (typeof flatpickr === 'undefined') return;
-
-        flatpickr("#check_start_date", { 
-            dateFormat: "Y-m-d",
-            onChange: () => window.updateDuplicateButtonState?.()
-        });
-        flatpickr("#check_end_date", { 
-            dateFormat: "Y-m-d",
-            onChange: () => window.updateDuplicateButtonState?.()
-        });
-        flatpickr("#start_date", {
-            dateFormat: "Y-m-d",
-            defaultDate: new Date(),
-            onChange: () => updateNextButtonState()
-        });
-        flatpickr("#end_date", {
-            dateFormat: "Y-m-d", 
-            defaultDate: new Date(),
-            onChange: () => updateNextButtonState()
         });
     }
 
@@ -802,7 +873,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function searchPlace() {
         const keyword = FormUtils.getValue('place-search');
         if (!keyword) {
-            // ✅ 중앙화된 메시지 사용
             FormUtils.showToast(msg('FORM_VALIDATION', 'SEARCH_KEYWORD_REQUIRED'), 'warning');
             return;
         }

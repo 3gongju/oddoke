@@ -5,7 +5,7 @@
 {% block body %}
 <section class="max-w-4xl mx-auto px-4 py-10">
   <h1 class="text-2xl font-bold mb-6 flex items-center space-x-3">
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-[46px] h-[46px] align-middle">
+    <img src="{% static 'image/ddok_circle_red.png' %}" alt="로고" class="w-[66px] h-[66px] align-middle">
     <span>생카 등록하기</span>
   </h1>
   <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트/ 멤버의 생카 정보를 등록해주세요!</p>
@@ -54,7 +54,7 @@
         <!-- 아티스트/멤버명 검색 -->
         <label class="block text-sm font-medium mb-1">아티스트/멤버명</label>
         <div class="relative mb-4">
-          <input type="text" id="final-artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
+          <input type="text" id="final-artist-member-search" class="w-full border rounded px-4 py-2" autocomplete="off" required>
           <ul id="final-artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
         </div>
         
@@ -137,29 +137,60 @@
     <div id="step-3" class="step hidden">
       <h2 class="text-lg font-semibold mb-6">운영 기간</h2>
       
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label class="block text-sm font-medium mb-2">시작일</label>
-          <input type="text" id="start_date" name="start_date" class="w-full border rounded px-4 py-3" required>
+          <label class="block text-sm font-medium mb-2">시작일 *</label>
+          <input type="date" 
+                 id="start_date" 
+                 name="start_date" 
+                 class="w-full border rounded px-4 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10" 
+                 required>
+          <p class="text-xs text-gray-500 mt-1">달력에서 날짜를 선택해주세요</p>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">종료일</label>
-          <input type="text" id="end_date" name="end_date" class="w-full border rounded px-4 py-3" required>
+          <label class="block text-sm font-medium mb-2">종료일 *</label>
+          <input type="date" 
+                 id="end_date" 
+                 name="end_date" 
+                 class="w-full border rounded px-4 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10" 
+                 required>
+          <p class="text-xs text-gray-500 mt-1">시작일 이후 날짜만 선택 가능합니다</p>
         </div>
       </div>
+
+      <!-- 운영 기간 표시 -->
+      <div id="duration-display" class="hidden text-center p-3 bg-blue-50 rounded-lg text-blue-800 text-sm font-medium mb-4">
+        <!-- 자동으로 업데이트됨 -->
+      </div>
+
+      <!-- 도움말 -->
+      <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+         <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+            <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-10 h-10">
+          날짜 입력 방법
+        </h4>        <ul class="space-y-1 list-disc list-inside">
+          <li><strong>달력 선택:</strong> 입력 필드를 클릭하여 달력에서 날짜를 선택할 수 있습니다</li>
+          <li><strong>직접 입력:</strong> YYYY-MM-DD 형식으로 직접 입력도 가능합니다</li>
+          <li><strong>자동 조정:</strong> 종료일이 시작일보다 이르면 자동으로 조정됩니다</li>
+        </ul>
+      </div>
     </div>
+
 
     <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
       <h2 class="text-lg font-semibold mb-6">특전 및 이벤트 정보</h2>
       
-      <label class="block text-sm font-medium mb-4">🎁 특전 정보</label>
 
       <!-- 일반 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3">🎨 특전</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+          일반 특전
+        </h4>
+
         <div class="grid grid-cols-4 gap-2">
-          {% for item in "종이컵,포토카드,스티커,엽서,증명사진,달력,포토매틱,엘홀더,포스터,포카홀더,메모지,프리쿠라,부채,마스킹테이프,ID카드,띠부띠부씰,키링,슬로건,그립톡,액자,컵,거울,편지지,틴케이스,토이카메라,짐색,카드지갑,티셔츠,트레카,티켓,수건,기타"|split:"," %}
+          {% for item in "ID카드,그립톡,거울,달력,띠부띠부씰,마스킹테이프,메모지,부채,스티커,슬로건,아크릴,액자,엽서,엘홀더,증명사진,종이컵,짐색,카드지갑,컵,키링,포스터,포카홀더,포토매틱,포토카드,프리쿠라,편지지,틴케이스,토이카메라,티셔츠,트레카,티켓,수건,+기타"|split:"," %}
             <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
@@ -170,9 +201,13 @@
 
       <!-- 선착 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3">🏃 선착 특전</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+          선착 특전
+        </h4>
+
         <div class="grid grid-cols-4 gap-2">
-          {% for item in "종이컵,포토카드,스티커,엽서,증명사진,달력,포토매틱,엘홀더,포스터,포카홀더,메모지,프리쿠라,부채,마스킹테이프,ID카드,띠부띠부씰,키링,슬로건,그립톡,액자,컵,거울,편지지,틴케이스,토이카메라,짐색,카드지갑,티셔츠,트레카,티켓,수건,기타"|split:"," %}
+          {% for item in "ID카드,그립톡,거울,달력,띠부띠부씰,마스킹테이프,메모지,부채,스티커,슬로건,아크릴,액자,엽서,엘홀더,증명사진,종이컵,짐색,카드지갑,컵,키링,포스터,포카홀더,포토매틱,포토카드,프리쿠라,편지지,틴케이스,토이카메라,티셔츠,트레카,티켓,수건,+기타"|split:"," %}
             <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_priority" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
@@ -183,9 +218,13 @@
 
       <!-- 그 외 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3">✨ 그 외 특전</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+          그 외 특전
+        </h4>
+
         <div class="grid grid-cols-4 gap-2">
-          {% for item in "메뉴 특전,선착 특전,당일 특전,랜덤 특전,럭키 넘버,럭키 드로우,가챠 뽑기,포토부스,전시회,해시태그 이벤트,기타"|split:"," %}
+          {% for item in "가챠 뽑기,당일 특전,랜덤 특전,럭키 드로우,럭키 넘버,메뉴 특전,선착 특전,전시회,포토부스,해시태그 이벤트,+기타"|split:"," %}
             <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_extra" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
@@ -203,15 +242,21 @@
       <h2 class="text-lg font-semibold mb-6">출처 정보 (선택사항)</h2>
       
       <label class="block text-sm font-medium mb-2">X 계정</label>
-      <div class="flex items-center mb-4">
-        <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l">@</span>
-        <input type="text" name="x_username" class="flex-1 border border-gray-300 rounded-r px-3 py-2" placeholder="x_username">
+      <div class="flex items-stretch mb-4">
+        <span class="inline-flex items-center px-3 py-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l whitespace-nowrap">@</span>
+        <input type="text" 
+               name="x_username" 
+               id="x_username"
+               class="flex-1 border border-gray-300 rounded-r px-3 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10 min-w-0" 
+               placeholder="username"
+               autocomplete="off">
       </div>
-      <p class="text-xs text-gray-500 mb-4">예: @oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
+      <p class="text-xs text-gray-500 mb-2">예: oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
+      <p class="text-xs text-gray-400">@ 기호는 자동으로 제거됩니다</p>
     </div>
 
 
-    <!-- Step 6: 이미지 업로드 (개선된 UI) -->
+    <!-- Step 6: 이미지 업로드 -->
     <div id="step-6" class="step hidden">
       <div class="text-center mb-8">
         <h2 class="text-lg font-semibold mb-4">이미지 업로드</h2>
@@ -240,19 +285,22 @@
         <!-- 이미지 미리보기 -->
         <div id="image-preview-container" class="hidden">
           <div class="mb-4">
-            <h3 class="text-sm font-medium text-gray-700 mb-3 text-center">미리보기</h3>
             <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4" id="image-preview-list"></div>
           </div>
         </div>
 
         <!-- 업로드 안내 -->
-        <div class="text-xs text-gray-500 text-center">
+        <div class="text-xs text-gray-600">
           <div class="bg-gray-50 rounded-lg p-4">
-            <ul class="space-y-1">
-              <li>• 첫 번째 이미지가 대표 이미지로 설정됩니다</li>
-              <li>• JPG, PNG, GIF 형식만 업로드 가능합니다</li>
-              <li>• 파일당 최대 5MB까지 업로드할 수 있습니다</li>
-              <li>• 최대 10장까지 업로드할 수 있습니다</li>
+            <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+                <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-10 h-10">
+              날짜 입력 방법
+            </h4> 
+            <ul class="space-y-1 list-disc list-inside">
+              <li><strong>대표 이미지:</strong> 첫 번째 이미지가 대표 이미지로 설정됩니다</li>
+              <li><strong>파일 형식:</strong> JPG, PNG, GIF 형식만 업로드 가능합니다</li>
+              <li><strong>파일 크기:</strong> 파일당 최대 5MB까지 업로드할 수 있습니다</li>
+              <li><strong>업로드 개수:</strong> 최대 10장까지 업로드할 수 있습니다</li>
             </ul>
           </div>
         </div>
@@ -281,10 +329,23 @@
       </style>
     </div>
 
-    <!-- 네비게이션 버튼 -->
-    <div id="navigationButtons" class="mt-8 flex justify-between">
-      <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors hidden">이전</button>
-      <button type="button" id="nextBtn" class="px-6 py-2 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed hidden">다음</button>
+    <!-- 네비게이션 버튼 (화살표 SVG로 변경) -->
+    <div id="navigationButtons" class="mt-8 flex justify-between items-center">
+      <button type="button" id="prevBtn" 
+              class="flex items-center justify-center w-12 h-12 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl hidden group relative"
+              title="이전 단계">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      
+      <button type="button" id="nextBtn" 
+              class="flex items-center justify-center w-12 h-12 bg-gray-400 text-gray-200 rounded-full cursor-not-allowed shadow-lg hidden group relative"
+              title="다음 단계">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
     </div>
 
   </form>
@@ -336,93 +397,120 @@
     box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
   }
 
+    /* X 계정 입력 필드 스타일 통일 */
+  #x_username {
+    height: 48px; /* 다른 입력 필드와 동일한 높이 */
+  }
+  
+  #x_username + span {
+    height: 48px; /* @ 표시 부분도 동일한 높이 */
+  }
+
   /* 반응형 버튼 스타일 */
   @media (max-width: 640px) {
     #navigationButtons {
-      flex-direction: column;
-      gap: 0.5rem;
+      padding: 0 1rem;
     }
     
     #navigationButtons button {
-      width: 100%;
+      width: 3rem;
+      height: 3rem;
+    }
+    
+    #navigationButtons button svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    
+    /* Step 1 버튼들 모바일 최적화 */
+    .step button {
+      font-size: 0.875rem;
+      padding: 0.75rem 1rem;
+    }
+    
+    /* 제목과 설명 텍스트 크기 조정 */
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+    
+    /* 프로그래스 바 높이 조정 */
+    #progressBar {
+      height: 0.25rem;
     }
   }
 </style>
 
 {{ messages_json|json_script:"ddoksang-messages" }}
 
-<!-- JavaScript 국제화 카탈로그 로드 -->
 <!-- Scripts - 순서 중요 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<!-- 유틸리티 모듈들 먼저 로드 -->
+<!-- 날짜 유틸리티 -->
+<script src="{% static 'js/ddoksang_date_utils.js' %}"></script>
+
+<!-- 유틸리티 모듈들 -->
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
 <script src="{% static 'js/ddoksang_image_upload.js' %}"></script>
 
-<!-- 메시지 시스템 추가 -->
+<!-- 메시지 시스템 -->
 <script>
 // Django의 json_script를 사용한 안전한 방법
-  const messagesElement = document.getElementById('ddoksang-messages');
-  window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
+const messagesElement = document.getElementById('ddoksang-messages');
+window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
 
-  // 메시지 유틸리티 객체
-  window.DdoksangMessages = {
-      get: function(category, key, params = {}) {
-          try {
-              let message = this.messages[category][key];
-              
-              if (typeof message !== 'string') {
-                  console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
-                  return `${category}.${key}`;
-              }
-              
-              // 플레이스홀더 치환
-              if (params && typeof params === 'object') {
-                  Object.entries(params).forEach(([paramKey, value]) => {
-                      const placeholder = `{${paramKey}}`;
-                      message = message.replace(new RegExp(placeholder, 'g'), value);
-                  });
-              }
-              
-              return message;
-          } catch (error) {
-              console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
-              return `${category}.${key}`;
-          }
-      },
-      
-      messages: window.DDOKSANG_MESSAGES || {}
-  };
-</script>
+// 메시지 유틸리티 객체
+window.DdoksangMessages = {
+    get: function(category, key, params = {}) {
+        try {
+            let message = this.messages[category][key];
+            
+            if (typeof message !== 'string') {
+                console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
+                return `${category}.${key}`;
+            }
+            
+            // 플레이스홀더 치환
+            if (params && typeof params === 'object') {
+                Object.entries(params).forEach(([paramKey, value]) => {
+                    const placeholder = `{${paramKey}}`;
+                    message = message.replace(new RegExp(placeholder, 'g'), value);
+                });
+            }
+            
+            return message;
+        } catch (error) {
+            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
+            return `${category}.${key}`;
+        }
+    },
+    
+    messages: window.DDOKSANG_MESSAGES || {}
+};
+
 // 편의 함수
 window.msg = function(category, key, params) {
     return window.DdoksangMessages.get(category, key, params);
 };
 
-console.log('✅ 메시지 시스템 로드됨 (json_script 방식)');
-console.log('📝 메시지 카테고리:', Object.keys(window.DDOKSANG_MESSAGES));
+console.log('✅ 메시지 시스템 로드됨');
 </script>
 
-<!-- 메인 스크립트 (기존 유지) -->
+<!-- 메인 스크립트 -->
 <script src="{% static 'js/ddoksang_create.js' %}"></script>
 
-<!-- 자동완성 스크립트를 일반 script로 로드 (기존 유지) -->
+<!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 중복 확인용 날짜 선택기 초기화 (기존 유지) -->
+<!-- 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  
-  // 날짜 선택기 초기화
-  if (typeof flatpickr !== 'undefined') {
-    flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
-    flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
-    console.log('📅 날짜 선택기 초기화 완료');
-  }
-
-  //  자동완성 즉시 초기화 (중복 확인 단계용)
+  // 자동완성 초기화
   if (typeof initAutocomplete === 'function') {
     console.log('🔄 자동완성 초기화 시작...');
     
@@ -478,14 +566,11 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ 폼 데이터 업데이트 완료:', data);
   }
 
-  // 전역 함수로 설정 (다른 스크립트에서 사용할 수 있도록)
+  // 전역 함수로 설정
   window.selectArtistForDuplicateCheck = selectArtistForDuplicateCheck;
 });
-</script>
 
-
-
-<!-- // 자동완성 재초기화 함수 -->
+// 자동완성 재초기화 함수
 window.restartAutocomplete = function() {
   if (typeof initAutocomplete === 'function') {
     initAutocomplete('artist-member-search', 'artist-member-results', {
@@ -496,7 +581,6 @@ window.restartAutocomplete = function() {
       apiUrl: '/artist/autocomplete/',
       onSelect: window.selectArtistForDuplicateCheck
     });
-  } else {
   }
 };
 </script>
