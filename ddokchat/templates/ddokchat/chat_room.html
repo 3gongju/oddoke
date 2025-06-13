@@ -102,54 +102,184 @@
               </p>
             {% endif %}
             
-            <!-- ✅ 계좌정보 메시지 처리 추가 -->
-            {% if message.message_type == 'account_info' and message.sender != user %}
-            <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
-              <div class="space-y-3">
-                <div class="flex items-center space-x-2 mb-2">
-                  <span class="text-lg">💳</span>
-                  <span class="font-semibold">계좌정보</span>
-                </div>
-                
-                <div class="bg-gray-50 rounded-lg p-3 space-y-2">
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">은행</span>
-                    <span class="font-medium">{{ message.account_bank_name }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">계좌번호</span>
-                    <span class="font-mono">{{ message.account_number }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">예금주</span>
-                    <span class="font-medium">{{ message.account_holder }}</span>
-                  </div>
-                </div>
-                
-                <!-- 상대방 메시지에만 버튼 표시 -->
-                <div class="flex space-x-2 mt-3">
-                  <button onclick="copyAccountNumber('{{ message.account_number }}')" 
-                          class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                    계좌번호 복사
-                  </button>
-                  <button onclick="checkFraudHistory('{{ message.account_bank_code }}', '{{ message.account_number }}', '{{ message.account_holder }}')" 
-                          class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                    신고이력 조회
-                  </button>
-                </div>
+            <!-- 메시지 타입별 처리 -->
+            {% if message.message_type == 'text' %}
+              <!-- 텍스트 메시지 -->
+              <div class="{% if message.sender == user %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-4 py-2 rounded-2xl shadow-sm">
+                <p class="text-sm break-words">{{ message.text_content.content }}</p>
               </div>
-            </div>
-
-          <!-- 기존 이미지/텍스트 메시지 처리 -->
-          {% elif message.message_type != 'account_info' %}
-            <div class="{% if message.sender == user %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-4 py-2 rounded-2xl shadow-sm">
-              {% if message.image %}
-                <img src="{{ message.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
-              {% elif message.content %}
-                <p class="text-sm break-words">{{ message.content }}</p>
-              {% endif %}
-            </div>
-          {% endif %}
+              
+            {% elif message.message_type == 'image' %}
+              <!-- 이미지 메시지 -->
+              <div class="{% if message.sender == user %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-3 py-2 rounded-2xl shadow-sm">
+                <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
+                {% if message.image_content.caption %}
+                  <p class="text-sm mt-2 {% if message.sender == user %}text-gray-200{% else %}text-gray-600{% endif %}">
+                    {{ message.image_content.caption }}
+                  </p>
+                {% endif %}
+              </div>
+              
+            {% elif message.message_type == 'account_info' and message.sender != user %}
+              <!-- 계좌정보 메시지 (상대방이 보낸 것만 표시) -->
+              {% with account_info=message.account_content.get_display_info %}
+                <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">💳</span>
+                      <span class="font-semibold">계좌정보</span>
+                    </div>
+                    
+                    {% if account_info.is_deleted %}
+                      <!-- 삭제된 계좌 정보 -->
+                      <div class="bg-gray-100 rounded-lg p-4 text-center">
+                        <div class="text-gray-500 mb-2">
+                        </div>
+                        <p class="text-sm text-gray-600 font-medium">{{ account_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <!-- 기존 계좌 정보 표시 -->
+                      <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">은행</span>
+                          <span class="font-medium">{{ account_info.bank_name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">계좌번호</span>
+                          <span class="font-mono">{{ account_info.account_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">예금주</span>
+                          <span class="font-medium">{{ account_info.account_holder }}</span>
+                        </div>
+                      </div>
+                      
+                      <!-- 상대방 메시지에만 버튼 표시 -->
+                      <div class="flex space-x-2 mt-3">
+                        <button onclick="copyAccountNumber('{{ account_info.account_number }}')" 
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          계좌번호 복사
+                        </button>
+                        <button onclick="checkFraudHistory('{{ account_info.bank_code }}', '{{ account_info.account_number }}', '{{ account_info.account_holder }}')" 
+                                class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          신고이력 조회
+                        </button>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+              
+            {% elif message.message_type == 'account_info' and message.sender == user %}
+              <!-- 내가 보낸 계좌정보 메시지 -->
+              {% with account_info=message.account_content.get_display_info %}
+                <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">💳</span>
+                      <span class="font-semibold">계좌정보 전송</span>
+                    </div>
+                    
+                    {% if account_info.is_deleted %}
+                      <!-- 삭제된 계좌 정보 -->
+                      <div class="bg-gray-800 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-300 font-medium">{{ account_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <!-- 기존 계좌 정보 표시 -->
+                      <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">은행</span>
+                          <span class="font-medium text-white">{{ account_info.bank_name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">계좌번호</span>
+                          <span class="font-mono text-white">{{ account_info.account_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">예금주</span>
+                          <span class="font-medium text-white">{{ account_info.account_holder }}</span>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+              
+            {% elif message.message_type == 'address_info' and message.sender != user %}
+              <!-- 주소정보 메시지 (상대방이 보낸 것만 표시) -->
+              {% with address_info=message.address_content.get_display_info %}
+                <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">📍</span>
+                      <span class="font-semibold">배송 주소</span>
+                    </div>
+                    
+                    {% if address_info.is_deleted %}
+                      <!-- 삭제된 주소 정보 -->
+                      <div class="bg-gray-100 rounded-lg p-4 text-center">
+                        <div class="text-gray-500 mb-2">
+                        </div>
+                        <p class="text-sm text-gray-600 font-medium">{{ address_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <!-- 기존 주소 정보 표시 -->
+                      <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">우편번호</span>
+                          <span class="font-medium">{{ address_info.postal_code }}</span>
+                        </div>
+                        <div>
+                          <span class="text-sm text-gray-600">주소</span>
+                          <p class="font-medium mt-1">{{ address_info.full_address }}</p>
+                        </div>
+                      </div>
+                      
+                      <!-- 주소 복사 버튼 -->
+                      <div class="mt-3">
+                        <button onclick="copyAddress('{{ address_info.full_address }}')" 
+                                class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          주소 복사
+                        </button>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+              
+            {% elif message.message_type == 'address_info' and message.sender == user %}
+              <!-- 내가 보낸 주소정보 메시지 -->
+              {% with address_info=message.address_content.get_display_info %}
+                <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">📍</span>
+                      <span class="font-semibold">주소정보 전송</span>
+                    </div>
+                    
+                    {% if address_info.is_deleted %}
+                      <!-- 삭제된 주소 정보 -->
+                      <div class="bg-gray-800 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-300 font-medium">{{ address_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <!-- 기존 주소 정보 표시 -->
+                      <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">우편번호</span>
+                          <span class="font-medium text-white">{{ address_info.postal_code }}</span>
+                        </div>
+                        <div>
+                          <span class="text-sm text-gray-300">주소</span>
+                          <p class="font-medium text-white mt-1">{{ address_info.full_address }}</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+            {% endif %}
 
             <!-- ⏰ 시간 및 읽음 여부 -->
             <div class="flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %} items-center gap-1 mt-1">
@@ -181,21 +311,24 @@
         </label>
         <input id="chat-image-upload" type="file" accept="image/*" class="hidden">
         
-        <!-- ✅ + 버튼 -> 계좌정보 전송 -->
-        <!-- <div class="relative">
+        <!-- ✅ + 버튼 -> 계좌정보/주소정보 전송 -->
+        <div class="relative">
           <button id="plus-menu-btn" class="p-2 cursor-pointer text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
-          </button> -->
+          </button>
           
           <!-- + 버튼 드롭다운 메뉴 -->
-          <!-- <div id="plus-menu" class="absolute bottom-12 left-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[160px] hidden">
+          <div id="plus-menu" class="absolute bottom-12 left-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[160px] hidden">
             <button id="send-account-btn" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
               <span class="mr-2">💳</span> 내 계좌 보내기
             </button>
+            <button id="send-address-btn" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+              <span class="mr-2">📍</span> 내 주소 보내기
+            </button>
           </div>
-        </div> -->
+        </div>
             
         <!-- 메시지 입력창 -->
         <div class="flex-1 relative">
@@ -219,7 +352,10 @@
       </div>
       {% endif %} 
     </div>
-    <!-- 사기 조회 결과 모달 (메시지 입력 영역 밖에 배치) -->
+  </div>
+</div>
+
+<!-- 사기 조회 결과 모달 -->
 <div id="fraudCheckModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
   <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
     <!-- 모달 헤더 -->
@@ -335,6 +471,41 @@
   </div>
 </div>
 
+<!-- 리뷰 모달 -->
+{% if user == room.buyer and not has_already_reviewed %}
+<dialog id="reviewModal" class="backdrop:bg-black backdrop:bg-opacity-50 bg-white rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 border-0">
+  <div class="bg-white rounded-2xl overflow-hidden">
+    <!-- 헤더 -->
+    <div class="bg-black text-white px-6 py-4">
+      <h2 class="text-xl font-bold">매너 리뷰 작성</h2>
+      <p class="text-gray-300 text-sm mt-1">거래 경험을 공유해주세요</p>
+    </div>
+    
+    <!-- 폼 내용 -->
+    <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}" class="p-6">
+      {% csrf_token %}
+      <input type="hidden" name="chatroom_id" value="{{ room.id }}">
+      
+      <div class="space-y-6">
+        {{ form.as_p }}
+      </div>
+      
+      <!-- 버튼 영역 -->
+      <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
+        <button type="button" onclick="document.getElementById('reviewModal').close()" 
+                class="px-6 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+          취소
+        </button>
+        <button type="submit" 
+                class="px-6 py-2.5 bg-black text-white hover:bg-gray-800 rounded-lg transition-colors font-medium">
+          리뷰 제출
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+{% endif %}
+
 <style>
 /* 스크롤바 스타일링 */
 #chat-log::-webkit-scrollbar {
@@ -354,12 +525,12 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* my_rooms.html 스타일의 말풍선 스타일 적용 */
+/* 말풍선 스타일 */
 .max-w-xs {
   max-width: 20rem;
 }
 
-/* 읽지 않음 표시 애니메이션 - my_rooms.html 스타일 */
+/* 읽지 않음 표시 애니메이션 */
 .unread-label {
   animation: pulse 2s infinite;
 }
@@ -384,22 +555,6 @@
   transform: scale(1.05);
 }
 
-/* 모바일 반응형 */
-@media (max-width: 640px) {
-  .max-w-xs {
-    max-width: 200px;
-  }
-  
-  #chat-log {
-    padding: 1rem;
-  }
-  
-  .px-4 {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-}
-
 /* 메시지 애니메이션 */
 @keyframes slideIn {
   from {
@@ -414,59 +569,6 @@
 
 .message-enter {
   animation: slideIn 0.3s ease-out;
-}
-
-/* 타이핑 인디케이터 */
-.typing-indicator {
-  display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-}
-
-.typing-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #9CA3AF;
-  animation: typing 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typing {
-  0%, 80%, 100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  40% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-/* my_rooms.html과 일관성을 위한 추가 스타일 */
-.chatroom-container {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 스크롤바 커스터마이징 - my_rooms.html 스타일과 통일 */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
 }
 
 /* 리뷰 모달 스타일링 */
@@ -554,6 +656,19 @@
 
 /* 반응형 */
 @media (max-width: 640px) {
+  .max-w-xs {
+    max-width: 200px;
+  }
+  
+  #chat-log {
+    padding: 1rem;
+  }
+  
+  .px-4 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
   #reviewModal {
     max-width: calc(100vw - 2rem);
     margin: 1rem;
@@ -569,41 +684,6 @@
   }
 }
 </style>
-
-{% if user == room.buyer and not has_already_reviewed %}
-<dialog id="reviewModal" class="backdrop:bg-black backdrop:bg-opacity-50 bg-white rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 border-0">
-  <div class="bg-white rounded-2xl overflow-hidden">
-    <!-- 헤더 -->
-    <div class="bg-black text-white px-6 py-4">
-      <h2 class="text-xl font-bold">매너 리뷰 작성</h2>
-      <p class="text-gray-300 text-sm mt-1">거래 경험을 공유해주세요</p>
-    </div>
-    
-    <!-- 폼 내용 -->
-    <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}" class="p-6">
-      {% csrf_token %}
-      <input type="hidden" name="chatroom_id" value="{{ room.id }}">
-      
-      <div class="space-y-6">
-        {{ form.as_p }}
-      </div>
-      
-      <!-- 버튼 영역 -->
-      <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
-        <button type="button" onclick="document.getElementById('reviewModal').close()" 
-                class="px-6 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
-          취소
-        </button>
-        <button type="submit" 
-                class="px-6 py-2.5 bg-black text-white hover:bg-gray-800 rounded-lg transition-colors font-medium">
-          리뷰 제출
-        </button>
-      </div>
-    </form>
-  </div>
-</dialog>
-{% endif %}
-
 <script>
   const roomId = "{{ room.id }}";
   const socket = new WebSocket(
@@ -616,7 +696,7 @@
   const input = document.getElementById('chat-message-input');
   const submit = document.getElementById('chat-message-submit');
   const currentUser = "{{ user.username }}";
-  console.log('현재 사용자:', currentUser); // 디버깅
+  const currentUserId = "{{ user.id }}";
   
   // 거래 완료 상태 추적
   let isTradeCompleted = "{{ room.is_fully_completed }}" === "True";
@@ -674,7 +754,7 @@
       messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} group message-enter mb-2`;
       
       if (isMine) {
-        // 내 메시지 (오른쪽) - my_rooms.html 스타일
+        // 내 메시지 (오른쪽)
         messageContainer.innerHTML = `
           <div class="max-w-xs">
             <div class="bg-gray-900 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
@@ -686,15 +766,14 @@
             </div>
           </div>`;
       } else {
-        // 상대방 메시지 (왼쪽) - my_rooms.html 스타일
+        // 상대방 메시지 (왼쪽)
         messageContainer.innerHTML = `
           <div class="max-w-xs">
+            <p class="text-sm font-semibold text-gray-800 mb-1">${data.sender}</p>
             <div class="bg-white text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm border border-gray-200">
               <p class="text-sm break-words">${data.message}</p>
             </div>
             <div class="flex justify-start items-center gap-1 mt-1">
-              <span class="text-xs text-gray-600 font-medium">${data.sender}</span>
-              <span class="text-xs text-gray-400">•</span>
               <span class="text-xs text-gray-400">${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
             </div>
           </div>`;
@@ -712,31 +791,17 @@
       scrollToBottom();
     }
 
-    // ✅ 계좌정보 메시지 수신 (새로 추가)
+    // 계좌정보 메시지 수신
     else if (data.type === 'account_info') {
-      console.log('=== 계좌정보 디버깅 시작 ===');
-      console.log('1. 전체 data:', data);
-      console.log('2. data.sender:', data.sender);
-      console.log('3. currentUser:', currentUser);
-      
       const accountInfo = data.account_info;
-      console.log('8. accountInfo:', accountInfo);
-      
-      // ✅ 위치용: 원래 로직 (송신자는 오른쪽, 수신자는 왼쪽)
       const isMineForPosition = data.sender === currentUser;
-      console.log('9. isMineForPosition (위치용):', isMineForPosition);
-      
-      // ✅ 버튼용: 강제로 false (항상 버튼 표시)
-      const isMineForButton = false;
-      console.log('10. isMineForButton (버튼용):', isMineForButton);
+      const isMineForButton = data.sender === currentUser;
       
       const messageContainer = document.createElement("div");
-      // 위치는 원래 로직 사용
       messageContainer.className = `flex ${isMineForPosition ? 'justify-end' : 'justify-start'} mb-2`;
 
-      // 버튼은 강제로 false 사용 (항상 표시)
       let buttonsHtml = '';
-      if (!isMineForButton) {  // 항상 true이므로 항상 버튼 생성
+      if (!isMineForButton && !accountInfo.is_deleted) {
         buttonsHtml = `
           <div class="flex space-x-2 mt-3">
             <button onclick="copyAccountNumber('${accountInfo.account_number}')" 
@@ -749,36 +814,47 @@
             </button>
           </div>
         `;
-        console.log('12. 버튼 HTML 생성됨!');
       }
-      
-      console.log('13. buttonsHtml 길이:', buttonsHtml.length);
+
+      let contentHtml = '';
+      if (accountInfo.is_deleted) {
+        // 삭제된 계좌 정보
+        contentHtml = `
+          <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
+            <p class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'} font-medium">계좌정보가 삭제되었습니다</p>
+          </div>
+        `;
+      } else {
+        // 현재 계좌 정보
+        contentHtml = `
+          <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2">
+            <div class="flex justify-between">
+              <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">은행</span>
+              <span class="font-medium">${accountInfo.bank_name}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
+              <span class="font-mono">${accountInfo.account_number}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
+              <span class="font-medium">${accountInfo.account_holder}</span>
+            </div>
+          </div>
+          ${buttonsHtml}
+        `;
+      }
 
       const fullHTML = `
         <div class="max-w-xs">
+          ${isMineForPosition ? '' : `<p class="text-sm font-semibold text-gray-800 mb-1">${data.sender}</p>`}
           <div class="${isMineForPosition ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-4 py-3 rounded-2xl shadow-sm">
             <div class="space-y-3">
               <div class="flex items-center space-x-2 mb-2">
                 <span class="text-lg">💳</span>
-                <span class="font-semibold">계좌정보</span>
+                <span class="font-semibold">${isMineForPosition ? '계좌정보 전송' : '계좌정보'}</span>
               </div>
-              
-              <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2">
-                <div class="flex justify-between">
-                  <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">은행</span>
-                  <span class="font-medium">${accountInfo.bank_name}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
-                  <span class="font-mono">${accountInfo.account_number}</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
-                  <span class="font-medium">${accountInfo.account_holder}</span>
-                </div>
-              </div>
-              
-              ${buttonsHtml}
+              ${contentHtml}
             </div>
           </div>
           <div class="flex ${isMineForPosition ? 'justify-end' : 'justify-start'} items-center gap-1 mt-1">
@@ -795,7 +871,80 @@
       messageContainer.innerHTML = fullHTML;
       chatLog.appendChild(messageContainer);
       scrollToBottom();
-      console.log('=== 계좌정보 디버깅 끝 ===');
+    }
+
+    // 주소정보 메시지 수신
+    else if (data.type === 'address_info') {
+      const addressInfo = data.address_info;
+      const isMineForPosition = data.sender === currentUser;
+      const isMineForButton = data.sender === currentUser;
+      
+      const messageContainer = document.createElement("div");
+      messageContainer.className = `flex ${isMineForPosition ? 'justify-end' : 'justify-start'} mb-2`;
+
+      let buttonsHtml = '';
+      if (!isMineForButton && !addressInfo.is_deleted) {
+        buttonsHtml = `
+          <div class="mt-3">
+            <button onclick="copyAddress('${addressInfo.full_address}')" 
+                    class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+              주소 복사
+            </button>
+          </div>
+        `;
+      }
+
+      let contentHtml = '';
+      if (addressInfo.is_deleted) {
+        // 삭제된 주소 정보
+        contentHtml = `
+          <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
+            <p class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'} font-medium">주소정보가 삭제되었습니다</p>
+          </div>
+        `;
+      } else {
+        // 현재 주소 정보
+        contentHtml = `
+          <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2">
+            <div class="flex justify-between">
+              <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">우편번호</span>
+              <span class="font-medium">${addressInfo.postal_code}</span>
+            </div>
+            <div>
+              <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">주소</span>
+              <p class="font-medium mt-1">${addressInfo.full_address}</p>
+            </div>
+          </div>
+          ${buttonsHtml}
+        `;
+      }
+
+      const fullHTML = `
+        <div class="max-w-xs">
+          ${isMineForPosition ? '' : `<p class="text-sm font-semibold text-gray-800 mb-1">${data.sender}</p>`}
+          <div class="${isMineForPosition ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-4 py-3 rounded-2xl shadow-sm">
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2 mb-2">
+                <span class="text-lg">📍</span>
+                <span class="font-semibold">${isMineForPosition ? '주소정보 전송' : '배송 주소'}</span>
+              </div>
+              ${contentHtml}
+            </div>
+          </div>
+          <div class="flex ${isMineForPosition ? 'justify-end' : 'justify-start'} items-center gap-1 mt-1">
+            ${isMineForPosition && !data.is_read ? '<span class="text-xs text-red-500 font-semibold unread-label">안읽음</span><span class="text-xs text-gray-400">•</span>' : ''}
+            <span class="text-xs text-gray-400">${new Date().toLocaleTimeString('ko-KR', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            })}</span>
+          </div>
+        </div>
+      `;
+      
+      messageContainer.innerHTML = fullHTML;
+      chatLog.appendChild(messageContainer);
+      scrollToBottom();
     }
     
     else if (data.type === 'chat_image') {
@@ -805,6 +954,7 @@
 
       messageContainer.innerHTML = `
         <div class="max-w-xs">
+          ${isMine ? '' : `<p class="text-sm font-semibold text-gray-800 mb-1">${data.sender}</p>`}
           <div class="${isMine ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-3 py-2 rounded-2xl shadow-sm">
             <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
           </div>
@@ -822,6 +972,17 @@
       chatLog.appendChild(messageContainer);
       scrollToBottom();
     }
+
+    // 거래 완료 알림 수신 (새로 추가)
+    else if (data.type === 'trade_completed') {
+      console.log('거래 완료 알림 수신');
+      // 화면의 모든 계좌/주소 카드를 삭제 상태로 업데이트
+      updateSensitiveInfoCards();
+      
+      // UI 업데이트
+      updateUIAfterTradeComplete(true);
+    }
+    
     // 읽음 처리 완료
     else if (data.type == 'read_message_sync_finish') {
       document.querySelectorAll(".unread-label").forEach(el => el.remove());
@@ -836,6 +997,67 @@
       return;
     }
   };
+
+  // 민감한 정보 카드들을 삭제 상태로 업데이트 (간단한 텍스트 버전)
+  function updateSensitiveInfoCards() {
+    console.log('민감한 정보 카드 업데이트 시작');
+    
+    // 모든 메시지 컨테이너를 찾아서 계좌/주소 카드 업데이트
+    document.querySelectorAll('#chat-log .flex').forEach(messageContainer => {
+      // 계좌 정보 카드 찾기 (💳 이모지 포함)
+      const accountCard = messageContainer.querySelector('.space-y-3');
+      if (accountCard && accountCard.innerHTML.includes('💳')) {
+        console.log('계좌 카드 발견, 업데이트 중...');
+        
+        // 카드가 내 메시지인지 상대방 메시지인지 확인
+        const isMyMessage = messageContainer.classList.contains('justify-end');
+        
+        if (isMyMessage) {
+          // 내가 보낸 계좌 정보 (검은색 배경)
+          accountCard.innerHTML = `
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-300 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
+            </div>
+          `;
+        } else {
+          // 상대방이 보낸 계좌 정보 (흰색 배경)
+          accountCard.innerHTML = `
+            <div class="bg-gray-100 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-600 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
+            </div>
+          `;
+        }
+        console.log('계좌 카드 업데이트 완료');
+      }
+      
+      // 주소 정보 카드 찾기 (📍 이모지 포함)
+      if (accountCard && accountCard.innerHTML.includes('📍')) {
+        console.log('주소 카드 발견, 업데이트 중...');
+        
+        // 카드가 내 메시지인지 상대방 메시지인지 확인
+        const isMyMessage = messageContainer.classList.contains('justify-end');
+        
+        if (isMyMessage) {
+          // 내가 보낸 주소 정보 (검은색 배경)
+          accountCard.innerHTML = `
+            <div class="bg-gray-800 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-300 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
+            </div>
+          `;
+        } else {
+          // 상대방이 보낸 주소 정보 (흰색 배경)
+          accountCard.innerHTML = `
+            <div class="bg-gray-100 rounded-lg p-4 text-center">
+              <p class="text-sm text-gray-600 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
+            </div>
+          `;
+        }
+        console.log('주소 카드 업데이트 완료');
+      }
+    });
+    
+    console.log('모든 민감한 정보 카드 업데이트 완료');
+  }
 
   // 거래 완료 후 UI 업데이트 함수
   function updateUIAfterTradeComplete(isFullyCompleted) {
@@ -983,13 +1205,10 @@
         .then(data => {
           if (data.success) {
             // 성공 시 즉시 UI 업데이트
-            updateUIAfterTradeComplete(data.is_fully_completed); // 수정
+            updateUIAfterTradeComplete(data.is_fully_completed);
             
             // 모달 닫기
             confirmModal.classList.add('hidden');
-            
-            // 성공 메시지 표시 (선택사항)
-            // alert('거래가 완료되었습니다!');
             
           } else {
             throw new Error(data.error || "처리 중 오류가 발생했습니다.");
@@ -1049,285 +1268,328 @@
       });
     }
   });
+
   // 리뷰 모달 띄워지는지 테스트
   document.addEventListener("DOMContentLoaded", function () {
-  const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
-  const isFullyCompleted = {{ is_fully_completed|yesno:"true,false" }};
-  const isBuyer = "{{ user.username }}" === "{{ room.buyer.username }}";
+    const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
+    const isFullyCompleted = {{ is_fully_completed|yesno:"true,false" }};
+    const isBuyer = "{{ user.username }}" === "{{ room.buyer.username }}";
 
-  if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
-    const reviewModal = document.getElementById("reviewModal");
-    if (reviewModal) {
-      try {
-        reviewModal.showModal();
-      } catch (e) {
-        reviewModal.style.display = "block";
-      }
-    }
-  }
-});
-
-// 계좌 정보 확인 & 더치트 자바
-// + 버튼 메뉴 토글 (디버깅 로그 추가)
-document.addEventListener('DOMContentLoaded', function() {
-  const plusMenuBtn = document.getElementById('plus-menu-btn');
-  const plusMenu = document.getElementById('plus-menu');
-  const sendAccountBtn = document.getElementById('send-account-btn');
-
-  console.log('Plus button 요소들:', { plusMenuBtn, plusMenu, sendAccountBtn }); // 디버깅
-
-  if (plusMenuBtn && plusMenu) {
-    // + 버튼 클릭시 메뉴 토글
-    plusMenuBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      console.log('+ 버튼 클릭됨!'); // 디버깅
-      plusMenu.classList.toggle('hidden');
-    });
-
-    // 문서 클릭시 메뉴 숨김
-    document.addEventListener('click', function(e) {
-      if (!plusMenu.contains(e.target) && !plusMenuBtn.contains(e.target)) {
-        plusMenu.classList.add('hidden');
-      }
-    });
-
-    // 메뉴 클릭시 이벤트 전파 방지
-    plusMenu.addEventListener('click', function(e) {
-      e.stopPropagation();
-    });
-  } else {
-    console.error('Plus button 요소를 찾을 수 없습니다!'); // 디버깅
-  }
-
-  // 내 계좌 보내기 버튼
-  if (sendAccountBtn) {
-    sendAccountBtn.addEventListener('click', function(e) {
-      e.preventDefault(); // ✅ 추가
-      e.stopPropagation();
-      console.log('계좌 보내기 버튼 클릭됨!'); // 디버깅
-      plusMenu.classList.add('hidden');
-      sendAccountInfo();
-    });
-  } else {
-    console.error('계좌 보내기 버튼을 찾을 수 없습니다!'); // 디버깅
-  }
-});
-
-// 계좌정보 전송 함수 (디버깅 로그 추가)
-function sendAccountInfo() {
-  console.log('sendAccountInfo 함수 실행됨'); // 디버깅
-  
-  if (isTradeCompleted) {
-    alert("거래가 완료되어 더 이상 메시지를 보낼 수 없습니다.");
-    return;
-  }
-
-  console.log(`요청 URL: /ddokchat/send-account/${roomId}/`); // 디버깅
-
-  fetch(`/ddokchat/send-account/${roomId}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/json',
-    },
-  })
-  .then(response => {
-    console.log('서버 응답 상태:', response.status); // 디버깅
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    console.log('서버 응답 데이터:', data); // 디버깅
-    if (data.success) {
-      console.log('계좌정보 전송 성공, 소켓으로 전송 중...'); // 디버깅
-      // 소켓으로 실시간 전송
-      socket.send(JSON.stringify({
-        type: 'account_info',
-        room_id: roomId,
-        account_info: data.account_info,
-        sender_id: '{{ user.id }}'
-      }));
-      console.log('소켓 전송 완료'); // 디버깅
-    } else {
-      console.log('서버에서 실패 응답:', data); // 디버깅
-      if (data.redirect_to_mypage) {
-        if (confirm('계좌 정보를 먼저 등록해주세요. 마이페이지로 이동하시겠습니까?')) {
-          window.location.href = '{% url "accounts:mypage" %}';
+    if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
+      const reviewModal = document.getElementById("reviewModal");
+      if (reviewModal) {
+        try {
+          reviewModal.showModal();
+        } catch (e) {
+          reviewModal.style.display = "block";
         }
-      } else {
-        alert(data.error || '계좌정보 전송에 실패했습니다.');
       }
     }
-  })
-  .catch(error => {
-    console.error('Fetch 오류:', error); // 디버깅
-    alert('계좌정보 전송 중 오류가 발생했습니다.');
   });
-}
 
-// 계좌번호 복사 함수 (그대로 유지)
-function copyAccountNumber(accountNumber) {
-  console.log('계좌번호 복사 시도:', accountNumber); // 디버깅
-  navigator.clipboard.writeText(accountNumber).then(function() {
-    console.log('계좌번호 복사 성공'); // 디버깅
-    // 복사 성공 로그 전송
-    fetch('/ddokchat/copy-account/', {
+  // + 버튼 메뉴 토글
+  document.addEventListener('DOMContentLoaded', function() {
+    const plusMenuBtn = document.getElementById('plus-menu-btn');
+    const plusMenu = document.getElementById('plus-menu');
+    const sendAccountBtn = document.getElementById('send-account-btn');
+    const sendAddressBtn = document.getElementById('send-address-btn');
+
+    if (plusMenuBtn && plusMenu) {
+      // + 버튼 클릭시 메뉴 토글
+      plusMenuBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        plusMenu.classList.toggle('hidden');
+      });
+
+      // 문서 클릭시 메뉴 숨김
+      document.addEventListener('click', function(e) {
+        if (!plusMenu.contains(e.target) && !plusMenuBtn.contains(e.target)) {
+          plusMenu.classList.add('hidden');
+        }
+      });
+
+      // 메뉴 클릭시 이벤트 전파 방지
+      plusMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+      });
+    }
+
+    // 내 계좌 보내기 버튼
+    if (sendAccountBtn) {
+      sendAccountBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        plusMenu.classList.add('hidden');
+        sendAccountInfo();
+      });
+    }
+
+    // 내 주소 보내기 버튼
+    if (sendAddressBtn) {
+      sendAddressBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        plusMenu.classList.add('hidden');
+        sendAddressInfo();
+      });
+    }
+  });
+
+  // 계좌정보 전송 함수
+  function sendAccountInfo() {
+    if (isTradeCompleted) {
+      alert("거래가 완료되어 더 이상 메시지를 보낼 수 없습니다.");
+      return;
+    }
+
+    fetch(`/ddokchat/send-account/${roomId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // 소켓으로 실시간 전송
+        socket.send(JSON.stringify({
+          type: 'account_info',
+          room_id: roomId,
+          account_info: data.account_info,
+          sender_id: currentUserId,
+          message_id: data.message_id
+        }));
+      } else {
+        if (data.redirect_to_mypage) {
+          if (confirm('계좌 정보를 먼저 등록해주세요. 마이페이지로 이동하시겠습니까?')) {
+            window.location.href = '{% url "accounts:mypage" %}';
+          }
+        } else {
+          alert(data.error || '계좌정보 전송에 실패했습니다.');
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Fetch 오류:', error);
+      alert('계좌정보 전송 중 오류가 발생했습니다.');
+    });
+  }
+
+  // 주소정보 전송 함수
+  function sendAddressInfo() {
+    if (isTradeCompleted) {
+      alert("거래가 완료되어 더 이상 메시지를 보낼 수 없습니다.");
+      return;
+    }
+
+    fetch(`/ddokchat/send-address/${roomId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // 소켓으로 실시간 전송
+        socket.send(JSON.stringify({
+          type: 'address_info',
+          room_id: roomId,
+          address_info: data.address_info,
+          sender_id: currentUserId,
+          message_id: data.message_id
+        }));
+      } else {
+        if (data.redirect_to_mypage) {
+          if (confirm('주소 정보를 먼저 등록해주세요. 마이페이지로 이동하시겠습니까?')) {
+            window.location.href = '{% url "accounts:mypage" %}';
+          }
+        } else {
+          alert(data.error || '주소정보 전송에 실패했습니다.');
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Fetch 오류:', error);
+      alert('주소정보 전송 중 오류가 발생했습니다.');
+    });
+  }
+
+  // 계좌번호 복사 함수
+  function copyAccountNumber(accountNumber) {
+    navigator.clipboard.writeText(accountNumber).then(function() {
+      // 복사 성공 로그 전송
+      fetch('/ddokchat/copy-account/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          account_number: accountNumber
+        })
+      });
+      
+      // 사용자에게 알림
+      showToast('계좌번호가 복사되었습니다. 📋');
+    }).catch(function(err) {
+      console.error('복사 실패:', err);
+      alert('계좌번호 복사에 실패했습니다.');
+    });
+  }
+
+  // 주소 복사 함수
+  function copyAddress(fullAddress) {
+    navigator.clipboard.writeText(fullAddress).then(function() {
+      showToast('주소가 복사되었습니다. 📍');
+    }).catch(function(err) {
+      console.error('복사 실패:', err);
+      alert('주소 복사에 실패했습니다.');
+    });
+  }
+
+  // 사기 이력 조회 함수
+  function checkFraudHistory(bankCode, accountNumber, accountHolder) {
+    const modal = document.getElementById('fraudCheckModal');
+    const loading = document.getElementById('fraudLoading');
+    const noReports = document.getElementById('fraudNoReports');
+    const hasReports = document.getElementById('fraudHasReports');
+    const errorDiv = document.getElementById('fraudError');
+    
+    // 모달 표시 및 초기화
+    modal.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    noReports.classList.add('hidden');
+    hasReports.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    
+    // 계좌 정보 표시
+    document.getElementById('fraudBankName').textContent = getBankName(bankCode);
+    document.getElementById('fraudAccountNumber').textContent = accountNumber;
+    document.getElementById('fraudAccountHolder').textContent = accountHolder;
+    
+    // API 호출
+    fetch('/ddokchat/check-fraud/', {
       method: 'POST',
       headers: {
         'X-CSRFToken': '{{ csrf_token }}',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        account_number: accountNumber
+        bank_code: bankCode,
+        account_number: accountNumber,
+        account_holder: accountHolder
       })
-    });
-    
-    // 사용자에게 알림
-    showToast('계좌번호가 복사되었습니다. 📋');
-  }).catch(function(err) {
-    console.error('복사 실패:', err);
-    alert('계좌번호 복사에 실패했습니다.');
-  });
-}
-
-// 사기 이력 조회 함수 (그대로 유지)
-function checkFraudHistory(bankCode, accountNumber, accountHolder) {
-  console.log('사기 이력 조회 시작:', { bankCode, accountNumber, accountHolder }); // 디버깅
-  
-  const modal = document.getElementById('fraudCheckModal');
-  const loading = document.getElementById('fraudLoading');
-  const noReports = document.getElementById('fraudNoReports');
-  const hasReports = document.getElementById('fraudHasReports');
-  const errorDiv = document.getElementById('fraudError');
-  
-  // 모달 표시 및 초기화
-  modal.classList.remove('hidden');
-  loading.classList.remove('hidden');
-  noReports.classList.add('hidden');
-  hasReports.classList.add('hidden');
-  errorDiv.classList.add('hidden');
-  
-  // 계좌 정보 표시
-  document.getElementById('fraudBankName').textContent = getBankName(bankCode);
-  document.getElementById('fraudAccountNumber').textContent = accountNumber;
-  document.getElementById('fraudAccountHolder').textContent = accountHolder;
-  
-  // API 호출
-  fetch('/ddokchat/check-fraud/', {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': '{{ csrf_token }}',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      bank_code: bankCode,
-      account_number: accountNumber,
-      account_holder: accountHolder
     })
-  })
-  .then(response => {
-    console.log('사기 조회 응답 상태:', response.status); // 디버깅
-    return response.json();
-  })
-  .then(data => {
-    console.log('사기 조회 응답 데이터:', data); // 디버깅
-    loading.classList.add('hidden');
-    
-    if (data.success) {
-      document.getElementById('fraudLastUpdated').textContent = data.last_updated || '알 수 없음';
+    .then(response => response.json())
+    .then(data => {
+      loading.classList.add('hidden');
       
-      if (data.has_reports && data.report_count > 0) {
-        // 신고 이력 있음
-        document.getElementById('fraudReportCount').textContent = data.report_count;
-        displayFraudReports(data.reports);
-        hasReports.classList.remove('hidden');
+      if (data.success) {
+        document.getElementById('fraudLastUpdated').textContent = data.last_updated || '알 수 없음';
+        
+        if (data.has_reports && data.report_count > 0) {
+          // 신고 이력 있음
+          document.getElementById('fraudReportCount').textContent = data.report_count;
+          displayFraudReports(data.reports);
+          hasReports.classList.remove('hidden');
+        } else {
+          // 신고 이력 없음
+          noReports.classList.remove('hidden');
+        }
       } else {
-        // 신고 이력 없음
-        noReports.classList.remove('hidden');
+        // 오류 발생
+        document.getElementById('fraudErrorMessage').textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+        errorDiv.classList.remove('hidden');
       }
-    } else {
-      // 오류 발생
-      document.getElementById('fraudErrorMessage').textContent = data.error || '알 수 없는 오류가 발생했습니다.';
+    })
+    .catch(error => {
+      console.error('사기 조회 오류:', error);
+      loading.classList.add('hidden');
+      document.getElementById('fraudErrorMessage').textContent = '네트워크 오류가 발생했습니다.';
       errorDiv.classList.remove('hidden');
-    }
-  })
-  .catch(error => {
-    console.error('사기 조회 오류:', error);
-    loading.classList.add('hidden');
-    document.getElementById('fraudErrorMessage').textContent = '네트워크 오류가 발생했습니다.';
-    errorDiv.classList.remove('hidden');
-  });
-}
+    });
+  }
 
-// 신고 내역 표시 함수 (그대로 유지)
-function displayFraudReports(reports) {
-  const reportsList = document.getElementById('fraudReportsList');
-  reportsList.innerHTML = '';
-  
-  reports.forEach(function(report, index) {
-    const reportDiv = document.createElement('div');
-    reportDiv.className = 'bg-white border border-red-200 rounded-lg p-3';
+  // 신고 내역 표시 함수
+  function displayFraudReports(reports) {
+    const reportsList = document.getElementById('fraudReportsList');
+    reportsList.innerHTML = '';
     
-    const statusClass = report.status === '확인됨' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+    reports.forEach(function(report, index) {
+      const reportDiv = document.createElement('div');
+      reportDiv.className = 'bg-white border border-red-200 rounded-lg p-3';
+      
+      const statusClass = report.status === '확인됨' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+      
+      reportDiv.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+          <h4 class="font-semibold text-gray-800">${report.report_type}</h4>
+          <span class="px-2 py-1 text-xs rounded-full ${statusClass}">${report.status}</span>
+        </div>
+        <p class="text-sm text-gray-600 mb-2">${report.description}</p>
+        <div class="flex justify-between text-xs text-gray-500">
+          <span>신고일: ${report.report_date}</span>
+          <span class="font-medium text-red-600">피해금액: ${report.amount.toLocaleString()}원</span>
+        </div>
+      `;
+      
+      reportsList.appendChild(reportDiv);
+    });
+  }
+
+  // 사기 조회 모달 닫기
+  function closeFraudModal() {
+    document.getElementById('fraudCheckModal').classList.add('hidden');
+  }
+
+  // 은행명 반환 함수
+  function getBankName(bankCode) {
+    const bankNames = {
+      '004': 'KB국민은행',
+      '088': '신한은행',
+      '020': '우리은행',
+      '003': 'IBK기업은행',
+      '011': 'NH농협은행',
+      '081': 'KEB하나은행',
+      '023': 'SC제일은행',
+      '090': '카카오뱅크',
+      '089': '케이뱅크',
+      '092': '토스뱅크',
+      '031': '대구은행',
+      '032': '부산은행',
+      '034': '광주은행',
+      '037': '전북은행',
+      '039': '경남은행'
+    };
+    return bankNames[bankCode] || `알 수 없는 은행(${bankCode})`;
+  }
+
+  // 토스트 메시지 표시 함수
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity';
+    toast.textContent = message;
+    document.body.appendChild(toast);
     
-    reportDiv.innerHTML = `
-      <div class="flex justify-between items-start mb-2">
-        <h4 class="font-semibold text-gray-800">${report.report_type}</h4>
-        <span class="px-2 py-1 text-xs rounded-full ${statusClass}">${report.status}</span>
-      </div>
-      <p class="text-sm text-gray-600 mb-2">${report.description}</p>
-      <div class="flex justify-between text-xs text-gray-500">
-        <span>신고일: ${report.report_date}</span>
-        <span class="font-medium text-red-600">피해금액: ${report.amount.toLocaleString()}원</span>
-      </div>
-    `;
-    
-    reportsList.appendChild(reportDiv);
-  });
-}
-
-// 사기 조회 모달 닫기 (그대로 유지)
-function closeFraudModal() {
-  document.getElementById('fraudCheckModal').classList.add('hidden');
-}
-
-// 은행명 반환 함수 (그대로 유지)
-function getBankName(bankCode) {
-  const bankNames = {
-    '004': 'KB국민은행',
-    '088': '신한은행',
-    '020': '우리은행',
-    '003': 'IBK기업은행',
-    '011': 'NH농협은행',
-    '081': 'KEB하나은행',
-    '023': 'SC제일은행',
-    '090': '카카오뱅크',
-    '089': '케이뱅크',
-    '092': '토스뱅크',
-    '031': '대구은행',
-    '032': '부산은행',
-    '034': '광주은행',
-    '037': '전북은행',
-    '039': '경남은행'
-  };
-  return bankNames[bankCode] || `알 수 없는 은행(${bankCode})`;
-}
-
-// 토스트 메시지 표시 함수 (그대로 유지)
-function showToast(message) {
-  const toast = document.createElement('div');
-  toast.className = 'fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity';
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
     setTimeout(() => {
-      document.body.removeChild(toast);
-    }, 300);
-  }, 2000);
-}
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        document.body.removeChild(toast);
+      }, 300);
+    }, 2000);
+  }
 </script>
 {% endblock %}
