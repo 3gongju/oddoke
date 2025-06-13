@@ -2,16 +2,17 @@
 
 <section class="bg-gray-50 border-b border-gray-200 py-4 sm:py-6">
   <div class="max-w-7xl mx-auto px-4">
-    <div class="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between sm:space-x-4">
+    <!-- 🔧 수정: 모바일에서도 한 줄 배치를 위한 Flexbox 조정 -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
       
       <!-- 검색창 -->
-      <div class="w-full sm:flex-1 relative">
+      <div class="flex-1 relative">
         <form method="get" action="{% url 'ddoksang:search' %}">
           <input 
             id="{{ search_input_id|default:'main-search' }}" 
             type="text" 
             name="q" 
-            placeholder="{{ search_placeholder|default:'아티스트, 멤버 검색...' }}" 
+            placeholder="{{ search_placeholder|default:'아티스트, 멤버 검색' }}" 
             class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-lg"
             value="{{ query|default:'' }}" 
             autocomplete="off">
@@ -29,11 +30,12 @@
         </ul>
       </div>
 
-      <!-- 생카 등록 버튼 (홈페이지에서만 표시) -->
+      <!-- 생카 등록 버튼 (데스크톱에서만 표시, 모바일에서는 하단 FAB 사용) -->
       {% if show_create_button %}
-      <div class="flex justify-center sm:justify-end">
+      <!-- 🔧 모바일에서는 숨김 (hidden), 데스크톱에서만 표시 (sm:block) -->
+      <div class="hidden sm:flex flex-shrink-0">
         <a href="{% url 'ddoksang:create' %}" 
-           class="bg-gray-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-sm sm:text-base">
+           class="bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-base whitespace-nowrap">
           + 생카 등록
         </a>
       </div>
