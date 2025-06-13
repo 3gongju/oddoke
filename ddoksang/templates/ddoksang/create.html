@@ -4,8 +4,11 @@
 
 {% block body %}
 <section class="max-w-4xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold mb-6">🎁 생카 등록하기</h1>
-  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생카 정보를 등록해주세요!</p>
+  <h1 class="text-2xl font-bold mb-6 flex items-center space-x-3">
+    <img src="{% static 'image/ddok_circle_red.png' %}" alt="로고" class="w-[36px] h-[36px]">
+    <span>생카 등록하기</span>
+  </h1>
+  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트/ 멤버의 생카 정보를 등록해주세요!</p>
 
   <!-- Progress Bar -->
   <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
@@ -105,7 +108,8 @@
       </div>
 
       <!-- 지도 컨테이너 -->
-      <div class="relative w-full h-64 bg-gray-100 rounded border overflow-hidden">
+       <!-- 지도 높이는 h로 조절 -->
+      <div class="relative w-full h-96 bg-gray-100 rounded border overflow-hidden"> 
         <div id="map" class="w-full h-full"></div>
         <div id="mapPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div class="text-center text-gray-500">
@@ -360,38 +364,38 @@
 <!-- 메시지 시스템 추가 -->
 <script>
 // Django의 json_script를 사용한 안전한 방법
-const messagesElement = document.getElementById('ddoksang-messages');
-window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
+  const messagesElement = document.getElementById('ddoksang-messages');
+  window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
 
-// 메시지 유틸리티 객체
-window.DdoksangMessages = {
-    get: function(category, key, params = {}) {
-        try {
-            let message = this.messages[category][key];
-            
-            if (typeof message !== 'string') {
-                console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
-                return `${category}.${key}`;
-            }
-            
-            // 플레이스홀더 치환
-            if (params && typeof params === 'object') {
-                Object.entries(params).forEach(([paramKey, value]) => {
-                    const placeholder = `{${paramKey}}`;
-                    message = message.replace(new RegExp(placeholder, 'g'), value);
-                });
-            }
-            
-            return message;
-        } catch (error) {
-            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
-            return `${category}.${key}`;
-        }
-    },
-    
-    messages: window.DDOKSANG_MESSAGES || {}
-};
-
+  // 메시지 유틸리티 객체
+  window.DdoksangMessages = {
+      get: function(category, key, params = {}) {
+          try {
+              let message = this.messages[category][key];
+              
+              if (typeof message !== 'string') {
+                  console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
+                  return `${category}.${key}`;
+              }
+              
+              // 플레이스홀더 치환
+              if (params && typeof params === 'object') {
+                  Object.entries(params).forEach(([paramKey, value]) => {
+                      const placeholder = `{${paramKey}}`;
+                      message = message.replace(new RegExp(placeholder, 'g'), value);
+                  });
+              }
+              
+              return message;
+          } catch (error) {
+              console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
+              return `${category}.${key}`;
+          }
+      },
+      
+      messages: window.DDOKSANG_MESSAGES || {}
+  };
+</script>
 // 편의 함수
 window.msg = function(category, key, params) {
     return window.DdoksangMessages.get(category, key, params);
