@@ -36,20 +36,38 @@
           <div class="flex-1 min-w-0 w-full sm:w-auto">
             <!-- 닉네임과 뱃지 -->
             <div class="mb-3 sm:mb-4">
-              <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
-                {% if user_profile.first_name %}
-                  {{ user_profile.first_name }}
-                {% elif user_profile.username|slice:":6" == "kakao_" %}
-                  카카오 사용자
-                {% elif user_profile.username|slice:":6" == "naver_" %}
-                  네이버 사용자
+              <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                  {% if user_profile.first_name %}
+                    {{ user_profile.first_name }}
+                  {% elif user_profile.username|slice:":6" == "kakao_" %}
+                    카카오 사용자
+                  {% elif user_profile.username|slice:":6" == "naver_" %}
+                    네이버 사용자
+                  {% else %}
+                    {{ user_profile.username }}
+                  {% endif %}
+                </h1>
+
+                <!-- 팬덤 인증 상태 - 유저네임 옆으로 이동 -->
+                {% if fandom_profile and fandom_profile.is_verified_fandom %}
+                  <div class="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
+                    <span class="mr-1">✓</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
+                  </div>
+                {% elif fandom_profile.is_pending_verification %}
+                  <div class="inline-flex items-center px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium border border-yellow-200">
+                    <span class="mr-1">⏳</span> 팬덤 인증 확인 중
+                  </div>
                 {% else %}
-                  {{ user_profile.username }}
+                  <a href="{% url 'accounts:fandom_verification' user_profile.username %}"
+                    class="inline-flex items-center px-2 py-1 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-800 transition-colors">
+                    <span class="mr-1"></span> 공식 팬덤 인증
+                  </a>
                 {% endif %}
-              </h1>
+              </div>
 
               <!-- 소셜 로그인 뱃지 -->
-              <div class="flex items-center gap-2 mt-2">
+              <div class="flex items-center gap-2">
                 {% if user_profile.username|slice:":6" == "kakao_" %}
                   <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
                     💬 카카오
@@ -90,10 +108,7 @@
               <span class="mr-2">⏳</span> 팬덤 인증 확인 중
             </div>
           {% else %}
-            <a href="{% url 'accounts:fandom_verification' user_profile.username %}"
-              class="inline-flex items-center px-4 py-2 sm:px-6 sm:py-3 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">
-              <span class="mr-2">🎫</span> 공식 팬덤 인증하기
-            </a>
+            
           {% endif %}
         </div>
       </div>
@@ -127,10 +142,11 @@
               </div>
             {% empty %}
               <div class="flex flex-col items-center py-8 sm:py-12 lg:py-16 w-full">
-                <div class="text-center py-8 sm:py-12 lg:py-16">
-                  <img src="{% static 'image/ddok_logo_filled.png' %}" alt="최애 없음" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 opacity-50 mx-auto mb-4 sm:mb-6" />
-                  <p class="text-gray-600 text-sm sm:text-base lg:text-lg">아직 찜한 덕이 없어요!</p>
-                </div>
+                <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 opacity-50 mb-4 sm:mb-6" />
+                <p class="text-gray-600 text-center text-sm sm:text-base lg:text-lg">
+                  아직 찜한 덕이 없어요!
+                </p>
+              </div>
             {% endfor %}
           </div>
         </div>
@@ -343,17 +359,20 @@
 
         <!-- 덕담 탭 네비게이션 -->
         <div class="flex bg-gray-100 rounded-xl p-1 mb-4 sm:mb-6">
-          <button class="tab-btn dam-tab-btn flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" 
+          <button class="tab-btn dam-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" 
                   onclick="showDamTab('written')">
-            내가 쓴 글
+            <span class="hidden sm:inline">내가 쓴 글</span>
+            <span class="sm:hidden">내 글</span>
           </button>
-          <button class="tab-btn dam-tab-btn flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
+          <button class="tab-btn dam-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showDamTab('commented')">
-            내가 쓴 댓글
+            <span class="hidden sm:inline">내가 쓴 댓글</span>
+            <span class="sm:hidden">내 댓글</span>
           </button>
-          <button class="tab-btn dam-tab-btn flex-1 py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
+          <button class="tab-btn dam-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showDamTab('liked')">
-            찜한 글
+            <span class="hidden sm:inline">찜한 글</span>
+            <span class="sm:hidden">찜</span>
           </button>
         </div>
 
