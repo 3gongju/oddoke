@@ -6,18 +6,14 @@
   <div class="max-w-2xl mx-auto px-4">
     
     <!-- 헤더 -->
-    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-100">
-      <div class="text-center">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-          {% if is_modify %}계좌정보 수정{% else %}계좌 등록{% endif %}
-        </h1>
-        <p class="text-sm sm:text-base text-gray-600">
-          {% if is_modify %}
-            기존 계좌정보를 새로운 정보로 변경합니다.
-          {% else %}
-            안전한 거래를 위해 본인 명의의 계좌를 등록해주세요.
-          {% endif %}
-        </p>
+    <div class="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <div class="flex items-center px-4 py-4">
+        <a href="{% url 'accounts:settings_main' user_profile.username %}" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg font-semibold text-gray-900">계좌 정보 수정</h1>
       </div>
     </div>
 

@@ -2,160 +2,187 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-4xl mx-auto px-4">
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-md mx-auto bg-white min-h-screen">
     
     <!-- 헤더 -->
-    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8 border border-gray-100">
-      <div class="text-center">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">설정</h1>
-        <p class="text-sm sm:text-base text-gray-600">
-          계정 정보 및 개인정보를 관리하세요
-        </p>
+    <div class="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <div class="flex items-center px-4 py-4">
+        <button onclick="history.back()" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        <h1 class="text-lg font-semibold text-gray-900">설정</h1>
       </div>
     </div>
 
-    <!-- 설정 카테고리 그리드 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+    <!-- 메인 콘텐츠 -->
+    <div class="px-0 pb-8">
       
-      <!-- 회원 정보 수정 -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-        <div class="text-center">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl sm:text-3xl text-blue-600">프로필</span>
-          </div>
-          <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">회원 정보 수정</h3>
-          <p class="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-            닉네임, 소개글, 프로필 이미지를<br>
-            변경할 수 있습니다
-          </p>
-          <a href="{% url 'accounts:edit_profile_info' user_profile.username %}" 
-             class="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base">
-            수정하기
-          </a>
+      <!-- 내 정보 섹션 -->
+      <div class="mb-8">
+        <div class="px-4 py-3 text-sm font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          내 정보
         </div>
-      </div>
-
-      <!-- 공식 팬덤 인증 -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-        <div class="text-center">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl sm:text-3xl text-purple-600">인증</span>
-          </div>
-          <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">공식 팬덤 인증</h3>
-          
-          {% if fandom_profile and fandom_profile.is_verified_fandom %}
-            <p class="text-sm sm:text-base text-green-600 mb-4 font-semibold">
-              ✅ {{ fandom_profile.fandom_artist.display_name }} 인증 완료
-            </p>
-          {% elif fandom_profile and fandom_profile.is_pending_verification %}
-            <p class="text-sm sm:text-base text-yellow-600 mb-4 font-semibold">
-              ⏳ 인증 심사 중 (3일 소요)
-            </p>
-          {% else %}
-            <p class="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              공식 팬클럽 멤버십을<br>
-              인증받을 수 있습니다
-            </p>
-          {% endif %}
-          
-          <a href="{% url 'accounts:fandom_verification' user_profile.username %}" 
-             class="inline-flex items-center px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base">
-             {% if fandom_profile and fandom_profile.is_verified_fandom %}
-               인증 정보 확인
-             {% else %}
-               인증하기
-             {% endif %}
-          </a>
-        </div>
-      </div>
-
-      <!-- 계좌 정보 -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-        <div class="text-center">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl sm:text-3xl text-green-600">계좌</span>
-          </div>
-          <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">계좌 정보</h3>
-          
-          {% if bank_profile %}
-            <p class="text-sm sm:text-base text-green-600 mb-4 font-semibold">
-              ✅ {{ bank_profile.bank_name }} 등록 완료
-            </p>
-          {% else %}
-            <p class="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              거래를 위한 계좌 정보를<br>
-              등록하고 관리하세요
-            </p>
-          {% endif %}
-          
-          <a href="{% url 'accounts:account_settings' user_profile.username %}" 
-             class="inline-flex items-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base">
-             {% if bank_profile %}
-               계좌 관리
-             {% else %}
-               계좌 등록
-             {% endif %}
-          </a>
-        </div>
-      </div>
-
-      <!-- 주소 정보 -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
-        <div class="text-center">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl sm:text-3xl text-orange-600">주소</span>
-          </div>
-          <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">주소 정보</h3>
-          
-          {% if address_profile %}
-            <p class="text-sm sm:text-base text-green-600 mb-4 font-semibold">
-              ✅ {{ address_profile.sido }} {{ address_profile.sigungu }} 등록 완료
-            </p>
-          {% else %}
-            <p class="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-              배송을 위한 주소 정보를<br>
-              등록하고 관리하세요
-            </p>
-          {% endif %}
-          
-          <a href="{% url 'accounts:address_settings' user_profile.username %}" 
-             class="inline-flex items-center px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base">
-             {% if address_profile %}
-               주소 관리
-             {% else %}
-               주소 등록
-             {% endif %}
-          </a>
-        </div>
-      </div>
-
-      <!-- 계정 정보 -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100 hover:shadow-2xl transition-shadow duration-300 md:col-span-2">
-        <div class="text-center">
-          <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl sm:text-3xl text-gray-600">계정</span>
-          </div>
-          <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3">계정 정보</h3>
-          <p class="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
-            가입 정보 및 로그인 방식을 확인하세요
-          </p>
+        
+        <div class="bg-white">
+          <!-- 계정 정보 -->
           <a href="{% url 'accounts:account_info' user_profile.username %}" 
-             class="inline-flex items-center px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors duration-200 text-sm sm:text-base">
-            정보 확인
+             class="flex items-center justify-between px-4 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <div>
+              <div class="text-base font-medium text-gray-900">계정 정보</div>
+              <div class="text-sm text-gray-500">기본 계정 정보 확인</div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+
+          <!-- 회원 정보 수정 -->
+          <a href="{% url 'accounts:edit_profile_info' user_profile.username %}" 
+             class="flex items-center justify-between px-4 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <div>
+              <div class="text-base font-medium text-gray-900">회원 정보 수정</div>
+              <div class="text-sm text-gray-500">닉네임, 소개 등 프로필 수정</div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+
+          <!-- 프로필 사진 -->
+        </div>
+      </div>
+
+      <!-- 인증 및 설정 섹션 -->
+      <div class="mb-8">
+        <div class="px-4 py-3 text-sm font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          인증 및 설정
+        </div>
+        
+        <div class="bg-white">
+          <!-- 팬덤 인증 -->
+          <a href="{% url 'accounts:fandom_verification' user_profile.username %}" 
+             class="flex items-center justify-between px-4 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <div class="flex-1">
+              <div class="text-base font-medium text-gray-900">팬덤 인증</div>
+              <div class="text-sm text-gray-500">공식 팬덤 멤버 인증</div>
+            </div>
+            <div class="flex items-center">
+              {% if fandom_profile and fandom_profile.is_verified_fandom %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                  인증완료
+                </span>
+              {% elif fandom_profile and fandom_profile.is_pending_verification %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
+                  심사중
+                </span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 mr-2">
+                  미인증
+                </span>
+              {% endif %}
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </a>
+
+          <!-- 계좌 관리 -->
+          <a href="{% url 'accounts:account_settings' user_profile.username %}" 
+             class="flex items-center justify-between px-4 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <div class="flex-1">
+              <div class="text-base font-medium text-gray-900">계좌 관리</div>
+              <div class="text-sm text-gray-500">거래용 계좌 정보 관리</div>
+            </div>
+            <div class="flex items-center">
+              {% if bank_profile %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                  등록완료
+                </span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2">
+                  미등록
+                </span>
+              {% endif %}
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
+          </a>
+
+          <!-- 주소 관리 -->
+          <a href="{% url 'accounts:address_settings' user_profile.username %}" 
+             class="flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors">
+            <div class="flex-1">
+              <div class="text-base font-medium text-gray-900">주소 관리</div>
+              <div class="text-sm text-gray-500">배송용 주소 정보 관리</div>
+            </div>
+            <div class="flex items-center">
+              {% if address_profile %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                  등록완료
+                </span>
+              {% else %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-2">
+                  미등록
+                </span>
+              {% endif %}
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </div>
           </a>
         </div>
       </div>
+
+      <!-- 기타 -->
+      <div class="mb-8">
+        <div class="px-4 py-3 text-sm font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          기타
+        </div>
+        
+        <div class="bg-white">
+          <!-- 로그아웃 -->
+          <a href="{% url 'accounts:logout' %}" 
+             class="flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors">
+            <div>
+              <div class="text-base font-medium text-red-600">로그아웃</div>
+              <div class="text-sm text-gray-500">현재 계정에서 로그아웃</div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+
     </div>
 
-    <!-- 하단 버튼 -->
-    <div class="mt-8 text-center">
-      <a href="{% url 'accounts:mypage' %}" 
-         class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-md">
-        마이페이지로 돌아가기
-      </a>
-    </div>
+    <!-- 하단 여백 -->
+    <div class="h-8"></div>
   </div>
 </div>
+
+<style>
+/* 모바일에서 더 깔끔하게 보이도록 추가 스타일 */
+@media (max-width: 768px) {
+  .max-w-md {
+    max-width: 100%;
+  }
+}
+
+/* hover 효과 부드럽게 */
+a {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 상태 배지 스타일 개선 */
+.inline-flex.items-center.px-2.py-1 {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+</style>
 
 {% endblock %}
