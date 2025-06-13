@@ -224,7 +224,7 @@
 
           <!-- 제출 버튼 -->
           <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-            <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+            <a href="{% url 'accounts:settings_main' user_profile.username %}" 
                class="flex-1 px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-center">
               설정으로 돌아가기
             </a>
@@ -238,7 +238,7 @@
     {% else %}
       <!-- 인증 완료/심사 중일 때 돌아가기 버튼 -->
       <div class="text-center">
-        <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+        <a href="{% url 'accounts:settings_main' user_profile.username %}"
            class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-md">
           설정으로 돌아가기
         </a>

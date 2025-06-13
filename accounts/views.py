@@ -368,7 +368,7 @@ def mypage(request):
     return render(request, 'mypage.html', context)
 
 @login_required
-def edit_profile(request, username):
+def settings_main(request, username):
     """설정 메인 페이지 (새로 추가)"""
     user_profile = get_object_or_404(User, username=username)
     
@@ -388,7 +388,7 @@ def edit_profile(request, username):
         'bank_profile': bank_profile,
         'address_profile': address_profile,
     }
-    return render(request, 'accounts/edit_profile.html', context)
+    return render(request, 'accounts/settings_main.html', context)
 
 @login_required
 def edit_profile_info(request, username):

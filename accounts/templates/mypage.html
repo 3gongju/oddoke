@@ -73,7 +73,7 @@
                   <span class="mr-2">⏳</span> 팬덤 인증 확인 중 (3일 소요)
                 </div>
               {% else %}
-                <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
+                <a href="{% url 'accounts:settings_main' user_profile.username %}#fandom-auth"
                   class="inline-flex items-center px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transform hover:scale-105 transition-all duration-200 shadow-lg">
                   <span class="mr-2">🎫</span> 공식 팬덤 인증하기
                 </a>
@@ -92,7 +92,7 @@
           
           <!-- 액션 버튼들 -->
           <div class="flex flex-col space-y-3 min-w-[160px]">
-            <a href="{% url 'accounts:edit_profile' user_profile.username %}" 
+            <a href="{% url 'accounts:settings_main' user_profile.username %}" 
                class="flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-md">
                설정
             </a>

@@ -27,7 +27,7 @@ urlpatterns = [
     path('my/', views.mypage, name='mypage'),
     
     # 설정 페이지들 (기존 edit_profile을 설정 메인으로 사용)
-    path('<str:username>/edit/', views.edit_profile, name='edit_profile'),  # 설정 메인 페이지
+    path('<str:username>/settings/', views.settings_main, name='settings_main'),  # 설정 메인 페이지
     path('<str:username>/edit/profile/', views.edit_profile_info, name='edit_profile_info'),  # 회원정보 수정
     path('<str:username>/edit/image/', views.edit_profile_image, name='edit_profile_image'),
     path('<str:username>/edit/fandom/', views.fandom_verification, name='fandom_verification'),  # 팬덤 인증
