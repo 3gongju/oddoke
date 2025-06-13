@@ -4,8 +4,11 @@
 
 {% block body %}
 <section class="max-w-4xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold mb-6">🎁 생카 등록하기</h1>
-  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트의 생카 정보를 등록해주세요!</p>
+  <h1 class="text-2xl font-bold mb-6 flex items-center space-x-3">
+    <img src="{% static 'image/ddok_circle_red.png' %}" alt="로고" class="w-[66px] h-[66px] align-middle">
+    <span>생카 등록하기</span>
+  </h1>
+  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트/ 멤버의 생카 정보를 등록해주세요!</p>
 
   <!-- Progress Bar -->
   <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
@@ -51,7 +54,7 @@
         <!-- 아티스트/멤버명 검색 -->
         <label class="block text-sm font-medium mb-1">아티스트/멤버명</label>
         <div class="relative mb-4">
-          <input type="text" id="final-artist-member-search" class="w-full border rounded px-4 py-2" placeholder="멤버명 입력" autocomplete="off" required>
+          <input type="text" id="final-artist-member-search" class="w-full border rounded px-4 py-2" autocomplete="off" required>
           <ul id="final-artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
         </div>
         
@@ -105,7 +108,8 @@
       </div>
 
       <!-- 지도 컨테이너 -->
-      <div class="relative w-full h-64 bg-gray-100 rounded border overflow-hidden">
+       <!-- 지도 높이는 h로 조절 -->
+      <div class="relative w-full h-96 bg-gray-100 rounded border overflow-hidden"> 
         <div id="map" class="w-full h-full"></div>
         <div id="mapPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div class="text-center text-gray-500">
@@ -133,29 +137,60 @@
     <div id="step-3" class="step hidden">
       <h2 class="text-lg font-semibold mb-6">운영 기간</h2>
       
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
-          <label class="block text-sm font-medium mb-2">시작일</label>
-          <input type="text" id="start_date" name="start_date" class="w-full border rounded px-4 py-3" required>
+          <label class="block text-sm font-medium mb-2">시작일 *</label>
+          <input type="date" 
+                 id="start_date" 
+                 name="start_date" 
+                 class="w-full border rounded px-4 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10" 
+                 required>
+          <p class="text-xs text-gray-500 mt-1">달력에서 날짜를 선택해주세요</p>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">종료일</label>
-          <input type="text" id="end_date" name="end_date" class="w-full border rounded px-4 py-3" required>
+          <label class="block text-sm font-medium mb-2">종료일 *</label>
+          <input type="date" 
+                 id="end_date" 
+                 name="end_date" 
+                 class="w-full border rounded px-4 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10" 
+                 required>
+          <p class="text-xs text-gray-500 mt-1">시작일 이후 날짜만 선택 가능합니다</p>
         </div>
       </div>
+
+      <!-- 운영 기간 표시 -->
+      <div id="duration-display" class="hidden text-center p-3 bg-blue-50 rounded-lg text-blue-800 text-sm font-medium mb-4">
+        <!-- 자동으로 업데이트됨 -->
+      </div>
+
+      <!-- 도움말 -->
+      <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+         <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+            <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
+          날짜 입력 방법
+        </h4>        <ul class="space-y-1 list-disc list-inside">
+          <li><strong>달력 선택:</strong> 입력 필드를 클릭하여 달력에서 날짜를 선택할 수 있습니다</li>
+          <li><strong>직접 입력:</strong> YYYY-MM-DD 형식으로 직접 입력도 가능합니다</li>
+          <li><strong>자동 조정:</strong> 종료일이 시작일보다 이르면 자동으로 조정됩니다</li>
+        </ul>
+      </div>
     </div>
+
 
     <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
       <h2 class="text-lg font-semibold mb-6">특전 및 이벤트 정보</h2>
       
-      <label class="block text-sm font-medium mb-4">🎁 특전 정보</label>
 
       <!-- 일반 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3">🎨 특전</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-8 h-8">
+          일반 특전
+        </h4>
+
         <div class="grid grid-cols-4 gap-2">
-          {% for item in "종이컵,포토카드,스티커,엽서,증명사진,달력,포토매틱,엘홀더,포스터,포카홀더,메모지,프리쿠라,부채,마스킹테이프,ID카드,띠부띠부씰,키링,슬로건,그립톡,액자,컵,거울,편지지,틴케이스,토이카메라,짐색,카드지갑,티셔츠,트레카,티켓,수건,기타"|split:"," %}
+          {% for item in "ID카드,그립톡,거울,달력,띠부띠부씰,마스킹테이프,메모지,부채,스티커,슬로건,아크릴,액자,엽서,엘홀더,증명사진,종이컵,짐색,카드지갑,컵,키링,포스터,포카홀더,포토매틱,포토카드,프리쿠라,편지지,틴케이스,토이카메라,티셔츠,트레카,티켓,수건,+기타"|split:"," %}
             <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
@@ -166,9 +201,13 @@
 
       <!-- 선착 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3">🏃 선착 특전</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+          선착 특전
+        </h4>
+
         <div class="grid grid-cols-4 gap-2">
-          {% for item in "종이컵,포토카드,스티커,엽서,증명사진,달력,포토매틱,엘홀더,포스터,포카홀더,메모지,프리쿠라,부채,마스킹테이프,ID카드,띠부띠부씰,키링,슬로건,그립톡,액자,컵,거울,편지지,틴케이스,토이카메라,짐색,카드지갑,티셔츠,트레카,티켓,수건,기타"|split:"," %}
+          {% for item in "ID카드,그립톡,거울,달력,띠부띠부씰,마스킹테이프,메모지,부채,스티커,슬로건,아크릴,액자,엽서,엘홀더,증명사진,종이컵,짐색,카드지갑,컵,키링,포스터,포카홀더,포토매틱,포토카드,프리쿠라,편지지,틴케이스,토이카메라,티셔츠,트레카,티켓,수건,+기타"|split:"," %}
             <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_priority" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
@@ -179,9 +218,13 @@
 
       <!-- 그 외 특전 -->
       <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3">✨ 그 외 특전</h4>
+        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+          그 외 특전
+        </h4>
+
         <div class="grid grid-cols-4 gap-2">
-          {% for item in "메뉴 특전,선착 특전,당일 특전,랜덤 특전,럭키 넘버,럭키 드로우,가챠 뽑기,포토부스,전시회,해시태그 이벤트,기타"|split:"," %}
+          {% for item in "가챠 뽑기,당일 특전,랜덤 특전,럭키 드로우,럭키 넘버,메뉴 특전,선착 특전,전시회,포토부스,해시태그 이벤트,+기타"|split:"," %}
             <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_extra" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
@@ -199,15 +242,21 @@
       <h2 class="text-lg font-semibold mb-6">출처 정보 (선택사항)</h2>
       
       <label class="block text-sm font-medium mb-2">X 계정</label>
-      <div class="flex items-center mb-4">
-        <span class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l">@</span>
-        <input type="text" name="x_username" class="flex-1 border border-gray-300 rounded-r px-3 py-2" placeholder="x_username">
+      <div class="flex items-stretch mb-4">
+        <span class="inline-flex items-center px-3 py-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l whitespace-nowrap">@</span>
+        <input type="text" 
+               name="x_username" 
+               id="x_username"
+               class="flex-1 border border-gray-300 rounded-r px-3 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10 min-w-0" 
+               placeholder="username"
+               autocomplete="off">
       </div>
-      <p class="text-xs text-gray-500 mb-4">예: @oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
+      <p class="text-xs text-gray-500 mb-2">예: oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
+
     </div>
 
 
-    <!-- Step 6: 이미지 업로드 (개선된 UI) -->
+    <!-- Step 6: 이미지 업로드 -->
     <div id="step-6" class="step hidden">
       <div class="text-center mb-8">
         <h2 class="text-lg font-semibold mb-4">이미지 업로드</h2>
@@ -236,19 +285,22 @@
         <!-- 이미지 미리보기 -->
         <div id="image-preview-container" class="hidden">
           <div class="mb-4">
-            <h3 class="text-sm font-medium text-gray-700 mb-3 text-center">미리보기</h3>
             <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4" id="image-preview-list"></div>
           </div>
         </div>
 
         <!-- 업로드 안내 -->
-        <div class="text-xs text-gray-500 text-center">
+        <div class="text-xs text-gray-600">
           <div class="bg-gray-50 rounded-lg p-4">
-            <ul class="space-y-1">
-              <li>• 첫 번째 이미지가 대표 이미지로 설정됩니다</li>
-              <li>• JPG, PNG, GIF 형식만 업로드 가능합니다</li>
-              <li>• 파일당 최대 5MB까지 업로드할 수 있습니다</li>
-              <li>• 최대 10장까지 업로드할 수 있습니다</li>
+            <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
+                <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
+              이미지 첨부 가이드 
+            </h4> 
+            <ul class="space-y-1 list-disc list-inside">
+              <li><strong>대표 이미지:</strong> 1번 이미지가 대표 이미지로 설정됩니다</li>
+              <li><strong>파일 형식:</strong> JPG, PNG, GIF 형식만 업로드 가능합니다</li>
+              <li><strong>파일 크기:</strong> 파일당 최대 5MB까지 업로드할 수 있습니다</li>
+              <li><strong>업로드 개수:</strong> 최대 10장까지 업로드할 수 있습니다</li>
             </ul>
           </div>
         </div>
@@ -277,10 +329,23 @@
       </style>
     </div>
 
-    <!-- 네비게이션 버튼 -->
-    <div id="navigationButtons" class="mt-8 flex justify-between">
-      <button type="button" id="prevBtn" class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors hidden">이전</button>
-      <button type="button" id="nextBtn" class="px-6 py-2 bg-gray-400 text-gray-200 rounded-lg cursor-not-allowed hidden">다음</button>
+    <!-- 네비게이션 버튼 (화살표 SVG로 변경) -->
+    <div id="navigationButtons" class="mt-8 flex justify-between items-center">
+      <button type="button" id="prevBtn" 
+              class="flex items-center justify-center w-12 h-12 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl hidden group relative"
+              title="이전 단계">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </button>
+      
+      <button type="button" id="nextBtn" 
+              class="flex items-center justify-center w-12 h-12 bg-gray-400 text-gray-200 rounded-full cursor-not-allowed shadow-lg hidden group relative"
+              title="다음 단계">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </button>
     </div>
 
   </form>
@@ -332,135 +397,339 @@
     box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
   }
 
+    /* X 계정 입력 필드 스타일 통일 */
+  #x_username {
+    height: 48px; /* 다른 입력 필드와 동일한 높이 */
+  }
+  
+  #x_username + span {
+    height: 48px; /* @ 표시 부분도 동일한 높이 */
+  }
+
   /* 반응형 버튼 스타일 */
   @media (max-width: 640px) {
     #navigationButtons {
-      flex-direction: column;
-      gap: 0.5rem;
+      padding: 0 1rem;
     }
     
     #navigationButtons button {
-      width: 100%;
+      width: 3rem;
+      height: 3rem;
+    }
+    
+    #navigationButtons button svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    
+    /* Step 1 버튼들 모바일 최적화 */
+    .step button {
+      font-size: 0.875rem;
+      padding: 0.75rem 1rem;
+    }
+    
+    /* 제목과 설명 텍스트 크기 조정 */
+    h1 {
+      font-size: 1.5rem;
+    }
+    
+    h2 {
+      font-size: 1.25rem;
+    }
+    
+    /* 프로그래스 바 높이 조정 */
+    #progressBar {
+      height: 0.25rem;
     }
   }
 </style>
 
+{{ messages_json|json_script:"ddoksang-messages" }}
+
 <!-- Scripts - 순서 중요 -->
+<!-- create.html의 스크립트 섹션 - 기존 코드 완전 교체 -->
+
+<!-- 외부 라이브러리 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<!-- 유틸리티 모듈들 먼저 로드 -->
+<!-- 🔧 덕생 유틸리티 모듈들 (순서 중요) -->
+<script src="{% static 'js/ddoksang_date_utils.js' %}"></script>
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
-<script src="{% static 'js/ddoksang_image_upload.js' %}"></script>
-<script src="{% static 'js/ddoksang_create.js' %}"></script>
 
-<!-- 자동완성 스크립트를 일반 script로 로드 -->
+<!-- 🔧 이미지 업로드 모듈 (독립 실행) -->
+<script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
+
+<!-- 메시지 시스템 -->
+{{ messages_json|json_script:"ddoksang-messages" }}
+<script>
+// 🔧 메시지 시스템 초기화
+const messagesElement = document.getElementById('ddoksang-messages');
+window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
+
+window.DdoksangMessages = {
+    get: function(category, key, params = {}) {
+        try {
+            let message = this.messages[category][key];
+            
+            if (typeof message !== 'string') {
+                console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
+                return `${category}.${key}`;
+            }
+            
+            if (params && typeof params === 'object') {
+                Object.entries(params).forEach(([paramKey, value]) => {
+                    const placeholder = `{${paramKey}}`;
+                    message = message.replace(new RegExp(placeholder, 'g'), value);
+                });
+            }
+            
+            return message;
+        } catch (error) {
+            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
+            return `${category}.${key}`;
+        }
+    },
+    
+    messages: window.DDOKSANG_MESSAGES || {}
+};
+
+window.msg = function(category, key, params) {
+    return window.DdoksangMessages.get(category, key, params);
+};
+
+console.log('✅ 메시지 시스템 초기화 완료');
+</script>
+
+<!-- 🔧 메인 폼 스크립트 (이미지 업로드 코드 제거됨) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=3.0"></script>
+
+<!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 중복 확인용 날짜 선택기 초기화 -->
+<!-- 🔧 통합 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  
-  // 날짜 선택기 초기화
-  if (typeof flatpickr !== 'undefined') {
-    flatpickr("#check_start_date", { dateFormat: "Y-m-d" });
-    flatpickr("#check_end_date", { dateFormat: "Y-m-d" });
-    console.log('📅 날짜 선택기 초기화 완료');
+  console.log('📄 create.html 초기화 시작');
+
+  // 🔧 1단계: 이미지 업로드 모듈 초기화 확인/재시도
+  function ensureImageUploadInit() {
+    if (window.ddoksangImageUploader?.isInitialized) {
+      console.log('✅ 이미지 업로드 모듈 이미 초기화됨');
+      return true;
+    }
+    
+    console.log('🔄 이미지 업로드 모듈 초기화 시도...');
+    if (window.initDdoksangImageUpload) {
+      return window.initDdoksangImageUpload();
+    }
+    
+    console.warn('⚠️ 이미지 업로드 초기화 함수를 찾을 수 없음');
+    return false;
   }
 
-  //  자동완성 즉시 초기화 (중복 확인 단계용)
-  if (typeof initAutocomplete === 'function') {
-    console.log(' 자동완성 초기화 시작...');
+  // 🔧 2단계: 자동완성 초기화 (중복 방지)
+  function initializeAutocomplete() {
+    if (typeof initAutocomplete !== 'function') {
+      console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
+      return false;
+    }
+
+    console.log('🔄 자동완성 초기화...');
     
-    // 중복 확인 단계 자동완성
-    initAutocomplete('artist-member-search', 'artist-member-results', {
-      showBirthday: true,
-      showArtistTag: true,
-      submitOnSelect: false,
-      artistOnly: false,
-      apiUrl: '/artist/autocomplete/',
-      onSelect: function(result) {
-        console.log(' 아티스트 선택:', result);
-        selectArtistForDuplicateCheck(result);
-      }
-    });
+    // 🔧 기존 이벤트 핸들러 완전 제거
+    const artistInput = document.getElementById('artist-member-search');
+    const resultsList = document.getElementById('artist-member-results');
     
-    console.log(' 자동완성 초기화 완료');
-  } else {
-    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다!');
+    if (!artistInput || !resultsList) {
+      console.warn('❌ 자동완성 요소를 찾을 수 없음');
+      return false;
+    }
+
+    // 기존 핸들러 제거를 위해 요소 복제
+    const newInput = artistInput.cloneNode(true);
+    artistInput.parentNode.replaceChild(newInput, artistInput);
+
+    try {
+      initAutocomplete('artist-member-search', 'artist-member-results', {
+        showBirthday: true,
+        showArtistTag: true,
+        submitOnSelect: false,
+        artistOnly: false,
+        apiUrl: '/artist/autocomplete/',
+        onSelect: function(result) {
+          console.log('👤 아티스트 선택:', result);
+          handleArtistSelection(result);
+        }
+      });
+      
+      console.log('✅ 자동완성 초기화 완료');
+      return true;
+    } catch (error) {
+      console.error('❌ 자동완성 초기화 실패:', error);
+      return false;
+    }
   }
 
-  // 아티스트 선택 함수
-  function selectArtistForDuplicateCheck(result) {
+  // 🔧 3단계: 아티스트 선택 처리 (단일 함수)
+  function handleArtistSelection(result) {
     const FormUtils = window.DdoksangFormUtils;
     if (!FormUtils) {
-      console.error('DdoksangFormUtils를 찾을 수 없습니다');
+      console.error('❌ DdoksangFormUtils를 찾을 수 없습니다');
       return;
     }
 
-    // 데이터 정규화
-    const data = FormUtils.normalizeArtistData({
-      member_name: result.name,
-      artist_display: result.artist || result.artist_name,
-      artist_id: result.artist_id,
-      member_id: result.id || result.member_id
-    });
+    try {
+      // 데이터 정규화
+      const data = FormUtils.normalizeArtistData({
+        member_name: result.name,
+        artist_display: result.artist || result.artist_name,
+        artist_id: result.artist_id,
+        member_id: result.id || result.member_id
+      });
 
-    // 폼 필드 업데이트
-    FormUtils.setValue('check_artist_id', data.artistId);
-    FormUtils.setValue('check_member_id', data.memberId);
-    FormUtils.setValue('artist-member-search', data.displayText);
-    FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
-    
-    // UI 업데이트
-    FormUtils.toggleClass('artist-member-results', 'hidden', true);
-    FormUtils.toggleClass('selected-artist', 'hidden', false);
-    
-    // 중복 확인 버튼 상태 업데이트
-    if (window.checkDuplicateBtnState) {
-      window.checkDuplicateBtnState();
+      // 폼 필드 업데이트
+      FormUtils.setValue('check_artist_id', data.artistId);
+      FormUtils.setValue('check_member_id', data.memberId);
+      FormUtils.setValue('artist-member-search', data.displayText);
+      FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
+      
+      // UI 업데이트
+      FormUtils.toggleClass('artist-member-results', 'hidden', true);
+      FormUtils.toggleClass('selected-artist', 'hidden', false);
+      
+      // 중복 확인 버튼 상태 업데이트
+      setTimeout(() => {
+        if (window.updateDuplicateButtonState) {
+          window.updateDuplicateButtonState();
+        }
+      }, 50);
+      
+      console.log('✅ 아티스트 선택 처리 완료:', data);
+    } catch (error) {
+      console.error('❌ 아티스트 선택 처리 실패:', error);
+    }
+  }
+
+  // 🔧 4단계: 모듈 연동 설정
+  function setupModuleIntegration() {
+    // 이미지 업로드 ↔ 폼 검증 연동
+    if (window.ddoksangApp && window.ddoksangImageUploader?.isInitialized) {
+      const originalUpdateNext = window.ddoksangApp.updateNextButtonState;
+      
+      if (originalUpdateNext) {
+        window.ddoksangApp.updateNextButtonState = function() {
+          // 기본 검증 실행
+          originalUpdateNext.call(this);
+          
+          // Step 6에서 이미지 개수 추가 검증
+          if (this.currentStep === 6) {
+            const fileCount = window.ddoksangImageUploader.getFileCount();
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (nextBtn && fileCount === 0) {
+              window.DdoksangFormUtils?.updateButtonState('nextBtn', false);
+            }
+          }
+        };
+        
+        console.log('🔗 모듈 연동 설정 완료');
+        return true;
+      }
     }
     
-    console.log('폼 데이터 업데이트 완료:', data);
+    console.warn('⚠️ 모듈 연동 설정 실패');
+    return false;
   }
 
-  // 전역 함수로 설정 (다른 스크립트에서 사용할 수 있도록)
-  window.selectArtistForDuplicateCheck = selectArtistForDuplicateCheck;
-});
-</script>
-
-<!-- 디버깅용 전역 함수 -->
-<script>
-window.debugDdoksang = function() {
-  console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
-  console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
-  console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
-  console.log('setupDdoksangImageUpload:', !!window.setupDdoksangImageUpload);
-  console.log('initAutocomplete:', !!window.initAutocomplete);
-  console.log('ddoksangApp:', window.ddoksangApp);
-  console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
-  console.log('selectArtistForDuplicateCheck:', typeof window.selectArtistForDuplicateCheck);
-  console.log('=======================================');
-};
-
-// 자동완성 재초기화 함수
-window.restartAutocomplete = function() {
-  if (typeof initAutocomplete === 'function') {
-    console.log(' 자동완성 재초기화...');
-    initAutocomplete('artist-member-search', 'artist-member-results', {
-      showBirthday: true,
-      showArtistTag: true,
-      submitOnSelect: false,
-      artistOnly: false,
-      apiUrl: '/artist/autocomplete/',
-      onSelect: window.selectArtistForDuplicateCheck
+  // 🔧 순차 초기화 실행
+  let imageInitSuccess = ensureImageUploadInit();
+  let autocompleteInitSuccess = initializeAutocomplete();
+  
+  // 지연된 재시도 (1초 후)
+  setTimeout(() => {
+    if (!imageInitSuccess) {
+      console.log('🔄 이미지 업로드 재시도...');
+      imageInitSuccess = ensureImageUploadInit();
+    }
+    
+    if (!autocompleteInitSuccess) {
+      console.log('🔄 자동완성 재시도...');
+      autocompleteInitSuccess = initializeAutocomplete();
+    }
+    
+    // 모듈 연동 설정
+    setupModuleIntegration();
+    
+    // 최종 상태 체크
+    console.log('📊 최종 초기화 상태:', {
+      imageUpload: !!window.ddoksangImageUploader?.isInitialized,
+      autocomplete: autocompleteInitSuccess,
+      mainApp: !!window.ddoksangApp,
+      formUtils: !!window.DdoksangFormUtils,
+      mapUtils: !!window.DdoksangMapUtils
     });
-    console.log('✅ 재초기화 완료');
-  } else {
-    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
+    
+  }, 1000);
+  
+  // 🔧 전역 함수 설정 (하위 호환성)
+  window.selectArtistForDuplicateCheck = handleArtistSelection;
+  
+  window.restartAutocomplete = function() {
+    console.log('🔄 자동완성 재시작...');
+    return initializeAutocomplete();
+  };
+  
+  console.log('✅ create.html 초기화 완료');
+});
+
+// 🔧 디버깅 도구들
+window.debugDdoksang = {
+  checkModules: function() {
+    console.log('🔍 덕생 모듈 상태:');
+    console.log('- FormUtils:', !!window.DdoksangFormUtils);
+    console.log('- MapUtils:', !!window.DdoksangMapUtils);
+    console.log('- DateUtils:', !!window.DdoksangDateUtils);
+    console.log('- ImageUploader:', !!window.ddoksangImageUploader?.isInitialized);
+    console.log('- MainApp:', !!window.ddoksangApp);
+    console.log('- Autocomplete:', typeof window.initAutocomplete);
+    console.log('- External libs:', {
+      sortable: typeof window.Sortable,
+      flatpickr: typeof window.flatpickr,
+      kakao: !!window.kakao?.maps
+    });
+  },
+  
+  imageUpload: function() {
+    if (window.ddoksangImageUploader?.debug) {
+      console.log('📊 이미지 업로드 상태:', window.ddoksangImageUploader.debug());
+    }
+  },
+  
+  compression: function() {
+    if (window.showCompressionStats) {
+      window.showCompressionStats();
+    }
+  },
+  
+  restartAll: function() {
+    console.log('🔄 모든 모듈 재시작...');
+    if (window.cleanupImageUploadHandlers) {
+      window.cleanupImageUploadHandlers();
+    }
+    if (window.initDdoksangImageUpload) {
+      window.initDdoksangImageUpload();
+    }
+    if (window.restartAutocomplete) {
+      window.restartAutocomplete();
+    }
+    console.log('✅ 재시작 완료');
   }
 };
+
+console.log('📄 create.html 스크립트 로드 완료');
+console.log('💡 디버깅: window.debugDdoksang.checkModules() 실행');
 </script>
 
 {% endblock %}
