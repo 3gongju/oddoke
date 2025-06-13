@@ -56,7 +56,7 @@
                   </div>
                 {% elif fandom_profile.is_pending_verification %}
                   <div class="inline-flex items-center px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium border border-yellow-200">
-                    <span class="mr-1">⏳</span> 팬덤 인증 확인 중
+                    <span class="mr-1"></span> 팬덤 인증 확인 중
                   </div>
                 {% else %}
                   <a href="{% url 'accounts:fandom_verification' user_profile.username %}"
@@ -104,9 +104,6 @@
               <span class="mr-2">✓</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
             </div>
           {% elif fandom_profile.is_pending_verification %}
-            <div class="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 rounded-full bg-yellow-50 text-yellow-700 text-sm font-medium border border-yellow-200">
-              <span class="mr-2">⏳</span> 팬덤 인증 확인 중
-            </div>
           {% else %}
             
           {% endif %}
