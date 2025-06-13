@@ -366,9 +366,32 @@ def mypage(request):
         'my_reviews': my_reviews,              # 내가 쓴 리뷰
     }
     return render(request, 'mypage.html', context)
-    
+
 @login_required
 def edit_profile(request, username):
+    """설정 메인 페이지 (새로 추가)"""
+    user_profile = get_object_or_404(User, username=username)
+    
+    # 본인만 접근 가능
+    if request.user != user_profile:
+        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
+        return redirect('accounts:mypage')
+    
+    # 필요한 프로필 정보들 가져오기 (기존 mypage 로직 활용)
+    fandom_profile = user_profile.get_fandom_profile()
+    bank_profile = user_profile.get_bank_profile()
+    address_profile = user_profile.get_address_profile()
+    
+    context = {
+        'user_profile': user_profile,
+        'fandom_profile': fandom_profile,
+        'bank_profile': bank_profile,
+        'address_profile': address_profile,
+    }
+    return render(request, 'accounts/edit_profile.html', context)
+
+@login_required
+def edit_profile_info(request, username):
     user_profile = get_object_or_404(User, username=username)
 
     if request.method == "POST":
@@ -1030,3 +1053,81 @@ def smart_logout(request):
         return naver_logout(request)
     else:
         return logout(request)  # 기존 logout 함수 호출
+
+
+@login_required
+def fandom_verification(request, username):
+    """팬덤 인증 페이지 (기존 upload_fandom_card 활용)"""
+    user_profile = get_object_or_404(User, username=username)
+    
+    # 본인만 접근 가능
+    if request.user != user_profile:
+        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
+        return redirect('accounts:mypage')
+    
+    # 기존 로직 재사용
+    fandom_profile = user_profile.get_fandom_profile()
+    artist_list = Artist.objects.all().order_by('display_name')
+    
+    context = {
+        'user_profile': user_profile,
+        'fandom_profile': fandom_profile,
+        'artist_list': artist_list,
+    }
+    return render(request, 'accounts/fandom_verification.html', context)
+
+
+@login_required
+def account_settings(request, username):
+    """계좌 설정 페이지 (기존 계좌 함수들 활용)"""
+    user_profile = get_object_or_404(User, username=username)
+    
+    # 본인만 접근 가능
+    if request.user != user_profile:
+        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
+        return redirect('accounts:mypage')
+    
+    # 기존 로직 재사용
+    bank_profile = user_profile.get_bank_profile()
+    
+    context = {
+        'user_profile': user_profile,
+        'bank_profile': bank_profile,
+    }
+    return render(request, 'accounts/account_settings.html', context)
+
+
+@login_required
+def address_settings(request, username):
+    """주소 설정 페이지 (기존 주소 함수들 활용)"""
+    user_profile = get_object_or_404(User, username=username)
+    
+    # 본인만 접근 가능
+    if request.user != user_profile:
+        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
+        return redirect('accounts:mypage')
+    
+    # 기존 로직 재사용
+    address_profile = user_profile.get_address_profile()
+    
+    context = {
+        'user_profile': user_profile,
+        'address_profile': address_profile,
+    }
+    return render(request, 'accounts/address_settings.html', context)
+
+
+@login_required
+def account_info(request, username):
+    """계정 정보 페이지"""
+    user_profile = get_object_or_404(User, username=username)
+    
+    # 본인만 접근 가능
+    if request.user != user_profile:
+        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
+        return redirect('accounts:mypage')
+    
+    context = {
+        'user_profile': user_profile,
+    }
+    return render(request, 'accounts/account_info.html', context)
