@@ -17,6 +17,8 @@ from difflib import SequenceMatcher
 from ddoksang.models import BdayCafe, CafeFavorite  
 from artist.models import Artist, Member 
 
+from ddoksang.messages import get_message, DUPLICATE_CHECK
+
 from ddoksang.utils.map_utils import (
     serialize_cafe_for_map, 
     get_nearby_cafes, 
@@ -300,7 +302,7 @@ def normalize(text):
 @require_GET
 def check_duplicate_cafe(request):
     """
-    생일카페 중복 확인 API - 안전한 버전
+    생일카페 중복 확인 API - i18n korean 메세지 확인
     """
     try:
         # 로그 설정
@@ -320,7 +322,7 @@ def check_duplicate_cafe(request):
             logger.warning("필수 파라미터 누락")
             return JsonResponse({
                 'exists': False,
-                'error': '필수 파라미터가 누락되었습니다.'
+                'error': get_message('DUPLICATE_CHECK', 'VALIDATION_ERROR')
             })
         
         # artist_id 유효성 검증
@@ -473,11 +475,15 @@ def check_duplicate_cafe(request):
         
         result = {
             'exists': exists,
-            'message': f'유사한 생일카페가 {len(similar_cafes)}개 발견되었습니다.' if exists else '해당 덕의 생카를 어덕해에 등록해주세요',
+            'message': (
+                get_message('DUPLICATE_CHECK', 'DUPLICATE_FOUND', count=len(similar_cafes))
+                if exists 
+                else get_message('DUPLICATE_CHECK', 'NO_DUPLICATE')
+            ),
             'similar_count': len(similar_cafes)
         }
         
-        # ✅ 중복 카페 정보 추가 (안전하게 처리)
+        #  중복 카페 정보 추가
         if exists:
             try:
                 # 사용자 찜 목록 확인 (로그인된 경우)
@@ -558,29 +564,14 @@ def check_duplicate_cafe(request):
                 # 카페 정보 생성에 실패해도 기본 결과는 반환
                 result['similar_cafes'] = []
         
-        # 디버깅용 정보 (개발 환경에서)
-        if getattr(settings, 'DEBUG', False):
-            result['debug'] = {
-                'normalized_input': normalized_input_name,
-                'total_checked': len(existing_cafes_list),
-                'similar_cafes_debug': [
-                    {
-                        'id': cafe.id,
-                        'name': cafe.cafe_name,
-                        'normalized': normalize_name(cafe.cafe_name)
-                    } for cafe in similar_cafes
-                ]
-            }
         
         logger.info(f"중복 확인 결과: {cafe_name} -> {'중복' if exists else '신규'} (유사 카페: {len(similar_cafes)}개)")
         return JsonResponse(result)
         
     except Exception as e:
         # 최상위 예외 처리
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"중복 확인 API 예상치 못한 오류: {e}", exc_info=True)
         return JsonResponse({
             'exists': False,
-            'error': f'서버 내부 오류가 발생했습니다. 관리자에게 문의해주세요.'
+            'error': get_message('DUPLICATE_CHECK', 'SERVER_ERROR')
         }, status=500)

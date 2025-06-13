@@ -3,6 +3,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils.safestring import mark_safe
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
@@ -14,6 +15,7 @@ from django.views.decorators.csrf import csrf_protect
 from django.db import IntegrityError, transaction
 from django.urls import reverse
 from datetime import date
+from ddoksang.messages import ALL_MESSAGES
 import json
 import logging
 from django.template.loader import render_to_string
@@ -41,6 +43,8 @@ def create_cafe(request):
             'image_form': image_form,
             'artists': artists,
             'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+            # JS에서 사용할 메세지들 가져오기
+            'messages_json':ALL_MESSAGES,
         }
         return render(request, 'ddoksang/create.html', context)
     
