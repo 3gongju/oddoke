@@ -2,82 +2,176 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-lg mx-auto px-4">
+<div class="min-h-screen bg-white">
+  <div class="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto bg-white min-h-screen">
     
-    <!-- 🎨 삭제 확인 카드 -->
-    <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-      
-      <!-- 🚨 경고 아이콘 -->
-      <div class="text-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-800 mb-2">주소정보 삭제</h1>
-        <p class="text-gray-600">정말로 등록된 주소정보를 삭제하시겠습니까?</p>
+    <!-- 헤더 - account_delete_confirm과 동일한 구조 -->
+    <div class="bg-white border-b border-gray-200 relative z-10">
+      <div class="flex items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <a href="{% url 'accounts:mypage' %}" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">주소정보 삭제</h1>
       </div>
+    </div>
 
-      <!-- 📋 현재 등록된 주소 정보 -->
-      <div class="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-200">
-        <h3 class="font-bold text-gray-800 mb-4">현재 등록된 주소정보</h3>
-        <div class="space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">우편번호</span>
-            <span class="font-semibold text-gray-800">{{ address_profile.postal_code }}</span>
+    <!-- 메인 콘텐츠 - 네비바 가림 방지를 위한 padding-bottom 추가 -->
+    <div class="px-0 pb-20">
+      
+      <!-- 삭제 확인 안내 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="bg-white">
+          <div class="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">정말로 삭제하시겠습니까?</h2>
+            <p class="text-sm sm:text-base text-gray-600">등록된 주소정보가 완전히 삭제됩니다</p>
           </div>
-          <div class="flex justify-between items-start">
-            <span class="text-gray-600 font-medium">도로명주소</span>
-            <span class="font-semibold text-gray-800 text-right break-all">{{ address_profile.road_address }}</span>
+        </div>
+      </div>
+      
+      <!-- 현재 등록된 주소 정보 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          현재 등록된 주소정보
+        </div>
+        
+        <div class="bg-white">
+          <!-- 우편번호 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">우편번호</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 우편번호</div>
+              </div>
+              <div class="ml-4 text-right">
+                <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.postal_code }}</p>
+              </div>
+            </div>
           </div>
+
+          <!-- 지역 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">지역</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">시도 및 시군구</div>
+              </div>
+              <div class="ml-4 text-right">
+                <p class="text-base sm:text-lg font-semibold text-gray-800">
+                  {{ address_profile.sido }} {{ address_profile.sigungu }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 도로명주소 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">도로명주소</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">기본 주소</div>
+              </div>
+              <div class="ml-4 text-right flex-1 max-w-xs">
+                <p class="text-base sm:text-lg font-semibold text-gray-800 break-all text-right">
+                  {{ address_profile.road_address }}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {% if address_profile.jibun_address %}
-          <div class="flex justify-between items-start">
-            <span class="text-gray-600 font-medium">지번주소</span>
-            <span class="font-semibold text-gray-800 text-right break-all">{{ address_profile.jibun_address }}</span>
+          <!-- 지번주소 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">지번주소</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">지번 주소</div>
+              </div>
+              <div class="ml-4 text-right flex-1 max-w-xs">
+                <p class="text-base sm:text-lg font-semibold text-gray-800 break-all text-right">
+                  {{ address_profile.jibun_address }}
+                </p>
+              </div>
+            </div>
           </div>
           {% endif %}
-          {% if address_profile.detail_address %}
-          <div class="flex justify-between items-start">
-            <span class="text-gray-600 font-medium">상세주소</span>
-            <span class="font-semibold text-gray-800 text-right break-all">{{ address_profile.detail_address }}</span>
-          </div>
-          {% endif %}
+
           {% if address_profile.building_name %}
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">건물명</span>
-            <span class="font-semibold text-gray-800">{{ address_profile.building_name }}</span>
+          <!-- 건물명 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">건물명</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">건물 또는 아파트명</div>
+              </div>
+              <div class="ml-4 text-right">
+                <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.building_name }}</p>
+              </div>
+            </div>
           </div>
           {% endif %}
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">지역</span>
-            <span class="font-semibold text-gray-800">{{ address_profile.sido }} {{ address_profile.sigungu }}</span>
+
+          {% if address_profile.detail_address %}
+          <!-- 상세주소 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">상세주소</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">추가 상세 주소</div>
+              </div>
+              <div class="ml-4 text-right">
+                <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.detail_address }}</p>
+              </div>
+            </div>
           </div>
-          <div class="flex justify-between items-center">
-            <span class="text-gray-600 font-medium">등록일</span>
-            <span class="font-semibold text-gray-800">
-              {{ address_profile.created_at|date:"Y년 m월 d일" }}
-            </span>
+          {% endif %}
+
+          <!-- 등록일 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <label class="text-base sm:text-lg font-medium text-gray-900">등록일</label>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">주소 등록 날짜</div>
+              </div>
+              <div class="ml-4 text-right">
+                <p class="text-base sm:text-lg font-semibold text-gray-800">
+                  {{ address_profile.created_at|date:"Y년 m월 d일" }}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ⚠️ 삭제 주의사항 -->
-      <div class="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
-        <div class="flex items-start space-x-3">
-          <div class="text-2xl"></div>
-          <div>
-            <h4 class="font-bold text-red-800 mb-3">삭제 시 주의사항</h4>
-            <ul class="text-sm text-red-700 space-y-2 leading-relaxed">
-              <li class="flex items-start space-x-2">
-                <span class="text-red-500 mt-1">•</span>
+      <!-- 삭제 주의사항 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          삭제 시 주의사항
+        </div>
+        
+        <div class="bg-red-50 border border-red-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <ul class="text-sm sm:text-base text-red-700 space-y-3">
+              <li class="flex items-start space-x-3">
+                <span class="text-red-500 mt-1 font-bold">•</span>
                 <span>삭제된 주소정보는 복구할 수 없습니다</span>
               </li>
-              <li class="flex items-start space-x-2">
-                <span class="text-red-500 mt-1">•</span>
+              <li class="flex items-start space-x-3">
+                <span class="text-red-500 mt-1 font-bold">•</span>
                 <span>진행 중인 거래가 있다면 완료 후 삭제하세요</span>
               </li>
-              <li class="flex items-start space-x-2">
-                <span class="text-red-500 mt-1">•</span>
+              <li class="flex items-start space-x-3">
+                <span class="text-red-500 mt-1 font-bold">•</span>
                 <span>새로운 거래를 위해서는 주소를 다시 등록해야 합니다</span>
               </li>
-              <li class="flex items-start space-x-2">
-                <span class="text-red-500 mt-1">•</span>
+              <li class="flex items-start space-x-3">
+                <span class="text-red-500 mt-1 font-bold">•</span>
                 <span>삭제 후에도 거래 기록은 보관됩니다</span>
               </li>
             </ul>
@@ -85,39 +179,175 @@
         </div>
       </div>
 
-      <!-- 🔘 버튼 그룹 -->
-      <div class="flex space-x-4">
-        <a href="{% url 'accounts:mypage' %}" 
-           class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-2xl transition-all duration-200 text-center">
-          <span class="mr-2">←</span> 취소
-        </a>
+      <!-- 주소 재등록 안내 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          주소 재등록 안내
+        </div>
         
-        <form method="POST" class="flex-1">
-          {% csrf_token %}
-          <button type="submit" 
-                  onclick="return confirm('정말로 주소정보를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')"
-                  class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105">
-            <span class="mr-2"></span> 삭제하기
-          </button>
-        </form>
+        <div class="bg-gray-50 border border-gray-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 text-center">
+            <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-2">주소 재등록 가능</h3>
+            <p class="text-sm sm:text-base text-gray-700 leading-relaxed">
+              주소정보를 삭제한 후 다시 거래를 원하신다면<br>
+              언제든지 새로운 주소를 등록할 수 있습니다.
+            </p>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- 💡 도움말 섹션 -->
-    <div class="bg-white rounded-3xl shadow-xl p-8 mt-8 border border-gray-100">
-      <div class="text-center">
-        <h3 class="text-lg font-bold text-gray-800 mb-3">주소 재등록 안내</h3>
-        <p class="text-gray-600 text-sm leading-relaxed">
-          주소정보를 삭제한 후 다시 거래를 원하신다면<br>
-          언제든지 새로운 주소를 등록할 수 있습니다.
-        </p>
-        <a href="{% url 'accounts:address_registration' user_profile.username %}" 
-           class="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors mt-4">
-          <span class="mr-2"></span> 새 주소 등록하기
-        </a>
+      <!-- 버튼 그룹 -->
+      <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 bg-white">
+        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+          <a href="{% url 'accounts:mypage' %}" 
+             class="w-full sm:flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
+            취소
+          </a>
+          
+          <form method="POST" class="w-full sm:flex-1">
+            {% csrf_token %}
+            <button type="submit" 
+                    onclick="return confirm('정말로 주소정보를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')"
+                    class="w-full px-4 py-2 sm:px-6 sm:py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm sm:text-base">
+              삭제하기
+            </button>
+          </form>
+        </div>
       </div>
+
     </div>
   </div>
 </div>
+
+<!-- 스타일링 -->
+<style>
+/* 기본 레이아웃 */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 섹션 구분선 스타일 */
+.border-b.border-gray-100 {
+  border-bottom-width: 1px;
+  border-color: #f3f4f6;
+}
+
+.border-b.border-gray-200 {
+  border-bottom-width: 1px;
+  border-color: #e5e7eb;
+}
+
+.border-t.border-gray-200 {
+  border-top-width: 1px;
+  border-color: #e5e7eb;
+}
+
+/* 반응형 레이아웃 조정 */
+@media (max-width: 640px) {
+  .flex.justify-between.items-center,
+  .flex.justify-between.items-start {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .ml-4.text-right {
+    margin-left: 0;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .ml-4.text-right.flex-1.max-w-xs {
+    max-width: 100%;
+  }
+  
+  .text-right {
+    text-align: left;
+  }
+}
+
+/* 웹에서 더 넓은 간격 */
+@media (min-width: 1024px) {
+  .lg\\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 버튼 스타일 */
+.bg-gray-100:hover {
+  background-color: #f3f4f6;
+}
+
+.bg-red-600:hover {
+  background-color: #dc2626;
+}
+
+/* 텍스트 색상 */
+.text-red-600 {
+  color: #dc2626;
+}
+
+.text-red-700 {
+  color: #b91c1c;
+}
+
+.text-red-500 {
+  color: #ef4444;
+}
+
+/* 배경 색상 */
+.bg-red-100 {
+  background-color: #fee2e2;
+}
+
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+/* 테두리 색상 */
+.border-red-200 {
+  border-color: #fecaca;
+}
+
+.border-gray-200 {
+  border-color: #e5e7eb;
+}
+
+/* 네비게이션바 겹침 방지 */
+.pb-20 {
+  padding-bottom: 5rem;
+}
+
+/* 모바일에서 추가 여백 */
+@media (max-width: 640px) {
+  .pb-20 {
+    padding-bottom: 6rem;
+  }
+}
+
+/* 아이콘 애니메이션 */
+.bg-red-100 {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .8;
+  }
+}
+
+/* 긴 텍스트 처리 */
+.break-all {
+  word-break: break-all;
+}
+</style>
 
 {% endblock %}

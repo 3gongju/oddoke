@@ -2,209 +2,455 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-4xl mx-auto px-4">
+<div class="min-h-screen bg-white">
+  <div class="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto bg-white min-h-screen">
     
-    <!-- 헤더 -->
-    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-8 border border-gray-100">
-      <div class="text-center">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">주소 정보</h1>
-        <p class="text-sm sm:text-base text-gray-600">
-          배송을 위한 주소 정보를 등록하고 관리하세요
-        </p>
+    <!-- 헤더 - account_settings와 동일한 구조 -->
+    <div class="bg-white border-b border-gray-200 relative z-10">
+      <div class="flex items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <a href="{% url 'accounts:settings_main' user_profile.username %}" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">주소 관리</h1>
       </div>
     </div>
-    
-    {% if address_profile %}
-      <!-- 등록된 주소 정보 표시 -->
-      <div class="space-y-6">
-        <!-- 주소 상태 -->
-        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-            <div class="flex items-center space-x-4">
-              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <span class="text-green-600 text-xl">✓</span>
-              </div>
-              <div>
-                <h4 class="font-bold text-green-800 text-lg">주소 등록 완료</h4>
-                <p class="text-green-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
-              </div>
-            </div>
-            <span class="px-4 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
-              등록완료
-            </span>
-          </div>
-        </div>
-        
-        <!-- 주소 정보 -->
-        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6">등록된 주소 정보</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h5 class="font-semibold text-gray-700 mb-2">우편번호</h5>
-              <p class="text-xl font-bold text-gray-800">{{ address_profile.postal_code }}</p>
-            </div>
-            
-            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h5 class="font-semibold text-gray-700 mb-2">지역</h5>
-              <p class="text-xl font-bold text-gray-800">{{ address_profile.sido }} {{ address_profile.sigungu }}</p>
-            </div>
-            
-            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200 md:col-span-2">
-              <h5 class="font-semibold text-gray-700 mb-2">기본 주소</h5>
-              <p class="text-lg font-bold text-gray-800 break-all">
-                {{ address_profile.get_masked_address }}
-              </p>
-            </div>
-            
-            {% if address_profile.detail_address %}
-            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h5 class="font-semibold text-gray-700 mb-2">상세 주소</h5>
-              <p class="text-lg font-bold text-gray-800">{{ address_profile.detail_address }}</p>
-            </div>
-            {% endif %}
-            
-            {% if address_profile.building_name %}
-            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h5 class="font-semibold text-gray-700 mb-2">건물명</h5>
-              <p class="text-lg font-bold text-gray-800">{{ address_profile.building_name }}</p>
-            </div>
-            {% endif %}
-            
-            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h5 class="font-semibold text-gray-700 mb-2">등록일</h5>
-              <p class="text-xl font-bold text-gray-800">
-                {{ address_profile.created_at|date:"Y.m.d" }}
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- 관리 버튼들 -->
-        <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
-          <h3 class="text-xl font-bold text-gray-800 mb-6">주소 관리</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-green-50 rounded-2xl p-6 border border-green-200 text-center">
-              <h4 class="text-lg font-bold text-green-800 mb-3">주소정보 수정</h4>
-              <p class="text-sm text-green-700 mb-4 leading-relaxed">
-                우편번호, 기본주소, 상세주소를<br>
-                새로운 정보로 변경합니다
-              </p>
-              <a href="{% url 'accounts:address_modify' user_profile.username %}"
-                 class="inline-flex items-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors duration-200">
-                수정하기
-              </a>
-            </div>
-            
-            <div class="bg-red-50 rounded-2xl p-6 border border-red-200 text-center">
-              <h4 class="text-lg font-bold text-red-800 mb-3">주소정보 삭제</h4>
-              <p class="text-sm text-red-700 mb-4 leading-relaxed">
-                등록된 주소정보를<br>
-                완전히 삭제합니다
-              </p>
-              <a href="{% url 'accounts:address_delete' user_profile.username %}"
-                 class="inline-flex items-center px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors duration-200">
-                삭제하기
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+
+    <!-- 메인 콘텐츠 - 네비바 가림 방지를 위한 padding-bottom 추가 -->
+    <div class="px-0 pb-20">
       
-    {% else %}
-      <!-- 미등록 상태 -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 border border-gray-100">
-        <div class="text-center py-12">
-          <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6 mx-auto">
-            <img src="{% static 'image/ddok_black.png' %}" alt="주소 미등록" class="w-12 h-12 opacity-50" />
-          </div>
-          <h4 class="text-xl font-bold text-gray-800 mb-3">주소가 등록되지 않았습니다</h4>
-          <p class="text-gray-600 mb-8 leading-relaxed">
-            거래 시 배송 주소를 공유하기 위해 주소를 등록해주세요.<br>
-            주소 정보는 암호화되어 안전하게 보관됩니다.
-          </p>
-          
-          <!-- 등록 안내 -->
-          <div class="bg-green-50 rounded-2xl p-6 mb-8 border border-green-200 text-left max-w-md mx-auto">
-            <h5 class="font-bold text-green-800 mb-3 text-center">주소 등록 혜택</h5>
-            <ul class="text-sm text-green-700 space-y-2">
-              <li class="flex items-center space-x-2">
-                <span class="text-green-500">•</span>
-                <span>채팅에서 배송 주소 간편 공유</span>
-              </li>
-              <li class="flex items-center space-x-2">
-                <span class="text-green-500">•</span>
-                <span>빠르고 안전한 거래 진행 가능</span>
-              </li>
-              <li class="flex items-center space-x-2">
-                <span class="text-green-500">•</span>
-                <span>거래 상대방의 신뢰도 증가</span>
-              </li>
-              <li class="flex items-center space-x-2">
-                <span class="text-green-500">•</span>
-                <span>마스킹된 주소로 개인정보 보호</span>
-              </li>
-            </ul>
+      {% if address_profile %}
+        <!-- 주소 등록 완료 상태 -->
+        
+        <!-- 주소 상태 섹션 -->
+        <div class="mb-6 sm:mb-8">
+          <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+            주소 상태
           </div>
           
-          <a href="{% url 'accounts:address_registration' user_profile.username %}"
-             class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-bold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
-            주소 등록하기
-          </a>
-        </div>
-      </div>
-    {% endif %}
-
-    <!-- 보안 안내 -->
-    <div class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mt-8 border border-gray-100">
-      <h3 class="text-xl font-bold text-gray-800 mb-6">보안 안내사항</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
-          <h4 class="font-bold text-yellow-800 mb-3">개인정보 보호</h4>
-          <ul class="text-sm text-yellow-700 space-y-2">
-            <li class="flex items-start space-x-2">
-              <span class="text-yellow-500 mt-1">•</span>
-              <span>주소정보는 암호화되어 저장됩니다</span>
-            </li>
-            <li class="flex items-start space-x-2">
-              <span class="text-yellow-500 mt-1">•</span>
-              <span>주소는 마스킹 처리됩니다</span>
-            </li>
-            <li class="flex items-start space-x-2">
-              <span class="text-yellow-500 mt-1">•</span>
-              <span>상세 주소는 거래 확정 후 공개</span>
-            </li>
-          </ul>
+          <div class="bg-white">
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+                <div class="flex items-center space-x-4">
+                  
+                  <div>
+                    <h4 class="font-bold text-green-800 text-lg">주소 등록 완료</h4>
+                    <p class="text-green-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
+                  </div>
+                </div>
+                <span class="px-4 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
+                  등록완료
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div class="bg-green-50 rounded-2xl p-6 border border-green-200">
-          <h4 class="font-bold text-green-800 mb-3">안전한 거래</h4>
-          <ul class="text-sm text-green-700 space-y-2">
-            <li class="flex items-start space-x-2">
-              <span class="text-green-500 mt-1">•</span>
-              <span>거래 완료 후 언제든 삭제 가능</span>
-            </li>
-            <li class="flex items-start space-x-2">
-              <span class="text-green-500 mt-1">•</span>
-              <span>주소 정보는 거래 상대방에게만 공개</span>
-            </li>
-            <li class="flex items-start space-x-2">
-              <span class="text-green-500 mt-1">•</span>
-              <span>24시간 고객센터 지원</span>
-            </li>
-          </ul>
+        <!-- 등록된 주소 정보 섹션 -->
+        <div class="mb-6 sm:mb-8">
+          <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+            등록된 주소 정보
+          </div>
+          
+          <div class="bg-white">
+            <!-- 우편번호 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">우편번호</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 우편번호</div>
+                </div>
+                <div class="ml-4 text-right">
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.postal_code }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 지역 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">지역</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">시도 및 시군구</div>
+                </div>
+                <div class="ml-4 text-right">
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">
+                    {{ address_profile.sido }} {{ address_profile.sigungu }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 기본 주소 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">기본 주소</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">보안을 위해 일부 숨김 처리</div>
+                </div>
+                <div class="ml-4 text-right flex-1 max-w-xs">
+                  <p class="text-base sm:text-lg font-semibold text-gray-800 break-all text-right">
+                    {{ address_profile.get_masked_address }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {% if address_profile.detail_address %}
+            <!-- 상세 주소 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">상세 주소</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">추가 상세 주소</div>
+                </div>
+                <div class="ml-4 text-right">
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.detail_address }}</p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if address_profile.building_name %}
+            <!-- 건물명 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">건물명</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">건물 또는 아파트명</div>
+                </div>
+                <div class="ml-4 text-right">
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.building_name }}</p>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- 등록일 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">등록일</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">주소 등록 날짜</div>
+                </div>
+                <div class="ml-4 text-right">
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">
+                    {{ address_profile.created_at|date:"Y.m.d" }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 주소 관리 버튼 섹션 -->
+        <div class="mb-6 sm:mb-8">
+          <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+            주소 관리
+          </div>
+          
+          <div class="bg-white">
+            <!-- 주소정보 수정 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">주소정보 수정</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">우편번호, 기본주소, 상세주소를 새로운 정보로 변경합니다</div>
+                </div>
+                <div class="ml-4">
+                  <a href="{% url 'accounts:address_modify' user_profile.username %}"
+                     class="px-3 py-1 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition">
+                    수정
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- 주소정보 삭제 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label class="text-base sm:text-lg font-medium text-gray-900">주소정보 삭제</label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 주소정보를 완전히 삭제합니다</div>
+                </div>
+                <div class="ml-4">
+                  <a href="{% url 'accounts:address_delete' user_profile.username %}"
+                     class="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                    삭제
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      
+      {% else %}
+        <!-- 주소 미등록 상태 -->
+        
+        <!-- 등록 안내 섹션 -->
+        <div class="mb-6 sm:mb-8">
+          <div class="bg-white">
+            <div class="px-4 sm:px-6 lg:px-8 py-8 sm:py-12 text-center">
+              <div class="flex flex-col items-center py-2 sm:py-3 lg:py-4 w-full">
+                <img src="{% static 'image/ddok_logo_filled.png' %}" alt="주소 미등록" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 opacity-50 mb-1" />
+              </div>
+              <h4 class="text-xl font-bold text-gray-800 mb-3">주소가 등록되지 않았습니다</h4>
+              <p class="text-gray-600 mb-8 leading-relaxed text-sm sm:text-base">
+                거래 시 배송 주소를 공유하기 위해 주소를 등록해주세요.<br>
+                주소 정보는 암호화되어 안전하게 보관됩니다.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 주소 등록 혜택 섹션 -->
+        <div class="mb-6 sm:mb-8">
+          <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+            주소 등록 혜택
+          </div>
+          
+          <div class="bg-gray-50 border border-gray-200">
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              <ul class="text-sm sm:text-base text-gray-700 space-y-3">
+                <li class="flex items-start space-x-3">
+                  <span class="text-gray-500 mt-1 font-bold">•</span>
+                  <span>채팅에서 배송 주소 간편 공유</span>
+                </li>
+                <li class="flex items-start space-x-3">
+                  <span class="text-gray-500 mt-1 font-bold">•</span>
+                  <span>빠르고 안전한 거래 진행 가능</span>
+                </li>
+                <li class="flex items-start space-x-3">
+                  <span class="text-gray-500 mt-1 font-bold">•</span>
+                  <span>거래 상대방의 신뢰도 증가</span>
+                </li>
+                <li class="flex items-start space-x-3">
+                  <span class="text-gray-500 mt-1 font-bold">•</span>
+                  <span>마스킹된 주소로 개인정보 보호</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- 등록 버튼 섹션 -->
+        <div class="mb-6 sm:mb-8">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 bg-white">
+            <a href="{% url 'accounts:address_registration' user_profile.username %}"
+               class="w-full block px-4 py-3 sm:px-6 sm:py-4 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
+              주소 등록하기
+            </a>
+          </div>
+        </div>
+      
+      {% endif %}
+
+      <!-- 보안 안내사항 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          보안 안내사항
+        </div>
+        
+        <div class="bg-gray-50 border border-gray-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- 개인정보 보호 -->
+              <div>
+                <h4 class="font-bold text-yellow-800 mb-3 text-base sm:text-lg">개인정보 보호</h4>
+                <ul class="text-sm sm:text-base text-gray-700 space-y-2">
+                  <li class="flex items-start space-x-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span>주소정보는 암호화되어 저장됩니다</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span>주소는 마스킹 처리됩니다</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <span class="text-yellow-500 mt-1">•</span>
+                    <span>상세 주소는 거래 확정 후 공개</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <!-- 안전한 거래 -->
+              <div>
+                <h4 class="font-bold text-green-800 mb-3 text-base sm:text-lg">안전한 거래</h4>
+                <ul class="text-sm sm:text-base text-gray-700 space-y-2">
+                  <li class="flex items-start space-x-2">
+                    <span class="text-green-500 mt-1">•</span>
+                    <span>거래 완료 후 언제든 삭제 가능</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <span class="text-green-500 mt-1">•</span>
+                    <span>주소 정보는 거래 상대방에게만 공개</span>
+                  </li>
+                  <li class="flex items-start space-x-2">
+                    <span class="text-green-500 mt-1">•</span>
+                    <span>24시간 고객센터 지원</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 하단 버튼 -->
-    <div class="mt-8 text-center">
-      <a href="{% url 'accounts:settings_main' user_profile.username %}" 
-         class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors duration-200 shadow-md">
-        설정으로 돌아가기
-      </a>
     </div>
   </div>
 </div>
+
+<!-- 스타일링 -->
+<style>
+/* 기본 레이아웃 */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 섹션 구분선 스타일 */
+.border-b.border-gray-100 {
+  border-bottom-width: 1px;
+  border-color: #f3f4f6;
+}
+
+.border-b.border-gray-200 {
+  border-bottom-width: 1px;
+  border-color: #e5e7eb;
+}
+
+.border-t.border-gray-200 {
+  border-top-width: 1px;
+  border-color: #e5e7eb;
+}
+
+/* 반응형 레이아웃 조정 */
+@media (max-width: 640px) {
+  .flex.justify-between.items-start,
+  .flex.justify-between.items-center {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .ml-4 {
+    margin-left: 0;
+    width: auto;
+  }
+  
+  .ml-4.text-right {
+    width: 100%;
+    text-align: left;
+  }
+  
+  .ml-4.text-right.flex-1.max-w-xs {
+    max-width: 100%;
+  }
+  
+  .text-right {
+    text-align: left;
+  }
+}
+
+/* 웹에서 더 넓은 간격 */
+@media (min-width: 1024px) {
+  .lg\\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 버튼 스타일 */
+.bg-green-50:hover {
+  background-color: #dcfce7;
+}
+
+.bg-red-50:hover {
+  background-color: #fef2f2;
+}
+
+.bg-green-100 {
+  background-color: #dcfce7;
+}
+
+.bg-red-100 {
+  background-color: #fecaca;
+}
+
+.bg-black:hover {
+  background-color: #374151;
+}
+
+/* 그리드 레이아웃 조정 */
+@media (max-width: 768px) {
+  .grid.grid-cols-1.md\\:grid-cols-2 {
+    gap: 1rem;
+  }
+}
+
+/* 텍스트 색상 */
+.text-green-600 {
+  color: #059669;
+}
+
+.text-green-800 {
+  color: #065f46;
+}
+
+.text-yellow-800 {
+  color: #92400e;
+}
+
+.text-yellow-500 {
+  color: #f59e0b;
+}
+
+.text-green-500 {
+  color: #10b981;
+}
+
+.text-red-600 {
+  color: #dc2626;
+}
+
+/* 배경 색상 */
+.bg-green-100 {
+  background-color: #dcfce7;
+}
+
+.bg-green-50 {
+  background-color: #f0fdf4;
+}
+
+.bg-red-50 {
+  background-color: #fef2f2;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+/* 테두리 색상 */
+.border-gray-200 {
+  border-color: #e5e7eb;
+}
+
+/* 네비게이션바 겹침 방지 */
+.pb-20 {
+  padding-bottom: 5rem;
+}
+
+/* 모바일에서 추가 여백 */
+@media (max-width: 640px) {
+  .pb-20 {
+    padding-bottom: 6rem;
+  }
+}
+
+/* 긴 텍스트 처리 */
+.break-all {
+  word-break: break-all;
+}
+</style>
 
 {% endblock %}
