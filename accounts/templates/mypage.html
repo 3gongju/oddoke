@@ -6,7 +6,7 @@
 <div class="min-h-screen bg-gray-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- 🎨 프로필 헤더 - 현대적 카드 디자인 -->
+    <!-- 프로필 헤더 - 현대적 카드 디자인 -->
     <div class="relative mb-12">
       <!-- 배경 그라디언트 -->
       <div class="absolute inset-0 bg-gray-800 rounded-3xl"></div>
@@ -66,16 +66,16 @@
               <!-- 팬덤 인증 상태 -->
               {% if fandom_profile and fandom_profile.is_verified_fandom %}
                 <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 font-semibold border-2 border-green-200 shadow-sm">
-                  <span class="mr-2">🎖</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
+                  <span class="mr-2"></span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
                 </div>
               {% elif fandom_profile.is_pending_verification %}
                 <div class="inline-flex items-center px-4 py-2 rounded-full bg-yellow-100 text-yellow-800 font-medium border-2 border-yellow-200 shadow-sm">
-                  <span class="mr-2">⏳</span> 팬덤 인증 확인 중 (3일 소요)
+                  <span class="mr-2"></span> 팬덤 인증 확인 중 (3일 소요)
                 </div>
               {% else %}
                 <a href="{% url 'accounts:edit_profile' user_profile.username %}#fandom-auth"
                   class="inline-flex items-center px-6 py-3 bg-black text-white font-semibold rounded-full hover:bg-gray-800 transform hover:scale-105 transition-all duration-200 shadow-lg">
-                  <span class="mr-2">🎫</span> 공식 팬덤 인증하기
+                  <span class="mr-2"></span> 공식 팬덤 인증하기
                 </a>
               {% endif %}
             </div>
@@ -85,7 +85,7 @@
               {% if user_profile.bio %}
                 <p class="text-gray-700 text-lg leading-relaxed">{{ user_profile.bio }}</p>
               {% else %}
-                <p class="text-gray-400 italic">소개글을 작성해보세요! ✨</p>
+                <p class="text-gray-400 italic">소개글을 작성해보세요!</p>
               {% endif %}
             </div>
           </div>
@@ -100,7 +100,7 @@
             {% if user.is_authenticated %}
               <a href="{% url 'accounts:profile' request.user.username %}" 
                  class="flex items-center justify-center px-6 py-3 bg-black text-white font-semibold rounded-xl hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 shadow-md">
-                <span class="mr-2">🔗</span> 공개 프로필
+                <span class="mr-2"></span> 공개 프로필
               </a>
             {% endif %}
           </div>
@@ -108,16 +108,16 @@
       </div>
     </div>
 
-    <!-- 🎨 찜한 아티스트 섹션 -->
+    <!--  찜한 아티스트 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <div class="flex justify-between items-center mb-8">
           <h2 class="text-2xl font-bold text-gray-800">
-            ♥ 내가 찜한 덕
+            내가 찜한 덕
           </h2>
           <a href="{% url 'artist:index' %}" 
              class="flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors group">
-            모든 덕 보기
+            찜덕 하러 가기
             <svg class="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
             </svg>
@@ -143,10 +143,7 @@
                   <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
                 </div>
                 <p class="text-gray-600 text-center text-lg">
-                  아직 찜한 덕이 없어요! 🥺<br>
-                  <a href="{% url 'artist:index' %}" class="text-blue-600 hover:text-blue-800 font-semibold underline decoration-2 underline-offset-2">
-                    찜덕하러 가기 ✨
-                  </a>
+                  아직 찜한 덕이 없어요!<br>
                 </p>
               </div>
             {% endfor %}
@@ -170,11 +167,11 @@
       </div>
     </div>
 
-    <!-- 🎨 최애 멤버 섹션 (멤버 개별 이미지 적용) -->
+    <!-- 최애 멤버 섹션 (멤버 개별 이미지 적용) -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-bold text-gray-800 mb-8">
-          최애 ❤
+          최애
         </h2>
         
         {% if favorite_members %}
@@ -223,37 +220,37 @@
             <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
               <img src="{% static 'image/ddok_black.png' %}" alt="최애 없음" class="w-12 h-12 opacity-50" />
             </div>
-            <p class="text-gray-600 text-lg">아티스트를 눌러서 최애 멤버를 선택해보세요! 💖</p>
+            <p class="text-gray-600 text-lg">아티스트를 눌러서 최애 멤버를 선택해보세요!</p>
           </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- 🎨 덕팜 활동 섹션 -->
+    <!-- 덕팜 활동 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-bold text-gray-800">
-          📌 나의 덕팜 활동
+          나의 덕팜 활동
         </h2>
 
         <!-- 덕팜 탭 네비게이션 -->
         <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
           <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
                   onclick="showFarmTab('written')">
-            📝 내가 쓴 글
+            내가 쓴 글
           </button>
           <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
                   onclick="showFarmTab('commented')">
-            💬 내가 쓴 댓글
+            내가 쓴 댓글
           </button>
           <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
                   onclick="showFarmTab('liked')">
-            ❤️ 찜한 글
+            찜한 글
           </button>
 
           <button class="tab-btn farm-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
                   onclick="showFarmTab('reviewed')">
-            🌟 내가 쓴 리뷰
+            내가 쓴 리뷰
           </button>
         </div>
 
@@ -273,7 +270,7 @@
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 글이 없습니다. 📝</p>
+              <p class="text-gray-500 text-lg">작성한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -287,14 +284,14 @@
                     class="text-gray-800 hover:text-black font-semibold transition-colors">
                     {{ comment.post.title }}
                   </a>
-                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">💬 {{ comment.content|truncatewords:15 }}</p>
+                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">{{ comment.content|truncatewords:15 }}</p>
                   <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다. 💬</p>
+              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -306,7 +303,7 @@
                 <div class="p-5 bg-white rounded-2xl border border-gray-300 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
                     class="text-gray-800 hover:text-black font-semibold transition-colors">
-                    ❤️ {{ post.title }}
+                    {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
@@ -314,7 +311,7 @@
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">찜한 글이 없습니다. ❤️</p>
+              <p class="text-gray-500 text-lg">찜한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -346,9 +343,9 @@
                     <span class="font-medium text-gray-900">재거래 의사:</span>
                     <span class="text-gray-700 ml-2">
                       {% if r.deal_again == 'O' %}
-                        ✅ 재거래 하고 싶어요
+                        재거래 하고 싶어요
                       {% else %}
-                        ❌ 재거래는 어려울 것 같아요
+                        재거래는 어려울 것 같아요
                       {% endif %}
                     </span>
                   </div>
@@ -359,33 +356,33 @@
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">아직 작성한 리뷰가 없습니다. ✍️</p>
+              <p class="text-gray-500 text-lg">아직 작성한 리뷰가 없습니다.</p>
             </div>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- 🎨 덕담 활동 섹션 -->
+    <!-- 덕담 활동 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h2 class="text-2xl font-bold text-gray-800">
-          📌 나의 덕담 활동
+          나의 덕담 활동
         </h2>
 
         <!-- 덕담 탭 네비게이션 -->
         <div class="flex space-x-1 bg-gray-100 rounded-2xl p-2 mb-8">
           <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm" 
                   onclick="showDamTab('written')">
-            📝 내가 쓴 글
+            내가 쓴 글
           </button>
           <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
                   onclick="showDamTab('commented')">
-            💬 내가 쓴 댓글
+            내가 쓴 댓글
           </button>
           <button class="tab-btn dam-tab-btn flex-1 py-3 px-6 rounded-xl font-semibold transition-all duration-200 text-gray-600 hover:text-indigo-600" 
                   onclick="showDamTab('liked')">
-            ❤️ 찜한 글
+            찜한 글
           </button>
         </div>
 
@@ -405,7 +402,7 @@
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 글이 없습니다. 📝</p>
+              <p class="text-gray-500 text-lg">작성한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -419,14 +416,14 @@
                     class="text-gray-800 hover:text-black font-semibold transition-colors">
                     {{ comment.post.title }}
                   </a>
-                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">💬 {{ comment.content|truncatewords:15 }}</p>
+                  <p class="text-green-600 hover:text-green-800 font-semibold transition-colors">{{ comment.content|truncatewords:15 }}</p>
                   <p class="text-sm text-gray-500 mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
               {% endfor %}
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다. 💬</p>
+              <p class="text-gray-500 text-lg">작성한 댓글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
@@ -438,7 +435,7 @@
                 <div class="p-5 bg-white rounded-2xl border border-gray-300 hover:shadow-md transition-shadow">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
                     class="text-gray-800 hover:text-black font-semibold transition-colors">
-                    ❤️ {{ post.title }}
+                    {{ post.title }}
                   </a>
                   <p class="text-sm text-gray-500 mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
                 </div>
@@ -446,18 +443,18 @@
             </div>
           {% else %}
             <div class="text-center py-12">
-              <p class="text-gray-500 text-lg">찜한 글이 없습니다. ❤️</p>
+              <p class="text-gray-500 text-lg">찜한 글이 없습니다.</p>
             </div>
           {% endif %}
         </div>
       </div>
     </div>
 
-<!-- 🎨 계좌정보 섹션 -->
+<!-- 계좌정보 섹션 -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h3 class="text-2xl font-bold mb-8 text-gray-800 flex items-center">
-          <span class="mr-3">💳</span> 계좌정보
+          <span class="mr-3"></span> 계좌정보
         </h3>
         
         {% if bank_profile %}
@@ -466,9 +463,6 @@
             <!-- 계좌 상태 -->
             <div class="flex items-center justify-between p-6 bg-green-50 rounded-2xl border border-green-200">
               <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span class="text-green-600 text-xl">✅</span>
-                </div>
                 <div>
                   <h4 class="font-bold text-green-800">계좌 등록 완료</h4>
                   <p class="text-green-600 text-sm">거래에서 계좌 정보를 공유할 수 있습니다</p>
@@ -510,11 +504,11 @@
             <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
               <a href="{% url 'accounts:account_modify' user_profile.username %}"
                  class="flex-1 flex items-center justify-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors">
-                <span class="mr-2">✏️</span> 계좌정보 수정
+                <span class="mr-2"></span> 계좌정보 수정
               </a>
               <a href="{% url 'accounts:account_delete' user_profile.username %}"
                  class="flex-1 flex items-center justify-center px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
-                <span class="mr-2">🗑️</span> 계좌정보 삭제
+                <span class="mr-2"></span> 계좌정보 삭제
               </a>
             </div>
           </div>
@@ -522,8 +516,8 @@
         {% else %}
           <!-- ❌ 미등록 상태 -->
           <div class="text-center py-12">
-            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span class="text-4xl text-gray-400">💳</span>
+            <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
             </div>
             <h4 class="text-xl font-bold text-gray-800 mb-3">계좌가 등록되지 않았습니다</h4>
             <p class="text-gray-600 mb-6 leading-relaxed">
@@ -534,7 +528,7 @@
             <!-- 등록 안내 -->
             <div class="bg-blue-50 rounded-2xl p-6 mb-6 border border-blue-200">
               <div class="flex items-start space-x-3">
-                <div class="text-2xl">💡</div>
+                <div class="text-2xl"></div>
                 <div class="text-left">
                   <h5 class="font-bold text-blue-800 mb-2">계좌 등록 혜택</h5>
                   <ul class="text-sm text-blue-700 space-y-1">
@@ -557,18 +551,18 @@
             
             <a href="{% url 'accounts:account_registration' user_profile.username %}"
                class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
-              <span class="mr-3">💳</span> 계좌 등록하기
+              <span class="mr-3"></span> 계좌 등록하기
             </a>
           </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- 🎨 주소정보 섹션 (계좌정보 섹션 다음에 추가) -->
+    <!-- 주소정보 섹션 (계좌정보 섹션 다음에 추가) -->
     <div class="mb-12">
       <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
         <h3 class="text-2xl font-bold mb-8 text-gray-800 flex items-center">
-          <span class="mr-3">🏠</span> 주소정보
+          <span class="mr-3"></span> 주소정보
         </h3>
         
         {% if address_profile %}
@@ -577,9 +571,6 @@
             <!-- 주소 상태 -->
             <div class="flex items-center justify-between p-6 bg-green-50 rounded-2xl border border-green-200">
               <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                  <span class="text-green-600 text-xl">✅</span>
-                </div>
                 <div>
                   <h4 class="font-bold text-green-800">주소 등록 완료</h4>
                   <p class="text-green-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
@@ -621,11 +612,11 @@
             <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200">
               <a href="{% url 'accounts:address_modify' user_profile.username %}"
                 class="flex-1 flex items-center justify-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors">
-                <span class="mr-2">✏️</span> 주소정보 수정
+                <span class="mr-2"></span> 주소정보 수정
               </a>
               <a href="{% url 'accounts:address_delete' user_profile.username %}"
                 class="flex-1 flex items-center justify-center px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors">
-                <span class="mr-2">🗑️</span> 주소정보 삭제
+                <span class="mr-2"></span> 주소정보 삭제
               </a>
             </div>
           </div>
@@ -633,8 +624,8 @@
         {% else %}
           <!-- ❌ 미등록 상태 -->
           <div class="text-center py-12">
-            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span class="text-4xl text-gray-400">🏠</span>
+            <div class="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6 mx-auto">
+              <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-12 h-12 opacity-50" />
             </div>
             <h4 class="text-xl font-bold text-gray-800 mb-3">주소가 등록되지 않았습니다</h4>
             <p class="text-gray-600 mb-6 leading-relaxed">
@@ -645,7 +636,7 @@
             <!-- 등록 안내 -->
             <div class="bg-green-50 rounded-2xl p-6 mb-6 border border-green-200">
               <div class="flex items-start space-x-3">
-                <div class="text-2xl">💡</div>
+                <div class="text-2xl"></div>
                 <div class="text-left">
                   <h5 class="font-bold text-green-800 mb-2">주소 등록 혜택</h5>
                   <ul class="text-sm text-green-700 space-y-1">
@@ -672,14 +663,14 @@
             
             <a href="{% url 'accounts:address_registration' user_profile.username %}"
               class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-bold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
-              <span class="mr-3">🏠</span> 주소 등록하기
+              <span class="mr-3"></span> 주소 등록하기
             </a>
           </div>
         {% endif %}
       </div>
     </div>
 
-    <!-- 🎨 계정 정보 섹션 -->
+    <!-- 계정 정보 섹션 -->
 <div class="mb-12">
   <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
     <h3 class="text-2xl font-bold mb-8 text-gray-800">
@@ -730,7 +721,7 @@
       <!-- 안내사항 -->
       <div class="bg-gray-100 p-6 rounded-2xl border border-gray-200">
         <div class="flex items-start space-x-3">
-          <div class="text-2xl">💡</div>
+          <div class="text-2xl"></div>
           <div>
             <h4 class="font-bold text-gray-800 mb-3">안내사항</h4>
             <ul class="text-sm text-gray-700 space-y-2 leading-relaxed">

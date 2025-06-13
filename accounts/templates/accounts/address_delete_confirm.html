@@ -10,9 +10,6 @@
       
       <!-- 🚨 경고 아이콘 -->
       <div class="text-center mb-8">
-        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-3xl text-red-600">⚠️</span>
-        </div>
         <h1 class="text-2xl font-bold text-gray-800 mb-2">주소정보 삭제</h1>
         <p class="text-gray-600">정말로 등록된 주소정보를 삭제하시겠습니까?</p>
       </div>
@@ -63,7 +60,7 @@
       <!-- ⚠️ 삭제 주의사항 -->
       <div class="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
         <div class="flex items-start space-x-3">
-          <div class="text-2xl">📝</div>
+          <div class="text-2xl"></div>
           <div>
             <h4 class="font-bold text-red-800 mb-3">삭제 시 주의사항</h4>
             <ul class="text-sm text-red-700 space-y-2 leading-relaxed">
@@ -100,7 +97,7 @@
           <button type="submit" 
                   onclick="return confirm('정말로 주소정보를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.')"
                   class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105">
-            <span class="mr-2">🗑️</span> 삭제하기
+            <span class="mr-2"></span> 삭제하기
           </button>
         </form>
       </div>
@@ -109,9 +106,6 @@
     <!-- 💡 도움말 섹션 -->
     <div class="bg-white rounded-3xl shadow-xl p-8 mt-8 border border-gray-100">
       <div class="text-center">
-        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-2xl text-blue-600">💡</span>
-        </div>
         <h3 class="text-lg font-bold text-gray-800 mb-3">주소 재등록 안내</h3>
         <p class="text-gray-600 text-sm leading-relaxed">
           주소정보를 삭제한 후 다시 거래를 원하신다면<br>
@@ -119,7 +113,7 @@
         </p>
         <a href="{% url 'accounts:address_registration' user_profile.username %}" 
            class="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors mt-4">
-          <span class="mr-2">🏠</span> 새 주소 등록하기
+          <span class="mr-2"></span> 새 주소 등록하기
         </a>
       </div>
     </div>

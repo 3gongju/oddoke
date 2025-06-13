@@ -1,4 +1,3 @@
-
 {% extends 'base.html' %}
 {% load static %}
 
@@ -6,12 +5,12 @@
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-2xl mx-auto px-4">
     
-    <!-- 🎨 헤더 -->
+    <!-- 헤더 -->
     <div class="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-gray-100">
       <div class="text-center">
-        <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-3xl text-white">🏠</span>
-        </div>
+        <!-- <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="text-3xl text-white">주소</span>
+        </div> -->
         <h1 class="text-3xl font-bold text-gray-800 mb-2">
           {% if is_modify %}주소정보 수정{% else %}주소 등록{% endif %}
         </h1>
@@ -25,23 +24,23 @@
       </div>
     </div>
 
-    <!-- 🎨 주소 등록 폼 -->
+    <!-- 주소 등록 폼 -->
     <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
       
-      <!-- ✅ 주소 등록 폼 -->
+      <!-- 주소 등록 폼 -->
       <form method="POST" id="addressForm" class="space-y-6">
         {% csrf_token %}
 
-        <!-- 🔍 우편번호 검색 -->
+        <!-- 우편번호 검색 -->
         <div class="space-y-2">
           <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-semibold text-gray-700">
             {{ form.postal_code.label }} <span class="text-red-500">*</span>
           </label>
-          <div class="flex space-x-2">
+          <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
             {{ form.postal_code }}
             <button type="button" id="addressSearchBtn" 
-                    class="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
-              <span class="mr-1">🔍</span> 주소 검색
+                    class="w-full sm:w-auto sm:min-w-[120px] px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg whitespace-nowrap">
+              주소 검색
             </button>
           </div>
           {% if form.postal_code.errors %}
@@ -54,7 +53,7 @@
           <p class="text-xs text-gray-500">주소 검색 버튼을 눌러 우편번호를 찾아주세요.</p>
         </div>
 
-        <!-- 🏠 지번주소 -->
+        <!-- 지번주소 -->
         <div class="space-y-2">
           <label for="{{ form.jibun_address.id_for_label }}" class="block text-sm font-semibold text-gray-700">
             {{ form.jibun_address.label }}
@@ -69,7 +68,7 @@
           {% endif %}
         </div>
 
-        <!-- 🛣️ 도로명주소 -->
+        <!-- 도로명주소 -->
         <div class="space-y-2">
           <label for="{{ form.road_address.id_for_label }}" class="block text-sm font-semibold text-gray-700">
             {{ form.road_address.label }} <span class="text-red-500">*</span>
@@ -84,7 +83,7 @@
           {% endif %}
         </div>
 
-        <!-- 🏢 건물명 -->
+        <!-- 건물명 -->
         <div class="space-y-2">
           <label for="{{ form.building_name.id_for_label }}" class="block text-sm font-semibold text-gray-700">
             {{ form.building_name.label }}
@@ -99,7 +98,7 @@
           {% endif %}
         </div>
 
-        <!-- 📍 상세주소 -->
+        <!-- 상세주소 -->
         <div class="space-y-2">
           <label for="{{ form.detail_address.id_for_label }}" class="block text-sm font-semibold text-gray-700">
             {{ form.detail_address.label }}
@@ -119,10 +118,10 @@
         {{ form.sido }}
         {{ form.sigungu }}
 
-        <!-- ⚠️ 보안 안내 -->
+        <!-- 보안 안내 -->
         <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
           <div class="flex items-start space-x-3">
-            <div class="text-2xl">🔒</div>
+            <!-- <div class="text-2xl">보안</div> -->
             <div>
               <h4 class="font-bold text-green-800 mb-2">개인정보 보호 안내</h4>
               <ul class="text-sm text-green-700 space-y-1 leading-relaxed">
@@ -147,11 +146,11 @@
           </div>
         </div>
 
-        <!-- 📝 폼 에러 메시지 -->
+        <!-- 폼 에러 메시지 -->
         {% if form.non_field_errors %}
           <div class="bg-red-50 border border-red-200 rounded-2xl p-4">
             <div class="flex items-center space-x-2">
-              <span class="text-red-500 text-lg">⚠️</span>
+              <span class="text-red-500 text-lg">경고</span>
               <div>
                 {% for error in form.non_field_errors %}
                   <p class="text-red-700 font-medium">{{ error }}</p>
@@ -161,25 +160,24 @@
           </div>
         {% endif %}
 
-        <!-- 🔘 버튼 그룹 -->
+        <!-- 버튼 그룹 -->
         <div class="flex space-x-4 pt-6">
           <a href="{% url 'accounts:mypage' %}" 
              class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-2xl transition-all duration-200 text-center">
-            <span class="mr-2">←</span> 취소
+            취소
           </a>
           <button type="submit" id="submitBtn"
                   class="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
-            <span class="mr-2">🏠</span>
             {% if is_modify %}주소정보 수정{% else %}주소 등록{% endif %}
           </button>
         </div>
       </form>
     </div>
 
-    <!-- 🎨 주소 검색 안내 -->
+    <!-- 주소 검색 안내 -->
     <div class="bg-white rounded-3xl shadow-xl p-8 mt-8 border border-gray-100">
       <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-        <span class="mr-2">📍</span> 카카오 주소 검색 서비스
+        카카오 주소 검색 서비스
       </h3>
       <div class="space-y-4 text-sm text-gray-600">
         <div class="flex items-start space-x-3">
@@ -203,7 +201,7 @@
   </div>
 </div>
 
-<!-- 📱 JavaScript -->
+<!-- JavaScript -->
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -211,10 +209,10 @@
     const submitBtn = document.getElementById('submitBtn');
     const addressSearchBtn = document.getElementById('addressSearchBtn');
     
-    // 🔥 카카오 주소 검색 버튼 이벤트
+    // 카카오 주소 검색 버튼 이벤트
     addressSearchBtn.addEventListener('click', function() {
       // 로딩 상태 표시
-      this.innerHTML = '<span class="mr-1">⏳</span> 검색 중...';
+      this.innerHTML = '검색 중...';
       this.disabled = true;
       
       // 카카오 주소 검색 팝업 열기
@@ -244,7 +242,7 @@
           }
           
           // 성공 메시지
-          showToast('✅ 주소가 자동으로 입력되었습니다!', 'success');
+          showToast('주소가 자동으로 입력되었습니다!', 'success');
         },
         onclose: function(state) {
           console.log('주소 검색 팝업 닫힘:', state);
@@ -265,7 +263,7 @@
       
       // 버튼 상태 복원
       setTimeout(() => {
-        addressSearchBtn.innerHTML = '<span class="mr-1">🔍</span> 주소 검색';
+        addressSearchBtn.innerHTML = '주소 검색';
         addressSearchBtn.disabled = false;
       }, 1000);
     });
@@ -277,7 +275,7 @@
       
       if (!postalCode || !roadAddress) {
         e.preventDefault();
-        showToast('❌ 주소 검색을 먼저 해주세요.', 'error');
+        showToast('주소 검색을 먼저 해주세요.', 'error');
         return;
       }
     });
@@ -288,7 +286,7 @@
       detailAddressInput.addEventListener('input', function(e) {
         if (this.value.length > 200) {
           this.value = this.value.substring(0, 200);
-          showToast('⚠️ 상세주소는 최대 200자까지 입력 가능합니다.', 'warning');
+          showToast('상세주소는 최대 200자까지 입력 가능합니다.', 'warning');
         }
       });
     }
