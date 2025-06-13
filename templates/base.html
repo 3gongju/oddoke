@@ -72,21 +72,8 @@
             <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
           </div>
           
-          <!-- 모바일 사용자 정보 (사용자명만 간략히) -->
-          <span class="md:hidden text-sm text-gray-700">
-            👤 
-            {% if request.user.first_name %}
-              {{ request.user.first_name|slice:":4" }}
-            {% elif request.user.username|slice:":10" == "naver_" %}
-              네이버
-            {% elif request.user.username|slice:":10" == "kakao_" %}
-              카카오
-            {% else %}
-              {{ request.user.username|slice:":4" }}
-            {% endif %}
-          </span>
         {% else %}
-          <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary">로그인</a>
+          <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary hidden md:block">로그인</a>
         {% endif %}
         
         <!-- 햄버거 버튼 (모바일에서만 표시, 맨 오른쪽) -->
@@ -102,17 +89,67 @@
   <!-- 모바일 메뉴 (햄버거 클릭 시 표시) -->
   <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200 hidden">
     <div class="px-4 py-3 space-y-3">
+      {% if request.user.is_authenticated %}
+        <!-- 사용자 정보 섹션 (모바일 전용) -->
+        <div class="bg-gray-50 rounded-lg p-3 mb-3">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">
+              {% if request.user.first_name %}
+                {{ request.user.first_name|first }}
+              {% elif request.user.username|slice:":10" == "naver_" %}
+                N
+              {% elif request.user.username|slice:":10" == "kakao_" %}
+                K
+              {% else %}
+                {{ request.user.username|first|upper }}
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">
+                {% if request.user.first_name %}
+                  {{ request.user.first_name }}님
+                {% elif request.user.username|slice:":10" == "naver_" %}
+                  네이버 사용자님
+                {% elif request.user.username|slice:":10" == "kakao_" %}
+                  카카오 사용자님
+                {% else %}
+                  {{ request.user.username }}님
+                {% endif %}
+              </p>
+              <p class="text-xs text-gray-500">환영합니다!</p>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      
       <!-- 메인 메뉴 -->
-      <a href="/ddokfarm/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">덕팜</a>
-      <a href="/ddokdam/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">덕담</a>
-      <a href="/ddoksang/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">덕생</a>
+      <a href="/ddokfarm/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+        <span class="text-lg mr-2"></span>덕팜
+      </a>
+      <a href="/ddokdam/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+        <span class="text-lg mr-2"></span>덕담
+      </a>
+      <a href="/ddoksang/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+        <span class="text-lg mr-2"></span>덕생
+      </a>
       
       {% if request.user.is_authenticated %}
-        <hr class="my-2">
+        <hr class="my-3 border-gray-200">
         <!-- 사용자 메뉴 -->
-        <a href="/ddokchat/my/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">내채팅방</a>
-        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">마이페이지</a>
-        <a href="/accounts/logout/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">로그아웃</a>
+        <a href="/ddokchat/my/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+          <span class="text-lg mr-2"></span>내채팅방
+        </a>
+        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+          <span class="text-lg mr-2"></span>마이페이지
+        </a>
+        <a href="/accounts/logout/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+          <span class="text-lg mr-2"></span>로그아웃
+        </a>
+      {% else %}
+        <hr class="my-3 border-gray-200">
+        <a href="/accounts/login/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
+          <span class="text-lg mr-2"></span>로그인
+        </a>
       {% endif %}
     </div>
   </div>
@@ -302,5 +339,28 @@
 
 <!-- ✅ 문의하기 기능 스크립트 분리 -->
 <script src="{% static 'js/faq.js' %}"></script>
+
+<!-- ✅ 추가 스타일 -->
+<style>
+  /* 사용자 아바타 색상 설정 */
+  .text-primary, .hover\\:text-primary:hover {
+    color: #3b82f6;
+  }
+  
+  .bg-primary {
+    background-color: #3b82f6;
+  }
+  
+  /* 모바일 메뉴 아이템 호버 효과 개선 */
+  .md\\:hidden a:hover {
+    transform: translateX(4px);
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* 사용자 정보 카드 그림자 효과 */
+  .bg-gray-50 {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  }
+</style>
 </body>
 </html>

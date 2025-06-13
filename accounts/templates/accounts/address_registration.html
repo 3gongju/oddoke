@@ -2,204 +2,383 @@
 {% load static %}
 
 {% block body %}
-<div class="min-h-screen bg-gray-50 py-8">
-  <div class="max-w-2xl mx-auto px-4">
+<div class="min-h-screen bg-white">
+  <div class="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto bg-white min-h-screen">
     
-    <!-- 헤더 -->
-    <div class="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-gray-100">
-      <div class="text-center">
-        <!-- <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-3xl text-white">주소</span>
-        </div> -->
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">
-          {% if is_modify %}주소정보 수정{% else %}주소 등록{% endif %}
-        </h1>
-        <p class="text-gray-600">
-          {% if is_modify %}
-            기존 주소정보를 새로운 정보로 변경합니다.
-          {% else %}
-            안전한 거래를 위해 배송 받을 주소를 등록해주세요.
-          {% endif %}
-        </p>
+    <!-- 헤더 - account_registration과 동일한 구조 -->
+    <div class="bg-white border-b border-gray-200 relative z-10">
+      <div class="flex items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <a href="{% url 'accounts:settings_main' user_profile.username %}" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">주소 정보 수정</h1>
       </div>
     </div>
 
-    <!-- 주소 등록 폼 -->
-    <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+    <!-- 메인 콘텐츠 -->
+    <div class="px-0 pb-20">
       
-      <!-- 주소 등록 폼 -->
-      <form method="POST" id="addressForm" class="space-y-6">
-        {% csrf_token %}
+      <!-- 주소 등록 폼 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          주소 정보
+        </div>
+        
+        <div class="bg-white">
+          <form method="POST" id="addressForm" class="space-y-0">
+            {% csrf_token %}
 
-        <!-- 우편번호 검색 -->
-        <div class="space-y-2">
-          <label for="{{ form.postal_code.id_for_label }}" class="block text-sm font-semibold text-gray-700">
-            {{ form.postal_code.label }} <span class="text-red-500">*</span>
-          </label>
-          <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-            {{ form.postal_code }}
-            <button type="button" id="addressSearchBtn" 
-                    class="w-full sm:w-auto sm:min-w-[120px] px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg whitespace-nowrap">
-              주소 검색
-            </button>
+            <!-- 우편번호 검색 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label for="{{ form.postal_code.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.postal_code.label }} <span class="text-red-500">*</span>
+                  </label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">주소 검색을 통해 우편번호를 입력하세요</div>
+                </div>
+                <div class="ml-4 min-w-0 flex-1 max-w-xs">
+                  <div class="flex flex-col space-y-2">
+                    {{ form.postal_code }}
+                    <button type="button" id="addressSearchBtn" 
+                            class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm">
+                      주소 검색
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {% if form.postal_code.errors %}
+                <div class="text-red-500 text-sm mt-2">
+                  {% for error in form.postal_code.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- 도로명주소 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label for="{{ form.road_address.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.road_address.label }} <span class="text-red-500">*</span>
+                  </label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">주소 검색을 통해 자동으로 입력됩니다</div>
+                </div>
+                <div class="ml-4 min-w-0 flex-1 max-w-xs">
+                  {{ form.road_address }}
+                </div>
+              </div>
+              {% if form.road_address.errors %}
+                <div class="text-red-500 text-sm mt-2">
+                  {% for error in form.road_address.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- 지번주소 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label for="{{ form.jibun_address.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.jibun_address.label }}
+                  </label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">지번 주소 (자동 입력)</div>
+                </div>
+                <div class="ml-4 min-w-0 flex-1 max-w-xs">
+                  {{ form.jibun_address }}
+                </div>
+              </div>
+              {% if form.jibun_address.errors %}
+                <div class="text-red-500 text-sm mt-2">
+                  {% for error in form.jibun_address.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- 건물명 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label for="{{ form.building_name.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.building_name.label }}
+                  </label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">아파트명, 건물명 등 (선택사항)</div>
+                </div>
+                <div class="ml-4 min-w-0 flex-1 max-w-xs">
+                  {{ form.building_name }}
+                </div>
+              </div>
+              {% if form.building_name.errors %}
+                <div class="text-red-500 text-sm mt-2">
+                  {% for error in form.building_name.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- 상세주소 -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <label for="{{ form.detail_address.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.detail_address.label }}
+                  </label>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">동, 호수 등 상세한 주소를 입력해주세요</div>
+                </div>
+                <div class="ml-4 min-w-0 flex-1 max-w-xs">
+                  {{ form.detail_address }}
+                </div>
+              </div>
+              {% if form.detail_address.errors %}
+                <div class="text-red-500 text-sm mt-2">
+                  {% for error in form.detail_address.errors %}
+                    <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- 숨겨진 필드들 -->
+            {{ form.sido }}
+            {{ form.sigungu }}
+          </form>
+        </div>
+      </div>
+
+      <!-- 보안 안내 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          보안 안내
+        </div>
+        
+        <div class="bg-gray-50 border border-gray-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <ul class="text-sm sm:text-base text-gray-700 space-y-2">
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>주소 정보는 암호화되어 안전하게 저장됩니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>거래 시에만 마스킹된 주소가 공개됩니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>상세 주소는 거래 확정 후에만 공개됩니다</span>
+              </li>
+            </ul>
           </div>
-          {% if form.postal_code.errors %}
-            <div class="text-red-500 text-sm mt-1">
-              {% for error in form.postal_code.errors %}
-                <p>{{ error }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-          <p class="text-xs text-gray-500">주소 검색 버튼을 눌러 우편번호를 찾아주세요.</p>
         </div>
+      </div>
 
-        <!-- 지번주소 -->
-        <div class="space-y-2">
-          <label for="{{ form.jibun_address.id_for_label }}" class="block text-sm font-semibold text-gray-700">
-            {{ form.jibun_address.label }}
-          </label>
-          {{ form.jibun_address }}
-          {% if form.jibun_address.errors %}
-            <div class="text-red-500 text-sm mt-1">
-              {% for error in form.jibun_address.errors %}
-                <p>{{ error }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
-
-        <!-- 도로명주소 -->
-        <div class="space-y-2">
-          <label for="{{ form.road_address.id_for_label }}" class="block text-sm font-semibold text-gray-700">
-            {{ form.road_address.label }} <span class="text-red-500">*</span>
-          </label>
-          {{ form.road_address }}
-          {% if form.road_address.errors %}
-            <div class="text-red-500 text-sm mt-1">
-              {% for error in form.road_address.errors %}
-                <p>{{ error }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
-
-        <!-- 건물명 -->
-        <div class="space-y-2">
-          <label for="{{ form.building_name.id_for_label }}" class="block text-sm font-semibold text-gray-700">
-            {{ form.building_name.label }}
-          </label>
-          {{ form.building_name }}
-          {% if form.building_name.errors %}
-            <div class="text-red-500 text-sm mt-1">
-              {% for error in form.building_name.errors %}
-                <p>{{ error }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-        </div>
-
-        <!-- 상세주소 -->
-        <div class="space-y-2">
-          <label for="{{ form.detail_address.id_for_label }}" class="block text-sm font-semibold text-gray-700">
-            {{ form.detail_address.label }}
-          </label>
-          {{ form.detail_address }}
-          {% if form.detail_address.errors %}
-            <div class="text-red-500 text-sm mt-1">
-              {% for error in form.detail_address.errors %}
-                <p>{{ error }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-          <p class="text-xs text-gray-500">동, 호수 등 상세한 주소를 입력해주세요.</p>
-        </div>
-
-        <!-- 숨겨진 필드들 -->
-        {{ form.sido }}
-        {{ form.sigungu }}
-
-        <!-- 보안 안내 -->
-        <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
-          <div class="flex items-start space-x-3">
-            <!-- <div class="text-2xl">보안</div> -->
-            <div>
-              <h4 class="font-bold text-green-800 mb-2">개인정보 보호 안내</h4>
-              <ul class="text-sm text-green-700 space-y-1 leading-relaxed">
-                <li class="flex items-start space-x-2">
-                  <span class="text-green-500 mt-1">•</span>
-                  <span>주소 정보는 암호화되어 안전하게 저장됩니다</span>
-                </li>
-                <li class="flex items-start space-x-2">
-                  <span class="text-green-500 mt-1">•</span>
-                  <span>거래 시에만 마스킹된 주소가 공개됩니다</span>
-                </li>
-                <li class="flex items-start space-x-2">
-                  <span class="text-green-500 mt-1">•</span>
-                  <span>언제든지 주소 정보를 수정하거나 삭제할 수 있습니다</span>
-                </li>
-                <li class="flex items-start space-x-2">
-                  <span class="text-green-500 mt-1">•</span>
-                  <span>상세 주소는 거래 확정 후에만 공개됩니다</span>
-                </li>
-              </ul>
-            </div>
+      <!-- 폼 에러 메시지 -->
+      {% if form.non_field_errors %}
+      <div class="mb-6 sm:mb-8">
+        <div class="bg-red-50 border border-red-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            {% for error in form.non_field_errors %}
+              <p class="text-red-700 font-medium text-sm sm:text-base">{{ error }}</p>
+            {% endfor %}
           </div>
         </div>
+      </div>
+      {% endif %}
 
-        <!-- 폼 에러 메시지 -->
-        {% if form.non_field_errors %}
-          <div class="bg-red-50 border border-red-200 rounded-2xl p-4">
-            <div class="flex items-center space-x-2">
-              <span class="text-red-500 text-lg">경고</span>
-              <div>
-                {% for error in form.non_field_errors %}
-                  <p class="text-red-700 font-medium">{{ error }}</p>
-                {% endfor %}
+      <!-- 주소 검색 안내 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          주소 검색 안내
+        </div>
+        
+        <div class="bg-white">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                  <p class="text-sm font-medium text-gray-800">주소 검색</p>
+                </div>
+                <p class="text-xs text-gray-600">주소 검색 버튼을 클릭하여 카카오 우편번호 서비스를 이용하세요</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                  <p class="text-sm font-medium text-gray-800">정확한 주소</p>
+                </div>
+                <p class="text-xs text-gray-600">도로명, 지번, 건물명 등으로 정확한 주소를 검색하세요</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                  <p class="text-sm font-medium text-gray-800">자동 입력</p>
+                </div>
+                <p class="text-xs text-gray-600">검색된 주소가 자동으로 입력됩니다</p>
+              </div>
+              
+              <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                  <p class="text-sm font-medium text-gray-800">상세 입력</p>
+                </div>
+                <p class="text-xs text-gray-600">동, 호수 등의 상세정보를 추가로 입력하세요</p>
               </div>
             </div>
           </div>
-        {% endif %}
+        </div>
+      </div>
 
-        <!-- 버튼 그룹 -->
-        <div class="flex space-x-4 pt-6">
+      <!-- 버튼 그룹 -->
+      <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 bg-white">
+        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
           <a href="{% url 'accounts:mypage' %}" 
-             class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-2xl transition-all duration-200 text-center">
+             class="w-full sm:flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
             취소
           </a>
-          <button type="submit" id="submitBtn"
-                  class="flex-1 px-6 py-4 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 text-white font-semibold rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg">
+          <button type="submit" form="addressForm" id="submitBtn"
+                  class="w-full sm:flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-sm sm:text-base">
             {% if is_modify %}주소정보 수정{% else %}주소 등록{% endif %}
           </button>
         </div>
-      </form>
-    </div>
-
-    <!-- 주소 검색 안내 -->
-    <div class="bg-white rounded-3xl shadow-xl p-8 mt-8 border border-gray-100">
-      <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-        카카오 주소 검색 서비스
-      </h3>
-      <div class="space-y-4 text-sm text-gray-600">
-        <div class="flex items-start space-x-3">
-          <span class="text-blue-500 mt-1 font-bold">1.</span>
-          <p><strong>주소 검색</strong> 버튼을 클릭하면 카카오 우편번호 서비스가 열립니다.</p>
-        </div>
-        <div class="flex items-start space-x-3">
-          <span class="text-blue-500 mt-1 font-bold">2.</span>
-          <p>도로명, 지번, 건물명 등으로 <strong>정확한 주소</strong>를 검색하세요.</p>
-        </div>
-        <div class="flex items-start space-x-3">
-          <span class="text-blue-500 mt-1 font-bold">3.</span>
-          <p>검색된 주소가 자동으로 입력되면, <strong>상세주소</strong>만 추가로 입력하면 됩니다.</p>
-        </div>
-        <div class="flex items-start space-x-3">
-          <span class="text-blue-500 mt-1 font-bold">4.</span>
-          <p>정확한 배송을 위해 동, 호수 등의 상세정보를 빠뜨리지 마세요.</p>
-        </div>
       </div>
+
     </div>
   </div>
 </div>
+
+<!-- 폼 필드 스타일링 -->
+<style>
+/* 폼 필드 기본 스타일 */
+select, input[type="text"], input[type="number"], textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 반응형 폼 필드 */
+@media (min-width: 640px) {
+  select, input[type="text"], input[type="number"], textarea {
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+}
+
+/* 필수 표시 스타일 */
+.text-red-500 {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* 에러 메시지 스타일 */
+.text-red-500.text-sm {
+  color: #dc2626;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* 웹에서 더 넓은 간격 */
+@media (min-width: 1024px) {
+  .lg\\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 섹션 구분선 스타일 */
+.border-b.border-gray-100 {
+  border-bottom-width: 1px;
+  border-color: #f3f4f6;
+}
+
+/* 네비바와 겹치지 않도록 하단 여백 추가 */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 폼 레이아웃 조정 */
+@media (max-width: 640px) {
+  .flex.justify-between.items-start {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .ml-4.min-w-0.flex-1.max-w-xs {
+    margin-left: 0;
+    margin-top: 8px;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* 모바일에서 입력 필드 최적화 */
+@media (max-width: 640px) {
+  select, input[type="text"], input[type="number"], textarea {
+    font-size: 16px; /* iOS 줌 방지 */
+  }
+}
+
+/* 주소 검색 버튼 스타일 */
+#addressSearchBtn {
+  white-space: nowrap;
+}
+
+/* 읽기 전용 필드 스타일 */
+input[readonly] {
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
+/* 토스트 메시지 스타일 */
+.toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  max-width: 300px;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  color: white;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast.success {
+  background-color: #10b981;
+}
+
+.toast.error {
+  background-color: #ef4444;
+}
+
+.toast.warning {
+  background-color: #f59e0b;
+}
+</style>
 
 <!-- JavaScript -->
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
@@ -212,6 +391,7 @@
     // 카카오 주소 검색 버튼 이벤트
     addressSearchBtn.addEventListener('click', function() {
       // 로딩 상태 표시
+      const originalText = this.innerHTML;
       this.innerHTML = '검색 중...';
       this.disabled = true;
       
@@ -263,7 +443,7 @@
       
       // 버튼 상태 복원
       setTimeout(() => {
-        addressSearchBtn.innerHTML = '주소 검색';
+        addressSearchBtn.innerHTML = originalText;
         addressSearchBtn.disabled = false;
       }, 1000);
     });
@@ -290,32 +470,35 @@
         }
       });
     }
+
+    // 읽기 전용 필드 설정
+    const readOnlyFields = ['{{ form.road_address.id_for_label }}', '{{ form.jibun_address.id_for_label }}'];
+    readOnlyFields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (field) {
+        field.setAttribute('readonly', true);
+      }
+    });
   });
 
-  // 간단한 토스트 메시지 함수
+  // 토스트 메시지 함수
   function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 transform transition-all duration-300 translate-x-full`;
-    
-    // 타입별 색상 설정
-    const colors = {
-      success: 'bg-green-500',
-      error: 'bg-red-500',
-      warning: 'bg-yellow-500',
-      info: 'bg-blue-500'
-    };
-    toast.classList.add(colors[type] || colors.info);
-    
+    toast.className = `toast ${type}`;
     toast.textContent = message;
     document.body.appendChild(toast);
     
     // 애니메이션으로 표시
-    setTimeout(() => toast.classList.remove('translate-x-full'), 100);
+    setTimeout(() => toast.classList.add('show'), 100);
     
     // 3초 후 자동 제거
     setTimeout(() => {
-      toast.classList.add('translate-x-full');
-      setTimeout(() => document.body.removeChild(toast), 300);
+      toast.classList.remove('show');
+      setTimeout(() => {
+        if (document.body.contains(toast)) {
+          document.body.removeChild(toast);
+        }
+      }, 300);
     }, 3000);
   }
 </script>
