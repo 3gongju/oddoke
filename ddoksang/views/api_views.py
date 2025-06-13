@@ -473,7 +473,7 @@ def check_duplicate_cafe(request):
         
         result = {
             'exists': exists,
-            'message': f'유사한 생일카페가 {len(similar_cafes)}개 발견되었습니다.' if exists else '중복되지 않습니다.',
+            'message': f'유사한 생일카페가 {len(similar_cafes)}개 발견되었습니다.' if exists else '해당 덕의 생카를 어덕해에 등록해주세요',
             'similar_count': len(similar_cafes)
         }
         

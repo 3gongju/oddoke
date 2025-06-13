@@ -88,9 +88,7 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    # ✅ 조회수 증가 로직 (접근할 때마다 무조건 증가)
     model.objects.filter(id=post_id).update(view_count=F('view_count') + 1)
-    # post 객체 새로고침하여 최신 view_count 반영
     post.refresh_from_db(fields=['view_count'])
 
     comment_qs = get_post_comments(post)
@@ -99,6 +97,7 @@ def post_detail(request, category, post_id):
     comment_form = DamCommentForm()
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokdam:comment_create', kwargs={'category': category, 'post_id': post_id})
+    is_owner = request.user == post.user
 
     context = {
         'post': post,
@@ -112,6 +111,7 @@ def post_detail(request, category, post_id):
         'app_name': 'ddokdam',
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokdam:comment_delete',
+        'is_owner': is_owner,
     }
 
     return render(request, 'ddokdam/detail.html', context)
@@ -125,9 +125,8 @@ def post_create(request):
     if request.method == 'POST':
         category = request.POST.get('category')
         selected_artist_id = request.POST.get('artist')
-        selected_member_ids = list(map(int, request.POST.getlist('members')))
-        image_files = request.FILES.getlist('images')  # ✅ 여러 이미지 받기
-
+        selected_member_ids = list(set(map(int, request.POST.getlist('members'))))
+        image_files = request.FILES.getlist('images')
         form_class = get_post_form(category)
         if not form_class:
             raise Http404("존재하지 않는 카테고리입니다.")
@@ -166,7 +165,7 @@ def post_create(request):
             raise Http404("존재하지 않는 카테고리입니다.")
         form = form_class()
 
-    default_artist_id = int(selected_artist_id) if selected_artist_id else (
+    default_artist_id = int(request.GET.get('artist')) if request.GET.get('artist') else (
         favorite_artists[0].id if favorite_artists.exists() else None
     )
 
@@ -234,21 +233,22 @@ def post_edit(request, category, post_id):
         return render(request, 'ddokdam/error_message.html', context)
 
     if request.method == 'POST':
-        form = form_class(request.POST, request.FILES, instance=post)
+        # ✅ 덕팜 방식: POST 데이터 복사 후 artist 강제 설정
+        post_data = request.POST.copy()
+        post_data['artist'] = post.artist.id
+
+        form = form_class(post_data, request.FILES, instance=post)
         image_files = request.FILES.getlist('images')  # 새 이미지 받기
-        removed_ids = request.POST.get('removed_image_ids', '').split(',')
+        removed_ids = post_data.get('removed_image_ids', '').split(',')  # ✅ post_data 사용
         removed_ids = [int(id) for id in removed_ids if id.isdigit()]  # 삭제할 ID만 정수로 처리
+        selected_member_ids = list(map(int, post_data.getlist('members')))  # ✅ post_data 사용
 
         if form.is_valid():
             post = form.save(commit=False)
-            artist_id = request.POST.get('artist')
-            member_ids = request.POST.getlist('members')
-
-            if artist_id:
-                post.artist_id = artist_id
-
             post.save()
-            post.members.set(member_ids)
+
+            # ✅ 덕팜과 동일한 순서: 멤버 설정 → 이미지 삭제 → 이미지 추가 → save_m2m
+            post.members.set(selected_member_ids)
 
             if removed_ids:
                 post.images.filter(id__in=removed_ids).delete()
@@ -263,17 +263,17 @@ def post_edit(request, category, post_id):
                         is_representative=(idx == 0)
                     )
 
+            form.save_m2m()
             return redirect('ddokdam:post_detail', category=category, post_id=post.id)
+
     else:
         form = form_class(instance=post)
 
-    existing_images = []
-    for img in post.images.all():
-        existing_images.append({
-            "id": img.id,
-            "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"
-        })
-
+    # ✅ 덕팜과 동일한 existing_images 생성 방식
+    existing_images = [
+        {"id": img.id, "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"}
+        for img in post.images.all()
+    ]
     sorted_artists = Artist.objects.order_by('display_name')
     selected_members = Member.objects.filter(artist_name=post.artist).distinct()
     selected_member_ids = list(post.members.values_list('id', flat=True))

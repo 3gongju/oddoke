@@ -24,7 +24,13 @@
 <script>
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
-  window.existingImages = JSON.parse(document.getElementById("existing-images-data").textContent);
+
+  const dataEl = document.getElementById("existing-images-data");
+  let existingImages = [];
+  if (dataEl && dataEl.textContent.trim()) {
+    existingImages = JSON.parse(dataEl.textContent.trim());
+  }
+  window.existingImages = existingImages;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script  type="module" src="{% static 'js/post_form/post_form_edit.js' %}"></script>
