@@ -166,7 +166,7 @@
       <!-- 도움말 -->
       <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
          <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-            <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-10 h-10">
+            <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
           날짜 입력 방법
         </h4>        <ul class="space-y-1 list-disc list-inside">
           <li><strong>달력 선택:</strong> 입력 필드를 클릭하여 달력에서 날짜를 선택할 수 있습니다</li>
@@ -185,7 +185,7 @@
       <!-- 일반 특전 -->
       <div class="mb-6">
         <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-8 h-8">
           일반 특전
         </h4>
 
@@ -293,8 +293,8 @@
         <div class="text-xs text-gray-600">
           <div class="bg-gray-50 rounded-lg p-4">
             <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-                <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-10 h-10">
-              날짜 입력 방법
+                <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
+              이미지 첨부 가이드 
             </h4> 
             <ul class="space-y-1 list-disc list-inside">
               <li><strong>대표 이미지:</strong> 1번 이미지가 대표 이미지로 설정됩니다</li>
@@ -447,24 +447,27 @@
 {{ messages_json|json_script:"ddoksang-messages" }}
 
 <!-- Scripts - 순서 중요 -->
+<!-- create.html의 스크립트 섹션 - 기존 코드 완전 교체 -->
+
+<!-- 외부 라이브러리 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<!-- 날짜 유틸리티 -->
+<!-- 🔧 덕생 유틸리티 모듈들 (순서 중요) -->
 <script src="{% static 'js/ddoksang_date_utils.js' %}"></script>
-
-<!-- 유틸리티 모듈들 -->
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
-<script src="{% static 'js/ddoksang_image_upload.js' %}"></script>
+
+<!-- 🔧 이미지 업로드 모듈 (독립 실행) -->
+<script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
 
 <!-- 메시지 시스템 -->
+{{ messages_json|json_script:"ddoksang-messages" }}
 <script>
-// Django의 json_script를 사용한 안전한 방법
+// 🔧 메시지 시스템 초기화
 const messagesElement = document.getElementById('ddoksang-messages');
 window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
 
-// 메시지 유틸리티 객체
 window.DdoksangMessages = {
     get: function(category, key, params = {}) {
         try {
@@ -475,7 +478,6 @@ window.DdoksangMessages = {
                 return `${category}.${key}`;
             }
             
-            // 플레이스홀더 치환
             if (params && typeof params === 'object') {
                 Object.entries(params).forEach(([paramKey, value]) => {
                     const placeholder = `{${paramKey}}`;
@@ -493,96 +495,241 @@ window.DdoksangMessages = {
     messages: window.DDOKSANG_MESSAGES || {}
 };
 
-// 편의 함수
 window.msg = function(category, key, params) {
     return window.DdoksangMessages.get(category, key, params);
 };
 
-console.log('✅ 메시지 시스템 로드됨');
+console.log('✅ 메시지 시스템 초기화 완료');
 </script>
 
-<!-- 메인 스크립트 -->
-<script src="{% static 'js/ddoksang_create.js' %}"></script>
+<!-- 🔧 메인 폼 스크립트 (이미지 업로드 코드 제거됨) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=3.0"></script>
 
 <!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 초기화 스크립트 -->
+<!-- 🔧 통합 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // 자동완성 초기화
-  if (typeof initAutocomplete === 'function') {
-    console.log('🔄 자동완성 초기화 시작...');
+  console.log('📄 create.html 초기화 시작');
+
+  // 🔧 1단계: 이미지 업로드 모듈 초기화 확인/재시도
+  function ensureImageUploadInit() {
+    if (window.ddoksangImageUploader?.isInitialized) {
+      console.log('✅ 이미지 업로드 모듈 이미 초기화됨');
+      return true;
+    }
     
-    // 중복 확인 단계 자동완성
-    initAutocomplete('artist-member-search', 'artist-member-results', {
-      showBirthday: true,
-      showArtistTag: true,
-      submitOnSelect: false,
-      artistOnly: false,
-      apiUrl: '/artist/autocomplete/',
-      onSelect: function(result) {
-        console.log('👤 아티스트 선택:', result);
-        selectArtistForDuplicateCheck(result);
-      }
-    });
+    console.log('🔄 이미지 업로드 모듈 초기화 시도...');
+    if (window.initDdoksangImageUpload) {
+      return window.initDdoksangImageUpload();
+    }
     
-    console.log('✅ 자동완성 초기화 완료');
-  } else {
-    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다!');
+    console.warn('⚠️ 이미지 업로드 초기화 함수를 찾을 수 없음');
+    return false;
   }
 
-  // 아티스트 선택 함수
-  function selectArtistForDuplicateCheck(result) {
+  // 🔧 2단계: 자동완성 초기화 (중복 방지)
+  function initializeAutocomplete() {
+    if (typeof initAutocomplete !== 'function') {
+      console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
+      return false;
+    }
+
+    console.log('🔄 자동완성 초기화...');
+    
+    // 🔧 기존 이벤트 핸들러 완전 제거
+    const artistInput = document.getElementById('artist-member-search');
+    const resultsList = document.getElementById('artist-member-results');
+    
+    if (!artistInput || !resultsList) {
+      console.warn('❌ 자동완성 요소를 찾을 수 없음');
+      return false;
+    }
+
+    // 기존 핸들러 제거를 위해 요소 복제
+    const newInput = artistInput.cloneNode(true);
+    artistInput.parentNode.replaceChild(newInput, artistInput);
+
+    try {
+      initAutocomplete('artist-member-search', 'artist-member-results', {
+        showBirthday: true,
+        showArtistTag: true,
+        submitOnSelect: false,
+        artistOnly: false,
+        apiUrl: '/artist/autocomplete/',
+        onSelect: function(result) {
+          console.log('👤 아티스트 선택:', result);
+          handleArtistSelection(result);
+        }
+      });
+      
+      console.log('✅ 자동완성 초기화 완료');
+      return true;
+    } catch (error) {
+      console.error('❌ 자동완성 초기화 실패:', error);
+      return false;
+    }
+  }
+
+  // 🔧 3단계: 아티스트 선택 처리 (단일 함수)
+  function handleArtistSelection(result) {
     const FormUtils = window.DdoksangFormUtils;
     if (!FormUtils) {
-      console.error('DdoksangFormUtils를 찾을 수 없습니다');
+      console.error('❌ DdoksangFormUtils를 찾을 수 없습니다');
       return;
     }
 
-    // 데이터 정규화
-    const data = FormUtils.normalizeArtistData({
-      member_name: result.name,
-      artist_display: result.artist || result.artist_name,
-      artist_id: result.artist_id,
-      member_id: result.id || result.member_id
-    });
+    try {
+      // 데이터 정규화
+      const data = FormUtils.normalizeArtistData({
+        member_name: result.name,
+        artist_display: result.artist || result.artist_name,
+        artist_id: result.artist_id,
+        member_id: result.id || result.member_id
+      });
 
-    // 폼 필드 업데이트
-    FormUtils.setValue('check_artist_id', data.artistId);
-    FormUtils.setValue('check_member_id', data.memberId);
-    FormUtils.setValue('artist-member-search', data.displayText);
-    FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
-    
-    // UI 업데이트
-    FormUtils.toggleClass('artist-member-results', 'hidden', true);
-    FormUtils.toggleClass('selected-artist', 'hidden', false);
-    
-    // 중복 확인 버튼 상태 업데이트
-    if (window.updateDuplicateButtonState) {
-      window.updateDuplicateButtonState();
+      // 폼 필드 업데이트
+      FormUtils.setValue('check_artist_id', data.artistId);
+      FormUtils.setValue('check_member_id', data.memberId);
+      FormUtils.setValue('artist-member-search', data.displayText);
+      FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
+      
+      // UI 업데이트
+      FormUtils.toggleClass('artist-member-results', 'hidden', true);
+      FormUtils.toggleClass('selected-artist', 'hidden', false);
+      
+      // 중복 확인 버튼 상태 업데이트
+      setTimeout(() => {
+        if (window.updateDuplicateButtonState) {
+          window.updateDuplicateButtonState();
+        }
+      }, 50);
+      
+      console.log('✅ 아티스트 선택 처리 완료:', data);
+    } catch (error) {
+      console.error('❌ 아티스트 선택 처리 실패:', error);
+    }
+  }
+
+  // 🔧 4단계: 모듈 연동 설정
+  function setupModuleIntegration() {
+    // 이미지 업로드 ↔ 폼 검증 연동
+    if (window.ddoksangApp && window.ddoksangImageUploader?.isInitialized) {
+      const originalUpdateNext = window.ddoksangApp.updateNextButtonState;
+      
+      if (originalUpdateNext) {
+        window.ddoksangApp.updateNextButtonState = function() {
+          // 기본 검증 실행
+          originalUpdateNext.call(this);
+          
+          // Step 6에서 이미지 개수 추가 검증
+          if (this.currentStep === 6) {
+            const fileCount = window.ddoksangImageUploader.getFileCount();
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (nextBtn && fileCount === 0) {
+              window.DdoksangFormUtils?.updateButtonState('nextBtn', false);
+            }
+          }
+        };
+        
+        console.log('🔗 모듈 연동 설정 완료');
+        return true;
+      }
     }
     
-    console.log('✅ 폼 데이터 업데이트 완료:', data);
+    console.warn('⚠️ 모듈 연동 설정 실패');
+    return false;
   }
 
-  // 전역 함수로 설정
-  window.selectArtistForDuplicateCheck = selectArtistForDuplicateCheck;
+  // 🔧 순차 초기화 실행
+  let imageInitSuccess = ensureImageUploadInit();
+  let autocompleteInitSuccess = initializeAutocomplete();
+  
+  // 지연된 재시도 (1초 후)
+  setTimeout(() => {
+    if (!imageInitSuccess) {
+      console.log('🔄 이미지 업로드 재시도...');
+      imageInitSuccess = ensureImageUploadInit();
+    }
+    
+    if (!autocompleteInitSuccess) {
+      console.log('🔄 자동완성 재시도...');
+      autocompleteInitSuccess = initializeAutocomplete();
+    }
+    
+    // 모듈 연동 설정
+    setupModuleIntegration();
+    
+    // 최종 상태 체크
+    console.log('📊 최종 초기화 상태:', {
+      imageUpload: !!window.ddoksangImageUploader?.isInitialized,
+      autocomplete: autocompleteInitSuccess,
+      mainApp: !!window.ddoksangApp,
+      formUtils: !!window.DdoksangFormUtils,
+      mapUtils: !!window.DdoksangMapUtils
+    });
+    
+  }, 1000);
+  
+  // 🔧 전역 함수 설정 (하위 호환성)
+  window.selectArtistForDuplicateCheck = handleArtistSelection;
+  
+  window.restartAutocomplete = function() {
+    console.log('🔄 자동완성 재시작...');
+    return initializeAutocomplete();
+  };
+  
+  console.log('✅ create.html 초기화 완료');
 });
 
-// 자동완성 재초기화 함수
-window.restartAutocomplete = function() {
-  if (typeof initAutocomplete === 'function') {
-    initAutocomplete('artist-member-search', 'artist-member-results', {
-      showBirthday: true,
-      showArtistTag: true,
-      submitOnSelect: false,
-      artistOnly: false,
-      apiUrl: '/artist/autocomplete/',
-      onSelect: window.selectArtistForDuplicateCheck
+// 🔧 디버깅 도구들
+window.debugDdoksang = {
+  checkModules: function() {
+    console.log('🔍 덕생 모듈 상태:');
+    console.log('- FormUtils:', !!window.DdoksangFormUtils);
+    console.log('- MapUtils:', !!window.DdoksangMapUtils);
+    console.log('- DateUtils:', !!window.DdoksangDateUtils);
+    console.log('- ImageUploader:', !!window.ddoksangImageUploader?.isInitialized);
+    console.log('- MainApp:', !!window.ddoksangApp);
+    console.log('- Autocomplete:', typeof window.initAutocomplete);
+    console.log('- External libs:', {
+      sortable: typeof window.Sortable,
+      flatpickr: typeof window.flatpickr,
+      kakao: !!window.kakao?.maps
     });
+  },
+  
+  imageUpload: function() {
+    if (window.ddoksangImageUploader?.debug) {
+      console.log('📊 이미지 업로드 상태:', window.ddoksangImageUploader.debug());
+    }
+  },
+  
+  compression: function() {
+    if (window.showCompressionStats) {
+      window.showCompressionStats();
+    }
+  },
+  
+  restartAll: function() {
+    console.log('🔄 모든 모듈 재시작...');
+    if (window.cleanupImageUploadHandlers) {
+      window.cleanupImageUploadHandlers();
+    }
+    if (window.initDdoksangImageUpload) {
+      window.initDdoksangImageUpload();
+    }
+    if (window.restartAutocomplete) {
+      window.restartAutocomplete();
+    }
+    console.log('✅ 재시작 완료');
   }
 };
+
+console.log('📄 create.html 스크립트 로드 완료');
+console.log('💡 디버깅: window.debugDdoksang.checkModules() 실행');
 </script>
 
 {% endblock %}
