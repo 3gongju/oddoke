@@ -30,11 +30,23 @@
     <div class="grid grid-cols-2 gap-4 mb-6">
       <div>
         <label class="block text-sm font-medium mb-1">시작일</label>
-        <input type="text" id="check_start_date" class="w-full border rounded px-4 py-2" placeholder="YYYY-MM-DD" required>
+        <input type="text" 
+              id="check_start_date" 
+              class="w-full border rounded px-4 py-2" 
+              placeholder="YYYY-MM-DD" 
+              maxlength="10"
+              required>
+        <p class="text-xs text-gray-500 mt-1">숫자만 입력하면 자동 하이픈 추가</p>
       </div>
       <div>
         <label class="block text-sm font-medium mb-1">종료일</label>
-        <input type="text" id="check_end_date" class="w-full border rounded px-4 py-2" placeholder="YYYY-MM-DD" required>
+        <input type="text" 
+              id="check_end_date" 
+              class="w-full border rounded px-4 py-2" 
+              placeholder="YYYY-MM-DD" 
+              maxlength="10"
+              required>
+        <p class="text-xs text-gray-500 mt-1">시작일 이후 날짜만 가능</p>
       </div>
     </div>
 
