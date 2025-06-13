@@ -822,6 +822,7 @@
         contentHtml = `
           <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
             <p class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'} font-medium">계좌정보가 삭제되었습니다</p>
+            <p class="text-xs ${isMineForPosition ? 'text-gray-400' : 'text-gray-500'} mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
           </div>
         `;
       } else {
@@ -900,6 +901,7 @@
         contentHtml = `
           <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
             <p class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'} font-medium">주소정보가 삭제되었습니다</p>
+            <p class="text-xs ${isMineForPosition ? 'text-gray-400' : 'text-gray-500'} mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
           </div>
         `;
       } else {
@@ -1017,6 +1019,7 @@
           accountCard.innerHTML = `
             <div class="bg-gray-800 rounded-lg p-4 text-center">
               <p class="text-sm text-gray-300 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
+              <p class="text-xs text-gray-400 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
             </div>
           `;
         } else {
@@ -1024,6 +1027,7 @@
           accountCard.innerHTML = `
             <div class="bg-gray-100 rounded-lg p-4 text-center">
               <p class="text-sm text-gray-600 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
+              <p class="text-xs text-gray-500 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
             </div>
           `;
         }
@@ -1042,6 +1046,7 @@
           accountCard.innerHTML = `
             <div class="bg-gray-800 rounded-lg p-4 text-center">
               <p class="text-sm text-gray-300 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
+              <p class="text-xs text-gray-400 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
             </div>
           `;
         } else {
@@ -1049,6 +1054,7 @@
           accountCard.innerHTML = `
             <div class="bg-gray-100 rounded-lg p-4 text-center">
               <p class="text-sm text-gray-600 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
+              <p class="text-xs text-gray-500 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
             </div>
           `;
         }
