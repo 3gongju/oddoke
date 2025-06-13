@@ -345,6 +345,9 @@
   }
 </style>
 
+{{ messages_json|json_script:"ddoksang-messages" }}
+
+<!-- JavaScript 국제화 카탈로그 로드 -->
 <!-- Scripts - 순서 중요 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
@@ -353,12 +356,58 @@
 <!-- 유틸리티 모듈들 먼저 로드 -->
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
 <script src="{% static 'js/ddoksang_image_upload.js' %}"></script>
+
+<!-- 메시지 시스템 추가 -->
+<script>
+// Django의 json_script를 사용한 안전한 방법
+const messagesElement = document.getElementById('ddoksang-messages');
+window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
+
+// 메시지 유틸리티 객체
+window.DdoksangMessages = {
+    get: function(category, key, params = {}) {
+        try {
+            let message = this.messages[category][key];
+            
+            if (typeof message !== 'string') {
+                console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
+                return `${category}.${key}`;
+            }
+            
+            // 플레이스홀더 치환
+            if (params && typeof params === 'object') {
+                Object.entries(params).forEach(([paramKey, value]) => {
+                    const placeholder = `{${paramKey}}`;
+                    message = message.replace(new RegExp(placeholder, 'g'), value);
+                });
+            }
+            
+            return message;
+        } catch (error) {
+            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
+            return `${category}.${key}`;
+        }
+    },
+    
+    messages: window.DDOKSANG_MESSAGES || {}
+};
+
+// 편의 함수
+window.msg = function(category, key, params) {
+    return window.DdoksangMessages.get(category, key, params);
+};
+
+console.log('✅ 메시지 시스템 로드됨 (json_script 방식)');
+console.log('📝 메시지 카테고리:', Object.keys(window.DDOKSANG_MESSAGES));
+</script>
+
+<!-- 메인 스크립트 (기존 유지) -->
 <script src="{% static 'js/ddoksang_create.js' %}"></script>
 
-<!-- 자동완성 스크립트를 일반 script로 로드 -->
+<!-- 자동완성 스크립트를 일반 script로 로드 (기존 유지) -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 중복 확인용 날짜 선택기 초기화 -->
+<!-- 중복 확인용 날짜 선택기 초기화 (기존 유지) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   
@@ -371,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   //  자동완성 즉시 초기화 (중복 확인 단계용)
   if (typeof initAutocomplete === 'function') {
-    console.log(' 자동완성 초기화 시작...');
+    console.log('🔄 자동완성 초기화 시작...');
     
     // 중복 확인 단계 자동완성
     initAutocomplete('artist-member-search', 'artist-member-results', {
@@ -381,12 +430,12 @@ document.addEventListener('DOMContentLoaded', function() {
       artistOnly: false,
       apiUrl: '/artist/autocomplete/',
       onSelect: function(result) {
-        console.log(' 아티스트 선택:', result);
+        console.log('👤 아티스트 선택:', result);
         selectArtistForDuplicateCheck(result);
       }
     });
     
-    console.log(' 자동완성 초기화 완료');
+    console.log('✅ 자동완성 초기화 완료');
   } else {
     console.error('❌ initAutocomplete 함수를 찾을 수 없습니다!');
   }
@@ -418,11 +467,11 @@ document.addEventListener('DOMContentLoaded', function() {
     FormUtils.toggleClass('selected-artist', 'hidden', false);
     
     // 중복 확인 버튼 상태 업데이트
-    if (window.checkDuplicateBtnState) {
-      window.checkDuplicateBtnState();
+    if (window.updateDuplicateButtonState) {
+      window.updateDuplicateButtonState();
     }
     
-    console.log('폼 데이터 업데이트 완료:', data);
+    console.log('✅ 폼 데이터 업데이트 완료:', data);
   }
 
   // 전역 함수로 설정 (다른 스크립트에서 사용할 수 있도록)
@@ -430,24 +479,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- 디버깅용 전역 함수 -->
-<script>
-window.debugDdoksang = function() {
-  console.log('=== 덕생 등록 페이지 디버깅 정보 ===');
-  console.log('DdoksangFormUtils:', !!window.DdoksangFormUtils);
-  console.log('DdoksangMapUtils:', !!window.DdoksangMapUtils);
-  console.log('setupDdoksangImageUpload:', !!window.setupDdoksangImageUpload);
-  console.log('initAutocomplete:', !!window.initAutocomplete);
-  console.log('ddoksangApp:', window.ddoksangApp);
-  console.log('checkDuplicateBtnState:', typeof window.checkDuplicateBtnState);
-  console.log('selectArtistForDuplicateCheck:', typeof window.selectArtistForDuplicateCheck);
-  console.log('=======================================');
-};
 
-// 자동완성 재초기화 함수
+
+<!-- // 자동완성 재초기화 함수 -->
 window.restartAutocomplete = function() {
   if (typeof initAutocomplete === 'function') {
-    console.log(' 자동완성 재초기화...');
     initAutocomplete('artist-member-search', 'artist-member-results', {
       showBirthday: true,
       showArtistTag: true,
@@ -456,9 +492,7 @@ window.restartAutocomplete = function() {
       apiUrl: '/artist/autocomplete/',
       onSelect: window.selectArtistForDuplicateCheck
     });
-    console.log('✅ 재초기화 완료');
   } else {
-    console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
   }
 };
 </script>

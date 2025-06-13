@@ -565,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
             FormUtils.showToast(`${result.similar_cafes.length}개의 유사한 생카가 발견되었습니다.`, 'warning');
         } else {
             FormUtils.toggleClass('duplicate-success', 'hidden', false);
-            FormUtils.showToast('해당 덕의 생카를 어덕해에 등록해주세요', 'success');
+            FormUtils.showToast('중복되지 않습니다!', 'success');
             setTimeout(() => showStep(1), 1500);
         }
     }
