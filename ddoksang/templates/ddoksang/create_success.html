@@ -75,20 +75,37 @@
           </div>
         </div>
 
-        <!-- 일반 특전 -->
-        {% if cafe.perks %}
-        <div class="mb-2">
-        <p class="text-xs font-semibold text-gray-600 mb-1">🎨 일반 특전</p>
-        <div class="flex flex-wrap gap-2">
-            {% for perk in cafe.perks|split:"," %}
-            <span class="text-xs px-2 py-1 rounded-full border bg-blue-100 text-blue-800 border-blue-200">
-            #{{ perk|strip }}
-            </span>
+        <!-- 특전 정보 표시 개선 -->
+        {% if cafe.special_benefits %}
+        <div class="mb-4">
+          <p class="text-sm font-semibold text-gray-800 mb-3">🎁 특전 정보</p>
+          <div class="space-y-2">
+            {% for benefit in cafe.special_benefits|split:"," %}
+              {% if benefit|strip %}
+                {% with parts=benefit|strip|split:":" %}
+                  {% if parts|length >= 2 %}
+                    <div class="flex items-center space-x-2">
+                      {% if parts.0 == "일반" %}
+                        <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">일반</span>
+                      {% elif parts.0 == "선착" %}
+                        <span class="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">선착</span>
+                      {% elif parts.0 == "기타" %}
+                        <span class="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">기타</span>
+                      {% endif %}
+                      <span class="text-sm text-gray-700">{{ parts.1 }}</span>
+                    </div>
+                  {% else %}
+                    <div class="flex items-center space-x-2">
+                      <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">특전</span>
+                      <span class="text-sm text-gray-700">{{ benefit|strip }}</span>
+                    </div>
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
             {% endfor %}
-        </div>
+          </div>
         </div>
         {% endif %}
-
 
         <!-- 📝 설명 -->
         {% if cafe.event_description %}
@@ -99,99 +116,178 @@
         {% endif %}
       </div>
 
-      <!-- 🖼 이미지 -->
+      <!-- 🖼 이미지 섹션 개선 -->
       {% if cafe.images.all %}
       <div class="p-6 border-t bg-gray-50">
-        <h4 class="text-sm font-bold text-gray-800 mb-4">첨부된 이미지</h4>
+        <h4 class="text-sm font-bold text-gray-800 mb-4">첨부된 이미지 ({{ cafe.images.count }}장)</h4>
+        
         {% if cafe.images.count == 1 %}
+        <!-- 단일 이미지 -->
         <div class="flex justify-center">
           {% for image in cafe.images.all %}
           <div class="max-w-xs w-full aspect-[3/4] overflow-hidden rounded-xl border shadow bg-white relative">
-            <img src="{{ image.image.url }}" alt="대표 이미지" class="w-full h-full object-cover cursor-pointer" />
+            <img src="{{ image.image.url }}" alt="대표 이미지" class="w-full h-full object-cover cursor-pointer" onclick="openImageModal('{{ image.image.url }}', '{{ image.caption|default:"대표 이미지" }}')" />
             <span class="absolute top-2 left-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">대표</span>
           </div>
           {% endfor %}
         </div>
         {% else %}
+        <!-- 다중 이미지 그리드 -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {% for image in cafe.images.all %}
           <div class="aspect-[3/4] rounded-lg overflow-hidden border shadow bg-white relative">
-            <img src="{{ image.image.url }}" alt="카페 이미지" class="w-full h-full object-cover cursor-pointer" />
-            {% if forloop.first %}
-            <span class="absolute top-2 left-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">대표</span>
+            <img src="{{ image.image.url }}" alt="{{ image.caption|default:"카페 이미지" }}" class="w-full h-full object-cover cursor-pointer" onclick="openImageModal('{{ image.image.url }}', '{{ image.caption|default:"카페 이미지" }}')" />
+            {% if image.is_main %}
+            <span class="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">대표</span>
+            {% else %}
+            <span class="absolute top-2 left-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">{{ forloop.counter }}</span>
+            {% endif %}
+            {% if image.image_type and image.image_type != 'other' %}
+            <span class="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">{{ image.get_image_type_display }}</span>
             {% endif %}
           </div>
           {% endfor %}
         </div>
         {% endif %}
+        
+        <!-- 이미지 정보 -->
+        <div class="mt-4 text-xs text-gray-500">
+          <p>💡 이미지를 클릭하면 크게 볼 수 있습니다</p>
+          {% if cafe.images.all %}
+          <div class="mt-2 space-y-1">
+            {% for image in cafe.images.all %}
+            <div class="flex items-center justify-between">
+              <span>{{ forloop.counter }}. {{ image.caption|default:"이미지" }}</span>
+              <span class="text-gray-400">
+                {% if image.width and image.height %}{{ image.width }}×{{ image.height }}px{% endif %}
+                {% if image.file_size %} · {{ image.file_size|filesizeformat }}{% endif %}
+              </span>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <!-- 이미지가 없는 경우 -->
+      <div class="p-6 border-t bg-gray-50 text-center">
+        <div class="text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <p class="text-sm text-gray-500">첨부된 이미지가 없습니다</p>
+        </div>
       </div>
       {% endif %}
     </div>
 
     <!-- 버튼 영역 -->
     <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-12">
-    <a href="{% url 'ddoksang:user_preview' cafe.id %}"
-        class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-        내 카페 미리보기
-    </a>
-    <a href="{% url 'ddoksang:my_cafes' %}"
-        class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-        내 등록 현황 보기
-    </a>
-    <a href="{% url 'ddoksang:create' %}"
-        class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-        다른 생일카페 등록하기
-    </a>
+      <a href="{% url 'ddoksang:user_preview' cafe.id %}"
+          class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
+          내 카페 미리보기
+      </a>
+      <a href="{% url 'ddoksang:my_cafes' %}"
+          class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
+          내 등록 현황 보기
+      </a>
+      <a href="{% url 'ddoksang:create' %}"
+          class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
+          다른 생일카페 등록하기
+      </a>
     </div>
 
     <!-- 홈으로 안내 -->
     <div class="text-center text-sm text-gray-600 mb-20 p-6 bg-gray-50 rounded-xl border border-gray-200">
-    <p class="mb-2">문의사항은 <span class="font-semibold text-gray-800">관리자</span>에게 연락해주세요.</p>
-    <a href="{% url 'ddoksang:home' %}" class="underline font-medium hover:text-gray-800">홈으로 돌아가기</a>
+      <p class="mb-2">문의사항은 <span class="font-semibold text-gray-800">관리자</span>에게 연락해주세요.</p>
+      <a href="{% url 'ddoksang:home' %}" class="underline font-medium hover:text-gray-800">홈으로 돌아가기</a>
     </div>
-
-
   </div>
 </div>
 
-<!--  이미지 모달 -->
+<!-- 이미지 모달 개선 -->
 <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
   <div class="max-w-5xl max-h-full relative">
     <img id="modalImage" src="" alt="확대 이미지" class="max-w-full max-h-full object-contain rounded-lg">
-    <button onclick="closeImageModal()" class="absolute -top-4 -right-4 w-12 h-12 bg-white text-gray-800 rounded-full text-2xl hover:bg-gray-100 shadow-lg font-bold">
+    <div id="modalCaption" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4 text-center rounded-b-lg">
+      <!-- 캡션이 여기에 표시됩니다 -->
+    </div>
+    <button onclick="closeImageModal()" class="absolute -top-4 -right-4 w-12 h-12 bg-white text-gray-800 rounded-full text-2xl hover:bg-gray-100 shadow-lg font-bold transition-colors">
       ×
     </button>
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+// 이미지 모달 개선
+function openImageModal(imageSrc, caption) {
   const modal = document.getElementById('imageModal');
   const modalImage = document.getElementById('modalImage');
-  const images = document.querySelectorAll('.cursor-pointer');
-  images.forEach(img => {
-    img.addEventListener('click', () => {
-      modalImage.src = img.src;
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    });
-  });
+  const modalCaption = document.getElementById('modalCaption');
+  
+  modalImage.src = imageSrc;
+  modalCaption.textContent = caption || '이미지';
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+  const modal = document.getElementById('imageModal');
+  modal.classList.add('hidden');
+  document.body.style.overflow = 'auto';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const modal = document.getElementById('imageModal');
+  
+  // 모달 외부 클릭 시 닫기
   modal.addEventListener('click', e => {
     if (e.target === modal) closeImageModal();
   });
+  
+  // ESC 키로 닫기
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeImageModal();
   });
+  
+  // 디버깅: 이미지 정보 출력
+  console.log('📊 페이지 로드 완료');
+  console.log('이미지 개수:', document.querySelectorAll('[onclick^="openImageModal"]').length);
 });
-function closeImageModal() {
-  document.getElementById('imageModal').classList.add('hidden');
-  document.body.style.overflow = 'auto';
-}
 </script>
 
 <style>
 .btn-primary {
   @apply flex items-center justify-center px-5 py-2 border-2 border-gray-700 text-gray-700 font-semibold rounded-xl transition-all shadow hover:bg-gray-700 hover:text-white;
+}
+
+/* 이미지 호버 효과 */
+img[onclick] {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+img[onclick]:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 모달 애니메이션 */
+#imageModal {
+  animation: fadeIn 0.3s ease;
+}
+
+#imageModal.hidden {
+  animation: fadeOut 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 </style>
 {% endblock %}

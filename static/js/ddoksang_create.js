@@ -974,7 +974,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         #check-duplicate-btn {
-            transition: all 0.2s ease-in-out;
+            transition: all 0.2s ease-in-o
             border: none;
             font-weight: 600;
             font-size: 0.875rem;

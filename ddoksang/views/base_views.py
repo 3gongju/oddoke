@@ -1,5 +1,5 @@
 # ddoksang/views/base_views.py
-# 홈 뷰 업데이트 - map_utils 사용으로 코드 정리
+# 홈 뷰 업데이트 - 지도 중심점 및 운영중 카페 필터링 수정
 
 import logging
 from datetime import timedelta, date
@@ -31,14 +31,21 @@ def home_view(request):
     """홈 뷰 - 지도 + 현재 운영중인 카페 리스트 + 생일 멤버"""
     today = timezone.now().date()
 
-    # === 1. 이번  생일 아티스트 ===
-    birthday_artists = get_weekly_bday_artists
+    # === 1. 이번주 생일 아티스트 ===
+    birthday_artists = get_weekly_bday_artists()
 
-    # === 2. 현재 운영중인 생일카페들 (지도용) ===
+    # === 2. 현재 운영중인 생일카페들 (지도용 + 사이드바용) ===
     approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
-    active_cafes = filter_operating_cafes(approved_cafes).order_by('-created_at')
+    
+    # ✅ 수정: 실제 운영중인 카페만 필터링 (사이드바용)
+    active_cafes = approved_cafes.filter(
+        start_date__lte=today,
+        end_date__gte=today
+    ).order_by('-created_at')
 
-    # === 3. 최신 등록된 카페들 (모든 승인된 카페) ===
+    logger.info(f"전체 승인된 카페: {approved_cafes.count()}개, 현재 운영중: {active_cafes.count()}개")
+
+    # === 3. 최신 등록된 카페들 (모든 승인된 카페, 운영 상태 무관) ===
     latest_cafes = approved_cafes.order_by('-created_at')[:6]  # 최신 등록 순으로 6개
     total_latest_cafes_count = approved_cafes.count()
 
@@ -60,33 +67,39 @@ def home_view(request):
 
         my_favorite_cafes = [fav.cafe for fav in favorites]
 
-    # === 5. 지도용 컨텍스트 생성 (map_utils 사용) ===
-    map_context = get_map_context(cafes_queryset=active_cafes)
-    
-    # ✅ 지도용 JSON 데이터 추가 (템플릿에서 직접 접근 가능)
+    # === 5. ✅ 수정: 지도용 데이터 - 운영중인 카페만 사용하되 지도 중심은 서울로 고정 ===
     cafes_json_data = []
-    for cafe in active_cafes:
+    for cafe in active_cafes:  # 운영중인 카페만
         cafe_data = serialize_cafe_for_map(cafe)
         if cafe_data:
             cafes_json_data.append(cafe_data)
+
+    # ✅ 지도 관련 컨텍스트 생성 - 중심점은 서울로 고정
+    map_context = get_map_context()  # 카페 데이터 없이 기본 설정만
+    map_context.update({
+        'cafes_json': cafes_json_data,
+        'total_cafes': len(cafes_json_data),
+        'default_center': {'lat': 37.5665, 'lng': 126.9780},  # 서울 시청 고정
+        'default_zoom': 8,  # 서울 전체가 보이는 줌 레벨
+    })
 
     # === 6. 템플릿 컨텍스트 ===
     context = {
         'birthday_artists': birthday_artists,
         'latest_cafes': latest_cafes,
         'total_latest_cafes_count': total_latest_cafes_count,
-        'active_cafes': active_cafes,  # 사이드바용
+        'active_cafes': active_cafes,  # ✅ 실제 운영중인 카페만 (사이드바용)
         'my_favorite_cafes': my_favorite_cafes,
         'user_favorites': user_favorites,
         
-        # 지도 관련 (map_utils에서 생성)
+        # 지도 관련 (운영중인 카페 데이터 + 서울 중심)
         'cafes_json': cafes_json_data,
         'total_cafes': len(cafes_json_data),
         
         **map_context,  # kakao_api_key, default_center 등 포함
     }
     
-    logger.info(f"홈페이지 로드: 운영중 카페 {len(cafes_json_data)}개, 최신 카페 {len(latest_cafes)}개")
+    logger.info(f"홈페이지 로드: 운영중 카페 {len(cafes_json_data)}개, 최신 카페 {len(latest_cafes)}개, 사이드바 카페 {active_cafes.count()}개")
     
     return render(request, 'ddoksang/home.html', context)
 
