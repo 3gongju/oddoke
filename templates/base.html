@@ -199,15 +199,15 @@
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}
 
-<!-- ✅ FAQ 버튼 - 반응형 최적화 -->
+<!-- ✅ FAQ 버튼 - 고정 위치 및 커서 스타일 수정 -->
 <button id="faqButton"
-        class="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 bg-black text-cream-soft px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg z-50 cursor-move hover:bg-gray-800 transition-colors font-bold text-sm sm:text-base">
+        class="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 bg-black text-cream-soft px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg z-50 cursor-pointer hover:bg-gray-800 hover:scale-105 transition-all font-bold text-sm sm:text-base">
   FAQ
 </button>
 
-<!-- ✅ FAQ 모달 - 반응형 최적화 -->
+<!-- ✅ FAQ 모달 - 위치 수정 (버튼 위에 표시) -->
 <div id="faqModal"
-     class="fixed bottom-16 left-4 sm:bottom-20 sm:left-6 w-72 sm:w-80 bg-white border-2 border-gray-300 rounded-xl shadow-xl hidden flex-col z-50">
+     class="fixed bottom-16 left-4 sm:bottom-20 sm:left-6 w-72 sm:w-80 bg-white border-2 border-gray-300 rounded-xl shadow-xl hidden flex-col z-50 transform transition-all duration-300 opacity-0 translate-y-2">
   <!-- 모달 헤더 -->
   <div class="bg-black text-cream-soft px-4 py-3 rounded-t-xl flex justify-between items-center">
     <span class="font-cute font-bold text-sm sm:text-base">어덕해</span>
@@ -364,8 +364,94 @@
   });
 </script>
 
-<!-- ✅ 문의하기 기능 스크립트 분리 -->
-<script src="{% static 'js/faq.js' %}"></script>
+<!-- ✅ FAQ 모달 토글 스크립트 개선 -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const faqButton = document.getElementById('faqButton');
+    const faqModal = document.getElementById('faqModal');
+    const closeModal = document.getElementById('closeModal');
+    const questionSection = document.getElementById('questionSection');
+    const answerSection = document.getElementById('answerSection');
+    const backBtn = document.getElementById('backBtn');
+    const faqOptions = document.querySelectorAll('.faq-option');
+    const faqAnswers = document.querySelectorAll('.faq-answer');
+
+    // FAQ 버튼 클릭
+    if (faqButton && faqModal) {
+      faqButton.addEventListener('click', function() {
+        if (faqModal.classList.contains('hidden')) {
+          // 모달 열기
+          faqModal.classList.remove('hidden');
+          setTimeout(() => {
+            faqModal.classList.remove('opacity-0', 'translate-y-2');
+            faqModal.classList.add('opacity-100', 'translate-y-0');
+          }, 10);
+        } else {
+          // 모달 닫기
+          faqModal.classList.add('opacity-0', 'translate-y-2');
+          faqModal.classList.remove('opacity-100', 'translate-y-0');
+          setTimeout(() => {
+            faqModal.classList.add('hidden');
+          }, 300);
+        }
+      });
+    }
+
+    // 모달 닫기 버튼
+    if (closeModal) {
+      closeModal.addEventListener('click', function() {
+        faqModal.classList.add('opacity-0', 'translate-y-2');
+        faqModal.classList.remove('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+          faqModal.classList.add('hidden');
+        }, 300);
+      });
+    }
+
+    // FAQ 옵션 클릭
+    faqOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        const target = this.getAttribute('data-target');
+        
+        // 질문 섹션 숨기고 답변 섹션 보이기
+        questionSection.classList.add('hidden');
+        answerSection.classList.remove('hidden');
+        
+        // 모든 답변 숨기기
+        faqAnswers.forEach(answer => {
+          answer.classList.add('hidden');
+        });
+        
+        // 선택된 답변만 보이기
+        const selectedAnswer = document.getElementById(target);
+        if (selectedAnswer) {
+          selectedAnswer.classList.remove('hidden');
+        }
+      });
+    });
+
+    // 뒤로가기 버튼
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        answerSection.classList.add('hidden');
+        questionSection.classList.remove('hidden');
+      });
+    }
+
+    // 모달 외부 클릭시 닫기
+    document.addEventListener('click', function(event) {
+      if (faqModal && !faqModal.contains(event.target) && !faqButton.contains(event.target)) {
+        if (!faqModal.classList.contains('hidden')) {
+          faqModal.classList.add('opacity-0', 'translate-y-2');
+          faqModal.classList.remove('opacity-100', 'translate-y-0');
+          setTimeout(() => {
+            faqModal.classList.add('hidden');
+          }, 300);
+        }
+      }
+    });
+  });
+</script>
 
 <!-- ✅ 추가 스타일 - 반응형 및 폰트 최적화 -->
 <style>
