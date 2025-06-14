@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oddmin - 통합 관리자 대시보드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'oddmin:dashboard' %}" class="text-xl font-semibold text-gray-900">🛠️ oddmin</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">{{ user.username }}님</span>
+                    <a href="/" class="text-blue-600 hover:text-blue-800">어덕해 메인페이지</a>
+                    <a href="{% url 'oddmin:cafe_list' %}" class="text-blue-600 hover:text-blue-800">생카 목록</a>
+                    <a href="{% url 'oddmin:fandom_list' %}" class="text-blue-600 hover:text-blue-800">팬덤 인증</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 메시지 표시 -->
+        {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                    <div class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- 페이지 제목 -->
+        {% block body %}
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">📊 통합 관리자 대시보드</h1>
+            <p class="mt-2 text-gray-600">어덕해 서비스 전체 관리 현황</p>
+        </div>
+
+        <!-- 통계 카드들 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- 생일카페 통계 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg border-l-4 border-blue-500">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-lg">☕</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">생일카페</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">{{ stats.cafe.total }}</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-blue-600">
+                                        대기: {{ stats.cafe.pending }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-between text-xs text-gray-500">
+                        <span>승인: {{ stats.cafe.approved }}</span>
+                        <span>거절: {{ stats.cafe.rejected }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 팬덤 인증 통계 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg border-l-4 border-purple-500">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-lg">🎭</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">팬덤 인증</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">{{ stats.fandom.total }}</div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-purple-600">
+                                        대기: {{ stats.fandom.pending }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-between text-xs text-gray-500">
+                        <span>승인: {{ stats.fandom.verified }}</span>
+                        <span>거절: {{ stats.fandom.failed }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 긴급 처리 필요 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg border-l-4 {% if urgent.total > 0 %}border-red-500{% else %}border-green-500{% endif %}">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 {% if urgent.total > 0 %}bg-red-500{% else %}bg-green-500{% endif %} rounded-md flex items-center justify-center">
+                                <span class="text-white text-lg">{% if urgent.total > 0 %}🚨{% else %}✅{% endif %}</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">긴급 처리</dt>
+                                <dd class="text-2xl font-semibold {% if urgent.total > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                                    {{ urgent.total }}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500">
+                        7일 이상 대기 중
+                    </div>
+                </div>
+            </div>
+
+            <!-- 전체 현황 -->
+            <div class="bg-white overflow-hidden shadow rounded-lg border-l-4 border-gray-500">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-gray-500 rounded-md flex items-center justify-center">
+                                <span class="text-white text-lg">📈</span>
+                            </div>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">전체 대기</dt>
+                                <dd class="text-2xl font-semibold text-gray-900">
+                                    {{ stats.cafe.pending|add:stats.fandom.pending }}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-3 text-xs text-gray-500">
+                        현재 승인 대기 중
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 긴급 알림 (7일 이상 대기) -->
+        {% if urgent.total > 0 %}
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <span class="text-red-400 text-xl">🚨</span>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">
+                        긴급 처리가 필요한 항목이 {{ urgent.total }}개 있습니다
+                    </h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <p>7일 이상 대기 중: 생일카페 {{ urgent.cafes }}개, 팬덤인증 {{ urgent.fandom }}개</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 최근 대기 항목들 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- 생일카페 대기 목록 -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center justify-between">
+                        ☕ 생일카페 승인 대기
+                        <a href="{% url 'oddmin:cafe_list' %}?status=pending" 
+                           class="text-sm text-blue-600 hover:text-blue-800">전체 보기 →</a>
+                    </h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    {% for cafe in recent_pending.cafes %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 truncate">
+                                    {{ cafe.cafe_name }}
+                                </h4>
+                                <p class="text-sm text-gray-500 truncate">
+                                    {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}
+                                </p>
+                                <p class="text-xs text-gray-400">
+                                    {{ cafe.submitted_by.username }} · {{ cafe.created_at|date:"m/d H:i" }}
+                                </p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'ddoksang:admin_preview' cafe.id %}" 
+                                   class="text-blue-600 hover:text-blue-800 text-sm">보기</a>
+                                <form method="post" action="{% url 'oddmin:approve_cafe' cafe.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="text-green-600 hover:text-green-800 text-sm"
+                                            onclick="return confirm('승인하시겠습니까?')">
+                                        승인
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        승인 대기 중인 생일카페가 없습니다.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 팬덤 인증 대기 목록 -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center justify-between">
+                        🎭 팬덤 인증 승인 대기
+                        <a href="{% url 'oddmin:fandom_list' %}?status=pending" 
+                           class="text-sm text-blue-600 hover:text-blue-800">전체 보기 →</a>
+                    </h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    {% for profile in recent_pending.fandom %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-medium text-gray-900 truncate">
+                                    {{ profile.user.username }}
+                                </h4>
+                                <p class="text-sm text-gray-500 truncate">
+                                    {{ profile.fandom_artist.display_name }}
+                                </p>
+                                <p class="text-xs text-gray-400">
+                                    {{ profile.applied_at|date:"m/d H:i" }}
+                                </p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'oddmin:fandom_detail' profile.id %}" 
+                                   class="text-blue-600 hover:text-blue-800 text-sm">보기</a>
+                                <form method="post" action="{% url 'oddmin:approve_fandom' profile.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                            class="text-green-600 hover:text-green-800 text-sm"
+                                            onclick="return confirm('승인하시겠습니까?')">
+                                        승인
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="px-6 py-8 text-center text-gray-500">
+                        승인 대기 중인 팬덤 인증이 없습니다.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 빠른 액션 버튼들 -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">🚀 빠른 액션</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="{% url 'oddmin:cafe_list' %}?status=pending" 
+                   class="inline-flex items-center justify-center px-4 py-3 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 transition-colors">
+                    ⏳ 생카 승인 대기 ({{ stats.cafe.pending }})
+                </a>
+                <a href="{% url 'oddmin:fandom_list' %}?status=pending" 
+                   class="inline-flex items-center justify-center px-4 py-3 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors">
+                    🎭 팬덤 승인 대기 ({{ stats.fandom.pending }})
+                </a>
+                <a href="{% url 'oddmin:cafe_list' %}" 
+                   class="inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+                    📋 전체 생카 관리
+                </a>
+                <a href="{% url 'ddoksang:home' %}" 
+                   class="inline-flex items-center justify-center px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
+                   target="_blank">
+                   🏠 사용자 페이지
+                </a>
+            </div>
+        </div>
+
+        <!-- 자동 새로고침용 데이터 -->
+        <div data-pending-count="{{ stats.cafe.pending|add:stats.fandom.pending }}" style="display: none;"></div>
+        {% endblock %}
+    </div>
+
+    <!-- 자동 새로고침 스크립트 -->
+    <script>
+        // 대기 항목이 있을 때 5분마다 자동 새로고침
+        const pendingCount = parseInt('{{ stats.cafe.pending|add:stats.fandom.pending|default:"0" }}');
+        if (pendingCount > 0) {
+            setTimeout(function() {
+                location.reload();
+            }, 5 * 60 * 1000); // 5분
+        }
+
+        // 확인 대화상자
+        function confirmAction(message) {
+            return confirm(message || '정말 실행하시겠습니까?');
+        }
+    </script>
+</body>
+</html>

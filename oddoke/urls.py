@@ -6,6 +6,7 @@ from oddoke import views  # oddoke/views.py
 
 urlpatterns = [
     path('admin/', admin.site.urls),                   # 관리자 페이지
+    path('oddmin/', include('oddmin.urls')),            # 관리자 패널
     
     path('', views.main, name='home'),                 # 메인 페이지 (home.html)
     path('artist/', include('artist.urls')),           # 아티스트 관련 (찜, 목록 등)
