@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body %}
+<div class="min-h-screen bg-white">
+  <div class="max-w-md sm:max-w-2xl lg:max-w-4xl mx-auto bg-white min-h-screen">
+    
+    <!-- 헤더 -->
+    <div class="bg-white border-b border-gray-200 relative z-10">
+      <div class="flex items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <a href="{% url 'accounts:settings_main' user_profile.username %}" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">계정 정보</h1>
+      </div>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="px-0 pb-20">
+      
+      <!-- 기본 정보 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          기본 정보
+        </div>
+        
+        <div class="bg-white">
+          <!-- 표시 이름 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">표시 이름</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">다른 사용자들에게 표시되는 이름</div>
+              </div>
+              <div class="text-right">
+                <p class="text-base sm:text-lg font-medium text-gray-800">
+                  {% if user_profile.first_name %}
+                    {{ user_profile.first_name }}
+                  {% elif user_profile.username|slice:":6" == "kakao_" %}
+                    카카오 사용자
+                  {% elif user_profile.username|slice:":6" == "naver_" %}
+                    네이버 사용자
+                  {% else %}
+                    {{ user_profile.username }}
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 프로필 ID -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">프로필 ID</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">프로필 URL에 사용되는 고유 ID</div>
+              </div>
+              <div class="text-right">
+                <p class="text-base sm:text-lg font-mono text-gray-800 break-all">{{ user_profile.username }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 가입일 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">가입일</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">서비스 가입 날짜</div>
+              </div>
+              <div class="text-right">
+                <p class="text-base sm:text-lg font-medium text-gray-800">
+                  {{ user_profile.date_joined|date:"Y년 m월 d일" }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 로그인 정보 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          로그인 정보
+        </div>
+        
+        <div class="bg-white">
+          <!-- 로그인 방식 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">로그인 방식</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">계정 로그인 방법</div>
+              </div>
+              <div class="flex items-center">
+                {% if user_profile.username|slice:":6" == "kakao_" %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    카카오 소셜 로그인
+                  </span>
+                {% elif user_profile.username|slice:":6" == "naver_" %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    네이버 소셜 로그인
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    이메일 로그인
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- 이메일 주소 (관리자만 표시) -->
+          {% if user.is_superuser and user_profile.email %}
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">이메일 주소</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 이메일 (관리자 전용)</div>
+              </div>
+              <div class="text-right">
+                <p class="text-base sm:text-lg font-medium text-gray-800 break-all">
+                  {{ user_profile.email }}
+                </p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 계정 상태 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          계정 상태
+        </div>
+        
+        <div class="bg-white">
+          <!-- 계정 활성화 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">계정 상태</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">현재 계정 활성화 상태</div>
+              </div>
+              <div class="flex items-center">
+                <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-gray-600 border border-gray-200">
+                  활성화됨
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 이메일 인증 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">이메일 인증</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">이메일 인증 완료 여부</div>
+              </div>
+              <div class="flex items-center">
+                {% if user_profile.email %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-gray-600 border border-gray-200">
+                    인증 완료
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    이메일 미등록
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- 프로필 완성 -->
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-gray-900">프로필 설정</div>
+                <div class="text-sm sm:text-base text-gray-500 mt-1">프로필 정보 완성도</div>
+              </div>
+              <div class="flex items-center">
+                {% if user_profile.social_signup_completed %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-gray-600 border border-gray-200">
+                    설정 완료
+                  </span>
+                {% else %}
+                  <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    추가 설정 필요
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 권한 정보 (관리자만 표시) -->
+      {% if user.is_superuser %}
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-red-500 uppercase tracking-wider border-b border-red-100">
+          관리자 정보
+        </div>
+        
+        <div class="bg-red-50 border border-red-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <div class="flex justify-between items-center">
+              <div class="flex-1">
+                <div class="text-base sm:text-lg font-medium text-red-800">관리자 권한</div>
+                <div class="text-sm sm:text-base text-red-600 mt-1">시스템 관리 권한 레벨</div>
+              </div>
+              <div class="flex items-center">
+                <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+                  {% if user_profile.is_superuser %}
+                    최고 관리자
+                  {% elif user_profile.is_staff %}
+                    운영진
+                  {% else %}
+                    일반 사용자
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- 안내사항 섹션 -->
+      <div class="mb-6 sm:mb-8">
+        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
+          안내사항
+        </div>
+        
+        <div class="bg-gray-50 border border-gray-200">
+          <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+            <ul class="text-sm sm:text-base text-gray-700 space-y-2">
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>닉네임과 소개글은 '회원 정보 수정'에서 변경할 수 있습니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>소셜 로그인 계정은 비밀번호 변경이 불가능합니다</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>프로필 ID는 URL에 사용되므로 신중하게 변경해주세요</span>
+              </li>
+              <li class="flex items-start space-x-2">
+                <span class="text-gray-500 mt-1">•</span>
+                <span>계정 관련 문의사항은 고객센터를 이용해주세요</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* 반응형 컨테이너 */
+@media (max-width: 640px) {
+  .max-w-md {
+    max-width: 100%;
+  }
+}
+
+/* hover 효과 부드럽게 */
+a {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 상태 배지 스타일 개선 */
+.inline-flex.items-center.px-2 {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+/* 웹에서 더 넓은 간격 */
+@media (min-width: 1024px) {
+  .lg\\:px-8 {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 섹션 구분선 스타일 */
+.border-b.border-gray-100 {
+  border-bottom-width: 1px;
+  border-color: #f3f4f6;
+}
+
+/* 네비바와 겹치지 않도록 하단 여백 추가 */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+</style>
+
+{% endblock %}
