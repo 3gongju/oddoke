@@ -108,6 +108,9 @@
         <button type="button" id="searchBtn" class="bg-gray-900 text-white px-4 rounded hover:bg-gray-800 transition-colors">검색</button>
       </div>
 
+      <ul id="place-results" class="mt-2 max-h-40 overflow-y-auto border rounded hidden"></ul>
+      <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
+
       <!-- 지도 컨테이너 -->
        <!-- 지도 높이는 h로 조절 -->
       <div class="relative w-full h-96 bg-gray-100 rounded border overflow-hidden"> 
@@ -122,9 +125,6 @@
           </div>
         </div>
       </div>
-
-      <ul id="place-results" class="mt-2 max-h-40 overflow-y-auto border rounded hidden"></ul>
-      <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
 
       <input type="hidden" name="place_name" id="place_name"> 
       <input type="hidden" name="address" id="address" required>
@@ -234,7 +234,7 @@
       </div>
 
       <label class="block text-sm font-medium mb-2">이벤트 설명</label>
-      <textarea name="event_description" id="event_description" class="w-full border rounded p-3" rows="4" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
+      <textarea name="event_description" id="event_description" class="w-full border rounded p-3" rows="14" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
     </div>
 
     <!-- STEP 5: 출처 정보 -->
@@ -328,24 +328,25 @@
       </style>
     </div>
 
-    <!-- 네비게이션 버튼 (화살표 SVG로 변경) -->
-    <div id="navigationButtons" class="mt-8 flex justify-between items-center">
-      <button type="button" id="prevBtn" 
-              class="flex items-center justify-center w-12 h-12 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl hidden group relative"
+    <!-- 네비게이션 버튼 <,> 기호로-->
+    <div id="navigationButtons" class="mt-8 w-full flex justify-between items-center gap-4">
+
+      <!-- 이전 버튼 -->
+      <button type="button" id="prevBtn"
+              class="w-12 h-12 bg-gray-900 text-white text-xl font-bold rounded-full hover:bg-gray-800 shadow-lg hover:shadow-xl hidden flex items-center justify-center leading-none"
               title="이전 단계">
-        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-        </svg>
+        &lt;
       </button>
-      
-      <button type="button" id="nextBtn" 
-              class="flex items-center justify-center w-12 h-12 bg-gray-400 text-gray-200 rounded-full cursor-not-allowed shadow-lg hidden group relative"
+
+      <!-- 다음 버튼 -->
+      <button type="button" id="nextBtn"
+              class="w-12 h-12 bg-gray-900 text-white text-xl font-bold rounded-full hover:bg-gray-800 shadow-lg hover:shadow-xl hidden flex items-center justify-center leading-none"
               title="다음 단계">
-        <svg class="w-5 h-5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-        </svg>
+        &gt;
       </button>
+
     </div>
+
 
   </form>
 </section>
@@ -407,7 +408,7 @@
 
   /* 반응형 버튼 스타일 */
   @media (max-width: 640px) {
-    #navigationButtons {
+    /* #navigationButtons {
       padding: 0 1rem;
     }
     
@@ -419,7 +420,7 @@
     #navigationButtons button svg {
       width: 1.25rem;
       height: 1.25rem;
-    }
+    } */
     
     /* Step 1 버튼들 모바일 최적화 */
     .step button {
