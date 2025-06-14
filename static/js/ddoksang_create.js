@@ -1020,3 +1020,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('✅ ddoksang_create.js 초기화 완료 (이미지 업로드 제외)');
 });
+
