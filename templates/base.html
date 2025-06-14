@@ -7,10 +7,35 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Oddoke</title>
   
-  <!-- Google Fonts - 둥글고 귀여운 폰트 -->
+  <!-- 나눔스퀘어 & 배민체 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Comfortaa:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'BMJUA';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NanumSquare';
+      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareRegular.woff') format('woff');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NanumSquare';
+      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareBold.woff') format('woff');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NanumSquare';
+      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareLight.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
   
   <!-- Tailwind CSS with Custom Config -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,8 +44,10 @@
       theme: {
         extend: {
           fontFamily: {
-            'cute': ['Fredoka', 'Nunito', 'Comfortaa', 'system-ui', 'sans-serif'],
-            'sans': ['Nunito', 'system-ui', 'sans-serif'],
+            'cute': ['BMJUA', 'NanumSquare', 'system-ui', 'sans-serif'],
+            'sans': ['NanumSquare', 'system-ui', 'sans-serif'],
+            'heading': ['BMJUA', 'system-ui', 'sans-serif'],
+            'body': ['NanumSquare', 'system-ui', 'sans-serif'],
           },
           colors: {
             // 레퍼런스에 맞는 부드러운 크림/노랑 색상
@@ -61,20 +88,20 @@
   {% block head %}{% endblock %}
 </head>
 
-<body class="bg-white text-black min-h-screen font-cute">
+<body class="bg-white text-black min-h-screen font-body">
 <!-- ✅ Navbar - 반응형 최적화 및 부드러운 색상 -->
 <nav class="bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-50 border-b border-gray-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between h-14 sm:h-16 items-center">
       <!-- 왼쪽: 로고 -->
       <div class="flex items-center space-x-4 sm:space-x-6">
-        <a href="/" class="font-cute text-xl sm:text-2xl font-bold text-black hover:text-gray-700 transition-colors">어덕해</a>
+        <a href="/" class="font-heading text-xl sm:text-2xl font-bold text-black hover:text-gray-700 transition-colors">어덕해</a>
         
         <!-- 데스크톱 메뉴 (md 이상에서만 표시) -->
         <div class="hidden md:flex items-center space-x-4 lg:space-x-6">
-          <a href="/ddokfarm/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent">덕팜</a>
-          <a href="/ddokdam/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent">덕담</a>
-          <a href="/ddoksang/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent">덕생</a>
+          <a href="/ddokfarm/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent font-body">덕팜</a>
+          <a href="/ddokdam/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent font-body">덕담</a>
+          <a href="/ddoksang/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent font-body">덕생</a>
         </div>
       </div>
       
@@ -87,7 +114,7 @@
               <div class="text-lg sm:text-xl">📬</div>
               <!-- 알림 개수 배지 -->
               <span id="notification-badge" 
-                    class="absolute -top-0.5 -right-0.5 bg-black text-cream-soft text-xs rounded-full min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center hidden border-2 border-white text-[10px] sm:text-xs">
+                    class="absolute -top-0.5 -right-0.5 bg-black text-cream-soft text-xs rounded-full min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center hidden border-2 border-white text-[10px] sm:text-xs font-body">
                 0
               </span>
             </a>
@@ -95,7 +122,7 @@
           
           <!-- 데스크톱 사용자 메뉴 -->
           <div class="hidden md:flex items-center space-x-3 lg:space-x-4">
-            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold">
+            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold font-body">
               👤 
               {% if request.user.first_name %}
                 {{ request.user.first_name }}
@@ -108,13 +135,13 @@
               {% endif %}
               님
             </span>
-            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors">내채팅방</a>
-            <a href="{% url 'accounts:mypage' %}" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors">마이페이지</a>
-            <a href="/accounts/logout/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors">로그아웃</a>
+            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">내채팅방</a>
+            <a href="{% url 'accounts:mypage' %}" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">마이페이지</a>
+            <a href="/accounts/logout/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">로그아웃</a>
           </div>
           
         {% else %}
-          <a href="/accounts/login/" class="text-xs sm:text-sm text-black hover:text-cream-dark hidden md:block bg-cream-light px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-colors font-semibold">로그인</a>
+          <a href="/accounts/login/" class="text-xs sm:text-sm text-black hover:text-cream-dark hidden md:block bg-cream-light px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-colors font-semibold font-body">로그인</a>
         {% endif %}
         
         <!-- 햄버거 버튼 (모바일에서만 표시, 맨 오른쪽) -->
@@ -134,7 +161,7 @@
         <!-- 사용자 정보 섹션 (모바일 전용) -->
         <div class="bg-cream-bg rounded-lg p-3 mb-3 border border-cream-light">
           <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-black rounded-full flex items-center justify-center text-cream-soft text-xs sm:text-sm font-bold">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-black rounded-full flex items-center justify-center text-cream-soft text-xs sm:text-sm font-bold font-body">
               {% if request.user.first_name %}
                 {{ request.user.first_name|first }}
               {% elif request.user.username|slice:":10" == "naver_" %}
@@ -146,7 +173,7 @@
               {% endif %}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-black truncate">
+              <p class="text-sm font-semibold text-black truncate font-body">
                 {% if request.user.first_name %}
                   {{ request.user.first_name }}님
                 {% elif request.user.username|slice:":10" == "naver_" %}
@@ -157,38 +184,38 @@
                   {{ request.user.username }}님
                 {% endif %}
               </p>
-              <p class="text-xs text-gray-600">환영합니다!</p>
+              <p class="text-xs text-gray-600 font-body">환영합니다!</p>
             </div>
           </div>
         </div>
       {% endif %}
       
       <!-- 메인 메뉴 -->
-      <a href="/ddokfarm/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold">
+      <a href="/ddokfarm/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
         덕팜
       </a>
-      <a href="/ddokdam/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold">
+      <a href="/ddokdam/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
         덕담
       </a>
-      <a href="/ddoksang/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold">
+      <a href="/ddoksang/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
         덕생
       </a>
       
       {% if request.user.is_authenticated %}
         <hr class="my-3 border-gray-200">
         <!-- 사용자 메뉴 -->
-        <a href="/ddokchat/my/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors">
+        <a href="/ddokchat/my/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
           내채팅방
         </a>
-        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors">
+        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
           마이페이지
         </a>
-        <a href="/accounts/logout/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors">
+        <a href="/accounts/logout/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
           로그아웃
         </a>
       {% else %}
         <hr class="my-3 border-gray-200">
-        <a href="/accounts/login/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold">
+        <a href="/accounts/login/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
           로그인
         </a>
       {% endif %}
@@ -201,7 +228,7 @@
 
 <!-- ✅ FAQ 버튼 - 고정 위치 및 커서 스타일 수정 -->
 <button id="faqButton"
-        class="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 bg-black text-cream-soft px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg z-50 cursor-pointer hover:bg-gray-800 hover:scale-105 transition-all font-bold text-sm sm:text-base">
+        class="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 bg-black text-cream-soft px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg z-50 cursor-pointer hover:bg-gray-800 hover:scale-105 transition-all font-bold text-sm sm:text-base font-body">
   FAQ
 </button>
 
@@ -210,12 +237,12 @@
      class="fixed bottom-16 left-4 sm:bottom-20 sm:left-6 w-72 sm:w-80 bg-white border-2 border-gray-300 rounded-xl shadow-xl hidden flex-col z-50 transform transition-all duration-300 opacity-0 translate-y-2">
   <!-- 모달 헤더 -->
   <div class="bg-black text-cream-soft px-4 py-3 rounded-t-xl flex justify-between items-center">
-    <span class="font-cute font-bold text-sm sm:text-base">어덕해</span>
+    <span class="font-heading font-bold text-sm sm:text-base">어덕해</span>
     <button id="closeModal" class="text-cream-soft text-lg hover:text-cream-light transition-colors">&times;</button>
   </div>
 
   <!-- 채팅 메시지 + 질문 -->
-  <div class="px-4 py-3 space-y-2 max-h-72 sm:max-h-80 overflow-y-auto text-sm">
+  <div class="px-4 py-3 space-y-2 max-h-72 sm:max-h-80 overflow-y-auto text-sm font-body">
     <div class="bg-gray-100 p-2 sm:p-3 rounded-lg w-fit max-w-[90%] text-black">무엇이 궁금하신가요?</div>
     <div class="bg-gray-100 p-2 sm:p-3 rounded-lg w-fit max-w-[90%] text-black">
       어덕해 소개, 회원가입 안내, 탈퇴 안내, 용어 설명 중 선택해주세요!
@@ -223,13 +250,13 @@
 
     <!-- 질문 버튼 -->
     <div id="questionSection" class="space-y-2">
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="about">📌 어덕해 소개</button>
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="signup">🙋‍♀️ 회원가입 안내</button>
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="withdraw">🚪 탈퇴 안내</button>
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="terms">📚 용어 설명</button>
     </div>
 
@@ -456,18 +483,29 @@
 
 <!-- ✅ 추가 스타일 - 반응형 및 폰트 최적화 -->
 <style>
-  /* 폰트 최적화 */
-  body {
+  /* 한글 폰트 최적화 */
+  .font-heading {
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+  }
+
+  .font-body {
     font-feature-settings: "kern" 1, "liga" 1;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+    line-height: 1.6;
   }
   
   /* 귀여운 폰트 개선 */
   .font-cute {
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     letter-spacing: -0.01em;
+    word-break: keep-all;
   }
   
   /* 호버 효과 개선 */
