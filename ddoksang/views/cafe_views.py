@@ -3,6 +3,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.conf import settings
 from django.utils.safestring import mark_safe
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -10,7 +11,6 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.db.models import F, Q
-from django.conf import settings
 from django.views.decorators.csrf import csrf_protect
 from django.db import IntegrityError, transaction
 from django.urls import reverse
@@ -31,156 +31,166 @@ from artist.models import Artist, Member
 logger = logging.getLogger(__name__)
 
 
-@login_required
-def create_cafe(request):
-    if request.method == 'GET':
-        form = BdayCafeForm()
-        image_form = BdayCafeImageForm()
-        artists = Artist.objects.all().order_by('display_name')
-        
-        context = {
-            'form': form,
-            'image_form': image_form,
-            'artists': artists,
-            'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
-            # JS에서 사용할 메세지들 가져오기
-            'messages_json':ALL_MESSAGES,
-        }
-        return render(request, 'ddoksang/create.html', context)
-    
-    elif request.method == 'POST':
-        # POST 데이터를 폼에 맞게 변환
-        form_data = request.POST.copy()
-        
-        # 아티스트 유효성 검증 및 매핑
-        artist_id = form_data.get('artist_id')
-        
-        if not artist_id:
-            messages.error(request, "아티스트를 선택해주세요.")
-            return redirect('ddoksang:create')
-            
+# ddoksang/views.py의 cafe_create_view 함수 수정
+
+def cafe_create_view(request):
+    if request.method == 'POST':
         try:
-            artist = Artist.objects.get(id=artist_id)
-            form_data['artist'] = artist.id
-        except Artist.DoesNotExist:
-            messages.error(request, "유효하지 않은 아티스트입니다.")
-            return redirect('ddoksang:create')
+            # 기본 폼 데이터 추출
+            cafe_data = {
+                'submitted_by': request.user,
+                'artist_id': request.POST.get('artist_id'),
+                'member_id': request.POST.get('member_id') or None,
+                'cafe_type': request.POST.get('cafe_type', 'bday'),
+                'cafe_name': request.POST.get('cafe_name'),
+                'place_name': request.POST.get('place_name', ''),
+                'address': request.POST.get('address'),
+                'road_address': request.POST.get('road_address', ''),
+                'detailed_address': request.POST.get('detailed_address', ''),
+                'kakao_place_id': request.POST.get('kakao_place_id', ''),
+                'latitude': float(request.POST.get('latitude')),
+                'longitude': float(request.POST.get('longitude')),
+                'start_date': request.POST.get('start_date'),
+                'end_date': request.POST.get('end_date'),
+                'start_time': request.POST.get('start_time') or None,
+                'end_time': request.POST.get('end_time') or None,
+                'event_description': request.POST.get('event_description', ''),
+                'hashtags': request.POST.get('hashtags', ''),
+                'x_source': request.POST.get('x_source', ''),
+                'status': 'pending'
+            }
 
-        # 멤버 유효성 검증 및 매핑 (선택적)
-        member_id = form_data.get('member_id')
-        
-        if member_id:
-            try:
-                member = Member.objects.get(id=member_id)
-                form_data['member'] = member.id
-            except Member.DoesNotExist:
-                messages.warning(request, "유효하지 않은 멤버입니다. 멤버 정보를 제외하고 등록합니다.")
-                form_data['member'] = ''
-        else:
-            form_data['member'] = ''
+            # 특전 정보 처리 - 여러 카테고리 합치기
+            perks_categories = []
+            
+            # 일반 특전
+            general_perks = request.POST.getlist('perks')
+            if general_perks:
+                perks_categories.extend([f"일반:{perk}" for perk in general_perks])
+            
+            # 선착 특전
+            priority_perks = request.POST.getlist('perks_priority')
+            if priority_perks:
+                perks_categories.extend([f"선착:{perk}" for perk in priority_perks])
+            
+            # 그 외 특전
+            extra_perks = request.POST.getlist('perks_extra')
+            if extra_perks:
+                perks_categories.extend([f"기타:{perk}" for perk in extra_perks])
+            
+            # special_benefits 필드에 저장
+            cafe_data['special_benefits'] = ', '.join(perks_categories)
 
-        # 카카오맵 API 데이터 처리 추가
-        kakao_place_data = request.POST.get('kakao_place_data')
-        if kakao_place_data:
-            try:
-                place_info = json.loads(kakao_place_data)
-                # place_name 추가
-                if 'place_name' in place_info:
-                    form_data['place_name'] = place_info['place_name']
-                    
-                # 기타 카카오맵 데이터도 업데이트
-                if 'address_name' in place_info:
-                    form_data['address'] = place_info['address_name']
-                if 'road_address_name' in place_info:
-                    form_data['road_address'] = place_info['road_address_name']
-                if 'id' in place_info:
-                    form_data['kakao_place_id'] = place_info['id']
-                if 'x' in place_info:
-                    form_data['longitude'] = place_info['x']
-                if 'y' in place_info:
-                    form_data['latitude'] = place_info['y']
-            except json.JSONDecodeError:
-                messages.warning(request, "카카오맵 정보 처리 중 오류가 발생했습니다.")
-
-        # 특전 정보 처리
-        perks = request.POST.getlist('perks')
-        if perks:
-            form_data['special_benefits'] = ', '.join(perks)
-
-        # artist_id, member_id 제거 (폼에서 인식하지 않는 필드)
-        if 'artist_id' in form_data:
-            del form_data['artist_id']
-        if 'member_id' in form_data:
-            del form_data['member_id']
-        
-        form = BdayCafeForm(form_data, request.FILES)
-
-        if form.is_valid():
-            try:
-                with transaction.atomic():
-                    cafe = form.save(commit=False)
-                    cafe.submitted_by = request.user
-                    cafe.status = 'pending'
-                    
-                    cafe.place_name = form.cleaned_data.get('place_name')
-                    
-                    cafe.save()
-
-                    # 다중 이미지 저장
-                    images = request.FILES.getlist('images')
+            # 카페 인스턴스 생성
+            cafe = BdayCafe.objects.create(**cafe_data)
+            
+            # 이미지 처리
+            uploaded_files = request.FILES.getlist('images')
+            print(f"📁 업로드된 파일 개수: {len(uploaded_files)}")
+            
+            if uploaded_files:
+                for index, image_file in enumerate(uploaded_files):
+                    try:
+                        # 이미지 타입 결정 (첫 번째는 메인)
+                        image_type = 'main' if index == 0 else 'other'
+                        is_main = index == 0
                         
-                    for idx, image_file in enumerate(images):
-                        image_type = 'main' if idx == 0 else 'other'
-                        is_main = idx == 0
-                        
-                        BdayCafeImage.objects.create(
+                        # BdayCafeImage 인스턴스 생성
+                        cafe_image = BdayCafeImage.objects.create(
                             cafe=cafe,
                             image=image_file,
                             image_type=image_type,
-                            order=idx,
                             is_main=is_main,
+                            order=index,
+                            caption=f"이미지 {index + 1}"
                         )
-                
-                    # 캐시 무효화 (새로운 카페가 추가되었으므로)
-                    cache.delete_many([
-                        'featured_cafes',
-                        'latest_cafes',
-                        'admin_stats',
-                    ])
-                    
-                    messages.success(request, f"'{cafe.cafe_name}' 생일카페가 성공적으로 등록되었습니다! 관리자 승인 후 공개됩니다.")
-
-                    return redirect('ddoksang:cafe_create_success', cafe_id=cafe.id)
-
-            except Exception as e:
-                logger.error(f"카페 등록 중 오류: {str(e)}")
-                messages.error(request, f"등록 중 오류가 발생했습니다: {str(e)}")
-        else:
-            # 폼 검증 실패
-            error_messages = []
-            for field, errors in form.errors.items():
-                for error in errors:
-                    error_messages.append(f"{field}: {error}")
-            messages.error(request, f"입력 정보를 확인해주세요: {', '.join(error_messages)}")
-        
-        return redirect('ddoksang:create')
+                        
+                        print(f"✅ 이미지 저장 완료: {cafe_image.id} - {image_file.name}")
+                        
+                    except Exception as img_error:
+                        print(f"❌ 이미지 저장 실패: {image_file.name} - {img_error}")
+                        continue
+            
+            # 저장된 이미지 확인
+            saved_images = cafe.images.all()
+            print(f"💾 저장된 이미지 개수: {saved_images.count()}")
+            for img in saved_images:
+                print(f"  - {img.id}: {img.image.name} (main: {img.is_main})")
+            
+            messages.success(request, '생일카페가 성공적으로 등록되었습니다. 관리자 승인 후 공개됩니다.')
+            return redirect('ddoksang:cafe_create_success', cafe_id=cafe.id)
+            
+        except Exception as e:
+            print(f"❌ 카페 생성 중 오류: {e}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f'등록 중 오류가 발생했습니다: {str(e)}')
+            return redirect('ddoksang:create')
+    
+    # GET 요청 처리
+    kakao_api_key = getattr(settings, 'KAKAO_API_KEY', '')
+    context = {
+        'kakao_api_key': kakao_api_key,
+    }
+    return render(request, 'ddoksang/create.html', context)
 
 @login_required
 def cafe_create_success(request, cafe_id):
-    """생일카페 등록 완료 페이지"""
+    """카페 등록 완료 페이지"""
     try:
-        # 사용자가 등록한 카페만 볼 수 있도록
-        cafe = get_object_or_404(BdayCafe, id=cafe_id, submitted_by=request.user)
-    except:
-        messages.error(request, "등록 정보를 찾을 수 없습니다.")
-        return redirect('ddoksang:my_cafes')
-    
-    context = {
-        'cafe': cafe,
-    }
-    return render(request, 'ddoksang/create_success.html', context)
+        # 해당 카페를 가져오기 (작성자만 접근 가능)
+        cafe = get_object_or_404(
+            BdayCafe.objects.select_related('artist', 'member')
+                            .prefetch_related('images'),
+            id=cafe_id,
+            submitted_by=request.user
+        )
+        
+        # 디버깅: 이미지 정보 출력
+        print(f"📊 카페 정보: {cafe.cafe_name}")
+        print(f"📊 연결된 이미지 개수: {cafe.images.count()}")
+        
+        if cafe.images.exists():
+            for img in cafe.images.all():
+                print(f"  - 이미지 {img.id}: {img.image.name} (URL: {img.image.url})")
+                print(f"    타입: {img.image_type}, 메인: {img.is_main}, 순서: {img.order}")
+        else:
+            print("  ❌ 연결된 이미지가 없음")
+        
+        # 특전 정보 파싱 (디스플레이용)
+        parsed_benefits = []
+        if cafe.special_benefits:
+            for benefit in cafe.special_benefits.split(','):
+                benefit = benefit.strip()
+                if ':' in benefit:
+                    category, item = benefit.split(':', 1)
+                    parsed_benefits.append({
+                        'category': category.strip(),
+                        'item': item.strip()
+                    })
+                else:
+                    parsed_benefits.append({
+                        'category': '일반',
+                        'item': benefit
+                    })
+        
+        context = {
+            'cafe': cafe,
+            'parsed_benefits': parsed_benefits,
+        }
+        
+        return render(request, 'ddoksang/create_success.html', context)
+        
+    except BdayCafe.DoesNotExist:
+        messages.error(request, '해당 카페를 찾을 수 없거나 접근 권한이 없습니다.')
+        return redirect('ddoksang:home')
+    except Exception as e:
+        print(f"❌ create_success 뷰 오류: {e}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, '페이지 로드 중 오류가 발생했습니다.')
+        return redirect('ddoksang:home')
 
-from django.db.models import Q
 
 @login_required
 def my_cafes(request):
