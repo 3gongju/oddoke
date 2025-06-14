@@ -58,9 +58,9 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-8 sm:mb-12 lg:mb-16">
       <h2 class="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-black mb-2 sm:mb-4 tracking-wide">
-        <span class="italic text-cream-dark">Hot</span> Items
+        <span class="italic text-cream-dark"></span> HOT 게시글
       </h2>
-      <p class="text-gray-700 text-sm sm:text-base lg:text-lg font-light font-body">지금 가장 사랑받고 있는 굿즈</p>
+      <p class="text-gray-700 text-sm sm:text-base lg:text-lg font-light font-body">지금 가장 사랑받고 있는 굿즈 보러가기!</p>
       <div class="w-16 sm:w-20 lg:w-24 h-0.5 bg-cream-accent mx-auto mt-3 sm:mt-6"></div>
     </div>
     
@@ -98,9 +98,9 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-8 sm:mb-12 lg:mb-16">
       <h2 class="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white mb-2 sm:mb-4 tracking-wide">
-        <span class="italic text-cream-soft">Today's</span> Updates
+        <span class="italic text-cream-soft"></span> Today's Updates
       </h2>
-      <p class="text-gray-300 text-sm sm:text-base lg:text-lg font-light font-body">방금 올라온 따끈따끈한 소식들</p>
+      <p class="text-gray-300 text-sm sm:text-base lg:text-lg font-light font-body">방금 올라온 따끈따끈한 소식들 보러가기!</p>
       <div class="w-16 sm:w-20 lg:w-24 h-0.5 bg-cream-soft mx-auto mt-3 sm:mt-6"></div>
     </div>
 
@@ -167,9 +167,9 @@
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
           <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
-            <span class="italic text-cream-dark">Farm</span> Highlights
+            <span class="italic text-cream-dark"></span> 덕질 용품 모음 zip
           </h2>
-          <p class="text-gray-700 font-light text-sm sm:text-base font-body">인기 굿즈 거래</p>
+          <p class="text-gray-700 font-light text-sm sm:text-base font-body">포카 중고거래, 분철, 대여까지 한번에</p>
         </div>
         <a href="{% url 'ddokfarm:index' %}" class="text-gray-700 hover:text-black font-semibold transition-colors border-b-2 border-cream-accent hover:border-cream-dark text-sm sm:text-base font-body">
           전체 보기 →
@@ -224,7 +224,7 @@
         </div>
       {% else %}
         <div class="text-center py-12 sm:py-16 bg-cream-bg rounded-xl border-2 border-cream-light">
-          <div class="text-4xl sm:text-5xl lg:text-6xl mb-4 sm:mb-6">🛍️</div>
+          <div class="text-4xl sm:text-5xl lg:text-6xl mb-4 sm:mb-6"></div>
           <h3 class="font-heading text-lg sm:text-xl font-bold text-black mb-2 sm:mb-3">아직 덕팜 게시글이 없어요</h3>
           <p class="text-gray-700 mb-4 sm:mb-6 text-sm sm:text-base font-body">첫 번째 굿즈 거래를 시작해보세요!</p>
           <a href="{% url 'ddokfarm:post_create' category='sell' %}" 
@@ -240,9 +240,9 @@
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
           <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
-            <span class="italic text-cream-dark">Community</span> Highlights
+            <span class="italic text-cream-dark"></span> 덕질 생활 모음 zip
           </h2>
-          <p class="text-gray-700 font-light text-sm sm:text-base font-body">인기 커뮤니티 글</p>
+          <p class="text-gray-700 font-light text-sm sm:text-base font-body">생카후기, 예절샷 등 나의 덕심 맘껏 발휘하러 가기!</p>
         </div>
         <a href="{% url 'ddokdam:index' %}" class="text-gray-700 hover:text-black font-semibold transition-colors border-b-2 border-cream-accent hover:border-cream-dark text-sm sm:text-base font-body">
           전체 보기 →
@@ -276,6 +276,25 @@
         {% endfor %}
       </div>
     </div>
+
+    <!-- 이번 주 생일 멤버: 슬라이더 버전 -->
+    <!-- <section class="mt-28 mb-28 max-w-7xl mx-auto px-4"> -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
+        <div class="mb-4 sm:mb-0">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+            <span class="italic text-cream-dark"></span> 이번 주 생일 아티스트
+          </h2>
+          <p class="text-gray-700 font-light text-sm sm:text-base font-body">월별 생일 아티스트가 궁금하다면 전체 달력 보기 클릭!</p>
+        </div>
+        <a href="{% url 'bday_calendar:calendar' %}" class="text-gray-700 hover:text-black font-semibold transition-colors border-b-2 border-cream-accent hover:border-cream-dark text-sm sm:text-base font-body">
+          전체 달력 보기 →
+        </a>
+    </div>
+      
+      <!-- 생일 멤버 슬라이더 영역 -->
+      <div class="bg-cream-bg rounded-2xl p-4 sm:p-6 lg:p-8 border border-cream-light">
+        {% include "ddoksang/_weekly_bday_member.html" %}
+      </div>
   </div>
 </section>
 
@@ -285,14 +304,14 @@
     <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-cream-light">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8">
         <div class="mb-4 sm:mb-0">
-          <h3 class="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-black mb-2">
-            <span class="italic text-cream-dark">My</span> Favorites
+          <h3 class="font-heading text-xl sm:text-2xl lg:text-3xl font-light text-black mb-2">
+            <span class="italic text-cream-dark"></span> 찜한 아티스트 모음 zip
           </h3>
           <p class="text-gray-700 text-sm sm:text-base font-light font-body">나만의 특별한 아티스트들</p>
         </div>
-        <a href="{% url 'artist:index' %}" class="text-cream-dark hover:text-black text-sm sm:text-base font-semibold transition-colors font-body">
+        <!-- <a href="{% url 'artist:index' %}" class="text-cream-dark hover:text-black text-sm sm:text-base font-semibold transition-colors font-body">
           찜덕 하러 가기 →
-        </a>
+        </a> -->
       </div>
 
       <div class="relative">
@@ -314,7 +333,7 @@
         {% else %}
           <div class="flex flex-col items-center py-12 sm:py-16 lg:py-20 w-full">
             <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
-              <img src="{% static 'image/ddok_black.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
+              <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
             </div>
             <h4 class="font-heading text-lg sm:text-xl font-light text-black mb-3">아직 찜한 덕이 없어요!</h4>
             <p class="text-gray-600 text-center text-sm sm:text-base mb-6 font-body">마음에 드는 아티스트를 찜해보세요</p>
