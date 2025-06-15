@@ -1,36 +1,44 @@
 // ddoksang_create.js - 메시지 시스템 및 지도 초기화 수정 완료 버전
-// 🔧 이미지 업로드는 ddoksang_image_upload.js에서 전담 처리
-
-// ✅ 메시지 함수 정의 (전역)
+// ✅ 메시지 함수 정의 (create.html과 완전 호환)
 function msg(category, key, params = {}) {
     try {
-        if (!window.DDOKSANG_MESSAGES || !window.DDOKSANG_MESSAGES[category]) {
+        // create.html에서 설정한 window.DDOKSANG_MESSAGES 직접 사용
+        const messages = window.DDOKSANG_MESSAGES;
+        
+        if (!messages) {
+            console.warn('DDOKSANG_MESSAGES가 설정되지 않음');
+            return `${category}.${key}`;
+        }
+        
+        if (!messages[category]) {
             console.warn(`메시지 카테고리를 찾을 수 없습니다: ${category}`);
             return `${category}.${key}`;
         }
         
-        let message = window.DDOKSANG_MESSAGES[category][key];
+        const message = messages[category][key];
         if (!message) {
             console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`);
             return `${category}.${key}`;
         }
         
-        // 파라미터 치환
+        let result = message;
         if (params && typeof params === 'object') {
             Object.entries(params).forEach(([paramKey, value]) => {
-                message = message.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
+                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
             });
         }
         
-        return message;
+        return result;
     } catch (error) {
         console.error('메시지 처리 오류:', error);
         return `${category}.${key}`;
     }
 }
 
-// ✅ 전역 메시지 함수 설정
-window.msg = msg;
+// 전역 msg 함수 설정
+if (!window.msg) {
+    window.msg = msg;
+}
 
 // 단계별 검증 규칙 (이미지 제외)
 const stepValidationRules = {
