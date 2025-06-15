@@ -1,50 +1,45 @@
 <!-- ddoksang/templates/ddoksang/components/detail/_image_header.html -->
-<!-- 디테일 페이지 이미지 헤더 컴포넌트 -->
+<!-- 디테일 페이지 이미지 헤더 컴포넌트 (모달 및 중복 ID 제거 + window 함수 연결 완료) -->
 
 <div class="relative">
-  <!-- 메인 이미지 영역 - 높이 증가 -->
   <div class="relative h-96 md:h-[500px] overflow-hidden">
     {% with all_images=cafe.get_all_images %}
       {% if all_images %}
         <div id="imageGallery" class="relative w-full h-full">
           {% for image in all_images %}
-            <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}" 
-                 onclick="openImageModal({{ forloop.counter0 }})">
-              <!-- 포스터 타입에 따른 다른 표시 방식 -->
+            <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}"
+                 onclick="window.openImageModal({{ forloop.counter0 }})">
               {% if image.type == 'poster' or image.type == 'main' %}
-                <!-- 포스터나 메인 이미지는 contain으로 전체 보이기 -->
                 <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                  <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                  <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}"
                        class="max-w-full max-h-full object-contain cursor-zoom-in shadow-2xl rounded-lg">
                 </div>
               {% else %}
-                <!-- 다른 이미지들은 cover로 화면 채우기 -->
-                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}" 
+                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}"
                      class="w-full h-full object-cover cursor-zoom-in">
               {% endif %}
-           
             </div>
           {% endfor %}
         </div>
-        
-        <!-- 이미지 네비게이션 (2장 이상일 때만) -->
+
         {% if all_images|length > 1 %}
+          <!-- 도트 -->
           <div class="absolute inset-x-0 bottom-4 flex justify-center space-x-2">
             {% for image in all_images %}
-              <button onclick="showGalleryImage({{ forloop.counter0 }})" 
+              <button type="button" onclick="window.showGalleryImage({{ forloop.counter0 }})"
                       class="gallery-dot w-2 h-2 rounded-full transition-all {% if forloop.first %}bg-white{% else %}bg-white/50{% endif %}">
               </button>
             {% endfor %}
           </div>
-          
+
           <!-- 좌우 화살표 -->
-          <button onclick="prevGalleryImage()" 
+          <button type="button" onclick="window.prevGalleryImage()"
                   class="gallery-nav-btn absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </button>
-          <button onclick="nextGalleryImage()" 
+          <button type="button" onclick="window.nextGalleryImage()"
                   class="gallery-nav-btn absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-2 rounded-full hover:bg-black/50 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -57,17 +52,16 @@
         </div>
       {% endif %}
     {% endwith %}
-    
-    <!-- 오버레이 - 포스터 타입일 때는 약간 줄이기 -->
+
     {% with main_image=cafe.get_all_images.0 %}
       {% if main_image.type == 'poster' or main_image.type == 'main' %}
-        <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div class="absolute inset-0 bg-black bg-opacity-20 pointer-events-none"></div>
       {% else %}
         <div class="absolute inset-0 bg-black bg-opacity-30 pointer-events-none"></div>
       {% endif %}
     {% endwith %}
-    
-    <!-- 카페 기본 정보 -->
+
+    <!-- 정보 오버레이 -->
     <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
       <div class="max-w-4xl mx-auto">
         <div class="flex items-center gap-3 mb-2">
@@ -88,8 +82,7 @@
         <p class="text-xl opacity-90">{{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}</p>
       </div>
     </div>
-    
-    <!-- 찜하기 버튼 -->
+
     {% if user.is_authenticated and cafe.status == 'approved' %}
     <div class="absolute top-6 right-6 z-50">
       <button 
@@ -97,7 +90,7 @@
         data-cafe-id="{{ cafe.id }}" 
         class="favorite-button p-3 bg-white bg-opacity-20 backdrop-blur-sm rounded-full hover:bg-opacity-30 transition-all focus:outline-none cursor-pointer {% if cafe.id in user_favorites %}favorited{% else %}not-favorited{% endif %}"
         style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};"
-        title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
+        title="{% if cafe.id in user_favorites %}질 해제{% else %}질하기{% endif %}"
       >
         <span class="favorite-icon">{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
       </button>

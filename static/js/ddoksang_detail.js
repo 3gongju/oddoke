@@ -523,6 +523,11 @@
             });
         }
         
+        // 초기 첫 이미지 강제 적용
+        if (totalImages > 0) {
+            showGalleryImage(0);
+        }
+        
         // 갤러리와 모달에 터치 이벤트 추가
         const gallery = document.getElementById('imageGallery');
         if (gallery) {
