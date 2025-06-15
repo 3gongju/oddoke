@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'channels',
     'notifications',
     'faq',
+    'oddmin',
 ]
 
 MIDDLEWARE = [

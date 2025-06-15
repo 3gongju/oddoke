@@ -9,7 +9,7 @@ from .base_views import (
 )
 
 from .cafe_views import (
-    create_cafe as cafe_create_view,
+    cafe_create_view,
     cafe_create_success,
     my_cafes,
     toggle_favorite as toggle_favorite_view,
@@ -37,7 +37,7 @@ from .admin_views import (
 )
 
 # 하위 호환성을 위한 별칭들
-create_cafe = cafe_create_view
+
 bday_cafe_detail = cafe_detail_view
 toggle_favorite = toggle_favorite_view
 admin_dashboard = admin_dashboard_view
