@@ -214,38 +214,33 @@ function updateDistances(userLat, userLng) {
   }
 
   // 카드 클릭 이벤트 (지도 이동)
-  document.addEventListener('DOMContentLoaded', function() {
-    requestLocationAndSort();
-    
-    // 카페 카드 클릭 시 지도 이동 (기존 로직 유지)
-    document.addEventListener('click', function(e) {
-      const cafeCard = e.target.closest('.cafe-card-mini');
-      if (cafeCard) {
-        // 상세보기 링크 클릭이 아닌 경우에만 지도 이동
-        if (!e.target.closest('a[href*="/ddoksang/cafe/"]')) {
-          const lat = parseFloat(cafeCard.dataset.cafeLat);
-          const lng = parseFloat(cafeCard.dataset.cafeLng);
-          
-          if (!isNaN(lat) && !isNaN(lng)) {
-            // 전역 지도 이동 함수 호출
-            if (typeof moveToLocationHome === 'function') {
-              moveToLocationHome(lat, lng);
-            } else if (typeof window.map !== 'undefined' && window.map) {
-              const position = new kakao.maps.LatLng(lat, lng);
-              window.map.setCenter(position);
-              window.map.setLevel(5);
-            }
-            
-            // 시각적 피드백
-            cafeCard.classList.add('ring-2', 'ring-blue-400');
-            setTimeout(() => {
-              cafeCard.classList.remove('ring-2', 'ring-blue-400');
-            }, 1000);
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.cafe-card-mini').forEach(card => {
+      card.addEventListener('click', function (e) {
+        // detail-link 또는 그 내부 클릭 무시
+        if (e.target.closest('.detail-link')) return;
+
+        const lat = parseFloat(card.dataset.cafeLat);
+        const lng = parseFloat(card.dataset.cafeLng);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          if (typeof moveToLocationHome === 'function') {
+            moveToLocationHome(lat, lng);
+          } else if (typeof window.map !== 'undefined' && window.map) {
+            const position = new kakao.maps.LatLng(lat, lng);
+            window.map.setCenter(position);
+            window.map.setLevel(5);
           }
+
+          card.classList.add('ring-2', 'ring-blue-400');
+          setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-blue-400');
+          }, 1000);
         }
-      }
+      });
     });
   });
+
 </script>
 
 <!-- 커스텀 스크롤바 스타일 -->

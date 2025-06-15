@@ -233,12 +233,11 @@
 <!-- ✅ 수정된 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🏠 덕생 홈페이지 로드 완료');
+
     
     // ✅ 메인 앱 초기화 (수정됨)
     if (window.ddoksangHome) {
         window.ddoksangHome.init().then(() => {
-            console.log('✅ 홈페이지 초기화 성공');
             
             // ✅ 초기화 완료 후 추가 설정
             console.log('🎯 마커 클릭 → 모달 표시');
@@ -306,18 +305,6 @@ window.closeCafeInfoModal = function(event) {
     }
 };
 
-// ✅ 디버깅용 전역 함수
-window.debugDdoksang = function() {
-    console.log('=== 덕생 홈페이지 디버깅 정보 ===');
-    console.log('ddoksangHome:', window.ddoksangHome);
-    console.log('DdoksangModals:', window.DdoksangModals);
-    console.log('DdoksangLocation:', window.DdoksangLocation);
-    console.log('DdoksangMap:', window.DdoksangMap);
-    console.log('카페 데이터 수:', window.ddoksangHome?.cafesData?.length || 0);
-    console.log('지도 초기화 상태:', !!window.ddoksangHome?.mapManager?.map);
-    console.log('================================');
-};
 
-console.log('✅ 홈페이지 스크립트 로드 완료 (마커 클릭 & 사이드바 연동)');
 </script>
 {% endblock %}
