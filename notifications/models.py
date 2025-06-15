@@ -9,12 +9,17 @@ class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('comment', '댓글'),
         ('reply', '대댓글'),
+        ('post_reply', '게시글 답글'),
         ('chat', '채팅'),
         ('split_application', '분철 참여 신청'),
         ('split_approved', '분철 승인'),
         ('split_rejected', '분철 반려'),
         ('like', '좋아요'),
         ('follow', '팔로우'),
+        ('cafe_approved', '생일카페 승인'),
+        ('cafe_rejected', '생일카페 반려'),
+        ('fandom_verified', '팬덤 인증 승인'),
+        ('fandom_rejected', '팬덤 인증 반려'),
     ]
     
     # 알림 받을 사용자
@@ -120,12 +125,17 @@ class Notification(models.Model):
         messages = {
             'comment': f'{actor_name}님이 회원님의 게시글에 댓글을 남겼습니다',
             'reply': f'{actor_name}님이 회원님의 댓글에 답글을 남겼습니다', 
+            'post_reply': f'{actor_name}님이 회원님의 게시글에 답글을 남겼습니다',
             'chat': f'{actor_name}님이 메시지를 보냈습니다',
             'split_application': f'{actor_name}님이 분철에 참여 신청했습니다',
             'split_approved': '분철 참여 신청이 승인되었습니다',
             'split_rejected': '분철 참여 신청이 반려되었습니다',
             'like': f'{actor_name}님이 회원님의 게시글을 좋아합니다',
             'follow': f'{actor_name}님이 회원님을 팔로우합니다',
+            'cafe_approved': f'등록하신 생일카페 "{getattr(content_object, "cafe_name", "")}"가 승인되었습니다',
+            'cafe_rejected': f'등록하신 생일카페 "{getattr(content_object, "cafe_name", "")}"가 반려되었습니다',
+            'fandom_verified': f'{getattr(getattr(content_object, "fandom_artist", None), "display_name", "아티스트")} 공식 팬덤 인증이 승인되었습니다',
+            'fandom_rejected': f'{getattr(getattr(content_object, "fandom_artist", None), "display_name", "아티스트")} 공식 팬덤 인증이 반려되었습니다',
         }
         
         return messages.get(notification_type, f'{actor_name}님의 알림')

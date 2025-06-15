@@ -188,8 +188,22 @@ def goto_content(request, notification_id):
         elif notification_type == 'follow' and model_name == 'user':
             return redirect('accounts:profile', username=content_object.username)
         
-        # 4. 댓글/대댓글 알림 → 해당 게시글의 댓글 위치로
-        elif notification_type in ['comment', 'reply']:
+        # 4. 생일카페 승인/반려 알림 → 내 카페 목록으로
+        elif notification_type in ['cafe_approved', 'cafe_rejected']:
+            if model_name == 'bdaycafe':
+                return redirect('ddoksang:my_cafes')
+            else:
+                return redirect('ddoksang:home')
+        
+        # 5. 팬덤 인증 승인/반려 알림 → 설정 페이지로
+        elif notification_type in ['fandom_verified', 'fandom_rejected']:
+            if model_name == 'fandomprofile':
+                return redirect('accounts:settings_main', username=request.user.username)
+            else:
+                return redirect('accounts:mypage')
+        
+        # 6. 댓글/대댓글/게시글답글 알림 → 해당 게시글의 댓글 위치로
+        elif notification_type in ['comment', 'reply', 'post_reply']:
             if hasattr(content_object, 'post'):
                 post = content_object.post
                 post_url = get_post_url(post)
@@ -198,17 +212,17 @@ def goto_content(request, notification_id):
                 post_url = get_post_url(content_object)
                 return redirect(post_url)
         
-        # 5. 좋아요 알림 → 해당 게시글로
+        # 7. 좋아요 알림 → 해당 게시글로
         elif notification_type == 'like':
             post_url = get_post_url(content_object)
             return redirect(post_url)
         
-        # 6. 분철 승인/반려 알림 → 해당 분철 게시글로
+        # 8. 분철 승인/반려 알림 → 해당 분철 게시글로
         elif notification_type in ['split_approved', 'split_rejected']:
             post_url = get_post_url(content_object)
             return redirect(post_url)
         
-        # 7. 기타 게시글 관련 알림 → 해당 게시글로
+        # 9. 기타 게시글 관련 알림 → 해당 게시글로
         elif hasattr(content_object, 'id'):
             post_url = get_post_url(content_object)
             return redirect(post_url)
