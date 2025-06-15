@@ -31,7 +31,6 @@ from artist.models import Artist, Member
 logger = logging.getLogger(__name__)
 
 
-# ddoksang/views.py의 cafe_create_view 함수 수정
 
 def cafe_create_view(request):
     if request.method == 'POST':
@@ -127,11 +126,18 @@ def cafe_create_view(request):
             messages.error(request, f'등록 중 오류가 발생했습니다: {str(e)}')
             return redirect('ddoksang:create')
     
-    # GET 요청 처리
+    # ✅ GET 요청 처리 - 메시지 데이터 추가
+    from ddoksang.messages import ALL_MESSAGES
+    import json
+    
     kakao_api_key = getattr(settings, 'KAKAO_API_KEY', '')
+    
     context = {
         'kakao_api_key': kakao_api_key,
+        # ✅ 메시지 데이터를 JSON으로 직렬화하여 전달
+        'messages_json': json.dumps(ALL_MESSAGES, ensure_ascii=False),
     }
+    
     return render(request, 'ddoksang/create.html', context)
 
 @login_required

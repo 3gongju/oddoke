@@ -351,6 +351,9 @@
   </form>
 </section>
 
+<!-- ✅ 메시지 데이터를 JSON으로 안전하게 전달 -->
+{{ messages_json|json_script:"ddoksang-messages" }}
+
 <!-- Styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
@@ -444,9 +447,15 @@
   }
 </style>
 
-{{ messages_json|json_script:"ddoksang-messages" }}
+
 
 <!-- Scripts - 순서 중요 -->
+<!-- ✅ 카카오맵 API 키 전달 방식 개선 -->
+<script>
+  // 카카오맵 API 키를 안전하게 전달
+  window.KAKAO_API_KEY = "{{ kakao_api_key|escapejs }}";
+</script>
+
 <!-- create.html의 스크립트 섹션 - 기존 코드 완전 교체 -->
 
 <!-- 외부 라이브러리 -->
