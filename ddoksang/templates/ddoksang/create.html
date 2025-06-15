@@ -111,7 +111,6 @@
       <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
 
       <!-- 지도 컨테이너 -->
-       <!-- 지도 높이는 h로 조절 -->
       <div class="relative w-full h-96 bg-gray-100 rounded border overflow-hidden"> 
         <div id="map" class="w-full h-full"></div>
         <div id="mapPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-100">
@@ -168,7 +167,8 @@
          <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
             <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
           날짜 입력 방법
-        </h4>        <ul class="space-y-1 list-disc list-inside">
+        </h4>        
+        <ul class="space-y-1 list-disc list-inside">
           <li><strong>달력 선택:</strong> 입력 필드를 클릭하여 달력에서 날짜를 선택할 수 있습니다</li>
           <li><strong>직접 입력:</strong> YYYY-MM-DD 형식으로 직접 입력도 가능합니다</li>
           <li><strong>자동 조정:</strong> 종료일이 시작일보다 이르면 자동으로 조정됩니다</li>
@@ -180,7 +180,6 @@
     <div id="step-4" class="step hidden">
       <h2 class="text-lg font-semibold mb-6">특전 및 이벤트 정보</h2>
       
-
       <!-- 일반 특전 -->
       <div class="mb-6">
         <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -251,7 +250,6 @@
                autocomplete="off">
       </div>
       <p class="text-xs text-gray-500 mb-2">예: oddoke_official → https://x.com/oddoke_official 링크로 연결됩니다</p>
-
     </div>
 
     <!-- Step 6: 이미지 업로드 -->
@@ -303,62 +301,33 @@
           </div>
         </div>
       </div>
-
-      <!-- 드래그 앤 드롭 스타일 -->
-      <style>
-        .sortable-ghost {
-          opacity: 0.5;
-        }
-        .sortable-chosen {
-          transform: scale(1.05);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        .sortable-drag {
-          opacity: 0.8;
-          transform: rotate(5deg);
-        }
-        #image-preview-list .relative:hover [data-drag-handle] {
-          opacity: 1;
-        }
-        #image-preview-list [data-drag-handle] {
-          opacity: 0.7;
-          transition: opacity 0.2s;
-        }
-      </style>
     </div>
 
-    <!-- 네비게이션 버튼 <,> 기호로-->
-    <div id="navigationButtons" class="mt-8 w-full flex justify-between items-center gap-4">
-
+    <!-- 네비게이션 버튼 (수정됨) -->
+    <div id="navigationButtons" class="mt-8 w-full">
       <!-- 이전 버튼 -->
       <button type="button" id="prevBtn"
-              class="w-12 h-12 bg-gray-900 text-white text-xl font-bold rounded-full hover:bg-gray-800 shadow-lg hover:shadow-xl hidden flex items-center justify-center leading-none"
+              class="fixed bottom-4 left-4 w-14 h-14 bg-gray-900 text-white text-2xl font-bold rounded-full hover:bg-gray-800 shadow-lg transition-all duration-200 hidden z-50 items-center justify-center"
               title="이전 단계">
-        &lt;
+        ‹
       </button>
 
-      <!-- 다음 버튼@ -->
+      <!-- 다음 버튼 -->
       <button type="button" id="nextBtn"
-              class="w-12 h-12 bg-gray-900 text-white text-xl font-bold rounded-full hover:bg-gray-800 shadow-lg hover:shadow-xl hidden flex items-center justify-center leading-none"
+              class="fixed bottom-4 right-4 w-14 h-14 bg-gray-900 text-white text-2xl font-bold rounded-full hover:bg-gray-800 shadow-lg transition-all duration-200 hidden z-50 items-center justify-center"
               title="다음 단계">
-        &gt;
+        ›
       </button>
-
     </div>
-
 
   </form>
 </section>
 
-<!-- ✅ 메시지 시스템 (수정됨) -->
+<!-- ✅ 메시지 시스템 -->
+<!-- ✅ 메시지 시스템 (개선된 버전) -->
 {{ messages_json|json_script:"ddoksang-messages" }}
 <script>
 console.log('🔍 메시지 초기화 시작...');
-
-// 0. 먼저 기본 함수 정의
-window.msg = function(category, key, params = {}) {
-    return `${category}.${key}`;
-};
 
 // 1. DOM에서 메시지 데이터 읽기
 const messagesElement = document.getElementById('ddoksang-messages');
@@ -375,6 +344,12 @@ if (messagesElement) {
         // 즉시 DDOKSANG_MESSAGES 설정
         window.DDOKSANG_MESSAGES = serverMessages;
         
+        // ✅ 메시지 내용 확인 (디버깅)
+        if (serverMessages.DUPLICATE_CHECK) {
+            console.log('✅ DUPLICATE_CHECK 메시지:', serverMessages.DUPLICATE_CHECK);
+            console.log('🔍 NO_DUPLICATE:', serverMessages.DUPLICATE_CHECK.NO_DUPLICATE);
+        }
+        
     } catch (error) {
         console.error('❌ 서버 메시지 파싱 실패:', error);
         serverMessages = {};
@@ -385,19 +360,12 @@ if (messagesElement) {
     window.DDOKSANG_MESSAGES = {};
 }
 
-// 2. DUPLICATE_CHECK 메시지 확인
-if (serverMessages.DUPLICATE_CHECK) {
-    console.log('✅ DUPLICATE_CHECK 메시지 발견:', Object.keys(serverMessages.DUPLICATE_CHECK));
-    console.log('🔍 NO_DUPLICATE 메시지:', serverMessages.DUPLICATE_CHECK.NO_DUPLICATE);
-} else {
-    console.error('❌ DUPLICATE_CHECK 메시지 없음');
-}
-
-// 3. 메시지 접근 함수 재정의 (완전 버전)
-window.msg = function(category, key, params = {}) {
+// 2. ✅ 개선된 메시지 접근 함수 정의
+window.getMsg = function(category, key, params = {}) {
     try {
-        if (!window.DDOKSANG_MESSAGES) {
-            console.error('❌ DDOKSANG_MESSAGES가 설정되지 않음');
+        // 메시지 시스템이 준비되지 않은 경우 대기
+        if (!window.DDOKSANG_MESSAGES || Object.keys(window.DDOKSANG_MESSAGES).length === 0) {
+            console.warn(`⚠️ 메시지 시스템이 아직 준비되지 않음: ${category}.${key}`);
             return `${category}.${key}`;
         }
         
@@ -428,15 +396,68 @@ window.msg = function(category, key, params = {}) {
     }
 };
 
-// 4. 즉시 테스트
-const testResult = window.msg('DUPLICATE_CHECK', 'NO_DUPLICATE');
-console.log('🧪 메시지 테스트 결과:', testResult);
+// 3. ✅ 하위 호환성을 위한 별칭
+window.msg = window.getMsg;
 
-// 5. ddoksang_create.js가 로드될 때까지 기다리기 위해 전역으로 설정
+// 4. ✅ 메시지 시스템 준비 완료 표시
 window.DDOKSANG_MESSAGES_READY = true;
 
+// 5. 즉시 테스트
+const testResult = window.getMsg('DUPLICATE_CHECK', 'NO_DUPLICATE');
+console.log('🧪 메시지 테스트 결과:', testResult);
+
+// 6. ✅ 메시지가 올바르게 번역되었는지 확인
+if (testResult === 'DUPLICATE_CHECK.NO_DUPLICATE') {
+    console.error('❌ 메시지가 번역되지 않음 - 시스템 오류');
+} else {
+    console.log('✅ 메시지 번역 성공');
+}
+
 console.log('✅ 메시지 시스템 초기화 완료');
-console.log('🔍 최종 DDOKSANG_MESSAGES:', window.DDOKSANG_MESSAGES);
+</script>
+
+<!-- ✅ 메시지 시스템 대기 스크립트 -->
+<script>
+// 메시지 시스템이 완전히 로드될 때까지 대기하는 함수
+window.waitForMessages = function(callback, maxWait = 5000) {
+    const startTime = Date.now();
+    
+    function checkMessages() {
+        if (window.DDOKSANG_MESSAGES_READY && 
+            window.DDOKSANG_MESSAGES && 
+            Object.keys(window.DDOKSANG_MESSAGES).length > 0) {
+            
+            console.log('✅ 메시지 시스템 준비 완료 - 콜백 실행');
+            callback();
+            return;
+        }
+        
+        // 최대 대기 시간 확인
+        if (Date.now() - startTime > maxWait) {
+            console.warn('⚠️ 메시지 시스템 로드 타임아웃');
+            callback(); // 타임아웃되어도 계속 진행
+            return;
+        }
+        
+        // 100ms 후 다시 확인
+        setTimeout(checkMessages, 100);
+    }
+    
+    checkMessages();
+};
+</script>
+
+<!-- 카카오맵 API 키 확인 -->
+<script>
+  window.KAKAO_API_KEY = "{{ kakao_api_key|escapejs }}";
+  
+  if (!window.KAKAO_API_KEY || window.KAKAO_API_KEY.trim() === '') {
+    console.error('❌ 카카오맵 API 키가 비어있습니다.');
+    window.KAKAO_MAP_DISABLED = true;
+  } else {
+    console.log('✅ 카카오맵 API 키 확인됨');
+    window.KAKAO_MAP_DISABLED = false;
+  }
 </script>
 
 <!-- Styles -->
@@ -485,24 +506,54 @@ console.log('🔍 최종 DDOKSANG_MESSAGES:', window.DDOKSANG_MESSAGES);
     box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1);
   }
 
-    /* X 계정 입력 필드 스타일 통일 */
+  /* X 계정 입력 필드 스타일 통일 */
   #x_username {
-    height: 48px; /* 다른 입력 필드와 동일한 높이 */
-  }
-  
-  #x_username + span {
-    height: 48px; /* @ 표시 부분도 동일한 높이 */
+    height: 48px;
   }
 
-  /* 반응형 버튼 스타일 */
+  /* ✅ 네비게이션 버튼 스타일 */
+  #prevBtn, #nextBtn {
+    display: none !important;
+  }
+
+  #prevBtn:not(.hidden), #nextBtn:not(.hidden) {
+    display: flex !important;
+  }
+
+  #prevBtn:hover, #nextBtn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  #prevBtn:active, #nextBtn:active {
+    transform: scale(0.95);
+  }
+
+  /* 모바일에서 네비게이션 버튼 조정 */
+  @media (max-width: 768px) {
+    #prevBtn, #nextBtn {
+      width: 48px !important;
+      height: 48px !important;
+      font-size: 18px !important;
+      bottom: 1.5rem !important;
+    }
+
+    #prevBtn {
+      left: 1rem !important;
+    }
+
+    #nextBtn {
+      right: 1rem !important;
+    }
+  }
+
+  /* 반응형 디자인 */
   @media (max-width: 640px) {
-    /* Step 1 버튼들 모바일 최적화 */
     .step button {
       font-size: 0.875rem;
       padding: 0.75rem 1rem;
     }
     
-    /* 제목과 설명 텍스트 크기 조정 */
     h1 {
       font-size: 1.5rem;
     }
@@ -511,33 +562,33 @@ console.log('🔍 최종 DDOKSANG_MESSAGES:', window.DDOKSANG_MESSAGES);
       font-size: 1.25rem;
     }
     
-    /* 프로그래스 바 높이 조정 */
     #progressBar {
       height: 0.25rem;
     }
   }
+
+  /* 드래그 앤 드롭 스타일 */
+  .sortable-ghost {
+    opacity: 0.5;
+  }
+  .sortable-chosen {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  .sortable-drag {
+    opacity: 0.8;
+    transform: rotate(5deg);
+  }
+  #image-preview-list .relative:hover [data-drag-handle] {
+    opacity: 1;
+  }
+  #image-preview-list [data-drag-handle] {
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
 </style>
 
 <!-- Scripts - 순서 중요 -->
-<!-- ✅ 카카오맵 API 키 확인 및 디버깅 -->
-<script>
-  console.log('🔍 카카오 API 키 확인 시작...');
-  
-  // 서버에서 전달된 API 키
-  window.KAKAO_API_KEY = "{{ kakao_api_key|escapejs }}";
-  
-  console.log('🔍 API 키 길이:', window.KAKAO_API_KEY.length);
-  console.log('🔍 API 키 첫 10자:', window.KAKAO_API_KEY.substring(0, 10));
-  
-  // API 키 유효성 확인
-  if (!window.KAKAO_API_KEY || window.KAKAO_API_KEY.trim() === '') {
-    console.error('❌ 카카오맵 API 키가 비어있습니다.');
-    window.KAKAO_MAP_DISABLED = true;
-  } else {
-    console.log('✅ 카카오맵 API 키 확인됨');
-    window.KAKAO_MAP_DISABLED = false;
-  }
-</script>
 
 <!-- 외부 라이브러리 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -581,67 +632,8 @@ window.KAKAO_MAP_READY = false;
 <!-- 🔧 이미지 업로드 모듈 (독립 실행) -->
 <script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
 
-<!-- 🔧 메인 폼 스크립트 (메시지 시스템 강제 적용) -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=3.1"></script>
-<script>
-// ddoksang_create.js 로드 후 메시지 시스템 강제 교체
-console.log('🔧 msg 함수 강제 교체 중...');
-
-window.msg = function(category, key, params = {}) {
-    try {
-        const messages = window.DDOKSANG_MESSAGES;
-        
-        if (!messages) {
-            console.warn('DDOKSANG_MESSAGES가 설정되지 않음');
-            return `${category}.${key}`;
-        }
-        
-        if (!messages[category]) {
-            console.warn(`메시지 카테고리를 찾을 수 없습니다: ${category}`);
-            return `${category}.${key}`;
-        }
-        
-        const message = messages[category][key];
-        if (!message) {
-            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`);
-            return `${category}.${key}`;
-        }
-        
-        let result = message;
-        if (params && typeof params === 'object') {
-            Object.entries(params).forEach(([paramKey, value]) => {
-                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
-            });
-        }
-        
-        return result;
-    } catch (error) {
-        console.error('메시지 처리 오류:', error);
-        return `${category}.${key}`;
-    }
-};
-
-// alert 함수도 수정
-const originalAlert = window.alert;
-window.alert = function(message) {
-    // 메시지 키 패턴 확인 (대문자.대문자 형태)
-    if (typeof message === 'string' && /^[A-Z_]+\.[A-Z_]+$/.test(message)) {
-        const parts = message.split('.');
-        if (parts.length === 2) {
-            const translatedMessage = window.msg(parts[0], parts[1]);
-            originalAlert(translatedMessage);
-            return;
-        }
-    }
-    // 일반 메시지는 그대로 표시
-    originalAlert(message);
-};
-
-// 즉시 테스트
-const testResult = window.msg('DUPLICATE_CHECK', 'REGISTER_NEW_CAFE');
-console.log('🧪 msg 함수 강제 교체 후 테스트:', testResult);
-console.log('✅ 메시지 시스템 강제 교체 완료');
-</script>
+<!-- 🔧 메인 폼 스크립트 (수정된 버전) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=4.0"></script>
 
 <!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>

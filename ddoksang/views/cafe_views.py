@@ -31,7 +31,6 @@ from artist.models import Artist, Member
 logger = logging.getLogger(__name__)
 
 
-
 def cafe_create_view(request):
     if request.method == 'POST':
         try:
@@ -119,7 +118,6 @@ def cafe_create_view(request):
             messages.success(request, '생일카페가 성공적으로 등록되었습니다. 관리자 승인 후 공개됩니다.')
             return redirect('ddoksang:cafe_create_success', cafe_id=cafe.id)
             
-            pass
         except Exception as e:
             messages.error(request, f'등록 중 오류가 발생했습니다: {str(e)}')
             return redirect('ddoksang:create')
@@ -153,7 +151,6 @@ def cafe_create_view(request):
     }
     
     return render(request, 'ddoksang/create.html', context)
-
 
 @login_required
 def cafe_create_success(request, cafe_id):
