@@ -163,45 +163,45 @@
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  function updateDistances(userLat, userLng) {
-    function formatWalkTime(minutes) {
-      const mins = parseInt(minutes, 10);
-      if (isNaN(mins)) return '';
-      if (mins < 60) return `${mins}분`;
-      const hours = Math.floor(mins / 60);
-      const rem = mins % 60;
-      return rem === 0 ? `${hours}시간` : `${hours}시간 ${rem}분`;
-    }
-
-    const cards = [...document.querySelectorAll('.cafe-card-mini')];
-    cards.forEach(card => {
-      const lat = parseFloat(card.dataset.cafeLat);
-      const lng = parseFloat(card.dataset.cafeLng);
-      
-      if (!isNaN(lat) && !isNaN(lng)) {
-        const distKm = haversine(userLat, userLng, lat, lng);
-        const minutes = Math.round((distKm / 5) * 60); // 평균 도보 5km/h
-
-        card.dataset.distance = distKm;
-        const distEl = card.querySelector('.walk-distance');
-        const timeEl = card.querySelector('.walk-time');
-        const boxEl = card.querySelector('.distance-time');
-
-        if (distEl && timeEl && boxEl) {
-          distEl.textContent = distKm.toFixed(1) + 'km';
-          timeEl.textContent = formatWalkTime(minutes);  // ⬅ 변경된 부분
-          boxEl.classList.remove('hidden');
-        }
-      }
-    });
-
-    // 거리순 정렬
-    cards.sort((a, b) => parseFloat(a.dataset.distance || 999) - parseFloat(b.dataset.distance || 999));
-    const container = document.getElementById('cafeCardContainer');
-    if (container) {
-      cards.forEach(card => container.appendChild(card));
-    }
+function updateDistances(userLat, userLng) {
+  function formatWalkTime(minutes) {
+    const mins = parseInt(minutes, 10);
+    if (isNaN(mins)) return '';
+    if (mins < 60) return `${mins}분`;
+    const hours = Math.floor(mins / 60);
+    const rem = mins % 60;
+    return rem === 0 ? `${hours}시간` : `${hours}시간 ${rem}분`;
   }
+
+  const cards = [...document.querySelectorAll('.cafe-card-mini')];
+  cards.forEach(card => {
+    const lat = parseFloat(card.dataset.cafeLat);
+    const lng = parseFloat(card.dataset.cafeLng);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const distKm = haversine(userLat, userLng, lat, lng);
+      const minutes = Math.round((distKm / 5) * 60); // 평균 도보 5km/h
+
+      card.dataset.distance = distKm;
+      const distEl = card.querySelector('.walk-distance');
+      const timeEl = card.querySelector('.walk-time');
+      const boxEl = card.querySelector('.distance-time');
+
+      if (distEl && timeEl && boxEl) {
+        distEl.textContent = distKm.toFixed(1) + 'km';
+        timeEl.textContent = formatWalkTime(minutes);  // ⬅ 변경된 부분
+        boxEl.classList.remove('hidden');
+      }
+    }
+  });
+
+  // 거리순 정렬
+  cards.sort((a, b) => parseFloat(a.dataset.distance || 999) - parseFloat(b.dataset.distance || 999));
+  const container = document.getElementById('cafeCardContainer');
+  if (container) {
+    cards.forEach(card => container.appendChild(card));
+  }
+}
 
 
   function requestLocationAndSort() {
