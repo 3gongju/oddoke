@@ -119,26 +119,41 @@ def cafe_create_view(request):
             messages.success(request, '생일카페가 성공적으로 등록되었습니다. 관리자 승인 후 공개됩니다.')
             return redirect('ddoksang:cafe_create_success', cafe_id=cafe.id)
             
+            pass
         except Exception as e:
-            print(f"❌ 카페 생성 중 오류: {e}")
-            import traceback
-            traceback.print_exc()
             messages.error(request, f'등록 중 오류가 발생했습니다: {str(e)}')
             return redirect('ddoksang:create')
     
-    # ✅ GET 요청 처리 - 메시지 데이터 추가
+    # ✅ GET 요청 처리 - 메시지와 API 키 전달 확인
     from ddoksang.messages import ALL_MESSAGES
     import json
     
-    kakao_api_key = getattr(settings, 'KAKAO_API_KEY', '')
+    # 디버깅: 메시지 확인
+    print("🔍 ALL_MESSAGES 내용:", ALL_MESSAGES.keys())
+    print("🔍 DUPLICATE_CHECK 메시지:", ALL_MESSAGES.get('DUPLICATE_CHECK', {}).keys())
+    
+    # 카카오 API 키 확인 (여러 가능한 설정명 확인)
+    kakao_api_key = (
+        getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
+        getattr(settings, 'KAKAO_API_KEY', '') or
+        getattr(settings, 'KAKAO_REST_API_KEY', '') or
+        getattr(settings, 'KAKAO_JAVASCRIPT_KEY', '') or
+        ''
+    )
+    
+    # 디버깅: API 키 확인
+    print("🔍 카카오 API 키 길이:", len(kakao_api_key))
+    print("🔍 카카오 API 키 첫 10자:", kakao_api_key[:10] if kakao_api_key else "없음")
     
     context = {
         'kakao_api_key': kakao_api_key,
-        # ✅ 메시지 데이터를 JSON으로 직렬화하여 전달
         'messages_json': json.dumps(ALL_MESSAGES, ensure_ascii=False),
+        # 디버깅용 추가
+        'debug_messages': ALL_MESSAGES,  # 템플릿에서 직접 확인 가능
     }
     
     return render(request, 'ddoksang/create.html', context)
+
 
 @login_required
 def cafe_create_success(request, cafe_id):
