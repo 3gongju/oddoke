@@ -1,4 +1,3 @@
-
 {% extends "ddoksang/base/ddoksang_base.html" %}
 {% load static %}
 {% load filters %}
@@ -351,8 +350,94 @@
   </form>
 </section>
 
-<!-- ✅ 메시지 데이터를 JSON으로 안전하게 전달 -->
+<!-- ✅ 메시지 시스템 (수정됨) -->
 {{ messages_json|json_script:"ddoksang-messages" }}
+<script>
+console.log('🔍 메시지 초기화 시작...');
+
+// 0. 먼저 기본 함수 정의
+window.msg = function(category, key, params = {}) {
+    return `${category}.${key}`;
+};
+
+// 1. DOM에서 메시지 데이터 읽기
+const messagesElement = document.getElementById('ddoksang-messages');
+let serverMessages = {};
+
+if (messagesElement) {
+    try {
+        const rawText = messagesElement.textContent;
+        console.log('🔍 서버 메시지 원본 길이:', rawText.length);
+        
+        serverMessages = JSON.parse(rawText);
+        console.log('✅ 서버 메시지 파싱 성공:', Object.keys(serverMessages));
+        
+        // 즉시 DDOKSANG_MESSAGES 설정
+        window.DDOKSANG_MESSAGES = serverMessages;
+        
+    } catch (error) {
+        console.error('❌ 서버 메시지 파싱 실패:', error);
+        serverMessages = {};
+        window.DDOKSANG_MESSAGES = {};
+    }
+} else {
+    console.warn('⚠️ 메시지 DOM 요소 없음');
+    window.DDOKSANG_MESSAGES = {};
+}
+
+// 2. DUPLICATE_CHECK 메시지 확인
+if (serverMessages.DUPLICATE_CHECK) {
+    console.log('✅ DUPLICATE_CHECK 메시지 발견:', Object.keys(serverMessages.DUPLICATE_CHECK));
+    console.log('🔍 NO_DUPLICATE 메시지:', serverMessages.DUPLICATE_CHECK.NO_DUPLICATE);
+} else {
+    console.error('❌ DUPLICATE_CHECK 메시지 없음');
+}
+
+// 3. 메시지 접근 함수 재정의 (완전 버전)
+window.msg = function(category, key, params = {}) {
+    try {
+        if (!window.DDOKSANG_MESSAGES) {
+            console.error('❌ DDOKSANG_MESSAGES가 설정되지 않음');
+            return `${category}.${key}`;
+        }
+        
+        if (!window.DDOKSANG_MESSAGES[category]) {
+            console.error(`❌ 메시지 카테고리 없음: ${category}`, '사용 가능:', Object.keys(window.DDOKSANG_MESSAGES));
+            return `${category}.${key}`;
+        }
+        
+        const message = window.DDOKSANG_MESSAGES[category][key];
+        if (!message) {
+            console.error(`❌ 메시지 키 없음: ${category}.${key}`, '사용 가능:', Object.keys(window.DDOKSANG_MESSAGES[category]));
+            return `${category}.${key}`;
+        }
+        
+        // 파라미터 치환
+        let result = message;
+        if (params && typeof params === 'object') {
+            Object.entries(params).forEach(([paramKey, value]) => {
+                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
+            });
+        }
+        
+        console.log(`✅ 메시지 반환: ${category}.${key} = "${result}"`);
+        return result;
+    } catch (error) {
+        console.error('❌ 메시지 처리 오류:', error);
+        return `${category}.${key}`;
+    }
+};
+
+// 4. 즉시 테스트
+const testResult = window.msg('DUPLICATE_CHECK', 'NO_DUPLICATE');
+console.log('🧪 메시지 테스트 결과:', testResult);
+
+// 5. ddoksang_create.js가 로드될 때까지 기다리기 위해 전역으로 설정
+window.DDOKSANG_MESSAGES_READY = true;
+
+console.log('✅ 메시지 시스템 초기화 완료');
+console.log('🔍 최종 DDOKSANG_MESSAGES:', window.DDOKSANG_MESSAGES);
+</script>
 
 <!-- Styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -411,20 +496,6 @@
 
   /* 반응형 버튼 스타일 */
   @media (max-width: 640px) {
-    /* #navigationButtons {
-      padding: 0 1rem;
-    }
-    
-    #navigationButtons button {
-      width: 3rem;
-      height: 3rem;
-    }
-    
-    #navigationButtons button svg {
-      width: 1.25rem;
-      height: 1.25rem;
-    } */
-    
     /* Step 1 버튼들 모바일 최적화 */
     .step button {
       font-size: 0.875rem;
@@ -447,20 +518,60 @@
   }
 </style>
 
-
-
 <!-- Scripts - 순서 중요 -->
-<!-- ✅ 카카오맵 API 키 전달 방식 개선 -->
+<!-- ✅ 카카오맵 API 키 확인 및 디버깅 -->
 <script>
-  // 카카오맵 API 키를 안전하게 전달
+  console.log('🔍 카카오 API 키 확인 시작...');
+  
+  // 서버에서 전달된 API 키
   window.KAKAO_API_KEY = "{{ kakao_api_key|escapejs }}";
+  
+  console.log('🔍 API 키 길이:', window.KAKAO_API_KEY.length);
+  console.log('🔍 API 키 첫 10자:', window.KAKAO_API_KEY.substring(0, 10));
+  
+  // API 키 유효성 확인
+  if (!window.KAKAO_API_KEY || window.KAKAO_API_KEY.trim() === '') {
+    console.error('❌ 카카오맵 API 키가 비어있습니다.');
+    window.KAKAO_MAP_DISABLED = true;
+  } else {
+    console.log('✅ 카카오맵 API 키 확인됨');
+    window.KAKAO_MAP_DISABLED = false;
+  }
 </script>
-
-<!-- create.html의 스크립트 섹션 - 기존 코드 완전 교체 -->
 
 <!-- 외부 라이브러리 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+
+<!-- 카카오맵 API 로드 (조건부) -->
+{% if kakao_api_key %}
+<script>
+console.log('🔄 카카오맵 API 스크립트 로드 시작...');
+</script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services" 
+        onload="console.log('✅ 카카오맵 API 로드 완료')" 
+        onerror="console.error('❌ 카카오맵 API 로드 실패')">
+</script>
+<script>
+// 카카오맵 로드 확인
+setTimeout(() => {
+    if (typeof kakao !== 'undefined' && kakao.maps) {
+        console.log('✅ 카카오맵 객체 사용 가능');
+        window.KAKAO_MAP_READY = true;
+    } else {
+        console.error('❌ 카카오맵 객체 사용 불가');
+        window.KAKAO_MAP_READY = false;
+        window.KAKAO_MAP_DISABLED = true;
+    }
+}, 1000);
+</script>
+{% else %}
+<script>
+console.warn('⚠️ 카카오 API 키가 없어 지도 기능이 비활성화됩니다.');
+window.KAKAO_MAP_DISABLED = true;
+window.KAKAO_MAP_READY = false;
+</script>
+{% endif %}
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
 <!-- 🔧 덕생 유틸리티 모듈들 (순서 중요) -->
@@ -470,49 +581,67 @@
 <!-- 🔧 이미지 업로드 모듈 (독립 실행) -->
 <script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
 
-<!-- 메시지 시스템 -->
-{{ messages_json|json_script:"ddoksang-messages" }}
+<!-- 🔧 메인 폼 스크립트 (메시지 시스템 강제 적용) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=3.1"></script>
 <script>
-// 🔧 메시지 시스템 초기화
-const messagesElement = document.getElementById('ddoksang-messages');
-window.DDOKSANG_MESSAGES = messagesElement ? JSON.parse(messagesElement.textContent) : {};
+// ddoksang_create.js 로드 후 메시지 시스템 강제 교체
+console.log('🔧 msg 함수 강제 교체 중...');
 
-window.DdoksangMessages = {
-    get: function(category, key, params = {}) {
-        try {
-            let message = this.messages[category][key];
-            
-            if (typeof message !== 'string') {
-                console.warn(`메시지가 문자열이 아닙니다: ${category}.${key}`, message);
-                return `${category}.${key}`;
-            }
-            
-            if (params && typeof params === 'object') {
-                Object.entries(params).forEach(([paramKey, value]) => {
-                    const placeholder = `{${paramKey}}`;
-                    message = message.replace(new RegExp(placeholder, 'g'), value);
-                });
-            }
-            
-            return message;
-        } catch (error) {
-            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`, error);
+window.msg = function(category, key, params = {}) {
+    try {
+        const messages = window.DDOKSANG_MESSAGES;
+        
+        if (!messages) {
+            console.warn('DDOKSANG_MESSAGES가 설정되지 않음');
             return `${category}.${key}`;
         }
-    },
-    
-    messages: window.DDOKSANG_MESSAGES || {}
+        
+        if (!messages[category]) {
+            console.warn(`메시지 카테고리를 찾을 수 없습니다: ${category}`);
+            return `${category}.${key}`;
+        }
+        
+        const message = messages[category][key];
+        if (!message) {
+            console.warn(`메시지를 찾을 수 없습니다: ${category}.${key}`);
+            return `${category}.${key}`;
+        }
+        
+        let result = message;
+        if (params && typeof params === 'object') {
+            Object.entries(params).forEach(([paramKey, value]) => {
+                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
+            });
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('메시지 처리 오류:', error);
+        return `${category}.${key}`;
+    }
 };
 
-window.msg = function(category, key, params) {
-    return window.DdoksangMessages.get(category, key, params);
+// alert 함수도 수정
+const originalAlert = window.alert;
+window.alert = function(message) {
+    // 메시지 키 패턴 확인 (대문자.대문자 형태)
+    if (typeof message === 'string' && /^[A-Z_]+\.[A-Z_]+$/.test(message)) {
+        const parts = message.split('.');
+        if (parts.length === 2) {
+            const translatedMessage = window.msg(parts[0], parts[1]);
+            originalAlert(translatedMessage);
+            return;
+        }
+    }
+    // 일반 메시지는 그대로 표시
+    originalAlert(message);
 };
 
-console.log('✅ 메시지 시스템 초기화 완료');
+// 즉시 테스트
+const testResult = window.msg('DUPLICATE_CHECK', 'REGISTER_NEW_CAFE');
+console.log('🧪 msg 함수 강제 교체 후 테스트:', testResult);
+console.log('✅ 메시지 시스템 강제 교체 완료');
 </script>
-
-<!-- 🔧 메인 폼 스크립트 (이미지 업로드 코드 제거됨) -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=3.0"></script>
 
 <!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
@@ -736,8 +865,6 @@ window.debugDdoksang = {
     console.log('✅ 재시작 완료');
   }
 };
-
-
 </script>
 
 {% endblock %}
