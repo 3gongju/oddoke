@@ -1,0 +1,500 @@
+{% load static %}
+{% load dict_filters %}
+<!-- 고급 필터링 모달 버튼 -->
+<div class="flex items-center justify-between mb-4">
+  <div class="flex items-center gap-2">
+    <!-- 필터 토글 버튼 -->
+    <button id="filter-toggle-btn" 
+            class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+      <img src="{% static 'image/sort.jpg' %}" alt="필터" class="w-4 h-4">
+      <span class="text-sm font-medium">필터링</span>
+    </button>
+    
+    <!-- 선택된 필터 표시 -->
+    <div id="active-filters" class="flex items-center gap-2">
+        {% if selected_shipping %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            {{ selected_shipping_display }}
+            <button type="button" onclick="removeFilter('shipping')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+        {% endif %}
+        
+        {% if wantto %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            {% if category == 'sell' %}
+                {% if wantto == 'buy' %}삽니다
+                {% elif wantto == 'sell' %}팝니다  
+                {% elif wantto == 'exchange' %}교환해요
+                {% endif %}
+            {% elif category == 'rental' %}
+                {% if wantto == 'sell' %}빌려줍니다
+                {% elif wantto == 'buy' %}빌려주세요
+                {% endif %}
+            {% endif %}
+            <button type="button" onclick="removeFilter('wantto')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+        {% endif %}
+        
+        {% if selected_conditions %}
+            {% for condition in selected_conditions %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+                {{ condition_display_map|get_item:condition }}
+                <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+            {% endfor %}
+        {% endif %}
+        
+        {% if min_price or max_price %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            {% if min_price and max_price %}{{ min_price|floatformat:0 }}원 - {{ max_price|floatformat:0 }}원
+            {% elif min_price %}{{ min_price|floatformat:0 }}원 이상
+            {% elif max_price %}{{ max_price|floatformat:0 }}원 이하
+            {% endif %}
+            <button type="button" onclick="removeFilter('price')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+        {% endif %}
+        </div>
+
+        <!-- 필터 초기화 버튼 -->
+        {% if selected_shipping or selected_conditions or min_price or max_price or wantto %}
+        <button onclick="clearAllFilters()" 
+                class="text-sm text-gray-500 hover:text-gray-700 underline">
+            전체 해제
+        </button>
+        {% endif %}
+  </div>
+</div>
+
+<!-- 필터링 모달 -->
+<div id="filter-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+    <!-- 모달 헤더 -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold">필터</h3>
+      <button id="close-filter-modal" class="text-gray-400 hover:text-gray-600 text-xl">×</button>
+    </div>
+
+    <!-- 모달 내용 -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <form id="filter-form">
+        {% csrf_token %}
+        
+        <!-- 배송 방법 -->
+        <div class="mb-6">
+          <h4 class="font-semibold mb-3 text-gray-900">배송 방법</h4>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input type="radio" name="shipping" value="" class="mr-2" {% if not selected_shipping %}checked{% endif %}>
+              <span class="text-sm">전체</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="shipping" value="delivery" class="mr-2" {% if selected_shipping == 'delivery' %}checked{% endif %}>
+              <span class="text-sm">택배</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="shipping" value="direct" class="mr-2" {% if selected_shipping == 'direct' %}checked{% endif %}>
+              <span class="text-sm">직거래</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 상품 상태 -->
+        <div class="mb-6">
+          <h4 class="font-semibold mb-3 text-gray-900">상품 상태</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center">
+              <input type="checkbox" name="condition" value="new" class="mr-2" {% if 'new' in selected_conditions %}checked{% endif %}>
+              <span class="text-sm">미개봉</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="condition" value="almost_new" class="mr-2" {% if 'almost_new' in selected_conditions %}checked{% endif %}>
+              <span class="text-sm">거의 새것</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="condition" value="used" class="mr-2" {% if 'used' in selected_conditions %}checked{% endif %}>
+              <span class="text-sm">사용감 있음</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="condition" value="damaged" class="mr-2" {% if 'damaged' in selected_conditions %}checked{% endif %}>
+              <span class="text-sm">하자 있음</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 가격 -->
+        <div class="mb-6">
+          <h4 class="font-semibold mb-3 text-gray-900">가격</h4>
+          <div class="space-y-3">
+            <div class="flex items-center gap-2">
+              <input type="number" name="min_price" placeholder="0" 
+                     value="{{ min_price|default:'' }}"
+                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <span class="text-sm text-gray-500">~</span>
+              <input type="number" name="max_price" placeholder="500,000" 
+                     value="{{ max_price|default:'' }}"
+                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- 가격 범위 슬라이더 (모바일 친화적) -->
+            <div class="px-1">
+              <input type="range" id="price-range-slider" 
+                     min="0" max="500000" step="1000"
+                     value="{{ max_price|default:'500000' }}"
+                     class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+              <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0원</span>
+                <span>500,000원</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- 모달 푸터 -->
+    <div class="border-t border-gray-200 p-4 flex gap-3">
+      <button id="reset-filters" 
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+        필터 초기화
+      </button>
+      <button id="apply-filters" 
+              class="flex-1 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
+        상품보기
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const filterToggleBtn = document.getElementById('filter-toggle-btn');
+  const filterModal = document.getElementById('filter-modal');
+  const closeFilterModal = document.getElementById('close-filter-modal');
+  const resetFiltersBtn = document.getElementById('reset-filters');
+  const applyFiltersBtn = document.getElementById('apply-filters');
+  const priceRangeSlider = document.getElementById('price-range-slider');
+  const maxPriceInput = document.querySelector('input[name="max_price"]');
+
+  // 모달 열기
+  filterToggleBtn?.addEventListener('click', function() {
+    filterModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  });
+
+  // 모달 닫기
+  function closeModal() {
+    filterModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  closeFilterModal?.addEventListener('click', closeModal);
+
+  // 모달 배경 클릭시 닫기
+  filterModal?.addEventListener('click', function(e) {
+    if (e.target === filterModal) {
+      closeModal();
+    }
+  });
+
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !filterModal.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+
+  // 가격 슬라이더 연동
+  priceRangeSlider?.addEventListener('input', function() {
+    maxPriceInput.value = this.value;
+  });
+
+  maxPriceInput?.addEventListener('input', function() {
+    if (this.value && this.value <= 500000) {
+      priceRangeSlider.value = this.value;
+    }
+  });
+
+  // 필터 초기화
+  resetFiltersBtn?.addEventListener('click', function() {
+    const form = document.getElementById('filter-form');
+    form.reset();
+    // 전체 라디오 버튼 체크
+    document.querySelector('input[name="shipping"][value=""]').checked = true;
+    priceRangeSlider.value = 500000;
+  });
+
+  // 필터 적용
+  applyFiltersBtn?.addEventListener('click', function() {
+    applyFilters();
+    closeModal();
+  });
+
+  // Enter 키로 필터 적용
+  filterModal?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyFilters();
+      closeModal();
+    }
+  });
+
+  function applyFilters() {
+    const form = document.getElementById('filter-form');
+    const formData = new FormData(form);
+    const url = new URL(window.location);
+    const params = new URLSearchParams(url.search);
+
+    // 기존 필터 파라미터 제거
+    params.delete('shipping');
+    params.delete('condition');
+    params.delete('min_price');
+    params.delete('max_price');
+
+    // 새 필터 파라미터 추가
+    const shipping = formData.get('shipping');
+    const conditions = formData.getAll('condition'); // 다중 선택 처리
+    const minPrice = formData.get('min_price');
+    const maxPrice = formData.get('max_price');
+
+    if (shipping) params.set('shipping', shipping);
+    if (conditions.length > 0) {
+      conditions.forEach(condition => params.append('condition', condition));
+    }
+    if (minPrice) params.set('min_price', minPrice);
+    if (maxPrice) params.set('max_price', maxPrice);
+
+    // URL 업데이트 및 페이지 리로드
+    url.search = params.toString();
+    window.location.href = url.toString();
+  }
+});
+
+// 개별 필터 제거 함수
+function removeFilter(filterType, value = null) {
+  const url = new URL(window.location);
+  const params = new URLSearchParams(url.search);
+  
+  if (filterType === 'shipping') {
+    params.delete('shipping');
+  } else if (filterType === 'wantto') {
+    params.delete('wantto');
+  } else if (filterType === 'condition') {
+    if (value) {
+      // 특정 조건만 제거
+      const conditions = params.getAll('condition');
+      params.delete('condition');
+      conditions.forEach(condition => {
+        if (condition !== value) {
+          params.append('condition', condition);
+        }
+      });
+    } else {
+      params.delete('condition');
+    }
+  } else if (filterType === 'price') {
+    params.delete('min_price');
+    params.delete('max_price');
+  }
+  
+  url.search = params.toString();
+  window.location.href = url.toString();
+}
+
+// 전체 필터 초기화 함수
+function clearAllFilters() {
+  const url = new URL(window.location);
+  const params = new URLSearchParams(url.search);
+  
+  params.delete('shipping');
+  params.delete('wantto');
+  params.delete('condition');
+  params.delete('min_price');
+  params.delete('max_price');
+  
+  url.search = params.toString();
+  window.location.href = url.toString();
+}
+
+// 모바일 터치 최적화
+const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+if (isTouchDevice) {
+  // 터치 디바이스에서 호버 효과 제거
+  const hoverElements = document.querySelectorAll('.hover\\:bg-gray-50, .hover\\:bg-blue-50');
+  hoverElements.forEach(element => {
+    element.addEventListener('touchstart', function() {
+      this.classList.add('bg-gray-50');
+    });
+    
+    element.addEventListener('touchend', function() {
+      setTimeout(() => {
+        this.classList.remove('bg-gray-50');
+      }, 150);
+    });
+  });
+}
+
+// 숫자 입력 필드 모바일 키보드 최적화
+const numberInputs = document.querySelectorAll('input[type="number"]');
+numberInputs.forEach(input => {
+  input.setAttribute('inputmode', 'numeric');
+  input.setAttribute('pattern', '[0-9]*');
+});
+</script>
+
+<!-- 슬라이더 스타일 -->
+<style>
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-track {
+  background: #e5e7eb;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+.slider::-moz-range-track {
+  background: #e5e7eb;
+  height: 8px;
+  border-radius: 4px;
+  border: none;
+}
+
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+  border: none;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  .slider::-webkit-slider-thumb {
+    height: 24px;
+    width: 24px;
+  }
+  
+  .slider::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+  }
+  
+  #filter-modal .max-w-md {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+  
+  #filter-modal .p-4 {
+    padding: 1rem;
+  }
+  
+  /* 선택된 필터 태그 모바일 스타일 */
+  #active-filters {
+    flex-wrap: wrap;
+  }
+  
+  #active-filters span {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+  }
+  
+  /* 필터 폼 모바일 최적화 */
+  .grid.grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  /* 가격 입력 필드 모바일 */
+  .flex.gap-2 input[type="number"] {
+    font-size: 16px; /* iOS 확대 방지 */
+  }
+  
+  /* 체크박스/라디오 버튼 터치 영역 확대 */
+  input[type="radio"], input[type="checkbox"] {
+    transform: scale(1.2);
+    margin-right: 0.75rem;
+  }
+  
+  label {
+    padding: 0.5rem 0;
+    cursor: pointer;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  #filter-modal .max-w-md {
+    max-width: 28rem;
+  }
+}
+
+/* 선택된 필터 스타일 */
+.filter-tag-active {
+  background-color: #000000;
+  color: #ffffff;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-tag-active button {
+  color: #ffffff;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.filter-tag-active button:hover {
+  opacity: 1;
+}
+
+/* 필터 버튼 호버 효과 */
+#filter-toggle-btn:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* 모달 애니메이션 */
+#filter-modal {
+  transition: opacity 0.2s ease-out;
+}
+
+#filter-modal.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#filter-modal:not(.hidden) {
+  opacity: 1;
+}
+
+/* 슬라이더 접근성 개선 */
+.slider:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+</style>
