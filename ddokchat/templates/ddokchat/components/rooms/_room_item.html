@@ -80,7 +80,16 @@
                   <div class="flex justify-end mb-2">
                     <div class="max-w-xs">
                       <div class="{% if is_completed %}bg-gray-400{% else %}bg-black{% endif %} text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
-                        {% include 'ddokchat/components/rooms/_message_preview.html' with message=last_message is_completed=is_completed %}
+                        <!-- 메시지 미리보기 인라인 처리 -->
+                        {% if last_message.message_type == 'text' %}
+                          <p class="text-sm break-words">{{ last_message.text_content.content|truncatechars:50 }}</p>
+                        {% elif last_message.message_type == 'image' %}
+                          <p class="text-sm italic text-gray-300">사진을 보냈습니다.</p>
+                        {% elif last_message.message_type == 'account_info' %}
+                          <p class="text-sm italic text-gray-300">계좌정보를 보냈습니다.</p>
+                        {% elif last_message.message_type == 'address_info' %}
+                          <p class="text-sm italic text-gray-300">주소정보를 보냈습니다.</p>
+                        {% endif %}
                       </div>
                       <div class="flex justify-end items-center gap-1 mt-1">
                         <span class="text-xs text-gray-400">나</span>
@@ -97,7 +106,16 @@
                   <div class="flex justify-start mb-2">
                     <div class="max-w-xs">
                       <div class="{% if is_completed %}bg-gray-200 text-gray-700{% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %} px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
-                        {% include 'ddokchat/components/rooms/_message_preview.html' with message=last_message is_completed=is_completed %}
+                        <!-- 메시지 미리보기 인라인 처리 -->
+                        {% if last_message.message_type == 'text' %}
+                          <p class="text-sm break-words">{{ last_message.text_content.content|truncatechars:50 }}</p>
+                        {% elif last_message.message_type == 'image' %}
+                          <p class="text-sm italic text-gray-600">사진을 보냈습니다.</p>
+                        {% elif last_message.message_type == 'account_info' %}
+                          <p class="text-sm italic text-gray-600">계좌정보를 보냈습니다.</p>
+                        {% elif last_message.message_type == 'address_info' %}
+                          <p class="text-sm italic text-gray-600">주소정보를 보냈습니다.</p>
+                        {% endif %}
                       </div>
                       <div class="flex justify-start items-center gap-1 mt-1">
                         <span class="text-xs {% if is_completed %}text-gray-500{% else %}text-gray-600{% endif %} font-medium">{{ last_message.sender.username }}</span>
