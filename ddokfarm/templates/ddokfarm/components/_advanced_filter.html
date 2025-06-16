@@ -44,6 +44,15 @@
             {% endfor %}
         {% endif %}
         
+        {% if selected_md %}
+            {% for md in selected_md %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+                {{ md_display_map|get_item:md }}
+                <button type="button" onclick="removeFilter('md', '{{ md }}')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+            {% endfor %}
+        {% endif %}
+        
         {% if min_price or max_price %}
             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
             {% if min_price and max_price %}{{ min_price|floatformat:0 }}원 - {{ max_price|floatformat:0 }}원
@@ -56,7 +65,7 @@
         </div>
 
         <!-- 필터 초기화 버튼 -->
-        {% if selected_shipping or selected_conditions or min_price or max_price or wantto %}
+        {% if selected_shipping or selected_conditions or selected_md or min_price or max_price or wantto %}
         <button onclick="clearAllFilters()" 
                 class="text-sm text-gray-500 hover:text-gray-700 underline">
             전체 해제
@@ -94,6 +103,33 @@
             <label class="flex items-center">
               <input type="radio" name="shipping" value="direct" class="mr-2" {% if selected_shipping == 'direct' %}checked{% endif %}>
               <span class="text-sm">직거래</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 상품 종류 -->
+        <div class="mb-6">
+          <h4 class="font-semibold mb-3 text-gray-900">상품 종류</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center">
+              <input type="checkbox" name="md" value="poca" class="mr-2" {% if 'poca' in selected_md %}checked{% endif %}>
+              <span class="text-sm">포토카드</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="md" value="md" class="mr-2" {% if 'md' in selected_md %}checked{% endif %}>
+              <span class="text-sm">MD</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="md" value="light_stick" class="mr-2" {% if 'light_stick' in selected_md %}checked{% endif %}>
+              <span class="text-sm">응원봉</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="md" value="album" class="mr-2" {% if 'album' in selected_md %}checked{% endif %}>
+              <span class="text-sm">앨범</span>
+            </label>
+            <label class="flex items-center">
+              <input type="checkbox" name="md" value="etc" class="mr-2" {% if 'etc' in selected_md %}checked{% endif %}>
+              <span class="text-sm">기타</span>
             </label>
           </div>
         </div>
@@ -248,18 +284,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // 기존 필터 파라미터 제거
     params.delete('shipping');
     params.delete('condition');
+    params.delete('md');
     params.delete('min_price');
     params.delete('max_price');
 
     // 새 필터 파라미터 추가
     const shipping = formData.get('shipping');
     const conditions = formData.getAll('condition'); // 다중 선택 처리
+    const mdTypes = formData.getAll('md'); // MD 다중 선택 처리
     const minPrice = formData.get('min_price');
     const maxPrice = formData.get('max_price');
 
     if (shipping) params.set('shipping', shipping);
     if (conditions.length > 0) {
       conditions.forEach(condition => params.append('condition', condition));
+    }
+    if (mdTypes.length > 0) {
+      mdTypes.forEach(md => params.append('md', md));
     }
     if (minPrice) params.set('min_price', minPrice);
     if (maxPrice) params.set('max_price', maxPrice);
@@ -292,6 +333,19 @@ function removeFilter(filterType, value = null) {
     } else {
       params.delete('condition');
     }
+  } else if (filterType === 'md') {
+    if (value) {
+      // 특정 MD만 제거
+      const mdTypes = params.getAll('md');
+      params.delete('md');
+      mdTypes.forEach(md => {
+        if (md !== value) {
+          params.append('md', md);
+        }
+      });
+    } else {
+      params.delete('md');
+    }
   } else if (filterType === 'price') {
     params.delete('min_price');
     params.delete('max_price');
@@ -309,6 +363,7 @@ function clearAllFilters() {
   params.delete('shipping');
   params.delete('wantto');
   params.delete('condition');
+  params.delete('md');
   params.delete('min_price');
   params.delete('max_price');
   
