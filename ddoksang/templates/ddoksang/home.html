@@ -66,7 +66,7 @@
 <!-- 상단 검색 헤더 -->
 {% include 'ddoksang/components/_search_header.html' with search_input_id='ddok-search' autocomplete_list_id='ddok-autocomplete-list' show_create_button=True %}
 
-<!-- 🗺️ 메인 지도 섹션 with 사이드바 -->
+<!--  메인 지도 섹션 with 사이드바 -->
 <section class="py-4 sm:py-8 px-4">
   <div class="max-w-7xl mx-auto">
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
@@ -87,7 +87,7 @@
           
           <!-- 지도 컨트롤 버튼들 -->
           <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-            <!-- 투어맵 버튼 -->
+            <!-- 투어맵 버튼
             <a href="{% url 'ddoksang:tour_map' %}" 
                 class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-w-[80px] sm:min-w-[120px]">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@
               </svg>
               <span class="hidden sm:inline">투어맵</span>
               <span class="sm:hidden">투어</span>
-            </a>
+            </a> -->
             <!-- 내 위치 버튼 -->
             <button id="myLocationBtn"
                     class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-w-[80px] sm:min-w-[100px]">
@@ -159,11 +159,13 @@
 <!-- 이번 주 생일 아티스트 섹션 -->
 <div class="mt-16 text-center mb-6 sm:mb-8">
   <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
-    <img src="{% static 'image/ddok_circle_red.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2">
-    이번 주 생일덕
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
+    이번 주 생일덕  
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 ml-2 sm:ml-3">
   </h2>
-  <p class="text-gray-600 text-sm sm:text-base">이번주 생일 아티스트를 추천해드립니다.</p>
+  <p class="text-gray-600 text-sm sm:text-base">(덕덕) 축하해요 (덕덕) </p>
 </div>
+
 
 <section class="px-4 mb-16"> 
   <div class="max-w-7xl mx-auto">
