@@ -5,8 +5,12 @@
   <!-- 헤더 -->
   <div class="flex items-center justify-between mb-6 px-4">
     <div class="flex items-center space-x-3">
-      <h2 class="text-xl font-semibold text-gray-800">⭐ 최신 등록된 생카</h2>
+      <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+        <img src="{% static 'image/ddok_circle_red.png' %}" alt="찜한 카페" class="w-10 h-10 mr-2">
+        최신 생카
+     </h2>
     </div>
+    
     <a href="{% url 'ddoksang:search' %}?sort=latest" class="text-sm text-orange-600 hover:underline">
       더 다양한 생카 검색하기 &rarr;
     </a>
