@@ -143,13 +143,12 @@ def search_view(request):
         results = paginator.get_page(page)
         total_count = paginator.count
 
-    # ✅ 지도용 JSON 변환 추가
-    cafes_json_data = [serialize_cafe_for_map(c) for c in results if serialize_cafe_for_map(c)]
+   # ✅ 첫 번째 결과의 멤버 추출
+    member = results[0].member if results and hasattr(results[0], 'member') else None
 
-    # ✅ 사용자 찜 목록
+    cafes_json_data = [serialize_cafe_for_map(c) for c in results if serialize_cafe_for_map(c)]
     user_favorites = get_user_favorites(request.user)
 
-    # ✅ 최종 컨텍스트
     context = {
         'results': results,
         'query': query,
@@ -159,6 +158,7 @@ def search_view(request):
         'current_sort': sort_order,
         'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
         'cafes_json': cafes_json_data,
+        'member': member,  # ✅ 템플릿에서 사용 가능하도록 추가
     }
 
     return render(request, 'ddoksang/search.html', context)
