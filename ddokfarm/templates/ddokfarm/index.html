@@ -7,6 +7,9 @@
 
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
 
+  <!-- 추가: 정렬 및 필터 컴포넌트 -->
+  {% include 'ddokfarm/components/_sort_filter.html' %}
+
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
   {% if posts %}

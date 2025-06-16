@@ -43,6 +43,8 @@ def main(request):
 def index(request):
     category = request.GET.get('category')
     query = request.GET.get('q', '').strip()
+    sort_by = request.GET.get('sort', 'latest')  # 추가
+    show_available_only = request.GET.get('available_only') == 'on'  # 추가
 
     if query:
         artist_filter = (
@@ -57,18 +59,34 @@ def index(request):
 
         sell_results = FarmSellPost.objects.filter(common_filter).distinct()
         rental_results = FarmRentalPost.objects.filter(common_filter).distinct()
-
-        # ✅ SplitPost는 member_prices로 member를 찾아야 함
         split_filter = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
         split_results = FarmSplitPost.objects.filter(split_filter).distinct()
 
-        posts = sorted(
-            chain(sell_results, rental_results, split_results),
-            key=attrgetter('created_at'),
-            reverse=True
-        )
+        # 판매중 필터 적용 - 추가
+        if show_available_only:
+            sell_results = sell_results.filter(is_sold=False)
+            rental_results = rental_results.filter(is_sold=False)
+            split_results = split_results.filter(is_sold=False)
+
+        posts = list(chain(sell_results, rental_results, split_results))
     else:
         posts = get_post_queryset(category)
+        posts = list(posts)  # chain을 list로 변환
+        
+        # 판매중 필터 적용 - 추가
+        if show_available_only:
+            posts = [post for post in posts if not post.is_sold]
+
+    # 정렬 로직 추가
+    if sort_by == 'latest':
+        posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
+    elif sort_by == 'price_low':
+        posts = sorted(posts, key=lambda x: getattr(x, 'price', float('inf')))
+    elif sort_by == 'price_high':
+        posts = sorted(posts, key=lambda x: getattr(x, 'price', 0), reverse=True)
+    elif sort_by == 'likes':
+        posts = sorted(posts, key=lambda x: x.like.count(), reverse=True)
+    else:
         posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
     for post in posts:
@@ -80,6 +98,8 @@ def index(request):
         'posts': posts,
         'category': category,
         'query': query,
+        'sort_by': sort_by,  # 추가
+        'show_available_only': show_available_only,  # 추가
         'search_action': reverse('ddokfarm:index'),
         'create_url': f"{reverse('ddokfarm:post_create')}?category={clean_category}",
         'category_urls': get_ddokfarm_category_urls(),
