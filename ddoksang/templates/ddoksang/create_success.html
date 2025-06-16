@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load filters %}
+{% load benefits_filters %}
 
 {% block title %}등록 완료 - 덕생{% endblock %}
 
@@ -76,36 +77,27 @@
         </div>
 
         <!-- 특전 정보 표시 개선 -->
-        {% if cafe.special_benefits %}
-        <div class="mb-4">
-          <p class="text-sm font-semibold text-gray-800 mb-3">🎁 특전 정보</p>
-          <div class="space-y-2">
-            {% for benefit in cafe.special_benefits|split:"," %}
-              {% if benefit|strip %}
-                {% with parts=benefit|strip|split:":" %}
-                  {% if parts|length >= 2 %}
-                    <div class="flex items-center space-x-2">
-                      {% if parts.0 == "일반" %}
-                        <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">일반</span>
-                      {% elif parts.0 == "선착" %}
-                        <span class="inline-block px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">선착</span>
-                      {% elif parts.0 == "기타" %}
-                        <span class="inline-block px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">기타</span>
-                      {% endif %}
-                      <span class="text-sm text-gray-700">{{ parts.1 }}</span>
-                    </div>
-                  {% else %}
-                    <div class="flex items-center space-x-2">
-                      <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">특전</span>
-                      <span class="text-sm text-gray-700">{{ benefit|strip }}</span>
-                    </div>
-                  {% endif %}
-                {% endwith %}
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
+        {% with grouped_benefits=cafe.special_benefits|parse_benefits %}
+          {% if grouped_benefits %}
+            <div class="mb-4">
+              <p class="text-sm font-semibold text-gray-800 mb-3">🎁 특전 정보</p>
+              <div class="space-y-2">
+
+                {% for category, items in grouped_benefits.items %}
+                  <div class="flex items-start flex-wrap gap-2">
+                    <span class="inline-block px-2 py-1 text-xs font-medium rounded-full {{ category|get_category_color }}">
+                      {{ category }}
+                    </span>
+                    <span class="text-sm text-gray-700">
+                      {{ items|join:", " }}
+                    </span>
+                  </div>
+                {% endfor %}
+
+              </div>
+            </div>
+          {% endif %}
+        {% endwith %}
 
         <!--  설명 -->
         {% if cafe.event_description %}
