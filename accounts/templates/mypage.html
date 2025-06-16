@@ -229,9 +229,9 @@
         <!-- 덕팜 탭 콘텐츠 -->
         <div id="farm-tab-written" class="tab-content">
           {% if farm_posts %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="farm-written-items">
               {% for post in farm_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-written-item" style="display: none;">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
                     class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
                     [덕팜] {{ post.title }}
@@ -240,6 +240,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="farm-written-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 글이 없습니다.</p>
@@ -249,9 +250,9 @@
 
         <div id="farm-tab-commented" class="tab-content hidden">
           {% if farm_comments %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="farm-commented-items">
               {% for comment in farm_comments %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-commented-item" style="display: none;">
                   <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
                     class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ comment.post.title }}
@@ -261,6 +262,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="farm-commented-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 댓글이 없습니다.</p>
@@ -270,9 +272,9 @@
 
         <div id="farm-tab-liked" class="tab-content hidden">
           {% if liked_farm_posts %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="farm-liked-items">
               {% for post in liked_farm_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-liked-item" style="display: none;">
                   <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
                     class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ post.title }}
@@ -281,6 +283,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="farm-liked-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">찜한 글이 없습니다.</p>
@@ -290,9 +293,9 @@
 
         <div id="farm-tab-reviewed" class="tab-content hidden">
           {% if my_reviews %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="farm-reviewed-items">
               {% for r in my_reviews %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 farm-reviewed-item" style="display: none;">
                   <p class="text-gray-900 font-medium text-sm sm:text-base">판매자: {{ r.target_user.first_name|default:r.target_user.username }}</p>
                   <p class="text-gray-800 font-medium text-sm sm:text-base mt-1">평점: {{ r.rating }}점</p>
 
@@ -326,6 +329,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="farm-reviewed-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">아직 작성한 리뷰가 없습니다.</p>
@@ -364,9 +368,9 @@
         <!-- 덕담 탭 콘텐츠 -->
         <div id="dam-tab-written" class="tab-content">
           {% if dam_posts %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="dam-written-items">
               {% for post in dam_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-written-item" style="display: none;">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
                     class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
                     [덕담] {{ post.title }}
@@ -375,6 +379,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="dam-written-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 글이 없습니다.</p>
@@ -384,9 +389,9 @@
 
         <div id="dam-tab-commented" class="tab-content hidden">
           {% if dam_comments %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="dam-commented-items">
               {% for comment in dam_comments %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-commented-item" style="display: none;">
                   <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
                     class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ comment.post.title }}
@@ -396,6 +401,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="dam-commented-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">작성한 댓글이 없습니다.</p>
@@ -405,9 +411,9 @@
 
         <div id="dam-tab-liked" class="tab-content hidden">
           {% if liked_dam_posts %}
-            <div class="space-y-3 sm:space-y-4">
+            <div class="space-y-3 sm:space-y-4" id="dam-liked-items">
               {% for post in liked_dam_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-liked-item" style="display: none;">
                   <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
                     class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
                     {{ post.title }}
@@ -416,6 +422,7 @@
                 </div>
               {% endfor %}
             </div>
+            <div id="dam-liked-pagination" class="mt-6 flex justify-center"></div>
           {% else %}
             <div class="text-center py-8 sm:py-12">
               <p class="text-gray-500 text-sm sm:text-base lg:text-lg">찜한 글이 없습니다.</p>
@@ -438,6 +445,8 @@
             닫기
           </button>
         </div>
+      </div>
+    </div>
 
     <!-- CSS 추가 스타일 -->
     <style>
@@ -477,11 +486,173 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
+
+      /* 페이지네이션 스타일 */
+      .pagination-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        margin: 0 2px;
+        font-size: 14px;
+        font-weight: 500;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        transition: all 0.2s;
+        cursor: pointer;
+        background: white;
+        color: #374151;
+      }
+      
+      @media (min-width: 640px) {
+        .pagination-btn {
+          width: 40px;
+          height: 40px;
+          margin: 0 4px;
+          font-size: 16px;
+        }
+      }
+      
+      .pagination-btn:hover:not(.disabled) {
+        background: #f9fafb;
+        border-color: #9ca3af;
+      }
+      
+      .pagination-btn.active {
+        background: #111827;
+        color: white;
+        border-color: #111827;
+      }
+      
+      .pagination-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     </style>
 
     <!-- JavaScript -->
     <script>
       const followedArtistIds = {{ followed_artist_ids|safe }};
+      
+      // 페이지네이션 관리 객체
+      const paginationManager = {
+        itemsPerPage: 3,
+        
+        // 페이지네이션 생성
+        createPagination: function(type, category) {
+          const items = document.querySelectorAll(`.${type}-${category}-item`);
+          const totalItems = items.length;
+          
+          if (totalItems <= this.itemsPerPage) {
+            this.showItems(items, 0, totalItems);
+            return;
+          }
+          
+          const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+          const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
+          
+          let paginationHTML = '<div class="flex items-center justify-center">';
+          
+          // 이전 버튼
+          paginationHTML += `
+            <button class="pagination-btn disabled" onclick="paginationManager.goToPage('${type}', '${category}', 1)" disabled>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+          `;
+          
+          // 페이지 번호들
+          for (let i = 1; i <= totalPages; i++) {
+            paginationHTML += `
+              <button class="pagination-btn ${i === 1 ? 'active' : ''}" 
+                      onclick="paginationManager.goToPage('${type}', '${category}', ${i})">
+                ${i}
+              </button>
+            `;
+          }
+          
+          // 다음 버튼
+          paginationHTML += `
+            <button class="pagination-btn ${totalPages === 1 ? 'disabled' : ''}" 
+                    onclick="paginationManager.goToPage('${type}', '${category}', 2)"
+                    ${totalPages === 1 ? 'disabled' : ''}>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          `;
+          
+          paginationHTML += '</div>';
+          paginationContainer.innerHTML = paginationHTML;
+          
+          // 첫 페이지 아이템들 표시
+          this.showItems(items, 0, this.itemsPerPage);
+        },
+        
+        // 특정 페이지로 이동
+        goToPage: function(type, category, page) {
+          const items = document.querySelectorAll(`.${type}-${category}-item`);
+          const totalItems = items.length;
+          const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+          
+          if (page < 1 || page > totalPages) return;
+          
+          const startIndex = (page - 1) * this.itemsPerPage;
+          const endIndex = Math.min(startIndex + this.itemsPerPage, totalItems);
+          
+          // 모든 아이템 숨기기
+          items.forEach(item => item.style.display = 'none');
+          
+          // 현재 페이지 아이템들만 표시
+          this.showItems(items, startIndex, endIndex);
+          
+          // 페이지네이션 버튼 상태 업데이트
+          this.updatePaginationButtons(type, category, page, totalPages);
+        },
+        
+        // 아이템들 표시
+        showItems: function(items, startIndex, endIndex) {
+          for (let i = startIndex; i < endIndex; i++) {
+            if (items[i]) {
+              items[i].style.display = 'block';
+            }
+          }
+        },
+        
+        // 페이지네이션 버튼 상태 업데이트
+        updatePaginationButtons: function(type, category, currentPage, totalPages) {
+          const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
+          const buttons = paginationContainer.querySelectorAll('.pagination-btn');
+          
+          buttons.forEach((btn, index) => {
+            btn.classList.remove('active', 'disabled');
+            btn.disabled = false;
+            
+            if (index === 0) { // 이전 버튼
+              if (currentPage === 1) {
+                btn.classList.add('disabled');
+                btn.disabled = true;
+              } else {
+                btn.onclick = () => this.goToPage(type, category, currentPage - 1);
+              }
+            } else if (index === buttons.length - 1) { // 다음 버튼
+              if (currentPage === totalPages) {
+                btn.classList.add('disabled');
+                btn.disabled = true;
+              } else {
+                btn.onclick = () => this.goToPage(type, category, currentPage + 1);
+              }
+            } else { // 페이지 번호 버튼
+              const pageNum = index;
+              if (pageNum === currentPage) {
+                btn.classList.add('active');
+              }
+            }
+          });
+        }
+      };
 
       function scrollSlider(id, direction) {
         const slider = document.getElementById(id);
@@ -503,6 +674,9 @@
         event.target.classList.remove('text-gray-600');
         document.querySelectorAll('[id^="farm-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`farm-tab-${tabId}`).classList.remove('hidden');
+        
+        // 해당 탭의 페이지네이션 생성
+        paginationManager.createPagination('farm', tabId);
       }
 
       function showDamTab(tabId) {
@@ -514,6 +688,9 @@
         event.target.classList.remove('text-gray-600');
         document.querySelectorAll('[id^="dam-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`dam-tab-${tabId}`).classList.remove('hidden');
+        
+        // 해당 탭의 페이지네이션 생성
+        paginationManager.createPagination('dam', tabId);
       }
 
       function bindFollowButtons(container) {
@@ -568,10 +745,15 @@
         }
       }
 
-      // 페이지 로드 시 각각의 첫 번째 탭 활성화
+      // 페이지 로드 시 초기화
       document.addEventListener('DOMContentLoaded', function() {
+        // 첫 번째 탭 활성화
         document.querySelector('.farm-tab-btn').classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
         document.querySelector('.dam-tab-btn').classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+        
+        // 초기 페이지네이션 생성
+        paginationManager.createPagination('farm', 'written');
+        paginationManager.createPagination('dam', 'written');
       });
     </script>
   </div>
