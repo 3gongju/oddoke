@@ -169,9 +169,7 @@ def cafe_create_success(request, cafe_id):
             submitted_by=request.user
         )
         
-        # 디버깅: 이미지 정보 출력
-        print(f"📊 카페 정보: {cafe.cafe_name}")
-        print(f"📊 연결된 이미지 개수: {cafe.images.count()}")
+
         
         if cafe.images.exists():
             for img in cafe.images.all():
