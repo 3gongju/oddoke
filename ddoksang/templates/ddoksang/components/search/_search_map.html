@@ -1,18 +1,27 @@
 {% load static %}
 {% load filters %}
 
-<!-- Kakao Maps API 불러오기 -->
+<!-- Kakao Maps API -->
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=clusterer"></script>
 
-
-<!-- 생일카페 지도 영역 -->
-<div class="mt-10">
+<div class="mt-10 max-w-6xl mx-auto px-4">
   <h2 class="text-lg font-semibold text-gray-800 mb-4">📍 검색된 생일카페 지도</h2>
-  <div id="searchMap" class="w-full h-[450px] rounded-2xl shadow-md border border-gray-200"></div>
+
+  <!-- 지도 표시 영역 -->
+  <div class="relative">
+    <div id="searchMap" class="w-full h-[420px] rounded-2xl shadow-md border border-gray-200"></div>
+
+    <!-- 내 위치 버튼 -->
+    <button id="locateMeBtn" class="absolute top-3 right-3 bg-white text-gray-800 px-3 py-1 rounded-full shadow hover:bg-gray-100 transition text-sm z-10">
+      내 위치
+    </button>
+  </div>
+
+  <!-- 지도용 JSON 데이터 -->
   {{ cafes_json|json_script:"cafes-data" }}
 </div>
 
-<!-- 상세 카드 -->
+<!-- 마커 클릭 시 상세 카드 -->
 <div id="searchMapCard" class="fixed z-50 bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-white border rounded-2xl shadow-xl p-4 hidden transition-all duration-300">
   <div class="flex justify-between items-start mb-2">
     <h3 id="cardTitle" class="text-base font-semibold text-gray-800"></h3>
@@ -27,14 +36,13 @@
   <a id="cardLink" href="#" class="inline-block px-3 py-1 text-sm bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition">상세보기</a>
 </div>
 
-<!-- 지도 초기화 스크립트 -->
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const cafeData = JSON.parse(document.getElementById("cafes-data").textContent);
-    const container = document.getElementById('searchMap');
-    if (!cafeData || !container || !window.kakao || !window.kakao.maps) return;
+    const mapContainer = document.getElementById("searchMap");
+    if (!cafeData || !mapContainer || !window.kakao || !window.kakao.maps) return;
 
-    const map = new kakao.maps.Map(container, {
+    const map = new kakao.maps.Map(mapContainer, {
       center: new kakao.maps.LatLng(37.5665, 126.9780),
       level: 6
     });
@@ -42,45 +50,57 @@
     const bounds = new kakao.maps.LatLngBounds();
 
     cafeData.forEach(cafe => {
-    if (!cafe.latitude || !cafe.longitude) return;
+      if (!cafe.latitude || !cafe.longitude) return;
 
-    const position = new kakao.maps.LatLng(cafe.latitude, cafe.longitude);
-    bounds.extend(position);
+      const position = new kakao.maps.LatLng(cafe.latitude, cafe.longitude);
+      bounds.extend(position);
 
-    const marker = new kakao.maps.Marker({
+      const marker = new kakao.maps.Marker({
         map: map,
         position: position,
-        title: cafe.cafe_name || cafe.name || ""
+        title: cafe.cafe_name
+      });
+
+      // ✅ 마커 클릭 시 카드 오픈
+      kakao.maps.event.addListener(marker, 'click', () => showSearchMapCard(cafe));
     });
 
-    const infowindow = new kakao.maps.InfoWindow({
-        content: `<div style="padding:6px 10px; font-size:14px;">${cafe.cafe_name || cafe.name}</div>`
+    if (cafeData.length > 0) map.setBounds(bounds);
+
+    // ✅ 내 위치 버튼
+    const locateBtn = document.getElementById("locateMeBtn");
+    locateBtn.addEventListener("click", () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const userLoc = new kakao.maps.LatLng(lat, lng);
+          map.setCenter(userLoc);
+
+          // 파란 마커 표시
+          new kakao.maps.Marker({
+            map: map,
+            position: userLoc,
+            title: "내 위치",
+            image: new kakao.maps.MarkerImage("https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png", new kakao.maps.Size(24, 35))
+          });
+        });
+      } else {
+        alert("위치 정보 사용이 불가능합니다.");
+      }
     });
-
-    kakao.maps.event.addListener(marker, 'mouseover', () => infowindow.open(map, marker));
-    kakao.maps.event.addListener(marker, 'mouseout', () => infowindow.close());
-    kakao.maps.event.addListener(marker, 'click', () => showSearchMapCard(cafe));
-    });
-
-
-    if (cafeData.length > 0) {
-      map.setBounds(bounds);
-    }
   });
 
- function showSearchMapCard(cafe) {
-  const card = document.getElementById("searchMapCard");
-  document.getElementById("cardTitle").textContent = cafe.cafe_name || cafe.title || "제목 없음";
-  document.getElementById("cardPlace").textContent = cafe.address || cafe.place || "장소 정보 없음";
-  document.getElementById("cardDate").textContent = formatPeriod(cafe.start_date, cafe.end_date);
-  document.getElementById("cardLink").href = `/ddoksang/${cafe.id}/`;
+  function showSearchMapCard(cafe) {
+    const card = document.getElementById("searchMapCard");
+    document.getElementById("cardTitle").textContent = cafe.cafe_name || "제목 없음";
+    document.getElementById("cardPlace").textContent = cafe.road_address || cafe.address || "장소 정보 없음";
+    document.getElementById("cardDate").textContent = `${cafe.start_date} ~ ${cafe.end_date}`;
+    document.getElementById("cardLink").href = `/ddoksang/cafe/${cafe.id}/`;  // ✅ 실제 상세 URL로 연결
+    card.classList.remove("hidden");
+  }
 
-  card.classList.remove("hidden");
-}
-
-function formatPeriod(start, end) {
-  if (!start || !end) return '';
-  return `${start} ~ ${end}`;
-}
-
+  function closeSearchMapCard() {
+    document.getElementById("searchMapCard").classList.add("hidden");
+  }
 </script>
