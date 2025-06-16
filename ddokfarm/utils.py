@@ -61,17 +61,35 @@ def get_post_queryset(category=None):
 
     if category in model_map:
         model, cat = model_map[category]
-        posts = model.objects.all()
+        
+        # 쿼리 최적화: 관련 데이터 미리 로드
+        if model == FarmSplitPost:
+            posts = model.objects.select_related(
+                'user', 'artist', 'user__fandom_profile'
+            ).prefetch_related('like', 'member_prices', 'images').all()
+        else:
+            posts = model.objects.select_related(
+                'user', 'artist', 'user__fandom_profile'
+            ).prefetch_related('like', 'images').all()
+        
         for post in posts:
-            post.category = cat  # 동적으로 category 속성 부여
+            post.category = cat
         return posts
 
-    # 전체 게시글 합치기
+    # 전체 게시글 합치기 (쿼리 최적화 포함)
     all_posts = []
     for model, cat in model_map.values():
-        posts = model.objects.all()
+        if model == FarmSplitPost:
+            posts = model.objects.select_related(
+                'user', 'artist', 'user__fandom_profile'
+            ).prefetch_related('like', 'member_prices', 'images').all()
+        else:
+            posts = model.objects.select_related(
+                'user', 'artist', 'user__fandom_profile'
+            ).prefetch_related('like', 'images').all()
+        
         for post in posts:
-            post.category = cat  # 템플릿에서 구분용
+            post.category = cat
         all_posts.append(posts)
 
-    return chain(*all_posts)  # generator 반환
+    return chain(*all_posts)
