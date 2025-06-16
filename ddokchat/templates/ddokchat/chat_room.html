@@ -39,7 +39,7 @@
               <!-- ✅ 상황 1 -->
               <span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>
 
-            {% elif user.pk == room.buyer.pk %}
+            {% elif current_sender.pk == room.buyer.pk %}
               {% if not room.buyer_completed and not room.seller_completed %}
                 <!-- ✅ 상황 2 -->
                 <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
@@ -60,7 +60,7 @@
                 </span>
               {% endif %}
 
-            {% elif user.pk == room.seller.pk %}
+            {% elif current_sender.pk == room.seller.pk %}
               {% if not room.seller_completed and not room.buyer_completed %}
                 <!-- ✅ 상황 3 -->
                 <span class="text-xs text-gray-400 px-2 py-1 rounded">거래 진행 중</span>
@@ -92,205 +92,207 @@
     <!-- 채팅 메시지 영역 -->
     <div id="chat-log" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
       {% for message in messages %}
-        <div class="flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %} mb-3">
-          <div class="max-w-xs">
-            
-            {% if message.sender != user %}
-              <!-- ✅ 닉네임을 상단에 표시 -->
-              <p class="text-sm font-semibold text-gray-800 mb-1">
-                {{ message.sender.username }}
-              </p>
-            {% endif %}
-            
-            <!-- 메시지 타입별 처리 -->
-            {% if message.message_type == 'text' %}
-              <!-- 텍스트 메시지 -->
-              <div class="{% if message.sender == user %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-4 py-2 rounded-2xl shadow-sm">
-                <p class="text-sm break-words">{{ message.text_content.content }}</p>
-              </div>
+        {% with is_my_message=message.sender == current_sender %}
+          <div class="flex {% if is_my_message %}justify-end{% else %}justify-start{% endif %} mb-3">
+            <div class="max-w-xs">
               
-            {% elif message.message_type == 'image' %}
-              <!-- 이미지 메시지 -->
-              <div class="{% if message.sender == user %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-3 py-2 rounded-2xl shadow-sm">
-                <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
-                {% if message.image_content.caption %}
-                  <p class="text-sm mt-2 {% if message.sender == user %}text-gray-200{% else %}text-gray-600{% endif %}">
-                    {{ message.image_content.caption }}
-                  </p>
-                {% endif %}
-              </div>
-              
-            {% elif message.message_type == 'account_info' and message.sender != user %}
-              <!-- 계좌정보 메시지 (상대방이 보낸 것만 표시) -->
-              {% with account_info=message.account_content.get_display_info %}
-                <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
-                  <div class="space-y-3">
-                    <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-lg">💳</span>
-                      <span class="font-semibold">계좌정보</span>
-                    </div>
-                    
-                    {% if account_info.is_deleted %}
-                      <!-- 삭제된 계좌 정보 -->
-                      <div class="bg-gray-100 rounded-lg p-4 text-center">
-                        <div class="text-gray-500 mb-2">
-                        </div>
-                        <p class="text-sm text-gray-600 font-medium">{{ account_info.deleted_message }}</p>
-                      </div>
-                    {% else %}
-                      <!-- 기존 계좌 정보 표시 -->
-                      <div class="bg-gray-50 rounded-lg p-3 space-y-2">
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">은행</span>
-                          <span class="font-medium">{{ account_info.bank_name }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">계좌번호</span>
-                          <span class="font-mono">{{ account_info.account_number }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">예금주</span>
-                          <span class="font-medium">{{ account_info.account_holder }}</span>
-                        </div>
-                      </div>
-                      
-                      <!-- 상대방 메시지에만 버튼 표시 -->
-                      <div class="flex space-x-2 mt-3">
-                        <button onclick="copyAccountNumber('{{ account_info.account_number }}')" 
-                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                          계좌번호 복사
-                        </button>
-                        <button onclick="checkFraudHistory('{{ account_info.bank_code }}', '{{ account_info.account_number }}', '{{ account_info.account_holder }}')" 
-                                class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                          신고이력 조회
-                        </button>
-                      </div>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endwith %}
-              
-            {% elif message.message_type == 'account_info' and message.sender == user %}
-              <!-- 내가 보낸 계좌정보 메시지 -->
-              {% with account_info=message.account_content.get_display_info %}
-                <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
-                  <div class="space-y-3">
-                    <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-lg">💳</span>
-                      <span class="font-semibold">계좌정보 전송</span>
-                    </div>
-                    
-                    {% if account_info.is_deleted %}
-                      <!-- 삭제된 계좌 정보 -->
-                      <div class="bg-gray-800 rounded-lg p-4 text-center">
-                        <p class="text-sm text-gray-300 font-medium">{{ account_info.deleted_message }}</p>
-                      </div>
-                    {% else %}
-                      <!-- 기존 계좌 정보 표시 -->
-                      <div class="bg-gray-800 rounded-lg p-3 space-y-2">
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-300">은행</span>
-                          <span class="font-medium text-white">{{ account_info.bank_name }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-300">계좌번호</span>
-                          <span class="font-mono text-white">{{ account_info.account_number }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-300">예금주</span>
-                          <span class="font-medium text-white">{{ account_info.account_holder }}</span>
-                        </div>
-                      </div>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endwith %}
-              
-            {% elif message.message_type == 'address_info' and message.sender != user %}
-              <!-- 주소정보 메시지 (상대방이 보낸 것만 표시) -->
-              {% with address_info=message.address_content.get_display_info %}
-                <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
-                  <div class="space-y-3">
-                    <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-lg">📍</span>
-                      <span class="font-semibold">배송 주소</span>
-                    </div>
-                    
-                    {% if address_info.is_deleted %}
-                      <!-- 삭제된 주소 정보 -->
-                      <div class="bg-gray-100 rounded-lg p-4 text-center">
-                        <div class="text-gray-500 mb-2">
-                        </div>
-                        <p class="text-sm text-gray-600 font-medium">{{ address_info.deleted_message }}</p>
-                      </div>
-                    {% else %}
-                      <!-- 기존 주소 정보 표시 -->
-                      <div class="bg-gray-50 rounded-lg p-3 space-y-2">
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-600">우편번호</span>
-                          <span class="font-medium">{{ address_info.postal_code }}</span>
-                        </div>
-                        <div>
-                          <span class="text-sm text-gray-600">주소</span>
-                          <p class="font-medium mt-1">{{ address_info.full_address }}</p>
-                        </div>
-                      </div>
-                      
-                      <!-- 주소 복사 버튼 -->
-                      <div class="mt-3">
-                        <button onclick="copyAddress('{{ address_info.full_address }}')" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                          주소 복사
-                        </button>
-                      </div>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endwith %}
-              
-            {% elif message.message_type == 'address_info' and message.sender == user %}
-              <!-- 내가 보낸 주소정보 메시지 -->
-              {% with address_info=message.address_content.get_display_info %}
-                <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
-                  <div class="space-y-3">
-                    <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-lg">📍</span>
-                      <span class="font-semibold">주소정보 전송</span>
-                    </div>
-                    
-                    {% if address_info.is_deleted %}
-                      <!-- 삭제된 주소 정보 -->
-                      <div class="bg-gray-800 rounded-lg p-4 text-center">
-                        <p class="text-sm text-gray-300 font-medium">{{ address_info.deleted_message }}</p>
-                      </div>
-                    {% else %}
-                      <!-- 기존 주소 정보 표시 -->
-                      <div class="bg-gray-800 rounded-lg p-3 space-y-2">
-                        <div class="flex justify-between">
-                          <span class="text-sm text-gray-300">우편번호</span>
-                          <span class="font-medium text-white">{{ address_info.postal_code }}</span>
-                        </div>
-                        <div>
-                          <span class="text-sm text-gray-300">주소</span>
-                          <p class="font-medium text-white mt-1">{{ address_info.full_address }}</p>
-                        </div>
-                      </div>
-                    {% endif %}
-                  </div>
-                </div>
-              {% endwith %}
-            {% endif %}
-
-            <!-- ⏰ 시간 및 읽음 여부 -->
-            <div class="flex {% if message.sender == user %}justify-end{% else %}justify-start{% endif %} items-center gap-1 mt-1">
-              {% if message.sender == user and message.is_read == 0 %}
-                <span class="text-xs text-red-500 font-semibold unread-label">안읽음</span>
-                <span class="text-xs text-gray-400">•</span>
+              {% if not is_my_message %}
+                <!-- ✅ 닉네임을 상단에 표시 -->
+                <p class="text-sm font-semibold text-gray-800 mb-1">
+                  {{ message.sender.username }}
+                </p>
               {% endif %}
-              <span class="text-xs text-gray-400">{{ message.timestamp|time:"H:i" }}</span>
+              
+              <!-- 메시지 타입별 처리 -->
+              {% if message.message_type == 'text' %}
+                <!-- 텍스트 메시지 -->
+                <div class="{% if is_my_message %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-4 py-2 rounded-2xl shadow-sm">
+                  <p class="text-sm break-words">{{ message.text_content.content }}</p>
+                </div>
+                
+              {% elif message.message_type == 'image' %}
+                <!-- 이미지 메시지 -->
+                <div class="{% if is_my_message %}bg-gray-900 text-white{% else %}bg-white text-gray-800 border border-gray-200{% endif %} px-3 py-2 rounded-2xl shadow-sm">
+                  <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
+                  {% if message.image_content.caption %}
+                    <p class="text-sm mt-2 {% if is_my_message %}text-gray-200{% else %}text-gray-600{% endif %}">
+                      {{ message.image_content.caption }}
+                    </p>
+                  {% endif %}
+                </div>
+                
+              {% elif message.message_type == 'account_info' and not is_my_message %}
+                <!-- 계좌정보 메시지 (상대방이 보낸 것만 표시) -->
+                {% with account_info=message.account_content.get_display_info %}
+                  <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
+                    <div class="space-y-3">
+                      <div class="flex items-center space-x-2 mb-2">
+                        <span class="text-lg">💳</span>
+                        <span class="font-semibold">계좌정보</span>
+                      </div>
+                      
+                      {% if account_info.is_deleted %}
+                        <!-- 삭제된 계좌 정보 -->
+                        <div class="bg-gray-100 rounded-lg p-4 text-center">
+                          <div class="text-gray-500 mb-2">
+                          </div>
+                          <p class="text-sm text-gray-600 font-medium">{{ account_info.deleted_message }}</p>
+                        </div>
+                      {% else %}
+                        <!-- 기존 계좌 정보 표시 -->
+                        <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">은행</span>
+                            <span class="font-medium">{{ account_info.bank_name }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">계좌번호</span>
+                            <span class="font-mono">{{ account_info.account_number }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">예금주</span>
+                            <span class="font-medium">{{ account_info.account_holder }}</span>
+                          </div>
+                        </div>
+                        
+                        <!-- 상대방 메시지에만 버튼 표시 -->
+                        <div class="flex space-x-2 mt-3">
+                          <button onclick="copyAccountNumber('{{ account_info.account_number }}')" 
+                                  class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                            계좌번호 복사
+                          </button>
+                          <button onclick="checkFraudHistory('{{ account_info.bank_code }}', '{{ account_info.account_number }}', '{{ account_info.account_holder }}')" 
+                                  class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                            신고이력 조회
+                          </button>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endwith %}
+                
+              {% elif message.message_type == 'account_info' and is_my_message %}
+                <!-- 내가 보낸 계좌정보 메시지 -->
+                {% with account_info=message.account_content.get_display_info %}
+                  <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
+                    <div class="space-y-3">
+                      <div class="flex items-center space-x-2 mb-2">
+                        <span class="text-lg">💳</span>
+                        <span class="font-semibold">계좌정보 전송</span>
+                      </div>
+                      
+                      {% if account_info.is_deleted %}
+                        <!-- 삭제된 계좌 정보 -->
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                          <p class="text-sm text-gray-300 font-medium">{{ account_info.deleted_message }}</p>
+                        </div>
+                      {% else %}
+                        <!-- 기존 계좌 정보 표시 -->
+                        <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-300">은행</span>
+                            <span class="font-medium text-white">{{ account_info.bank_name }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-300">계좌번호</span>
+                            <span class="font-mono text-white">{{ account_info.account_number }}</span>
+                          </div>
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-300">예금주</span>
+                            <span class="font-medium text-white">{{ account_info.account_holder }}</span>
+                          </div>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endwith %}
+                
+              {% elif message.message_type == 'address_info' and not is_my_message %}
+                <!-- 주소정보 메시지 (상대방이 보낸 것만 표시) -->
+                {% with address_info=message.address_content.get_display_info %}
+                  <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
+                    <div class="space-y-3">
+                      <div class="flex items-center space-x-2 mb-2">
+                        <span class="text-lg">📍</span>
+                        <span class="font-semibold">배송 주소</span>
+                      </div>
+                      
+                      {% if address_info.is_deleted %}
+                        <!-- 삭제된 주소 정보 -->
+                        <div class="bg-gray-100 rounded-lg p-4 text-center">
+                          <div class="text-gray-500 mb-2">
+                          </div>
+                          <p class="text-sm text-gray-600 font-medium">{{ address_info.deleted_message }}</p>
+                        </div>
+                      {% else %}
+                        <!-- 기존 주소 정보 표시 -->
+                        <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">우편번호</span>
+                            <span class="font-medium">{{ address_info.postal_code }}</span>
+                          </div>
+                          <div>
+                            <span class="text-sm text-gray-600">주소</span>
+                            <p class="font-medium mt-1">{{ address_info.full_address }}</p>
+                          </div>
+                        </div>
+                        
+                        <!-- 주소 복사 버튼 -->
+                        <div class="mt-3">
+                          <button onclick="copyAddress('{{ address_info.full_address }}')" 
+                                  class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                            주소 복사
+                          </button>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endwith %}
+                
+              {% elif message.message_type == 'address_info' and is_my_message %}
+                <!-- 내가 보낸 주소정보 메시지 -->
+                {% with address_info=message.address_content.get_display_info %}
+                  <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
+                    <div class="space-y-3">
+                      <div class="flex items-center space-x-2 mb-2">
+                        <span class="text-lg">📍</span>
+                        <span class="font-semibold">주소정보 전송</span>
+                      </div>
+                      
+                      {% if address_info.is_deleted %}
+                        <!-- 삭제된 주소 정보 -->
+                        <div class="bg-gray-800 rounded-lg p-4 text-center">
+                          <p class="text-sm text-gray-300 font-medium">{{ address_info.deleted_message }}</p>
+                        </div>
+                      {% else %}
+                        <!-- 기존 주소 정보 표시 -->
+                        <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                          <div class="flex justify-between">
+                            <span class="text-sm text-gray-300">우편번호</span>
+                            <span class="font-medium text-white">{{ address_info.postal_code }}</span>
+                          </div>
+                          <div>
+                            <span class="text-sm text-gray-300">주소</span>
+                            <p class="font-medium text-white mt-1">{{ address_info.full_address }}</p>
+                          </div>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endwith %}
+              {% endif %}
+
+              <!-- ⏰ 시간 및 읽음 여부 -->
+              <div class="flex {% if is_my_message %}justify-end{% else %}justify-start{% endif %} items-center gap-1 mt-1">
+                {% if is_my_message and message.is_read == 0 %}
+                  <span class="text-xs text-red-500 font-semibold unread-label">안읽음</span>
+                  <span class="text-xs text-gray-400">•</span>
+                {% endif %}
+                <span class="text-xs text-gray-400">{{ message.timestamp|time:"H:i" }}</span>
+              </div>
             </div>
           </div>
-        </div>
+        {% endwith %}
       {% endfor %}
     </div>
 
@@ -472,7 +474,7 @@
 </div>
 
 <!-- 리뷰 모달 -->
-{% if user == room.buyer and not has_already_reviewed %}
+{% if current_sender == room.buyer and not has_already_reviewed %}
 <dialog id="reviewModal" class="backdrop:bg-black backdrop:bg-opacity-50 bg-white rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 border-0">
   <div class="bg-white rounded-2xl overflow-hidden">
     <!-- 헤더 -->
@@ -695,8 +697,8 @@
   const chatLog = document.getElementById('chat-log');
   const input = document.getElementById('chat-message-input');
   const submit = document.getElementById('chat-message-submit');
-  const currentUser = "{{ user.username }}";
-  const currentUserId = "{{ user.id }}";
+  const currentSender = "{{ current_sender.username }}";
+  const currentSenderId = "{{ current_sender.id }}";
   
   // 거래 완료 상태 추적
   let isTradeCompleted = "{{ room.is_fully_completed }}" === "True";
@@ -714,7 +716,7 @@
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       const isVisible = entry.isIntersecting;
-      const isMine = entry.target.dataset.sender === currentUser;
+      const isMine = entry.target.dataset.sender === currentSender;
       
       if (isVisible && !isMine) {
         socket.send(JSON.stringify({
@@ -747,7 +749,7 @@
     
     // 새 메시지 수신
     else if (data.type == 'chat_message') {
-      const isMine = data.sender === currentUser;
+      const isMine = data.sender === currentSender;
       
       // 메시지 컨테이너 생성
       const messageContainer = document.createElement("div");
@@ -794,8 +796,8 @@
     // 계좌정보 메시지 수신
     else if (data.type === 'account_info') {
       const accountInfo = data.account_info;
-      const isMineForPosition = data.sender === currentUser;
-      const isMineForButton = data.sender === currentUser;
+      const isMineForPosition = data.sender === currentSender;
+      const isMineForButton = data.sender === currentSender;
       
       const messageContainer = document.createElement("div");
       messageContainer.className = `flex ${isMineForPosition ? 'justify-end' : 'justify-start'} mb-2`;
@@ -877,8 +879,8 @@
     // 주소정보 메시지 수신
     else if (data.type === 'address_info') {
       const addressInfo = data.address_info;
-      const isMineForPosition = data.sender === currentUser;
-      const isMineForButton = data.sender === currentUser;
+      const isMineForPosition = data.sender === currentSender;
+      const isMineForButton = data.sender === currentSender;
       
       const messageContainer = document.createElement("div");
       messageContainer.className = `flex ${isMineForPosition ? 'justify-end' : 'justify-start'} mb-2`;
@@ -950,7 +952,7 @@
     }
     
     else if (data.type === 'chat_image') {
-      const isMine = data.sender === currentUser;
+      const isMine = data.sender === currentSender;
       const messageContainer = document.createElement("div");
       messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} mb-2`;
 
@@ -993,7 +995,7 @@
     
     // 채팅방 입장 완료
     else if (data.type == 'enter_chatroom_finish') {
-      if (data.reader !== currentUser) {
+      if (data.reader !== currentSender) {
         document.querySelectorAll(".unread-label").forEach(el => el.remove());
       }
       return;
@@ -1157,7 +1159,7 @@
             type: 'chat_image',
             room_id: roomId,
             image_url: data.image_url,
-            sender_id: '{{ user.id }}'
+            sender_id: '{{ current_sender.id }}'
           }));
         } else {
           alert('이미지 업로드 실패: ' + (data.error || ''));
@@ -1279,7 +1281,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     const hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
     const isFullyCompleted = {{ is_fully_completed|yesno:"true,false" }};
-    const isBuyer = "{{ user.username }}" === "{{ room.buyer.username }}";
+    const isBuyer = "{{ current_sender.username }}" === "{{ room.buyer.username }}";
 
     if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
       const reviewModal = document.getElementById("reviewModal");
@@ -1368,7 +1370,7 @@
           type: 'account_info',
           room_id: roomId,
           account_info: data.account_info,
-          sender_id: currentUserId,
+          sender_id: currentSenderId,
           message_id: data.message_id
         }));
       } else {
@@ -1414,7 +1416,7 @@
           type: 'address_info',
           room_id: roomId,
           address_info: data.address_info,
-          sender_id: currentUserId,
+          sender_id: currentSenderId,
           message_id: data.message_id
         }));
       } else {

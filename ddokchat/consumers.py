@@ -30,14 +30,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type', 'chat')  # 기본은 'chat'
-        current_user = self.scope['user']
+        current_sender = self.scope['user']
         room_id = data.get('room_id')
 
         seller = await self.get_chatroom_seller(room_id)
 
-        print(f"WebSocket 메시지 수신: type={message_type}, user={current_user}, room_id={room_id}")
+        print(f"WebSocket 메시지 수신: type={message_type}, sender={current_sender}, room_id={room_id}")
         
-        is_seller = True if current_user == seller else False
+        is_seller = True if current_sender == seller else False
 
         if message_type == 'read_all':
             await self.mark_all_as_read()
@@ -219,10 +219,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 sender = User.objects.get(id=sender_id)
                 room = ChatRoom.objects.get(id=room_id)
                 
-                # 기본 메시지 생성
+                # receiver 계산: sender가 buyer면 seller가 receiver, 반대의 경우도 마찬가지
+                receiver = room.seller if sender == room.buyer else room.buyer
+                
+                # 기본 메시지 생성 (sender와 receiver 모두 설정)
                 message = Message.objects.create(
                     room=room, 
-                    sender=sender, 
+                    sender=sender,
+                    receiver=receiver,
                     message_type='text'
                 )
                 
@@ -246,13 +250,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def get_chatroom_seller(self, room_id):
         return ChatRoom.objects.get(id=room_id).seller
 
-    # DB에서 읽음 처리
+    # DB에서 읽음 처리 (receiver 기준으로 변경)
     @database_sync_to_async
     def mark_all_as_read(self):
+        # 내가 receiver인 메시지들 중 읽지 않은 것들을 읽음 처리
         Message.objects.filter(
             room_id=self.room_id,
+            receiver=self.scope['user'],
             is_read=False
-        ).exclude(sender=self.scope['user']).update(is_read=True)
+        ).update(is_read=True)
     
     # 읽음 결과 전송하고 JS에서 처리
     async def read_update(self, event):

@@ -303,11 +303,11 @@
       </div>
     </div>
 
-    <!-- 네비게이션 버튼 (수정됨) -->
+    <!-- 네비게이션 버튼 (FAQ와 완전히 겹치지 않게 수정) -->
     <div id="navigationButtons" class="mt-8 w-full">
       <!-- 이전 버튼 -->
       <button type="button" id="prevBtn"
-              class="fixed bottom-4 left-4 w-14 h-14 bg-gray-900 text-white text-2xl font-bold rounded-full hover:bg-gray-800 shadow-lg transition-all duration-200 hidden z-50 items-center justify-center"
+              class="fixed bottom-4 w-14 h-14 bg-gray-900 text-white text-2xl font-bold rounded-full hover:bg-gray-800 shadow-lg transition-all duration-200 hidden z-50 items-center justify-center"
               title="이전 단계">
         ‹
       </button>
@@ -319,7 +319,6 @@
         ›
       </button>
     </div>
-
   </form>
 </section>
 
@@ -388,11 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // 즉시 테스트
-    console.log('🧪 메시지 테스트 결과:');
-    console.log('- NO_DUPLICATE:', window.msg('DUPLICATE_CHECK', 'NO_DUPLICATE'));
-    console.log('- DUPLICATE_FOUND:', window.msg('DUPLICATE_CHECK', 'DUPLICATE_FOUND', {count: 3}));
-    
+
     // 전역 변수로도 설정 (다른 스크립트에서 접근 가능)
     window.DDOKSANG_MESSAGES = DDOKSANG_MESSAGES;
 });
@@ -462,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 48px;
   }
 
-  /* ✅ 네비게이션 버튼 스타일 */
+  /* ✅ FAQ 버튼과 완전히 겹치지 않는 위치 설정 */
   #prevBtn, #nextBtn {
     display: none !important;
   }
@@ -480,21 +475,57 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: scale(0.95);
   }
 
-  /* 모바일에서 네비게이션 버튼 조정 */
-  @media (max-width: 768px) {
+  /* FAQ 버튼 위치를 고려한 이전 버튼 위치 (더 큰 간격) */
+  #prevBtn {
+    /* FAQ 버튼 (left: 24px, width: ~80px) + 여유공간 40px = 144px */
+    left: 144px !important;
+  }
+
+  #nextBtn {
+    /* 오른쪽 하단 고정 */
+    right: 24px !important;
+  }
+
+  /* 모바일에서 FAQ 버튼 위치에 맞춘 조정 (더 큰 간격) */
+  @media (max-width: 640px) {
     #prevBtn, #nextBtn {
       width: 48px !important;
       height: 48px !important;
       font-size: 18px !important;
-      bottom: 1.5rem !important;
+      bottom: 16px !important; /* FAQ와 같은 bottom 값 */
     }
 
     #prevBtn {
-      left: 1rem !important;
+      /* 모바일 FAQ 버튼 (left: 16px, width: ~80px) + 여유공간 40px = 136px */
+      left: 136px !important;
     }
 
     #nextBtn {
-      right: 1rem !important;
+      right: 16px !important; /* FAQ와 같은 margin 값 */
+    }
+  }
+
+  /* 아주 작은 화면에서 추가 조정 */
+  @media (max-width: 480px) {
+    #prevBtn {
+      left: 120px !important; /* 조금 더 좁힌 간격 */
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 16px !important;
+    }
+
+    #nextBtn {
+      right: 12px !important;
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 16px !important;
+    }
+  }
+
+  /* 매우 작은 화면 (iPhone SE 등) */
+  @media (max-width: 375px) {
+    #prevBtn {
+      left: 110px !important;
     }
   }
 
@@ -584,7 +615,7 @@ window.KAKAO_MAP_READY = false;
 <script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
 
 <!-- 🔧 메인 폼 스크립트 (수정된 버전) -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=4.0"></script>
+<script src="{% static 'js/ddoksang_create.js' %}?v=4.1"></script>
 
 <!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
