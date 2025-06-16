@@ -3,7 +3,7 @@
 {% load filters %}
 {% load member_images %}
 
-{% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
+{% block title %} 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block ddoksang_content %}
 
@@ -202,16 +202,60 @@
 </section>
 
 <!-- 플로팅 액션 버튼 -->
-<!-- 📱 플로팅 액션 버튼 -->
-<div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
-  <a href="{% url 'ddoksang:create' %}" 
-     class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-900 text-white rounded-full shadow-2xl hover:shadow-3xl flex items-center justify-center transition-all duration-200">
-    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-    </svg>
-  </a>
-</div>
+<!-- 📱 플로팅 액션 버튼 (FAQ와 정확히 대칭) -->
+<a href="{% url 'ddoksang:create' %}" class="floating-action-button">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+  </svg>
+</a>
 
+<style>
+/* 플로팅 액션 버튼 - FAQ와 정확히 대칭 위치 */
+.floating-action-button {
+    position: fixed;
+    bottom: 1rem;   /* 16px - FAQ와 동일 */
+    right: 1rem;    /* 16px - FAQ와 대칭 */
+    z-index: 50;
+    width: 3.5rem;  /* 56px - FAQ와 동일한 크기 */
+    height: 3.5rem; /* 56px - FAQ와 동일한 크기 */
+    background-color: #111827; /* gray-900 */
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.floating-action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+    background-color: #1f2937; /* gray-800 */
+}
+
+/* 데스크톱에서는 FAQ와 동일하게 24px */
+@media (min-width: 640px) {
+    .floating-action-button {
+        bottom: 1.5rem; /* 24px - FAQ sm:bottom-6과 동일 */
+        right: 1.5rem;  /* 24px - FAQ sm:left-6과 대칭 */
+    }
+}
+
+/* Safe area 지원 */
+@supports (bottom: env(safe-area-inset-bottom)) {
+    .floating-action-button {
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+    
+    @media (min-width: 640px) {
+        .floating-action-button {
+            bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        }
+    }
+}
+</style>
 
 
 <!-- 페이지 식별자 (찜하기 기능용) -->
