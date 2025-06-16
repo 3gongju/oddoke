@@ -1,0 +1,87 @@
+<!-- ddokchat/templates/ddokchat/components/chat/header.html -->
+
+<div class="bg-gray-900 border-b border-gray-700 px-4 py-3 shadow-sm">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <button onclick="history.back()" class="text-gray-300 hover:text-white transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      
+      <div class="flex items-center gap-3">
+        <!-- 상대방 프로필 이미지 -->
+        <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-100">
+          {% if room.other_user.profile_image %}
+            <img src="{{ room.other_user.profile_image.url }}" alt="{{ room.other_user.username }}" class="w-full h-full object-cover">
+          {% else %}
+            <div class="w-full h-full flex items-center justify-center text-white bg-gradient-to-r from-blue-400 to-purple-500">
+              {{ room.other_user.username|first|upper }}
+            </div>
+          {% endif %}
+        </div>
+        
+        <div>
+          <h2 class="font-semibold text-white">{{ room.other_user.username }}</h2>
+          <p class="text-sm text-gray-300">{{ room.post.title|truncatechars:25 }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <!-- 거래 완료 버튼 -->
+      <div id="tradeStatusContainer">
+        {% if room.is_fully_completed %}
+          <!-- 상황 1: 거래 완료됨 -->
+          <span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>
+
+        {% elif current_user.pk == room.buyer.pk %}
+          {% if not room.buyer_completed and not room.seller_completed %}
+            <!-- 상황 2: 구매자, 아무도 완료 안함 -->
+            <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
+              거래 완료
+            </button>
+          {% elif not room.buyer_completed and room.seller_completed %}
+            <!-- 상황 5: 구매자, 판매자만 완료함 -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-red-500">거래완료 버튼을 눌러주세요!</span>
+              <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
+                거래 완료
+              </button>
+            </div>
+          {% elif room.buyer_completed and not room.seller_completed %}
+            <!-- 상황 6: 구매자, 구매자만 완료함 -->
+            <span class="text-xs text-red-500 bg-gray-100 px-2 py-1 rounded">
+              판매자의 거래 완료를 기다리는 중입니다.
+            </span>
+          {% endif %}
+
+        {% elif current_user.pk == room.seller.pk %}
+          {% if not room.seller_completed and not room.buyer_completed %}
+            <!-- 상황 3: 판매자, 아무도 완료 안함 -->
+            <span class="text-xs text-gray-400 px-2 py-1 rounded">거래 진행 중</span>
+          {% elif room.seller_completed and not room.buyer_completed %}
+            <!-- 상황 4: 판매자, 판매자만 완료함 -->
+            <span class="text-xs text-gray-500 px-2 py-1 rounded">
+              구매자의 거래 완료를 기다리는 중입니다.
+            </span>
+          {% elif room.buyer_completed and not room.seller_completed %}
+            <!-- 상황 7: 판매자, 구매자만 완료함 -->
+            <span class="text-xs text-red-500 px-2 py-1 rounded">
+              게시글로 돌아가 거래완료 버튼을 눌러주세요!
+            </span>
+          {% endif %}
+
+        {% else %}
+          <span class="text-xs text-gray-400 px-2 py-1 rounded">권한이 없습니다.</span>
+        {% endif %}
+      </div>
+      
+      <button class="p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-full transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
