@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block body %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+<div class="min-h-screen bg-white">
   <div class="max-w-5xl mx-auto px-4 py-8">
     
-    <!-- Profile Header. -->
-    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-8 backdrop-blur-sm bg-white/80">
+    <!-- Profile Header -->
+    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-8 mb-8">
       <div class="flex flex-col lg:flex-row items-center lg:items-start gap-8">
         
         <!-- Profile Image -->
-        <div class="relative group">
-          <div class="w-40 h-40 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-500 p-1 shadow-2xl">
+        <div class="relative">
+          <div class="w-40 h-40 rounded-full bg-cream-accent p-1 shadow-lg">
             <div class="w-full h-full rounded-full overflow-hidden bg-white p-1">
               {% if user_profile.profile_image and user_profile.profile_image.name %}
                 <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
@@ -19,8 +19,8 @@
               {% endif %}
             </div>
           </div>
-          <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
-            <span class="text-white text-lg">✨</span>
+          <div class="absolute -bottom-2 -right-2 w-12 h-12 bg-cream-accent rounded-full border-4 border-white flex items-center justify-center">
+            <div class="w-3 h-3 bg-green-500 rounded-full"></div>
           </div>
         </div>
 
@@ -28,7 +28,7 @@
         <div class="flex-1 text-center lg:text-left">
           <!-- Username and Follow Button -->
           <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">
+            <h1 class="text-3xl font-bold text-black font-heading">
               {% if user_profile.first_name %}
                 {{ user_profile.first_name }}
               {% elif user_profile.username|slice:":6" == "kakao_" %}
@@ -67,7 +67,7 @@
           <!-- Verification Badge -->
           {% if user_profile.is_verified_fandom %}
             <div class="mb-4">
-              <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+              <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-cream-accent text-black border border-cream-dark">
                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                 </svg>
@@ -78,24 +78,24 @@
 
           <!-- Bio -->
           {% if user_profile.bio %}
-            <p class="text-gray-700 mb-6 text-lg leading-relaxed max-w-md mx-auto lg:mx-0">{{ user_profile.bio }}</p>
+            <p class="text-gray-700 mb-6 text-lg leading-relaxed max-w-md mx-auto lg:mx-0 font-body">{{ user_profile.bio }}</p>
           {% endif %}
 
           <!-- Stats -->
           <div class="flex justify-center lg:justify-start gap-8 mb-6">
             <button id="followerBtn" class="stat-button group">
-              <div class="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{{ user_profile.followers.all|length }}</div>
-              <div class="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">팔로워</div>
+              <div class="text-2xl font-bold text-black group-hover:text-cream-dark transition-colors font-heading">{{ user_profile.followers.all|length }}</div>
+              <div class="text-sm text-gray-600 group-hover:text-cream-dark transition-colors font-body">팔로워</div>
             </button>
             <button id="followingBtn" class="stat-button group">
-              <div class="text-2xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{{ user_profile.followings.all|length }}</div>
-              <div class="text-sm text-gray-500 group-hover:text-purple-500 transition-colors">팔로잉</div>
+              <div class="text-2xl font-bold text-black group-hover:text-cream-dark transition-colors font-heading">{{ user_profile.followings.all|length }}</div>
+              <div class="text-sm text-gray-600 group-hover:text-cream-dark transition-colors font-body">팔로잉</div>
             </button>
           </div>
 
           <!-- Action Button -->
           <a href="{% url 'accounts:review_home' user_profile.username %}" 
-             class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-semibold rounded-full hover:from-orange-500 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+             class="inline-flex items-center px-6 py-3 bg-black text-cream-soft font-semibold rounded-full hover:bg-gray-800 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl font-body">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
             </svg>
@@ -106,13 +106,12 @@
     </div>
 
     <!-- Favorite Artists -->
-    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 mb-8 backdrop-blur-sm bg-white/80">
+    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-8 mb-8">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-3">
-          <span class="text-2xl">💖</span>
+        <h2 class="text-2xl font-bold text-black flex items-center gap-3 font-heading">
           찜한 덕
         </h2>
-        <div class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+        <div class="text-sm text-gray-600 bg-cream-light px-3 py-1 rounded-full font-body">
           {{ favorite_artists|length }}개
         </div>
       </div>
@@ -122,43 +121,43 @@
           {% for artist in favorite_artists %}
           <div class="artist-card group">
             <div class="relative">
-              <div class="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-gray-200 group-hover:border-purple-400 transition-all duration-300">
+              <div class="w-16 h-16 rounded-2xl overflow-hidden shadow-sm border-2 border-cream-light group-hover:border-cream-accent transition-all duration-300">
                 <img src="{% static artist.logo %}" alt="{{ artist.display_name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
               </div>
-              <div class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span class="text-white text-xs">♥</span>
+              <div class="absolute -top-1 -right-1 w-6 h-6 bg-cream-accent rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div class="w-2 h-2 bg-black rounded-full"></div>
               </div>
             </div>
-            <p class="text-xs font-medium text-gray-700 mt-2 text-center truncate group-hover:text-purple-600 transition-colors">{{ artist.display_name }}</p>
+            <p class="text-xs font-medium text-gray-700 mt-2 text-center truncate group-hover:text-cream-dark transition-colors font-body">{{ artist.display_name }}</p>
           </div>
           {% endfor %}
         </div>
       {% else %}
-        <div class="text-center py-16">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <span class="text-3xl opacity-50">💔</span>
+        <div class="flex flex-col items-center py-12 sm:py-16 lg:py-20 w-full">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
+              <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
+            </div>
+            <h4 class="font-heading text-lg sm:text-xl font-light text-black mb-3">아직 찜한 덕이 없어요!</h4>
+            <p class="text-gray-600 text-center text-sm sm:text-base mb-6 font-body">마음에 드는 아티스트를 찜해보세요</p>
+            <a href="{% url 'artist:index' %}" class="inline-block px-6 sm:px-8 py-3 bg-black text-cream-soft rounded-full hover:bg-gray-800 transition-colors duration-300 shadow-lg font-bold text-sm sm:text-base font-body">
+              찜덕하러 가기
+            </a>
           </div>
-          <p class="text-gray-400 text-lg">아직 찜한 덕이 없어요!</p>
-          <p class="text-gray-300 text-sm mt-2">좋아하는 아티스트를 찜해보세요</p>
-        </div>
       {% endif %}
     </div>
 
     <!-- Posts Section -->
-    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 backdrop-blur-sm bg-white/80">
+    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-8">
       <!-- Category Tabs -->
       <div class="flex justify-center mb-8">
-        <div class="bg-gray-100 rounded-2xl p-2 shadow-inner">
+        <div class="bg-cream-light rounded-2xl p-2 shadow-inner">
           <button id="tab-all" class="category-tab active">
-            <span class="tab-icon">📱</span>
             <span>전체</span>
           </button>
           <button id="tab-ddokfarm" class="category-tab">
-            <span class="tab-icon">🌱</span>
             <span>덕팜</span>
           </button>
           <button id="tab-ddokdam" class="category-tab">
-            <span class="tab-icon">💬</span>
             <span>덕담</span>
           </button>
         </div>
@@ -172,7 +171,7 @@
             {% for post in ddokfarm_posts %}
             <div class="post-item post-card" data-category="ddokfarm">
               <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" class="block">
-                <div class="relative overflow-hidden rounded-2xl shadow-lg group">
+                <div class="relative overflow-hidden rounded-2xl shadow-sm group border border-cream-light">
                   {% with post.images.first as image %}
                     <div class="aspect-square overflow-hidden">
                       <img src="{{ image.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -180,24 +179,24 @@
                   {% endwith %}
                   
                   <!-- Overlay -->
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div class="absolute bottom-4 left-4 right-4">
                       <div class="flex items-center justify-between text-white">
-                        <span class="bg-blue-500 px-3 py-1 rounded-full text-xs font-semibold">덕팜</span>
-                        <span class="text-xs">{{ post.created_at|date:"m/d" }}</span>
+                        <span class="bg-cream-accent text-black px-3 py-1 rounded-full text-xs font-semibold font-body">덕팜</span>
+                        <span class="text-xs font-body">{{ post.created_at|date:"m/d" }}</span>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Badge -->
-                  <div class="absolute top-3 right-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+                  <div class="absolute top-3 right-3 bg-cream-accent text-black text-xs px-2 py-1 rounded-full font-medium shadow-sm font-body">
                     덕팜
                   </div>
                 </div>
                 
                 <div class="p-4">
-                  <h3 class="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{{ post.title }}</h3>
-                  <div class="flex items-center text-xs text-gray-500">
+                  <h3 class="font-semibold text-black text-sm mb-2 line-clamp-2 group-hover:text-cream-dark transition-colors font-body">{{ post.title }}</h3>
+                  <div class="flex items-center text-xs text-gray-600 font-body">
                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
@@ -212,7 +211,7 @@
             {% for post in ddokdam_posts %}
             <div class="post-item post-card" data-category="ddokdam">
               <a href="{% url 'ddokdam:post_detail' 'community' post.id %}" class="block">
-                <div class="relative overflow-hidden rounded-2xl shadow-lg group">
+                <div class="relative overflow-hidden rounded-2xl shadow-sm group border border-cream-light">
                   {% with post.images.first as image %}
                     <div class="aspect-square overflow-hidden">
                       <img src="{{ image.image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -220,24 +219,24 @@
                   {% endwith %}
                   
                   <!-- Overlay -->
-                  <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div class="absolute bottom-4 left-4 right-4">
                       <div class="flex items-center justify-between text-white">
-                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs font-semibold">덕담</span>
-                        <span class="text-xs">{{ post.created_at|date:"m/d" }}</span>
+                        <span class="bg-gray-600 text-cream-soft px-3 py-1 rounded-full text-xs font-semibold font-body">덕담</span>
+                        <span class="text-xs font-body">{{ post.created_at|date:"m/d" }}</span>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Badge -->
-                  <div class="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg">
+                  <div class="absolute top-3 right-3 bg-gray-600 text-cream-soft text-xs px-2 py-1 rounded-full font-medium shadow-sm font-body">
                     덕담
                   </div>
                 </div>
                 
                 <div class="p-4">
-                  <h3 class="font-semibold text-gray-800 text-sm mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">{{ post.title }}</h3>
-                  <div class="flex items-center text-xs text-gray-500">
+                  <h3 class="font-semibold text-black text-sm mb-2 line-clamp-2 group-hover:text-cream-dark transition-colors font-body">{{ post.title }}</h3>
+                  <div class="flex items-center text-xs text-gray-600 font-body">
                     <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
@@ -250,11 +249,11 @@
           </div>
         {% else %}
           <div class="text-center py-20" id="no-posts">
-            <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-              <span class="text-4xl opacity-50">📝</span>
+            <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
+              <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
             </div>
-            <h3 class="text-xl font-semibold text-gray-600 mb-2">아직 활동이 없어요!</h3>
-            <p class="text-gray-400">첫 번째 게시글을 작성해보세요</p>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2 font-heading">아직 활동이 없어요!</h3>
+            <p class="text-gray-500 font-body">첫 번째 게시글을 작성해보세요</p>
           </div>
         {% endif %}
       </div>
@@ -262,14 +261,14 @@
   </div>
 </div>
 
-<!-- 🎨 Fixed Follow Modal -->
+<!-- Follow Modal -->
 <div id="followModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
   <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md mx-auto transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-auto transform transition-all duration-300 scale-95 opacity-0 border border-cream-light" id="modalContent">
       <!-- Modal Header -->
-      <div class="flex items-center justify-between p-6 border-b border-gray-100">
-        <h3 id="followModalTitle" class="text-xl font-bold text-gray-900">팔로워</h3>
-        <button onclick="closeFollowModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
+      <div class="flex items-center justify-between p-6 border-b border-cream-light">
+        <h3 id="followModalTitle" class="text-xl font-bold text-black font-heading">팔로워</h3>
+        <button onclick="closeFollowModal()" class="text-gray-500 hover:text-gray-700 transition-colors p-2 hover:bg-cream-light rounded-full">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
@@ -284,16 +283,16 @@
         
         <!-- 로딩 상태 -->
         <div id="modalLoading" class="text-center py-8 hidden">
-          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-          <p class="text-gray-500 mt-2">로딩 중...</p>
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cream-accent"></div>
+          <p class="text-gray-600 mt-2 font-body">로딩 중...</p>
         </div>
         
         <!-- 빈 상태 -->
         <div id="modalEmpty" class="text-center py-8 hidden">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl text-gray-400">👥</span>
+          <div class="w-16 h-16 bg-cream-light rounded-full flex items-center justify-center mx-auto mb-4">
+            <div class="w-8 h-8 bg-cream-accent rounded-full opacity-50"></div>
           </div>
-          <p class="text-gray-500">목록이 비어있습니다</p>
+          <p class="text-gray-600 font-body">목록이 비어있습니다</p>
         </div>
       </div>
     </div>
@@ -315,15 +314,15 @@
 
   /* Follow Button */
   .follow-btn {
-    @apply px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 transform hover:scale-105 shadow-lg;
+    @apply px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 transform hover:-translate-y-1 shadow-lg font-body;
   }
   
   .follow-btn.following {
-    @apply bg-gray-200 text-gray-700 hover:bg-gray-300;
+    @apply bg-cream-light text-gray-700 hover:bg-cream-accent border border-cream-dark;
   }
   
   .follow-btn.not-following {
-    @apply bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-xl;
+    @apply bg-black text-cream-soft hover:bg-gray-800 shadow-xl;
   }
 
   /* Stat Button */
@@ -338,25 +337,21 @@
 
   /* Category Tabs */
   .category-tab {
-    @apply flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer;
+    @apply flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer font-body;
     color: #6b7280;
   }
 
   .category-tab.active {
-    @apply bg-white text-gray-900 shadow-lg transform scale-105;
+    @apply bg-white text-black shadow-sm transform scale-105 border border-cream-light;
   }
 
   .category-tab:hover:not(.active) {
     @apply bg-white/50 text-gray-700;
   }
 
-  .tab-icon {
-    @apply text-lg;
-  }
-
   /* Post Card */
   .post-card {
-    @apply bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:transform hover:scale-105;
+    @apply bg-white rounded-2xl shadow-sm border border-cream-light overflow-hidden transition-all duration-300 hover:shadow-lg hover:transform hover:scale-105;
   }
 
   .post-item {
@@ -377,7 +372,7 @@
 
   /* Follow List Styles */
   .follow-list-item {
-    @apply flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200;
+    @apply flex items-center justify-between p-4 hover:bg-cream-light rounded-2xl transition-all duration-200;
   }
 
   .user-info {
@@ -385,15 +380,15 @@
   }
 
   .user-avatar {
-    @apply w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg;
+    @apply w-12 h-12 bg-cream-accent rounded-full flex items-center justify-center text-black font-bold text-lg shadow-sm;
   }
 
   .user-name {
-    @apply font-semibold text-gray-900 text-lg;
+    @apply font-semibold text-black text-lg font-body;
   }
 
   .view-profile {
-    @apply text-purple-500 hover:text-purple-700 font-semibold text-sm px-4 py-2 bg-purple-50 rounded-lg hover:bg-purple-100 transition-all duration-200;
+    @apply text-cream-dark hover:text-black font-semibold text-sm px-4 py-2 bg-cream-light rounded-lg hover:bg-cream-accent transition-all duration-200 font-body;
   }
 
   /* Animations */
@@ -414,7 +409,7 @@
 </style>
 
 <script>
-  // 🎨 Fixed Modal functionality
+  // Modal functionality
   const followModal = document.getElementById("followModal");
   const followModalTitle = document.getElementById("followModalTitle");
   const followModalList = document.getElementById("followModalList");
@@ -517,9 +512,9 @@
     followModalList.innerHTML = `
       <div class="text-center py-8">
         <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span class="text-2xl text-red-500">⚠️</span>
+          <div class="w-8 h-8 bg-red-500 rounded-full"></div>
         </div>
-        <p class="text-red-500">데이터를 불러오는데 실패했습니다</p>
+        <p class="text-red-600 font-body">데이터를 불러오는데 실패했습니다</p>
       </div>
     `;
     followModalList.classList.remove("hidden");
