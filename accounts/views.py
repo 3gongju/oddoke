@@ -133,6 +133,8 @@ def logout(request):
 @login_required
 def profile(request, username):
     user_profile = User.objects.get(username=username)
+    fandom_profile = user_profile.get_fandom_profile() # 팬덤 프로필 추가
+
     # ✅ 덕담 게시글 모두 가져오기
     community_posts = DamCommunityPost.objects.filter(user=user_profile)
     manner_posts = DamMannerPost.objects.filter(user=user_profile)
@@ -161,6 +163,7 @@ def profile(request, username):
 
     return render(request, 'profile.html', {
         'user_profile': user_profile,
+        'fandom_profile': fandom_profile,
         'ddokdam_posts': ddokdam_posts,  # 덕담
         'ddokfarm_posts': ddokfarm_posts,  # 덕팜 
         'favorite_artists': favorite_artists, # 아티스트
