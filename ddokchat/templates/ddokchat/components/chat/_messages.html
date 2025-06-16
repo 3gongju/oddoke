@@ -9,13 +9,83 @@
             
             <!-- 메시지 타입별 처리 -->
             {% if message.message_type == 'text' %}
-              {% include 'ddokchat/components/chat/message_types/_text_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 텍스트 메시지 -->
+              <div class="bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-sm">
+                <p class="text-sm break-words">{{ message.text_content.content }}</p>
+              </div>
+              
             {% elif message.message_type == 'image' %}
-              {% include 'ddokchat/components/chat/message_types/_image_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 이미지 메시지 -->
+              <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl shadow-sm">
+                <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
+                {% if message.image_content.caption %}
+                  <p class="text-sm mt-2 text-gray-200">{{ message.image_content.caption }}</p>
+                {% endif %}
+              </div>
+              
             {% elif message.message_type == 'account_info' %}
-              {% include 'ddokchat/components/chat/message_types/_account_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 내가 보낸 계좌정보 메시지 -->
+              {% with account_info=message.account_content.get_display_info %}
+                <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">💳</span>
+                      <span class="font-semibold">계좌정보 전송</span>
+                    </div>
+                    
+                    {% if account_info.is_deleted %}
+                      <div class="bg-gray-800 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-300 font-medium">{{ account_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">은행</span>
+                          <span class="font-medium text-white">{{ account_info.bank_name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">계좌번호</span>
+                          <span class="font-mono text-white">{{ account_info.account_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">예금주</span>
+                          <span class="font-medium text-white">{{ account_info.account_holder }}</span>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+              
             {% elif message.message_type == 'address_info' %}
-              {% include 'ddokchat/components/chat/message_types/_address_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 내가 보낸 주소정보 메시지 -->
+              {% with address_info=message.address_content.get_display_info %}
+                <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">📍</span>
+                      <span class="font-semibold">주소정보 전송</span>
+                    </div>
+                    
+                    {% if address_info.is_deleted %}
+                      <div class="bg-gray-800 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-300 font-medium">{{ address_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">우편번호</span>
+                          <span class="font-medium text-white">{{ address_info.postal_code }}</span>
+                        </div>
+                        <div>
+                          <span class="text-sm text-gray-300">주소</span>
+                          <p class="font-medium text-white mt-1">{{ address_info.full_address }}</p>
+                        </div>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
             {% endif %}
 
             <!-- 시간 및 읽음 여부 -->
@@ -35,19 +105,107 @@
           <div class="max-w-xs">
             
             <!-- 닉네임을 상단에 표시 -->
-            <p class="text-sm font-semibold text-gray-800 mb-1">
-              {{ message.sender.username }}
-            </p>
+            <p class="text-sm font-semibold text-gray-800 mb-1">{{ message.sender.username }}</p>
             
             <!-- 메시지 타입별 처리 -->
             {% if message.message_type == 'text' %}
-              {% include 'ddokchat/components/chat/message_types/_text_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 텍스트 메시지 -->
+              <div class="bg-white text-gray-800 border border-gray-200 px-4 py-2 rounded-2xl shadow-sm">
+                <p class="text-sm break-words">{{ message.text_content.content }}</p>
+              </div>
+              
             {% elif message.message_type == 'image' %}
-              {% include 'ddokchat/components/chat/message_types/_image_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 이미지 메시지 -->
+              <div class="bg-white text-gray-800 border border-gray-200 px-3 py-2 rounded-2xl shadow-sm">
+                <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
+                {% if message.image_content.caption %}
+                  <p class="text-sm mt-2 text-gray-600">{{ message.image_content.caption }}</p>
+                {% endif %}
+              </div>
+              
             {% elif message.message_type == 'account_info' %}
-              {% include 'ddokchat/components/chat/message_types/_account_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 계좌정보 메시지 (상대방이 보낸 것) -->
+              {% with account_info=message.account_content.get_display_info %}
+                <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">💳</span>
+                      <span class="font-semibold">계좌정보</span>
+                    </div>
+                    
+                    {% if account_info.is_deleted %}
+                      <div class="bg-gray-100 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600 font-medium">{{ account_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">은행</span>
+                          <span class="font-medium">{{ account_info.bank_name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">계좌번호</span>
+                          <span class="font-mono">{{ account_info.account_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">예금주</span>
+                          <span class="font-medium">{{ account_info.account_holder }}</span>
+                        </div>
+                      </div>
+                      
+                      <!-- 상대방 메시지에만 버튼 표시 -->
+                      <div class="flex space-x-2 mt-3">
+                        <button onclick="copyAccountNumber('{{ account_info.account_number }}')" 
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          계좌번호 복사
+                        </button>
+                        <button onclick="checkFraudHistory('{{ account_info.bank_code }}', '{{ account_info.account_number }}', '{{ account_info.account_holder }}')" 
+                                class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          신고이력 조회
+                        </button>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
+              
             {% elif message.message_type == 'address_info' %}
-              {% include 'ddokchat/components/chat/message_types/_address_message.html' with message=message is_my_message=is_my_message %}
+              <!-- 주소정보 메시지 (상대방이 보낸 것) -->
+              {% with address_info=message.address_content.get_display_info %}
+                <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
+                  <div class="space-y-3">
+                    <div class="flex items-center space-x-2 mb-2">
+                      <span class="text-lg">📍</span>
+                      <span class="font-semibold">배송 주소</span>
+                    </div>
+                    
+                    {% if address_info.is_deleted %}
+                      <div class="bg-gray-100 rounded-lg p-4 text-center">
+                        <p class="text-sm text-gray-600 font-medium">{{ address_info.deleted_message }}</p>
+                      </div>
+                    {% else %}
+                      <div class="bg-gray-50 rounded-lg p-3 space-y-2">
+                        <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">우편번호</span>
+                          <span class="font-medium">{{ address_info.postal_code }}</span>
+                        </div>
+                        <div>
+                          <span class="text-sm text-gray-600">주소</span>
+                          <p class="font-medium mt-1">{{ address_info.full_address }}</p>
+                        </div>
+                      </div>
+                      
+                      <!-- 주소 복사 버튼 -->
+                      <div class="mt-3">
+                        <button onclick="copyAddress('{{ address_info.full_address }}')" 
+                                class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          주소 복사
+                        </button>
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% endwith %}
             {% endif %}
 
             <!-- 시간 표시 -->

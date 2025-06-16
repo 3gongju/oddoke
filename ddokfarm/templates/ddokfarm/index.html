@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   {% include 'ddokfarm/components/_header.html' %}
@@ -7,12 +8,37 @@
 
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
 
-  {% include 'ddokfarm/components/_sort_filter.html' %}
+  <!-- ✅ 고급 필터를 카테고리 필터 바로 다음으로 이동 -->
+  {% include 'ddokfarm/components/_advanced_filter.html' %}
 
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
+  <!-- 순서 정렬 (게시글 작성 바로 밑으로 이동) -->
+  <div class="flex justify-end mb-4">
+    <div class="flex items-center gap-2">
+      <label for="sort-select" class="text-sm font-medium text-gray-700">정렬:</label>
+      <select id="sort-select" 
+              class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-400">
+        <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>최신순</option>
+        <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>낮은 가격순</option>
+        <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>높은 가격순</option>
+        <option value="likes" {% if sort_by == 'likes' %}selected{% endif %}>찜 많은 순</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 판매중 상품만 보기 (필터링 바로 밑으로 이동) -->
+  <div class="flex items-center gap-2 mb-6">
+    <input type="checkbox" 
+           id="available-only" 
+           {% if show_available_only %}checked{% endif %}
+           class="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+    <label for="available-only" class="text-sm font-medium text-gray-700">
+      판매중인 상품만 보기
+    </label>
+  </div>
+
   {% if posts %}
-    <!-- 개선된 반응형 그리드 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {% for post in posts %}
         {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url %}
@@ -20,21 +46,64 @@
     </div>
   {% else %}
     <div class="text-center py-12">
-      <div class="text-gray-400 text-6xl mb-4">📦</div>
-      <p class="text-gray-500 text-lg">게시글이 없습니다.</p>
+      <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
+      </div>
+      <p class="text-gray-500 text-lg">
+        {% if selected_shipping or selected_conditions or selected_md or min_price or max_price %}
+          선택한 조건에 맞는 게시글이 없습니다.
+        {% else %}
+          게시글이 없습니다.
+        {% endif %}
+      </p>
       {% if show_available_only %}
         <p class="text-gray-400 text-sm mt-2">판매중 필터를 해제해보세요.</p>
+      {% endif %}
+      {% if selected_shipping or selected_conditions or selected_md or min_price or max_price %}
+        <!-- <button onclick="clearAllFilters()" 
+                class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          필터 초기화
+        </button> -->
       {% endif %}
     </div>
   {% endif %}
 </div>
 
-<!-- 전역 사용자 정보 및 CSRF 토큰 설정 -->
+<!-- JavaScript -->
 <script>
 window.user = {
   is_authenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
   username: '{{ user.username|default:"" }}'
 };
 window.csrfToken = '{{ csrf_token }}';
+
+// 정렬 변경 처리
+document.addEventListener('DOMContentLoaded', function() {
+  const sortSelect = document.getElementById('sort-select');
+  const availableOnlyCheckbox = document.getElementById('available-only');
+  
+  function updateURL() {
+    const url = new URL(window.location);
+    const params = new URLSearchParams(url.search);
+    
+    // 정렬 파라미터 업데이트
+    params.set('sort', sortSelect.value);
+    
+    // 판매중 필터 파라미터 업데이트
+    if (availableOnlyCheckbox.checked) {
+      params.set('available_only', 'on');
+    } else {
+      params.delete('available_only');
+    }
+    
+    // URL 업데이트 및 페이지 리로드
+    url.search = params.toString();
+    window.location.href = url.toString();
+  }
+  
+  // 이벤트 리스너 등록
+  sortSelect.addEventListener('change', updateURL);
+  availableOnlyCheckbox.addEventListener('change', updateURL);
+});
 </script>
 {% endblock %}
