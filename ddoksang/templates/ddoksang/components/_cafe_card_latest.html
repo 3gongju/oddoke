@@ -3,6 +3,7 @@
 최신 생일카페 카드 - 종료 효과 포함
 - 종료된 카페: 그레이스케일 + 블러 + 오버레이 효과
 - 기존 카드와 동일한 종료 스타일 적용
+- 이미지 없을 때 로고 표시
 =====================================
 {% endcomment %}
 
@@ -22,9 +23,10 @@
            class="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
            loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
-        <span class="text-orange-400 text-6xl mb-2">🎂</span>
-        <p class="text-orange-600 font-medium text-lg">{{ cafe.cafe_name }}</p>
+      <!-- 🔧 이미지 로딩 실패 시 로고 표시 -->
+      <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
+        <p class="text-orange-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
       </div>
     {% elif cafe.main_image %}
       <img src="{{ cafe.main_image.url }}" 
@@ -32,9 +34,10 @@
            class="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
            loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
-        <span class="text-orange-400 text-6xl mb-2">🎂</span>
-        <p class="text-orange-600 font-medium text-lg">{{ cafe.cafe_name }}</p>
+      <!-- 🔧 이미지 로딩 실패 시 로고 표시 -->
+      <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
+        <p class="text-orange-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
       </div>
     {% elif cafe.images.all %}
       <img src="{{ cafe.images.all.0.image.url }}" 
@@ -42,14 +45,16 @@
            class="w-full h-full object-contain bg-white group-hover:scale-105 transition-transform duration-500"
            loading="lazy"
            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
-        <span class="text-orange-400 text-6xl mb-2">🎂</span>
-        <p class="text-orange-600 font-medium text-lg">{{ cafe.cafe_name }}</p>
+      <!-- 🔧 이미지 로딩 실패 시 로고 표시 -->
+      <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col items-center justify-center" style="display: none;">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
+        <p class="text-orange-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
       </div>
     {% else %}
-      <div class="w-full h-full bg-gradient-to-br from-yellow-100 to-orange-100 flex flex-col items-center justify-center">
-        <span class="text-orange-400 text-6xl mb-2">🎂</span>
-        <p class="text-orange-600 font-medium text-lg">{{ cafe.cafe_name }}</p>
+      <!-- 🔧 이미지 없을 때 로고 표시 -->
+      <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col items-center justify-center">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
+        <p class="text-orange-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
       </div>
     {% endif %}
 
@@ -124,7 +129,7 @@
       <div class="flex items-center text-sm text-gray-600">
         <div class="flex items-center">
           <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
           <span class="truncate date-range">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
         </div>
