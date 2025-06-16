@@ -7,7 +7,11 @@
 {% block body %}
 
 <!-- 검색 헤더 컴포넌트 -->
-{% include 'ddoksang/components/_search_header.html' with search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=False total_count=results.count %}
+<section class="pt-10 pb-6">
+  <div class="max-w-7xl mx-auto px-4">
+    {% include 'ddoksang/components/_search_header.html' with search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=False total_count=results.count %}
+  </div>
+</section>
 
 <!-- 지도 마커 -->
 {% if query and results %}
