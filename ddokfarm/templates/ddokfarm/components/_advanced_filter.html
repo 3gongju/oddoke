@@ -12,40 +12,56 @@
     
     <!-- 선택된 필터 표시 (두 번째 사진 스타일) -->
     <div id="active-filters" class="flex items-center gap-2">
-      {% if selected_shipping %}
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-          {{ selected_shipping_display }}
-          <button type="button" onclick="removeFilter('shipping')" class="ml-2 text-white hover:text-gray-300">×</button>
-        </span>
-      {% endif %}
-      
-      {% if selected_conditions %}
-        {% for condition in selected_conditions %}
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-            {{ condition_display_map|get_item:condition }}
-            <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-2 text-white hover:text-gray-300">×</button>
-          </span>
-        {% endfor %}
-      {% endif %}
-      
-      {% if min_price or max_price %}
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-          {% if min_price and max_price %}{{ min_price|floatformat:0 }}원 - {{ max_price|floatformat:0 }}원
-          {% elif min_price %}{{ min_price|floatformat:0 }}원 이상
-          {% elif max_price %}{{ max_price|floatformat:0 }}원 이하
-          {% endif %}
-          <button type="button" onclick="removeFilter('price')" class="ml-2 text-white hover:text-gray-300">×</button>
-        </span>
-      {% endif %}
-    </div>
-    
-    <!-- 필터 초기화 버튼 -->
-    {% if selected_shipping or selected_conditions or min_price or max_price %}
-      <button onclick="clearAllFilters()" 
-              class="text-sm text-gray-500 hover:text-gray-700 underline">
-        전체 해제
-      </button>
-    {% endif %}
+        {% if selected_shipping %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            {{ selected_shipping_display }}
+            <button type="button" onclick="removeFilter('shipping')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+        {% endif %}
+        
+        {% if wantto %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            {% if category == 'sell' %}
+                {% if wantto == 'buy' %}삽니다
+                {% elif wantto == 'sell' %}팝니다  
+                {% elif wantto == 'exchange' %}교환해요
+                {% endif %}
+            {% elif category == 'rental' %}
+                {% if wantto == 'sell' %}빌려줍니다
+                {% elif wantto == 'buy' %}빌려주세요
+                {% endif %}
+            {% endif %}
+            <button type="button" onclick="removeFilter('wantto')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+        {% endif %}
+        
+        {% if selected_conditions %}
+            {% for condition in selected_conditions %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+                {{ condition_display_map|get_item:condition }}
+                <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+            {% endfor %}
+        {% endif %}
+        
+        {% if min_price or max_price %}
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            {% if min_price and max_price %}{{ min_price|floatformat:0 }}원 - {{ max_price|floatformat:0 }}원
+            {% elif min_price %}{{ min_price|floatformat:0 }}원 이상
+            {% elif max_price %}{{ max_price|floatformat:0 }}원 이하
+            {% endif %}
+            <button type="button" onclick="removeFilter('price')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+        {% endif %}
+        </div>
+
+        <!-- 필터 초기화 버튼 -->
+        {% if selected_shipping or selected_conditions or min_price or max_price or wantto %}
+        <button onclick="clearAllFilters()" 
+                class="text-sm text-gray-500 hover:text-gray-700 underline">
+            전체 해제
+        </button>
+        {% endif %}
   </div>
 </div>
 
@@ -261,6 +277,8 @@ function removeFilter(filterType, value = null) {
   
   if (filterType === 'shipping') {
     params.delete('shipping');
+  } else if (filterType === 'wantto') {
+    params.delete('wantto');
   } else if (filterType === 'condition') {
     if (value) {
       // 특정 조건만 제거
@@ -289,6 +307,7 @@ function clearAllFilters() {
   const params = new URLSearchParams(url.search);
   
   params.delete('shipping');
+  params.delete('wantto');
   params.delete('condition');
   params.delete('min_price');
   params.delete('max_price');

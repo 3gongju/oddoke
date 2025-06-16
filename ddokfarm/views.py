@@ -42,30 +42,30 @@ def main(request):
 # 전체 게시글 보기
 def index(request):
     category = request.GET.get('category')
+    wantto = request.GET.get('wantto')  # URL 파라미터는 wantto로 유지
     query = request.GET.get('q', '').strip()
     sort_by = request.GET.get('sort', 'latest')
     show_available_only = request.GET.get('available_only') == 'on'
     
-    # 필터링 파라미터 수정 - 상품 상태 다중 선택
+    # 필터링 파라미터 (기존과 동일)
     selected_shipping = request.GET.get('shipping', '')
-    selected_conditions = request.GET.getlist('condition')  # 다중 선택으로 변경
+    selected_conditions = request.GET.getlist('condition')
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
 
-    # 필터링 조건 구성
+    # 기본 필터링 조건 구성 (기존과 동일)
     filter_conditions = Q()
     
     if selected_shipping:
         filter_conditions &= Q(shipping=selected_shipping)
     
     if selected_conditions:
-        # 여러 조건을 OR로 연결
         condition_q = Q()
         for condition in selected_conditions:
             condition_q |= Q(condition=condition)
         filter_conditions &= condition_q
     
-    # 가격 필터링 (분철은 member_prices 고려)
+    # 가격 필터링 (기존과 동일)
     price_conditions = Q()
     if min_price:
         try:
@@ -81,7 +81,13 @@ def index(request):
         except ValueError:
             max_price = ''
 
+    # want_to 필터링 추가 (DB 필드명이 want_to라면)
+    wantto_conditions = Q()
+    if wantto:
+        wantto_conditions &= Q(want_to=wantto)  # 실제 DB 필드명 사용
+
     if query:
+        # 검색 로직 (want_to 필터 추가)
         artist_filter = (
             Q(artist__display_name__icontains=query) |
             Q(artist__korean_name__icontains=query) |
@@ -92,17 +98,16 @@ def index(request):
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
         common_filter = text_filter | artist_filter | member_filter
 
-        # 검색 + 필터링 조합
         sell_results = FarmSellPost.objects.filter(
-            common_filter & filter_conditions & price_conditions
+            common_filter & filter_conditions & price_conditions & wantto_conditions
         ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
         rental_results = FarmRentalPost.objects.filter(
-            common_filter & filter_conditions & price_conditions
+            common_filter & filter_conditions & price_conditions & wantto_conditions
         ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
+        # 분철은 want_to 필터링 없음
         split_filter = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
-        # 분철 게시글 가격 필터링 (member_prices의 최소값 사용)
         split_price_filter = Q()
         if min_price:
             try:
@@ -121,16 +126,17 @@ def index(request):
 
         posts = list(chain(sell_results, rental_results, split_results))
     else:
-        # 카테고리별 필터링
+        # 카테고리별 필터링 (want_to 필터 추가)
         if category == 'sell':
             posts = FarmSellPost.objects.filter(
-                filter_conditions & price_conditions
+                filter_conditions & price_conditions & wantto_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'rental':
             posts = FarmRentalPost.objects.filter(
-                filter_conditions & price_conditions
+                filter_conditions & price_conditions & wantto_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'split':
+            # 분철은 want_to 필터링 없음
             split_price_filter = Q()
             if min_price:
                 try:
@@ -146,13 +152,13 @@ def index(request):
                 split_price_filter
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
         else:
-            # 전체 카테고리
+            # 전체 카테고리 (want_to 필터 적용)
             sell_posts = FarmSellPost.objects.filter(
-                filter_conditions & price_conditions
+                filter_conditions & price_conditions & wantto_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
             
             rental_posts = FarmRentalPost.objects.filter(
-                filter_conditions & price_conditions
+                filter_conditions & price_conditions & wantto_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
             
             split_price_filter = Q()
@@ -175,7 +181,7 @@ def index(request):
         if not isinstance(posts, list):
             posts = list(posts)
 
-    # 판매중 필터 적용
+    # 판매중 필터 적용 (기존과 동일)
     if show_available_only:
         posts = [post for post in posts if not post.is_sold]
 
@@ -196,7 +202,7 @@ def index(request):
 
     clean_category = (request.GET.get('category') or 'sell').split('?')[0]
 
-    # 필터 표시용 데이터 생성
+    # 필터 표시용 데이터 생성 (기존과 동일)
     shipping_choices = dict(FarmSellPost.SHIPPING_CHOICES)
     condition_choices = dict(FarmSellPost.CONDITION_CHOICES)
     
@@ -208,6 +214,7 @@ def index(request):
     context = {
         'posts': posts,
         'category': category,
+        'wantto': wantto,  # 템플릿에서는 wantto로 사용
         'query': query,
         'sort_by': sort_by,
         'show_available_only': show_available_only,
@@ -216,13 +223,13 @@ def index(request):
         'category_urls': get_ddokfarm_category_urls(),
         'default_category': 'sell',
         
-        # 필터링 관련 컨텍스트 수정
+        # 필터링 관련 컨텍스트 (기존과 동일)
         'selected_shipping': selected_shipping,
-        'selected_conditions': selected_conditions,  # 리스트로 변경
+        'selected_conditions': selected_conditions,
         'min_price': min_price,
         'max_price': max_price,
         'selected_shipping_display': shipping_choices.get(selected_shipping, ''),
-        'condition_display_map': condition_display_map,  # 추가
+        'condition_display_map': condition_display_map,
     }
 
     return render(request, 'ddokfarm/index.html', context)
