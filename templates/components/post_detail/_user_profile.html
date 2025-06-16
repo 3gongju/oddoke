@@ -12,11 +12,11 @@
 <a href="{% url 'accounts:profile' user.username %}" class="font-semibold inline-flex items-center space-x-1 relative group">
   <span>{{ user.display_name }}</span>
 
-  {% if user.is_verified_fandom %}
+  {% if user.fandom_profile.is_verified_fandom %}
     <span class="ml-1 text-pink-500 text-sm cursor-pointer relative">
       ⭐
       <div class="absolute left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs bg-black text-white rounded shadow-lg opacity-0 group-hover:opacity-100 transition duration-300 z-10 whitespace-nowrap">
-        {{ user.fandom_artist.fandom }}
+        {{ user.fandom_profile.fandom_artist.fandom }}
       </div>
     </span>
   {% endif %}
