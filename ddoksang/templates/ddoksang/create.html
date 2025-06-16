@@ -324,127 +324,78 @@
 </section>
 
 <!-- ✅ 메시지 시스템 -->
-<!-- ✅ 메시지 시스템 (개선된 버전) -->
-{{ messages_json|json_script:"ddoksang-messages" }}
-<script>
-console.log('🔍 메시지 초기화 시작...');
-
-// 1. DOM에서 메시지 데이터 읽기
-const messagesElement = document.getElementById('ddoksang-messages');
-let serverMessages = {};
-
-if (messagesElement) {
-    try {
-        const rawText = messagesElement.textContent;
-        console.log('🔍 서버 메시지 원본 길이:', rawText.length);
-        
-        serverMessages = JSON.parse(rawText);
-        console.log('✅ 서버 메시지 파싱 성공:', Object.keys(serverMessages));
-        
-        // 즉시 DDOKSANG_MESSAGES 설정
-        window.DDOKSANG_MESSAGES = serverMessages;
-        
-        // ✅ 메시지 내용 확인 (디버깅)
-        if (serverMessages.DUPLICATE_CHECK) {
-            console.log('✅ DUPLICATE_CHECK 메시지:', serverMessages.DUPLICATE_CHECK);
-            console.log('🔍 NO_DUPLICATE:', serverMessages.DUPLICATE_CHECK.NO_DUPLICATE);
-        }
-        
-    } catch (error) {
-        console.error('❌ 서버 메시지 파싱 실패:', error);
-        serverMessages = {};
-        window.DDOKSANG_MESSAGES = {};
-    }
-} else {
-    console.warn('⚠️ 메시지 DOM 요소 없음');
-    window.DDOKSANG_MESSAGES = {};
-}
-
-// 2. ✅ 개선된 메시지 접근 함수 정의
-window.getMsg = function(category, key, params = {}) {
-    try {
-        // 메시지 시스템이 준비되지 않은 경우 대기
-        if (!window.DDOKSANG_MESSAGES || Object.keys(window.DDOKSANG_MESSAGES).length === 0) {
-            console.warn(`⚠️ 메시지 시스템이 아직 준비되지 않음: ${category}.${key}`);
-            return `${category}.${key}`;
-        }
-        
-        if (!window.DDOKSANG_MESSAGES[category]) {
-            console.error(`❌ 메시지 카테고리 없음: ${category}`, '사용 가능:', Object.keys(window.DDOKSANG_MESSAGES));
-            return `${category}.${key}`;
-        }
-        
-        const message = window.DDOKSANG_MESSAGES[category][key];
-        if (!message) {
-            console.error(`❌ 메시지 키 없음: ${category}.${key}`, '사용 가능:', Object.keys(window.DDOKSANG_MESSAGES[category]));
-            return `${category}.${key}`;
-        }
-        
-        // 파라미터 치환
-        let result = message;
-        if (params && typeof params === 'object') {
-            Object.entries(params).forEach(([paramKey, value]) => {
-                result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
-            });
-        }
-        
-        console.log(`✅ 메시지 반환: ${category}.${key} = "${result}"`);
-        return result;
-    } catch (error) {
-        console.error('❌ 메시지 처리 오류:', error);
-        return `${category}.${key}`;
-    }
-};
-
-// 3. ✅ 하위 호환성을 위한 별칭
-window.msg = window.getMsg;
-
-// 4. ✅ 메시지 시스템 준비 완료 표시
-window.DDOKSANG_MESSAGES_READY = true;
-
-// 5. 즉시 테스트
-const testResult = window.getMsg('DUPLICATE_CHECK', 'NO_DUPLICATE');
-console.log('🧪 메시지 테스트 결과:', testResult);
-
-// 6. ✅ 메시지가 올바르게 번역되었는지 확인
-if (testResult === 'DUPLICATE_CHECK.NO_DUPLICATE') {
-    console.error('❌ 메시지가 번역되지 않음 - 시스템 오류');
-} else {
-    console.log('✅ 메시지 번역 성공');
-}
-
-console.log('✅ 메시지 시스템 초기화 완료');
+<script type="application/json" id="ddoksang-messages">
+{{ messages_json|safe }}
 </script>
 
-<!-- ✅ 메시지 시스템 대기 스크립트 -->
 <script>
-// 메시지 시스템이 완전히 로드될 때까지 대기하는 함수
-window.waitForMessages = function(callback, maxWait = 5000) {
-    const startTime = Date.now();
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 메시지 시스템 초기화');
     
-    function checkMessages() {
-        if (window.DDOKSANG_MESSAGES_READY && 
-            window.DDOKSANG_MESSAGES && 
-            Object.keys(window.DDOKSANG_MESSAGES).length > 0) {
+    // messages.py에서 온 데이터 로드
+    let DDOKSANG_MESSAGES = {};
+    try {
+        const messageElement = document.getElementById('ddoksang-messages');
+        if (messageElement && messageElement.textContent.trim()) {
+            DDOKSANG_MESSAGES = JSON.parse(messageElement.textContent);
+            console.log('✅ messages.py 데이터 로드 성공:', Object.keys(DDOKSANG_MESSAGES));
             
-            console.log('✅ 메시지 시스템 준비 완료 - 콜백 실행');
-            callback();
-            return;
+            // DUPLICATE_CHECK 메시지 확인
+            if (DDOKSANG_MESSAGES.DUPLICATE_CHECK) {
+                console.log('✅ DUPLICATE_CHECK 메시지들:', Object.keys(DDOKSANG_MESSAGES.DUPLICATE_CHECK));
+            }
+        } else {
+            throw new Error('메시지 요소가 비어있음');
         }
-        
-        // 최대 대기 시간 확인
-        if (Date.now() - startTime > maxWait) {
-            console.warn('⚠️ 메시지 시스템 로드 타임아웃');
-            callback(); // 타임아웃되어도 계속 진행
-            return;
-        }
-        
-        // 100ms 후 다시 확인
-        setTimeout(checkMessages, 100);
+    } catch (error) {
+        console.error('❌ messages.py 데이터 로드 실패:', error);
+        // messages.py가 실패했을 때만 기본값 사용
+        DDOKSANG_MESSAGES = {
+            DUPLICATE_CHECK: {
+                NO_DUPLICATE: '해당 덕의 생카를 어덕해에 등록해주세요',
+                DUPLICATE_FOUND: '유사한 생일카페가 {count}개 발견되었습니다'
+            }
+        };
     }
     
-    checkMessages();
-};
+    // 전역 메시지 함수 정의
+    window.msg = function(category, key, params = {}) {
+        try {
+            if (!DDOKSANG_MESSAGES[category]) {
+                console.warn(`메시지 카테고리를 찾을 수 없음: ${category}`);
+                return `[${category}.${key}]`;
+            }
+            
+            if (!DDOKSANG_MESSAGES[category][key]) {
+                console.warn(`메시지 키를 찾을 수 없음: ${category}.${key}`);
+                return `[${category}.${key}]`;
+            }
+            
+            let message = DDOKSANG_MESSAGES[category][key];
+            
+            // 파라미터 치환 (messages.py의 {count} 같은 것들)
+            if (params && typeof params === 'object') {
+                Object.entries(params).forEach(([paramKey, value]) => {
+                    message = message.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
+                });
+            }
+            
+            console.log(`✅ 메시지 반환: ${category}.${key} = "${message}"`);
+            return message;
+        } catch (error) {
+            console.error('메시지 처리 오류:', error);
+            return `[오류: ${category}.${key}]`;
+        }
+    };
+    
+    // 즉시 테스트
+    console.log('🧪 메시지 테스트 결과:');
+    console.log('- NO_DUPLICATE:', window.msg('DUPLICATE_CHECK', 'NO_DUPLICATE'));
+    console.log('- DUPLICATE_FOUND:', window.msg('DUPLICATE_CHECK', 'DUPLICATE_FOUND', {count: 3}));
+    
+    // 전역 변수로도 설정 (다른 스크립트에서 접근 가능)
+    window.DDOKSANG_MESSAGES = DDOKSANG_MESSAGES;
+});
 </script>
 
 <!-- 카카오맵 API 키 확인 -->

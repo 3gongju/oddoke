@@ -122,32 +122,35 @@ def cafe_create_view(request):
             messages.error(request, f'등록 중 오류가 발생했습니다: {str(e)}')
             return redirect('ddoksang:create')
     
-    # ✅ GET 요청 처리 - 메시지와 API 키 전달 확인
+    # ✅ messages.py의 ALL_MESSAGES 제대로 활용
     from ddoksang.messages import ALL_MESSAGES
     import json
     
-    # 디버깅: 메시지 확인
-    print("🔍 ALL_MESSAGES 내용:", ALL_MESSAGES.keys())
-    print("🔍 DUPLICATE_CHECK 메시지:", ALL_MESSAGES.get('DUPLICATE_CHECK', {}).keys())
+    # 디버깅: messages.py 내용 확인
+    print("🔍 messages.py ALL_MESSAGES 키들:", ALL_MESSAGES.keys())
+    if 'DUPLICATE_CHECK' in ALL_MESSAGES:
+        print("🔍 DUPLICATE_CHECK 메시지들:", ALL_MESSAGES['DUPLICATE_CHECK'].keys())
+        print("🔍 NO_DUPLICATE 메시지:", ALL_MESSAGES['DUPLICATE_CHECK'].get('NO_DUPLICATE'))
     
-    # 카카오 API 키 확인 (여러 가능한 설정명 확인)
+    
+    # 카카오 API 키
     kakao_api_key = (
         getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
         getattr(settings, 'KAKAO_API_KEY', '') or
-        getattr(settings, 'KAKAO_REST_API_KEY', '') or
-        getattr(settings, 'KAKAO_JAVASCRIPT_KEY', '') or
         ''
     )
     
-    # 디버깅: API 키 확인
-    print("🔍 카카오 API 키 길이:", len(kakao_api_key))
-    print("🔍 카카오 API 키 첫 10자:", kakao_api_key[:10] if kakao_api_key else "없음")
+    # ✅ messages.py의 ALL_MESSAGES를 JSON으로 직렬화
+    try:
+        messages_json = json.dumps(ALL_MESSAGES, ensure_ascii=False)
+        print(f"✅ messages.py JSON 직렬화 성공, 길이: {len(messages_json)}자")
+    except Exception as e:
+        print(f"❌ messages.py JSON 직렬화 실패: {e}")
+        messages_json = '{}'
     
     context = {
         'kakao_api_key': kakao_api_key,
-        'messages_json': json.dumps(ALL_MESSAGES, ensure_ascii=False),
-        # 디버깅용 추가
-        'debug_messages': ALL_MESSAGES,  # 템플릿에서 직접 확인 가능
+        'messages_json': messages_json,  # messages.py의 실제 데이터
     }
     
     return render(request, 'ddoksang/create.html', context)

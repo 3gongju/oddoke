@@ -234,14 +234,15 @@ document.addEventListener('DOMContentLoaded', function() {
         if (normalFields.length > 0) {
             const validation = FormUtils.validateRequired(normalFields);
             if (!validation.valid) {
-                FormUtils.showToast(getMsg('FORM_VALIDATION', 'REQUIRED_FIELD', {field: getFieldLabel(validation.field)}), 'warning');
+                const fieldLabel = getFieldLabel(validation.field);
+                FormUtils.showToast(`${fieldLabel}을(를) 입력해주세요.`, 'warning');
                 return false;
             }
         }
 
         if (rules.includes('images')) {
             if (!imageUploadModule || imageUploadModule.getFileCount() === 0) {
-                FormUtils.showToast(getMsg('FORM_VALIDATION', 'IMAGE_REQUIRED'), 'warning');
+                FormUtils.showToast('최소 1개의 이미지를 업로드해주세요.', 'warning');
                 return false;
             }
         }
@@ -249,13 +250,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentStep === 3) {
             const dateValidation = FormUtils.validateDateRange('start_date', 'end_date');
             if (!dateValidation.valid) {
-                FormUtils.showToast(getMsg('FORM_VALIDATION', 'DATE_RANGE_ERROR'), 'warning');
+                FormUtils.showToast(dateValidation.message, 'warning');
                 return false;
             }
         }
 
         return true;
     }
+
 
     function getFieldLabel(fieldId) {
         // ✅ messages.py에서 필드 라벨 가져오기
@@ -494,87 +496,91 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ✅ 개선된 중복 확인 실행 함수
     async function performDuplicateCheck() {
-        console.log('🚀 중복 확인 실행 시작');
+    console.log('🚀 중복 확인 실행 시작');
+    
+    const checkBtn = document.getElementById('check-duplicate-btn');
+    
+    // 버튼이 disabled 상태인지 확인
+    if (checkBtn.disabled) {
+        console.warn('⚠️ 버튼이 비활성화 상태입니다');
+        return;
+    }
+
+    const data = {
+        artist_id: FormUtils.getValue('check_artist_id'),
+        member_id: FormUtils.getValue('check_member_id'),
+        cafe_name: FormUtils.getValue('check_cafe_name'),
+        start_date: FormUtils.getValue('check_start_date'),
+        end_date: FormUtils.getValue('check_end_date')
+    };
+
+    console.log('📊 요청 데이터:', data);
+
+    // 필수 필드 재검증
+    if (!data.artist_id || !data.cafe_name || !data.start_date || !data.end_date) {
+        // ✅ messages.py의 VALIDATION_ERROR 메시지 사용
+        const message = window.msg('DUPLICATE_CHECK', 'VALIDATION_ERROR');
+        FormUtils.showToast(message, 'warning');
+        console.error('❌ 필수 필드 누락:', data);
+        return;
+    }
+
+    // 버튼 로딩 상태 설정
+    const originalText = checkBtn.textContent;
+    const originalDisabled = checkBtn.disabled;
+    
+    checkBtn.disabled = true;
+    checkBtn.textContent = '확인 중...';
+    checkBtn.className = checkBtn.className
+        .replace(/bg-gray-\d+|hover:bg-gray-\d+/g, '')
+        + ' bg-gray-600';
+
+    try {
+        const url = `/ddoksang/cafe/check-duplicate/?` + 
+            Object.entries(data)
+                .filter(([k, v]) => v) // 빈 값 제외
+                .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+                .join('&');
         
-        const checkBtn = document.getElementById('check-duplicate-btn');
+        console.log('🌐 요청 URL:', url);
         
-        // 버튼이 disabled 상태인지 확인
-        if (checkBtn.disabled) {
-            console.warn('⚠️ 버튼이 비활성화 상태입니다');
-            return;
-        }
-
-        const data = {
-            artist_id: FormUtils.getValue('check_artist_id'),
-            member_id: FormUtils.getValue('check_member_id'),
-            cafe_name: FormUtils.getValue('check_cafe_name'),
-            start_date: FormUtils.getValue('check_start_date'),
-            end_date: FormUtils.getValue('check_end_date')
-        };
-
-        console.log('📊 요청 데이터:', data);
-
-        // 필수 필드 재검증
-        if (!data.artist_id || !data.cafe_name || !data.start_date || !data.end_date) {
-            FormUtils.showToast(getMsg('FORM_VALIDATION', 'VALIDATION_ERROR'), 'warning');
-            console.error('❌ 필수 필드 누락:', data);
-            return;
-        }
-
-        // 버튼 로딩 상태 설정
-        const originalText = checkBtn.textContent;
-        const originalDisabled = checkBtn.disabled;
+        const response = await fetch(url);
         
-        checkBtn.disabled = true;
-        checkBtn.textContent = getMsg('DUPLICATE_CHECK', 'CHECKING_DUPLICATE');
-        checkBtn.className = checkBtn.className
-            .replace(/bg-gray-\d+|hover:bg-gray-\d+/g, '')
-            + ' bg-gray-600';
-
-        try {
-            const url = `/ddoksang/cafe/check-duplicate/?` + 
-                Object.entries(data)
-                    .filter(([k, v]) => v) // 빈 값 제외
-                    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-                    .join('&');
-            
-            console.log('🌐 요청 URL:', url);
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const result = await response.json();
-            console.log('📥 응답 데이터:', result);
-            
-            if (result.error) {
-                throw new Error(result.error);
-            }
-            
-            handleDuplicateCheckResult(result);
-            
-        } catch (error) {
-            console.error('❌ 중복 확인 오류:', error);
-            FormUtils.showToast(getMsg('DUPLICATE_CHECK', 'SERVER_ERROR'), 'error');
-            
-            // 오류 시 폼 숨기기 및 오류 메시지 표시
-            hideDuplicateCheckForm();
-            showErrorMessage(error.message);
-            
-        } finally {
-            // 버튼 상태 복원
-            checkBtn.disabled = originalDisabled;
-            checkBtn.textContent = originalText;
-            
-            // 버튼 스타일 복원
-            if (window.updateDuplicateButtonState) {
-                window.updateDuplicateButtonState();
-            }
-            
-            console.log('🔄 중복 확인 완료 - 버튼 상태 복원');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        const result = await response.json();
+        console.log('📥 응답 데이터:', result);
+        
+        if (result.error) {
+            throw new Error(result.error);
+        }
+        
+        handleDuplicateCheckResult(result);
+        
+    } catch (error) {
+        console.error('❌ 중복 확인 오류:', error);
+        // ✅ messages.py의 SERVER_ERROR 메시지 사용
+        const message = window.msg('DUPLICATE_CHECK', 'SERVER_ERROR');
+        FormUtils.showToast(message, 'error');
+        
+        // 오류 시 폼 숨기기 및 오류 메시지 표시
+        hideDuplicateCheckForm();
+        showErrorMessage(error.message);
+        
+    } finally {
+        // 버튼 상태 복원
+        checkBtn.disabled = originalDisabled;
+        checkBtn.textContent = originalText;
+        
+        // 버튼 스타일 복원
+        if (window.updateDuplicateButtonState) {
+            window.updateDuplicateButtonState();
+        }
+        
+        console.log('🔄 중복 확인 완료 - 버튼 상태 복원');
+    }
     }
 
     function handleDuplicateCheckResult(result) {
@@ -588,10 +594,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (result.exists && result.similar_cafes?.length > 0) {
             showDuplicateCafes(result.similar_cafes);
-            FormUtils.showToast(getMsg('DUPLICATE_CHECK', 'DUPLICATE_FOUND', {count: result.similar_cafes.length}), 'warning');
+            // ✅ messages.py의 DUPLICATE_FOUND 메시지 사용
+            const message = window.msg('DUPLICATE_CHECK', 'DUPLICATE_FOUND', { count: result.similar_cafes.length });
+            FormUtils.showToast(message, 'warning');
         } else {
             FormUtils.toggleClass('duplicate-success', 'hidden', false);
-            FormUtils.showToast(getMsg('DUPLICATE_CHECK', 'NO_DUPLICATE'), 'success');
+            // ✅ messages.py의 NO_DUPLICATE 메시지 사용
+            const message = window.msg('DUPLICATE_CHECK', 'NO_DUPLICATE');
+            FormUtils.showToast(message, 'success');
             setTimeout(() => showStep(1), 1500);
         }
     }
