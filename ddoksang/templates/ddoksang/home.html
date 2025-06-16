@@ -201,15 +201,18 @@
   </div>
 </section>
 
+<!-- 플로팅 액션 버튼 -->
 <!-- 📱 플로팅 액션 버튼 -->
 <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
   <a href="{% url 'ddoksang:create' %}" 
-     class="bg-gray-900 text-white p-3 sm:p-4 rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-200 flex items-center justify-center">
+     class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-900 text-white rounded-full shadow-2xl hover:shadow-3xl flex items-center justify-center transition-all duration-200">
     <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
     </svg>
   </a>
 </div>
+
+
 
 <!-- 페이지 식별자 (찜하기 기능용) -->
 <div id="page-identifier" data-page="home" style="display: none;"></div>

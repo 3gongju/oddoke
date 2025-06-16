@@ -157,14 +157,19 @@ class DdoksangHome {
     }
 
     setupSidebarEvents() {
-        document.addEventListener('click', (e) => {
-            const cafeCard = e.target.closest('.cafe-card-mini');
-            if (cafeCard) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // 상세 페이지 링크가 아닌 경우에만 지도 이동
-                if (!e.target.closest('a[href*="/ddoksang/cafe/"]')) {
+            document.addEventListener('click', (e) => {
+                const cafeCard = e.target.closest('.cafe-card-mini');
+                if (cafeCard) {
+                    // ✅ 상세보기 버튼(.detail-link) 클릭은 기본 동작 허용
+                    if (e.target.closest('.detail-link')) {
+                        console.log('📋 상세보기 버튼 클릭 - 상세 페이지로 이동');
+                        return; // 기본 링크 동작 허용 (detail.html로 이동)
+                    }
+                    
+                    // ✅ 카드 자체 클릭은 지도 이동만 수행
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     const lat = parseFloat(cafeCard.dataset.cafeLat);
                     const lng = parseFloat(cafeCard.dataset.cafeLng);
                     const cafeId = cafeCard.dataset.cafeId;
@@ -174,18 +179,20 @@ class DdoksangHome {
                         this.mapManager.moveToLocation(lat, lng, 5);
                         this.highlightCafeCard(cafeId);
                         
-                        // 해당 카페 데이터 찾아서 모달 표시
-                        const cafeData = this.cafesData.find(c => c.id == cafeId);
-                        if (cafeData) {
-                            this.handleMarkerClick(cafeData);
-                        }
+                        // 선택사항: 해당 카페 데이터 찾아서 모달 표시 (원하면 주석 해제)
+                        // const cafeData = this.cafesData.find(c => c.id == cafeId);
+                        // if (cafeData) {
+                        //     this.handleMarkerClick(cafeData);
+                        // }
                         
-                        console.log(`📍 사이드바 클릭: ${cafeId}번 카페로 지도 이동`);
+                        console.log(`📍 사이드바 클릭: ${cafeId}번 카페로 지도 이동 (상세보기 X)`);
+                        
+                        // 시각적 피드백
+                        this.showToast(`${cafeCard.querySelector('h4')?.textContent} 위치로 이동했습니다`, 'success');
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
     initializeUI() {
         // UI 관련 초기화 작업들
