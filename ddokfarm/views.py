@@ -43,8 +43,43 @@ def main(request):
 def index(request):
     category = request.GET.get('category')
     query = request.GET.get('q', '').strip()
-    sort_by = request.GET.get('sort', 'latest')  # 추가
-    show_available_only = request.GET.get('available_only') == 'on'  # 추가
+    sort_by = request.GET.get('sort', 'latest')
+    show_available_only = request.GET.get('available_only') == 'on'
+    
+    # 필터링 파라미터 수정 - 상품 상태 다중 선택
+    selected_shipping = request.GET.get('shipping', '')
+    selected_conditions = request.GET.getlist('condition')  # 다중 선택으로 변경
+    min_price = request.GET.get('min_price', '')
+    max_price = request.GET.get('max_price', '')
+
+    # 필터링 조건 구성
+    filter_conditions = Q()
+    
+    if selected_shipping:
+        filter_conditions &= Q(shipping=selected_shipping)
+    
+    if selected_conditions:
+        # 여러 조건을 OR로 연결
+        condition_q = Q()
+        for condition in selected_conditions:
+            condition_q |= Q(condition=condition)
+        filter_conditions &= condition_q
+    
+    # 가격 필터링 (분철은 member_prices 고려)
+    price_conditions = Q()
+    if min_price:
+        try:
+            min_price_val = float(min_price)
+            price_conditions &= Q(price__gte=min_price_val)
+        except ValueError:
+            min_price = ''
+    
+    if max_price:
+        try:
+            max_price_val = float(max_price)
+            price_conditions &= Q(price__lte=max_price_val)
+        except ValueError:
+            max_price = ''
 
     if query:
         artist_filter = (
@@ -57,27 +92,94 @@ def index(request):
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
         common_filter = text_filter | artist_filter | member_filter
 
-        sell_results = FarmSellPost.objects.filter(common_filter).distinct()
-        rental_results = FarmRentalPost.objects.filter(common_filter).distinct()
+        # 검색 + 필터링 조합
+        sell_results = FarmSellPost.objects.filter(
+            common_filter & filter_conditions & price_conditions
+        ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
+        
+        rental_results = FarmRentalPost.objects.filter(
+            common_filter & filter_conditions & price_conditions
+        ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
+        
         split_filter = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
-        split_results = FarmSplitPost.objects.filter(split_filter).distinct()
-
-        # 판매중 필터 적용 - 추가
-        if show_available_only:
-            sell_results = sell_results.filter(is_sold=False)
-            rental_results = rental_results.filter(is_sold=False)
-            split_results = split_results.filter(is_sold=False)
+        # 분철 게시글 가격 필터링 (member_prices의 최소값 사용)
+        split_price_filter = Q()
+        if min_price:
+            try:
+                split_price_filter &= Q(member_prices__price__gte=float(min_price))
+            except ValueError:
+                pass
+        if max_price:
+            try:
+                split_price_filter &= Q(member_prices__price__lte=float(max_price))
+            except ValueError:
+                pass
+            
+        split_results = FarmSplitPost.objects.filter(
+            split_filter & split_price_filter
+        ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
 
         posts = list(chain(sell_results, rental_results, split_results))
     else:
-        posts = get_post_queryset(category)
-        posts = list(posts)  # chain을 list로 변환
-        
-        # 판매중 필터 적용 - 추가
-        if show_available_only:
-            posts = [post for post in posts if not post.is_sold]
+        # 카테고리별 필터링
+        if category == 'sell':
+            posts = FarmSellPost.objects.filter(
+                filter_conditions & price_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
+        elif category == 'rental':
+            posts = FarmRentalPost.objects.filter(
+                filter_conditions & price_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
+        elif category == 'split':
+            split_price_filter = Q()
+            if min_price:
+                try:
+                    split_price_filter &= Q(member_prices__price__gte=float(min_price))
+                except ValueError:
+                    pass
+            if max_price:
+                try:
+                    split_price_filter &= Q(member_prices__price__lte=float(max_price))
+                except ValueError:
+                    pass
+            posts = FarmSplitPost.objects.filter(
+                split_price_filter
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
+        else:
+            # 전체 카테고리
+            sell_posts = FarmSellPost.objects.filter(
+                filter_conditions & price_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
+            
+            rental_posts = FarmRentalPost.objects.filter(
+                filter_conditions & price_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
+            
+            split_price_filter = Q()
+            if min_price:
+                try:
+                    split_price_filter &= Q(member_prices__price__gte=float(min_price))
+                except ValueError:
+                    pass
+            if max_price:
+                try:
+                    split_price_filter &= Q(member_prices__price__lte=float(max_price))
+                except ValueError:
+                    pass
+            split_posts = FarmSplitPost.objects.filter(
+                split_price_filter
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
+            
+            posts = list(chain(sell_posts, rental_posts, split_posts))
 
-    # 정렬 로직 추가
+        if not isinstance(posts, list):
+            posts = list(posts)
+
+    # 판매중 필터 적용
+    if show_available_only:
+        posts = [post for post in posts if not post.is_sold]
+
+    # 정렬 로직 (기존과 동일)
     if sort_by == 'latest':
         posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
     elif sort_by == 'price_low':
@@ -94,16 +196,33 @@ def index(request):
 
     clean_category = (request.GET.get('category') or 'sell').split('?')[0]
 
+    # 필터 표시용 데이터 생성
+    shipping_choices = dict(FarmSellPost.SHIPPING_CHOICES)
+    condition_choices = dict(FarmSellPost.CONDITION_CHOICES)
+    
+    # 상품 상태 표시 매핑 생성
+    condition_display_map = {}
+    for condition in selected_conditions:
+        condition_display_map[condition] = condition_choices.get(condition, condition)
+    
     context = {
         'posts': posts,
         'category': category,
         'query': query,
-        'sort_by': sort_by,  # 추가
-        'show_available_only': show_available_only,  # 추가
+        'sort_by': sort_by,
+        'show_available_only': show_available_only,
         'search_action': reverse('ddokfarm:index'),
         'create_url': f"{reverse('ddokfarm:post_create')}?category={clean_category}",
         'category_urls': get_ddokfarm_category_urls(),
         'default_category': 'sell',
+        
+        # 필터링 관련 컨텍스트 수정
+        'selected_shipping': selected_shipping,
+        'selected_conditions': selected_conditions,  # 리스트로 변경
+        'min_price': min_price,
+        'max_price': max_price,
+        'selected_shipping_display': shipping_choices.get(selected_shipping, ''),
+        'condition_display_map': condition_display_map,  # 추가
     }
 
     return render(request, 'ddokfarm/index.html', context)

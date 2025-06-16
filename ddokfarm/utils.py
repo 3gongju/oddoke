@@ -52,31 +52,41 @@ def get_post_comments(post):
     return FarmComment.objects.filter(content_type=content_type, object_id=post.id)
 
 # 카테고리별 게시글 목록 반환 (전체일 경우 모두 병합)
-def get_post_queryset(category=None):
+def get_post_queryset(category=None, filter_conditions=None, price_conditions=None):
+    """필터링 조건을 받아서 최적화된 쿼리셋 반환"""
     model_map = {
         'sell': (FarmSellPost, 'sell'),
         'rental': (FarmRentalPost, 'rental'),
         'split': (FarmSplitPost, 'split'),
     }
+    
+    # 기본 필터 조건
+    if filter_conditions is None:
+        filter_conditions = Q()
+    if price_conditions is None:
+        price_conditions = Q()
 
     if category in model_map:
         model, cat = model_map[category]
         
         # 쿼리 최적화: 관련 데이터 미리 로드
         if model == FarmSplitPost:
+            # 분철은 가격 필터링이 다르므로 별도 처리
             posts = model.objects.select_related(
                 'user', 'artist', 'user__fandom_profile'
             ).prefetch_related('like', 'member_prices', 'images').all()
         else:
-            posts = model.objects.select_related(
+            posts = model.objects.filter(
+                filter_conditions & price_conditions
+            ).select_related(
                 'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'images').all()
+            ).prefetch_related('like', 'images')
         
         for post in posts:
             post.category = cat
         return posts
 
-    # 전체 게시글 합치기 (쿼리 최적화 포함)
+    # 전체 게시글 합치기 (필터링 포함)
     all_posts = []
     for model, cat in model_map.values():
         if model == FarmSplitPost:
@@ -84,9 +94,11 @@ def get_post_queryset(category=None):
                 'user', 'artist', 'user__fandom_profile'
             ).prefetch_related('like', 'member_prices', 'images').all()
         else:
-            posts = model.objects.select_related(
+            posts = model.objects.filter(
+                filter_conditions & price_conditions
+            ).select_related(
                 'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'images').all()
+            ).prefetch_related('like', 'images')
         
         for post in posts:
             post.category = cat

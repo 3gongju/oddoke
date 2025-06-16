@@ -143,6 +143,22 @@ class FarmSplitPost(FarmBasePost):
             return (0, 0)
         return (min(prices), max(prices))
 
+    def has_price_in_range(self, min_price=None, max_price=None):
+        """분철 게시글이 지정된 가격 범위에 포함되는지 확인"""
+        prices = list(self.member_prices.values_list('price', flat=True))
+        if not prices:
+            return False
+        
+        min_post_price = min(prices)
+        max_post_price = max(prices)
+        
+        if min_price and max_post_price < min_price:
+            return False
+        if max_price and min_post_price > max_price:
+            return False
+        
+        return True
+
 # 멤버별 가격 설정 필드
 class SplitPrice(models.Model):
     post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, related_name='member_prices')
