@@ -184,13 +184,14 @@
     <div class="max-w-7xl mx-auto">
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
         <div class="inline-flex items-center justify-center w-14 h-14 bg-gray-900 rounded-full mb-3">
-          <span class="text-xl">🗂</span>
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-16 h-16 mr-2">
+    
         </div>
         <h3 class="text-lg font-bold text-gray-900 mb-2">내 덕생 관리</h3>
-        <p class="text-gray-600 mb-4 text-sm">등록한 생일카페와 찜한 카페를 확인하고 관리하세요</p>
+        <p class="text-gray-600 mb-4 text-sm">등록한 생카와 찜한 카페를 확인하고 관리하세요</p>
         <a href="{% url 'ddoksang:my_cafes' %}" 
            class="inline-block bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-          관리하러 가기
+          GO!
         </a>
       </div>
     </div>
@@ -206,7 +207,6 @@
 </section>
 
 <!-- 플로팅 액션 버튼 -->
-<!-- 📱 플로팅 액션 버튼 (FAQ와 정확히 대칭) -->
 <a href="{% url 'ddoksang:create' %}" class="floating-action-button">
   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
