@@ -71,9 +71,11 @@
     </div>
   {% else %}
     <div class="text-center py-8 sm:py-12">
-      <div class="text-4xl sm:text-6xl mb-4">🎭</div>
-      <p class="text-gray-500 text-base sm:text-lg">이번 주 생일인 아티스트가 없어요</p>
-      <p class="text-gray-400 text-sm mt-2">다음 주를 기대해주세요!</p>
+      <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="이번 주 생일인 아티스트 없음" class="w-full h-full object-contain" />
+      </div>
+      <p class="font-heading text-lg sm:text-xl font-light text-black mb-3">이번 주 생일인 아티스트가 없어요</p>
+      <p class="text-gray-400 text-sm mt-2 font-body">다음 주를 기대해주세요!</p>
     </div>
   {% endif %}
 </div>
