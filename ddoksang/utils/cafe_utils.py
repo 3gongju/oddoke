@@ -1,4 +1,3 @@
-# ddoksang/utils/cafe_utils.py
 # 카페 관련 공통 유틸리티 함수들
 
 import logging
@@ -62,7 +61,7 @@ def get_cafe_detail_context(cafe, user, is_preview=False, can_edit=False, previe
         ).exists()
     
     # 같은 멤버의 다른 카페들
-    nearby_member_cafes = get_member_nearby_cafes(cafe, exclude_cafe_id=cafe.id)
+    nearby_cafes = get_member_nearby_cafes(cafe, exclude_cafe_id=cafe.id)
     
     # 사용자 찜 목록
     user_favorites = get_user_favorites(user)
@@ -73,11 +72,10 @@ def get_cafe_detail_context(cafe, user, is_preview=False, can_edit=False, previe
     return {
         'cafe': cafe,
         'is_favorited': is_favorited,
-        'nearby_member_cafes': nearby_member_cafes,
+        'nearby_cafes': nearby_cafes, 
         'user_favorites': user_favorites,
         'is_preview': is_preview,
         'can_edit': can_edit,
         'preview_type': preview_type,
         **map_context,
     }
-
