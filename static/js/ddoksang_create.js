@@ -170,6 +170,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+
+// ✅ updateNavigationButtons 함수 수정 (텍스트 대신 기호 유지)
     function updateNavigationButtons(index) {
         const isFirstStep = index === 0;
         const isLastStep = index === totalSteps - 1;
@@ -181,7 +183,19 @@ document.addEventListener('DOMContentLoaded', function() {
             prevBtn?.classList.remove("hidden");
             nextBtn?.classList.remove("hidden");
             
-            if (nextBtn) nextBtn.textContent = isLastStep ? "제출하기" : "다음";
+            // ✅ 기호 유지하고 마지막 단계에서만 텍스트 변경
+            if (nextBtn) {
+                if (isLastStep) {
+                    nextBtn.innerHTML = '제출';
+                    nextBtn.style.fontSize = '14px';
+                    nextBtn.style.fontWeight = '600';
+                } else {
+                    nextBtn.innerHTML = '›';
+                    nextBtn.style.fontSize = '24px';
+                    nextBtn.style.fontWeight = 'bold';
+                }
+            }
+            
             FormUtils.updateButtonState('prevBtn', true);
         }
     }
