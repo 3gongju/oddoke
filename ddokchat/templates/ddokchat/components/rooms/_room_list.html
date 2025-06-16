@@ -1,0 +1,27 @@
+<!-- ddokchat/templates/ddokchat/components/rooms/room_list.html -->
+
+<!-- 거래중 채팅 탭 내용 -->
+<div id="activeContent" class="tab-content active p-6">
+  {% if active_rooms %}
+    <div class="space-y-4">
+      {% for room in active_rooms %}
+        {% include 'ddokchat/components/rooms/_room_item.html' with room=room is_completed=False %}
+      {% endfor %}
+    </div>
+  {% else %}
+    {% include 'ddokchat/components/rooms/_empty_state.html' with type='active' %}
+  {% endif %}
+</div>
+
+<!-- 거래완료 채팅 탭 내용 -->
+<div id="completedContent" class="tab-content p-6">
+  {% if completed_rooms %}
+    <div class="space-y-4">
+      {% for room in completed_rooms %}
+        {% include 'ddokchat/components/rooms/_room_item.html' with room=room is_completed=True %}
+      {% endfor %}
+    </div>
+  {% else %}
+    {% include 'ddokchat/components/rooms/_empty_state.html' with type='completed' %}
+  {% endif %}
+</div>

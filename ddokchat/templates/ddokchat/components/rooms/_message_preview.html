@@ -1,0 +1,11 @@
+<!-- ddokchat/templates/ddokchat/components/rooms/message_preview.html -->
+
+{% if message.message_type == 'text' %}
+  <p class="text-sm break-words">{{ message.text_content.content|truncatechars:50 }}</p>
+{% elif message.message_type == 'image' %}
+  <p class="text-sm italic {% if is_completed %}text-gray-200{% else %}text-gray-300{% endif %}">사진을 보냈습니다.</p>
+{% elif message.message_type == 'account_info' %}
+  <p class="text-sm italic {% if is_completed %}text-gray-200{% else %}text-gray-300{% endif %}">계좌정보를 보냈습니다.</p>
+{% elif message.message_type == 'address_info' %}
+  <p class="text-sm italic {% if is_completed %}text-gray-200{% else %}text-gray-300{% endif %}">주소정보를 보냈습니다.</p>
+{% endif %}
