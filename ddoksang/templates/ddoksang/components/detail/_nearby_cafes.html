@@ -1,98 +1,161 @@
+{% load static member_images %}
 <!-- ddoksang/templates/ddoksang/components/detail/_nearby_cafes.html -->
-<!-- 주변 생일카페 리스트 -->
+<!-- 멤버 이미지 템플릿 태그 사용 버전 -->
+
+<!-- CSS 파일 로드 -->
+<link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
 
 <div id="nearbyCafeContainer" class="bg-white rounded-2xl shadow-sm border p-6">
-  <h3 class="font-bold text-gray-900 mb-4 flex items-center">
-    <span class="mr-2">📍</span> 운영중/예정 생일카페
+  <h3 class="font-bold text-lg text-gray-900 mb-5 flex items-center">
+    {% if cafe.member %}
+      <!-- 멤버 얼굴 이미지 -->
+      <div class="w-8 h-8 rounded-full overflow-hidden mr-3 border-2 border-orange-200 bg-gray-100">
+        <img src="{% member_image cafe.member.member_name cafe.artist.artist_name %}" 
+             alt="{{ cafe.member.member_name }}" 
+             class="w-full h-full object-cover"
+             onload="this.parentNode.classList.remove('bg-gray-100')"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <!-- 이미지 로드 실패시 fallback -->
+        <div class="w-full h-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center" style="display: none;">
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-4 h-4 filter brightness-0 invert">
+        </div>
+      </div>
+      {{ cafe.member.member_name }}의 다른 생카
+    {% else %}
+      <!-- 멤버가 없을 때는 기본 아이콘 -->
+      <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center mr-3">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-4 h-4 filter brightness-0 invert">
+      </div>
+      주변 생일카페
+    {% endif %}
     {% if nearby_cafes %}
-      <span class="ml-auto text-xs text-gray-500 font-normal">{{ nearby_cafes|length }}개</span>
+      <span class="ml-auto text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ nearby_cafes|length }}개</span>
     {% endif %}
   </h3>
-  <div id="nearbyCafeList" class="space-y-3">
+  
+  <!-- 더 찾기 버튼을 리스트 위로 이동 -->
+  {% if cafe.member %}
+    <div class="mb-6">
+      <a href="{% url 'ddoksang:search' %}?q={{ cafe.member.member_name|urlencode }}" 
+         class="block w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-center py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-lg">
+        <div class="flex items-center justify-center space-x-2">
+          <span>{{ cafe.member.member_name }}의 모든 생카 보기</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </a>
+      {% if nearby_cafes %}
+        <p class="text-xs text-gray-500 text-center mt-2">
+          가까운 {{ nearby_cafes|length }}개 카페 미리보기
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+  
+  <div id="nearbyCafeList" class="max-h-96 overflow-y-auto space-y-4 scrollbar-hide">
     {% if nearby_cafes %}
       {% for nearby_cafe in nearby_cafes %}
-        <div class="nearby-cafe-card flex items-center space-x-3 p-3 rounded-lg cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all duration-200 border border-gray-200" 
+        <div class="nearby-cafe-card cursor-pointer" 
              onclick="location.href='{% url 'ddoksang:detail' nearby_cafe.id %}'">
           
-          <!-- 🔧 이미지 처리 개선 -->
-          {% if nearby_cafe.main_image %}
-            <img src="{{ nearby_cafe.main_image }}" alt="{{ nearby_cafe.cafe_name }}" 
-                 class="w-14 h-14 rounded-lg object-cover flex-shrink-0 shadow-sm">
-          {% else %}
-            <div class="w-14 h-14 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
-              <span class="text-gray-400 text-lg">🎂</span>
-            </div>
-          {% endif %}
-          
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center space-x-2 mb-1.5">
-              <h4 class="text-sm font-semibold text-gray-900 truncate">{{ nearby_cafe.cafe_name }}</h4>
-              <!-- 🔧 관련 카페 표시 (같은 멤버/아티스트) -->
-              {% if nearby_cafe.artist == cafe.artist %}
-                <span class="related-badge flex-shrink-0">관련</span>
-              {% endif %}
-            </div>
+          <div class="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition-all duration-200">
             
-            <p class="text-xs text-gray-600 truncate mb-2">
-              {{ nearby_cafe.artist }}{% if nearby_cafe.member %} - {{ nearby_cafe.member }}{% endif %}
-            </p>
-            
-            <div class="flex items-center space-x-2">
-              <!-- 🔧 거리 표시 -->
-              <span class="distance-badge">{{ nearby_cafe.distance|floatformat:1 }}km</span>
+            <div class="flex items-center space-x-4">
               
-              <!-- 🔧 도보 시간 계산 -->
-              {% if nearby_cafe.walk_time %}
-                <span class="text-xs text-gray-500">🚶‍♂️ {{ nearby_cafe.walk_time }}분</span>
-              {% endif %}
-              
-              <!-- 🔧 상태 표시 개선 -->
-              {% if nearby_cafe.is_active %}
-                <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">운영중</span>
-              {% elif nearby_cafe.days_until_start > 0 %}
-                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">{{ nearby_cafe.days_until_start }}일 후</span>
+              <!-- 카페 이미지 -->
+              {% if nearby_cafe.main_image %}
+                <img src="{{ nearby_cafe.main_image }}" alt="{{ nearby_cafe.cafe_name }}" 
+                     class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
               {% else %}
-                <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">종료</span>
+                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-8 h-8 opacity-50">
+                </div>
               {% endif %}
+              
+              <!-- 카페 정보 -->
+              <div class="flex-1 min-w-0">
+                <!-- 카페명 -->
+                <div class="mb-2">
+                  <h4 class="text-base font-bold text-gray-900 leading-tight">
+                    {{ nearby_cafe.cafe_name }}
+                  </h4>
+                </div>
+                
+                <!-- 상태 -->
+                <div class="mb-2">
+                  {% if nearby_cafe.is_active %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      운영중
+                    </span>
+                  {% elif nearby_cafe.days_until_start > 0 %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ nearby_cafe.days_until_start }}일 후
+                    </span>
+                  {% else %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                      종료
+                    </span>
+                  {% endif %}
+                </div>
+                
+                <!-- 거리 정보 -->
+                <div class="flex items-center text-gray-600 mb-1">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
+                  </svg>
+                  <span class="text-sm font-medium">{{ nearby_cafe.distance|floatformat:1 }}km</span>
+                </div>
+                
+                <!-- 도보 시간 -->
+                {% if nearby_cafe.walk_time %}
+                  <div class="flex items-center text-gray-500">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-sm">도보 {{ nearby_cafe.walk_time }}분</span>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <!-- 화살표 -->
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
             </div>
-          </div>
-          
-          <div class="flex-shrink-0">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
           </div>
         </div>
       {% endfor %}
       
-      <!-- 🔧 관련 카페 설명 -->
-      {% if nearby_cafes|length > 0 %}
-        <div class="mt-4 pt-3 border-t border-gray-100">
-          <p class="text-xs text-gray-500 flex items-center">
-            <span class="related-badge mr-2">관련</span>
-            같은 아티스트/멤버의 생일카페
-          </p>
-        </div>
-      {% endif %}
+      <!-- 안내 메시지 -->
+      <div class="mt-4 text-center">
+        <p class="text-xs text-gray-500">
+          {% if nearby_cafes|length >= 10 %}
+            10개의 가까운 카페를 표시 중
+          {% else %}
+            {{ nearby_cafes|length }}개의 카페 표시 중
+          {% endif %}
+        </p>
+      </div>
+      
     {% else %}
-      <div class="text-center py-6">
-        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <span class="text-gray-400 text-2xl">🔍</span>
+      <!-- 빈 상태 -->
+      <div class="text-center py-8">
+        <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-8 h-8 opacity-50">
         </div>
-        <p class="text-sm text-gray-500">운영중/예정 카페가 없습니다</p>
-        <p class="text-xs text-gray-400 mt-1">50km 반경 내 검색 결과 (종료된 카페 제외)</p>
+        <p class="text-sm text-gray-600 mb-1">
+          {% if cafe.member %}
+            {{ cafe.member.member_name }}의 다른 운영중인 생카가 없어요
+          {% else %}
+            주변에 운영중인 생카가 없어요
+          {% endif %}
+        </p>
+        <p class="text-xs text-gray-400">50km 반경 내 검색 결과</p>
       </div>
     {% endif %}
   </div>
 </div>
-
-<!-- 🔧 디버깅 정보 (개발 중에만 표시) -->
-{% if settings.DEBUG %}
-<div class="mt-2 text-xs text-gray-400">
-  <!-- 디버깅: nearby_cafes 변수 확인 -->
-  디버그: nearby_cafes 타입 = {{ nearby_cafes|length }}개 
-  {% if cafe.member %}
-    | 현재 카페 멤버: {{ cafe.member.member_name }}
-  {% endif %}
-</div>
-{% endif %}
