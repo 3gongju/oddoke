@@ -74,9 +74,9 @@
                   <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
                 </div>
 
-                <!-- 카페 정보 -->
+                <!-- ✅ 수정된 카페 정보 레이아웃 -->
                 <div class="flex-1 min-w-0 relative">
-                  <!-- ✅ 수정: 상세보기 버튼 (우상단) - 클릭 이벤트 분리 -->
+                  <!-- ✅ 상세보기 버튼 (우상단) -->
                   <a href="{% url 'ddoksang:detail' cafe.id %}"
                      class="detail-link absolute top-0 right-0 w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10 shadow-lg"
                      title="상세 보기"
@@ -86,46 +86,40 @@
                     </svg>
                   </a>
                   
-                  <!-- 카페명 -->
+                  <!-- 1. 카페명 -->
                   <h4 class="font-semibold text-sm text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors pr-8">
                     {{ cafe.cafe_name|truncatechars:18 }}
                   </h4>
                   
-                  <!-- 아티스트/멤버 정보 -->
-                  <div class="mb-2">
-                    <p class="text-xs text-gray-600 leading-tight">
-                      {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name|truncatechars:8 }}{% endif %}
+                  <!-- 2. 아티스트/멤버 정보 -->
+                  <p class="text-xs text-gray-600 leading-tight mb-1">
+                    {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name|truncatechars:8 }}{% endif %}
+                  </p>
+                  
+                  <!-- 3. 운영 기간 -->
+                  <div class="flex items-center mb-1">
+                    <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-xs text-blue-600 font-medium">
+                      {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}
                     </p>
                   </div>
                   
-                  <!-- 운영 기간 및 도보 시간 -->
-                  <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center">
-                      <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                      </svg>
-                      <p class="text-xs text-blue-600 font-medium">
-                        {{ cafe.start_date|date:"m.d" }} ~ {{ cafe.end_date|date:"m.d" }}
-                      </p>
-                    </div>
-                    
-                    <!-- ✅ 도보 시간 표시 (위치 정보 있을 때만) -->
-                    <div class="distance-time text-xs text-green-600 font-medium hidden">
-                      <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                      </svg>
-                      <span class="walk-time"></span>
-                    </div>
-                  </div>
-                  
-                  <!-- 주소 (호버 시에만 표시) -->
-                  <p class="text-xs text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
+                  <!-- 4. 주소 (호버 시에만 표시) -->
+                  <p class="text-xs text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity leading-tight mb-1">
                     <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
                     </svg>
                     {{ cafe.place_name|truncatechars:25 }}
                   </p>
+                  
+                  <!-- 5. 도보 시간 및 거리 (줄바꿈 적용, svg 제거) -->
+                  <div class="distance-time text-xs text-green-600 font-medium hidden">
+                    <div>도보: <span class="walk-time"></span></div>
+                    <div>(총 <span class="walk-distance"></span>)</div>
+                  </div>
                   
                   <!-- ✅ 종료 임박 알림 (7일 이내) -->
                   {% if cafe.days_remaining <= 7 and cafe.days_remaining > 0 %}
@@ -136,12 +130,6 @@
                       종료 D-{{ cafe.days_remaining }}
                     </div>
                   {% endif %}
-                  
-                  <!-- 추가 거리 정보 (더 자세한 표시) -->
-                   
-                  <div class="distance-details text-xs text-gray-500 mt-1 hidden">
-                    <span class="walk-distance-detail"></span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -226,22 +214,15 @@ function updateDistances(userLat, userLng) {
 
       card.dataset.distance = distKm;
       
-      // ✅ 운영 기간 옆에 표시되는 도보 시간
+      // ✅ 새로운 형식: 도보: 15분 (총 1.2km)
       const walkTimeEl = card.querySelector('.walk-time');
+      const walkDistanceEl = card.querySelector('.walk-distance');
       const distanceTimeEl = card.querySelector('.distance-time');
-      
-      // ✅ 추가 상세 정보
-      const distanceDetailEl = card.querySelector('.walk-distance-detail');
-      const distanceDetailsEl = card.querySelector('.distance-details');
 
-      if (walkTimeEl && distanceTimeEl) {
+      if (walkTimeEl && walkDistanceEl && distanceTimeEl) {
         walkTimeEl.textContent = formatWalkTime(minutes);
+        walkDistanceEl.textContent = formatDistance(distKm);
         distanceTimeEl.classList.remove('hidden');
-      }
-      
-      if (distanceDetailEl && distanceDetailsEl) {
-        distanceDetailEl.textContent = `거리: ${formatDistance(distKm)}`;
-        distanceDetailsEl.classList.remove('hidden');
       }
     }
   });
@@ -304,6 +285,7 @@ function updateDistances(userLat, userLng) {
         const cafeId = card.dataset.cafeId;
 
         if (!isNaN(lat) && !isNaN(lng)) {
+          console.log(`📍 카드 클릭: ${cafeId}번 카페로 지도 이동 (${lat}, ${lng})`);
           
           // 지도 이동 (ddoksang_home_main.js의 함수 사용)
           if (typeof moveToLocationHome === 'function') {
