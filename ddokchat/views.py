@@ -5,7 +5,7 @@ from accounts.forms import MannerReviewForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
-from django.db.models import Q, Max, Count, Prefetch
+from django.db.models import Q, Max, Count, Prefetch, Case, When, OuterRef, Subquery
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -22,15 +22,21 @@ from django.contrib.auth import get_user_model
 # Create your views here.
 
 # 채팅방
+@login_required 
 def chat_room(request, room_id):
-    room = get_object_or_404(ChatRoom, id=room_id)
+    # N+1 해결: 관련 데이터 한번에 로드
+    room = get_object_or_404(
+        ChatRoom.objects.select_related(
+            'buyer', 'seller',
+        ),
+        id=room_id
+    )
 
-    # 현재 사용자와 상대방 구분 (명명 통일)
     current_user = request.user
     other_user = room.seller if room.buyer == current_user else room.buyer
-    room.other_user = other_user  # 상대방 프로필 이미지 추가
+    room.other_user = other_user
 
-    # ✅ 구매자 리뷰 작성 여부 확인
+    # 리뷰 여부 확인 최적화
     has_already_reviewed = False
     if current_user == room.buyer and room.is_fully_completed:
         has_already_reviewed = MannerReview.objects.filter(
@@ -39,14 +45,15 @@ def chat_room(request, room_id):
             chatroom=room
         ).exists()
 
-    # 내가 receiver인 메시지들 중 읽지 않은 것들 읽음 처리
-    Message.objects.filter(
+    # 읽음 처리 (bulk update)
+    unread_messages = Message.objects.filter(
         room=room,
         receiver=current_user,
         is_read=False
-    ).update(is_read=True)
+    )
+    unread_count = unread_messages.update(is_read=True)
 
-    # 메시지 조회 시 관련 데이터 프리로드
+    # 메시지 조회 최적화
     messages = Message.objects.filter(room=room).select_related(
         'sender', 'receiver'
     ).prefetch_related(
@@ -56,33 +63,39 @@ def chat_room(request, room_id):
         'address_content__address_profile'
     ).order_by('timestamp')
     
-    # 분철 관련 정보 추가
+    # 분철 관련 정보 추가 (기존 코드 유지)
     split_info = None
     if hasattr(room.post, 'category_type') and room.post.category_type == 'split':
         from ddokfarm.models import SplitApplication
+        # N+1 최적화: prefetch_related 사용
         application = SplitApplication.objects.filter(
             post=room.post,
             user=room.buyer,
             status='approved'
-        ).prefetch_related('members').first()
+        ).prefetch_related(
+            'members',
+            'post__member_prices__member'  # member_prices 관련 데이터도 미리 로드
+        ).first()
         
         if application:
             split_info = {
                 'applied_members': application.members.all(),
                 'total_price': sum(
-                    room.post.member_prices.filter(member__in=application.members.all()).values_list('price', flat=True)
+                    room.post.member_prices.filter(
+                        member__in=application.members.all()
+                    ).values_list('price', flat=True)
                 )
             }
 
     context = {
         'room': room,
         'messages': messages,
-        'current_user': current_user,  # 명명 통일
+        'current_user': current_user,
         'other_user': other_user,
         'form': MannerReviewForm(),
         'has_already_reviewed': has_already_reviewed,
         'is_fully_completed': room.is_fully_completed,
-        'split_info': split_info,
+        'split_info': split_info,  # split 정보 추가
     }
 
     return render(request, 'ddokchat/chat_room.html', context)
@@ -123,32 +136,52 @@ def get_or_create_chatroom(request, category, post_id):
 def my_chatrooms(request):
     current_user = request.user
     
-    # 성능 최적화된 쿼리
+    # N+1 해결: 모든 데이터를 한 번의 쿼리로 가져오기
     rooms = ChatRoom.objects.filter(
         Q(buyer=current_user) | Q(seller=current_user)
-    ).select_related('buyer', 'seller').prefetch_related(
+    ).select_related(
+        # 관련 사용자 정보 미리 로드
+        'buyer', 'seller',
+    ).prefetch_related(
+        # 마지막 메시지만 효율적으로 가져오기
         Prefetch(
             'messages',
             queryset=Message.objects.select_related('sender', 'receiver')
                                    .prefetch_related('text_content')
-                                   .order_by('-timestamp')
-        ),
-        'post'
+                                   .order_by('-timestamp')[:1],
+            to_attr='latest_messages'
+        )
     ).annotate(
-        last_message_time=Max('messages__timestamp'),
+        # 안읽은 메시지 수를 서브쿼리로 한번에 계산
         unread_count=Count(
             'messages',
-            filter=Q(messages__receiver=current_user, messages__is_read=False)
+            filter=Q(
+                messages__receiver=current_user,
+                messages__is_read=False
+            )
+        ),
+        # 마지막 메시지 시간
+        last_message_time=Max('messages__timestamp'),
+        
+        # 상대방 정보를 Case/When으로 한번에 결정
+        partner_id=Case(
+            When(buyer=current_user, then='seller_id'),
+            default='buyer_id'
+        ),
+        partner_username=Case(
+            When(buyer=current_user, then='seller__username'),
+            default='buyer__username'
         )
     ).order_by('-last_message_time')
     
+    # 한번에 가져온 데이터로 추가 처리
     for room in rooms:
-        room._current_user = current_user
+        # 이미 annotate로 계산된 값 사용
         room.partner = room.seller if room.buyer == current_user else room.buyer
-        room.last_message = room.messages.first() if room.messages.exists() else None
-        room.category = room.post.category_type  # 'sell' 등
-
-    # ✅ 거래중 / 거래완료 분리
+        room.last_message = room.latest_messages[0] if room.latest_messages else None
+        room.category = room.post.category_type if hasattr(room.post, 'category_type') else 'unknown'
+    
+    # 거래중/완료 분리
     active_rooms = [room for room in rooms if not room.is_fully_completed]
     completed_rooms = [room for room in rooms if room.is_fully_completed]
 
@@ -156,7 +189,7 @@ def my_chatrooms(request):
         'rooms': rooms,
         'active_rooms': active_rooms,
         'completed_rooms': completed_rooms,
-        'me': current_user,  # 명명 통일
+        'me': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
 

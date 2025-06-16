@@ -23,6 +23,12 @@ class ChatRoom(models.Model):
     
     class Meta:
         unique_together = ('content_type', 'object_id', 'buyer')  # 구매자는 같은 글에 대해 1방만
+        # 성능 최적화를 위한 인덱스 추가
+        indexes = [
+            models.Index(fields=['buyer', 'created_at']),  # 구매자별 채팅방 조회
+            models.Index(fields=['seller', 'created_at']),  # 판매자별 채팅방 조회
+            models.Index(fields=['buyer_completed', 'seller_completed']),  # 거래 완료 상태별 조회
+        ]
 
     @property
     def is_fully_completed(self):
@@ -50,6 +56,19 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['timestamp']
+        # 성능 최적화를 위한 인덱스 추가
+        indexes = [
+            # 가장 중요: 안읽은 메시지 조회 최적화
+            models.Index(
+                fields=['room', 'receiver', 'is_read'], 
+                name='idx_unread_messages',
+                condition=models.Q(is_read=False)  # 부분 인덱스
+            ),
+            # 채팅방별 메시지 시간순 조회
+            models.Index(fields=['room', 'timestamp'], name='idx_room_messages'),
+            # 마지막 메시지 시간 조회 (채팅방 목록용)
+            models.Index(fields=['room', '-timestamp'], name='idx_latest_message'),
+        ]
 
     def get_content(self):
         """메시지 타입에 따른 실제 내용 반환"""
