@@ -20,6 +20,8 @@ import json
 import logging
 from django.template.loader import render_to_string
 
+from ..utils.cafe_utils import get_cafe_detail_context
+
 from ddoksang.utils.favorite_utils import get_user_favorites
 
 from ..models import BdayCafe, BdayCafeImage, CafeFavorite
@@ -464,37 +466,17 @@ def favorites_view(request):
 @login_required
 def user_preview_cafe(request, cafe_id):
     """사용자 미리보기 (자신이 등록한 카페만, 상태 무관)"""
+
+    
     cafe = get_object_or_404(BdayCafe, id=cafe_id, submitted_by=request.user)
     
-    # 주변 카페들 - 유틸리티 사용
-    nearby_cafes = []
-    if cafe.latitude and cafe.longitude:
-        try:
-            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
-            nearby_cafes = get_nearby_cafes(
-                user_lat=float(cafe.latitude), 
-                user_lng=float(cafe.longitude), 
-                cafes_queryset=approved_cafes,
-                radius_km=5, 
-                limit=5, 
-                exclude_id=cafe.id
-            )
-        except (ValueError, TypeError) as e:
-            logger.warning(f"주변 카페 조회 오류: {e}")
-    
-    # 지도 관련 컨텍스트 생성
-    map_context = get_map_context()
-    
-    context = {
-        'cafe': cafe,
-        'is_favorited': False,
-        'nearby_cafes': nearby_cafes,
-        'user_favorites': [],
-        'is_preview': True,
-        'can_edit': True,
-        'preview_type': 'user',
-        **map_context,  # 지도 관련 컨텍스트 병합
-    }
+    context = get_cafe_detail_context(
+        cafe, 
+        request.user, 
+        is_preview=True, 
+        can_edit=True, 
+        preview_type='user'
+    )
     return render(request, 'ddoksang/detail.html', context)
 
 
