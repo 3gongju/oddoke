@@ -113,12 +113,15 @@ function initBirthdayNavigation() {
         
         for (let i = 0; i < totalPages; i++) {
             const dot = document.createElement('button');
-            dot.className = `w-2 h-2 rounded-full transition-colors ${i === Math.floor(currentIndex / visibleCards) ? 'bg-gray-600' : 'bg-gray-300'}`;
+            // 인라인 스타일 제거, 표준 클래스만 사용
+            dot.className = `w-1 h-1 rounded-full transition-colors mx-1 ${i === Math.floor(currentIndex / visibleCards) ? 'bg-gray-600' : 'bg-gray-300'}`;
+            // dot.style.width = '6px';  ← 이 줄 삭제
+            // dot.style.height = '6px'; ← 이 줄 삭제
             dot.addEventListener('click', () => goToPage(i));
             indicatorsContainer.appendChild(dot);
         }
     }
-    
+        
     function goToPage(pageIndex) {
         currentIndex = Math.min(pageIndex * visibleCards, maxIndex);
         updateSlider();
@@ -139,7 +142,8 @@ function initBirthdayNavigation() {
         const currentPage = Math.floor(currentIndex / visibleCards);
         
         for (let i = 0; i < dots.length; i++) {
-            dots[i].className = `w-2 h-2 rounded-full transition-colors ${i === currentPage ? 'bg-gray-600' : 'bg-gray-300'}`;
+            // 🔧 w-2 h-2에서 w-1 h-1로 변경 (더 작게)
+            dots[i].className = `w-1 h-1 rounded-full transition-colors mx-1 ${i === currentPage ? 'bg-gray-600' : 'bg-gray-300'}`;
         }
     }
     

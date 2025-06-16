@@ -1,6 +1,56 @@
 {% load static %}
 {% load member_images %}
 
+<style>
+/*  모든 생일 아티스트 인디케이터 통일 스타일 */
+
+/* 템플릿 기반 인디케이터 (#indicators) */
+#indicators button,
+#indicators .indicator-dot,
+#indicators .w-\[5px\] {
+    width: 6px !important;
+    height: 6px !important;
+    margin: 0 3px !important;
+}
+
+/* JavaScript 기반 인디케이터 (#birthdayIndicators) */
+#birthdayIndicators button,
+#birthdayIndicators .w-1,
+#birthdayIndicators .w-2 {
+    width: 6px !important;
+    height: 6px !important;
+    margin: 0 3px !important;
+}
+
+/* 모든 생일 관련 인디케이터 */
+[id*="birthday"] button,
+[id*="indicator"] button {
+    min-width: 6px !important;
+    min-height: 6px !important;
+    max-width: 6px !important;
+    max-height: 6px !important;
+}
+
+/* 호버 효과 */
+#indicators button:hover,
+#birthdayIndicators button:hover {
+    transform: scale(1.3);
+    transition: transform 0.2s ease;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    #indicators button,
+    #birthdayIndicators button {
+        width: 6px !important;
+        height: 6px !important;
+        margin: 0 2px !important;
+    }
+}
+</style>
+
+
+
 <div class="max-w-7xl mx-auto"> 
   {% if birthday_artists %}
     <div class="relative">
@@ -112,7 +162,8 @@ function initBirthdaySlider() {
     indicatorsContainer.innerHTML = '';
     for (let i = 0; i < totalPages; i++) {
       const dot = document.createElement('button');
-      dot.className = `w-2 h-2 rounded-full transition-colors ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`;
+      // 🔧 w-2 h-2를 w-1 h-1로 변경 (CSS가 4px로 덮어씀)
+      dot.className = `w-1 h-1 rounded-full transition-colors mx-1 ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`;
       dot.onclick = () => goToPage(i);
       indicatorsContainer.appendChild(dot);
     }
@@ -135,7 +186,8 @@ function initBirthdaySlider() {
     if (!indicatorsContainer) return;
     const dots = indicatorsContainer.children;
     for (let i = 0; i < dots.length; i++) {
-      dots[i].className = `w-2 h-2 rounded-full transition-colors ${i === currentIndex ? 'bg-gray-800' : 'bg-gray-300'}`;
+      // 🔧 w-2 h-2를 w-1 h-1로 변경 (CSS가 4px로 덮어씀)
+      dots[i].className = `w-1 h-1 rounded-full transition-colors mx-1 ${i === currentIndex ? 'bg-gray-800' : 'bg-gray-300'}`;
     }
   }
 

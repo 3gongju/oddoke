@@ -3,7 +3,10 @@
 
 <section class="mb-12" id="favoritesSection">
   <div class="flex items-center justify-between mb-4 px-4">
-    <h2 class="text-xl font-semibold text-gray-800">💖 내가 찜한 생일카페</h2>
+    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+      <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-12 h-12 mr-2">
+      내가 찜한 생일카페
+    </h2>
     <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">전체 보기 &rarr;</a>
   </div>
 
@@ -19,10 +22,36 @@
           {% endfor %}
         </div>
       </div>
+      
+      <!--  스와이프 안내 문구 (HTML로 직접 추가) -->
+      <div class="text-center mt-4 mb-2">
+        <!-- 데스크톱용 안내 -->
+        <p class="hidden sm:block text-xs text-gray-500 font-body">
+          <span class="inline-flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+            </svg>
+            마우스로 드래그하여 더 많은 찜한 카페를 확인하세요
+            <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </span>
+        </p>
+        
+        <!-- 모바일용 안내 -->
+        <p class="block sm:hidden text-xs text-gray-500 font-body">
+          <span class="inline-flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="" class="w-3 h-3 mr-1">
+            좌우로 스와이프하여 더 많은 카페를 확인하세요
+          </span>
+        </p>
+      </div>
     </div>
   {% else %}
     <div class="text-center py-16">
-      <div class="text-6xl mb-4">💔</div>
+      <div class="mb-4">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페 없음" class="w-16 h-16 mx-auto opacity-50">
+      </div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생일카페가 없어요</h3>
       <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
       <a href="{% url 'ddoksang:home' %}" class="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 transition-colors">
@@ -112,36 +141,5 @@ function updateFavoritesSwiper() {
 
 .favorites-swiper .swiper-slide:hover {
   transform: translateY(-4px);
-}
-
-/* 스와이프 안내 텍스트 */
-.favorites-swiper::after {
-  content: '← 좌우로 스와이프하세요 →';
-  position: absolute;
-  bottom: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 12px;
-  color: #9ca3af;
-  z-index: 20;
-  white-space: nowrap;
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .favorites-swiper::after {
-    content: '← 드래그하거나 스와이프하여 더 많은 카페를 확인하세요 →';
-    font-size: 13px;
-    color: #6b7280;
-    bottom: -35px;
-  }
-}
-
-@media (max-width: 767px) {
-  .favorites-swiper::after {
-    content: '← 스와이프 →';
-    font-size: 11px;
-    bottom: -25px;
-  }
 }
 </style>
