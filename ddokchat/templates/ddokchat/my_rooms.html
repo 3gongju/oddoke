@@ -48,7 +48,7 @@
       {% if active_rooms %}
         <div class="space-y-4">
           {% for room in active_rooms %}
-            {% with post=room.post current_sender=me %}
+            {% with post=room.post current_user=me %}
               <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item">
                 <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
                   <!-- 헤더 영역 -->
@@ -70,7 +70,7 @@
                         </div>
                         
                         <div>
-                          {% if current_sender == room.buyer %}
+                          {% if current_user == room.buyer %}
                             <h3 class="font-semibold text-gray-900 flex items-center gap-2">
                               {{ room.seller.username }}
                               <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">판매자</span>
@@ -117,10 +117,7 @@
                         {% if room.last_message %}
                           <div class="chat-preview">
                             {% with last_message=room.last_message %}
-                              {% if last_message.sender == current_sender %}
-                                {% with is_my_message=True %}
-                              <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
-                              {% if is_my_message %}
+                              {% if last_message.sender == current_user %}
                                 <!-- 내가 보낸 메시지 (오른쪽 정렬, 검은색) -->
                                 <div class="flex justify-end mb-2">
                                   <div class="max-w-xs">
@@ -146,7 +143,6 @@
                                   </div>
                                 </div>
                               {% else %}
-                                {% with is_my_message=False %}
                                 <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
                                 <div class="flex justify-start mb-2">
                                   <div class="max-w-xs">
@@ -171,7 +167,6 @@
                                     </div>
                                   </div>
                                 </div>
-                                {% endwith %}
                               {% endif %}
                             {% endwith %}
                           </div>
@@ -227,7 +222,7 @@
       {% if completed_rooms %}
         <div class="space-y-4">
           {% for room in completed_rooms %}
-            {% with post=room.post current_sender=me %}
+            {% with post=room.post current_user=me %}
               <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item opacity-75">
                 <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
                   <!-- 헤더 영역 -->
@@ -249,7 +244,7 @@
                         </div>
                         
                         <div>
-                          {% if current_sender == room.buyer %}
+                          {% if current_user == room.buyer %}
                             <h3 class="font-semibold text-gray-700 flex items-center gap-2">
                               {{ room.seller.username }}
                               <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">판매자</span>
@@ -293,10 +288,7 @@
                         {% if room.last_message %}
                           <div class="chat-preview">
                             {% with last_message=room.last_message %}
-                              {% if last_message.sender == current_sender %}
-                                {% with is_my_message=True %}
-                              <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
-                              {% if is_my_message %}
+                              {% if last_message.sender == current_user %}
                                 <!-- 내가 보낸 메시지 (오른쪽 정렬, 회색톤) -->
                                 <div class="flex justify-end mb-2">
                                   <div class="max-w-xs">
@@ -340,7 +332,6 @@
                                     </div>
                                   </div>
                                 </div>
-                              {% endwith %}
                               {% endif %}
                             {% endwith %}
                           </div>
@@ -432,7 +423,7 @@
 .tab-button:hover:not(.active) {
   color: #374151;
   background: #f3f4f6;
-  border-bottom: 3px solid transparent;  /* 호버 상태도 투명 유지 */
+  border-bottom: 3px solid transparent;
 }
 
 .tab-content {
@@ -719,7 +710,6 @@
   outline-offset: 2px;
 }
 </style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // 탭 요소들 선택
@@ -940,5 +930,4 @@ window.chatRoomUtils = {
     }
 };
 </script>
-
 {% endblock %}
