@@ -8,6 +8,9 @@
 
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
 
+  <!-- ✅ 고급 필터를 카테고리 필터 바로 다음으로 이동 -->
+  {% include 'ddokfarm/components/_advanced_filter.html' %}
+
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
   <!-- 순서 정렬 (게시글 작성 바로 밑으로 이동) -->
@@ -23,9 +26,6 @@
       </select>
     </div>
   </div>
-
-  <!-- 고급 필터 -->
-  {% include 'ddokfarm/components/_advanced_filter.html' %}
 
   <!-- 판매중 상품만 보기 (필터링 바로 밑으로 이동) -->
   <div class="flex items-center gap-2 mb-6">
@@ -50,7 +50,7 @@
           <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
       </div>
       <p class="text-gray-500 text-lg">
-        {% if selected_shipping or selected_conditions or min_price or max_price %}
+        {% if selected_shipping or selected_conditions or selected_md or min_price or max_price %}
           선택한 조건에 맞는 게시글이 없습니다.
         {% else %}
           게시글이 없습니다.
@@ -59,7 +59,7 @@
       {% if show_available_only %}
         <p class="text-gray-400 text-sm mt-2">판매중 필터를 해제해보세요.</p>
       {% endif %}
-      {% if selected_shipping or selected_conditions or min_price or max_price %}
+      {% if selected_shipping or selected_conditions or selected_md or min_price or max_price %}
         <!-- <button onclick="clearAllFilters()" 
                 class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
           필터 초기화

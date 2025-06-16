@@ -50,6 +50,7 @@ def index(request):
     # 필터링 파라미터 (기존과 동일)
     selected_shipping = request.GET.get('shipping', '')
     selected_conditions = request.GET.getlist('condition')
+    selected_md = request.GET.getlist('md')  # ✅ 새로 추가: MD 종류 필터
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
 
@@ -64,6 +65,13 @@ def index(request):
         for condition in selected_conditions:
             condition_q |= Q(condition=condition)
         filter_conditions &= condition_q
+    
+    # ✅ 새로 추가: MD 종류 필터링
+    if selected_md:
+        md_q = Q()
+        for md in selected_md:
+            md_q |= Q(md=md)
+        filter_conditions &= md_q
     
     # 가격 필터링 (기존과 동일)
     price_conditions = Q()
@@ -205,11 +213,17 @@ def index(request):
     # 필터 표시용 데이터 생성 (기존과 동일)
     shipping_choices = dict(FarmSellPost.SHIPPING_CHOICES)
     condition_choices = dict(FarmSellPost.CONDITION_CHOICES)
+    md_choices = dict(FarmSellPost.MD_CHOICES)  # ✅ 새로 추가
     
     # 상품 상태 표시 매핑 생성
     condition_display_map = {}
     for condition in selected_conditions:
         condition_display_map[condition] = condition_choices.get(condition, condition)
+    
+    # ✅ 새로 추가: MD 종류 표시 매핑 생성
+    md_display_map = {}
+    for md in selected_md:
+        md_display_map[md] = md_choices.get(md, md)
     
     context = {
         'posts': posts,
@@ -226,10 +240,12 @@ def index(request):
         # 필터링 관련 컨텍스트 (기존과 동일)
         'selected_shipping': selected_shipping,
         'selected_conditions': selected_conditions,
+        'selected_md': selected_md,  # ✅ 새로 추가
         'min_price': min_price,
         'max_price': max_price,
         'selected_shipping_display': shipping_choices.get(selected_shipping, ''),
         'condition_display_map': condition_display_map,
+        'md_display_map': md_display_map,  # ✅ 새로 추가
     }
 
     return render(request, 'ddokfarm/index.html', context)
