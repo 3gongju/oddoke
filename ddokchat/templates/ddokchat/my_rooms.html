@@ -48,7 +48,7 @@
       {% if active_rooms %}
         <div class="space-y-4">
           {% for room in active_rooms %}
-            {% with post=room.post %}
+            {% with post=room.post current_sender=me %}
               <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item">
                 <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
                   <!-- 헤더 영역 -->
@@ -70,7 +70,7 @@
                         </div>
                         
                         <div>
-                          {% if me == room.buyer %}
+                          {% if current_sender == room.buyer %}
                             <h3 class="font-semibold text-gray-900 flex items-center gap-2">
                               {{ room.seller.username }}
                               <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-medium">판매자</span>
@@ -116,50 +116,64 @@
                       <div class="flex-1 min-w-0">
                         {% if room.last_message %}
                           <div class="chat-preview">
-                            <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
-                            {% if room.last_message.sender == me %}
-                              <!-- 내가 보낸 메시지 (오른쪽 정렬, 파란색) -->
-                              <div class="flex justify-end mb-2">
-                                <div class="max-w-xs">
-                                  <div class="bg-black text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
-                                    {% if room.last_message.image %}
-                                      <p class="text-sm italic text-white-500">사진을 보냈습니다.</p>
-                                    {% else %}
-                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
-                                    {% endif %}
-                                  </div>
-                                  <div class="flex justify-end items-center gap-1 mt-1">
-                                    <span class="text-xs text-gray-400">나</span>
-                                    <span class="text-xs text-gray-400">•</span>
-                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
-                                    {% if room.unread_count %}
-                                      <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
-                                    {% endif %}
-                                  </div>
-                                </div>
-                              </div>
-                            {% else %}
-                              <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
-                              <div class="flex justify-start mb-2">
-                                <div class="max-w-xs">
-                                  <div class="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
-                                    {% if room.last_message.image %}
-                                      <p class="text-sm italic text-white-500">사진을 보냈습니다.</p>
-                                    {% else %}
-                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
-                                    {% endif %}
-                                  </div>
-                                  <div class="flex justify-start items-center gap-1 mt-1">
-                                    <span class="text-xs text-gray-600 font-medium">{{ room.last_message.sender.username }}</span>
-                                    <span class="text-xs text-gray-400">•</span>
-                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
-                                    {% if room.unread_count %}
-                                      <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
-                                    {% endif %}
+                            {% with last_message=room.last_message %}
+                              {% if last_message.sender == current_sender %}
+                                {% with is_my_message=True %}
+                              <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
+                              {% if is_my_message %}
+                                <!-- 내가 보낸 메시지 (오른쪽 정렬, 검은색) -->
+                                <div class="flex justify-end mb-2">
+                                  <div class="max-w-xs">
+                                    <div class="bg-black text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
+                                      {% if last_message.message_type == 'text' %}
+                                        <p class="text-sm break-words">{{ last_message.text_content.content|truncatechars:50 }}</p>
+                                      {% elif last_message.message_type == 'image' %}
+                                        <p class="text-sm italic text-gray-300">사진을 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'account_info' %}
+                                        <p class="text-sm italic text-gray-300">계좌정보를 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'address_info' %}
+                                        <p class="text-sm italic text-gray-300">주소정보를 보냈습니다.</p>
+                                      {% endif %}
+                                    </div>
+                                    <div class="flex justify-end items-center gap-1 mt-1">
+                                      <span class="text-xs text-gray-400">나</span>
+                                      <span class="text-xs text-gray-400">•</span>
+                                      <span class="text-xs text-gray-400">{{ last_message.timestamp|timesince }} 전</span>
+                                      {% if room.unread_count %}
+                                        <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
+                                      {% endif %}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            {% endif %}
+                              {% else %}
+                                {% with is_my_message=False %}
+                                <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
+                                <div class="flex justify-start mb-2">
+                                  <div class="max-w-xs">
+                                    <div class="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm border border-gray-200">
+                                      {% if last_message.message_type == 'text' %}
+                                        <p class="text-sm break-words">{{ last_message.text_content.content|truncatechars:50 }}</p>
+                                      {% elif last_message.message_type == 'image' %}
+                                        <p class="text-sm italic text-gray-600">사진을 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'account_info' %}
+                                        <p class="text-sm italic text-gray-600">계좌정보를 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'address_info' %}
+                                        <p class="text-sm italic text-gray-600">주소정보를 보냈습니다.</p>
+                                      {% endif %}
+                                    </div>
+                                    <div class="flex justify-start items-center gap-1 mt-1">
+                                      <span class="text-xs text-gray-600 font-medium">{{ last_message.sender.username }}</span>
+                                      <span class="text-xs text-gray-400">•</span>
+                                      <span class="text-xs text-gray-400">{{ last_message.timestamp|timesince }} 전</span>
+                                      {% if room.unread_count %}
+                                        <span class="text-xs text-red-500 font-semibold">({{ room.unread_count }})</span>
+                                      {% endif %}
+                                    </div>
+                                  </div>
+                                </div>
+                                {% endwith %}
+                              {% endif %}
+                            {% endwith %}
                           </div>
                         {% else %}
                           <div class="flex justify-center">
@@ -213,7 +227,7 @@
       {% if completed_rooms %}
         <div class="space-y-4">
           {% for room in completed_rooms %}
-            {% with post=room.post %}
+            {% with post=room.post current_sender=me %}
               <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item opacity-75">
                 <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
                   <!-- 헤더 영역 -->
@@ -235,7 +249,7 @@
                         </div>
                         
                         <div>
-                          {% if me == room.buyer %}
+                          {% if current_sender == room.buyer %}
                             <h3 class="font-semibold text-gray-700 flex items-center gap-2">
                               {{ room.seller.username }}
                               <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">판매자</span>
@@ -278,44 +292,57 @@
                       <div class="flex-1 min-w-0">
                         {% if room.last_message %}
                           <div class="chat-preview">
-                            <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
-                            {% if room.last_message.sender == me %}
-                              <!-- 내가 보낸 메시지 (오른쪽 정렬, 회색톤) -->
-                              <div class="flex justify-end mb-2">
-                                <div class="max-w-xs">
-                                  <div class="bg-gray-400 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
-                                    {% if room.last_message.image %}
-                                      <p class="text-sm italic">사진을 보냈습니다.</p>
-                                    {% else %}
-                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
-                                    {% endif %}
-                                  </div>
-                                  <div class="flex justify-end items-center gap-1 mt-1">
-                                    <span class="text-xs text-gray-400">나</span>
-                                    <span class="text-xs text-gray-400">•</span>
-                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
-                                  </div>
-                                </div>
-                              </div>
-                            {% else %}
-                              <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
-                              <div class="flex justify-start mb-2">
-                                <div class="max-w-xs">
-                                  <div class="bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
-                                    {% if room.last_message.image %}
-                                      <p class="text-sm italic">사진을 보냈습니다.</p>
-                                    {% else %}
-                                      <p class="text-sm break-words">{{ room.last_message.content|truncatechars:50 }}</p>
-                                    {% endif %}
-                                  </div>
-                                  <div class="flex justify-start items-center gap-1 mt-1">
-                                    <span class="text-xs text-gray-500 font-medium">{{ room.last_message.sender.username }}</span>
-                                    <span class="text-xs text-gray-400">•</span>
-                                    <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
+                            {% with last_message=room.last_message %}
+                              {% if last_message.sender == current_sender %}
+                                {% with is_my_message=True %}
+                              <!-- 메시지 보낸 사람에 따라 다른 스타일 적용 -->
+                              {% if is_my_message %}
+                                <!-- 내가 보낸 메시지 (오른쪽 정렬, 회색톤) -->
+                                <div class="flex justify-end mb-2">
+                                  <div class="max-w-xs">
+                                    <div class="bg-gray-400 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
+                                      {% if last_message.message_type == 'text' %}
+                                        <p class="text-sm break-words">{{ last_message.text_content.content|truncatechars:50 }}</p>
+                                      {% elif last_message.message_type == 'image' %}
+                                        <p class="text-sm italic">사진을 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'account_info' %}
+                                        <p class="text-sm italic">계좌정보를 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'address_info' %}
+                                        <p class="text-sm italic">주소정보를 보냈습니다.</p>
+                                      {% endif %}
+                                    </div>
+                                    <div class="flex justify-end items-center gap-1 mt-1">
+                                      <span class="text-xs text-gray-400">나</span>
+                                      <span class="text-xs text-gray-400">•</span>
+                                      <span class="text-xs text-gray-400">{{ last_message.timestamp|timesince }} 전</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            {% endif %}
+                              {% else %}
+                                <!-- 상대방이 보낸 메시지 (왼쪽 정렬, 회색) -->
+                                <div class="flex justify-start mb-2">
+                                  <div class="max-w-xs">
+                                    <div class="bg-gray-200 text-gray-700 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm">
+                                      {% if last_message.message_type == 'text' %}
+                                        <p class="text-sm break-words">{{ last_message.text_content.content|truncatechars:50 }}</p>
+                                      {% elif last_message.message_type == 'image' %}
+                                        <p class="text-sm italic">사진을 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'account_info' %}
+                                        <p class="text-sm italic">계좌정보를 보냈습니다.</p>
+                                      {% elif last_message.message_type == 'address_info' %}
+                                        <p class="text-sm italic">주소정보를 보냈습니다.</p>
+                                      {% endif %}
+                                    </div>
+                                    <div class="flex justify-start items-center gap-1 mt-1">
+                                      <span class="text-xs text-gray-500 font-medium">{{ last_message.sender.username }}</span>
+                                      <span class="text-xs text-gray-400">•</span>
+                                      <span class="text-xs text-gray-400">{{ last_message.timestamp|timesince }} 전</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              {% endwith %}
+                              {% endif %}
+                            {% endwith %}
                           </div>
                         {% else %}
                           <div class="flex justify-center">
@@ -691,29 +718,6 @@
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
-
-/* 다크모드 대응 (선택사항) */
-/*@media (prefers-color-scheme: dark) {
-  .bg-gray-50 {
-    background-color: #1f2937;
-  }
-  
-  .bg-white {
-    background-color: #374151;
-  }
-  
-  .text-gray-800 {
-    color: #f9fafb;
-  }
-  
-  .text-gray-600 {
-    color: #d1d5db;
-  }
-  
-  .border-gray-200 {
-    border-color: #4b5563;
-  }
-}*/
 </style>
 
 <script>
