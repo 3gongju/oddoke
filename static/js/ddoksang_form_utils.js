@@ -64,7 +64,7 @@ window.DdoksangFormUtils = {
     },
 
     // ✅ 날짜 검증 제거 - DdoksangDateUtils로 이동됨
-    // validateDateRange 함수는 이제 window.DdoksangDateUtils.validateDateRange 사용
+
 
     // 생일 날짜 포맷팅
     formatBirthday(birthday) {
@@ -74,11 +74,51 @@ window.DdoksangFormUtils = {
 
     // 토스트 메시지 (기존 ddoksang_ui_components.js의 showToast 재사용)
     showToast(message, type = 'info') {
-        if (window.showToast) {
+        // 전역 showToast 함수 사용 (ddoksang_ui_components.js에서 정의됨)
+        if (typeof window.showToast === 'function') {
             window.showToast(message, type);
         } else {
-            alert(message); // fallback
+            // showToast 함수가 없으면 직접 토스트 생성
+            this.createToast(message, type);
         }
+    },
+
+        createToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+
+        const colors = {
+            success: '#10b981',
+            warning: '#f59e0b', 
+            error: '#ef4444',
+            info: '#3b82f6'
+        };
+
+        Object.assign(toast.style, {
+            position: 'fixed',
+            bottom: '60px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: colors[type] || colors.info,
+            color: '#fff',
+            padding: '12px 20px',
+            borderRadius: '9999px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 9999,
+            opacity: 0,
+            transition: 'opacity 0.4s ease',
+            fontSize: '14px',
+            fontWeight: '500'
+        });
+
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => (toast.style.opacity = 1));
+
+        setTimeout(() => {
+            toast.style.opacity = 0;
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, 3000);
     },
 
     // 아티스트 선택 데이터 정규화
