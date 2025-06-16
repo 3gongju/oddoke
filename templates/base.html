@@ -6,13 +6,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Oddoke</title>
+  
+  <!-- 나눔스퀘어 & 배민체 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <style>
+    @font-face {
+      font-family: 'BMJUA';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NanumSquare';
+      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareRegular.woff') format('woff');
+      font-weight: 400;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NanumSquare';
+      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareBold.woff') format('woff');
+      font-weight: 700;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'NanumSquare';
+      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareLight.woff') format('woff');
+      font-weight: 300;
+      font-style: normal;
+    }
+  </style>
+  
+  <!-- Tailwind CSS with Custom Config -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'cute': ['BMJUA', 'NanumSquare', 'system-ui', 'sans-serif'],
+            'sans': ['NanumSquare', 'system-ui', 'sans-serif'],
+            'heading': ['BMJUA', 'system-ui', 'sans-serif'],
+            'body': ['NanumSquare', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            // 레퍼런스에 맞는 부드러운 크림/노랑 색상
+            cream: {
+              bg: '#fffef7',
+              soft: '#f6f1e8',
+              light: '#f0e6d2',
+              accent: '#e8d5a3',
+              dark: '#d4bf7a',
+            }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.5s ease-in-out',
+            'slide-up': 'slideUp 0.6s ease-out',
+            'bounce-slow': 'bounce 3s infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(20px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
+          },
+        }
+      }
+    }
+  </script>
 
   <!--  커스텀 스크롤 제거용 CSS 연결 -->
   <link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
-
-  <!--  하트 버튼 통일 CSS 추가 -->
-  <!-- <link rel="stylesheet" href="{% static 'css/heart-buttons.css' %}"> -->
 
   <!-- Swiper CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -20,41 +88,41 @@
   {% block head %}{% endblock %}
 </head>
 
-<body class="bg-white text-gray-900 min-h-screen">
-<!-- ✅ Navbar -->
-<nav class="bg-white shadow sticky top-0 z-50">
+<body class="bg-white text-black min-h-screen font-body">
+<!-- ✅ Navbar - 반응형 최적화 및 부드러운 색상 -->
+<nav class="bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-50 border-b border-gray-200">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex justify-between h-16 items-center">
+    <div class="flex justify-between h-14 sm:h-16 items-center">
       <!-- 왼쪽: 로고 -->
-      <div class="flex items-center space-x-4">
-        <a href="/" class="text-xl font-bold text-primary">어덕해</a>
+      <div class="flex items-center space-x-4 sm:space-x-6">
+        <a href="/" class="font-heading text-xl sm:text-2xl font-bold text-black hover:text-gray-700 transition-colors">어덕해</a>
         
         <!-- 데스크톱 메뉴 (md 이상에서만 표시) -->
-        <div class="hidden md:flex items-center space-x-4">
-          <a href="/ddokfarm/" class="hover:text-primary text-sm font-medium">덕팜</a>
-          <a href="/ddokdam/" class="hover:text-primary text-sm font-medium">덕담</a>
-          <a href="/ddoksang/" class="hover:text-primary text-sm font-medium">덕생</a>
+        <div class="hidden md:flex items-center space-x-4 lg:space-x-6">
+          <a href="/ddokfarm/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent font-body">덕팜</a>
+          <a href="/ddokdam/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent font-body">덕담</a>
+          <a href="/ddoksang/" class="hover:text-cream-dark text-sm font-semibold text-black transition-colors border-b-2 border-transparent hover:border-cream-accent font-body">덕생</a>
         </div>
       </div>
       
       <!-- 오른쪽: 사용자 메뉴 + 햄버거 버튼 -->
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-2 sm:space-x-3">
         {% if request.user.is_authenticated %}
           <!-- 알림 버튼 -->
           <div class="relative">
-            <a href="/notifications/" class="relative inline-flex items-center justify-center p-2 text-gray-700 hover:text-primary transition-colors">
-              <div class="text-xl">📬</div>
+            <a href="/notifications/" class="relative inline-flex items-center justify-center p-2 text-black hover:text-cream-dark transition-colors rounded-full hover:bg-cream-bg">
+              <div class="text-lg sm:text-xl">📬</div>
               <!-- 알림 개수 배지 -->
               <span id="notification-badge" 
-                    class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center hidden border-2 border-white">
+                    class="absolute -top-0.5 -right-0.5 bg-black text-cream-soft text-xs rounded-full min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center hidden border-2 border-white text-[10px] sm:text-xs font-body">
                 0
               </span>
             </a>
           </div>
           
           <!-- 데스크톱 사용자 메뉴 -->
-          <div class="hidden md:flex items-center space-x-2">
-            <span class="text-sm text-gray-700">
+          <div class="hidden md:flex items-center space-x-3 lg:space-x-4">
+            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold font-body">
               👤 
               {% if request.user.first_name %}
                 {{ request.user.first_name }}
@@ -67,20 +135,20 @@
               {% endif %}
               님
             </span>
-            <a href="/ddokchat/my/" class="text-sm text-gray-700 hover:text-primary">내채팅방</a>
-            <a href="{% url 'accounts:mypage' %}" class="text-sm text-gray-700 hover:text-primary">마이페이지</a>
-            <a href="/accounts/logout/" class="text-sm text-gray-700 hover:text-primary">로그아웃</a>
+            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">내채팅방</a>
+            <a href="{% url 'accounts:mypage' %}" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">마이페이지</a>
+            <a href="/accounts/logout/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">로그아웃</a>
           </div>
           
         {% else %}
-          <a href="/accounts/login/" class="text-sm text-gray-700 hover:text-primary hidden md:block">로그인</a>
+          <a href="/accounts/login/" class="text-xs sm:text-sm text-black hover:text-cream-dark hidden md:block bg-cream-light px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-colors font-semibold font-body">로그인</a>
         {% endif %}
         
         <!-- 햄버거 버튼 (모바일에서만 표시, 맨 오른쪽) -->
-        <button id="hamburger-btn" class="flex flex-col justify-center items-center w-6 h-6 focus:outline-none md:hidden ml-2">
-          <span class="block w-5 h-0.5 bg-gray-700 transition-all duration-300"></span>
-          <span class="block w-5 h-0.5 bg-gray-700 mt-1 transition-all duration-300"></span>
-          <span class="block w-5 h-0.5 bg-gray-700 mt-1 transition-all duration-300"></span>
+        <button id="hamburger-btn" class="flex flex-col justify-center items-center w-5 h-5 sm:w-6 sm:h-6 focus:outline-none md:hidden ml-1 sm:ml-2">
+          <span class="block w-4 h-0.5 sm:w-5 sm:h-0.5 bg-black transition-all duration-300"></span>
+          <span class="block w-4 h-0.5 sm:w-5 sm:h-0.5 bg-black mt-0.5 sm:mt-1 transition-all duration-300"></span>
+          <span class="block w-4 h-0.5 sm:w-5 sm:h-0.5 bg-black mt-0.5 sm:mt-1 transition-all duration-300"></span>
         </button>
       </div>
     </div>
@@ -88,12 +156,12 @@
   
   <!-- 모바일 메뉴 (햄버거 클릭 시 표시) -->
   <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200 hidden">
-    <div class="px-4 py-3 space-y-3">
+    <div class="px-4 py-3 space-y-2 sm:space-y-3">
       {% if request.user.is_authenticated %}
         <!-- 사용자 정보 섹션 (모바일 전용) -->
-        <div class="bg-gray-50 rounded-lg p-3 mb-3">
+        <div class="bg-cream-bg rounded-lg p-3 mb-3 border border-cream-light">
           <div class="flex items-center space-x-2">
-            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-black rounded-full flex items-center justify-center text-cream-soft text-xs sm:text-sm font-bold font-body">
               {% if request.user.first_name %}
                 {{ request.user.first_name|first }}
               {% elif request.user.username|slice:":10" == "naver_" %}
@@ -105,7 +173,7 @@
               {% endif %}
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">
+              <p class="text-sm font-semibold text-black truncate font-body">
                 {% if request.user.first_name %}
                   {{ request.user.first_name }}님
                 {% elif request.user.username|slice:":10" == "naver_" %}
@@ -116,39 +184,39 @@
                   {{ request.user.username }}님
                 {% endif %}
               </p>
-              <p class="text-xs text-gray-500">환영합니다!</p>
+              <p class="text-xs text-gray-600 font-body">환영합니다!</p>
             </div>
           </div>
         </div>
       {% endif %}
       
       <!-- 메인 메뉴 -->
-      <a href="/ddokfarm/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-        <span class="text-lg mr-2"></span>덕팜
+      <a href="/ddokfarm/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
+        덕팜
       </a>
-      <a href="/ddokdam/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-        <span class="text-lg mr-2"></span>덕담
+      <a href="/ddokdam/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
+        덕담
       </a>
-      <a href="/ddoksang/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-        <span class="text-lg mr-2"></span>덕생
+      <a href="/ddoksang/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
+        덕생
       </a>
       
       {% if request.user.is_authenticated %}
         <hr class="my-3 border-gray-200">
         <!-- 사용자 메뉴 -->
-        <a href="/ddokchat/my/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-          <span class="text-lg mr-2"></span>내채팅방
+        <a href="/ddokchat/my/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
+          내채팅방
         </a>
-        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-          <span class="text-lg mr-2"></span>마이페이지
+        <a href="{% url 'accounts:mypage' %}" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
+          마이페이지
         </a>
-        <a href="/accounts/logout/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-          <span class="text-lg mr-2"></span>로그아웃
+        <a href="/accounts/logout/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
+          로그아웃
         </a>
       {% else %}
         <hr class="my-3 border-gray-200">
-        <a href="/accounts/login/" class="block py-2 text-gray-700 hover:text-primary hover:bg-gray-50 rounded px-2">
-          <span class="text-lg mr-2"></span>로그인
+        <a href="/accounts/login/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-semibold font-body">
+          로그인
         </a>
       {% endif %}
     </div>
@@ -158,66 +226,67 @@
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}
 
-<!-- ✅ 1. FAQ 버튼 (왼쪽 하단으로 이동) -->
+<!-- ✅ FAQ 버튼 - 고정 위치 및 커서 스타일 수정 -->
 <button id="faqButton"
-        class="fixed bottom-6 left-6 bg-black text-white px-4 py-2 rounded-full shadow-lg z-50 cursor-move">
+        class="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 bg-black text-cream-soft px-4 sm:px-6 py-2 sm:py-3 rounded-full shadow-lg z-50 cursor-pointer hover:bg-gray-800 hover:scale-105 transition-all font-bold text-sm sm:text-base font-body">
   FAQ
 </button>
 
-<!-- ✅ 2. FAQ 모달 (왼쪽 하단으로 이동) -->
+<!-- ✅ FAQ 모달 - 위치 수정 (버튼 위에 표시) -->
 <div id="faqModal"
-     class="fixed bottom-20 left-6 w-80 bg-white border border-gray-300 rounded-xl shadow-lg hidden flex-col z-50">
-  <!-- 모달 헤더: 검정 배경 -->
-  <div class="bg-black text-white px-4 py-3 rounded-t-xl flex justify-between items-center">
-    <span class="font-semibold">어덕해</span>
-    <button id="closeModal" class="text-white text-lg">&times;</button>
+     class="fixed bottom-16 left-4 sm:bottom-20 sm:left-6 w-72 sm:w-80 bg-white border-2 border-gray-300 rounded-xl shadow-xl hidden flex-col z-50 transform transition-all duration-300 opacity-0 translate-y-2">
+  <!-- 모달 헤더 -->
+  <div class="bg-black text-cream-soft px-4 py-3 rounded-t-xl flex justify-between items-center">
+    <span class="font-heading font-bold text-sm sm:text-base">어덕해</span>
+    <button id="closeModal" class="text-cream-soft text-lg hover:text-cream-light transition-colors">&times;</button>
   </div>
 
   <!-- 채팅 메시지 + 질문 -->
-  <div class="px-4 py-3 space-y-2 max-h-80 overflow-y-auto text-sm">
-    <div class="bg-gray-100 p-2 rounded-lg w-fit max-w-[90%]">무엇이 궁금하신가요?</div>
-    <div class="bg-gray-100 p-2 rounded-lg w-fit max-w-[90%]">
+  <div class="px-4 py-3 space-y-2 max-h-72 sm:max-h-80 overflow-y-auto text-sm font-body">
+    <div class="bg-gray-100 p-2 sm:p-3 rounded-lg w-fit max-w-[90%] text-black">무엇이 궁금하신가요?</div>
+    <div class="bg-gray-100 p-2 sm:p-3 rounded-lg w-fit max-w-[90%] text-black">
       어덕해 소개, 회원가입 안내, 탈퇴 안내, 용어 설명 중 선택해주세요!
     </div>
 
-    <!-- 질문 버튼: 어두운 회색 계열 -->
+    <!-- 질문 버튼 -->
     <div id="questionSection" class="space-y-2">
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-gray-800 hover:bg-gray-700 text-white"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="about">📌 어덕해 소개</button>
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-gray-800 hover:bg-gray-700 text-white"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="signup">🙋‍♀️ 회원가입 안내</button>
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-gray-800 hover:bg-gray-700 text-white"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="withdraw">🚪 탈퇴 안내</button>
-      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-gray-800 hover:bg-gray-700 text-white"
+      <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
               data-target="terms">📚 용어 설명</button>
     </div>
 
     <!-- 답변 -->
     <div id="answerSection" class="hidden space-y-2">
-      <div id="about" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
+      <div id="about" class="faq-answer hidden bg-cream-bg p-2 sm:p-3 rounded-lg text-black border border-cream-light">
         <p><strong>"어덕해"</strong>는 팬들을 위한 굿즈 거래, 생일카페 정보, 덕질 기록 플랫폼입니다.</p>
       </div>
-      <div id="signup" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
-        <p>비회원은 열람만 가능하며, 댓글/작성은 로그인 필요. 이메일, 카카오, 구글 가입 가능.</p>
+      <div id="signup" class="faq-answer hidden bg-cream-bg p-2 sm:p-3 rounded-lg text-black border border-cream-light">
+        <p>비회원은 열람만 가능하며, 댓글/작성은 로그인 필요 (이메일, 카카오, 네이버 가입 가능)</p>
+        <p><strong>이메일 인증 메일이 오지 않을 경우 스팸메일함을 확인해주세요!</strong></p>
       </div>
-      <div id="withdraw" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
+      <div id="withdraw" class="faq-answer hidden bg-cream-bg p-2 sm:p-3 rounded-lg text-black border border-cream-light">
         <p>마이페이지 → 프로필 관리 → 회원탈퇴 가능. 탈퇴 후 30일간 재가입 제한됩니다.</p>
       </div>
-      <div id="terms" class="faq-answer hidden bg-gray-100 p-2 rounded-lg">
-        <ul class="list-disc list-inside space-y-1">
+      <div id="terms" class="faq-answer hidden bg-cream-bg p-2 sm:p-3 rounded-lg text-black border border-cream-light">
+        <ul class="list-disc list-inside space-y-1 text-sm">
           <li><strong>포카</strong> = 포토카드</li>
           <li><strong>덕팜</strong> = 굿즈 거래</li>
           <li><strong>덕담</strong> = 커뮤니티</li>
           <li><strong>덕생</strong> = 생일카페 정보</li>
         </ul>
       </div>
-      <button id="backBtn" class="text-sm text-blue-500 underline">← 질문 목록으로 돌아가기</button>
+      <button id="backBtn" class="text-sm text-gray-600 underline hover:text-black transition-colors">← 질문 목록으로 돌아가기</button>
     </div>
   </div>
 </div>
 
 <!-- ✅ 모든 페이지에 적용되는 하단 여유 공간 -->
-<div class="h-48"></div>
+<div class="h-32 sm:h-48"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
@@ -247,7 +316,6 @@
 
 <!-- ✅ 알림 개수 업데이트 스크립트 -->
 <script>
-  // 알림 개수 업데이트 함수
   function updateNotificationCount() {
     {% if request.user.is_authenticated %}
       fetch('/notifications/unread-count/')
@@ -258,10 +326,9 @@
             badge.textContent = data.unread_count;
             if (data.unread_count > 0) {
               badge.classList.remove('hidden');
-              // 99+ 처리
               if (data.unread_count > 99) {
                 badge.textContent = '99+';
-                badge.classList.add('px-1'); // 더 넓게
+                badge.classList.add('px-1');
               }
             } else {
               badge.classList.add('hidden');
@@ -272,15 +339,11 @@
     {% endif %}
   }
 
-  // 페이지 로드 시 알림 개수 업데이트
   document.addEventListener('DOMContentLoaded', function() {
     updateNotificationCount();
-    
-    // 3분마다 알림 개수 업데이트
     setInterval(updateNotificationCount, 180000);
   });
 
-  // 알림 페이지에서 돌아왔을 때 업데이트
   window.addEventListener('focus', function() {
     updateNotificationCount();
   });
@@ -295,39 +358,31 @@
 
     if (hamburgerBtn && mobileMenu && hamburgerLines) {
       hamburgerBtn.addEventListener('click', function() {
-        // 메뉴 토글
         mobileMenu.classList.toggle('hidden');
         
-        // 햄버거 아이콘 애니메이션
         if (mobileMenu.classList.contains('hidden')) {
-          // 메뉴 닫힘: 원래 햄버거 모양
           hamburgerLines[0].style.transform = 'rotate(0deg) translateY(0px)';
           hamburgerLines[1].style.opacity = '1';
           hamburgerLines[2].style.transform = 'rotate(0deg) translateY(0px)';
         } else {
-          // 메뉴 열림: X 모양
           hamburgerLines[0].style.transform = 'rotate(45deg) translateY(6px)';
           hamburgerLines[1].style.opacity = '0';
           hamburgerLines[2].style.transform = 'rotate(-45deg) translateY(-6px)';
         }
       });
 
-      // 메뉴 외부 클릭 시 닫기
       document.addEventListener('click', function(event) {
         if (!hamburgerBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
           mobileMenu.classList.add('hidden');
-          // 햄버거 아이콘 원래대로
           hamburgerLines[0].style.transform = 'rotate(0deg) translateY(0px)';
           hamburgerLines[1].style.opacity = '1';
           hamburgerLines[2].style.transform = 'rotate(0deg) translateY(0px)';
         }
       });
 
-      // 창 크기 변경 시 모바일 메뉴 숨김
       window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) { // md 브레이크포인트
+        if (window.innerWidth >= 768) {
           mobileMenu.classList.add('hidden');
-          // 햄버거 아이콘 원래대로
           hamburgerLines[0].style.transform = 'rotate(0deg) translateY(0px)';
           hamburgerLines[1].style.opacity = '1';
           hamburgerLines[2].style.transform = 'rotate(0deg) translateY(0px)';
@@ -337,29 +392,182 @@
   });
 </script>
 
-<!-- ✅ 문의하기 기능 스크립트 분리 -->
-<script src="{% static 'js/faq.js' %}"></script>
+<!-- ✅ FAQ 모달 토글 스크립트 개선 -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const faqButton = document.getElementById('faqButton');
+    const faqModal = document.getElementById('faqModal');
+    const closeModal = document.getElementById('closeModal');
+    const questionSection = document.getElementById('questionSection');
+    const answerSection = document.getElementById('answerSection');
+    const backBtn = document.getElementById('backBtn');
+    const faqOptions = document.querySelectorAll('.faq-option');
+    const faqAnswers = document.querySelectorAll('.faq-answer');
 
-<!-- ✅ 추가 스타일 -->
+    // FAQ 버튼 클릭
+    if (faqButton && faqModal) {
+      faqButton.addEventListener('click', function() {
+        if (faqModal.classList.contains('hidden')) {
+          // 모달 열기
+          faqModal.classList.remove('hidden');
+          setTimeout(() => {
+            faqModal.classList.remove('opacity-0', 'translate-y-2');
+            faqModal.classList.add('opacity-100', 'translate-y-0');
+          }, 10);
+        } else {
+          // 모달 닫기
+          faqModal.classList.add('opacity-0', 'translate-y-2');
+          faqModal.classList.remove('opacity-100', 'translate-y-0');
+          setTimeout(() => {
+            faqModal.classList.add('hidden');
+          }, 300);
+        }
+      });
+    }
+
+    // 모달 닫기 버튼
+    if (closeModal) {
+      closeModal.addEventListener('click', function() {
+        faqModal.classList.add('opacity-0', 'translate-y-2');
+        faqModal.classList.remove('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+          faqModal.classList.add('hidden');
+        }, 300);
+      });
+    }
+
+    // FAQ 옵션 클릭
+    faqOptions.forEach(option => {
+      option.addEventListener('click', function() {
+        const target = this.getAttribute('data-target');
+        
+        // 질문 섹션 숨기고 답변 섹션 보이기
+        questionSection.classList.add('hidden');
+        answerSection.classList.remove('hidden');
+        
+        // 모든 답변 숨기기
+        faqAnswers.forEach(answer => {
+          answer.classList.add('hidden');
+        });
+        
+        // 선택된 답변만 보이기
+        const selectedAnswer = document.getElementById(target);
+        if (selectedAnswer) {
+          selectedAnswer.classList.remove('hidden');
+        }
+      });
+    });
+
+    // 뒤로가기 버튼
+    if (backBtn) {
+      backBtn.addEventListener('click', function() {
+        answerSection.classList.add('hidden');
+        questionSection.classList.remove('hidden');
+      });
+    }
+
+    // 모달 외부 클릭시 닫기
+    document.addEventListener('click', function(event) {
+      if (faqModal && !faqModal.contains(event.target) && !faqButton.contains(event.target)) {
+        if (!faqModal.classList.contains('hidden')) {
+          faqModal.classList.add('opacity-0', 'translate-y-2');
+          faqModal.classList.remove('opacity-100', 'translate-y-0');
+          setTimeout(() => {
+            faqModal.classList.add('hidden');
+          }, 300);
+        }
+      }
+    });
+  });
+</script>
+
+<!-- ✅ 추가 스타일 - 반응형 및 폰트 최적화 -->
 <style>
-  /* 사용자 아바타 색상 설정 */
-  .text-primary, .hover\\:text-primary:hover {
-    color: #3b82f6;
+  /* 한글 폰트 최적화 */
+  .font-heading {
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+  }
+
+  .font-body {
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+    line-height: 1.6;
   }
   
-  .bg-primary {
-    background-color: #3b82f6;
+  /* 귀여운 폰트 개선 */
+  .font-cute {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    letter-spacing: -0.01em;
+    word-break: keep-all;
   }
   
-  /* 모바일 메뉴 아이템 호버 효과 개선 */
-  .md\\:hidden a:hover {
-    transform: translateX(4px);
-    transition: all 0.2s ease-in-out;
+  /* 호버 효과 개선 */
+  .transition-all {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  /* 사용자 정보 카드 그림자 효과 */
-  .bg-gray-50 {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  /* 라인 클램프 */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* 스크롤바 스타일링 */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  @media (min-width: 640px) {
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #fffef7;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #e8d5a3;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #d4bf7a;
+  }
+  
+  /* 선택 하이라이트 색상 */
+  ::selection {
+    background-color: #f0e6d2;
+    color: #000;
+  }
+  
+  ::-moz-selection {
+    background-color: #f0e6d2;
+    color: #000;
+  }
+  
+  /* 터치 대상 크기 최적화 */
+  @media (max-width: 767px) {
+    button, a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+  
+  /* 포커스 스타일 개선 */
+  button:focus, a:focus {
+    outline: 2px solid #e8d5a3;
+    outline-offset: 2px;
   }
 </style>
 </body>

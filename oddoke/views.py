@@ -1,40 +1,15 @@
 from itertools import zip_longest
 from datetime import datetime, timedelta
 from django.shortcuts import render
+from django.db.models import Count, Q
 from artist.models import Artist, Member
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 from ddoksang.utils.bday_utils import get_weekly_bday_artists
 
 
-
 def group_artists(artists, group_size=5):
     return [list(filter(None, group)) for group in zip_longest(*[iter(artists)] * group_size)]
-
-
-# def get_weekly_birthdays():
-#     today = datetime.today()
-#     start_of_week = today - timedelta(days=today.weekday())  # 이번 주 월요일
-#     end_of_week = start_of_week + timedelta(days=6)          # 이번 주 일요일
-
-#     def to_date(mmdd_str):
-#         try:
-#             return datetime.strptime(f"{today.year}-{mmdd_str}", "%Y-%m-%d")
-#         except:
-#             return None
-
-#     members = Member.objects.exclude(member_bday__isnull=True).exclude(member_bday__exact='')
-#     birthday_list = []
-#     for m in members:
-#         bday_date = to_date(m.member_bday)
-#         if bday_date and start_of_week <= bday_date <= end_of_week:
-#             artist_names = ', '.join([a.display_name for a in m.artist_name.all()])
-#             birthday_list.append({
-#                 'member_name': m.member_name,
-#                 'artist_name': artist_names,
-#                 'bday': bday_date.strftime('%m월 %d일'),
-#             })
-#     return birthday_list
 
 
 def main(request):
@@ -53,11 +28,13 @@ def main(request):
         'image/banner/banner4.jpg',
     ]
 
-    # 4) 덕팜 최신 게시물 3개 + 카테고리 수동 부여
-    latest_sell_posts = list(FarmSellPost.objects.order_by('-created_at')[:3])
+    # ✅ 4) 덕팜 최신 게시물 - 개선된 템플릿에 맞게 개수 증가
+    # 실시간 인기 만두용 (3개) + 하이라이트용 (3개) = 총 6개 필요
+    latest_sell_posts = list(FarmSellPost.objects.order_by('-created_at')[:6])
     for post in latest_sell_posts:
         post.category = 'sell'
 
+    # 대여글, 분철글은 기존대로 3개씩
     latest_rental_posts = list(FarmRentalPost.objects.order_by('-created_at')[:3])
     for post in latest_rental_posts:
         post.category = 'rental'
@@ -66,8 +43,9 @@ def main(request):
     for post in latest_split_posts:
         post.category = 'split'
 
-    # 5) 덕담 최신 게시물 3개 + 카테고리 수동 부여
-    latest_community_posts = list(DamCommunityPost.objects.order_by('-created_at')[:3])
+    # ✅ 5) 덕담 최신 게시물 - 개선된 템플릿에 맞게 개수 증가
+    # 오늘의 새 소식용 (2개) + 하이라이트용 (3개) = 총 5개 필요
+    latest_community_posts = list(DamCommunityPost.objects.order_by('-created_at')[:5])
     for post in latest_community_posts:
         post.category = 'community'
 
@@ -79,7 +57,63 @@ def main(request):
     for post in latest_bdaycafe_posts:
         post.category = 'bdaycafe'
 
-    # 6) 주간 생일 멤버
+    # ✅ 6) 새로 추가: 이주의 베스트 (좋아요 수 기준)
+    # 일주일 전 날짜 계산
+    one_week_ago = datetime.now() - timedelta(days=7)
+    
+    # 모든 게시물을 합쳐서 좋아요 수 기준으로 정렬
+    weekly_best_posts = []
+    
+    # 덕팜 게시물들 (좋아요 수가 있다면)
+    if hasattr(FarmSellPost, 'like'):  # 좋아요 기능이 있는 경우
+        sell_posts = list(FarmSellPost.objects
+                         .filter(created_at__gte=one_week_ago)
+                         .annotate(like_count=Count('like'))
+                         .order_by('-like_count')[:3])
+        for post in sell_posts:
+            post.category = 'sell'
+        weekly_best_posts.extend(sell_posts)
+    
+    # 덕담 게시물들
+    if hasattr(DamCommunityPost, 'like'):  # 좋아요 기능이 있는 경우
+        community_posts = list(DamCommunityPost.objects
+                              .filter(created_at__gte=one_week_ago)
+                              .annotate(like_count=Count('like'))
+                              .order_by('-like_count')[:3])
+        for post in community_posts:
+            post.category = 'community'
+        weekly_best_posts.extend(community_posts)
+    
+    # 좋아요 기능이 없다면 조회수나 최신순으로 대체
+    if not weekly_best_posts:
+        # 조회수 기준 (view_count 필드가 있다면)
+        if hasattr(FarmSellPost, 'view_count'):
+            sell_posts = list(FarmSellPost.objects
+                             .filter(created_at__gte=one_week_ago)
+                             .order_by('-view_count')[:4])
+            for post in sell_posts:
+                post.category = 'sell'
+            weekly_best_posts.extend(sell_posts)
+        
+        if hasattr(DamCommunityPost, 'view_count'):
+            community_posts = list(DamCommunityPost.objects
+                                  .filter(created_at__gte=one_week_ago)
+                                  .order_by('-view_count')[:4])
+            for post in community_posts:
+                post.category = 'community'
+            weekly_best_posts.extend(community_posts)
+    
+    # 그래도 없다면 최신순으로 대체
+    if not weekly_best_posts:
+        recent_sell = list(FarmSellPost.objects.order_by('-created_at')[:4])
+        for post in recent_sell:
+            post.category = 'sell'
+        recent_community = list(DamCommunityPost.objects.order_by('-created_at')[:4])
+        for post in recent_community:
+            post.category = 'community'
+        weekly_best_posts = recent_sell + recent_community
+
+    # 7) 주간 생일 멤버
     birthday_artists = get_weekly_bday_artists()
 
     return render(request, 'main/home.html', {
@@ -87,17 +121,16 @@ def main(request):
         'grouped_artists': grouped_artists,
         'banner_images': banner_images,
 
+        # 기존 변수들
         'latest_sell_posts': latest_sell_posts,
         'latest_rental_posts': latest_rental_posts,
         'latest_split_posts': latest_split_posts,
-
         'latest_community_posts': latest_community_posts,
         'latest_manner_posts': latest_manner_posts,
         'latest_bdaycafe_posts': latest_bdaycafe_posts,
         
+        # ✅ 새로 추가된 변수
+        'weekly_best_posts': weekly_best_posts,
+        
         'birthday_artists': birthday_artists,
-
     })
-
-
-

@@ -163,36 +163,46 @@
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
-  function updateDistances(userLat, userLng) {
-    const cards = [...document.querySelectorAll('.cafe-card-mini')];
-    cards.forEach(card => {
-      const lat = parseFloat(card.dataset.cafeLat);
-      const lng = parseFloat(card.dataset.cafeLng);
-      
-      if (!isNaN(lat) && !isNaN(lng)) {
-        const distKm = haversine(userLat, userLng, lat, lng);
-        const minutes = Math.round((distKm / 5) * 60);
-
-        card.dataset.distance = distKm;
-        const distEl = card.querySelector('.walk-distance');
-        const timeEl = card.querySelector('.walk-time');
-        const boxEl = card.querySelector('.distance-time');
-
-        if (distEl && timeEl && boxEl) {
-          distEl.textContent = distKm.toFixed(1) + 'km';
-          timeEl.textContent = minutes + '분';
-          boxEl.classList.remove('hidden');
-        }
-      }
-    });
-
-    // 거리순 정렬
-    cards.sort((a, b) => parseFloat(a.dataset.distance || 999) - parseFloat(b.dataset.distance || 999));
-    const container = document.getElementById('cafeCardContainer');
-    if (container) {
-      cards.forEach(card => container.appendChild(card));
-    }
+function updateDistances(userLat, userLng) {
+  function formatWalkTime(minutes) {
+    const mins = parseInt(minutes, 10);
+    if (isNaN(mins)) return '';
+    if (mins < 60) return `${mins}분`;
+    const hours = Math.floor(mins / 60);
+    const rem = mins % 60;
+    return rem === 0 ? `${hours}시간` : `${hours}시간 ${rem}분`;
   }
+
+  const cards = [...document.querySelectorAll('.cafe-card-mini')];
+  cards.forEach(card => {
+    const lat = parseFloat(card.dataset.cafeLat);
+    const lng = parseFloat(card.dataset.cafeLng);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const distKm = haversine(userLat, userLng, lat, lng);
+      const minutes = Math.round((distKm / 5) * 60); // 평균 도보 5km/h
+
+      card.dataset.distance = distKm;
+      const distEl = card.querySelector('.walk-distance');
+      const timeEl = card.querySelector('.walk-time');
+      const boxEl = card.querySelector('.distance-time');
+
+      if (distEl && timeEl && boxEl) {
+        distEl.textContent = distKm.toFixed(1) + 'km';
+        timeEl.textContent = formatWalkTime(minutes);  // ⬅ 변경된 부분
+        boxEl.classList.remove('hidden');
+      }
+    }
+  });
+
+  // 거리순 정렬
+  cards.sort((a, b) => parseFloat(a.dataset.distance || 999) - parseFloat(b.dataset.distance || 999));
+  const container = document.getElementById('cafeCardContainer');
+  if (container) {
+    cards.forEach(card => container.appendChild(card));
+  }
+}
+
 
   function requestLocationAndSort() {
     if (navigator.geolocation) {
@@ -204,38 +214,33 @@
   }
 
   // 카드 클릭 이벤트 (지도 이동)
-  document.addEventListener('DOMContentLoaded', function() {
-    requestLocationAndSort();
-    
-    // 카페 카드 클릭 시 지도 이동 (기존 로직 유지)
-    document.addEventListener('click', function(e) {
-      const cafeCard = e.target.closest('.cafe-card-mini');
-      if (cafeCard) {
-        // 상세보기 링크 클릭이 아닌 경우에만 지도 이동
-        if (!e.target.closest('a[href*="/ddoksang/cafe/"]')) {
-          const lat = parseFloat(cafeCard.dataset.cafeLat);
-          const lng = parseFloat(cafeCard.dataset.cafeLng);
-          
-          if (!isNaN(lat) && !isNaN(lng)) {
-            // 전역 지도 이동 함수 호출
-            if (typeof moveToLocationHome === 'function') {
-              moveToLocationHome(lat, lng);
-            } else if (typeof window.map !== 'undefined' && window.map) {
-              const position = new kakao.maps.LatLng(lat, lng);
-              window.map.setCenter(position);
-              window.map.setLevel(5);
-            }
-            
-            // 시각적 피드백
-            cafeCard.classList.add('ring-2', 'ring-blue-400');
-            setTimeout(() => {
-              cafeCard.classList.remove('ring-2', 'ring-blue-400');
-            }, 1000);
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.cafe-card-mini').forEach(card => {
+      card.addEventListener('click', function (e) {
+        // detail-link 또는 그 내부 클릭 무시
+        if (e.target.closest('.detail-link')) return;
+
+        const lat = parseFloat(card.dataset.cafeLat);
+        const lng = parseFloat(card.dataset.cafeLng);
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          if (typeof moveToLocationHome === 'function') {
+            moveToLocationHome(lat, lng);
+          } else if (typeof window.map !== 'undefined' && window.map) {
+            const position = new kakao.maps.LatLng(lat, lng);
+            window.map.setCenter(position);
+            window.map.setLevel(5);
           }
+
+          card.classList.add('ring-2', 'ring-blue-400');
+          setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-blue-400');
+          }, 1000);
         }
-      }
+      });
     });
   });
+
 </script>
 
 <!-- 커스텀 스크롤바 스타일 -->

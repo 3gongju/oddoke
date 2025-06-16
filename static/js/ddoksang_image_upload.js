@@ -234,10 +234,6 @@ window.setupDdoksangImageUpload = function({
   function validateFiles(files) {
     const errors = [];
     
-    // 🔧 개수 제한은 별도 처리하므로 여기서는 제외
-    // if (selectedFiles.length + files.length > maxFiles) {
-    //   errors.push(`최대 ${maxFiles}개의 이미지만 업로드할 수 있습니다.`);
-    // }
 
     for (const file of files) {
       if (!file.type.startsWith('image/')) {
