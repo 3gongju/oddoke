@@ -15,6 +15,7 @@ from django.conf import settings
 
 from ddoksang.models import BdayCafe, CafeFavorite
 from ddoksang.utils.favorite_utils import get_user_favorites
+
 from ddoksang.utils.map_utils import (
     get_map_context, 
     get_nearby_cafes, 
@@ -113,39 +114,41 @@ def search_view(request):
     
     results = []
     total_count = 0
-    
+
     if query and len(query) >= 2:
-        # 카페 검색 - 아티스트/멤버만
+        # 카페 검색 - 아티스트/멤버 정확히 일치
         cafes = BdayCafe.objects.filter(
-            Q(artist__display_name__icontains=query) |
-            Q(member__member_name__icontains=query),
+            Q(artist__display_name__iexact=query) |
+            Q(member__member_name__iexact=query),
             status='approved'
         ).select_related('artist', 'member').distinct()
         
-        # ✅ 간단한 상태 필터링 (map_utils 함수 활용 가능하지만 여기서는 직접 구현)
+        # 날짜 상태 필터링
         today = timezone.now().date()
-        
         if status_filter == 'ongoing':
             cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
         elif status_filter == 'upcoming':
             cafes = cafes.filter(start_date__gt=today)
         elif status_filter == 'ended':
             cafes = cafes.filter(end_date__lt=today)
-        
-        # 정렬
+
+        # 정렬 기준 적용
         if sort_order == 'latest':
             cafes = cafes.order_by('-created_at')
         elif sort_order == 'start_date':
             cafes = cafes.order_by('start_date', '-created_at')
-        
-        # 페이징 처리
-        paginator = Paginator(cafes, 10)
+
+        # 페이지네이션
+        paginator = Paginator(cafes, 9)
         results = paginator.get_page(page)
         total_count = paginator.count
-    
-    # 사용자 찜 목록
+
+   # ✅ 첫 번째 결과의 멤버 추출
+    member = results[0].member if results and hasattr(results[0], 'member') else None
+
+    cafes_json_data = [serialize_cafe_for_map(c) for c in results if serialize_cafe_for_map(c)]
     user_favorites = get_user_favorites(request.user)
-    
+
     context = {
         'results': results,
         'query': query,
@@ -154,7 +157,10 @@ def search_view(request):
         'current_status': status_filter,
         'current_sort': sort_order,
         'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'cafes_json': cafes_json_data,
+        'member': member,  # ✅ 템플릿에서 사용 가능하도록 추가
     }
+
     return render(request, 'ddoksang/search.html', context)
 
 

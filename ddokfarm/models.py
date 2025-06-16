@@ -130,6 +130,19 @@ class FarmSplitPost(FarmBasePost):
             return main_img.image.url
         return None
 
+    @property
+    def price(self):
+        """정렬을 위해 분철 게시글의 최소 가격 반환"""
+        prices = self.member_prices.values_list('price', flat=True)
+        return min(prices) if prices else 0
+
+    def get_price_range(self):
+        """분철 게시글의 가격 범위 반환"""
+        prices = list(self.member_prices.values_list('price', flat=True))
+        if not prices:
+            return 0, 0
+        return min(prices), max(prices)
+
 # 멤버별 가격 설정 필드
 class SplitPrice(models.Model):
     post = models.ForeignKey(FarmSplitPost, on_delete=models.CASCADE, related_name='member_prices')

@@ -7,7 +7,16 @@
 {% block body %}
 
 <!-- 검색 헤더 컴포넌트 -->
-{% include 'ddoksang/components/_search_header.html' with search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=True total_count=results.count %}
+<section class="pt-10 pb-6">
+  <div class="max-w-7xl mx-auto px-4">
+    {% include 'ddoksang/components/_search_header.html' with search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=False total_count=results.count %}
+  </div>
+</section>
+
+<!-- 지도 마커 -->
+{% if query and results %}
+  {% include 'ddoksang/components/search/_search_map.html' %}
+{% endif %}
 
 <section class="max-w-6xl mx-auto px-4 py-8">
   
@@ -43,8 +52,9 @@
       <!-- 결과 개수 및 정렬 -->
       <div class="flex justify-between items-center mb-6">
         <p class="text-sm text-gray-600">
-          {{ results.count }}개의 생일카페를 찾았습니다
+          {{ results|length }}개의 생일카페를 찾았습니다
         </p>
+
         <div class="flex items-center space-x-2">
           <span class="text-sm text-gray-600">정렬:</span>
           <select class="text-sm border rounded px-2 py-1" onchange="location.href=this.value">
