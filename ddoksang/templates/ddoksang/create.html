@@ -459,60 +459,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ✅ FAQ 버튼과 완전히 겹치지 않는 위치 설정 */
   #prevBtn, #nextBtn {
-    position: fixed;
-    bottom: 88px !important; /* ← 핵심: FAQ 위로 띄움 (원래 bottom-4는 16px) */
-    width: 48px !important;
-    height: 48px !important;
-    font-size: 18px !important;
-    z-index: 50;
     display: none !important;
-    align-items: center;
-    justify-content: center;
   }
 
-  #prevBtn:not(.hidden),
-  #nextBtn:not(.hidden) {
+  #prevBtn:not(.hidden), #nextBtn:not(.hidden) {
     display: flex !important;
   }
 
+  #prevBtn:hover, #nextBtn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  #prevBtn:active, #nextBtn:active {
+    transform: scale(0.95);
+  }
+
+  /* FAQ 버튼 위치를 고려한 이전 버튼 위치 (더 큰 간격) */
   #prevBtn {
-    left: 24px !important;
+    /* FAQ 버튼 (left: 24px, width: ~80px) + 여유공간 40px = 144px */
+    left: 144px !important;
   }
 
   #nextBtn {
+    /* 오른쪽 하단 고정 */
     right: 24px !important;
   }
 
-  /* 모바일 반응형 대응 */
-  @media (max-width: 480px) {
+  /* 모바일에서 FAQ 버튼 위치에 맞춘 조정 (더 큰 간격) */
+  @media (max-width: 640px) {
     #prevBtn, #nextBtn {
-      bottom: 72px !important;
+      width: 48px !important;
+      height: 48px !important;
+      font-size: 18px !important;
+      bottom: 16px !important; /* FAQ와 같은 bottom 값 */
+    }
+
+    #prevBtn {
+      /* 모바일 FAQ 버튼 (left: 16px, width: ~80px) + 여유공간 40px = 136px */
+      left: 136px !important;
+    }
+
+    #nextBtn {
+      right: 16px !important; /* FAQ와 같은 margin 값 */
+    }
+  }
+
+  /* 아주 작은 화면에서 추가 조정 */
+  @media (max-width: 480px) {
+    #prevBtn {
+      left: 120px !important; /* 조금 더 좁힌 간격 */
       width: 44px !important;
       height: 44px !important;
       font-size: 16px !important;
     }
 
-    #prevBtn {
-      left: 20px !important;
-    }
-
     #nextBtn {
-      right: 20px !important;
+      right: 12px !important;
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 16px !important;
     }
   }
 
+  /* 매우 작은 화면 (iPhone SE 등) */
   @media (max-width: 375px) {
     #prevBtn {
-      left: 16px !important;
-    }
-
-    #nextBtn {
-      right: 16px !important;
+      left: 110px !important;
     }
   }
-
-
- 
 
   /* 반응형 디자인 */
   @media (max-width: 640px) {
