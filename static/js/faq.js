@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
   }
 
-  // ✅ 반응형 위치 조정 (화면 크기 변경 시)
+  //  반응형 위치 조정 (화면 크기 변경 시)
   window.addEventListener('resize', () => {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;

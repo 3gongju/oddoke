@@ -3,7 +3,7 @@
 {% load filters %}
 {% load member_images %}
 
-{% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
+{% block title %} 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block ddoksang_content %}
 
@@ -158,7 +158,10 @@
 
 <!-- 이번 주 생일 아티스트 섹션 -->
 <div class="mt-16 text-center mb-6 sm:mb-8">
-  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🎂 이번 주 생일덕</h2>
+  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+    <img src="{% static 'image/ddok_circle_red.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2">
+    이번 주 생일덕
+  </h2>
   <p class="text-gray-600 text-sm sm:text-base">이번주 생일 아티스트를 추천해드립니다.</p>
 </div>
 
@@ -181,13 +184,14 @@
     <div class="max-w-7xl mx-auto">
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
         <div class="inline-flex items-center justify-center w-14 h-14 bg-gray-900 rounded-full mb-3">
-          <span class="text-xl">🗂</span>
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-16 h-16 mr-2">
+    
         </div>
         <h3 class="text-lg font-bold text-gray-900 mb-2">내 덕생 관리</h3>
-        <p class="text-gray-600 mb-4 text-sm">등록한 생일카페와 찜한 카페를 확인하고 관리하세요</p>
+        <p class="text-gray-600 mb-4 text-sm">등록한 생카와 찜한 카페를 확인하고 관리하세요</p>
         <a href="{% url 'ddoksang:my_cafes' %}" 
            class="inline-block bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-          관리하러 가기
+          GO!
         </a>
       </div>
     </div>
@@ -197,21 +201,65 @@
 <!-- 최신 등록된 생일카페 섹션 -->
 <section class="mt-16 sm:mt-20 py-8 sm:py-12 px-4">  
   <div class="max-w-7xl mx-auto">
+    
     {% include 'ddoksang/components/_latest_cafe_section.html' %}
   </div>
 </section>
 
 <!-- 플로팅 액션 버튼 -->
-<!-- 📱 플로팅 액션 버튼 -->
-<div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
-  <a href="{% url 'ddoksang:create' %}" 
-     class="w-14 h-14 sm:w-16 sm:h-16 bg-gray-900 text-white rounded-full shadow-2xl hover:shadow-3xl flex items-center justify-center transition-all duration-200">
-    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-    </svg>
-  </a>
-</div>
+<a href="{% url 'ddoksang:create' %}" class="floating-action-button">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+  </svg>
+</a>
 
+<style>
+/* 플로팅 액션 버튼 - FAQ와 정확히 대칭 위치 */
+.floating-action-button {
+    position: fixed;
+    bottom: 1rem;   /* 16px - FAQ와 동일 */
+    right: 1rem;    /* 16px - FAQ와 대칭 */
+    z-index: 50;
+    width: 3.5rem;  /* 56px - FAQ와 동일한 크기 */
+    height: 3.5rem; /* 56px - FAQ와 동일한 크기 */
+    background-color: #111827; /* gray-900 */
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.floating-action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+    background-color: #1f2937; /* gray-800 */
+}
+
+/* 데스크톱에서는 FAQ와 동일하게 24px */
+@media (min-width: 640px) {
+    .floating-action-button {
+        bottom: 1.5rem; /* 24px - FAQ sm:bottom-6과 동일 */
+        right: 1.5rem;  /* 24px - FAQ sm:left-6과 대칭 */
+    }
+}
+
+/* Safe area 지원 */
+@supports (bottom: env(safe-area-inset-bottom)) {
+    .floating-action-button {
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+    
+    @media (min-width: 640px) {
+        .floating-action-button {
+            bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        }
+    }
+}
+</style>
 
 
 <!-- 페이지 식별자 (찜하기 기능용) -->

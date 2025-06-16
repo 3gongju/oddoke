@@ -3,7 +3,40 @@
 {% load filters %}
 
 {% block body %}
-  <!-- 덕생 본문 콘텐츠 블록 -->
+  <!--  모바일 가로 스크롤 방지 CSS (최소한만 적용) -->
+
+  <!-- ddoksang_base.html의 <style> 섹션에 추가 -->
+
+  <style>
+    /* 가로 스크롤만 차단 */
+    html {
+      overflow-x: hidden;
+    }
+    
+    body {
+      overflow-x: hidden;
+    }
+    
+    /* 모바일에서만 터치 제어 */
+    @media (max-width: 768px) {
+      body {
+        touch-action: pan-y;
+        overscroll-behavior-x: none;
+      }
+      
+      /* 지도는 모든 터치 허용 */
+      #mapContainer {
+        touch-action: manipulation;
+      }
+      
+      /* 슬라이더는 가로 터치 허용 */
+      .swiper, .carousel, #birthdaySlider {
+        touch-action: pan-x;
+      }
+    }
+  </style>
+
+  <!-- 덕생 본문 콘텐츠 블록 (기존 구조 유지) -->
   <div class="max-w-6xl mx-auto px-4 py-10">
     {% block ddoksang_content %}
     <!-- 하위 템플릿에서 이 부분을 덮어씀 -->
@@ -17,13 +50,23 @@
   <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
   <script src="{% static 'js/ddoksang_maps.js' %}"></script> 
   
+  <!--  모바일 안전화 JavaScript (단순화) -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 모바일에서만 실행
+      if (window.innerWidth <= 768) {
+        // 지도 컨테이너 터치 설정
+        const mapContainer = document.getElementById('mapContainer');
+        if (mapContainer) {
+          mapContainer.style.touchAction = 'manipulation';
+        }
+      }
+    });
+  </script>
+  
   {% block extra_js %}
   <!-- 하위 템플릿에서 추가 스크립트 -->
   {% endblock %}
 
   {% block extra_css %}{% endblock %}
-  
-
-
-
 {% endblock %}

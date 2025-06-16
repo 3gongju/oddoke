@@ -7,19 +7,34 @@
 
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
 
-  <!-- 추가: 정렬 및 필터 컴포넌트 -->
   {% include 'ddokfarm/components/_sort_filter.html' %}
 
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
   {% if posts %}
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <!-- 개선된 반응형 그리드 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {% for post in posts %}
         {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url %}
       {% endfor %}
     </div>
   {% else %}
-    <p class="text-gray-500">게시글이 없습니다.</p>
+    <div class="text-center py-12">
+      <div class="text-gray-400 text-6xl mb-4">📦</div>
+      <p class="text-gray-500 text-lg">게시글이 없습니다.</p>
+      {% if show_available_only %}
+        <p class="text-gray-400 text-sm mt-2">판매중 필터를 해제해보세요.</p>
+      {% endif %}
+    </div>
   {% endif %}
 </div>
+
+<!-- 전역 사용자 정보 및 CSRF 토큰 설정 -->
+<script>
+window.user = {
+  is_authenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+  username: '{{ user.username|default:"" }}'
+};
+window.csrfToken = '{{ csrf_token }}';
+</script>
 {% endblock %}

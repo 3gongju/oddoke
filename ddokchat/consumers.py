@@ -359,9 +359,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def check_room_permission(self):
-        """채팅방 접근 권한 확인"""
+        """채팅방 접근 권한 확인 - select_related로 최적화"""
         try:
-            room = ChatRoom.objects.get(id=self.room_id)
+            room = ChatRoom.objects.select_related('buyer', 'seller').get(id=self.room_id)
             return self.user in [room.buyer, room.seller]
         except ChatRoom.DoesNotExist:
             return False
@@ -383,10 +383,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_text_message(self, content):
-        """텍스트 메시지 DB 저장 (최적화됨)"""
+        """텍스트 메시지 DB 저장 - 최적화됨"""
         try:
             with transaction.atomic():
-                # 채팅방과 사용자 정보를 한 번에 가져오기
+                # select_related로 한번에 가져오기
                 room = ChatRoom.objects.select_related('buyer', 'seller').get(id=self.room_id)
                 
                 # receiver 계산
@@ -413,9 +413,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_username(self, user_id):
-        """사용자 이름 가져오기 (캐시 고려)"""
+        """사용자 이름 가져오기 - 캐시 추가 고려"""
         try:
-            return User.objects.get(id=user_id).username
+            # 나중에 캐시 추가 가능
+            return User.objects.values_list('username', flat=True).get(id=user_id)
         except User.DoesNotExist:
             logger.error(f"존재하지 않는 사용자 ID: {user_id}")
             return "Unknown User"
@@ -437,9 +438,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def mark_all_as_read(self):
-        """읽음 처리 (성능 최적화)"""
+        """읽음 처리 - 최적화된 bulk update"""
         try:
-            # 한 번의 쿼리로 읽음 처리
+            # bulk_update 사용으로 성능 개선
             updated_count = Message.objects.filter(
                 room_id=self.room_id,
                 receiver=self.user,

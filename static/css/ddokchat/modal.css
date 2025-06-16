@@ -1,0 +1,329 @@
+/* 리뷰 모달 스타일링 */
+#reviewModal {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+#reviewModal::backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* 모달 애니메이션 */
+#reviewModal[open] {
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 폼 필드 스타일링 */
+#reviewModal form p {
+  margin-bottom: 1.5rem;
+}
+
+#reviewModal form label {
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+#reviewModal form select,
+#reviewModal form textarea,
+#reviewModal form input[type="text"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+#reviewModal form select:focus,
+#reviewModal form textarea:focus,
+#reviewModal form input[type="text"]:focus {
+  outline: none;
+  border-color: #374151;
+  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.1);
+}
+
+#reviewModal form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* 라디오 버튼 스타일링 */
+#reviewModal form input[type="radio"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  accent-color: #000;
+}
+
+/* 체크박스 스타일링 */
+#reviewModal form input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+  accent-color: #000;
+}
+
+/* 사기 조회 모달 스타일 */
+#fraudCheckModal {
+  backdrop-filter: blur(4px);
+}
+
+#fraudCheckModal .modal-content {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* 사기 신고 내역 카드 */
+.fraud-report-card {
+  background: white;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.fraud-report-card:hover {
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+  transform: translateY(-1px);
+}
+
+/* 상태 배지 스타일 */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.status-confirmed {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.status-investigating {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+/* 모달 오버레이 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+/* 모달 컨테이너 */
+.modal-container {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 28rem;
+  width: 100%;
+  margin: 1rem;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: modal-appear 0.3s ease-out;
+}
+
+/* 모달 헤더 */
+.modal-header {
+  background: #ef4444;
+  color: white;
+  padding: 1.5rem;
+}
+
+.modal-header h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.modal-header .close-button {
+  color: white;
+  transition: color 0.2s ease;
+}
+
+.modal-header .close-button:hover {
+  color: #fca5a5;
+}
+
+/* 모달 내용 */
+.modal-content {
+  padding: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* 모달 푸터 */
+.modal-footer {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 로딩 스피너 */
+.loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #ef4444;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* 성공/에러 아이콘 */
+.success-icon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.error-icon {
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+/* 반응형 모달 */
+@media (max-width: 640px) {
+  .modal-container {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
+  
+  .modal-content {
+    padding: 1rem;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem;
+  }
+}
+
+/* 모달 진입/퇴장 애니메이션 */
+.modal-enter {
+  animation: modalEnter 0.3s ease-out;
+}
+
+.modal-exit {
+  animation: modalExit 0.2s ease-in;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+}
+
+/* 모달 백드롭 블러 효과 */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* 접근성 향상 */
+.modal-container:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* 버튼 스타일 */
+.modal-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-button:active {
+  transform: translateY(0);
+}
+
+/* 모달 내 스크롤바 */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

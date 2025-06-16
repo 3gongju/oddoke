@@ -1,0 +1,62 @@
+<!-- ddokchat/templates/ddokchat/components/chat/messages.html -->
+
+<div id="chat-log" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
+  {% for message in messages %}
+    {% if message.sender == current_user %}
+      {% with is_my_message=True %}
+        <div class="flex justify-end mb-3">
+          <div class="max-w-xs">
+            
+            <!-- 메시지 타입별 처리 -->
+            {% if message.message_type == 'text' %}
+              {% include 'ddokchat/components/chat/message_types/_text_message.html' with message=message is_my_message=is_my_message %}
+            {% elif message.message_type == 'image' %}
+              {% include 'ddokchat/components/chat/message_types/_image_message.html' with message=message is_my_message=is_my_message %}
+            {% elif message.message_type == 'account_info' %}
+              {% include 'ddokchat/components/chat/message_types/_account_message.html' with message=message is_my_message=is_my_message %}
+            {% elif message.message_type == 'address_info' %}
+              {% include 'ddokchat/components/chat/message_types/_address_message.html' with message=message is_my_message=is_my_message %}
+            {% endif %}
+
+            <!-- 시간 및 읽음 여부 -->
+            <div class="flex justify-end items-center gap-1 mt-1">
+              {% if message.is_read == 0 %}
+                <span class="text-xs text-red-500 font-semibold unread-label">안읽음</span>
+                <span class="text-xs text-gray-400">•</span>
+              {% endif %}
+              <span class="text-xs text-gray-400">{{ message.timestamp|time:"H:i" }}</span>
+            </div>
+          </div>
+        </div>
+      {% endwith %}
+    {% else %}
+      {% with is_my_message=False %}
+        <div class="flex justify-start mb-3">
+          <div class="max-w-xs">
+            
+            <!-- 닉네임을 상단에 표시 -->
+            <p class="text-sm font-semibold text-gray-800 mb-1">
+              {{ message.sender.username }}
+            </p>
+            
+            <!-- 메시지 타입별 처리 -->
+            {% if message.message_type == 'text' %}
+              {% include 'ddokchat/components/chat/message_types/_text_message.html' with message=message is_my_message=is_my_message %}
+            {% elif message.message_type == 'image' %}
+              {% include 'ddokchat/components/chat/message_types/_image_message.html' with message=message is_my_message=is_my_message %}
+            {% elif message.message_type == 'account_info' %}
+              {% include 'ddokchat/components/chat/message_types/_account_message.html' with message=message is_my_message=is_my_message %}
+            {% elif message.message_type == 'address_info' %}
+              {% include 'ddokchat/components/chat/message_types/_address_message.html' with message=message is_my_message=is_my_message %}
+            {% endif %}
+
+            <!-- 시간 표시 -->
+            <div class="flex justify-start items-center gap-1 mt-1">
+              <span class="text-xs text-gray-400">{{ message.timestamp|time:"H:i" }}</span>
+            </div>
+          </div>
+        </div>
+      {% endwith %}
+    {% endif %}
+  {% endfor %}
+</div>
