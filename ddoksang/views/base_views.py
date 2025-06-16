@@ -117,12 +117,12 @@ def search_view(request):
     if query and len(query) >= 2:
         # 카페 검색 - 아티스트/멤버만
         cafes = BdayCafe.objects.filter(
-            Q(artist__display_name__icontains=query) |
-            Q(member__member_name__icontains=query),
+            Q(artist__display_name__iexact=query) |
+            Q(member__member_name__iexact=query),
             status='approved'
         ).select_related('artist', 'member').distinct()
         
-        # ✅ 간단한 상태 필터링 (map_utils 함수 활용 가능하지만 여기서는 직접 구현)
+        #  간단한 상태 필터링 (map_utils 함수 활용 가능하지만 여기서는 직접 구현)
         today = timezone.now().date()
         
         if status_filter == 'ongoing':
