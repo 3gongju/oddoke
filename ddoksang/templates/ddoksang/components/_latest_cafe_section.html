@@ -4,16 +4,11 @@
 <section class="mb-12" id="latestCafesSection">
   <!-- 헤더 -->
   <div class="flex items-center justify-between mb-6 px-4">
-    <div class="flex items-center space-x-3">
-      <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-12 h-12 mr-2">
-        최신 생카
-     </h2>
-    </div>
-    
-    <a href="{% url 'ddoksang:search' %}?sort=latest" class="text-sm text-orange-600 hover:underline">
-      더 다양한 생카 검색하기 &rarr;
-    </a>
+    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+      <img src="{% static 'image/ddok_logo_filled.png' %}" alt="최신 생카" class="w-10 h-10 mr-2">
+      최근 등록된 생카 둘러보기
+    </h2>
+
   </div>
 
   {% if latest_cafes %}
@@ -38,7 +33,9 @@
   {% else %}
     <!-- 빈 상태 -->
     <div class="text-center py-16 px-4">
-      <div class="text-6xl mb-4">☕</div>
+      <div class="mb-4">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="등록된 생카 없음" class="w-16 h-16 mx-auto opacity-50">
+      </div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">아직 등록된 생카가 없어요</h3>
       <p class="text-gray-600 mb-6">첫 번째 생일카페를 등록해보세요!</p>
       <a href="{% url 'ddoksang:create' %}" 
