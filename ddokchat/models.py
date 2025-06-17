@@ -30,6 +30,96 @@ class ChatRoom(models.Model):
             models.Index(fields=['buyer_completed', 'seller_completed']),  # 거래 완료 상태별 조회
         ]
 
+    def get_other_user(self, user):
+        """
+        현재 사용자의 상대방 반환
+        
+        Args:
+            user: 현재 사용자 객체
+            
+        Returns:
+            User: 상대방 사용자 객체
+            
+        Raises:
+            ValueError: 사용자가 이 채팅방의 참여자가 아닌 경우
+        """
+        if user == self.buyer:
+            return self.seller
+        elif user == self.seller:
+            return self.buyer
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+    
+    def get_user_role(self, user):
+        """
+        사용자의 역할 반환 (buyer/seller)
+        
+        Args:
+            user: 사용자 객체
+            
+        Returns:
+            str: 'buyer' 또는 'seller'
+            
+        Raises:
+            ValueError: 사용자가 이 채팅방의 참여자가 아닌 경우
+        """
+        if user == self.buyer:
+            return 'buyer'
+        elif user == self.seller:
+            return 'seller'
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+    
+    def is_participant(self, user):
+        """
+        사용자가 이 채팅방의 참여자인지 확인
+        
+        Args:
+            user: 사용자 객체
+            
+        Returns:
+            bool: 참여자이면 True, 아니면 False
+        """
+        return user in [self.buyer, self.seller]
+    
+    def get_completion_status_for_user(self, user):
+        """
+        특정 사용자의 거래 완료 상태 반환
+        
+        Args:
+            user: 사용자 객체
+            
+        Returns:
+            bool: 해당 사용자의 완료 상태
+        """
+        if user == self.buyer:
+            return self.buyer_completed
+        elif user == self.seller:
+            return self.seller_completed
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+    
+    def set_completion_status_for_user(self, user, completed=True):
+        """
+        특정 사용자의 거래 완료 상태 설정
+        
+        Args:
+            user: 사용자 객체
+            completed: 완료 상태 (기본값: True)
+            
+        Returns:
+            bool: 양측 모두 완료되었는지 여부
+        """
+        if user == self.buyer:
+            self.buyer_completed = completed
+        elif user == self.seller:
+            self.seller_completed = completed
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+        
+        self.save()
+        return self.is_fully_completed
+
     @property
     def is_fully_completed(self):
         return self.buyer_completed and self.seller_completed
@@ -198,9 +288,9 @@ class AddressMessage(models.Model):
                 'is_deleted': False,
                 'postal_code': self.address_profile.postal_code,
                 'road_address': self.address_profile.road_address,
-                'jibun_address': self.address_profile.jibun_address,
+                # 'jibun_address': self.address_profile.jibun_address,
                 'detail_address': self.address_profile.detail_address,
-                'building_name': self.address_profile.building_name,
+                # 'building_name': self.address_profile.building_name,
                 'sido': self.address_profile.sido,
                 'sigungu': self.address_profile.sigungu,
                 'full_address': self.address_profile.full_address,
