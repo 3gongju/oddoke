@@ -111,7 +111,9 @@
           <!-- 알림 버튼 -->
           <div class="relative">
             <a href="/notifications/" class="relative inline-flex items-center justify-center p-2 text-black hover:text-cream-dark transition-colors rounded-full hover:bg-cream-bg">
-              <div class="text-lg sm:text-xl">📬</div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                <path fill-rule="evenodd" d="M12 5a4 4 0 0 0-8 0v2.379a1.5 1.5 0 0 1-.44 1.06L2.294 9.707a1 1 0 0 0-.293.707V11a1 1 0 0 0 1 1h2a3 3 0 1 0 6 0h2a1 1 0 0 0 1-1v-.586a1 1 0 0 0-.293-.707L12.44 8.44A1.5 1.5 0 0 1 12 7.38V5Zm-5.5 7a1.5 1.5 0 0 0 3 0h-3Z" clip-rule="evenodd" />
+              </svg>
               <!-- 알림 개수 배지 -->
               <span id="notification-badge" 
                     class="absolute -top-0.5 -right-0.5 bg-black text-cream-soft text-xs rounded-full min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center hidden border-2 border-white text-[10px] sm:text-xs font-body">
@@ -122,8 +124,10 @@
           
           <!-- 데스크톱 사용자 메뉴 -->
           <div class="hidden md:flex items-center space-x-3 lg:space-x-4">
-            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold font-body">
-              👤 
+            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold font-body flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4 mr-1">
+                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
+              </svg>
               {% if request.user.first_name %}
                 {{ request.user.first_name }}
               {% elif request.user.username|slice:":10" == "naver_" %}
@@ -135,7 +139,7 @@
               {% endif %}
               님
             </span>
-            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">내채팅방</a>
+            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">내 채팅방</a>
             <a href="{% url 'accounts:mypage' %}" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">마이페이지</a>
             <a href="/accounts/logout/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">로그아웃</a>
           </div>
@@ -205,7 +209,7 @@
         <hr class="my-3 border-gray-200">
         <!-- 사용자 메뉴 -->
         <a href="/ddokchat/my/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
-          내채팅방
+          내 채팅방
         </a>
         <a href="{% url 'accounts:mypage' %}" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
           마이페이지
