@@ -202,10 +202,10 @@ class AddressProfile(models.Model):
    
    # 암호화 저장 필드들
    _encrypted_postal_code = models.TextField(blank=True, null=True)
-   _encrypted_jibun_address = models.TextField(blank=True, null=True)
+#    _encrypted_jibun_address = models.TextField(blank=True, null=True)
    _encrypted_road_address = models.TextField(blank=True, null=True)
    _encrypted_detail_address = models.TextField(blank=True, null=True)
-   _encrypted_building_name = models.TextField(blank=True, null=True)
+#    _encrypted_building_name = models.TextField(blank=True, null=True)
    
    # 검색용 (암호화 안 함)
    sido = models.CharField(max_length=20)
@@ -223,13 +223,13 @@ class AddressProfile(models.Model):
    def postal_code(self, value):
        self._encrypted_postal_code = AddressEncryption.encrypt(value)
    
-   @property
-   def jibun_address(self):
-       return AddressEncryption.decrypt(self._encrypted_jibun_address)
+#    @property
+#    def jibun_address(self):
+#        return AddressEncryption.decrypt(self._encrypted_jibun_address)
    
-   @jibun_address.setter
-   def jibun_address(self, value):
-       self._encrypted_jibun_address = AddressEncryption.encrypt(value)
+#    @jibun_address.setter
+#    def jibun_address(self, value):
+#        self._encrypted_jibun_address = AddressEncryption.encrypt(value)
    
    @property
    def road_address(self):
@@ -247,29 +247,23 @@ class AddressProfile(models.Model):
    def detail_address(self, value):
        self._encrypted_detail_address = AddressEncryption.encrypt(value)
    
-   @property
-   def building_name(self):
-       return AddressEncryption.decrypt(self._encrypted_building_name)
+#    @property
+#    def building_name(self):
+#        return AddressEncryption.decrypt(self._encrypted_building_name)
    
-   @building_name.setter
-   def building_name(self, value):
-       self._encrypted_building_name = AddressEncryption.encrypt(value)
+#    @building_name.setter
+#    def building_name(self, value):
+#        self._encrypted_building_name = AddressEncryption.encrypt(value)
    
    @property
    def full_address(self):
        """전체 주소 조합"""
-       base = self.road_address if self.road_address else self.jibun_address
-       if base and self.detail_address:
-           return f"{base} {self.detail_address}"
-       return base
+       def full_address(self):
+        return f"{self.road_address}, {self.detail_address}" if self.detail_address else self.road_address
    
    def get_masked_address(self):
-       """마스킹된 주소 (배송지 표시용)"""
-       if self.road_address:
-           parts = self.road_address.split()
-           if len(parts) >= 3:
-               return f"{parts[0]} {parts[1]} {parts[2][:3]}***"
-       return f"{self.sido} {self.sigungu} ***"
+    """마스킹된 주소 (배송지 표시용)"""
+    return f"{self.sido} {self.sigungu} ***"
    
    def __str__(self):
        return f"{self.user.username}의 주소 ({self.sido} {self.sigungu})"

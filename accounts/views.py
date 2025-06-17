@@ -723,10 +723,10 @@ def address_modify(request, username):
             try:
                 # 기존 주소 정보 업데이트
                 address_profile.postal_code = form.cleaned_data['postal_code']
-                address_profile.jibun_address = form.cleaned_data['jibun_address']
+                # address_profile.jibun_address = form.cleaned_data['jibun_address']
                 address_profile.road_address = form.cleaned_data['road_address']
                 address_profile.detail_address = form.cleaned_data['detail_address']
-                address_profile.building_name = form.cleaned_data.get('building_name', '')
+                # address_profile.building_name = form.cleaned_data.get('building_name', '')
                 address_profile.sido = form.cleaned_data['sido']
                 address_profile.sigungu = form.cleaned_data['sigungu']
                 address_profile.save()
@@ -739,10 +739,10 @@ def address_modify(request, username):
         # 기존 정보로 폼 초기화
         initial_data = {
             'postal_code': address_profile.postal_code,
-            'jibun_address': address_profile.jibun_address,
+            # 'jibun_address': address_profile.jibun_address,
             'road_address': address_profile.road_address,
             'detail_address': address_profile.detail_address,
-            'building_name': address_profile.building_name,
+            # 'building_name': address_profile.building_name,
             'sido': address_profile.sido,
             'sigungu': address_profile.sigungu,
         }
