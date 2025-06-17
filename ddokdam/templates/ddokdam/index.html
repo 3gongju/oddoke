@@ -5,18 +5,27 @@
 
   {% include 'components/index/_search_bar.html' with search_action=search_action query=query %}
 
-  {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
+  {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category app_name='ddokdam' %}
 
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
   {% if posts %}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for post in posts %}
-        {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url %}
+        {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url app_name='ddokdam' %}
       {% endfor %}
     </div>
   {% else %}
     <p class="text-gray-500">게시글이 없습니다.</p>
   {% endif %}
 </div>
+
+<!-- 덕담용 JavaScript 변수 설정 추가 -->
+<script>
+window.user = {
+  is_authenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+  username: '{{ user.username|default:"" }}'
+};
+window.csrfToken = '{{ csrf_token }}';
+</script>
 {% endblock %}

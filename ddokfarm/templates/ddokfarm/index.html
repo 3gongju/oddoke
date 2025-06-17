@@ -6,7 +6,7 @@
 
   {% include 'components/index/_search_bar.html' with search_action=search_action query=query %}
 
-  {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category %}
+  {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category app_name='ddokfarm' %}
 
   <!-- ✅ 고급 필터를 카테고리 필터 바로 다음으로 이동 -->
   {% include 'ddokfarm/components/_advanced_filter.html' %}
@@ -41,7 +41,7 @@
   {% if posts %}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {% for post in posts %}
-        {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url %}
+        {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url app_name='ddokfarm' %}
       {% endfor %}
     </div>
   {% else %}
@@ -102,8 +102,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // 이벤트 리스너 등록
-  sortSelect.addEventListener('change', updateURL);
-  availableOnlyCheckbox.addEventListener('change', updateURL);
+  if (sortSelect) {
+    sortSelect.addEventListener('change', updateURL);
+  }
+  if (availableOnlyCheckbox) {
+    availableOnlyCheckbox.addEventListener('change', updateURL);
+  }
 });
 </script>
 {% endblock %}

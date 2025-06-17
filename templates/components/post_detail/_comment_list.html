@@ -1,11 +1,12 @@
 {# 댓글/대댓글 하나를 출력하는 컴포넌트 #}
 {% load humanize %}
+{% load ddokfarm_filters %}
 
 <div id="comment-{{ comment.id }}" class="comment-item {% if is_reply %}mt-2 ml-6{% endif %} py-2 border-t text-sm">
   <div class="flex justify-between items-center">
     <div class="flex items-center space-x-2">
       {% include 'components/post_detail/_user_profile.html' with user=comment.user %}
-      <span class="text-gray-400 text-xs">· {{ comment.created_at|naturaltime }}</span>
+      <span class="text-xs text-gray-500">{{ comment.created_at|smart_date }}</span>
     </div>
     {% if comment.user == request.user and not comment.is_deleted %}
       {% url comment_delete_url_name category=category post_id=post.id comment_id=comment.id as delete_url %}

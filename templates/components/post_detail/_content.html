@@ -1,5 +1,6 @@
 {# components/post_detail/_content.html #}
 {% load humanize %}
+{% load ddokfarm_filters %}
 <div class="flex flex-col justify-start h-full">
 
   <!-- 덕팜: 거래 완료 토글 버튼 -->
@@ -34,7 +35,7 @@
   <!-- 유저명 + 시간 -->
   <div class="flex items-center text-sm mb-2 space-x-2">
     {% include 'components/post_detail/_user_profile.html' with user=post.user %}
-    <span class="text-gray-400 text-xs">· {{ post.created_at|naturaltime }}</span>
+    <p class="text-sm text-gray-500 mb-2">{{ post.created_at|smart_date }}</p>
   </div>
 
   <hr class="border-gray-300">

@@ -52,16 +52,19 @@
                 <!-- 팬덤 인증 상태 - 유저네임 옆으로 이동 -->
                 {% if fandom_profile and fandom_profile.is_verified_fandom %}
                   <div class="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
-                    <span class="mr-1">✓</span> {{ fandom_profile.fandom_artist.fandom }} 공식 팬
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                      <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="mr-1"></span> {{ fandom_profile.fandom_artist.fandom }}
                   </div>
                 {% elif fandom_profile.is_pending_verification %}
                   <div class="inline-flex items-center px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 text-xs font-medium border border-yellow-200">
-                    <span class="mr-1">⏳</span> 팬덤 인증 확인 중
+                    <span class="mr-1"></span> 팬덤 인증 확인 중
                   </div>
                 {% else %}
                   <a href="{% url 'accounts:fandom_verification' user_profile.username %}"
                     class="inline-flex items-center px-2 py-1 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-800 transition-colors">
-                    <span class="mr-1">⭐</span> 공식 팬덤 인증
+                    <span class="mr-1"></span> 공식 팬덤 인증
                   </a>
                 {% endif %}
               </div>
@@ -70,11 +73,11 @@
               <div class="flex items-center gap-2">
                 {% if user_profile.username|slice:":6" == "kakao_" %}
                   <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
-                    💬 카카오
+                    카카오
                   </span>
                 {% elif user_profile.username|slice:":6" == "naver_" %}
                   <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-50 text-green-700 border border-green-200">
-                    N 네이버
+                    네이버
                   </span>
                 {% endif %}
               </div>
@@ -165,7 +168,9 @@
                       </div>
                       <!-- 하트 표시 -->
                       <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white">
-                        <span class="text-white text-xs">♥</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3 h-3 text-white">
+                          <path d="M2 6.342a3.375 3.375 0 0 1 6-2.088 3.375 3.375 0 0 1 5.997 2.26c-.063 2.134-1.618 3.76-2.955 4.784a14.437 14.437 0 0 1-2.676 1.61c-.02.01-.038.017-.05.022l-.014.006-.004.002h-.002a.75.75 0 0 1-.592.001h-.002l-.004-.003-.015-.006a5.528 5.528 0 0 1-.232-.107 14.395 14.395 0 0 1-2.535-1.557C3.564 10.22 1.999 8.558 1.999 6.38L2 6.342Z" />
+                        </svg>
                       </div>
                     </div>
                   </div>
@@ -695,6 +700,10 @@
 
       function bindFollowButtons(container) {
         container.querySelectorAll('.follow-btn').forEach(btn => {
+          // 초기 상태 설정 - 항상 SVG로 표시
+          const isFollowed = btn.dataset.followed === 'true';
+          updateFollowButtonDisplay(btn, isFollowed);
+          
           btn.addEventListener('click', function () {
             const memberId = this.dataset.memberId;
             fetch(`/artist/member/${memberId}/follow-toggle/`, {
@@ -703,7 +712,10 @@
             })
             .then(res => res.json())
             .then(data => {
-              this.innerText = data.followed ? '❤️ 팔로잉' : '🤍 팔로우';
+              // 데이터 속성 업데이트
+              this.dataset.followed = data.followed;
+              // SVG로 하트 아이콘 변경
+              updateFollowButtonDisplay(this, data.followed);
             })
             .catch(err => {
               console.error('팔로우 오류:', err);
@@ -711,6 +723,26 @@
             });
           });
         });
+      }
+
+      function updateFollowButtonDisplay(btn, isFollowed) {
+        if (isFollowed) {
+          btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-1">
+              <path d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z" />
+            </svg>
+            팔로잉
+          `;
+          btn.className = 'follow-btn inline-flex items-center px-3 py-1 bg-red-50 text-red-600 text-xs font-medium rounded-full border border-red-200 hover:bg-red-100 transition-colors';
+        } else {
+          btn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+            </svg>
+            팔로우
+          `;
+          btn.className = 'follow-btn inline-flex items-center px-3 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-100 transition-colors';
+        }
       }
 
       document.querySelectorAll('.artist-logo').forEach(img => {
