@@ -1,0 +1,15 @@
+{% load static %}
+
+<!-- 이벤트 설명 -->
+{% if cafe.event_description %}
+<div class="bg-white rounded-xl shadow-sm border p-4">
+    <h2 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-10 h-10 mr-2">
+        이벤트 설명
+    </h2>
+
+    <div class="prose prose-sm max-w-none">
+    <p class="text-gray-700 leading-relaxed whitespace-pre-line text-sm">{{ cafe.event_description }}</p>
+    </div>
+</div>
+{% endif %}
