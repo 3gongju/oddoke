@@ -1,24 +1,30 @@
 {% extends "ddoksang/base/ddoksang_base.html" %}
-
 {% load static %}
 {% load filters %}
+{% load benefits_filters %}
 
 {% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/ddoksang_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/ddoksang/ddoksang_detail_responsive.css' %}">
 {% endblock %}
+
+<!-- Viewport 메타 태그 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+
+
 
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-white">
   {% include "ddoksang/components/detail/_status_banner.html" %}
-
-  <!-- 이미지 헤더 (갤러리만 포함, 모달 없음) -->
   {% include "ddoksang/components/detail/_image_header.html" %}
 
   <div id="page-identifier" data-page="detail" style="display: none;"></div>
 
-  <!-- 이미지 모달 (단일 정의) -->
+  <!-- 이미지 모달 -->
   <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
     <div class="relative max-w-7xl max-h-full mx-4">
       <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-colors z-10">
@@ -52,17 +58,22 @@
     </div>
   </div>
 
-  <div class="max-w-4xl mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <!--  새로운 메인 컨테이너 구조 -->
+  <div class="detail-page-container mx-auto px-4 py-8">
+    <div class="detail-main-grid grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- 왼쪽 영역 (2칸) -->
       <div class="lg:col-span-2 space-y-6">
         {% include "ddoksang/components/detail/_poster_section.html" %}
         {% include "ddoksang/components/detail/_cafe_basic_info.html" %}
-        {% include "ddoksang/components/detail/_cafe_map.html" %}
+        <!-- 다른 생카 섹션 -->
+        {% include "ddoksang/components/detail/_nearby_cafes.html" %}
       </div>
 
-      <div class="space-y-6">
-        <div class="bg-white rounded-2xl shadow-sm border p-6">
-          <h3 class="font-bold text-gray-900 mb-4">📋 빠른 정보</h3>
+      <!-- 오른쪽 사이드바 영역 (1칸) -->
+      <div class="sidebar-container space-y-6">
+        <!-- 빠른 정보 섹션 -->
+        <div class="sidebar-card quick-info-card bg-white rounded-2xl shadow-sm border p-6">
+          <h3 class="font-bold text-gray-900 mb-4">빠른 정보</h3>
           <div class="space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-gray-600">상태</span>
@@ -95,14 +106,21 @@
           </div>
         </div>
 
-        {% include "ddoksang/components/detail/_nearby_cafes.html" %}
-        {% include "ddoksang/components/detail/_related_cafes.html" %}
-        {% include "ddoksang/components/detail/_share_section.html" %}
+        <!-- ✅ 지도 섹션을 여기로 이동 -->
+        <div class="sidebar-card map-card">
+          {% include "ddoksang/components/detail/_cafe_map.html" %}
+        </div>
+        
+        <!-- 공유 섹션 -->
+        <div class="sidebar-card">
+          {% include "ddoksang/components/detail/_share_section.html" %}
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- JavaScript 및 데이터 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
 
 <script id="cafe-data" type="application/json">
@@ -141,4 +159,30 @@
 
 <script src="{% static 'js/favorite.js' %}"></script>
 <script src="{% static 'js/ddoksang_detail.js' %}"></script>
+
+<!-- 동적 스케일 조정 스크립트 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function adjustScale() {
+        const container = document.querySelector('.detail-page-container');
+        if (!container) return;
+        
+        const windowWidth = window.innerWidth;
+        
+        if (windowWidth < 480) {
+            container.style.transform = 'scale(0.95)';
+            container.style.transformOrigin = 'top center';
+        } else if (windowWidth < 768) {
+            container.style.transform = 'scale(0.98)';
+            container.style.transformOrigin = 'top center';
+        } else {
+            container.style.transform = 'scale(1)';
+        }
+    }
+    
+    adjustScale();
+    window.addEventListener('resize', adjustScale);
+});
+</script>
+
 {% endblock %}

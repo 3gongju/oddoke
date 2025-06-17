@@ -1,0 +1,368 @@
+/* static/ddokchat/css/components/message_bubbles.css */
+
+/* 기본 말풍선 스타일 */
+.message-bubble {
+  position: relative;
+  word-wrap: break-word;
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  max-width: 20rem;
+  transition: all 0.2s ease;
+}
+
+/* 내 메시지 (오른쪽) */
+.message-bubble.sent {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  color: white;
+  border-bottom-right-radius: 0.25rem;
+  margin-left: auto;
+}
+
+/* 상대방 메시지 (왼쪽) */
+.message-bubble.received {
+  background: white;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 0.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 말풍선 꼬리 */
+.message-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+
+.message-bubble.sent::after {
+  right: -6px;
+  border-left-color: #1f2937;
+  border-right: none;
+  border-bottom: none;
+}
+
+.message-bubble.received::after {
+  left: -6px;
+  border-right-color: white;
+  border-left: none;
+  border-bottom: none;
+}
+
+/* 텍스트 메시지 스타일 */
+.text-message {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* 이미지 메시지 스타일 */
+.image-message {
+  padding: 0.5rem;
+  border-radius: 1rem;
+}
+
+.image-message img {
+  width: 100%;
+  max-height: 16rem;
+  border-radius: 0.75rem;
+  object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.image-message.loading img {
+  opacity: 0.7;
+}
+
+/* 정보 메시지 카드 스타일 */
+.info-message {
+  padding: 1rem;
+  border-radius: 1rem;
+  max-width: 24rem;
+}
+
+.info-message.sent {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  color: white;
+}
+
+.info-message.received {
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+/* 정보 카드 헤더 */
+.info-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.info-header .icon {
+  font-size: 1.25rem;
+}
+
+/* 정보 카드 내용 */
+.info-content {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-message.received .info-content {
+  background: #f9fafb;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.info-value {
+  font-weight: 500;
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+/* 액션 버튼들 */
+.message-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn.copy {
+  background: #3b82f6;
+  color: white;
+}
+
+.action-btn.copy:hover {
+  background: #2563eb;
+}
+
+.action-btn.fraud-check {
+  background: #ef4444;
+  color: white;
+}
+
+.action-btn.fraud-check:hover {
+  background: #dc2626;
+}
+
+.action-btn.address-copy {
+  background: #10b981;
+  color: white;
+}
+
+.action-btn.address-copy:hover {
+  background: #059669;
+}
+
+/* 삭제된 정보 스타일 */
+.deleted-info {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  opacity: 0.8;
+}
+
+.deleted-info.sent {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d1d5db;
+}
+
+.deleted-info.received {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.deleted-message {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.deleted-reason {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+/* 시간 및 읽음 상태 */
+.message-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.message-meta.sent {
+  justify-content: flex-end;
+}
+
+.message-meta.received {
+  justify-content: flex-start;
+}
+
+.unread-indicator {
+  color: #ef4444;
+  font-weight: 600;
+  animation: pulse-gentle 2s infinite;
+}
+
+@keyframes pulse-gentle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+/* 메시지 등장 애니메이션 */
+.message-enter {
+  animation: messageSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 메시지 그룹 스타일 */
+.message-group {
+  margin-bottom: 1rem;
+}
+
+.message-group:last-child {
+  margin-bottom: 0;
+}
+
+/* 발신자 표시 */
+.sender-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+  padding-left: 0.5rem;
+}
+
+/* 메시지 호버 효과 */
+.message-container {
+  transition: all 0.2s ease;
+}
+
+.message-container:hover .message-bubble {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 연속 메시지 스타일 */
+.message-continuous {
+  margin-top: 0.25rem;
+}
+
+.message-continuous .sender-name {
+  display: none;
+}
+
+.message-continuous .message-bubble::after {
+  display: none;
+}
+
+.message-continuous .message-bubble {
+  border-radius: 1rem;
+}
+
+/* 시스템 메시지 스타일 */
+.system-message {
+  text-align: center;
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  max-width: 16rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 반응형 조정 */
+@media (max-width: 640px) {
+  .message-bubble {
+    max-width: 16rem;
+    padding: 0.625rem 0.875rem;
+  }
+  
+  .info-message {
+    max-width: 18rem;
+    padding: 0.875rem;
+  }
+  
+  .action-btn {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.6875rem;
+  }
+  
+  .message-actions {
+    gap: 0.375rem;
+  }
+}

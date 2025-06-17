@@ -5,7 +5,7 @@ from accounts.forms import MannerReviewForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
-from django.db.models import Q
+from django.db.models import Q, Max, Count, Prefetch, Case, When, OuterRef, Subquery
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -21,32 +21,39 @@ from django.contrib.auth import get_user_model
 
 # Create your views here.
 
-# 채팅방.
+# 채팅방
+@login_required 
 def chat_room(request, room_id):
-    room = get_object_or_404(ChatRoom, id=room_id)
+    # N+1 해결: 관련 데이터 한번에 로드
+    room = get_object_or_404(
+        ChatRoom.objects.select_related(
+            'buyer', 'seller',
+        ),
+        id=room_id
+    )
 
-    # 현재 사용자와 상대방 구분
-    current_sender = request.user
-    other_user = room.seller if room.buyer == current_sender else room.buyer
-    room.other_user = other_user  # 상대방 프로필 이미지 추가
+    current_user = request.user
+    other_user = room.seller if room.buyer == current_user else room.buyer
+    room.other_user = other_user
 
-    # ✅ 구매자 리뷰 작성 여부 확인
+    # 리뷰 여부 확인 최적화
     has_already_reviewed = False
-    if current_sender == room.buyer and room.is_fully_completed:
+    if current_user == room.buyer and room.is_fully_completed:
         has_already_reviewed = MannerReview.objects.filter(
-            user=current_sender,
+            user=current_user,
             target_user=room.seller,
             chatroom=room
         ).exists()
 
-    # 내가 receiver인 메시지들 중 읽지 않은 것들 읽음 처리
-    Message.objects.filter(
+    # 읽음 처리 (bulk update)
+    unread_messages = Message.objects.filter(
         room=room,
-        receiver=current_sender,
+        receiver=current_user,
         is_read=False
-    ).update(is_read=True)
+    )
+    unread_count = unread_messages.update(is_read=True)
 
-    # 메시지 조회 시 관련 데이터 프리로드
+    # 메시지 조회 최적화
     messages = Message.objects.filter(room=room).select_related(
         'sender', 'receiver'
     ).prefetch_related(
@@ -56,34 +63,39 @@ def chat_room(request, room_id):
         'address_content__address_profile'
     ).order_by('timestamp')
     
-    # 분철 관련 정보 추가
+    # 분철 관련 정보 추가 (기존 코드 유지)
     split_info = None
     if hasattr(room.post, 'category_type') and room.post.category_type == 'split':
         from ddokfarm.models import SplitApplication
+        # N+1 최적화: prefetch_related 사용
         application = SplitApplication.objects.filter(
             post=room.post,
             user=room.buyer,
             status='approved'
-        ).prefetch_related('members').first()
+        ).prefetch_related(
+            'members',
+            'post__member_prices__member'  # member_prices 관련 데이터도 미리 로드
+        ).first()
         
         if application:
             split_info = {
                 'applied_members': application.members.all(),
                 'total_price': sum(
-                    room.post.member_prices.filter(member__in=application.members.all()).values_list('price', flat=True)
+                    room.post.member_prices.filter(
+                        member__in=application.members.all()
+                    ).values_list('price', flat=True)
                 )
             }
 
     context = {
         'room': room,
         'messages': messages,
-        'user': current_sender,  # 템플릿에서 사용
-        'current_sender': current_sender,
+        'current_user': current_user,
         'other_user': other_user,
         'form': MannerReviewForm(),
         'has_already_reviewed': has_already_reviewed,
         'is_fully_completed': room.is_fully_completed,
-        'split_info': split_info,
+        'split_info': split_info,  # split 정보 추가
     }
 
     return render(request, 'ddokchat/chat_room.html', context)
@@ -119,29 +131,57 @@ def get_or_create_chatroom(request, category, post_id):
 
     return redirect('ddokchat:chat_room', room_id=room.id)
 
-# 내 채팅 목록
+# 내 채팅 목록 (성능 최적화)
 @login_required
 def my_chatrooms(request):
-    current_sender = request.user
+    current_user = request.user
     
+    # N+1 해결: 모든 데이터를 한 번의 쿼리로 가져오기
     rooms = ChatRoom.objects.filter(
-        Q(buyer=current_sender) | Q(seller=current_sender)
-    ).prefetch_related('messages')  # 쿼리 최적화
-
-    rooms = sorted(rooms, key=lambda room: room.messages.last().timestamp if room.messages.exists() else room.created_at, reverse=True)
+        Q(buyer=current_user) | Q(seller=current_user)
+    ).select_related(
+        # 관련 사용자 정보 미리 로드
+        'buyer', 'seller',
+    ).prefetch_related(
+        # 마지막 메시지만 효율적으로 가져오기
+        Prefetch(
+            'messages',
+            queryset=Message.objects.select_related('sender', 'receiver')
+                                   .prefetch_related('text_content')
+                                   .order_by('-timestamp')[:1],
+            to_attr='latest_messages'
+        )
+    ).annotate(
+        # 안읽은 메시지 수를 서브쿼리로 한번에 계산
+        unread_count=Count(
+            'messages',
+            filter=Q(
+                messages__receiver=current_user,
+                messages__is_read=False
+            )
+        ),
+        # 마지막 메시지 시간
+        last_message_time=Max('messages__timestamp'),
+        
+        # 상대방 정보를 Case/When으로 한번에 결정
+        partner_id=Case(
+            When(buyer=current_user, then='seller_id'),
+            default='buyer_id'
+        ),
+        partner_username=Case(
+            When(buyer=current_user, then='seller__username'),
+            default='buyer__username'
+        )
+    ).order_by('-last_message_time')
     
+    # 한번에 가져온 데이터로 추가 처리
     for room in rooms:
-        room._current_user = current_sender
-        room.partner = room.seller if room.buyer == current_sender else room.buyer
-        room.last_message = room.messages.last()
-        # 읽지 않은 메시지 수: 내가 receiver인 것들 중 읽지 않은 것
-        room.unread_count = room.messages.filter(
-            receiver=current_sender,
-            is_read=False
-        ).count()
-        room.category = room.post.category_type  # 'sell' 등
-
-    # ✅ 거래중 / 거래완료 분리
+        # 이미 annotate로 계산된 값 사용
+        room.partner = room.get_other_user(current_user)
+        room.last_message = room.latest_messages[0] if room.latest_messages else None
+        room.category = room.post.category_type if hasattr(room.post, 'category_type') else 'unknown'
+    
+    # 거래중/완료 분리
     active_rooms = [room for room in rooms if not room.is_fully_completed]
     completed_rooms = [room for room in rooms if room.is_fully_completed]
 
@@ -149,11 +189,11 @@ def my_chatrooms(request):
         'rooms': rooms,
         'active_rooms': active_rooms,
         'completed_rooms': completed_rooms,
-        'me': current_sender,
+        'current_user': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
 
-
+# ✅ 수정된 이미지 업로드 함수 (receiver 설정 추가)
 @login_required
 @require_POST
 def upload_image(request):
@@ -166,15 +206,23 @@ def upload_image(request):
 
     try:
         room = ChatRoom.objects.get(id=room_id)
+        
+        if not room.is_participant(request.user):
+            return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
+        
         sender = request.user
-        receiver = room.seller if sender == room.buyer else room.buyer
+        receiver = room.get_other_user(sender)
+        
+        # 거래 완료 상태 확인
+        if room.is_fully_completed:
+            return JsonResponse({'success': False, 'error': '이미 완료된 거래입니다.'}, status=400)
         
         # 트랜잭션으로 메시지와 이미지 정보를 함께 생성
         with transaction.atomic():
             message = Message.objects.create(
                 room=room,
                 sender=sender,
-                receiver=receiver,
+                receiver=receiver,  # ✅ receiver 추가
                 message_type='image'
             )
             
@@ -191,27 +239,32 @@ def upload_image(request):
         })
     except ChatRoom.DoesNotExist:
         return JsonResponse({'success': False, 'error': '존재하지 않는 채팅방입니다.'}, status=404)
+    except Exception as e:
+        print(f"이미지 업로드 에러: {e}")
+        return JsonResponse({'success': False, 'error': '이미지 업로드 중 오류가 발생했습니다.'}, status=500)
 
 @require_POST
 @login_required
 def complete_trade(request, room_id):
     room = get_object_or_404(ChatRoom, id=room_id)
-    current_sender = request.user
+    current_user = request.user
 
-    is_buyer = (room.buyer == current_sender)
-    is_seller = (room.seller == current_sender)
-
-    if not (is_buyer or is_seller):
+    if not room.is_participant(current_user):
         return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
 
-    if is_buyer:
+    if room.get_completion_status_for_user(current_user):
+        return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
+
+    user_role = room.get_user_role(current_user)
+
+    if user_role == 'buyer':
         room.buyer_completed = True
-    if is_seller:
+    elif user_role == 'seller':
         room.seller_completed = True
 
     room.save()
 
-    is_fully_completed = room.buyer_completed and room.seller_completed
+    is_fully_completed = room.is_fully_completed
 
     # 거래가 완전히 완료되었을 때 민감한 정보 삭제 처리
     if is_fully_completed:
@@ -233,9 +286,9 @@ def complete_trade(request, room_id):
     return JsonResponse({
         'success': True,
         'is_fully_completed': is_fully_completed,
-        'is_buyer': is_buyer,
+        'user_role': user_role,
+        'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
     })
-
 
 def delete_sensitive_info(room):
     """거래 완료 시 민감한 정보 삭제 처리"""
@@ -261,8 +314,7 @@ def delete_sensitive_info(room):
         deleted_at=now
     )
 
-
-# 계좌 정보 메시지 전송
+# ✅ 수정된 계좌 정보 메시지 전송 함수 (읽음 처리 개선)
 @require_POST
 @login_required
 def send_account_info(request, room_id):
@@ -272,7 +324,7 @@ def send_account_info(request, room_id):
         sender = request.user
         
         # 채팅방 참여자 확인
-        if sender not in [room.buyer, room.seller]:
+        if not room.is_participant(sender):
             return JsonResponse({
                 'success': False,
                 'error': '채팅방 참여자만 계좌정보를 보낼 수 있습니다.'
@@ -286,7 +338,7 @@ def send_account_info(request, room_id):
             })
         
         # receiver 계산
-        receiver = room.seller if sender == room.buyer else room.buyer
+        receiver = room.get_other_user(sender)
         
         # BankProfile에서 계좌정보 확인
         bank_profile = sender.get_bank_profile()
@@ -303,7 +355,7 @@ def send_account_info(request, room_id):
             message = Message.objects.create(
                 room=room,
                 sender=sender,
-                receiver=receiver,
+                receiver=receiver,  # ✅ receiver 설정
                 message_type='account_info'
             )
             
@@ -334,20 +386,20 @@ def send_account_info(request, room_id):
             'error': f'서버 오류가 발생했습니다: {str(e)}'
         })
 
-# 주소 정보 메시지 전송
+# ✅ 수정된 주소 정보 메시지 전송 함수 (읽음 처리 개선)
 @require_POST
 @login_required
 def send_address_info(request, room_id):
-    """주소정보 전송"""
+    """배송정보 전송 - 핸드폰 번호 포함"""
     try:
         room = get_object_or_404(ChatRoom, id=room_id)
         sender = request.user
         
         # 채팅방 참여자 확인
-        if sender not in [room.buyer, room.seller]:
+        if not room.is_participant(sender):
             return JsonResponse({
                 'success': False,
-                'error': '채팅방 참여자만 주소정보를 보낼 수 있습니다.'
+                'error': '채팅방 참여자만 배송정보를 보낼 수 있습니다.'
             })
         
         # 거래 완료 상태 확인
@@ -358,19 +410,24 @@ def send_address_info(request, room_id):
             })
         
         # receiver 계산
-        receiver = room.seller if sender == room.buyer else room.buyer
+        receiver = room.get_other_user(sender)
         
-        # AddressProfile에서 주소정보 확인
+        # AddressProfile에서 배송정보 확인
         address_profile = sender.get_address_profile()
         
-        if not address_profile or not all([address_profile.postal_code, address_profile.road_address or address_profile.jibun_address]):
+        # 필수 필드 체크 - 핸드폰 번호 포함
+        if not address_profile or not all([
+            address_profile.postal_code, 
+            address_profile.road_address,
+            address_profile.phone_number
+        ]):
             return JsonResponse({
                 'success': False,
                 'redirect_to_mypage': True,
-                'error': '주소 정보를 먼저 등록해주세요.'
+                'error': '배송 정보(주소, 핸드폰 번호)를 먼저 등록해주세요.'
             })
         
-        # 트랜잭션으로 메시지와 주소 정보를 함께 생성
+        # 트랜잭션으로 메시지와 배송 정보를 함께 생성
         with transaction.atomic():
             message = Message.objects.create(
                 room=room,
@@ -384,13 +441,12 @@ def send_address_info(request, room_id):
                 address_profile=address_profile,
             )
         
-        # 클라이언트로 전송할 주소정보
+        # 클라이언트로 전송할 배송정보 - 핸드폰 번호 포함
         address_info = {
             'postal_code': address_profile.postal_code,
             'road_address': address_profile.road_address,
-            'jibun_address': address_profile.jibun_address,
-            'detail_address': address_profile.detail_address,
-            'building_name': address_profile.building_name,
+            'detail_address': address_profile.detail_address or '',
+            'phone_number': address_profile.phone_number,
             'sido': address_profile.sido,
             'sigungu': address_profile.sigungu,
             'full_address': address_profile.full_address,

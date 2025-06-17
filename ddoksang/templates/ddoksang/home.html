@@ -3,7 +3,7 @@
 {% load filters %}
 {% load member_images %}
 
-{% block title %}🎂 덕생 - 생일카페 투어맵{% endblock %}
+{% block title %} 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block ddoksang_content %}
 
@@ -66,7 +66,7 @@
 <!-- 상단 검색 헤더 -->
 {% include 'ddoksang/components/_search_header.html' with search_input_id='ddok-search' autocomplete_list_id='ddok-autocomplete-list' show_create_button=True %}
 
-<!-- 🗺️ 메인 지도 섹션 with 사이드바 -->
+<!--  메인 지도 섹션 with 사이드바 -->
 <section class="py-4 sm:py-8 px-4">
   <div class="max-w-7xl mx-auto">
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
@@ -76,18 +76,18 @@
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
           <div>
             <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
-              <span class="text-2xl sm:text-3xl mr-2 sm:mr-3">🗺️</span>
-              <span>생카 지도</span>
+              <img src="{% static 'image/ddok_logo_filled.png' %}" alt="투어맵 로고" class="w-10 h-10 sm:w-12 sm:h-12 mr-2 sm:mr-3">
+              <span>생카 투어맵</span>
             </h2>
-            <div class="flex items-center mt-2">
+            <!-- <div class="flex items-center mt-2">
               <span class="text-xs sm:text-sm bg-gray-200 text-gray-800 px-2 sm:px-3 py-1 rounded-full" id="cafeCountDisplay">{{ total_cafes }}개 운영중</span>
             </div>
-            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">투어맵을 통해 더 자세한 카페 위치 정보를 확인하세요!</p>
+            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">투어맵을 통해 더 자세한 카페 위치 정보를 확인하세요!</p> -->
           </div>
           
           <!-- 지도 컨트롤 버튼들 -->
           <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-            <!-- 투어맵 버튼 -->
+            <!-- 투어맵 버튼
             <a href="{% url 'ddoksang:tour_map' %}" 
                 class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-w-[80px] sm:min-w-[120px]">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@
               </svg>
               <span class="hidden sm:inline">투어맵</span>
               <span class="sm:hidden">투어</span>
-            </a>
+            </a> -->
             <!-- 내 위치 버튼 -->
             <button id="myLocationBtn"
                     class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-w-[80px] sm:min-w-[100px]">
@@ -137,7 +137,7 @@
           <!-- 주변 카페 패널 -->
           <div id="nearbyPanel" class="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 w-[280px] max-h-[500px] overflow-y-auto z-50 hidden">
             <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-gray-800">📍 내 주변 생카</h3>
+                <h3 class="text-sm font-semibold text-gray-800"> 주변 3km 이내 생카</h3>
                 <button id="closeNearbyPanel" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -158,9 +158,14 @@
 
 <!-- 이번 주 생일 아티스트 섹션 -->
 <div class="mt-16 text-center mb-6 sm:mb-8">
-  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">🎂 이번 주 생일덕</h2>
-  <p class="text-gray-600 text-sm sm:text-base">이번주 생일 아티스트를 추천해드립니다.</p>
+  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
+    이번 주 생일덕  
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 ml-2 sm:ml-3">
+  </h2>
+  <p class="text-gray-600 text-sm sm:text-base">(덕덕) 축하해요 (덕덕) </p>
 </div>
+
 
 <section class="px-4 mb-16"> 
   <div class="max-w-7xl mx-auto">
@@ -181,13 +186,14 @@
     <div class="max-w-7xl mx-auto">
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
         <div class="inline-flex items-center justify-center w-14 h-14 bg-gray-900 rounded-full mb-3">
-          <span class="text-xl">🗂</span>
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-16 h-16 mr-2">
+    
         </div>
         <h3 class="text-lg font-bold text-gray-900 mb-2">내 덕생 관리</h3>
-        <p class="text-gray-600 mb-4 text-sm">등록한 생일카페와 찜한 카페를 확인하고 관리하세요</p>
+        <p class="text-gray-600 mb-4 text-sm">등록한 생카와 찜한 카페를 확인하고 관리하세요</p>
         <a href="{% url 'ddoksang:my_cafes' %}" 
            class="inline-block bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-          관리하러 가기
+          GO!
         </a>
       </div>
     </div>
@@ -197,19 +203,66 @@
 <!-- 최신 등록된 생일카페 섹션 -->
 <section class="mt-16 sm:mt-20 py-8 sm:py-12 px-4">  
   <div class="max-w-7xl mx-auto">
+    
     {% include 'ddoksang/components/_latest_cafe_section.html' %}
   </div>
 </section>
 
-<!-- 📱 플로팅 액션 버튼 -->
-<div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
-  <a href="{% url 'ddoksang:create' %}" 
-     class="bg-gray-900 text-white p-3 sm:p-4 rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-200 flex items-center justify-center">
-    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-    </svg>
-  </a>
-</div>
+<!-- 플로팅 액션 버튼 -->
+<a href="{% url 'ddoksang:create' %}" class="floating-action-button">
+  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+  </svg>
+</a>
+
+<style>
+/* 플로팅 액션 버튼 - FAQ와 정확히 대칭 위치 */
+.floating-action-button {
+    position: fixed;
+    bottom: 1rem;   /* 16px - FAQ와 동일 */
+    right: 1rem;    /* 16px - FAQ와 대칭 */
+    z-index: 50;
+    width: 3.5rem;  /* 56px - FAQ와 동일한 크기 */
+    height: 3.5rem; /* 56px - FAQ와 동일한 크기 */
+    background-color: #111827; /* gray-900 */
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.floating-action-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
+    background-color: #1f2937; /* gray-800 */
+}
+
+/* 데스크톱에서는 FAQ와 동일하게 24px */
+@media (min-width: 640px) {
+    .floating-action-button {
+        bottom: 1.5rem; /* 24px - FAQ sm:bottom-6과 동일 */
+        right: 1.5rem;  /* 24px - FAQ sm:left-6과 대칭 */
+    }
+}
+
+/* Safe area 지원 */
+@supports (bottom: env(safe-area-inset-bottom)) {
+    .floating-action-button {
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+    
+    @media (min-width: 640px) {
+        .floating-action-button {
+            bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        }
+    }
+}
+</style>
+
 
 <!-- 페이지 식별자 (찜하기 기능용) -->
 <div id="page-identifier" data-page="home" style="display: none;"></div>

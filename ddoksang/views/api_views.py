@@ -164,7 +164,7 @@ def search_suggestions_api(request):
         
         # 승인된 카페에서 아티스트/멤버명으로 검색
         cafes = BdayCafe.objects.filter(
-            Q(artist__display_name__icontains=q) | Q(member__member_name__icontains=q), 
+            Q(artist__display_name__iexact=q) | Q(member__member_name__iexact=q), 
             status='approved'
         ).select_related('artist', 'member')[:10]
         

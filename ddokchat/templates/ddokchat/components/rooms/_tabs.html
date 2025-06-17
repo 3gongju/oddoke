@@ -1,0 +1,28 @@
+<!-- ddokchat/templates/ddokchat/components/rooms/tabs.html -->
+
+<div class="bg-white rounded-xl shadow-sm mb-6">
+  <div class="flex border-b border-gray-200">
+    <button id="activeTab" class="tab-button active flex-1 px-6 py-4 text-center font-medium text-sm rounded-tl-xl transition-all duration-200 flex items-center justify-center gap-2">
+      <div class="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      거래중
+      {% if active_rooms %}
+        <span class="text-sm bg-orange-100 text-orange-700 px-2 py-1 rounded-full">{{ active_rooms|length }}개</span>
+      {% endif %}
+    </button>
+    <button id="completedTab" class="tab-button flex-1 px-6 py-4 text-center font-medium text-sm rounded-tr-xl transition-all duration-200 flex items-center justify-center gap-2">
+      <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      거래완료
+      {% if completed_rooms %}
+        <span class="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">{{ completed_rooms|length }}개</span>
+      {% endif %}
+    </button>
+  </div>
+</div>

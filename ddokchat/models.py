@@ -23,6 +23,102 @@ class ChatRoom(models.Model):
     
     class Meta:
         unique_together = ('content_type', 'object_id', 'buyer')  # 구매자는 같은 글에 대해 1방만
+        # 성능 최적화를 위한 인덱스 추가
+        indexes = [
+            models.Index(fields=['buyer', 'created_at']),  # 구매자별 채팅방 조회
+            models.Index(fields=['seller', 'created_at']),  # 판매자별 채팅방 조회
+            models.Index(fields=['buyer_completed', 'seller_completed']),  # 거래 완료 상태별 조회
+        ]
+
+    def get_other_user(self, user):
+        """
+        현재 사용자의 상대방 반환
+        
+        Args:
+            user: 현재 사용자 객체
+            
+        Returns:
+            User: 상대방 사용자 객체
+            
+        Raises:
+            ValueError: 사용자가 이 채팅방의 참여자가 아닌 경우
+        """
+        if user == self.buyer:
+            return self.seller
+        elif user == self.seller:
+            return self.buyer
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+    
+    def get_user_role(self, user):
+        """
+        사용자의 역할 반환 (buyer/seller)
+        
+        Args:
+            user: 사용자 객체
+            
+        Returns:
+            str: 'buyer' 또는 'seller'
+            
+        Raises:
+            ValueError: 사용자가 이 채팅방의 참여자가 아닌 경우
+        """
+        if user == self.buyer:
+            return 'buyer'
+        elif user == self.seller:
+            return 'seller'
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+    
+    def is_participant(self, user):
+        """
+        사용자가 이 채팅방의 참여자인지 확인
+        
+        Args:
+            user: 사용자 객체
+            
+        Returns:
+            bool: 참여자이면 True, 아니면 False
+        """
+        return user in [self.buyer, self.seller]
+    
+    def get_completion_status_for_user(self, user):
+        """
+        특정 사용자의 거래 완료 상태 반환
+        
+        Args:
+            user: 사용자 객체
+            
+        Returns:
+            bool: 해당 사용자의 완료 상태
+        """
+        if user == self.buyer:
+            return self.buyer_completed
+        elif user == self.seller:
+            return self.seller_completed
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+    
+    def set_completion_status_for_user(self, user, completed=True):
+        """
+        특정 사용자의 거래 완료 상태 설정
+        
+        Args:
+            user: 사용자 객체
+            completed: 완료 상태 (기본값: True)
+            
+        Returns:
+            bool: 양측 모두 완료되었는지 여부
+        """
+        if user == self.buyer:
+            self.buyer_completed = completed
+        elif user == self.seller:
+            self.seller_completed = completed
+        else:
+            raise ValueError(f"사용자 {user}는 이 채팅방의 참여자가 아닙니다.")
+        
+        self.save()
+        return self.is_fully_completed
 
     @property
     def is_fully_completed(self):
@@ -50,6 +146,19 @@ class Message(models.Model):
 
     class Meta:
         ordering = ['timestamp']
+        # 성능 최적화를 위한 인덱스 추가
+        indexes = [
+            # 가장 중요: 안읽은 메시지 조회 최적화
+            models.Index(
+                fields=['room', 'receiver', 'is_read'], 
+                name='idx_unread_messages',
+                condition=models.Q(is_read=False)  # 부분 인덱스
+            ),
+            # 채팅방별 메시지 시간순 조회
+            models.Index(fields=['room', 'timestamp'], name='idx_room_messages'),
+            # 마지막 메시지 시간 조회 (채팅방 목록용)
+            models.Index(fields=['room', '-timestamp'], name='idx_latest_message'),
+        ]
 
     def get_content(self):
         """메시지 타입에 따른 실제 내용 반환"""
@@ -151,7 +260,7 @@ class AddressMessage(models.Model):
     message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='address_content')
     address_profile = models.ForeignKey(
         'accounts.AddressProfile', 
-        on_delete=models.SET_NULL,  # 주소 삭제 시 NULL로 설정
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='chat_messages'
@@ -162,26 +271,25 @@ class AddressMessage(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, help_text="삭제된 시간")
 
     def get_display_info(self):
-        """현재 상태에 따른 정보 반환"""
+        """현재 상태에 따른 정보 반환 - 핸드폰 번호 추가"""
         if self.is_deleted:
             return {
                 'is_deleted': True,
-                'deleted_message': '거래 완료로 주소정보가 삭제되었습니다'
+                'deleted_message': '거래 완료로 배송정보가 삭제되었습니다'
             }
-        elif not self.address_profile:  # 주소가 삭제된 경우
+        elif not self.address_profile:
             return {
                 'is_deleted': True,
-                'deleted_message': '주소 정보가 삭제되었습니다'
+                'deleted_message': '배송 정보가 삭제되었습니다'
             }
         else:
-            # 현재 주소 정보 표시
+            # 현재 주소 정보 표시 - 핸드폰 번호 추가
             return {
                 'is_deleted': False,
                 'postal_code': self.address_profile.postal_code,
                 'road_address': self.address_profile.road_address,
-                'jibun_address': self.address_profile.jibun_address,
                 'detail_address': self.address_profile.detail_address,
-                'building_name': self.address_profile.building_name,
+                'phone_number': self.address_profile.phone_number,
                 'sido': self.address_profile.sido,
                 'sigungu': self.address_profile.sigungu,
                 'full_address': self.address_profile.full_address,
@@ -189,8 +297,8 @@ class AddressMessage(models.Model):
 
     def __str__(self):
         if self.is_deleted:
-            return "주소정보: [삭제됨]"
+            return "배송정보: [삭제됨]"
         elif not self.address_profile:
-            return "주소정보: [주소 삭제됨]"
+            return "배송정보: [주소 삭제됨]"
         else:
-            return f"주소정보: {self.address_profile.sido} {self.address_profile.sigungu}"
+            return f"배송정보: {self.address_profile.sido} {self.address_profile.sigungu}"

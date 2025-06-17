@@ -1,6 +1,3 @@
-# ddoksang/views/base_views.py
-# 홈 뷰 업데이트 - 지도 중심점 및 운영중 카페 필터링 수정
-
 import logging
 from datetime import timedelta, date
 
@@ -15,6 +12,8 @@ from django.conf import settings
 
 from ddoksang.models import BdayCafe, CafeFavorite
 from ddoksang.utils.favorite_utils import get_user_favorites
+from ..utils.cafe_utils import get_cafe_detail_context
+
 from ddoksang.utils.map_utils import (
     get_map_context, 
     get_nearby_cafes, 
@@ -67,7 +66,7 @@ def home_view(request):
 
         my_favorite_cafes = [fav.cafe for fav in favorites]
 
-    # === 5. ✅ 수정: 지도용 데이터 - 운영중인 카페만 사용하되 지도 중심은 서울로 고정 ===
+    # === 5. 지도용 데이터 - 운영중인 카페만 사용하되 지도 중심은 서울로 고정 ===
     cafes_json_data = []
     for cafe in active_cafes:  # 운영중인 카페만
         cafe_data = serialize_cafe_for_map(cafe)
@@ -113,39 +112,41 @@ def search_view(request):
     
     results = []
     total_count = 0
-    
+
     if query and len(query) >= 2:
-        # 카페 검색 - 아티스트/멤버만
+        # 카페 검색 - 아티스트/멤버 정확히 일치
         cafes = BdayCafe.objects.filter(
-            Q(artist__display_name__icontains=query) |
-            Q(member__member_name__icontains=query),
+            Q(artist__display_name__iexact=query) |
+            Q(member__member_name__iexact=query),
             status='approved'
         ).select_related('artist', 'member').distinct()
         
-        # ✅ 간단한 상태 필터링 (map_utils 함수 활용 가능하지만 여기서는 직접 구현)
+        # 날짜 상태 필터링
         today = timezone.now().date()
-        
         if status_filter == 'ongoing':
             cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
         elif status_filter == 'upcoming':
             cafes = cafes.filter(start_date__gt=today)
         elif status_filter == 'ended':
             cafes = cafes.filter(end_date__lt=today)
-        
-        # 정렬
+
+        # 정렬 기준 적용
         if sort_order == 'latest':
             cafes = cafes.order_by('-created_at')
         elif sort_order == 'start_date':
             cafes = cafes.order_by('start_date', '-created_at')
-        
-        # 페이징 처리
-        paginator = Paginator(cafes, 10)
+
+        # 페이지네이션
+        paginator = Paginator(cafes, 9)
         results = paginator.get_page(page)
         total_count = paginator.count
-    
-    # 사용자 찜 목록
+
+   # ✅ 첫 번째 결과의 멤버 추출
+    member = results[0].member if results and hasattr(results[0], 'member') else None
+
+    cafes_json_data = [serialize_cafe_for_map(c) for c in results if serialize_cafe_for_map(c)]
     user_favorites = get_user_favorites(request.user)
-    
+
     context = {
         'results': results,
         'query': query,
@@ -154,7 +155,10 @@ def search_view(request):
         'current_status': status_filter,
         'current_sort': sort_order,
         'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
+        'cafes_json': cafes_json_data,
+        'member': member,  # 템플릿에서 사용 가능하도록 추가
     }
+
     return render(request, 'ddoksang/search.html', context)
 
 
@@ -173,53 +177,19 @@ def cafe_detail_view(request, cafe_id):
     except Exception as e:
         logger.warning(f"조회수 업데이트 실패: {e}")
     
-    # 사용자 찜 상태 확인
-    is_favorited = False
-    if request.user.is_authenticated:
-        is_favorited = CafeFavorite.objects.filter(
-            user=request.user, 
-            cafe=cafe
-        ).exists()
+    # 디버깅: 카페 정보 확인
+    logger.info(f"카페 상세 조회: {cafe.cafe_name} (ID: {cafe.id})")
+    logger.info(f"카페 아티스트: {cafe.artist.display_name if cafe.artist else 'None'}")
+    logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
+    logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
     
-    # ✅ 주변 카페들 (map_utils 사용)
-    nearby_cafes = []
-    if cafe.latitude and cafe.longitude:
-        try:
-            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
-            nearby_cafes = get_nearby_cafes(
-                user_lat=float(cafe.latitude), 
-                user_lng=float(cafe.longitude), 
-                cafes_queryset=approved_cafes,
-                radius_km=5, 
-                limit=5, 
-                exclude_id=cafe.id
-            )
-        except (ValueError, TypeError) as e:
-            logger.warning(f"주변 카페 조회 오류: {e}")
+    # 공통 함수 사용으로 중복 제거
+    context = get_cafe_detail_context(cafe, request.user)
     
-    # 같은 아티스트/멤버의 다른 카페들
-    related_cafes = BdayCafe.objects.filter(
-        Q(artist=cafe.artist) | Q(member=cafe.member),
-        status='approved'
-    ).exclude(id=cafe.id).select_related('artist', 'member')[:6]
-    
-    # 사용자 찜 목록
-    user_favorites = get_user_favorites(request.user)
-    
-    # ✅ 지도 관련 컨텍스트 생성 (map_utils 사용)
-    map_context = get_map_context()
-    
-    context = {
-        'cafe': cafe,
-        'is_favorited': is_favorited,
-        'nearby_cafes': nearby_cafes,
-        'related_cafes': related_cafes,
-        'user_favorites': user_favorites,
-        'is_preview': False,
-        'can_edit': False,
-        'preview_type': None,
-        **map_context,
-    }
+    # 디버깅: 컨텍스트 확인
+    logger.info(f"nearby_cafes 개수: {len(context.get('nearby_cafes', []))}")
+    for nearby in context.get('nearby_cafes', [])[:3]:  # 처음 3개만 로그
+        logger.info(f"  - {nearby.get('cafe_name', 'Unknown')} ({nearby.get('distance', 'Unknown')}km)")
     
     return render(request, 'ddoksang/detail.html', context)
 
@@ -227,7 +197,7 @@ def cafe_detail_view(request, cafe_id):
 @cache_page(60 * 5)  # 5분 캐시
 def map_view(request):
     """지도 페이지 (별도 지도 전용 페이지)"""
-    # ✅ map_utils 사용으로 간소화
+    #  map_utils 사용으로 간소화
     approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
     active_cafes = filter_operating_cafes(approved_cafes)
     
@@ -248,14 +218,14 @@ def map_view(request):
     return render(request, 'ddoksang/map.html', context)
 
 
-# ✅ 추가: 투어맵 뷰 (cafe_views.py에서 이동)
+#  추가: 투어맵 뷰 (cafe_views.py에서 이동)
 def tour_map_view(request):
     """투어맵 뷰 - map_utils 사용으로 간소화"""
     from datetime import date
     
     today = date.today()
     
-    # ✅ map_utils 사용
+    #  map_utils 사용
     approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
     operating_cafes = filter_operating_cafes(approved_cafes, reference_date=today)
     
