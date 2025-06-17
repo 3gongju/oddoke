@@ -177,7 +177,7 @@ def my_chatrooms(request):
     # 한번에 가져온 데이터로 추가 처리
     for room in rooms:
         # 이미 annotate로 계산된 값 사용
-        room.partner = room.seller if room.buyer == current_user else room.buyer
+        room.partner = room.get_other_user(current_user)
         room.last_message = room.latest_messages[0] if room.latest_messages else None
         room.category = room.post.category_type if hasattr(room.post, 'category_type') else 'unknown'
     
@@ -189,7 +189,7 @@ def my_chatrooms(request):
         'rooms': rooms,
         'active_rooms': active_rooms,
         'completed_rooms': completed_rooms,
-        'me': current_user,
+        'current_user': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
 
@@ -206,8 +206,12 @@ def upload_image(request):
 
     try:
         room = ChatRoom.objects.get(id=room_id)
+        
+        if not room.is_participant(request.user):
+            return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
+        
         sender = request.user
-        receiver = room.seller if sender == room.buyer else room.buyer  # ✅ receiver 설정 추가
+        receiver = room.get_other_user(sender)
         
         # 거래 완료 상태 확인
         if room.is_fully_completed:
@@ -245,20 +249,22 @@ def complete_trade(request, room_id):
     room = get_object_or_404(ChatRoom, id=room_id)
     current_user = request.user
 
-    is_buyer = (room.buyer == current_user)
-    is_seller = (room.seller == current_user)
-
-    if not (is_buyer or is_seller):
+    if not room.is_participant(current_user):
         return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
 
-    if is_buyer:
+    if room.get_completion_status_for_user(current_user):
+        return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
+
+    user_role = room.get_user_role(current_user)
+
+    if user_role == 'buyer':
         room.buyer_completed = True
-    if is_seller:
+    elif user_role == 'seller':
         room.seller_completed = True
 
     room.save()
 
-    is_fully_completed = room.buyer_completed and room.seller_completed
+    is_fully_completed = room.is_fully_completed
 
     # 거래가 완전히 완료되었을 때 민감한 정보 삭제 처리
     if is_fully_completed:
@@ -280,7 +286,8 @@ def complete_trade(request, room_id):
     return JsonResponse({
         'success': True,
         'is_fully_completed': is_fully_completed,
-        'is_buyer': is_buyer,
+        'user_role': user_role,
+        'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
     })
 
 def delete_sensitive_info(room):
@@ -317,7 +324,7 @@ def send_account_info(request, room_id):
         sender = request.user
         
         # 채팅방 참여자 확인
-        if sender not in [room.buyer, room.seller]:
+        if not room.is_participant(sender):
             return JsonResponse({
                 'success': False,
                 'error': '채팅방 참여자만 계좌정보를 보낼 수 있습니다.'
@@ -331,7 +338,7 @@ def send_account_info(request, room_id):
             })
         
         # receiver 계산
-        receiver = room.seller if sender == room.buyer else room.buyer
+        receiver = room.get_other_user(sender)
         
         # BankProfile에서 계좌정보 확인
         bank_profile = sender.get_bank_profile()
@@ -389,7 +396,7 @@ def send_address_info(request, room_id):
         sender = request.user
         
         # 채팅방 참여자 확인
-        if sender not in [room.buyer, room.seller]:
+        if not room.is_participant(sender):
             return JsonResponse({
                 'success': False,
                 'error': '채팅방 참여자만 주소정보를 보낼 수 있습니다.'
@@ -403,7 +410,7 @@ def send_address_info(request, room_id):
             })
         
         # receiver 계산
-        receiver = room.seller if sender == room.buyer else room.buyer
+        receiver = room.get_other_user(sender)
         
         # AddressProfile에서 주소정보 확인
         address_profile = sender.get_address_profile()
@@ -433,9 +440,9 @@ def send_address_info(request, room_id):
         address_info = {
             'postal_code': address_profile.postal_code,
             'road_address': address_profile.road_address,
-            'jibun_address': address_profile.jibun_address,
+            # 'jibun_address': address_profile.jibun_address,
             'detail_address': address_profile.detail_address,
-            'building_name': address_profile.building_name,
+            # 'building_name': address_profile.building_name,
             'sido': address_profile.sido,
             'sigungu': address_profile.sigungu,
             'full_address': address_profile.full_address,

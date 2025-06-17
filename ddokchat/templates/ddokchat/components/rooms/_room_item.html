@@ -1,6 +1,6 @@
 <!-- ddokchat/templates/ddokchat/components/rooms/room_item.html -->
 
-{% with post=room.post current_user=me %}
+{% with post=room.post current_user=current_user %}
 <div class="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-[1.02] chatroom-item {% if is_completed %}opacity-75{% endif %}">
   <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block">
     <!-- 헤더 영역 -->
