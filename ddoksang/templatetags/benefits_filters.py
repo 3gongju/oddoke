@@ -53,8 +53,8 @@ def get_category_color(category):
 def get_category_icon(category):
     """카테고리별 아이콘 반환"""
     icons = {
-        '일반': '🎁',
-        '선착': '⚡',
-        '기타': '✨'
+        '일반': '',
+        '선착': '',
+        '기타': ''
     }
     return icons.get(category, '🎈')
