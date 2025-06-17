@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="{% static 'css/ddokchat/modals.css' %}">
 <link rel="stylesheet" href="{% static 'css/ddokchat/message_bubbles.css' %}">
 
-<!-- 채팅방 전용 스타일 -->
+<!-- 채팅방 전용 스타일 - chat_room.html의 style 태그 내용 -->
 <style>
   /* 기존 스타일들 */
   body {
@@ -90,8 +90,8 @@
     }
     
     #chat-log {
-      height: calc(100vh - 120px) !important;
-      padding-bottom: 1.5rem !important; /* pb-6 하단 여백 추가 */
+      height: calc(100vh - 110px) !important;
+      padding-bottom: 2.5rem !important; /* 하단 여백 증가 */
     }
   }
   
@@ -103,8 +103,8 @@
     }
     
     #chat-log {
-      height: calc(100vh - 184px) !important;
-      padding-bottom: 1.5rem !important; /* pb-6 하단 여백 추가 */
+      height: calc(100vh - 174px) !important;
+      padding-bottom: 2.5rem !important; /* 하단 여백 증가 */
     }
     
     /* PC에서 좌우 여백 추가 */
@@ -114,16 +114,8 @@
     }
   }
   
-  /* 태블릿 사이즈 최적화 */
-  @media (min-width: 768px) and (max-width: 1024px) {
-    .h-screen {
-      max-width: 600px !important; /* 태블릿에서는 좀 더 좁게 */
-    }
-  }
-  
   /* 입력창 상단 여백 제거 */
   #messageInputArea {
-    padding-top: 0 !important;
     padding-bottom: 0.75rem !important; /* pb-3만 유지 */
   }
 </style>
