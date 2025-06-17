@@ -400,7 +400,7 @@
 /* 포커스 상태 */
 .tab-button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px #3b82f6;
+  box-shadow: none;
 }
 
 .chatroom-item:focus,
