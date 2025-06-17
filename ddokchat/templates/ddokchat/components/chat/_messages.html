@@ -16,7 +16,7 @@
             </div>
             
             <!-- 말풍선 (오른쪽) -->
-            <div class="max-w-xs">
+            <div class="{% if message.message_type == 'account_info' or message.message_type == 'address_info' %}max-w-sm{% else %}max-w-xs{% endif %}">
               
               <!-- 메시지 타입별 처리 -->
               {% if message.message_type == 'text' %}
@@ -41,10 +41,10 @@
                     <div class="space-y-3">
                       <div class="flex items-center space-x-2 mb-2">
                         <!-- Heroicons Credit Card Icon -->
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"></path>
                         </svg>
-                        <span class="font-semibold">계좌정보 전송</span>
+                        <span class="text-sm">계좌정보 전송</span>
                       </div>
                       
                       {% if account_info.is_deleted %}
@@ -52,18 +52,18 @@
                           <p class="text-sm text-gray-300 font-medium">{{ account_info.deleted_message }}</p>
                         </div>
                       {% else %}
-                        <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                        <div class="bg-gray-800 rounded-lg p-4 space-y-2 min-w-[220px]">
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-300">은행</span>
-                            <span class="font-medium text-white">{{ account_info.bank_name }}</span>
+                            <span class="text-xs text-gray-300">은행</span>
+                            <span class="text-sm text-white">{{ account_info.bank_name }}</span>
                           </div>
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-300">계좌번호</span>
-                            <span class="font-mono text-white">{{ account_info.account_number }}</span>
+                            <span class="text-xs text-gray-300">계좌번호</span>
+                            <span class="text-sm text-white">{{ account_info.account_number }}</span>
                           </div>
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-300">예금주</span>
-                            <span class="font-medium text-white">{{ account_info.account_holder }}</span>
+                            <span class="text-xs text-gray-300">예금주</span>
+                            <span class="text-sm text-white">{{ account_info.account_holder }}</span>
                           </div>
                         </div>
                       {% endif %}
@@ -78,11 +78,11 @@
                     <div class="space-y-3">
                       <div class="flex items-center space-x-2 mb-2">
                         <!-- Heroicons Map Pin Icon -->
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"></path>
                         </svg>
-                        <span class="font-semibold">배송정보 전송</span>
+                        <span class="text-sm">배송정보 전송</span>
                       </div>
                       
                       {% if address_info.is_deleted %}
@@ -90,18 +90,18 @@
                           <p class="text-sm text-gray-300 font-medium">{{ address_info.deleted_message }}</p>
                         </div>
                       {% else %}
-                        <div class="bg-gray-800 rounded-lg p-3 space-y-2">
+                        <div class="bg-gray-800 rounded-lg p-4 space-y-2 min-w-[220px]">
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-300">연락처</span>
-                            <span class="font-mono text-white">{{ address_info.phone_number }}</span>
+                            <span class="text-xs text-gray-300">연락처</span>
+                            <span class="text-sm text-white">{{ address_info.phone_number }}</span>
                           </div>
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-300">우편번호</span>
-                            <span class="font-medium text-white">{{ address_info.postal_code }}</span>
+                            <span class="text-xs text-gray-300">우편번호</span>
+                            <span class="text-sm text-white">{{ address_info.postal_code }}</span>
                           </div>
                           <div>
-                            <span class="text-sm text-gray-300">배송주소</span>
-                            <p class="font-medium text-white mt-1">{{ address_info.full_address }}</p>
+                            <span class="text-xs text-gray-300">배송주소</span>
+                            <p class="text-sm text-white mt-1">{{ address_info.full_address }}</p>
                           </div>
                         </div>
                       {% endif %}
@@ -119,7 +119,7 @@
           <!-- 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거) -->
           <div class="flex items-end gap-2">
             <!-- 말풍선 (왼쪽) -->
-            <div class="max-w-xs">
+            <div class="{% if message.message_type == 'account_info' or message.message_type == 'address_info' %}max-w-sm{% else %}max-w-xs{% endif %}">
               
               <!-- 메시지 타입별 처리 -->
               {% if message.message_type == 'text' %}
@@ -144,10 +144,10 @@
                     <div class="space-y-3">
                       <div class="flex items-center space-x-2 mb-2">
                         <!-- Heroicons Credit Card Icon -->
-                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"></path>
                         </svg>
-                        <span class="font-semibold">계좌정보</span>
+                        <span class="text-sm">계좌정보</span>
                       </div>
                       
                       {% if account_info.is_deleted %}
@@ -157,16 +157,16 @@
                       {% else %}
                         <div class="bg-gray-50 rounded-lg p-3 space-y-2">
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">은행</span>
-                            <span class="font-medium">{{ account_info.bank_name }}</span>
+                            <span class="text-xs text-gray-600">은행</span>
+                            <span class="text-sm">{{ account_info.bank_name }}</span>
                           </div>
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">계좌번호</span>
-                            <span class="font-mono">{{ account_info.account_number }}</span>
+                            <span class="text-xs text-gray-600">계좌번호</span>
+                            <span class="text-sm">{{ account_info.account_number }}</span>
                           </div>
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">예금주</span>
-                            <span class="font-medium">{{ account_info.account_holder }}</span>
+                            <span class="text-xs text-gray-600">예금주</span>
+                            <span class="text-sm">{{ account_info.account_holder }}</span>
                           </div>
                         </div>
                         
@@ -193,11 +193,11 @@
                     <div class="space-y-3">
                       <div class="flex items-center space-x-2 mb-2">
                         <!-- Heroicons Map Pin Icon -->
-                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"></path>
                         </svg>
-                        <span class="font-semibold">배송정보</span>
+                        <span class="text-sm">배송정보</span>
                       </div>
                       
                       {% if address_info.is_deleted %}
@@ -207,16 +207,16 @@
                       {% else %}
                         <div class="bg-gray-50 rounded-lg p-3 space-y-2">
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">연락처</span>
-                            <span class="font-mono">{{ address_info.phone_number }}</span>
+                            <span class="text-xs text-gray-600">연락처</span>
+                            <span class="text-sm">{{ address_info.phone_number }}</span>
                           </div>
                           <div class="flex justify-between">
-                            <span class="text-sm text-gray-600">우편번호</span>
-                            <span class="font-medium">{{ address_info.postal_code }}</span>
+                            <span class="text-xs text-gray-600">우편번호</span>
+                            <span class="text-sm">{{ address_info.postal_code }}</span>
                           </div>
                           <div>
-                            <span class="text-sm text-gray-600">배송주소</span>
-                            <p class="font-medium mt-1">{{ address_info.full_address }}</p>
+                            <span class="text-xs text-gray-600">배송주소</span>
+                            <p class="text-sm mt-1">{{ address_info.full_address }}</p>
                           </div>
                         </div>
                         

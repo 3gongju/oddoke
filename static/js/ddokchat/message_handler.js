@@ -177,18 +177,18 @@ export function handleAccountMessage(data) {
     `;
   } else {
     contentHtml = `
-      <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2 info-card">
+      <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-${isMine ? '4' : '3'} space-y-2 info-card ${isMine ? 'min-w-[220px]' : ''}">
         <div class="flex justify-between">
-          <span class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'}">은행</span>
-          <span class="font-medium">${accountInfo.bank_name}</span>
+          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">은행</span>
+          <span class="text-sm">${accountInfo.bank_name}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
-          <span class="font-mono">${accountInfo.account_number}</span>
+          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
+          <span class="text-sm">${accountInfo.account_number}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
-          <span class="font-medium">${accountInfo.account_holder}</span>
+          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
+          <span class="text-sm">${accountInfo.account_holder}</span>
         </div>
       </div>
       ${buttonsHtml}
@@ -197,7 +197,7 @@ export function handleAccountMessage(data) {
 
   // Heroicons Credit Card Icon SVG
   const creditCardIcon = `
-    <svg class="w-5 h-5 ${isMine ? 'text-white' : 'text-blue-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-4 h-4 ${isMine ? 'text-white' : 'text-blue-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"></path>
     </svg>
   `;
@@ -213,12 +213,12 @@ export function handleAccountMessage(data) {
         </div>
         
         <!-- 말풍선 (오른쪽) -->
-        <div class="max-w-xs">
+        <div class="max-w-sm">
           <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
             <div class="space-y-3">
               <div class="flex items-center space-x-2 mb-2">
                 ${creditCardIcon}
-                <span class="font-semibold">계좌정보 전송</span>
+                <span class="text-sm">계좌정보 전송</span>
               </div>
               ${contentHtml}
             </div>
@@ -230,12 +230,12 @@ export function handleAccountMessage(data) {
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
         <!-- 말풍선 (왼쪽) -->
-        <div class="max-w-xs">
+        <div class="max-w-sm">
           <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
             <div class="space-y-3">
               <div class="flex items-center space-x-2 mb-2">
                 ${creditCardIcon}
-                <span class="font-semibold">계좌정보</span>
+                <span class="text-sm">계좌정보</span>
               </div>
               ${contentHtml}
             </div>
@@ -289,18 +289,18 @@ export function handleAddressMessage(data) {
     `;
   } else {
     contentHtml = `
-      <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2 info-card">
+      <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-${isMine ? '4' : '3'} space-y-2 info-card ${isMine ? 'min-w-[220px]' : ''}">
         <div class="flex justify-between">
-          <span class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'}">연락처</span>
-          <span class="font-mono">${addressInfo.phone_number}</span>
+          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">연락처</span>
+          <span class="text-sm">${addressInfo.phone_number}</span>
         </div>
         <div class="flex justify-between">
-          <span class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'}">우편번호</span>
-          <span class="font-medium">${addressInfo.postal_code}</span>
+          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">우편번호</span>
+          <span class="text-sm">${addressInfo.postal_code}</span>
         </div>
         <div>
-          <span class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'}">배송주소</span>
-          <p class="font-medium mt-1">${addressInfo.full_address}</p>
+          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">배송주소</span>
+          <p class="text-sm mt-1">${addressInfo.full_address}</p>
         </div>
       </div>
       ${buttonsHtml}
@@ -309,7 +309,7 @@ export function handleAddressMessage(data) {
 
   // Heroicons Map Pin Icon SVG
   const mapPinIcon = `
-    <svg class="w-5 h-5 ${isMine ? 'text-white' : 'text-green-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg class="w-4 h-4 ${isMine ? 'text-white' : 'text-green-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"></path>
     </svg>
@@ -326,12 +326,12 @@ export function handleAddressMessage(data) {
         </div>
         
         <!-- 말풍선 (오른쪽) -->
-        <div class="max-w-xs">
+        <div class="max-w-sm">
           <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
             <div class="space-y-3">
               <div class="flex items-center space-x-2 mb-2">
                 ${mapPinIcon}
-                <span class="font-semibold">배송정보 전송</span>
+                <span class="text-sm">배송정보 전송</span>
               </div>
               ${contentHtml}
             </div>
@@ -343,12 +343,12 @@ export function handleAddressMessage(data) {
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
         <!-- 말풍선 (왼쪽) -->
-        <div class="max-w-xs">
+        <div class="max-w-sm">
           <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
             <div class="space-y-3">
               <div class="flex items-center space-x-2 mb-2">
                 ${mapPinIcon}
-                <span class="font-semibold">배송정보</span>
+                <span class="text-sm">배송정보</span>
               </div>
               ${contentHtml}
             </div>
