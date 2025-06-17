@@ -87,85 +87,85 @@ class User(AbstractUser):
    
     @property
     def is_social_user(self):
-       return self.username.startswith(('temp_kakao_', 'temp_naver_'))
+        return self.username.startswith(('temp_kakao_', 'temp_naver_'))
 
 class FandomProfile(models.Model):
-   user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
-   fandom_card = models.ImageField(upload_to='fandom_cards/', blank=True, null=True)
-   fandom_artist = models.ForeignKey('artist.Artist', on_delete=models.SET_NULL, blank=True, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
+    fandom_card = models.ImageField(upload_to='fandom_cards/', blank=True, null=True)
+    fandom_artist = models.ForeignKey('artist.Artist', on_delete=models.SET_NULL, blank=True, null=True)
+
+    # 인증 상태
+    is_verified_fandom = models.BooleanField(default=False)
+    is_pending_verification = models.BooleanField(default=False)
+    verification_failed = models.BooleanField(default=False)
+
+    # 사용자 입력 인증 기간
+    verification_start_date = models.DateField(blank=True, null=True, verbose_name="인증 시작일")
+    verification_end_date = models.DateField(blank=True, null=True, verbose_name="인증 만료일")
+
+    # 기록
+    applied_at = models.DateTimeField(blank=True, null=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def is_verification_expired(self):
+        """인증이 만료되었는지 확인"""
+        if not self.verification_end_date:
+            return False
+        return timezone.now().date() > self.verification_end_date
    
-   # 인증 상태
-   is_verified_fandom = models.BooleanField(default=False)
-   is_pending_verification = models.BooleanField(default=False)
-   verification_failed = models.BooleanField(default=False)
-   
-   # 사용자 입력 인증 기간
-   verification_start_date = models.DateField(blank=True, null=True, verbose_name="인증 시작일")
-   verification_end_date = models.DateField(blank=True, null=True, verbose_name="인증 만료일")
-   
-   # 기록
-   applied_at = models.DateTimeField(blank=True, null=True)
-   verified_at = models.DateTimeField(blank=True, null=True)
-   created_at = models.DateTimeField(auto_now_add=True)
-   updated_at = models.DateTimeField(auto_now=True)
-   
-   @property
-   def is_verification_expired(self):
-       """인증이 만료되었는지 확인"""
-       if not self.verification_end_date:
-           return False
-       return timezone.now().date() > self.verification_end_date
-   
-   @property
-   def days_until_expiration(self):
-       """만료까지 남은 일수"""
-       if not self.verification_end_date:
-           return None
-       today = timezone.now().date()
-       if today > self.verification_end_date:
-           return 0
-       return (self.verification_end_date - today).days
-   
-   @property
-   def needs_renewal_alert(self):
-       """갱신 알림이 필요한지 확인 (7일 전)"""
-       if not self.verification_end_date or not self.is_verified_fandom:
-           return False
+    @property
+    def days_until_expiration(self):
+        """만료까지 남은 일수"""
+        if not self.verification_end_date:
+            return None
+        today = timezone.now().date()
+        if today > self.verification_end_date:
+            return 0
+        return (self.verification_end_date - today).days
+
+    @property
+    def needs_renewal_alert(self):
+        """갱신 알림이 필요한지 확인 (7일 전)"""
+        if not self.verification_end_date or not self.is_verified_fandom:
+            return False
        
-       today = timezone.now().date()
-       alert_date = self.verification_end_date - timedelta(days=7)
-       return today >= alert_date and today <= self.verification_end_date
+        today = timezone.now().date()
+        alert_date = self.verification_end_date - timedelta(days=7)
+        return today >= alert_date and today <= self.verification_end_date
    
-   @property
-   def verification_status(self):
-       """현재 인증 상태"""
-       if self.is_verification_expired:
-           return 'expired'
-       elif self.is_verified_fandom:
-           return 'verified'
-       elif self.is_pending_verification:
-           return 'pending'
-       elif self.verification_failed:
-           return 'failed'
-       else:
-           return 'none'
+    @property
+    def verification_status(self):
+        """현재 인증 상태"""
+        if self.is_verification_expired:
+            return 'expired'
+        elif self.is_verified_fandom:
+            return 'verified'
+        elif self.is_pending_verification:
+            return 'pending'
+        elif self.verification_failed:
+            return 'failed'
+        else:
+            return 'none'
+
+    def expire_verification(self):
+        """인증 만료 처리"""
+        self.is_verified_fandom = False
+        self.save()
    
-   def expire_verification(self):
-       """인증 만료 처리"""
-       self.is_verified_fandom = False
-       self.save()
-   
-   def renew_verification(self, start_date, end_date):
-       """인증 갱신"""
-       self.verification_start_date = start_date
-       self.verification_end_date = end_date
-       self.is_pending_verification = True
-       self.verification_failed = False
-       self.applied_at = timezone.now()
-       self.save()
-   
-   def __str__(self):
-       return f"{self.user.username}의 팬덤 프로필"
+    def renew_verification(self, start_date, end_date):
+        """인증 갱신"""
+        self.verification_start_date = start_date
+        self.verification_end_date = end_date
+        self.is_pending_verification = True
+        self.verification_failed = False
+        self.applied_at = timezone.now()
+        self.save()
+
+    def __str__(self):
+        return f"{self.user.username}의 팬덤 프로필"
 
 
 class BankProfile(models.Model):
@@ -198,95 +198,95 @@ class BankProfile(models.Model):
 
 
 class AddressProfile(models.Model):
-   user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='address_profile')
-   
-   # 암호화 저장 필드들
-   _encrypted_postal_code = models.TextField(blank=True, null=True)
-#    _encrypted_jibun_address = models.TextField(blank=True, null=True)
-   _encrypted_road_address = models.TextField(blank=True, null=True)
-   _encrypted_detail_address = models.TextField(blank=True, null=True)
-#    _encrypted_building_name = models.TextField(blank=True, null=True)
-   
-   # 검색용 (암호화 안 함)
-   sido = models.CharField(max_length=20)
-   sigungu = models.CharField(max_length=50)
-   
-   created_at = models.DateTimeField(auto_now_add=True)
-   updated_at = models.DateTimeField(auto_now=True)
-   
-   # 프로퍼티들
-   @property
-   def postal_code(self):
-       return AddressEncryption.decrypt(self._encrypted_postal_code)
-   
-   @postal_code.setter
-   def postal_code(self, value):
-       self._encrypted_postal_code = AddressEncryption.encrypt(value)
-   
-#    @property
-#    def jibun_address(self):
-#        return AddressEncryption.decrypt(self._encrypted_jibun_address)
-   
-#    @jibun_address.setter
-#    def jibun_address(self, value):
-#        self._encrypted_jibun_address = AddressEncryption.encrypt(value)
-   
-   @property
-   def road_address(self):
-       return AddressEncryption.decrypt(self._encrypted_road_address)
-   
-   @road_address.setter
-   def road_address(self, value):
-       self._encrypted_road_address = AddressEncryption.encrypt(value)
-   
-   @property
-   def detail_address(self):
-       return AddressEncryption.decrypt(self._encrypted_detail_address)
-   
-   @detail_address.setter
-   def detail_address(self, value):
-       self._encrypted_detail_address = AddressEncryption.encrypt(value)
-   
-#    @property
-#    def building_name(self):
-#        return AddressEncryption.decrypt(self._encrypted_building_name)
-   
-#    @building_name.setter
-#    def building_name(self, value):
-#        self._encrypted_building_name = AddressEncryption.encrypt(value)
-   
-   @property
-   def full_address(self):
-       """전체 주소 조합"""
-       def full_address(self):
-        return f"{self.road_address}, {self.detail_address}" if self.detail_address else self.road_address
-   
-   def get_masked_address(self):
-    """마스킹된 주소 (배송지 표시용)"""
-    return f"{self.sido} {self.sigungu} ***"
-   
-   def __str__(self):
-       return f"{self.user.username}의 주소 ({self.sido} {self.sigungu})"
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='address_profile')
+
+    # 암호화 저장 필드들
+    _encrypted_postal_code = models.TextField(blank=True, null=True)
+    _encrypted_road_address = models.TextField(blank=True, null=True)
+    _encrypted_detail_address = models.TextField(blank=True, null=True)
+    _encrypted_phone_number = models.TextField(blank=True, null=True)
+
+    # 검색용 (암호화 안 함)
+    sido = models.CharField(max_length=20)
+    sigungu = models.CharField(max_length=50)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # 프로퍼티들
+    @property
+    def postal_code(self):
+        return AddressEncryption.decrypt(self._encrypted_postal_code)
+
+    @postal_code.setter
+    def postal_code(self, value):
+        self._encrypted_postal_code = AddressEncryption.encrypt(value)
+
+    @property
+    def road_address(self):
+        return AddressEncryption.decrypt(self._encrypted_road_address)
+
+    @road_address.setter
+    def road_address(self, value):
+        self._encrypted_road_address = AddressEncryption.encrypt(value)
+
+    @property
+    def detail_address(self):
+        return AddressEncryption.decrypt(self._encrypted_detail_address)
+
+    @detail_address.setter
+    def detail_address(self, value):
+        self._encrypted_detail_address = AddressEncryption.encrypt(value)
+
+    @property
+    def phone_number(self):
+        return AddressEncryption.decrypt(self._encrypted_phone_number)
+    
+    @phone_number.setter
+    def phone_number(self, value):
+        self._encrypted_phone_number = AddressEncryption.encrypt(value)
+
+    @property
+    def full_address(self):
+        """전체 주소 조합"""
+        if self.detail_address:
+            return f"{self.road_address}, {self.detail_address}"
+        else:
+            return self.road_address or ""
+
+    def get_masked_address(self):
+        """마스킹된 주소 (배송지 표시용)"""
+        return f"{self.sido} {self.sigungu} ***"
+
+    def get_masked_phone_number(self):
+        """마스킹된 핸드폰 번호 반환"""
+        phone = self.phone_number
+        if phone and len(phone) >= 4:
+            return phone[:3] + '****' + phone[-4:]
+        return '010-****-****'
+
+    def __str__(self):
+        return f"{self.user.username}의 주소 ({self.sido} {self.sigungu})"
 
 
 class MannerReview(models.Model):
-   RATING_CHOICES = [(i, f'{i}점') for i in range(1, 6)]
+    RATING_CHOICES = [(i, f'{i}점') for i in range(1, 6)]
 
-   user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='manner_reviews')
-   target_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
-   chatroom = models.ForeignKey('ddokchat.ChatRoom', on_delete=models.CASCADE, null=True, blank=True)
-   rating = models.IntegerField(choices=RATING_CHOICES, verbose_name="전반적인 거래 만족도")
-   description_match = models.CharField(max_length=50, verbose_name="상품 상태 일치 여부")
-   response_speed = models.CharField(max_length=50, verbose_name="응답 속도")
-   politeness = models.CharField(max_length=50, verbose_name="메시지 말투")
-   deal_again = models.CharField(max_length=10, verbose_name="재거래 의사")
-   created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='manner_reviews')
+    target_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
+    chatroom = models.ForeignKey('ddokchat.ChatRoom', on_delete=models.CASCADE, null=True, blank=True)
+    rating = models.IntegerField(choices=RATING_CHOICES, verbose_name="전반적인 거래 만족도")
+    description_match = models.CharField(max_length=50, verbose_name="상품 상태 일치 여부")
+    response_speed = models.CharField(max_length=50, verbose_name="응답 속도")
+    politeness = models.CharField(max_length=50, verbose_name="메시지 말투")
+    deal_again = models.CharField(max_length=10, verbose_name="재거래 의사")
+    created_at = models.DateTimeField(auto_now_add=True)
 
-   def __str__(self):
-       return f"{self.user} → {self.target_user} ({self.rating}점)"
+    def __str__(self):
+        return f"{self.user} → {self.target_user} ({self.rating}점)"
 
 
 def default_profile_image():
-   return 'profile/default.png'
+    return 'profile/default.png'
 
 # profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
