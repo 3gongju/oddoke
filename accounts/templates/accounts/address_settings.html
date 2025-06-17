@@ -59,7 +59,7 @@
               <div class="flex justify-between items-center">
                 <div class="flex-1">
                   <label class="text-base sm:text-lg font-medium text-gray-900">우편번호</label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 우편번호</div>
+                  <!-- <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 우편번호</div> -->
                 </div>
                 <div class="ml-4 text-right">
                   <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.postal_code }}</p>
@@ -68,7 +68,7 @@
             </div>
 
             <!-- 지역 -->
-            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <!-- <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
               <div class="flex justify-between items-center">
                 <div class="flex-1">
                   <label class="text-base sm:text-lg font-medium text-gray-900">지역</label>
@@ -80,14 +80,14 @@
                   </p>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <!-- 기본 주소 -->
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
                   <label class="text-base sm:text-lg font-medium text-gray-900">기본 주소</label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">보안을 위해 일부 숨김 처리</div>
+                  <!-- <div class="text-sm sm:text-base text-gray-500 mt-1">보안을 위해 일부 숨김 처리</div> -->
                 </div>
                 <div class="ml-4 text-right flex-1 max-w-xs">
                   <p class="text-base sm:text-lg font-semibold text-gray-800 break-all text-right">
@@ -103,7 +103,7 @@
               <div class="flex justify-between items-center">
                 <div class="flex-1">
                   <label class="text-base sm:text-lg font-medium text-gray-900">상세 주소</label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">추가 상세 주소</div>
+                  <!-- <div class="text-sm sm:text-base text-gray-500 mt-1">추가 상세 주소</div> -->
                 </div>
                 <div class="ml-4 text-right">
                   <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.detail_address }}</p>
@@ -112,35 +112,22 @@
             </div>
             {% endif %}
 
-            {% if address_profile.building_name %}
-            <!-- 건물명 -->
+            {% if address_profile.phone_number %}
+            <!-- 연락처 추가 -->
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
               <div class="flex justify-between items-center">
                 <div class="flex-1">
-                  <label class="text-base sm:text-lg font-medium text-gray-900">건물명</label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">건물 또는 아파트명</div>
+                  <label class="text-base sm:text-lg font-medium text-gray-900">연락처</label>
+                  <!-- <div class="text-sm sm:text-base text-gray-500 mt-1">배송 시 연락용 휴대폰 번호</div> -->
                 </div>
                 <div class="ml-4 text-right">
-                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.building_name }}</p>
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ address_profile.get_masked_phone_number }}</p>
                 </div>
               </div>
             </div>
             {% endif %}
 
-            <!-- 등록일 -->
-            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-              <div class="flex justify-between items-center">
-                <div class="flex-1">
-                  <label class="text-base sm:text-lg font-medium text-gray-900">등록일</label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">주소 등록 날짜</div>
-                </div>
-                <div class="ml-4 text-right">
-                  <p class="text-base sm:text-lg font-semibold text-gray-800">
-                    {{ address_profile.created_at|date:"Y.m.d" }}
-                  </p>
-                </div>
-              </div>
-            </div>
+
           </div>
         </div>
         
@@ -156,7 +143,7 @@
               <div class="flex justify-between items-start">
                 <div class="flex-1">
                   <label class="text-base sm:text-lg font-medium text-gray-900">주소정보 수정</label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">우편번호, 기본주소, 상세주소를 새로운 정보로 변경합니다</div>
+                  <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 주소정보를 새로운 정보로 변경합니다</div>
                 </div>
                 <div class="ml-4">
                   <a href="{% url 'accounts:address_modify' user_profile.username %}"
