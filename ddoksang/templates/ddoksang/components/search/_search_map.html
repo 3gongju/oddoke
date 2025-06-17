@@ -37,7 +37,7 @@
   <img id="cardImage" src="" alt="포스터" class="w-full h-36 object-cover rounded-lg mb-3" />
   <p id="cardPlace" class="text-sm text-gray-700 mb-1 text-center"></p>
   <p id="cardDate" class="text-sm text-gray-600 mb-3 text-center"></p>
-  <a id="cardLink" href="#" class="block text-center px-3 py-1 text-sm bg-black text-white rounded-lg hover:bg-gray-900 transition">상세보기</a>
+  <a id="cardLink" href="#" class="block text-center px-3 py-1 text-sm bg-black text-white rounded-lg hover:bg-gray-900 transition">(덕)보기</a>
 </div>
 
 <!-- 지도 스크립트 -->
@@ -84,7 +84,7 @@
 
   function showSearchMapCard(cafe) {
     document.getElementById("cardTitle").textContent = cafe.cafe_name || "제목 없음";
-    document.getElementById("cardPlace").textContent = cafe.road_address || cafe.address || "장소 정보 없음";
+    document.getElementById("cardPlace").textContent = cafe.place_name;
     document.getElementById("cardDate").textContent = (cafe.start_date || '') + " ~ " + (cafe.end_date || '');
     document.getElementById("cardImage").src = cafe.main_image_url || '';
     document.getElementById("cardLink").href = `/ddoksang/cafe/${cafe.id}/`;
@@ -101,8 +101,8 @@
     if (!container || !window.kakao || !window.kakao.maps) return;
 
     const map = new kakao.maps.Map(container, {
-      center: new kakao.maps.LatLng(37.5665, 126.9780),
-      level: 6
+      center: new kakao.maps.LatLng(36.3, 127.4), // 남쪽으로 이동 (대전 근처)
+      level: 13 // 레벨도 조금 낮춰서 제주도까지 포함
     });
 
     const bounds = new kakao.maps.LatLngBounds();
@@ -127,7 +127,7 @@
       }
     }
 
-    if (cafeData.length > 0) map.setBounds(bounds);
+    // if (cafeData.length > 0) map.setBounds(bounds);
 
     // 내 위치 버튼
     const locateBtn = document.getElementById('locateBtn');
@@ -139,7 +139,7 @@
         const lng = pos.coords.longitude;
         const locPosition = new kakao.maps.LatLng(lat, lng);
 
-        // 오리 이미지 직접 사용 (canvas X)
+        // 오리 이미지 직접 사용 
         const duckImage = new kakao.maps.MarkerImage(
           "{% static 'image/ddok_circle_red.png' %}",
           new kakao.maps.Size(48, 48),
