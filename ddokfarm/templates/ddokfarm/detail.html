@@ -65,11 +65,48 @@
         .then(data => {
           likeButtons.forEach(btn => {
             btn.dataset.liked = data.liked ? "true" : "false";
-            btn.innerHTML = data.liked ? "❤️ 찜하기" : "🤍 찜하기";
+            
+            // SVG 아이콘 업데이트
+            const svgIcon = btn.querySelector('svg');
+            if (svgIcon) {
+              if (data.liked) {
+                // 채운 하트 SVG로 변경
+                svgIcon.setAttribute('fill', 'currentColor');
+                svgIcon.removeAttribute('stroke');
+                svgIcon.removeAttribute('stroke-width');
+                svgIcon.innerHTML = '<path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />';
+              } else {
+                // 빈 하트 SVG로 변경
+                svgIcon.setAttribute('fill', 'none');
+                svgIcon.setAttribute('stroke', 'currentColor');
+                svgIcon.setAttribute('stroke-width', '1.5');
+                svgIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />';
+              }
+            } else {
+              // SVG가 없는 경우 (하단 버튼용) - 이모티콘 방식 유지
+              btn.innerHTML = data.liked ? "❤️" : "🤍";
+            }
+            
+            // 텍스트가 있는 버튼의 경우 (상단 버튼)
+            if (btn.id === 'like-button-top') {
+              const textSpan = btn.querySelector('span:last-child') || btn.lastChild;
+              if (textSpan && textSpan.nodeType === Node.TEXT_NODE) {
+                // 텍스트 노드가 직접 있는 경우
+                btn.childNodes.forEach(node => {
+                  if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                    node.textContent = ' 찜하기';
+                  }
+                });
+              } else if (btn.textContent.includes('찜하기')) {
+                // 텍스트 전체를 다시 설정하지 않고 SVG만 업데이트
+                // (위에서 이미 SVG 업데이트 완료)
+              }
+            }
           });
 
+          // 하단 버튼 별도 처리 (SVG 없는 경우)
           const bottomBtn = document.getElementById('like-button');
-          if (bottomBtn) {
+          if (bottomBtn && !bottomBtn.querySelector('svg')) {
             bottomBtn.innerHTML = data.liked ? "❤️" : "🤍";
           }
 
