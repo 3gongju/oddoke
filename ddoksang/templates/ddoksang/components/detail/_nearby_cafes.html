@@ -1,7 +1,4 @@
 {% load static member_images %}
-<!-- ddoksang/templates/ddoksang/components/detail/_nearby_cafes.html -->
-<!-- 기존 시간 표시 로직 사용 버전 -->
-
 <!-- CSS 파일 로드 -->
 <link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
 
@@ -9,21 +6,21 @@
   <h3 class="font-bold text-lg text-gray-900 mb-5 flex items-center">
     {% if cafe.member %}
       <!-- 멤버 얼굴 이미지 -->
-      <div class="w-8 h-8 rounded-full overflow-hidden mr-3 border-2 border-orange-200 bg-gray-100">
+      <div class="w-11 h-11 rounded-full overflow-hidden mr-3">
         <img src="{% member_image cafe.member.member_name cafe.artist.artist_name %}" 
              alt="{{ cafe.member.member_name }}" 
              class="w-full h-full object-cover"
              onload="this.parentNode.classList.remove('bg-gray-100')"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <!-- 이미지 로드 실패시 fallback -->
-        <div class="w-full h-full bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center" style="display: none;">
+        <div class="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center" style="display: none;">
           <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-4 h-4 filter brightness-0 invert">
         </div>
       </div>
       {{ cafe.member.member_name }}의 다른 생카
     {% else %}
       <!-- 멤버가 없을 때는 기본 아이콘 -->
-      <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-500 rounded-full flex items-center justify-center mr-3">
+      <div class="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mr-3">
         <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-4 h-4 filter brightness-0 invert">
       </div>
       주변 생일카페
@@ -33,13 +30,13 @@
     {% endif %}
   </h3>
   
-  <!-- 더 찾기 버튼을 리스트 위로 이동 -->
+  <!-- 더 찾기 버튼 -->
   {% if cafe.member %}
     <div class="mb-6">
       <a href="{% url 'ddoksang:search' %}?q={{ cafe.member.member_name|urlencode }}" 
-         class="block w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-center py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-lg">
+         class="block w-full bg-black hover:from-blue-600 hover:to-gray-500 text-white text-center py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-lg">
         <div class="flex items-center justify-center space-x-2">
-          <span>{{ cafe.member.member_name }}의 모든 생카 보기</span>
+          <span>{{ cafe.member.member_name }}의 모든 생카 (덕)보기</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
@@ -159,9 +156,9 @@
         </div>
         <p class="text-sm text-gray-600 mb-1">
           {% if cafe.member %}
-            {{ cafe.member.member_name }}의 다른 운영중인 생카가 없어요
-          {% else %}
             주변에 운영중인 생카가 없어요
+          {% else %}
+            50km 이내에는 운영중인 생카가 없어요
           {% endif %}
         </p>
         <p class="text-xs text-gray-400">50km 반경 내 검색 결과</p>
