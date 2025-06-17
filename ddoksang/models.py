@@ -189,12 +189,7 @@ class BdayCafeImage(models.Model):
     IMAGE_TYPE_CHOICES = [
         ('main', '메인 이미지'),
         ('poster', '포스터'),
-        ('menu', '메뉴판'),
-        ('interior', '내부 전경'),
-        ('exterior', '외부 전경'),
-        ('goods', '굿즈/특전'),
-        ('event', '이벤트'),
-        ('other', '기타'),
+
     ]
     
     cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, related_name='images')

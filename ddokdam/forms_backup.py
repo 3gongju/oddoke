@@ -48,44 +48,17 @@ class DamMannerPostForm(forms.ModelForm):
         }
 
 class DamBdaycafePostForm(forms.ModelForm):
-    # 숨겨진 필드로 덕생 카페 ID 저장 (새로운 필드)
-    linked_ddoksang_cafe_id = forms.IntegerField(
-        required=False,
-        widget=forms.HiddenInput()
-    )
-    
     class Meta:
         model = DamBdaycafePost
-        fields = ['title', 'content', 'cafe_name', 'artist', 'members']  # 기존 필드들 유지
+        fields = ['title', 'content', 'cafe_name', 'artist', 'members']
         widgets = {
-            **common_widgets,  # 기존 공통 위젯 사용
+            **common_widgets,
             'cafe_name': forms.TextInput(attrs={
                 'class': COMMON_INPUT_CLASS,
-                'placeholder': '카페 이름을 입력하세요 (덕생 카페 자동완성 지원)',
-                'autocomplete': 'off',  # 브라우저 자동완성 비활성화
-                'data-ddoksang-autocomplete': 'true',  # 자동완성 활성화 플래그
+                'placeholder': '카페 이름을 입력하세요',
             }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # 기존 인스턴스가 있고 덕생 카페가 연결되어 있으면 초기값 설정
-        if self.instance and self.instance.pk and self.instance.linked_ddoksang_cafe_id:
-            self.fields['linked_ddoksang_cafe_id'].initial = self.instance.linked_ddoksang_cafe_id
-    
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        
-        # 연결된 덕생 카페 ID 설정
-        linked_cafe_id = self.cleaned_data.get('linked_ddoksang_cafe_id')
-        if linked_cafe_id:
-            instance.linked_ddoksang_cafe_id = linked_cafe_id
-        
-        if commit:
-            instance.save()
-            
-        return instance
+
 
 # ✅ 댓글 작성 폼
 class DamCommentForm(forms.ModelForm):

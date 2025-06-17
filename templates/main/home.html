@@ -75,7 +75,7 @@
                      class="w-full h-full object-cover group-hover:scale-105 sm:group-hover:scale-110 transition-transform duration-700" />
               {% else %}
                 <div class="w-full h-full bg-gradient-to-br from-cream-light to-cream-accent flex items-center justify-center">
-                  <span class="text-4xl sm:text-5xl lg:text-6xl">🛍️</span>
+                  <span class="text-4xl sm:text-5xl lg:text-6xl"></span>
                 </div>
               {% endif %}
             </div>
@@ -166,7 +166,8 @@
     <div class="mb-12 sm:mb-16 lg:mb-20">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle mr-3">
             <span class="italic text-cream-dark"></span> 덕질 용품 모음 zip
           </h2>
           <p class="text-gray-700 font-light text-sm sm:text-base font-body">포카 중고거래, 분철, 대여까지 한번에</p>
@@ -239,7 +240,8 @@
     <div class="mb-12 sm:mb-16 lg:mb-20">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle mr-3">
             <span class="italic text-cream-dark"></span> 덕질 생활 모음 zip
           </h2>
           <p class="text-gray-700 font-light text-sm sm:text-base font-body">생카후기, 예절샷 등 나의 덕심 맘껏 발휘하러 가기!</p>
@@ -261,7 +263,7 @@
                 </div>
               {% else %}
                 <div class="aspect-video bg-gradient-to-br from-cream-light to-cream-accent flex items-center justify-center">
-                  <span class="text-3xl sm:text-4xl">💌</span>
+                  <span class="text-3xl sm:text-4xl"></span>
                 </div>
               {% endif %}
               <div class="p-4 sm:p-5">
@@ -280,7 +282,8 @@
     <!-- 이번 주 생일 멤버: 반응형 슬라이더 -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle mr-3">
             <span class="italic text-cream-dark"></span> 이번 주 생일 아티스트
           </h2>
           <p class="text-gray-700 font-light text-sm sm:text-base font-body">월별 생일 아티스트가 궁금하다면 전체 달력 보기 클릭!</p>
@@ -291,7 +294,92 @@
     </div>
       
     <!-- 생일 멤버 반응형 슬라이더 영역 -->
+<<<<<<< HEAD
     {% include 'ddoksang/_weekly_bday_member.html' %}
+=======
+    <div class="bg-cream-bg rounded-2xl p-4 sm:p-6 lg:p-8 border border-cream-light relative mx-6 sm:mx-0">
+      <div class="relative overflow-hidden">
+        {% if birthday_artists %}
+          <!-- 슬라이더 컨테이너 -->
+          <div id="weeklyBirthdaySlider" class="relative overflow-hidden">
+            <div class="flex transition-transform duration-500 ease-in-out" id="sliderTrack">
+              {% for artist in birthday_artists %}
+                <div class="min-w-full sm:min-w-1/2 md:min-w-1/3 lg:min-w-1/4 xl:min-w-1/5 px-2 sm:px-3 flex-shrink-0">
+                  <div class="{% if artist.is_today_birthday %}bg-red-50 border-red-200{% else %}bg-white{% endif %} rounded-xl shadow-sm border border-cream-light p-3 sm:p-4 text-center hover:shadow-md hover:border-cream-accent transition-all duration-300">
+                    
+                    <!-- 오늘 생일 라벨 -->
+                    {% if artist.is_today_birthday %}
+                      <div class="mb-3">
+                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                          오늘 생일! 
+                        </span>
+                      </div>
+                    {% else %}
+                      <div class="h-6 mb-3"></div>
+                    {% endif %}
+                    
+                    <div class="mb-3 sm:mb-4">
+                      <img src="{% member_image artist.member_name artist.artist_display_name %}" 
+                           alt="{{ artist.member_name }}"
+                           class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto rounded-full border-2 border-cream-light shadow-sm object-cover">
+                    </div>
+                    <div class="space-y-1">
+                      <h4 class="font-body font-bold {% if artist.is_today_birthday %}text-red-600{% else %}text-black{% endif %} text-sm sm:text-base truncate">{{ artist.member_name }}</h4>
+                      {% if artist.artist_name %}
+                        <p class="text-xs sm:text-sm text-gray-600 font-body">{{ artist.artist_name }}</p>
+                      {% endif %}
+                      <div class="flex items-center justify-center space-x-1 {% if artist.is_today_birthday %}text-red-600{% else %}text-cream-dark{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                          <path d="m4.75 1-.884.884a1.25 1.25 0 1 0 1.768 0L4.75 1ZM11.25 1l-.884.884a1.25 1.25 0 1 0 1.768 0L11.25 1ZM8.884 1.884 8 1l-.884.884a1.25 1.25 0 1 0 1.768 0ZM4 7a2 2 0 0 0-2 2v1.034c.347 0 .694-.056 1.028-.167l.47-.157a4.75 4.75 0 0 1 3.004 0l.47.157a3.25 3.25 0 0 0 2.056 0l.47-.157a4.75 4.75 0 0 1 3.004 0l.47.157c.334.111.681.167 1.028.167V9a2 2 0 0 0-2-2V5.75a.75.75 0 0 0-1.5 0V7H8.75V5.75a.75.75 0 0 0-1.5 0V7H5.5V5.75a.75.75 0 0 0-1.5 0V7ZM14 11.534a4.749 4.749 0 0 1-1.502-.244l-.47-.157a3.25 3.25 0 0 0-2.056 0l-.47.157a4.75 4.75 0 0 1-3.004 0l-.47-.157a3.25 3.25 0 0 0-2.056 0l-.47.157A4.748 4.748 0 0 1 2 11.534V13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1.466Z" />
+                        </svg>
+                        <span class="text-xs sm:text-sm font-medium font-body">{{ artist.birthday_display }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          
+          <!-- 네비게이션 버튼 (카드 외부, 데스크톱에서만 표시) -->
+          {% if birthday_artists|length > 1 %}
+            <button id="prevBtn" class="hidden sm:flex absolute -left-12 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 z-20 items-center justify-center">
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <button id="nextBtn" class="hidden sm:flex absolute -right-12 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 z-20 items-center justify-center">
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          {% endif %}
+          
+          <!-- 인디케이터 (모바일에서만 표시, 작은 크기) -->
+          {% if birthday_artists|length > 1 %}
+            <div class="flex justify-center mt-4 space-x-1 sm:hidden" id="indicators">
+              {% for artist in birthday_artists %}
+                <button class="w-1 h-1 rounded-full transition-all duration-300 indicator-dot {% if forloop.first %}bg-cream-dark{% else %}bg-gray-300{% endif %}" 
+                        data-slide="{{ forloop.counter0 }}"></button>
+              {% endfor %}
+            </div>
+          {% endif %}
+          
+        {% else %}
+          <!-- 빈 상태 -->
+          <div class="text-center py-12 sm:py-16">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-cream-light rounded-full flex items-center justify-center opacity-60">
+              <span class="text-2xl sm:text-3xl"></span>
+            </div>
+            <h4 class="font-heading text-lg sm:text-xl font-light text-black mb-2">이번 주 생일인 아티스트가 없어요</h4>
+            <p class="text-gray-600 text-sm sm:text-base font-body">다른 생일 아티스트들을 확인해보세요</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
 
 <!-- 찜한 아티스트 섹션 - 마이페이지 스타일 적용 -->
 <section class="py-16 sm:py-20 lg:py-24 bg-cream-bg">
@@ -299,7 +387,8 @@
     <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-cream-light">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8">
         <div class="mb-4 sm:mb-0">
-          <h3 class="font-heading text-xl sm:text-2xl lg:text-3xl font-light text-black mb-2">
+          <h3 class="font-heading text-xl sm:text-2xl lg:text-3xl font-light text-black mb-2 flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle mr-3">
             <span class="italic text-cream-dark"></span> 찜한 아티스트 모음 zip
           </h3>
           <p class="text-gray-700 text-sm sm:text-base font-light font-body">나만의 특별한 아티스트들</p>
@@ -308,7 +397,7 @@
 
       <div class="relative">
         {% if raw_favs %}
-          <div id="favArtistSlider" class="flex overflow-x-auto space-x-3 sm:space-x-4 lg:space-x-6 pb-2 scrollbar-hide">
+          <div id="favArtistSlider" class="flex overflow-x-auto space-x-3 sm:space-x-4 lg:space-x-6 pb-2 custom-scrollbar">
             {% for artist in raw_favs %}
               <div class="min-w-[80px] sm:min-w-[100px] lg:min-w-[120px] text-center flex-shrink-0">
                 <div class="bg-cream-bg border-2 border-cream-light rounded-xl p-2 sm:p-3 lg:p-4 hover:shadow-md hover:border-cream-accent transition-all duration-300">
@@ -381,6 +470,97 @@
 
 <!-- 반응형 스타일 (스크롤바 숨김용) -->
 <style>
+<<<<<<< HEAD
+=======
+/* 기본 스크롤바 숨김 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* 전체 페이지 스크롤바 스타일 */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f9fafb;
+}
+
+html::-webkit-scrollbar {
+  width: 12px;
+}
+
+html::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 6px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* 페이지 최하단 여백 제거 */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+@media (max-width: 639px) {
+  #sliderTrack .min-w-full {
+    min-width: 100%;
+  }
+}
+
+@media (min-width: 640px) {
+  #sliderTrack .sm\:min-w-1\/2 {
+    min-width: 50%;
+  }
+}
+
+@media (min-width: 768px) {
+  #sliderTrack .md\:min-w-1\/3 {
+    min-width: 33.333333%;
+  }
+}
+
+@media (min-width: 1024px) {
+  #sliderTrack .lg\:min-w-1\/4 {
+    min-width: 25%;
+  }
+}
+
+@media (min-width: 1280px) {
+  #sliderTrack .xl\:min-w-1\/5 {
+    min-width: 20%;
+  }
+}
+
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

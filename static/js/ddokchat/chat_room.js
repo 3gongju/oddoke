@@ -57,7 +57,10 @@ document.addEventListener("DOMContentLoaded", () => {
 function setupEventListeners() {
   const input = document.getElementById('chat-message-input');
   const submit = document.getElementById('chat-message-submit');
+<<<<<<< HEAD
   const imageUpload = document.getElementById('chat-image-upload');
+=======
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   
   // 메시지 전송
   if (submit) {
@@ -77,12 +80,16 @@ function setupEventListeners() {
     input.focus();
   }
 
+<<<<<<< HEAD
   // 이미지 업로드
   if (imageUpload) {
     imageUpload.addEventListener('change', handleImageUpload);
   }
 
   // + 버튼 메뉴 설정
+=======
+  // 플러스 메뉴 설정 (이미지 업로드 포함)
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   setupPlusMenu();
   
   // 거래 완료 모달 설정
@@ -104,12 +111,19 @@ function sendTextMessage() {
   }
 }
 
+<<<<<<< HEAD
 function handleImageUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   
   if (!checkTradeCompletedBeforeSend()) {
     this.value = '';
+=======
+function handleImageUpload(file) {
+  if (!file) return;
+  
+  if (!checkTradeCompletedBeforeSend()) {
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
     return;
   }
 
@@ -117,7 +131,10 @@ function handleImageUpload(e) {
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
     showToast('파일 크기가 10MB를 초과합니다.', 'error');
+<<<<<<< HEAD
     this.value = '';
+=======
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
     return;
   }
 
@@ -125,7 +142,10 @@ function handleImageUpload(e) {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
     showToast('지원하지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 가능)', 'error');
+<<<<<<< HEAD
     this.value = '';
+=======
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
     return;
   }
 
@@ -164,17 +184,27 @@ function handleImageUpload(e) {
     hideLoadingToast(loadingToast);
     console.error('이미지 업로드 오류:', error);
     showToast('이미지 업로드 중 오류가 발생했습니다.', 'error');
+<<<<<<< HEAD
   })
   .finally(() => {
     e.target.value = '';
+=======
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   });
 }
 
 function setupPlusMenu() {
   const plusMenuBtn = document.getElementById('plus-menu-btn');
   const plusMenu = document.getElementById('plus-menu');
+<<<<<<< HEAD
   const sendAccountBtn = document.getElementById('send-account-btn');
   const sendAddressBtn = document.getElementById('send-address-btn');
+=======
+  const sendImageBtn = document.getElementById('send-image-btn');
+  const sendAccountBtn = document.getElementById('send-account-btn');
+  const sendAddressBtn = document.getElementById('send-address-btn');
+  const imageUpload = document.getElementById('chat-image-upload');
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
 
   if (plusMenuBtn && plusMenu) {
     plusMenuBtn.addEventListener('click', function(e) {
@@ -193,6 +223,28 @@ function setupPlusMenu() {
     });
   }
 
+<<<<<<< HEAD
+=======
+  // 이미지/동영상 버튼
+  if (sendImageBtn && imageUpload) {
+    sendImageBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (plusMenu) plusMenu.classList.add('hidden');
+      imageUpload.click();
+    });
+
+    imageUpload.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        handleImageUpload(file);
+        e.target.value = ''; // 선택 초기화
+      }
+    });
+  }
+
+  // 계좌 공유 버튼
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   if (sendAccountBtn) {
     sendAccountBtn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -202,6 +254,10 @@ function setupPlusMenu() {
     });
   }
 
+<<<<<<< HEAD
+=======
+  // 주소 공유 버튼
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   if (sendAddressBtn) {
     sendAddressBtn.addEventListener('click', function(e) {
       e.preventDefault();

@@ -14,9 +14,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 
-
-
-
 {% block body %}
 <div class="min-h-screen bg-gradient-to-br from-white">
   {% include "ddoksang/components/detail/_status_banner.html" %}
@@ -64,7 +61,22 @@
       <!-- 왼쪽 영역 (2칸) -->
       <div class="lg:col-span-2 space-y-6">
         {% include "ddoksang/components/detail/_poster_section.html" %}
-        {% include "ddoksang/components/detail/_cafe_basic_info.html" %}
+        
+
+        <!-- 이벤트 설명 -->
+        {% if cafe.event_description %}
+        <div class="bg-white rounded-2xl shadow-sm border p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
+            이벤트 설명
+          </h2>
+        
+          <div class="prose prose-sm max-w-none">
+            <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ cafe.event_description }}</p>
+          </div>
+        </div>
+        {% endif %}
+
         <!-- 다른 생카 섹션 -->
         {% include "ddoksang/components/detail/_nearby_cafes.html" %}
       </div>
@@ -106,11 +118,12 @@
           </div>
         </div>
 
-        <!-- ✅ 지도 섹션을 여기로 이동 -->
-        <div class="sidebar-card map-card">
-          {% include "ddoksang/components/detail/_cafe_map.html" %}
-        </div>
+
         
+        <div class="sidebar-card map-card">
+         {% include "ddoksang/components/detail/_cafe_basic_info.html" %}
+        </div>
+
         <!-- 공유 섹션 -->
         <div class="sidebar-card">
           {% include "ddoksang/components/detail/_share_section.html" %}

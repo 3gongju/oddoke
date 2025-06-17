@@ -1,9 +1,13 @@
 <!-- 공유하기 버튼 섹션 -->
-
+{% load static %}
 <div class="bg-white rounded-2xl shadow-sm border p-6">
-  <h3 class="font-bold text-gray-900 mb-4">📤 공유하기</h3>
+  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
+    공유하기
+  </h2>
+
   <div class="grid grid-cols-2 gap-2">
-    <button onclick="shareKakao()" class="p-3 bg-yellow-400 text-yellow-900 rounded-lg text-sm font-medium hover:bg-yellow-500 transition-colors">
+    <button onclick="shareKakao()" class="p-3 bg-yellow-300 text-yellow-900 rounded-lg text-sm font-medium hover:bg-yellow-500 transition-colors">
       카카오톡
     </button>
     <button onclick="copyLink()" class="p-3 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">

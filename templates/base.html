@@ -111,7 +111,9 @@
           <!-- 알림 버튼 -->
           <div class="relative">
             <a href="/notifications/" class="relative inline-flex items-center justify-center p-2 text-black hover:text-cream-dark transition-colors rounded-full hover:bg-cream-bg">
-              <div class="text-lg sm:text-xl">📬</div>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+                <path fill-rule="evenodd" d="M12 5a4 4 0 0 0-8 0v2.379a1.5 1.5 0 0 1-.44 1.06L2.294 9.707a1 1 0 0 0-.293.707V11a1 1 0 0 0 1 1h2a3 3 0 1 0 6 0h2a1 1 0 0 0 1-1v-.586a1 1 0 0 0-.293-.707L12.44 8.44A1.5 1.5 0 0 1 12 7.38V5Zm-5.5 7a1.5 1.5 0 0 0 3 0h-3Z" clip-rule="evenodd" />
+              </svg>
               <!-- 알림 개수 배지 -->
               <span id="notification-badge" 
                     class="absolute -top-0.5 -right-0.5 bg-black text-cream-soft text-xs rounded-full min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center hidden border-2 border-white text-[10px] sm:text-xs font-body">
@@ -122,8 +124,10 @@
           
           <!-- 데스크톱 사용자 메뉴 -->
           <div class="hidden md:flex items-center space-x-3 lg:space-x-4">
-            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold font-body">
-              👤 
+            <span class="text-xs sm:text-sm text-black bg-cream-light px-2 sm:px-3 py-1 rounded-full font-semibold font-body flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4 mr-1">
+                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
+              </svg>
               {% if request.user.first_name %}
                 {{ request.user.first_name }}
               {% elif request.user.username|slice:":10" == "naver_" %}
@@ -135,7 +139,7 @@
               {% endif %}
               님
             </span>
-            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">내채팅방</a>
+            <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">내 채팅방</a>
             <a href="{% url 'accounts:mypage' %}" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">마이페이지</a>
             <a href="/accounts/logout/" class="text-xs sm:text-sm text-black hover:text-cream-dark transition-colors font-body">로그아웃</a>
           </div>
@@ -205,7 +209,7 @@
         <hr class="my-3 border-gray-200">
         <!-- 사용자 메뉴 -->
         <a href="/ddokchat/my/" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
-          내채팅방
+          내 채팅방
         </a>
         <a href="{% url 'accounts:mypage' %}" class="block py-2 text-black hover:text-cream-dark hover:bg-cream-bg rounded px-2 transition-colors font-body">
           마이페이지
@@ -251,13 +255,13 @@
     <!-- 질문 버튼 -->
     <div id="questionSection" class="space-y-2">
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
-              data-target="about">📌 어덕해 소개</button>
+              data-target="about">어덕해 소개</button>
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
-              data-target="signup">🙋‍♀️ 회원가입 안내</button>
+              data-target="signup">회원가입 안내</button>
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
-              data-target="withdraw">🚪 탈퇴 안내</button>
+              data-target="withdraw">탈퇴 안내</button>
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-cream-soft transition-colors font-semibold text-sm font-body"
-              data-target="terms">📚 용어 설명</button>
+              data-target="terms">용어 설명</button>
     </div>
 
     <!-- 답변 -->
@@ -285,8 +289,24 @@
   </div>
 </div>
 
-<!-- ✅ 모든 페이지에 적용되는 하단 여유 공간 -->
-<div class="h-32 sm:h-48"></div>
+<!-- ✅ 하단 소셜 미디어 링크 및 여유 공간 -->
+<div class="flex flex-col items-center justify-center py-8 sm:py-12 bg-gray-50">
+  <!-- 트위터 링크 -->
+  <a href="https://x.com/oddoke_official" 
+     target="_blank" 
+     rel="noopener noreferrer"
+     class="mb-6 sm:mb-8 hover:scale-110 transition-transform duration-300">
+    <svg xmlns="http://www.w3.org/2000/svg" 
+        x="0px" y="0px" 
+        width="30" height="30" 
+        viewBox="0 0 50 50">
+      <path d="M 11 4 C 7.1456661 4 4 7.1456661 4 11 L 4 39 C 4 42.854334 7.1456661 46 11 46 L 39 46 C 42.854334 46 46 42.854334 46 39 L 46 11 C 46 7.1456661 42.854334 4 39 4 L 11 4 z M 11 6 L 39 6 C 41.773666 6 44 8.2263339 44 11 L 44 39 C 44 41.773666 41.773666 44 39 44 L 11 44 C 8.2263339 44 6 41.773666 6 39 L 6 11 C 6 8.2263339 8.2263339 6 11 6 z M 13.085938 13 L 22.308594 26.103516 L 13 37 L 15.5 37 L 23.4375 27.707031 L 29.976562 37 L 37.914062 37 L 27.789062 22.613281 L 36 13 L 33.5 13 L 26.660156 21.009766 L 21.023438 13 L 13.085938 13 z M 16.914062 15 L 19.978516 15 L 34.085938 35 L 31.021484 35 L 16.914062 15 z"></path>
+    </svg>
+  </a>
+  
+  <!-- 추가 여유 공간 -->
+  <div class="h-16 sm:h-24"></div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
@@ -523,27 +543,27 @@
   
   /* 스크롤바 스타일링 */
   ::-webkit-scrollbar {
-    width: 4px;
+  width: 4px;
+}
+
+@media (min-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 6px;
   }
-  
-  @media (min-width: 640px) {
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: #fffef7;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: #e8d5a3;
-    border-radius: 3px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: #d4bf7a;
-  }
+}
+
+::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
   
   /* 선택 하이라이트 색상 */
   ::selection {

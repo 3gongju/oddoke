@@ -61,10 +61,17 @@ function setupTabSwitcher() {
   
   // 페이지 로드 시 이전에 선택했던 탭 복원
   try {
+<<<<<<< HEAD
     const savedTab = localStorage.getItem('selectedChatTab');
     if (savedTab === 'completed') {
       switchTab(completedTab, completedContent, activeTab, activeContent);
     }
+=======
+    // const savedTab = localStorage.getItem('selectedChatTab');
+    // if (savedTab === 'completed') {
+    //   switchTab(completedTab, completedContent, activeTab, activeContent);
+    // }
+>>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   } catch (e) {
     // localStorage 사용 불가능한 환경에서는 기본값 유지
     console.warn('localStorage not available');
