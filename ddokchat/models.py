@@ -260,7 +260,7 @@ class AddressMessage(models.Model):
     message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='address_content')
     address_profile = models.ForeignKey(
         'accounts.AddressProfile', 
-        on_delete=models.SET_NULL,  # 주소 삭제 시 NULL로 설정
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='chat_messages'
@@ -271,26 +271,25 @@ class AddressMessage(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, help_text="삭제된 시간")
 
     def get_display_info(self):
-        """현재 상태에 따른 정보 반환"""
+        """현재 상태에 따른 정보 반환 - 핸드폰 번호 추가"""
         if self.is_deleted:
             return {
                 'is_deleted': True,
-                'deleted_message': '거래 완료로 주소정보가 삭제되었습니다'
+                'deleted_message': '거래 완료로 배송정보가 삭제되었습니다'
             }
-        elif not self.address_profile:  # 주소가 삭제된 경우
+        elif not self.address_profile:
             return {
                 'is_deleted': True,
-                'deleted_message': '주소 정보가 삭제되었습니다'
+                'deleted_message': '배송 정보가 삭제되었습니다'
             }
         else:
-            # 현재 주소 정보 표시
+            # 현재 주소 정보 표시 - 핸드폰 번호 추가
             return {
                 'is_deleted': False,
                 'postal_code': self.address_profile.postal_code,
                 'road_address': self.address_profile.road_address,
-                # 'jibun_address': self.address_profile.jibun_address,
                 'detail_address': self.address_profile.detail_address,
-                # 'building_name': self.address_profile.building_name,
+                'phone_number': self.address_profile.phone_number,
                 'sido': self.address_profile.sido,
                 'sigungu': self.address_profile.sigungu,
                 'full_address': self.address_profile.full_address,
@@ -298,8 +297,8 @@ class AddressMessage(models.Model):
 
     def __str__(self):
         if self.is_deleted:
-            return "주소정보: [삭제됨]"
+            return "배송정보: [삭제됨]"
         elif not self.address_profile:
-            return "주소정보: [주소 삭제됨]"
+            return "배송정보: [주소 삭제됨]"
         else:
-            return f"주소정보: {self.address_profile.sido} {self.address_profile.sigungu}"
+            return f"배송정보: {self.address_profile.sido} {self.address_profile.sigungu}"

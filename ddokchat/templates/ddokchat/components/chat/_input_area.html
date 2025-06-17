@@ -1,4 +1,4 @@
-<!-- ddokchat/templates/ddokchat/components/chat/input_area.html -->
+<!-- ddokchat/templates/ddokchat/components/chat/_input_area.html 수정 -->
 
 <div id="messageInputArea" class="bg-gray-50 border-t border-gray-300 px-4 py-3">
   {% if room.is_fully_completed %}
@@ -16,7 +16,7 @@
     </label>
     <input id="chat-image-upload" type="file" accept="image/*" class="hidden">
     
-    <!-- + 버튼 -> 계좌정보/주소정보 전송 -->
+    <!-- + 버튼 -> 계좌정보/배송정보 전송 -->
     <div class="relative">
       <button id="plus-menu-btn" class="p-2 cursor-pointer text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +30,7 @@
           <span class="mr-2">💳</span> 내 계좌 보내기
         </button>
         <button id="send-address-btn" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-          <span class="mr-2">📍</span> 내 주소 보내기
+          <span class="mr-2">📦</span> 내 배송정보 보내기
         </button>
       </div>
     </div>

@@ -390,7 +390,7 @@ def send_account_info(request, room_id):
 @require_POST
 @login_required
 def send_address_info(request, room_id):
-    """주소정보 전송"""
+    """배송정보 전송 - 핸드폰 번호 포함"""
     try:
         room = get_object_or_404(ChatRoom, id=room_id)
         sender = request.user
@@ -399,7 +399,7 @@ def send_address_info(request, room_id):
         if not room.is_participant(sender):
             return JsonResponse({
                 'success': False,
-                'error': '채팅방 참여자만 주소정보를 보낼 수 있습니다.'
+                'error': '채팅방 참여자만 배송정보를 보낼 수 있습니다.'
             })
         
         # 거래 완료 상태 확인
@@ -412,22 +412,27 @@ def send_address_info(request, room_id):
         # receiver 계산
         receiver = room.get_other_user(sender)
         
-        # AddressProfile에서 주소정보 확인
+        # AddressProfile에서 배송정보 확인
         address_profile = sender.get_address_profile()
         
-        if not address_profile or not all([address_profile.postal_code, address_profile.road_address or address_profile.jibun_address]):
+        # 필수 필드 체크 - 핸드폰 번호 포함
+        if not address_profile or not all([
+            address_profile.postal_code, 
+            address_profile.road_address,
+            address_profile.phone_number
+        ]):
             return JsonResponse({
                 'success': False,
                 'redirect_to_mypage': True,
-                'error': '주소 정보를 먼저 등록해주세요.'
+                'error': '배송 정보(주소, 핸드폰 번호)를 먼저 등록해주세요.'
             })
         
-        # 트랜잭션으로 메시지와 주소 정보를 함께 생성
+        # 트랜잭션으로 메시지와 배송 정보를 함께 생성
         with transaction.atomic():
             message = Message.objects.create(
                 room=room,
                 sender=sender,
-                receiver=receiver,  # ✅ receiver 설정
+                receiver=receiver,
                 message_type='address_info'
             )
             
@@ -436,13 +441,12 @@ def send_address_info(request, room_id):
                 address_profile=address_profile,
             )
         
-        # 클라이언트로 전송할 주소정보
+        # 클라이언트로 전송할 배송정보 - 핸드폰 번호 포함
         address_info = {
             'postal_code': address_profile.postal_code,
             'road_address': address_profile.road_address,
-            # 'jibun_address': address_profile.jibun_address,
-            'detail_address': address_profile.detail_address,
-            # 'building_name': address_profile.building_name,
+            'detail_address': address_profile.detail_address or '',
+            'phone_number': address_profile.phone_number,
             'sido': address_profile.sido,
             'sigungu': address_profile.sigungu,
             'full_address': address_profile.full_address,

@@ -1,4 +1,4 @@
-<!-- ddokchat/templates/ddokchat/components/chat/messages.html -->
+<!-- ddokchat/templates/ddokchat/components/chat/_messages.html -->
 
 <div id="chat-log" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100">
   {% for message in messages %}
@@ -58,13 +58,13 @@
               {% endwith %}
               
             {% elif message.message_type == 'address_info' %}
-              <!-- 내가 보낸 주소정보 메시지 -->
+              <!-- 내가 보낸 배송정보 메시지 -->
               {% with address_info=message.address_content.get_display_info %}
                 <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-sm">
                   <div class="space-y-3">
                     <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-lg">📍</span>
-                      <span class="font-semibold">주소정보 전송</span>
+                      <span class="text-lg">📦</span>
+                      <span class="font-semibold">배송정보 전송</span>
                     </div>
                     
                     {% if address_info.is_deleted %}
@@ -74,11 +74,15 @@
                     {% else %}
                       <div class="bg-gray-800 rounded-lg p-3 space-y-2">
                         <div class="flex justify-between">
+                          <span class="text-sm text-gray-300">연락처</span>
+                          <span class="font-mono text-white">{{ address_info.phone_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
                           <span class="text-sm text-gray-300">우편번호</span>
                           <span class="font-medium text-white">{{ address_info.postal_code }}</span>
                         </div>
                         <div>
-                          <span class="text-sm text-gray-300">주소</span>
+                          <span class="text-sm text-gray-300">배송주소</span>
                           <p class="font-medium text-white mt-1">{{ address_info.full_address }}</p>
                         </div>
                       </div>
@@ -170,13 +174,13 @@
               {% endwith %}
               
             {% elif message.message_type == 'address_info' %}
-              <!-- 주소정보 메시지 (상대방이 보낸 것) -->
+              <!-- 배송정보 메시지 (상대방이 보낸 것) -->
               {% with address_info=message.address_content.get_display_info %}
                 <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl shadow-sm">
                   <div class="space-y-3">
                     <div class="flex items-center space-x-2 mb-2">
-                      <span class="text-lg">📍</span>
-                      <span class="font-semibold">배송 주소</span>
+                      <span class="text-lg">📦</span>
+                      <span class="font-semibold">배송정보</span>
                     </div>
                     
                     {% if address_info.is_deleted %}
@@ -186,20 +190,28 @@
                     {% else %}
                       <div class="bg-gray-50 rounded-lg p-3 space-y-2">
                         <div class="flex justify-between">
+                          <span class="text-sm text-gray-600">연락처</span>
+                          <span class="font-mono">{{ address_info.phone_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
                           <span class="text-sm text-gray-600">우편번호</span>
                           <span class="font-medium">{{ address_info.postal_code }}</span>
                         </div>
                         <div>
-                          <span class="text-sm text-gray-600">주소</span>
+                          <span class="text-sm text-gray-600">배송주소</span>
                           <p class="font-medium mt-1">{{ address_info.full_address }}</p>
                         </div>
                       </div>
                       
-                      <!-- 주소 복사 버튼 -->
-                      <div class="mt-3">
-                        <button onclick="copyAddress('{{ address_info.full_address }}')" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
-                          주소 복사
+                      <!-- 배송정보 복사 버튼들 -->
+                      <div class="flex space-x-2 mt-3">
+                        <button onclick="copyDeliveryInfo('{{ address_info.phone_number }}', '{{ address_info.full_address }}')" 
+                                class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          배송정보 복사
+                        </button>
+                        <button onclick="copyPhoneNumber('{{ address_info.phone_number }}')" 
+                                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors">
+                          연락처 복사
                         </button>
                       </div>
                     {% endif %}

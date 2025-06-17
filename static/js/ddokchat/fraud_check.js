@@ -1,4 +1,4 @@
-// static/js/ddokchat/fraud_check.js
+// static/js/ddokchat/fraud_check.js 수정 및 추가
 
 import { showToast } from './ui_manager.js';
 
@@ -6,6 +6,8 @@ export function setupFraudCheck() {
   // 전역 함수로 노출 (템플릿에서 onclick으로 호출하기 위해)
   window.copyAccountNumber = copyAccountNumber;
   window.copyAddress = copyAddress;
+  window.copyPhoneNumber = copyPhoneNumber;  // 🔥 새로 추가
+  window.copyDeliveryInfo = copyDeliveryInfo;  // 🔥 새로 추가
   window.checkFraudHistory = checkFraudHistory;
   window.closeFraudModal = closeFraudModal;
 }
@@ -19,7 +21,7 @@ export function copyAccountNumber(accountNumber) {
     textArea.select();
     try {
       document.execCommand('copy');
-      showToast('계좌번호가 복사되었습니다. 📋', 'success');
+      showToast('계좌번호가 복사되었습니다. 💳', 'success');
     } catch (err) {
       showToast('복사에 실패했습니다.', 'error');
     }
@@ -45,7 +47,7 @@ export function copyAccountNumber(accountNumber) {
       console.error('복사 로그 전송 실패:', error);
     });
     
-    showToast('계좌번호가 복사되었습니다. 📋', 'success');
+    showToast('계좌번호가 복사되었습니다. 💳', 'success');
   }).catch(function(err) {
     console.error('복사 실패:', err);
     showToast('계좌번호 복사에 실패했습니다.', 'error');
@@ -73,6 +75,62 @@ export function copyAddress(fullAddress) {
   }).catch(function(err) {
     console.error('복사 실패:', err);
     showToast('주소 복사에 실패했습니다.', 'error');
+  });
+}
+
+// 🔥 새로 추가: 핸드폰 번호 복사 함수
+export function copyPhoneNumber(phoneNumber) {
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea');
+    textArea.value = phoneNumber;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('연락처가 복사되었습니다. 📞', 'success');
+    } catch (err) {
+      showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
+    return;
+  }
+
+  navigator.clipboard.writeText(phoneNumber).then(function() {
+    showToast('연락처가 복사되었습니다. 📞', 'success');
+  }).catch(function(err) {
+    console.error('복사 실패:', err);
+    showToast('연락처 복사에 실패했습니다.', 'error');
+  });
+}
+
+// 🔥 새로 추가: 배송정보 전체 복사 함수
+export function copyDeliveryInfo(phoneNumber, fullAddress) {
+  const deliveryText = `
+📦 배송정보
+연락처: ${phoneNumber}
+주소: ${fullAddress}
+  `.trim();
+
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea');
+    textArea.value = deliveryText;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('배송정보가 복사되었습니다. 📦', 'success');
+    } catch (err) {
+      showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
+    return;
+  }
+
+  navigator.clipboard.writeText(deliveryText).then(function() {
+    showToast('배송정보가 복사되었습니다. 📦', 'success');
+  }).catch(function(err) {
+    console.error('복사 실패:', err);
+    showToast('배송정보 복사에 실패했습니다.', 'error');
   });
 }
 
