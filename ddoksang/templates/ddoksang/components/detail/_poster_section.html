@@ -1,15 +1,18 @@
-<!-- 단순한 포스터 이미지 표시 - 확대 기능 없음 -->
+{% load static %}
+
+<!-- 포스터 & 이미지 그리드 -->
 {% with all_images=cafe.get_all_images %}
   {% if all_images %}
     <div class="bg-white rounded-2xl shadow-sm border p-6">
       <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-        📌 포스터 & 이미지
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="포스터" class="w-6 h-6 sm:w-12 sm:h-12 mr-2 sm:mr-3">
+        <span>포스터 & 이미지</span>
       </h2>
 
-      <!-- 큼직하게 한 줄에 하나씩, 가로폭 최대한 사용 -->
-      <div class="space-y-8">
+      <!--  2열 그리드 구성 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 max-w-5xl mx-auto">
         {% for image in all_images %}
-          <div class="w-full max-w-4xl mx-auto aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden shadow-md">
+          <div class="aspect-[3/4] bg-gray-100 rounded-2xl overflow-hidden shadow-md">
             <img src="{{ image.url }}" 
                  alt="{{ image.caption|default:cafe.cafe_name }}"
                  class="w-full h-full object-contain rounded-2xl" />

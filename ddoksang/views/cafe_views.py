@@ -34,8 +34,15 @@ logger = logging.getLogger(__name__)
 
 
 def cafe_create_view(request):
+    """카페 등록 뷰"""
     if request.method == 'POST':
         try:
+            # 디버깅: 요청 데이터 확인
+            print("=" * 50)
+            print("POST 데이터:", request.POST.keys())
+            print("FILES 데이터:", request.FILES.keys())
+            print("업로드된 이미지 개수:", len(request.FILES.getlist('images')))
+            
             # 기본 폼 데이터 추출
             cafe_data = {
                 'submitted_by': request.user,
@@ -81,59 +88,83 @@ def cafe_create_view(request):
             # special_benefits 필드에 저장
             cafe_data['special_benefits'] = ', '.join(perks_categories)
 
-            # 카페 인스턴스 생성
-            cafe = BdayCafe.objects.create(**cafe_data)
-            
-            # 이미지 처리
-            uploaded_files = request.FILES.getlist('images')
-            print(f"📁 업로드된 파일 개수: {len(uploaded_files)}")
-            
-            if uploaded_files:
-                for index, image_file in enumerate(uploaded_files):
-                    try:
-                        # 이미지 타입 결정 (첫 번째는 메인)
-                        image_type = 'main' if index == 0 else 'other'
-                        is_main = index == 0
-                        
-                        # BdayCafeImage 인스턴스 생성
-                        cafe_image = BdayCafeImage.objects.create(
-                            cafe=cafe,
-                            image=image_file,
-                            image_type=image_type,
-                            is_main=is_main,
-                            order=index,
-                            caption=f"이미지 {index + 1}"
-                        )
-                        
-                        print(f"✅ 이미지 저장 완료: {cafe_image.id} - {image_file.name}")
-                        
-                    except Exception as img_error:
-                        print(f"❌ 이미지 저장 실패: {image_file.name} - {img_error}")
-                        continue
-            
-            # 저장된 이미지 확인
-            saved_images = cafe.images.all()
-            print(f"💾 저장된 이미지 개수: {saved_images.count()}")
-            for img in saved_images:
-                print(f"  - {img.id}: {img.image.name} (main: {img.is_main})")
+            print(f"카페 데이터 준비 완료: {cafe_data['cafe_name']}")
+
+            # 트랜잭션으로 카페와 이미지를 함께 저장
+            with transaction.atomic():
+                # 카페 인스턴스 생성
+                cafe = BdayCafe.objects.create(**cafe_data)
+                print(f"✅ 카페 생성 완료: {cafe.id} - {cafe.cafe_name}")
+                
+                # 이미지 처리
+                uploaded_files = request.FILES.getlist('images')
+                print(f"📁 업로드된 파일들:")
+                for i, file in enumerate(uploaded_files):
+                    print(f"  {i+1}. {file.name} ({file.size} bytes, {file.content_type})")
+                
+                if uploaded_files:
+                    success_count = 0
+                    for index, image_file in enumerate(uploaded_files):
+                        try:
+                            # 파일 유효성 검사
+                            if not image_file.content_type.startswith('image/'):
+                                print(f"❌ 잘못된 파일 타입: {image_file.name} - {image_file.content_type}")
+                                continue
+                                
+                            # 파일 크기 검사 (10MB 제한)
+                            if image_file.size > 10 * 1024 * 1024:
+                                print(f"❌ 파일 크기 초과: {image_file.name} - {image_file.size} bytes")
+                                continue
+                            
+                            # 이미지 타입 결정 (첫 번째는 메인)
+                            image_type = 'main' if index == 0 else 'other'
+                            is_main = index == 0
+                            
+                            # BdayCafeImage 인스턴스 생성
+                            cafe_image = BdayCafeImage.objects.create(
+                                cafe=cafe,
+                                image=image_file,
+                                image_type=image_type,
+                                is_main=is_main,
+                                order=index,
+                                caption=f"이미지 {index + 1}"
+                            )
+                            
+                            success_count += 1
+                            print(f"✅ 이미지 저장 완료: {cafe_image.id} - {image_file.name}")
+                            print(f"   경로: {cafe_image.image.name}")
+                            print(f"   타입: {image_type}, 메인: {is_main}, 순서: {index}")
+                            
+                        except Exception as img_error:
+                            print(f"❌ 이미지 저장 실패: {image_file.name} - {str(img_error)}")
+                            import traceback
+                            traceback.print_exc()
+                            # 개별 이미지 저장 실패는 전체 트랜잭션을 롤백하지 않음
+                            continue
+                    
+                    print(f"📊 이미지 저장 결과: {success_count}/{len(uploaded_files)}개 성공")
+                else:
+                    print("⚠️ 업로드된 이미지가 없습니다.")
+                
+                # 최종 저장된 이미지 확인
+                saved_images = cafe.images.all()
+                print(f"💾 최종 저장된 이미지 개수: {saved_images.count()}")
+                for img in saved_images:
+                    print(f"  - ID:{img.id}, 파일:{img.image.name}, 메인:{img.is_main}, 순서:{img.order}")
             
             messages.success(request, '생일카페가 성공적으로 등록되었습니다. 관리자 승인 후 공개됩니다.')
             return redirect('ddoksang:cafe_create_success', cafe_id=cafe.id)
             
         except Exception as e:
+            print(f"❌ 등록 중 오류: {str(e)}")
+            import traceback
+            traceback.print_exc()
             messages.error(request, f'등록 중 오류가 발생했습니다: {str(e)}')
             return redirect('ddoksang:create')
     
-    # ✅ messages.py의 ALL_MESSAGES 제대로 활용
+    # GET 요청 처리
     from ddoksang.messages import ALL_MESSAGES
     import json
-    
-    # 디버깅: messages.py 내용 확인
-    print("🔍 messages.py ALL_MESSAGES 키들:", ALL_MESSAGES.keys())
-    if 'DUPLICATE_CHECK' in ALL_MESSAGES:
-        print("🔍 DUPLICATE_CHECK 메시지들:", ALL_MESSAGES['DUPLICATE_CHECK'].keys())
-        print("🔍 NO_DUPLICATE 메시지:", ALL_MESSAGES['DUPLICATE_CHECK'].get('NO_DUPLICATE'))
-    
     
     # 카카오 API 키
     kakao_api_key = (
@@ -142,7 +173,7 @@ def cafe_create_view(request):
         ''
     )
     
-    # ✅ messages.py의 ALL_MESSAGES를 JSON으로 직렬화
+    # messages.py의 ALL_MESSAGES를 JSON으로 직렬화
     try:
         messages_json = json.dumps(ALL_MESSAGES, ensure_ascii=False)
         print(f"✅ messages.py JSON 직렬화 성공, 길이: {len(messages_json)}자")
@@ -152,10 +183,11 @@ def cafe_create_view(request):
     
     context = {
         'kakao_api_key': kakao_api_key,
-        'messages_json': messages_json,  # messages.py의 실제 데이터
+        'messages_json': messages_json,
     }
     
     return render(request, 'ddoksang/create.html', context)
+
 
 @login_required
 def cafe_create_success(request, cafe_id):
@@ -169,13 +201,18 @@ def cafe_create_success(request, cafe_id):
             submitted_by=request.user
         )
         
-        # 디버깅: 이미지 정보 출력
-        print(f"📊 카페 정보: {cafe.cafe_name}")
-        print(f"📊 연결된 이미지 개수: {cafe.images.count()}")
+        print(f"🎉 등록 성공 페이지: 카페 ID {cafe.id}")
+        print(f"   카페명: {cafe.cafe_name}")
+        print(f"   아티스트: {cafe.artist.display_name if cafe.artist else 'N/A'}")
+        print(f"   멤버: {cafe.member.member_name if cafe.member else 'N/A'}")
         
-        if cafe.images.exists():
-            for img in cafe.images.all():
-                print(f"  - 이미지 {img.id}: {img.image.name} (URL: {img.image.url})")
+        # 이미지 정보 출력
+        images = cafe.images.all()
+        print(f"📸 연결된 이미지 개수: {images.count()}")
+        if images.exists():
+            for img in images:
+                print(f"  - 이미지 {img.id}: {img.image.name}")
+                print(f"    URL: {img.image.url}")
                 print(f"    타입: {img.image_type}, 메인: {img.is_main}, 순서: {img.order}")
         else:
             print("  ❌ 연결된 이미지가 없음")
@@ -222,9 +259,9 @@ def my_cafes(request):
     status_filter = request.GET.get('status', '')
     runtime_filter = request.GET.get('runtime', '')
     query = request.GET.get('q', '').strip()
-    search_scope = request.GET.get('scope', 'my')  # 🔧 search_scope 추가
+    search_scope = request.GET.get('scope', 'my')
 
-    # 🔧 전체 검색이면 search 페이지로 리다이렉트
+    # 전체 검색이면 search 페이지로 리다이렉트
     if query and search_scope == 'all':
         return redirect(f"{reverse('ddoksang:search')}?q={query}")
 
@@ -232,18 +269,18 @@ def my_cafes(request):
         submitted_by=request.user
     ).select_related('artist', 'member')
 
-    # ✅ 검색어가 있다면 아티스트/멤버명 기준으로 필터링
-    if query and search_scope == 'my':  # 🔧 my 범위일 때만 필터링
+    # 검색어가 있다면 아티스트/멤버명 기준으로 필터링
+    if query and search_scope == 'my':
         cafes = cafes.filter(
             Q(artist__display_name__icontains=query) |
             Q(member__member_name__icontains=query)
         )
 
-    # ✅ 상태 필터 적용
+    # 상태 필터 적용
     if status_filter:
         cafes = cafes.filter(status=status_filter)
     
-    # ✅ 운영 상태 필터 적용
+    # 운영 상태 필터 적용
     today = date.today()
     if runtime_filter == 'active':
         cafes = cafes.filter(start_date__lte=today, end_date__gte=today)
@@ -252,7 +289,7 @@ def my_cafes(request):
     elif runtime_filter == 'ended':
         cafes = cafes.filter(end_date__lt=today)
 
-    # ✅ 정렬
+    # 정렬
     sort = request.GET.get('sort', 'latest')
     if sort == "start_date":
         cafes = cafes.order_by("start_date")
@@ -264,10 +301,9 @@ def my_cafes(request):
     paginator = Paginator(cafes, 10)
     cafes_page = paginator.get_page(page)
 
-    # 통계 계산 - 검색어가 있으면 해당 결과 기준으로 계산
+    # 통계 계산
     base_cafes = BdayCafe.objects.filter(submitted_by=request.user)
     
-    # 검색어가 있다면 검색 결과 기준으로 통계 계산
     if query:
         search_cafes = base_cafes.filter(
             Q(artist__display_name__icontains=query) |
@@ -280,7 +316,6 @@ def my_cafes(request):
             'rejected': search_cafes.filter(status='rejected').count(),
         }
     else:
-        # 검색어가 없으면 전체 기준으로 통계 계산
         stats = {
             'total': base_cafes.count(),
             'pending': base_cafes.filter(status='pending').count(),
@@ -288,7 +323,7 @@ def my_cafes(request):
             'rejected': base_cafes.filter(status='rejected').count(),
         }
 
-    # 상태 필터 탭 생성 - 🔧 검색어 유지 및 표시 개선
+    # 상태 필터 탭 생성
     filter_prefix = f"'{query}' 검색 결과" if query else ""
     
     status_filters = [
@@ -338,7 +373,7 @@ def my_cafes(request):
         },
     ]
 
-    # 액션 버튼 데이터 (컴포넌트용)
+    # 액션 버튼 데이터
     action_buttons = [
         {
             'text': '+ 생카 등록',
@@ -356,34 +391,33 @@ def my_cafes(request):
         'status_filters': status_filters,
         'runtime_filters': runtime_filters,
         'query': query,
-        'search_scope': search_scope,  # 검색 범위 추가
+        'search_scope': search_scope,
         'user_favorites': user_favorites,
         'extra_params': {
             'status': status_filter,
             'runtime': runtime_filter,
             'sort': sort,
-            'scope': search_scope,  # 검색 범위 추가
+            'scope': search_scope,
         },
-        
-        # 컴포넌트용 변수들
         'action_buttons': action_buttons,
         'search_placeholder': '내 등록 카페에서 아티스트/멤버 검색...',
         'search_url': request.path,
         'search_input_id': 'my-cafes-search',
         'autocomplete_list_id': 'my-cafes-autocomplete',
         'autocomplete_options': {
-            'show_birthday': True,    # 🔧 생일 표시 활성화
+            'show_birthday': True,
             'show_artist_tag': True,
             'submit_on_select': True,
             'artist_only': False,
             'api_url': '/artist/autocomplete/'
         },
-        'filter_tags': status_filters,  # 검색 헤더에서 필터 탭으로 사용
+        'filter_tags': status_filters,
         'show_results_summary': False,
         'total_count': cafes_page.paginator.count,
     }
 
     return render(request, 'ddoksang/my_cafes.html', context)
+
 
 @login_required
 @require_POST
