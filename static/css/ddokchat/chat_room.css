@@ -16,9 +16,39 @@
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* 말풍선 스타일 */
+/* 말풍선 스타일 - 최대 너비 조정 */
 .max-w-xs {
   max-width: 20rem;
+}
+
+/* 시간/읽음상태 컨테이너 스타일 */
+.time-status-container {
+  min-width: 45px; /* 최소 너비 보장 */
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+}
+
+/* 말풍선 모양 개선 - 뾰족한 모서리 유지 */
+.message-bubble-sent {
+  border-bottom-right-radius: 0.25rem !important;
+}
+
+.message-bubble-received {
+  border-bottom-left-radius: 0.25rem !important;
+}
+
+/* 안읽음 표시 스타일 - 회색으로 변경 */
+.unread-label {
+  color: #9ca3af; /* text-gray-400 */
+  font-weight: 500;
+  font-size: 0.75rem;
+  animation: pulse-gentle 2s infinite;
+  transition: all 0.3s ease;
+}
+
+/* 시간 표시 스타일 */
+.time-display {
+  color: #9ca3af; /* text-gray-400 */
+  font-size: 0.75rem;
 }
 
 /* 입력창 포커스 효과 */
@@ -67,19 +97,14 @@
   100% { transform: rotate(360deg); }
 }
 
-/* 읽지 않음 표시 애니메이션 */
-.unread-label {
-  animation: pulse-gentle 2s infinite;
-  transition: all 0.3s ease;
-}
-
+/* 읽지 않음 표시 애니메이션 - 부드럽게 */
 @keyframes pulse-gentle {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.7;
     transform: scale(0.98);
   }
 }
@@ -143,25 +168,39 @@
   word-wrap: break-word;
 }
 
-.message-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  width: 0;
-  height: 0;
-  border: 8px solid transparent;
+/* 메시지 정렬 개선 */
+.message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.message-bubble.sent::after {
-  right: -6px;
-  border-left-color: #3b82f6;
-  border-right: none;
+.message-row.sent {
+  justify-content: flex-end;
 }
 
-.message-bubble.received::after {
-  left: -6px;
-  border-right-color: #f3f4f6;
-  border-left: none;
+.message-row.received {
+  justify-content: flex-start;
+}
+
+/* 시간/상태 표시 컨테이너 */
+.time-status {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-width: 50px;
+  padding-bottom: 2px;
+}
+
+.time-status.sent {
+  align-items: flex-end;
+  order: -1; /* 말풍선보다 먼저 배치 */
+}
+
+.time-status.received {
+  align-items: flex-start;
+  order: 1; /* 말풍선 다음에 배치 */
 }
 
 /* 알림 배지 그라데이션 */
@@ -266,7 +305,7 @@
 /* 반응형 개선 */
 @media (max-width: 640px) {
   .max-w-xs {
-    max-width: 200px;
+    max-width: 16rem;
   }
   
   #chat-log {
@@ -276,6 +315,17 @@
   .px-4 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+  }
+  
+  /* 모바일에서 시간/상태 표시 영역 축소 */
+  .time-status {
+    min-width: 40px;
+    font-size: 0.6875rem;
+  }
+  
+  /* 모바일에서 gap 축소 */
+  .message-row {
+    gap: 0.375rem;
   }
 }
 
