@@ -1,3 +1,5 @@
+// ddoksang_create.js - 이미지 업로드 연동 수정
+
 // 새로운 이미지 업로드 모듈 import
 // import { setupDdoksangImageUpload } from './ddoksang_image_upload.js';
 
@@ -163,15 +165,54 @@ document.addEventListener('DOMContentLoaded', function() {
         
         updateNavigationButtons(index);
         addStepValidationListeners(index);
-        updateNextButtonState();
+        
+        // 🔧 스텝 변경 후 검증 실행을 지연시켜 DOM이 완전히 업데이트되도록 함
+        setTimeout(() => {
+            updateNextButtonState();
+        }, 100);
 
         if (index === 2 && !MapUtils.map) {
             setTimeout(() => MapUtils.initMap(), 100);
         }
+        
+        // 🔧 Step 6 진입 시 이미지 업로더 연동 강화
+        if (index === 6) {
+            console.log('📸 Step 6 진입 - 이미지 업로더 상태 확인');
+            setTimeout(() => {
+                setupImageUploadConnection();
+                updateNextButtonState();
+            }, 200);
+        }
     }
 
+    // 🔧 이미지 업로더 연동 함수 추가
+    function setupImageUploadConnection() {
+        console.log('🔗 이미지 업로더 연동 설정 시작');
+        
+        // window.ddoksangImageUploader가 있는지 확인
+        if (window.ddoksangImageUploader?.isInitialized) {
+            console.log('✅ 글로벌 이미지 업로더 발견');
+            window.ddoksangApp.imageUploadModule = window.ddoksangImageUploader;
+            
+            // 검증 콜백 설정
+            const originalTriggerValidation = window.ddoksangImageUploader.triggerValidation;
+            if (originalTriggerValidation) {
+                window.ddoksangImageUploader.triggerValidation = function() {
+                    console.log('📸 이미지 업로더에서 검증 요청');
+                    setTimeout(() => {
+                        window.ddoksangApp.updateNextButtonState();
+                    }, 50);
+                };
+            }
+        } else if (imageUploadModule?.isInitialized) {
+            console.log('✅ 로컬 이미지 업로더 사용');
+            window.ddoksangApp.imageUploadModule = imageUploadModule;
+        } else {
+            console.warn('⚠️ 이미지 업로더를 찾을 수 없음');
+        }
+    }
 
-// ✅ updateNavigationButtons 함수 수정 (텍스트 대신 기호 유지)
+    // ✅ updateNavigationButtons 함수 수정 (텍스트 대신 기호 유지)
     function updateNavigationButtons(index) {
         const isFirstStep = index === 0;
         const isLastStep = index === totalSteps - 1;
@@ -255,7 +296,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (rules.includes('images')) {
-            if (!imageUploadModule || imageUploadModule.getFileCount() === 0) {
+            // 🔧 이미지 검증 개선
+            let fileCount = 0;
+            
+            // 우선순위: 글로벌 업로더 > 로컬 업로더 > 직접 input 확인
+            if (window.ddoksangImageUploader?.getFileCount) {
+                fileCount = window.ddoksangImageUploader.getFileCount();
+                console.log('📸 글로벌 업로더에서 파일 개수:', fileCount);
+            } else if (imageUploadModule?.getFileCount) {
+                fileCount = imageUploadModule.getFileCount();
+                console.log('📸 로컬 업로더에서 파일 개수:', fileCount);
+            } else {
+                // 폴백: 직접 input 확인
+                const fileInput = document.getElementById('image-upload');
+                if (fileInput?.files) {
+                    fileCount = fileInput.files.length;
+                    console.log('📸 파일 input에서 파일 개수:', fileCount);
+                }
+            }
+            
+            if (fileCount === 0) {
                 FormUtils.showToast('최소 1개의 이미지를 업로드해주세요.', 'warning');
                 return false;
             }
@@ -271,7 +331,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return true;
     }
-
 
     function getFieldLabel(fieldId) {
         // ✅ messages.py에서 필드 라벨 가져오기
@@ -298,11 +357,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 🔧 updateNextButtonState 함수 대폭 개선
     function updateNextButtonState() {
         if (!nextBtn || currentStep === 0) return;
 
+        console.log(`🎯 Step ${currentStep} 검증 시작`);
+        
         const rules = stepValidationRules[currentStep];
         let isValid = true;
+        let buttonText = currentStep === totalSteps - 1 ? '제출하기' : '›';
 
         if (rules?.length > 0) {
             const normalFields = rules.filter(field => field !== 'images');
@@ -312,16 +375,81 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = validation.valid;
             }
 
+            // 🔧 이미지 검증 강화
             if (rules.includes('images')) {
-                const uploader = window.ddoksangApp?.imageUploadModule;
-                const count = uploader?.getFileCount?.() || 0;
-                console.log('🖼️ 업로드된 이미지 개수:', count);
-                isValid = isValid && count > 0;
+                let fileCount = 0;
+                
+                // 다양한 방법으로 파일 개수 확인
+                if (window.ddoksangImageUploader?.getFileCount) {
+                    fileCount = window.ddoksangImageUploader.getFileCount();
+                    console.log('📸 글로벌 업로더 파일 개수:', fileCount);
+                } else if (window.ddoksangApp?.imageUploadModule?.getFileCount) {
+                    fileCount = window.ddoksangApp.imageUploadModule.getFileCount();
+                    console.log('📸 앱 업로더 파일 개수:', fileCount);
+                } else if (imageUploadModule?.getFileCount) {
+                    fileCount = imageUploadModule.getFileCount();
+                    console.log('📸 로컬 업로더 파일 개수:', fileCount);
+                } else {
+                    // 폴백: DOM에서 직접 확인
+                    const fileInput = document.getElementById('image-upload');
+                    const previewItems = document.querySelectorAll('#image-preview-list > div:not([data-add-button])');
+                    
+                    if (fileInput?.files) {
+                        fileCount = fileInput.files.length;
+                    } else if (previewItems) {
+                        fileCount = previewItems.length;
+                    }
+                    
+                    console.log('📸 DOM에서 파일 개수:', fileCount);
+                }
+                
+                console.log('🖼️ 최종 파일 개수:', fileCount);
+                
+                const imageValid = fileCount > 0;
+                isValid = isValid && imageValid;
+                
+                // Step 6에서 이미지 개수에 따른 버튼 텍스트 변경
+                if (currentStep === 6) {
+                    buttonText = imageValid ? '제출하기' : '이미지를 업로드해주세요';
+                }
             }
         }
 
-        console.log('🚦 버튼 활성화 여부:', isValid);
-        FormUtils.updateButtonState('nextBtn', isValid);
+        console.log('🚦 최종 검증 결과:', { 
+            currentStep, 
+            isValid, 
+            buttonText,
+            rules: rules?.join(', ') || 'none'
+        });
+
+        // 🔧 버튼 상태 업데이트 강화
+        if (isValid) {
+            nextBtn.disabled = false;
+            nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            nextBtn.classList.add('bg-gray-900', 'hover:bg-gray-800', 'text-white');
+            
+            // Step 6에서는 텍스트 업데이트
+            if (currentStep === 6) {
+                nextBtn.textContent = buttonText;
+                nextBtn.style.fontSize = '14px';
+                nextBtn.style.fontWeight = '600';
+            }
+            
+            console.log('✅ 버튼 활성화:', buttonText);
+        } else {
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+            nextBtn.classList.remove('bg-gray-900', 'hover:bg-gray-800');
+            
+            // Step 6에서는 텍스트 업데이트
+            if (currentStep === 6) {
+                nextBtn.textContent = buttonText;
+                nextBtn.style.fontSize = '14px';
+                nextBtn.style.fontWeight = '600';
+            }
+            
+            console.log('❌ 버튼 비활성화:', buttonText);
+        }
     }
 
     function showSubmitConfirmModal() {
@@ -367,11 +495,6 @@ document.addEventListener('DOMContentLoaded', function() {
         FormUtils.toggleClass('step1-confirm-mode', 'hidden', false);
         FormUtils.toggleClass('step1-search-mode', 'hidden', true);
     }
-
-    // ✅ copyDataToForm 함수 제거 - 이제 useSelectedArtist()에서 처리
-    // function copyDataToForm() {
-    //     FormUtils.setValue('cafe_name', FormUtils.getValue('check_cafe_name'));
-    // }
 
     function resetDuplicateCheck() {
         console.log('🔄 중복 확인 상태 초기화');
@@ -869,11 +992,40 @@ document.addEventListener('DOMContentLoaded', function() {
         updateNextButtonState();
     }
 
+    // 🔧 이미지 업로드 초기화 함수 개선
     function initializeImageUpload() {
+        console.log('📸 이미지 업로드 모듈 초기화 시작');
+        
         const imageContainer = document.getElementById('image-upload-container');
-        if (imageContainer && window.setupDdoksangImageUpload) { // window.로 접근
+        if (!imageContainer) {
+            console.warn('⚠️ 이미지 컨테이너를 찾을 수 없음');
+            return;
+        }
+
+        // 글로벌 이미지 업로더가 이미 있는지 확인
+        if (window.ddoksangImageUploader?.isInitialized) {
+            console.log('✅ 글로벌 이미지 업로더 사용');
+            imageUploadModule = window.ddoksangImageUploader;
+            window.ddoksangApp.imageUploadModule = imageUploadModule;
+            
+            // 검증 콜백 연결
+            const originalTriggerValidation = imageUploadModule.triggerValidation;
+            if (originalTriggerValidation) {
+                imageUploadModule.triggerValidation = function() {
+                    console.log('📸 이미지 업로더에서 검증 요청');
+                    setTimeout(() => {
+                        window.ddoksangApp.updateNextButtonState();
+                    }, 50);
+                };
+            }
+            
+            return;
+        }
+
+        // 새로운 이미지 업로더 생성
+        if (window.setupDdoksangImageUpload) {
             try {
-                imageUploadModule = window.setupDdoksangImageUpload({ // window.로 접근
+                imageUploadModule = window.setupDdoksangImageUpload({
                     fileInputId: "image-upload",
                     fileCountId: "file-count", 
                     previewContainerId: "image-upload-container",
@@ -882,11 +1034,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     maxFiles: 10,
                     maxSizeMB: 5
                 });
-                window.ddoksangApp.imageUploadModule = imageUploadModule;
-                console.log('✅ 이미지 업로드 모듈 초기화 완료');
+                
+                if (imageUploadModule?.isInitialized) {
+                    window.ddoksangApp.imageUploadModule = imageUploadModule;
+                    console.log('✅ 이미지 업로드 모듈 초기화 완료');
+                    
+                    // 검증 콜백 연결
+                    const originalTriggerValidation = imageUploadModule.triggerValidation;
+                    if (originalTriggerValidation) {
+                        imageUploadModule.triggerValidation = function() {
+                            console.log('📸 이미지 업로더에서 검증 요청');
+                            setTimeout(() => {
+                                window.ddoksangApp.updateNextButtonState();
+                            }, 50);
+                        };
+                    }
+                } else {
+                    console.error('❌ 이미지 업로드 모듈 초기화 실패');
+                }
             } catch (error) {
-                console.error('❌ 이미지 업로드 모듈 초기화 실패:', error);
+                console.error('❌ 이미지 업로드 모듈 초기화 중 오류:', error);
             }
+        } else {
+            console.error('❌ setupDdoksangImageUpload 함수를 찾을 수 없음');
         }
     }
 
@@ -1005,12 +1175,61 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`  window.updateDuplicateButtonState: ${typeof window.updateDuplicateButtonState}`);
     }
 
+    // 🔧 이미지 검증 디버깅 함수 추가
+    function debugImageValidation() {
+        console.log('🔍 이미지 검증 상태 디버깅:');
+        
+        const checkers = [
+            {
+                name: 'window.ddoksangImageUploader',
+                obj: window.ddoksangImageUploader,
+                getCount: () => window.ddoksangImageUploader?.getFileCount?.()
+            },
+            {
+                name: 'window.ddoksangApp.imageUploadModule',
+                obj: window.ddoksangApp?.imageUploadModule,
+                getCount: () => window.ddoksangApp?.imageUploadModule?.getFileCount?.()
+            },
+            {
+                name: 'imageUploadModule (로컬)',
+                obj: imageUploadModule,
+                getCount: () => imageUploadModule?.getFileCount?.()
+            },
+            {
+                name: 'DOM 파일 input',
+                obj: document.getElementById('image-upload'),
+                getCount: () => document.getElementById('image-upload')?.files?.length
+            },
+            {
+                name: 'DOM 미리보기 아이템',
+                obj: document.querySelectorAll('#image-preview-list > div:not([data-add-button])'),
+                getCount: () => document.querySelectorAll('#image-preview-list > div:not([data-add-button])').length
+            }
+        ];
+        
+        checkers.forEach(checker => {
+            const exists = !!checker.obj;
+            const count = exists ? checker.getCount() : 'N/A';
+            console.log(`  ${checker.name}: 존재=${exists}, 파일수=${count}`);
+        });
+        
+        console.log(`현재 스텝: ${currentStep}`);
+        console.log(`다음 버튼 상태: disabled=${nextBtn?.disabled}, text="${nextBtn?.textContent}"`);
+    }
+
     // ✅ 전역 디버깅 함수로 등록 (개발 환경에서만)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         window.debugDuplicateCheckState = debugDuplicateCheckState;
+        window.debugImageValidation = debugImageValidation;
+        
+        // 전역 강제 검증 함수
+        window.forceValidation = function() {
+            console.log('🔧 강제 검증 실행');
+            updateNextButtonState();
+        };
     }
 
-    // CSS 스타일 추가
+    // CSS 스타일 추가 (기존과 동일)
     const additionalCSS = `
         .line-clamp-2 {
             display: -webkit-box;

@@ -257,11 +257,6 @@ class BdayCafeImage(models.Model):
     def __str__(self):
         return f"{self.cafe.cafe_name} - {self.get_image_type_display()}"
     
-    @property
-    def thumbnail_url(self):
-        """썸네일 URL (나중에 썸네일 생성 시스템 구현 예정)"""
-        return self.image.url if self.image else None
-    
     def get_image_data(self):
         """프론트엔드용 이미지 데이터"""
         return {

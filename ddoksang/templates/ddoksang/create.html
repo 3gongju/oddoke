@@ -607,55 +607,65 @@ window.KAKAO_MAP_READY = false;
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<!-- 🔧 덕생 유틸리티 모듈들 (순서 중요) -->
+<!--  덕생 유틸리티 모듈들 (순서 중요) -->
 <script src="{% static 'js/ddoksang_date_utils.js' %}"></script>
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
 
-<!-- 🔧 이미지 업로드 모듈 (독립 실행) -->
+<!--  이미지 업로드 모듈 (독립 실행) -->
 <script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
 
-<!-- 🔧 메인 폼 스크립트 (수정된 버전) -->
+<!--  메인 폼 스크립트 (수정된 버전) -->
 <script src="{% static 'js/ddoksang_create.js' %}?v=4.1"></script>
 
 <!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 🔧 통합 초기화 스크립트 -->
+<!--  통합 초기화 스크립트 -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('📄 create.html 초기화 시작');
+// create.html의 마지막 초기화 스크립트 부분을 다음으로 교체하세요
 
-  // 🔧 1단계: 이미지 업로드 모듈 초기화 확인/재시도
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🔄 create.html 초기화 시작...');
+
+  // 1단계: 이미지 업로드 모듈 초기화 확인/재시도
   function ensureImageUploadInit() {
+    console.log('📸 이미지 업로드 모듈 초기화 시도...');
+    
     if (window.ddoksangImageUploader?.isInitialized) {
       console.log('✅ 이미지 업로드 모듈 이미 초기화됨');
       return true;
     }
     
-    console.log('🔄 이미지 업로드 모듈 초기화 시도...');
-    if (window.initDdoksangImageUpload) {
-      return window.initDdoksangImageUpload();
+    if (typeof window.initDdoksangImageUpload === 'function') {
+      const result = window.initDdoksangImageUpload();
+      if (result && result.isInitialized) {
+        console.log('✅ 이미지 업로드 모듈 초기화 성공');
+        return true;
+      } else {
+        console.error('❌ 이미지 업로드 모듈 초기화 실패');
+        return false;
+      }
+    } else {
+      console.error('❌ initDdoksangImageUpload 함수를 찾을 수 없음');
+      return false;
     }
-    
-    console.warn('⚠️ 이미지 업로드 초기화 함수를 찾을 수 없음');
-    return false;
   }
 
-  // 🔧 2단계: 자동완성 초기화 (중복 방지)
+  // 2단계: 자동완성 초기화 (중복 방지)
   function initializeAutocomplete() {
+    console.log('🔍 자동완성 초기화 시도...');
+    
     if (typeof initAutocomplete !== 'function') {
       console.error('❌ initAutocomplete 함수를 찾을 수 없습니다');
       return false;
     }
 
-    console.log('🔄 자동완성 초기화...');
-    
-    // 🔧 기존 이벤트 핸들러 완전 제거
+    // 기존 이벤트 핸들러 완전 제거
     const artistInput = document.getElementById('artist-member-search');
     const resultsList = document.getElementById('artist-member-results');
     
     if (!artistInput || !resultsList) {
-      console.warn('❌ 자동완성 요소를 찾을 수 없음');
+      console.error('❌ 자동완성용 DOM 요소를 찾을 수 없음');
       return false;
     }
 
@@ -676,7 +686,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       
-      console.log('✅ 자동완성 초기화 완료');
+      console.log('✅ 자동완성 초기화 성공');
       return true;
     } catch (error) {
       console.error('❌ 자동완성 초기화 실패:', error);
@@ -684,11 +694,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // 🔧 3단계: 아티스트 선택 처리 (단일 함수)
+  // 3단계: 아티스트 선택 처리 (단일 함수)
   function handleArtistSelection(result) {
+    console.log('📝 아티스트 선택 처리 시작:', result);
+    
     const FormUtils = window.DdoksangFormUtils;
     if (!FormUtils) {
-      console.error('❌ DdoksangFormUtils를 찾을 수 없습니다');
+      console.error('❌ DdoksangFormUtils를 찾을 수 없음');
       return;
     }
 
@@ -724,43 +736,128 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // 🔧 4단계: 모듈 연동 설정
+  // 4단계: 모듈 연동 설정 강화
   function setupModuleIntegration() {
-    // 이미지 업로드 ↔ 폼 검증 연동
+    console.log('🔗 모듈 연동 설정 시작...');
+    
+    // 이미지 업로드 ↔ 폼 검증 연동 강화
     if (window.ddoksangApp && window.ddoksangImageUploader?.isInitialized) {
+      console.log('📸 이미지 업로더와 메인 앱 연동 설정...');
+      
+      // 메인 앱의 검증 함수에 이미지 검증 로직 추가
       const originalUpdateNext = window.ddoksangApp.updateNextButtonState;
       
       if (originalUpdateNext) {
         window.ddoksangApp.updateNextButtonState = function() {
+          console.log('🔄 통합 검증 로직 실행 (Step:', this.currentStep, ')');
+          
           // 기본 검증 실행
           originalUpdateNext.call(this);
           
-          // Step 6에서 이미지 개수 추가 검증
+          // Step 6에서 이미지 검증 강화
           if (this.currentStep === 6) {
             const fileCount = window.ddoksangImageUploader.getFileCount();
             const nextBtn = document.getElementById('nextBtn');
             
-            if (nextBtn && fileCount === 0) {
-              window.DdoksangFormUtils?.updateButtonState('nextBtn', false);
+            console.log('📊 Step 6 이미지 검증:', {
+              fileCount: fileCount,
+              uploaderInitialized: window.ddoksangImageUploader.isInitialized
+            });
+            
+            if (nextBtn) {
+              if (fileCount > 0) {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                nextBtn.classList.add('bg-gray-900', 'hover:bg-gray-800', 'text-white');
+                nextBtn.textContent = '제출하기';
+                nextBtn.style.fontSize = '14px';
+                nextBtn.style.fontWeight = '600';
+                console.log('✅ 제출 버튼 활성화 (파일:', fileCount, '개)');
+              } else {
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                nextBtn.classList.remove('bg-gray-900', 'hover:bg-gray-800');
+                nextBtn.textContent = '이미지를 업로드해주세요';
+                nextBtn.style.fontSize = '14px';
+                nextBtn.style.fontWeight = '600';
+                console.log('❌ 제출 버튼 비활성화 (파일 없음)');
+              }
             }
           }
         };
         
-        console.log('🔗 모듈 연동 설정 완료');
-        return true;
+        console.log('✅ 메인 앱 검증 함수 연동 완료');
       }
+      
+      // 이미지 업로더의 triggerValidation을 메인 앱과 연결
+      const originalTriggerValidation = window.ddoksangImageUploader.triggerValidation;
+      if (originalTriggerValidation) {
+        window.ddoksangImageUploader.triggerValidation = function() {
+          console.log('📸 이미지 업로더에서 검증 요청');
+          
+          // 원본 로직 실행
+          if (originalTriggerValidation) {
+            originalTriggerValidation.call(this);
+          }
+          
+          // 메인 앱 검증도 실행
+          if (window.ddoksangApp?.updateNextButtonState) {
+            setTimeout(() => {
+              window.ddoksangApp.updateNextButtonState();
+            }, 50);
+          }
+        };
+      }
+      
+      return true;
     }
     
-    console.warn('⚠️ 모듈 연동 설정 실패');
+    console.warn('⚠️ 모듈 연동 설정 실패 - 필요한 모듈이 없음');
     return false;
   }
 
-  // 🔧 순차 초기화 실행
-  let imageInitSuccess = ensureImageUploadInit();
-  let autocompleteInitSuccess = initializeAutocomplete();
+  // 5단계: Step 6 진입 감지 및 검증
+  function watchStepChanges() {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const target = mutation.target;
+          if (target.id && target.id.startsWith('step-') && !target.classList.contains('hidden')) {
+            const stepNumber = parseInt(target.id.split('-')[1]);
+            
+            if (stepNumber === 6) {
+              console.log('📸 Step 6 진입 감지, 이미지 검증 실행');
+              setTimeout(() => {
+                if (window.ddoksangApp?.updateNextButtonState) {
+                  window.ddoksangApp.updateNextButtonState();
+                }
+              }, 200);
+            }
+          }
+        }
+      });
+    });
+    
+    // 모든 step 요소 관찰
+    document.querySelectorAll('[id^="step-"]').forEach(step => {
+      observer.observe(step, { attributes: true, attributeFilter: ['class'] });
+    });
+    
+    console.log('👀 스텝 변경 관찰자 설정 완료');
+  }
+
+  // 초기화 단계별 실행
+  let imageInitSuccess = false;
+  let autocompleteInitSuccess = false;
   
-  // 지연된 재시도 (1초 후)
+  // 즉시 실행
+  imageInitSuccess = ensureImageUploadInit();
+  autocompleteInitSuccess = initializeAutocomplete();
+  
+  // 지연된 재시도 및 연동 설정 (1초 후)
   setTimeout(() => {
+    console.log('🔄 지연된 재시도 시작...');
+    
     if (!imageInitSuccess) {
       console.log('🔄 이미지 업로드 재시도...');
       imageInitSuccess = ensureImageUploadInit();
@@ -774,18 +871,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // 모듈 연동 설정
     setupModuleIntegration();
     
+    // 스텝 변경 감지 설정
+    watchStepChanges();
+    
     // 최종 상태 체크
-    console.log('📊 최종 초기화 상태:', {
+    const finalStatus = {
       imageUpload: !!window.ddoksangImageUploader?.isInitialized,
       autocomplete: autocompleteInitSuccess,
       mainApp: !!window.ddoksangApp,
       formUtils: !!window.DdoksangFormUtils,
       mapUtils: !!window.DdoksangMapUtils
-    });
+    };
+    
+    console.log('📊 최종 초기화 상태:', finalStatus);
+    
+    // 모든 모듈이 성공적으로 초기화되었는지 확인
+    const allInitialized = Object.values(finalStatus).every(status => status);
+    if (allInitialized) {
+      console.log('🎉 모든 모듈 초기화 완료!');
+    } else {
+      console.warn('⚠️ 일부 모듈 초기화 실패:', 
+        Object.entries(finalStatus)
+          .filter(([key, value]) => !value)
+          .map(([key, value]) => key)
+      );
+    }
     
   }, 1000);
   
-  // 🔧 전역 함수 설정 (하위 호환성)
+  // 전역 함수 설정 (하위 호환성)
   window.selectArtistForDuplicateCheck = handleArtistSelection;
   
   window.restartAutocomplete = function() {
@@ -793,10 +907,29 @@ document.addEventListener('DOMContentLoaded', function() {
     return initializeAutocomplete();
   };
   
-  console.log('✅ create.html 초기화 완료');
+  window.restartImageUpload = function() {
+    console.log('🔄 이미지 업로드 재시작...');
+    return ensureImageUploadInit();
+  };
+  
+  // 디버깅용 즉시 검증 함수
+  window.forceValidation = function() {
+    console.log('🔧 강제 검증 실행');
+    if (window.ddoksangApp?.updateNextButtonState) {
+      window.ddoksangApp.updateNextButtonState();
+    }
+    if (window.ddoksangImageUploader) {
+      console.log('📊 현재 이미지 상태:', {
+        fileCount: window.ddoksangImageUploader.getFileCount(),
+        isInitialized: window.ddoksangImageUploader.isInitialized
+      });
+    }
+  };
+  
+  console.log('✅ create.html 초기화 스크립트 설정 완료');
 });
 
-// 🔧 디버깅 도구들
+// 디버깅 도구들
 window.debugDdoksang = {
   checkModules: function() {
     console.log('🔍 덕생 모듈 상태:');
@@ -816,12 +949,16 @@ window.debugDdoksang = {
   imageUpload: function() {
     if (window.ddoksangImageUploader?.debug) {
       console.log('📊 이미지 업로드 상태:', window.ddoksangImageUploader.debug());
+    } else {
+      console.log('⚠️ 이미지 업로더가 초기화되지 않았습니다.');
     }
   },
   
   compression: function() {
     if (window.showCompressionStats) {
       window.showCompressionStats();
+    } else {
+      console.log('⚠️ 압축 통계 함수를 찾을 수 없습니다.');
     }
   },
   
@@ -830,8 +967,8 @@ window.debugDdoksang = {
     if (window.cleanupImageUploadHandlers) {
       window.cleanupImageUploadHandlers();
     }
-    if (window.initDdoksangImageUpload) {
-      window.initDdoksangImageUpload();
+    if (window.restartImageUpload) {
+      window.restartImageUpload();
     }
     if (window.restartAutocomplete) {
       window.restartAutocomplete();
