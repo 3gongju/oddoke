@@ -166,7 +166,8 @@
     <div class="mb-12 sm:mb-16 lg:mb-20">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle">
             <span class="italic text-cream-dark"></span> 덕질 용품 모음 zip
           </h2>
           <p class="text-gray-700 font-light text-sm sm:text-base font-body">포카 중고거래, 분철, 대여까지 한번에</p>
@@ -239,7 +240,8 @@
     <div class="mb-12 sm:mb-16 lg:mb-20">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle">
             <span class="italic text-cream-dark"></span> 덕질 생활 모음 zip
           </h2>
           <p class="text-gray-700 font-light text-sm sm:text-base font-body">생카후기, 예절샷 등 나의 덕심 맘껏 발휘하러 가기!</p>
@@ -280,7 +282,8 @@
     <!-- 이번 주 생일 멤버: 반응형 슬라이더 -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
         <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide">
+          <h2 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle">
             <span class="italic text-cream-dark"></span> 이번 주 생일 아티스트
           </h2>
           <p class="text-gray-700 font-light text-sm sm:text-base font-body">월별 생일 아티스트가 궁금하다면 전체 달력 보기 클릭!</p>
@@ -363,7 +366,7 @@
           <!-- 빈 상태 -->
           <div class="text-center py-12 sm:py-16">
             <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-cream-light rounded-full flex items-center justify-center opacity-60">
-              <span class="text-2xl sm:text-3xl">🎂</span>
+              <span class="text-2xl sm:text-3xl"></span>
             </div>
             <h4 class="font-heading text-lg sm:text-xl font-light text-black mb-2">이번 주 생일인 아티스트가 없어요</h4>
             <p class="text-gray-600 text-sm sm:text-base font-body">다른 생일 아티스트들을 확인해보세요</p>
@@ -380,7 +383,8 @@
     <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-cream-light">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8">
         <div class="mb-4 sm:mb-0">
-          <h3 class="font-heading text-xl sm:text-2xl lg:text-3xl font-light text-black mb-2">
+          <h3 class="font-heading text-xl sm:text-2xl lg:text-3xl font-light text-black mb-2 flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle">
             <span class="italic text-cream-dark"></span> 찜한 아티스트 모음 zip
           </h3>
           <p class="text-gray-700 text-sm sm:text-base font-light font-body">나만의 특별한 아티스트들</p>
@@ -389,7 +393,7 @@
 
       <div class="relative">
         {% if raw_favs %}
-          <div id="favArtistSlider" class="flex overflow-x-auto space-x-3 sm:space-x-4 lg:space-x-6 pb-2 scrollbar-hide">
+          <div id="favArtistSlider" class="flex overflow-x-auto space-x-3 sm:space-x-4 lg:space-x-6 pb-2 custom-scrollbar">
             {% for artist in raw_favs %}
               <div class="min-w-[80px] sm:min-w-[100px] lg:min-w-[120px] text-center flex-shrink-0">
                 <div class="bg-cream-bg border-2 border-cream-light rounded-xl p-2 sm:p-3 lg:p-4 hover:shadow-md hover:border-cream-accent transition-all duration-300">
@@ -612,6 +616,64 @@
 
 <!-- 반응형 스타일 -->
 <style>
+/* 기본 스크롤바 숨김 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* 전체 페이지 스크롤바 스타일 */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f9fafb;
+}
+
+html::-webkit-scrollbar {
+  width: 12px;
+}
+
+html::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: #9ca3af;
+  border-radius: 6px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* 페이지 최하단 여백 제거 */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
 @media (max-width: 639px) {
   #sliderTrack .min-w-full {
     min-width: 100%;
