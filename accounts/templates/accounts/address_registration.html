@@ -103,7 +103,7 @@
             </div> -->
 
             <!-- 건물명 -->
-            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
+            <!-- <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
                   <label for="{{ form.building_name.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
@@ -122,7 +122,7 @@
                   {% endfor %}
                 </div>
               {% endif %}
-            </div>
+            </div> -->
 
             <!-- 상세주소 -->
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
@@ -214,7 +214,7 @@
                   <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
                   <p class="text-sm font-medium text-gray-800">정확한 주소</p>
                 </div>
-                <p class="text-xs text-gray-600">도로명, 지번, 건물명 등으로 정확한 주소를 검색하세요</p>
+                <p class="text-xs text-gray-600">도로명, 건물명 등으로 정확한 주소를 검색하세요</p>
               </div>
               
               <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
@@ -403,8 +403,8 @@ input[readonly] {
           // 폼 필드 자동 입력
           document.getElementById('{{ form.postal_code.id_for_label }}').value = data.zonecode;
           document.getElementById('{{ form.road_address.id_for_label }}').value = data.roadAddress;
-          document.getElementById('{{ form.jibun_address.id_for_label }}').value = data.jibunAddress || '';
-          document.getElementById('{{ form.building_name.id_for_label }}').value = data.buildingName || '';
+          // document.getElementById('{{ form.jibun_address.id_for_label }}').value = data.jibunAddress || '';
+          // document.getElementById('{{ form.building_name.id_for_label }}').value = data.buildingName || '';
           
           // 시/도, 시/군/구 정보 추출
           const roadAddress = data.roadAddress || data.jibunAddress;

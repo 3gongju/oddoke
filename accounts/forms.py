@@ -357,16 +357,16 @@ class AddressForm(forms.ModelForm):
         label="우편번호"
     )
     
-    jibun_address = forms.CharField(
-        max_length=200,
-        required=False,  # 선택사항
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'placeholder': '지번주소',
-            'readonly': True  # 검색으로만 입력 가능
-        }),
-        label="지번주소"
-    )
+    # jibun_address = forms.CharField(
+    #     max_length=200,
+    #     required=False,  # 선택사항
+    #     widget=forms.TextInput(attrs={
+    #         'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+    #         'placeholder': '지번주소',
+    #         'readonly': True  # 검색으로만 입력 가능
+    #     }),
+    #     label="지번주소"
+    # )
     
     road_address = forms.CharField(
         max_length=200,
@@ -388,15 +388,15 @@ class AddressForm(forms.ModelForm):
         label="상세주소"
     )
     
-    building_name = forms.CharField(
-        max_length=100,
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'readonly': True  # 검색으로만 입력 가능
-        }),
-        label="건물명"
-    )
+    # building_name = forms.CharField(
+    #     max_length=100,
+    #     required=False,
+    #     widget=forms.TextInput(attrs={
+    #         'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+    #         'readonly': True  # 검색으로만 입력 가능
+    #     }),
+    #     label="건물명"
+    # )
     
     sido = forms.CharField(
         max_length=20,
@@ -410,7 +410,7 @@ class AddressForm(forms.ModelForm):
     
     class Meta:
         model = AddressProfile
-        fields = ['postal_code', 'jibun_address', 'road_address', 'detail_address', 'building_name', 'sido', 'sigungu']
+        fields = ['postal_code', 'road_address', 'detail_address', 'sido', 'sigungu']
     
     def clean_postal_code(self):
         postal_code = self.cleaned_data.get('postal_code')
@@ -447,10 +447,10 @@ class AddressForm(forms.ModelForm):
         """사용자와 연결해서 저장"""
         address_profile = user.get_or_create_address_profile()
         address_profile.postal_code = self.cleaned_data['postal_code']
-        address_profile.jibun_address = self.cleaned_data.get('jibun_address', '')
+        # address_profile.jibun_address = self.cleaned_data.get('jibun_address', '')
         address_profile.road_address = self.cleaned_data['road_address']
         address_profile.detail_address = self.cleaned_data.get('detail_address', '')
-        address_profile.building_name = self.cleaned_data.get('building_name', '')
+        # address_profile.building_name = self.cleaned_data.get('building_name', '')
         address_profile.sido = self.cleaned_data['sido']
         address_profile.sigungu = self.cleaned_data['sigungu']
         address_profile.save()
