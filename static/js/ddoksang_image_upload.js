@@ -3,11 +3,8 @@
 
 // 메인 초기화 함수 - create.html에서 호출되는 함수
 window.initDdoksangImageUpload = function() {
-  console.log('🔄 이미지 업로드 모듈 초기화 시작...');
-  
   // 이미 초기화된 경우 기존 인스턴스 반환
   if (window.ddoksangImageUploader && window.ddoksangImageUploader.isInitialized) {
-    console.log('✅ 이미지 업로드 모듈 이미 초기화됨');
     return window.ddoksangImageUploader;
   }
 
@@ -32,10 +29,8 @@ window.initDdoksangImageUpload = function() {
 
   if (uploader && uploader.isInitialized) {
     window.ddoksangImageUploader = uploader;
-    console.log('✅ 이미지 업로드 모듈 초기화 완료');
     return uploader;
   } else {
-    console.error('❌ 이미지 업로드 모듈 초기화 실패');
     return null;
   }
 };
@@ -57,11 +52,8 @@ window.setupDdoksangImageUpload = function({
     autoCompress: true
   }
 }) {
-  console.log('🔧 setupDdoksangImageUpload 실행...');
-  
   // 이미 초기화된 경우 방지
   if (window.ddoksangImageUploader && window.ddoksangImageUploader.isInitialized) {
-    console.log('⚠️ 이미 초기화된 업로더가 있습니다.');
     return window.ddoksangImageUploader;
   }
 
@@ -71,16 +63,7 @@ window.setupDdoksangImageUpload = function({
   const previewList = document.getElementById(previewListId);
   const form = document.getElementById(formId);
 
-  console.log('📋 DOM 요소 체크:', {
-    fileInput: !!fileInput,
-    fileCount: !!fileCount,
-    previewContainer: !!previewContainer,
-    previewList: !!previewList,
-    form: !!form
-  });
-
   if (!fileInput || !fileCount || !previewContainer || !previewList) {
-    console.error('❌ 필수 DOM 요소를 찾을 수 없습니다');
     return null;
   }
 
@@ -132,7 +115,6 @@ window.setupDdoksangImageUpload = function({
               return;
             }
 
-            // 압축된 파일에 원본 정보 유지
             const compressedFile = new File([blob], file.name, {
               type: outputType,
               lastModified: file.lastModified
@@ -193,7 +175,6 @@ window.setupDdoksangImageUpload = function({
               processedFile = file; // 압축 효과가 미미하면 원본 사용
             }
           } catch (error) {
-            console.warn('압축 실패, 원본 사용:', error);
             processedFile = file;
           }
         }
@@ -205,7 +186,6 @@ window.setupDdoksangImageUpload = function({
       return processedFiles;
 
     } catch (error) {
-      console.error('파일 처리 오류:', error);
       showToast('파일 처리 중 오류가 발생했습니다.', 'error');
       return files;
     } finally {
@@ -287,8 +267,6 @@ window.setupDdoksangImageUpload = function({
         errors.push(`${file.name}: 파일 크기가 ${maxSizeDisplay}MB를 초과합니다.`);
         continue;
       }
-
-      // 중복 검증 완전 제거 - 같은 이미지도 여러 번 첨부 가능
     }
 
     return { valid: errors.length === 0, errors };
@@ -301,7 +279,7 @@ window.setupDdoksangImageUpload = function({
       try {
         sortableInstance.destroy();
       } catch (e) {
-        console.warn('Sortable 정리 중 오류:', e);
+        // 무시
       }
       sortableInstance = null;
     }
@@ -328,49 +306,6 @@ window.setupDdoksangImageUpload = function({
     
     // 파일 개수 변경 시마다 검증 실행
     triggerValidation();
-  }
-
-  // processFilesAsync 함수도 수정하여 파일 추가 후 검증 실행
-  async function processFilesAsync(filesToAdd) {
-    try {
-      const processedFiles = await processFiles(filesToAdd);
-      
-      // 새 파일 객체 생성 - 고유 ID 보장, 중복 허용
-      const newFileObjects = processedFiles.map((file, index) => {
-        const originalFile = filesToAdd[index];
-        const wasCompressed = file !== originalFile;
-        
-        return {
-          id: `new_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
-          type: "new",
-          file: file,
-          name: file.name,
-          size: file.size,
-          previewUrl: null,
-          compressed: wasCompressed
-        };
-      });
-      
-      // 기존 배열에 추가 - 중복 허용
-      selectedFiles = [...selectedFiles, ...newFileObjects];
-      
-      console.log('📁 파일 추가 완료:', {
-        추가된파일수: newFileObjects.length,
-        총파일수: selectedFiles.length
-      });
-      
-      updatePreview();
-      updateFormFileInput();
-      
-      // 파일 추가 후 즉시 검증 실행
-      setTimeout(() => {
-        triggerValidation();
-      }, 100);
-      
-    } catch (error) {
-      console.error('파일 처리 오류:', error);
-      showToast('파일 처리 중 오류가 발생했습니다.', 'error');
-    }
   }
 
   // 이미지 래퍼 생성 함수
@@ -559,7 +494,7 @@ window.setupDdoksangImageUpload = function({
     // 실제 업로드할 파일들 선택
     const filesToAdd = newFiles.slice(0, remainingSlots);
     
-    // 파일 검증 - 중복 검증 제거됨
+    // 파일 검증
     const validation = validateFiles(filesToAdd);
     
     if (!validation.valid) {
@@ -574,7 +509,6 @@ window.setupDdoksangImageUpload = function({
   function initSortable() {
     if (selectedFiles.length <= 1 || isProcessing) return;
     if (typeof Sortable === 'undefined') {
-      console.warn('Sortable 라이브러리가 로드되지 않았습니다.');
       return;
     }
 
@@ -611,7 +545,7 @@ window.setupDdoksangImageUpload = function({
         }
       });
     } catch (error) {
-      console.warn('Sortable 초기화 실패:', error);
+      // 무시
     }
   }
 
@@ -632,11 +566,6 @@ window.setupDdoksangImageUpload = function({
     });
     
     if (selectedFiles.length !== initialLength) {
-      console.log('🗑️ 파일 제거 완료:', {
-        제거전: initialLength,
-        제거후: selectedFiles.length
-      });
-      
       updatePreview();
       updateFormFileInput();
       
@@ -676,39 +605,29 @@ window.setupDdoksangImageUpload = function({
           try {
             dt.items.add(f.file);
           } catch (error) {
-            console.warn('파일 추가 실패:', error);
+            // 무시
           }
         });
       
       cleanFileInput.files = dt.files;
       
     } catch (error) {
-      console.warn('폼 파일 입력 업데이트 실패:', error);
+      // 무시
     }
   }
 
   function triggerValidation() {
-    console.log('🔄 이미지 업로드 검증 트리거 실행...');
-    console.log('📊 현재 파일 개수:', selectedFiles.length);
-    
     // 메인 앱의 검증 로직 호출
     if (window.ddoksangApp?.updateNextButtonState) {
-      console.log('✅ 메인 앱 검증 로직 호출');
       window.ddoksangApp.updateNextButtonState();
     }
     
     // Step 6에서 추가 검증 (이미지 개수 체크)
     const currentStep = window.ddoksangApp?.currentStep || 0;
-    console.log('🎯 현재 스텝:', currentStep);
     
     if (currentStep === 6) {
       const nextBtn = document.getElementById('nextBtn');
       const fileCount = selectedFiles.length;
-      
-      console.log('📸 Step 6 이미지 검증:', {
-        fileCount: fileCount,
-        nextBtnExists: !!nextBtn
-      });
       
       if (nextBtn) {
         // 파일이 있으면 버튼 활성화, 없으면 비활성화
@@ -719,13 +638,11 @@ window.setupDdoksangImageUpload = function({
           nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
           nextBtn.classList.add('hover:bg-gray-800');
           nextBtn.textContent = '제출하기';
-          console.log('✅ 제출 버튼 활성화 (파일 개수:', fileCount, ')');
         } else {
           nextBtn.disabled = true;
           nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
           nextBtn.classList.remove('hover:bg-gray-800');
           nextBtn.textContent = '이미지를 업로드해주세요';
-          console.log('❌ 제출 버튼 비활성화 (파일 없음)');
         }
       }
     }
@@ -734,19 +651,13 @@ window.setupDdoksangImageUpload = function({
     if (window.DdoksangFormUtils?.updateButtonState) {
       const fileCount = selectedFiles.length;
       const shouldEnable = currentStep !== 6 || fileCount > 0;
-      console.log('🔧 FormUtils 검증:', { currentStep, fileCount, shouldEnable });
       window.DdoksangFormUtils.updateButtonState('nextBtn', shouldEnable);
     }
-    
-    console.log('🏁 검증 트리거 완료');
   }
-
 
   function showToast(message, type = 'info') {
     if (window.DdoksangFormUtils?.showToast) {
       window.DdoksangFormUtils.showToast(message, type);
-    } else {
-      console.log(`Toast ${type}: ${message}`);
     }
   }
 
@@ -758,7 +669,7 @@ window.setupDdoksangImageUpload = function({
       return;
     }
     
-    // 파일 검증 - 중복 검증 제거됨
+    // 파일 검증
     const validation = validateFiles(newFiles);
     
     if (!validation.valid) {
@@ -808,10 +719,13 @@ window.setupDdoksangImageUpload = function({
       
       updatePreview();
       updateFormFileInput();
-      triggerValidation();
+      
+      // 파일 추가 후 즉시 검증 실행
+      setTimeout(() => {
+        triggerValidation();
+      }, 100);
       
     } catch (error) {
-      console.error('파일 처리 오류:', error);
       showToast('파일 처리 중 오류가 발생했습니다.', 'error');
     }
   }
@@ -822,8 +736,6 @@ window.setupDdoksangImageUpload = function({
   // 폼 제출 이벤트
   if (form) {
     form.addEventListener("submit", function(e) {
-      console.log('📤 폼 제출 시 이미지 데이터 준비 중...');
-      
       // 제거된 기존 이미지 ID 처리
       if (existingImages && existingImages.length > 0) {
         const existingIds = existingImages.map(img => img.id);
@@ -843,7 +755,6 @@ window.setupDdoksangImageUpload = function({
       }
       
       updateFormFileInput();
-      console.log('📤 폼 제출 준비 완료');
     });
   }
 
@@ -869,7 +780,7 @@ window.setupDdoksangImageUpload = function({
         try {
           sortableInstance.destroy();
         } catch (e) {
-          console.warn('Sortable 정리 중 오류:', e);
+          // 무시
         }
         sortableInstance = null;
       }
@@ -902,19 +813,16 @@ window.setupDdoksangImageUpload = function({
     })
   };
 
-  console.log('✅ setupDdoksangImageUpload 완료');
   return apiObject;
 };
 
 // 정리 함수
 window.cleanupImageUploadHandlers = function() {
-  console.log('🧹 이미지 업로드 핸들러 정리 중...');
-  
   if (window.ddoksangImageUploader) {
     try {
       window.ddoksangImageUploader.clear();
     } catch (e) {
-      console.warn('업로더 정리 중 오류:', e);
+      // 무시
     }
     window.ddoksangImageUploader = null;
   }
@@ -925,11 +833,9 @@ window.cleanupImageUploadHandlers = function() {
     try {
       previewList.__sortable.destroy();
     } catch (e) {
-      console.warn('Sortable 정리 중 오류:', e);
+      // 무시
     }
   }
-  
-  console.log('✅ 이미지 업로드 핸들러 정리 완료');
 };
 
 // 스타일 정의
@@ -1000,4 +906,3 @@ if (!document.getElementById('ddoksang-image-upload-styles')) {
   styleElement.textContent = imageUploadCSS;
   document.head.appendChild(styleElement);
 }
-

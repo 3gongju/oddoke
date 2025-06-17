@@ -131,4 +131,18 @@
   {% endif %}
 </section>
 
+<!-- 찜하기 버튼 -->
+<!-- 1. CSRF 토큰 추가 (detail.html과 동일) -->
+{% csrf_token %}
+
+<!-- 2. 사용자 데이터 추가 (detail.html과 동일) -->
+<div id="user-data" 
+     data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+     style="display: none;">
+</div>
+
+<!-- 3. 기존 favorite.js 스크립트는 그대로 유지 -->
+<script src="{% static 'js/favorite.js' %}"></script>
+
+
 {% endblock %}
