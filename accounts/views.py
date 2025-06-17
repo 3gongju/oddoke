@@ -1066,14 +1066,24 @@ def fandom_verification(request, username):
         messages.error(request, '본인의 정보만 확인할 수 있습니다.')
         return redirect('accounts:mypage')
     
-    # 기존 로직 재사용
+    # 찜한 아티스트와 그렇지 않은 아티스트 분리
     fandom_profile = user_profile.get_fandom_profile()
-    artist_list = Artist.objects.all().order_by('display_name')
+    
+    if request.user.is_authenticated:
+        # 찜한 아티스트 (가나다순 정렬)
+        favorite_artists = Artist.objects.filter(followers=request.user).order_by('display_name')
+        # 찜하지 않은 아티스트 (가나다순 정렬)
+        other_artists = Artist.objects.exclude(followers=request.user).order_by('display_name')
+    else:
+        favorite_artists = []
+        other_artists = Artist.objects.all().order_by('display_name')
     
     context = {
         'user_profile': user_profile,
         'fandom_profile': fandom_profile,
-        'artist_list': artist_list,
+        'favorite_artists': favorite_artists,  # 추가
+        'other_artists': other_artists,        # 추가
+        'artist_list': Artist.objects.all().order_by('display_name'),  # 기존 호환성 유지
     }
     return render(request, 'accounts/fandom_verification.html', context)
 
