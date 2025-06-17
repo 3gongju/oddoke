@@ -74,11 +74,11 @@ _cafe_card_default.html - 향상된 버전
       <div class="flex items-center space-x-2">
         {% if show_admin_status %}
           {% if cafe.status == 'pending' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">⏳ 승인대기</span>
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">승인대기</span>
           {% elif cafe.status == 'approved' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✅ 승인됨</span>
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">승인완료</span>
           {% elif cafe.status == 'rejected' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">❌ 거절됨</span>
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">거절됨</span>
           {% endif %}
         {% endif %}
 

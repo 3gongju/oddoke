@@ -1,8 +1,9 @@
 {% load humanize %}
+{% load ddokfarm_filters %}
 
 <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200 relative">
-  <!-- 판매완료 오버레이 -->
-  {% if post.is_sold %}
+  <!-- 판매완료 오버레이 (덕팜만) -->
+  {% if post.is_sold and app_name == 'ddokfarm' %}
     <div class="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10">
       판매완료
     </div>
@@ -14,9 +15,13 @@
       {% if post.get_main_image %}
         <img src="{{ post.get_main_image }}" 
              alt="{{ post.title }}" 
-             class="w-full h-full object-cover {% if post.is_sold %}opacity-70{% endif %}">
+             class="w-full h-full object-cover {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
+      {% elif post.images.all %}
+        <img src="{{ post.images.first.image.url }}" 
+             alt="{{ post.title }}" 
+             class="w-full h-full object-cover {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
       {% else %}
-        <div class="w-full h-full flex items-center justify-center text-gray-400 text-4xl {% if post.is_sold %}opacity-70{% endif %}">
+        <div class="w-full h-full flex items-center justify-center text-gray-400 text-4xl {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
           📷
         </div>
       {% endif %}
@@ -25,12 +30,14 @@
     <!-- 찜하기 버튼 (이미지 위 우상단) -->
     <button class="absolute top-2 right-2 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center text-pink-500 hover:bg-opacity-100 transition-all duration-200 shadow-sm"
             onclick="toggleLike(event, {{ post.id }}, '{{ post.category_type }}')">
-      <span class="text-sm">🤍</span>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+      </svg>
     </button>
   </div>
 
   <!-- 카드 내용 -->
-  <div class="p-3 {% if post.is_sold %}opacity-80{% endif %}">
+  <div class="p-3 {% if post.is_sold and app_name == 'ddokfarm' %}opacity-80{% endif %}">
     <!-- 제목 -->
     <h3 class="font-medium text-gray-900 text-sm mb-2 line-clamp-2 leading-tight">
       <a href="{{ detail_url }}" class="hover:text-gray-700">
@@ -38,16 +45,28 @@
       </a>
     </h3>
 
-    <!-- 가격 정보 -->
-    <div class="mb-3">
-      {% if post.category_type == 'split' %}
-        {% with min_price=post.get_price_range.0 max_price=post.get_price_range.1 %}
+    <!-- 가격 정보 (덕팜만) -->
+    {% if app_name == 'ddokfarm' %}
+      <div class="mb-3">
+        {% if post.category_type == 'split' %}
+          {% if post.get_price_range %}
+            {% with min_price=post.get_price_range.0 max_price=post.get_price_range.1 %}
+              <div class="text-lg font-bold text-gray-900">
+                {% if min_price == max_price %}
+                  {{ min_price|intcomma }}원
+                {% else %}
+                  {{ min_price|intcomma }}원 ~ {{ max_price|intcomma }}원
+                {% endif %}
+              </div>
+            {% endwith %}
+          {% else %}
+            <div class="text-lg font-bold text-gray-900">
+              {{ post.shipping_fee|default:"0"|intcomma }}원
+            </div>
+          {% endif %}
+        {% else %}
           <div class="text-lg font-bold text-gray-900">
-            {% if min_price == max_price %}
-              {{ min_price|intcomma }}원
-            {% else %}
-              {{ min_price|intcomma }}원 ~ {{ max_price|intcomma }}원
-            {% endif %}
+            {{ post.price|intcomma }}원
           </div>
         {% endwith %}
       {% else %}
@@ -88,20 +107,58 @@
           </span>
         {% endif %}
       </div>
+    {% endif %}
+
+    <!-- 하단 정보 영역 -->
+    <div class="flex items-center justify-between text-xs text-gray-500">
+      <!-- 유저 정보 -->
+      <div class="flex items-center space-x-1 min-w-0 flex-1">
+        <!-- 프로필 이미지 -->
+        <div class="flex-shrink-0 w-5 h-5">
+          {% if post.user.profile_image %}
+            <img src="{{ post.user.profile_image.url }}" 
+                 alt="{{ post.user.username }}" 
+                 class="w-5 h-5 rounded-full object-cover">
+          {% else %}
+            <div class="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xs">
+              {{ post.user.username|first|upper }}
+            </div>
+          {% endif %}
+        </div>
+        
+        <!-- 유저명 -->
+        <span class="truncate text-gray-700 font-medium">{{ post.user.username }}</span>
+        
+        <!-- 팬덤 인증 마크 - 다양한 방식으로 체크 -->
+        {% if post.user.fandom_profile.is_verified_fandom or post.user.is_verified_fandom %}
+          <span class="flex-shrink-0 text-black-500 text-sm" title="팬덤 인증">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+              <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+            </svg>
+          </span>
+        {% endif %}
+      </div>
 
       <!-- 통계 정보 -->
       <div class="flex items-center space-x-2 text-gray-400 flex-shrink-0">
         <!-- 찜 개수 -->
         <div class="flex items-center space-x-1">
-          <span>❤️</span>
-          <span>{{ post.like.count }}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+            <path d="M2 6.342a3.375 3.375 0 0 1 6-2.088 3.375 3.375 0 0 1 5.997 2.26c-.063 2.134-1.618 3.76-2.955 4.784a14.437 14.437 0 0 1-2.676 1.61c-.02.01-.038.017-.05.022l-.014.006-.004.002h-.002a.75.75 0 0 1-.592.001h-.002l-.004-.003-.015-.006a5.528 5.528 0 0 1-.232-.107 14.395 14.395 0 0 1-2.535-1.557C3.564 10.22 1.999 8.558 1.999 6.38L2 6.342Z" />
+          </svg>
+          <span data-like-count>{{ post.like.count }}</span>
         </div>
         
-        <!-- 조회수 -->
-        <div class="flex items-center space-x-1">
-          <span>👁️</span>
-          <span>{{ post.view_count }}</span>
-        </div>
+        <!-- 조회수 (있는 경우만) -->
+        {% if post.view_count %}
+          <div class="flex items-center space-x-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+              <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+              <path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.566 7.003 7.003 0 0 1 13.238.006.87.87 0 0 1 0 .566A7.003 7.003 0 0 1 1.379 8.28ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ post.view_count }}</span>
+          </div>
+        {% endif %}
       </div>
     </div>
 
@@ -114,7 +171,7 @@
 
     <!-- 게시 시간 -->
     <div class="mt-2 text-xs text-gray-400">
-      {{ post.created_at|timesince }} 전
+      <span class="text-xs text-gray-500">{{ post.created_at|smart_date }}</span>
     </div>
   </div>
 </div>
@@ -132,9 +189,13 @@ function toggleLike(event, postId, category) {
   }
   
   const button = event.currentTarget;
-  const icon = button.querySelector('span');
+  const icon = button.querySelector('svg');
   
-  fetch(`/ddokfarm/${category}/${postId}/like/`, {
+  // 앱별 URL 결정
+  const appName = '{{ app_name|default:"ddokfarm" }}';
+  const baseUrl = appName === 'ddokfarm' ? '/ddokfarm/' : '/ddokdam/';
+  
+  fetch(`${baseUrl}${category}/${postId}/like/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || window.csrfToken,
@@ -144,11 +205,18 @@ function toggleLike(event, postId, category) {
   .then(response => response.json())
   .then(data => {
     if (data.liked) {
-      icon.textContent = '❤️';
+      // 채운 하트로 변경
+      icon.setAttribute('fill', 'currentColor');
+      icon.setAttribute('stroke', 'none');
+      icon.innerHTML = '<path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />';
       button.classList.add('text-red-500');
       button.classList.remove('text-pink-500');
-    } else {
-      icon.textContent = '🤍';
+  } else {
+      // 빈 하트로 변경
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '1.5');
+      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />';
       button.classList.add('text-pink-500');
       button.classList.remove('text-red-500');
     }

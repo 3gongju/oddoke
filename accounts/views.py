@@ -670,7 +670,7 @@ def account_delete(request, username):
 
 @login_required
 def address_registration(request, username):
-    """주소 정보 등록"""
+    """주소 정보 등록 - 핸드폰 번호 포함"""
     user_profile = get_object_or_404(User, username=username)
     
     # 본인만 접근 가능
@@ -681,7 +681,7 @@ def address_registration(request, username):
     # 이미 등록된 주소가 있는지 확인
     address_profile = user_profile.get_address_profile()
     if address_profile:
-        messages.info(request, '이미 등록된 주소가 있습니다.')
+        messages.info(request, '이미 등록된 배송정보가 있습니다.')
         return redirect('accounts:mypage')
     
     if request.method == 'POST':
@@ -689,10 +689,10 @@ def address_registration(request, username):
         if form.is_valid():
             try:
                 address_profile = form.save(user_profile)
-                messages.success(request, '✅ 주소 정보가 등록되었습니다!')
+                messages.success(request, '✅ 배송정보가 등록되었습니다!')
                 return redirect('accounts:mypage')
             except Exception as e:
-                messages.error(request, f'주소 등록 중 오류가 발생했습니다: {str(e)}')
+                messages.error(request, f'배송정보 등록 중 오류가 발생했습니다: {str(e)}')
     else:
         form = AddressForm()
     
@@ -704,7 +704,7 @@ def address_registration(request, username):
 
 @login_required  
 def address_modify(request, username):
-    """등록된 주소정보 수정"""
+    """등록된 주소정보 수정 - 핸드폰 번호 포함"""
     user_profile = get_object_or_404(User, username=username)
     
     # 본인만 접근 가능
@@ -721,28 +721,26 @@ def address_modify(request, username):
         form = AddressForm(request.POST)
         if form.is_valid():
             try:
-                # 기존 주소 정보 업데이트
+                # 기존 주소 정보 업데이트 - 핸드폰 번호 포함
                 address_profile.postal_code = form.cleaned_data['postal_code']
-                address_profile.jibun_address = form.cleaned_data['jibun_address']
                 address_profile.road_address = form.cleaned_data['road_address']
                 address_profile.detail_address = form.cleaned_data['detail_address']
-                address_profile.building_name = form.cleaned_data.get('building_name', '')
+                address_profile.phone_number = form.cleaned_data['phone_number']  # 🔥 핸드폰 번호 추가
                 address_profile.sido = form.cleaned_data['sido']
                 address_profile.sigungu = form.cleaned_data['sigungu']
                 address_profile.save()
                 
-                messages.success(request, '✅ 주소정보가 수정되었습니다!')
+                messages.success(request, '✅ 배송정보가 수정되었습니다!')
                 return redirect('accounts:mypage')
             except Exception as e:
-                messages.error(request, f'주소 수정 중 오류가 발생했습니다: {str(e)}')
+                messages.error(request, f'배송정보 수정 중 오류가 발생했습니다: {str(e)}')
     else:
-        # 기존 정보로 폼 초기화
+        # 기존 정보로 폼 초기화 - 핸드폰 번호 포함
         initial_data = {
             'postal_code': address_profile.postal_code,
-            'jibun_address': address_profile.jibun_address,
             'road_address': address_profile.road_address,
             'detail_address': address_profile.detail_address,
-            'building_name': address_profile.building_name,
+            'phone_number': address_profile.phone_number,  # 🔥 핸드폰 번호 추가
             'sido': address_profile.sido,
             'sigungu': address_profile.sigungu,
         }
@@ -773,7 +771,7 @@ def address_delete(request, username):
     
     if request.method == 'POST':
         address_profile.delete()
-        messages.success(request, '🏠 주소정보가 삭제되었습니다.')
+        messages.success(request, '🏠 배송정보가 삭제되었습니다.')  # 🔥 메시지 변경
         return redirect('accounts:mypage')
     
     context = {
@@ -1102,7 +1100,7 @@ def account_settings(request, username):
 
 @login_required
 def address_settings(request, username):
-    """주소 설정 페이지 (기존 주소 함수들 활용)"""
+    """주소 설정 페이지 (기존 주소 함수들 활용) - 메시지 업데이트"""
     user_profile = get_object_or_404(User, username=username)
     
     # 본인만 접근 가능
@@ -1118,7 +1116,6 @@ def address_settings(request, username):
         'address_profile': address_profile,
     }
     return render(request, 'accounts/address_settings.html', context)
-
 
 @login_required
 def account_info(request, username):

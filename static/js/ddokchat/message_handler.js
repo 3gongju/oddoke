@@ -209,10 +209,14 @@ export function handleAddressMessage(data) {
   let buttonsHtml = '';
   if (!isMineForButton && !addressInfo.is_deleted) {
     buttonsHtml = `
-      <div class="mt-3">
-        <button onclick="copyAddress('${addressInfo.full_address}')" 
-                class="w-full bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
-          주소 복사
+      <div class="flex space-x-2 mt-3">
+        <button onclick="copyDeliveryInfo('${addressInfo.phone_number}', '${addressInfo.full_address}')" 
+                class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
+          배송정보 복사
+        </button>
+        <button onclick="copyPhoneNumber('${addressInfo.phone_number}')" 
+                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
+          연락처 복사
         </button>
       </div>
     `;
@@ -222,7 +226,7 @@ export function handleAddressMessage(data) {
   if (addressInfo.is_deleted) {
     contentHtml = `
       <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
-        <p class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'} font-medium">주소정보가 삭제되었습니다</p>
+        <p class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'} font-medium">배송정보가 삭제되었습니다</p>
         <p class="text-xs ${isMineForPosition ? 'text-gray-400' : 'text-gray-500'} mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
       </div>
     `;
@@ -230,11 +234,15 @@ export function handleAddressMessage(data) {
     contentHtml = `
       <div class="bg-${isMineForPosition ? 'gray-800' : 'gray-50'} rounded-lg p-3 space-y-2 info-card">
         <div class="flex justify-between">
+          <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">연락처</span>
+          <span class="font-mono">${addressInfo.phone_number}</span>
+        </div>
+        <div class="flex justify-between">
           <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">우편번호</span>
           <span class="font-medium">${addressInfo.postal_code}</span>
         </div>
         <div>
-          <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">주소</span>
+          <span class="text-sm ${isMineForPosition ? 'text-gray-300' : 'text-gray-600'}">배송주소</span>
           <p class="font-medium mt-1">${addressInfo.full_address}</p>
         </div>
       </div>
@@ -248,8 +256,8 @@ export function handleAddressMessage(data) {
       <div class="${isMineForPosition ? 'bg-gray-900 text-white' : 'bg-white text-gray-800 border border-gray-200'} px-4 py-3 rounded-2xl shadow-sm">
         <div class="space-y-3">
           <div class="flex items-center space-x-2 mb-2">
-            <span class="text-lg">📍</span>
-            <span class="font-semibold">${isMineForPosition ? '주소정보 전송' : '배송 주소'}</span>
+            <span class="text-lg">📦</span>
+            <span class="font-semibold">${isMineForPosition ? '배송정보 전송' : '배송정보'}</span>
           </div>
           ${contentHtml}
         </div>

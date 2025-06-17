@@ -357,17 +357,6 @@ class AddressForm(forms.ModelForm):
         label="우편번호"
     )
     
-    jibun_address = forms.CharField(
-        max_length=200,
-        required=False,  # 선택사항
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'placeholder': '지번주소',
-            'readonly': True  # 검색으로만 입력 가능
-        }),
-        label="지번주소"
-    )
-    
     road_address = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={
@@ -387,15 +376,15 @@ class AddressForm(forms.ModelForm):
         }),
         label="상세주소"
     )
-    
-    building_name = forms.CharField(
-        max_length=100,
-        required=False,
+
+    phone_number = forms.CharField(
+        max_length=15,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'readonly': True  # 검색으로만 입력 가능
+            'placeholder': '010-1234-5678',
+            'required': True
         }),
-        label="건물명"
+        label="연락처"
     )
     
     sido = forms.CharField(
@@ -410,7 +399,7 @@ class AddressForm(forms.ModelForm):
     
     class Meta:
         model = AddressProfile
-        fields = ['postal_code', 'jibun_address', 'road_address', 'detail_address', 'building_name', 'sido', 'sigungu']
+        fields = ['postal_code', 'road_address', 'detail_address', 'phone_number', 'sido', 'sigungu']
     
     def clean_postal_code(self):
         postal_code = self.cleaned_data.get('postal_code')
@@ -432,25 +421,48 @@ class AddressForm(forms.ModelForm):
                 raise forms.ValidationError("상세주소는 최대 200자까지 입력 가능합니다.")
         return detail_address
     
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get('phone_number')
+        if not phone:
+            raise forms.ValidationError("연락처를 입력해주세요.")
+        
+        # 숫자만 추출
+        phone = re.sub(r'[^0-9]', '', phone)
+        
+        # 한국 휴대폰 번호 형식 검증 (010, 011, 016, 017, 018, 019)
+        if not re.match(r'^01[0-9][0-9]{7,8}$', phone):
+            raise forms.ValidationError('올바른 휴대폰 번호를 입력해주세요. (010-XXXX-XXXX)')
+        
+        # 하이픈 추가하여 저장
+        if len(phone) == 10:
+            return f"{phone[:3]}-{phone[3:6]}-{phone[6:]}"
+        elif len(phone) == 11:
+            return f"{phone[:3]}-{phone[3:7]}-{phone[7:]}"
+        else:
+            raise forms.ValidationError('올바른 휴대폰 번호를 입력해주세요.')
+
     def clean(self):
         cleaned_data = super().clean()
         postal_code = cleaned_data.get('postal_code')
         road_address = cleaned_data.get('road_address')
-        
+        phone_number = cleaned_data.get('phone_number')
+
         # 기본 주소 정보가 모두 입력되었는지 확인
         if not postal_code or not road_address:
             raise forms.ValidationError("주소 검색을 통해 기본 주소 정보를 입력해주세요.")
         
+        if not phone_number:
+            raise forms.ValidationError("연락처를 입력해주세요.")
+
         return cleaned_data
     
     def save(self, user):
         """사용자와 연결해서 저장"""
         address_profile = user.get_or_create_address_profile()
         address_profile.postal_code = self.cleaned_data['postal_code']
-        address_profile.jibun_address = self.cleaned_data.get('jibun_address', '')
         address_profile.road_address = self.cleaned_data['road_address']
         address_profile.detail_address = self.cleaned_data.get('detail_address', '')
-        address_profile.building_name = self.cleaned_data.get('building_name', '')
+        address_profile.phone_number = self.cleaned_data['phone_number']
         address_profile.sido = self.cleaned_data['sido']
         address_profile.sigungu = self.cleaned_data['sigungu']
         address_profile.save()

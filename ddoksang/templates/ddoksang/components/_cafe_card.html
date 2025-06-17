@@ -52,7 +52,7 @@ _cafe_card.html - 최적화된 버전
         {% endif %}
       </div>
     {% else %}
-      <!-- 🔧 이미지 없을 때 로고 표시 -->
+      <!--  이미지 없을 때 로고 표시 -->
       <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col items-center justify-center {% if cafe_state == 'ended' %}relative{% endif %}">
         <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
         <p class="text-orange-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
@@ -218,6 +218,8 @@ _cafe_card.html - 최적화된 버전
   </div>
 </div>
 {% endwith %}
+
+
 
 <style>
 /* 기본 스타일 */

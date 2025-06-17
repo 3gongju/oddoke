@@ -1,220 +1,232 @@
-<!-- <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
-  {% for label, value, url in category_urls %}
-    <a href="{{ url }}"
-        class="px-3 py-1 rounded-full border
-                {% if category == value or not category and value == '' %}
-                bg-black text-white
-                {% else %}
-                bg-white text-gray-700 hover:bg-gray-100
-                {% endif %}">
-        {{ label }}
-    </a>
-    {% endfor %}
-</div> -->
-
 <!-- 카테고리 필터 -->
-<div class="flex flex-wrap gap-2 mb-6">
-  <!-- 전체 버튼 -->
-  <a href="{% url 'ddokfarm:index' %}" 
-     class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not category %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-    전체
-  </a>
+<div class="mb-6">
+  <!-- 덕팜과 덕담 공통: 기본 카테고리 필터 -->
+  {% if app_name == 'ddokfarm' %}
+    <!-- 덕팜: 드롭다운이 있는 고급 카테고리 필터 -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <!-- 전체 버튼 -->
+      <a href="{% url 'ddokfarm:index' %}" 
+         class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not category %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+        전체
+      </a>
 
-  <!-- 판매/구매 버튼 (서브 카테고리 포함) -->
-  <div class="relative" id="sell-category-wrapper">
-    <button id="sell-category-btn" 
-            class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 {% if category == 'sell' %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-      판매/구매
-      <svg class="w-3 h-3 transition-transform" id="sell-arrow" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-      </svg>
-    </button>
-    
-    <!-- 서브 카테고리 드롭다운 -->
-    <div id="sell-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
-      <a href="?category=sell&wantto=buy" 
-         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg {% if wantto == 'buy' %}bg-gray-50 font-medium{% endif %}">
-        삽니다
-      </a>
-      <a href="?category=sell&wantto=sell" 
-         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if wantto == 'sell' %}bg-gray-50 font-medium{% endif %}">
-        팝니다
-      </a>
-      <a href="?category=sell&wantto=exchange" 
-         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg {% if wantto == 'exchange' %}bg-gray-50 font-medium{% endif %}">
-        교환해요
+      <!-- 판매/구매 버튼 (서브 카테고리 포함) -->
+      <div class="relative" id="sell-category-wrapper">
+        <button id="sell-category-btn" 
+                class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 {% if category == 'sell' %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+          판매/구매
+          <svg class="w-3 h-3 transition-transform" id="sell-arrow" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+        
+        <!-- 서브 카테고리 드롭다운 -->
+        <div id="sell-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
+          <a href="?category=sell&wantto=buy" 
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg {% if wantto == 'buy' %}bg-gray-50 font-medium{% endif %}">
+            삽니다
+          </a>
+          <a href="?category=sell&wantto=sell" 
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if wantto == 'sell' %}bg-gray-50 font-medium{% endif %}">
+            팝니다
+          </a>
+          <a href="?category=sell&wantto=exchange" 
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg {% if wantto == 'exchange' %}bg-gray-50 font-medium{% endif %}">
+            교환해요
+          </a>
+        </div>
+      </div>
+
+      <!-- 대여 버튼 (서브 카테고리 포함) -->
+      <div class="relative" id="rental-category-wrapper">
+        <button id="rental-category-btn" 
+                class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 {% if category == 'rental' %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+          대여
+          <svg class="w-3 h-3 transition-transform" id="rental-arrow" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+          </svg>
+        </button>
+        
+        <!-- 서브 카테고리 드롭다운 -->
+        <div id="rental-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
+          <a href="?category=rental&wantto=sell" 
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg {% if wantto == 'sell' %}bg-gray-50 font-medium{% endif %}">
+            빌려줍니다
+          </a>
+          <a href="?category=rental&wantto=buy" 
+             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg {% if wantto == 'buy' %}bg-gray-50 font-medium{% endif %}">
+            빌려주세요
+          </a>
+        </div>
+      </div>
+
+      <!-- 분철 버튼 -->
+      <a href="?category=split" 
+         class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if category == 'split' %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+        분철
       </a>
     </div>
-  </div>
 
-  <!-- 대여 버튼 (서브 카테고리 포함) -->
-  <div class="relative" id="rental-category-wrapper">
-    <button id="rental-category-btn" 
-            class="px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 {% if category == 'rental' %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-      대여
-      <svg class="w-3 h-3 transition-transform" id="rental-arrow" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-      </svg>
-    </button>
-    
-    <!-- 서브 카테고리 드롭다운 -->
-    <div id="rental-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
-      <a href="?category=rental&wantto=sell" 
-         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg {% if wantto == 'sell' %}bg-gray-50 font-medium{% endif %}">
-        빌려줍니다
-      </a>
-      <a href="?category=rental&wantto=buy" 
-         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg {% if wantto == 'buy' %}bg-gray-50 font-medium{% endif %}">
-        빌려주세요
-      </a>
-    </div>
-  </div>
-
-  <!-- 분철 버튼 -->
-  <a href="?category=split" 
-     class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if category == 'split' %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-    분철
-  </a>
-</div>
-
-<!-- JavaScript -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // 판매/구매 드롭다운 처리
-  const sellBtn = document.getElementById('sell-category-btn');
-  const sellDropdown = document.getElementById('sell-subcategory');
-  const sellArrow = document.getElementById('sell-arrow');
-  
-  // 대여 드롭다운 처리
-  const rentalBtn = document.getElementById('rental-category-btn');
-  const rentalDropdown = document.getElementById('rental-subcategory');
-  const rentalArrow = document.getElementById('rental-arrow');
-
-  // 드롭다운 토글 함수
-  function toggleDropdown(button, dropdown, arrow, otherDropdown, otherArrow) {
-    const isOpen = !dropdown.classList.contains('hidden');
-    
-    // 모든 드롭다운 닫기
-    sellDropdown.classList.add('hidden');
-    rentalDropdown.classList.add('hidden');
-    sellArrow.style.transform = 'rotate(0deg)';
-    rentalArrow.style.transform = 'rotate(0deg)';
-    
-    // 클릭한 드롭다운만 토글
-    if (!isOpen) {
-      dropdown.classList.remove('hidden');
-      arrow.style.transform = 'rotate(180deg)';
-    }
-  }
-
-  // 이벤트 리스너
-  sellBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleDropdown(sellBtn, sellDropdown, sellArrow, rentalDropdown, rentalArrow);
-  });
-
-  rentalBtn.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleDropdown(rentalBtn, rentalDropdown, rentalArrow, sellDropdown, sellArrow);
-  });
-
-  // 외부 클릭시 드롭다운 닫기
-  document.addEventListener('click', function(e) {
-    if (!sellBtn.contains(e.target) && !sellDropdown.contains(e.target)) {
-      sellDropdown.classList.add('hidden');
-      sellArrow.style.transform = 'rotate(0deg)';
-    }
-    if (!rentalBtn.contains(e.target) && !rentalDropdown.contains(e.target)) {
-      rentalDropdown.classList.add('hidden');
-      rentalArrow.style.transform = 'rotate(0deg)';
-    }
-  });
-
-  // 서브 카테고리 링크에 현재 URL 파라미터 유지
-  const subcategoryLinks = document.querySelectorAll('#sell-subcategory a, #rental-subcategory a');
-  subcategoryLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
+    <!-- 덕팜 전용: 드롭다운 JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 판매/구매 드롭다운 처리
+      const sellBtn = document.getElementById('sell-category-btn');
+      const sellDropdown = document.getElementById('sell-subcategory');
+      const sellArrow = document.getElementById('sell-arrow');
       
-      const url = new URL(window.location);
-      const linkUrl = new URL(this.href, window.location.origin);
+      // 대여 드롭다운 처리
+      const rentalBtn = document.getElementById('rental-category-btn');
+      const rentalDropdown = document.getElementById('rental-subcategory');
+      const rentalArrow = document.getElementById('rental-arrow');
+
+      // 드롭다운 토글 함수
+      function toggleDropdown(button, dropdown, arrow, otherDropdown, otherArrow) {
+        const isOpen = !dropdown.classList.contains('hidden');
+        
+        // 모든 드롭다운 닫기
+        sellDropdown.classList.add('hidden');
+        rentalDropdown.classList.add('hidden');
+        sellArrow.style.transform = 'rotate(0deg)';
+        rentalArrow.style.transform = 'rotate(0deg)';
+        
+        // 클릭한 드롭다운만 토글
+        if (!isOpen) {
+          dropdown.classList.remove('hidden');
+          arrow.style.transform = 'rotate(180deg)';
+        }
+      }
+
+      // 이벤트 리스너
+      if (sellBtn) {
+        sellBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleDropdown(sellBtn, sellDropdown, sellArrow, rentalDropdown, rentalArrow);
+        });
+      }
+
+      if (rentalBtn) {
+        rentalBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleDropdown(rentalBtn, rentalDropdown, rentalArrow, sellDropdown, sellArrow);
+        });
+      }
+
+      // 외부 클릭시 드롭다운 닫기
+      document.addEventListener('click', function(e) {
+        if (sellBtn && sellDropdown && !sellBtn.contains(e.target) && !sellDropdown.contains(e.target)) {
+          sellDropdown.classList.add('hidden');
+          sellArrow.style.transform = 'rotate(0deg)';
+        }
+        if (rentalBtn && rentalDropdown && !rentalBtn.contains(e.target) && !rentalDropdown.contains(e.target)) {
+          rentalDropdown.classList.add('hidden');
+          rentalArrow.style.transform = 'rotate(0deg)';
+        }
+      });
+
+      // 서브 카테고리 링크에 현재 URL 파라미터 유지
+      const subcategoryLinks = document.querySelectorAll('#sell-subcategory a, #rental-subcategory a');
+      subcategoryLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          const url = new URL(window.location);
+          const linkUrl = new URL(this.href, window.location.origin);
+          
+          // 기존 검색어와 정렬 파라미터 유지
+          const currentQuery = url.searchParams.get('q');
+          const currentSort = url.searchParams.get('sort');
+          const currentAvailableOnly = url.searchParams.get('available_only');
+          
+          if (currentQuery) linkUrl.searchParams.set('q', currentQuery);
+          if (currentSort) linkUrl.searchParams.set('sort', currentSort);
+          if (currentAvailableOnly) linkUrl.searchParams.set('available_only', currentAvailableOnly);
+          
+          window.location.href = linkUrl.toString();
+        });
+      });
+
+      // 현재 선택된 wantto가 있다면 드롭다운 열기
+      const currentCategory = '{{ category }}';
+      const currentWantto = '{{ wantto }}';
       
-      // 기존 검색어와 정렬 파라미터 유지
-      const currentQuery = url.searchParams.get('q');
-      const currentSort = url.searchParams.get('sort');
-      const currentAvailableOnly = url.searchParams.get('available_only');
-      
-      if (currentQuery) linkUrl.searchParams.set('q', currentQuery);
-      if (currentSort) linkUrl.searchParams.set('sort', currentSort);
-      if (currentAvailableOnly) linkUrl.searchParams.set('available_only', currentAvailableOnly);
-      
-      window.location.href = linkUrl.toString();
+      if (currentCategory === 'sell' && currentWantto) {
+        sellDropdown.classList.remove('hidden');
+        sellArrow.style.transform = 'rotate(180deg)';
+      } else if (currentCategory === 'rental' && currentWantto) {
+        rentalDropdown.classList.remove('hidden');
+        rentalArrow.style.transform = 'rotate(180deg)';
+      }
     });
-  });
+    </script>
 
-  // 현재 선택된 wantto가 있다면 드롭다운 열기
-  const currentCategory = '{{ category }}';
-  const currentWantto = '{{ wantto }}';
-  
-  if (currentCategory === 'sell' && currentWantto) {
-    sellDropdown.classList.remove('hidden');
-    sellArrow.style.transform = 'rotate(180deg)';
-  } else if (currentCategory === 'rental' && currentWantto) {
-    rentalDropdown.classList.remove('hidden');
-    rentalArrow.style.transform = 'rotate(180deg)';
-  }
-});
-</script>
+    <!-- 덕팜 전용: 모바일 최적화 스타일 -->
+    <style>
+    @media (max-width: 640px) {
+      .flex.flex-wrap.gap-2 {
+        gap: 0.5rem;
+      }
+      
+      .px-4.py-2 {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+      }
+      
+      /* 드롭다운 모바일 최적화 */
+      #sell-subcategory, #rental-subcategory {
+        position: fixed;
+        top: auto;
+        left: 1rem;
+        right: 1rem;
+        margin-top: 0.5rem;
+        z-index: 50;
+      }
+      
+      /* 터치 영역 확대 */
+      #sell-subcategory a, #rental-subcategory a {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+      }
+    }
 
-<!-- 모바일 최적화 스타일 -->
-<style>
-@media (max-width: 640px) {
-  .flex.flex-wrap.gap-2 {
-    gap: 0.5rem;
-  }
-  
-  .px-4.py-2 {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-  }
-  
-  /* 드롭다운 모바일 최적화 */
-  #sell-subcategory, #rental-subcategory {
-    position: fixed;
-    top: auto;
-    left: 1rem;
-    right: 1rem;
-    margin-top: 0.5rem;
-    z-index: 50;
-  }
-  
-  /* 터치 영역 확대 */
-  #sell-subcategory a, #rental-subcategory a {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-  }
-}
+    /* 드롭다운 애니메이션 */
+    #sell-subcategory, #rental-subcategory {
+      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
 
-/* 드롭다운 애니메이션 */
-#sell-subcategory, #rental-subcategory {
-  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-}
+    #sell-subcategory.hidden, #rental-subcategory.hidden {
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
 
-#sell-subcategory.hidden, #rental-subcategory.hidden {
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
-}
+    #sell-subcategory:not(.hidden), #rental-subcategory:not(.hidden) {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-#sell-subcategory:not(.hidden), #rental-subcategory:not(.hidden) {
-  opacity: 1;
-  transform: translateY(0);
-}
+    /* 화살표 애니메이션 */
+    #sell-arrow, #rental-arrow {
+      transition: transform 0.2s ease-out;
+    }
+    </style>
 
-/* 화살표 애니메이션 */
-#sell-arrow, #rental-arrow {
-  transition: transform 0.2s ease-out;
-}
-</style>
+  {% else %}
+    <!-- 덕담: 간단한 카테고리 필터 (드롭다운 없음) -->
+    <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
+      {% for label, value, url in category_urls %}
+        <a href="{{ url }}"
+            class="px-3 py-1 rounded-full border
+                    {% if category == value or not category and value == '' %}
+                    bg-black text-white
+                    {% else %}
+                    bg-white text-gray-700 hover:bg-gray-100
+                    {% endif %}">
+            {{ label }}
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

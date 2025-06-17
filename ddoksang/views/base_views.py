@@ -177,8 +177,25 @@ def cafe_detail_view(request, cafe_id):
     except Exception as e:
         logger.warning(f"조회수 업데이트 실패: {e}")
     
+<<<<<<< HEAD
     # 공통 함수 사용으로 중복 제거
     context = get_cafe_detail_context(cafe, request.user)
+=======
+    # 디버깅: 카페 정보 확인
+    logger.info(f"카페 상세 조회: {cafe.cafe_name} (ID: {cafe.id})")
+    logger.info(f"카페 아티스트: {cafe.artist.display_name if cafe.artist else 'None'}")
+    logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
+    logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
+    
+    # 공통 함수 사용으로 중복 제거
+    context = get_cafe_detail_context(cafe, request.user)
+    
+    # 디버깅: 컨텍스트 확인
+    logger.info(f"nearby_cafes 개수: {len(context.get('nearby_cafes', []))}")
+    for nearby in context.get('nearby_cafes', [])[:3]:  # 처음 3개만 로그
+        logger.info(f"  - {nearby.get('cafe_name', 'Unknown')} ({nearby.get('distance', 'Unknown')}km)")
+    
+>>>>>>> 8c06060d2e3f6f4de9aad033dd094b54d91e8de3
     return render(request, 'ddoksang/detail.html', context)
 
 
