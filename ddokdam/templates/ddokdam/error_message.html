@@ -2,9 +2,14 @@
 
 {% block body %}
 <div class="max-w-xl mx-auto mt-20 px-4 text-center">
-    <h2 class="text-2xl font-bold text-red-600 mb-4">🚫 {{ title|default:"오류 발생" }}</h2>
+    <div class="flex items-center justify-center gap-3 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-600">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+        <h2 class="text-2xl font-bold text-red-600">{{ title|default:"오류 발생" }}</h2>
+    </div>
+    
     <p class="text-gray-600 mb-6">{{ message|default:"문제가 발생했습니다. 잠시 후 다시 시도해주세요." }}</p>
-
     {% if back_url %}
         <a href="{{ back_url }}"
            class="inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
