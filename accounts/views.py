@@ -566,7 +566,7 @@ def account_registration(request, username):
     bank_profile = user_profile.get_bank_profile()
     if bank_profile:
         messages.info(request, '이미 등록된 계좌가 있습니다.')
-        return redirect('accounts:mypage')
+        return redirect('accounts:account_settings', username=username)  
     
     if request.method == 'POST':
         print("🔍 POST 요청 받음")
@@ -580,7 +580,7 @@ def account_registration(request, username):
                 bank_profile = form.save(user_profile)
                 print(f"🔍 저장 성공: {bank_profile}")
                 messages.success(request, '✅ 계좌 정보가 등록되었습니다!')
-                return redirect('accounts:mypage')
+                return redirect('accounts:account_settings', username=username)  
             except Exception as e:
                 print(f"🔍 저장 실패: {str(e)}")
                 messages.error(request, f'계좌 등록 중 오류가 발생했습니다: {str(e)}')
@@ -622,7 +622,7 @@ def account_modify(request, username):
                 bank_profile.save()
                 
                 messages.success(request, '✅ 계좌정보가 수정되었습니다!')
-                return redirect('accounts:mypage')
+                return redirect('accounts:account_settings', username=username)  
             except Exception as e:
                 messages.error(request, f'계좌 수정 중 오류가 발생했습니다: {str(e)}')
     else:
@@ -655,18 +655,19 @@ def account_delete(request, username):
     bank_profile = user_profile.get_bank_profile()
     if not bank_profile:
         messages.warning(request, '등록된 계좌가 없습니다.')
-        return redirect('accounts:mypage')
+        return redirect('accounts:account_settings', username=username)  
     
     if request.method == 'POST':
         bank_profile.delete()
         messages.success(request, '💳 계좌정보가 삭제되었습니다.')
-        return redirect('accounts:mypage')
+        return redirect('accounts:account_settings', username=username)  
     
     context = {
         'user_profile': user_profile,
         'bank_profile': bank_profile,
     }
     return render(request, 'accounts/account_delete_confirm.html', context)
+
 
 @login_required
 def address_registration(request, username):
@@ -682,7 +683,7 @@ def address_registration(request, username):
     address_profile = user_profile.get_address_profile()
     if address_profile:
         messages.info(request, '이미 등록된 배송정보가 있습니다.')
-        return redirect('accounts:mypage')
+        return redirect('accounts:address_settings', username=username)  
     
     if request.method == 'POST':
         form = AddressForm(request.POST)
@@ -690,7 +691,7 @@ def address_registration(request, username):
             try:
                 address_profile = form.save(user_profile)
                 messages.success(request, '✅ 배송정보가 등록되었습니다!')
-                return redirect('accounts:mypage')
+                return redirect('accounts:address_settings', username=username) 
             except Exception as e:
                 messages.error(request, f'배송정보 등록 중 오류가 발생했습니다: {str(e)}')
     else:
@@ -725,13 +726,13 @@ def address_modify(request, username):
                 address_profile.postal_code = form.cleaned_data['postal_code']
                 address_profile.road_address = form.cleaned_data['road_address']
                 address_profile.detail_address = form.cleaned_data['detail_address']
-                address_profile.phone_number = form.cleaned_data['phone_number']  # 🔥 핸드폰 번호 추가
+                address_profile.phone_number = form.cleaned_data['phone_number']  
                 address_profile.sido = form.cleaned_data['sido']
                 address_profile.sigungu = form.cleaned_data['sigungu']
                 address_profile.save()
                 
                 messages.success(request, '✅ 배송정보가 수정되었습니다!')
-                return redirect('accounts:mypage')
+                return redirect('accounts:address_settings', username=username)  
             except Exception as e:
                 messages.error(request, f'배송정보 수정 중 오류가 발생했습니다: {str(e)}')
     else:
@@ -767,12 +768,12 @@ def address_delete(request, username):
     address_profile = user_profile.get_address_profile()
     if not address_profile:
         messages.warning(request, '등록된 주소가 없습니다.')
-        return redirect('accounts:mypage')
+        return redirect('accounts:address_settings', username=username) 
     
     if request.method == 'POST':
         address_profile.delete()
         messages.success(request, '🏠 배송정보가 삭제되었습니다.')  # 🔥 메시지 변경
-        return redirect('accounts:mypage')
+        return redirect('accounts:address_settings', username=username) 
     
     context = {
         'user_profile': user_profile,
