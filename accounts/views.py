@@ -72,10 +72,6 @@ def signup(request):
 
             messages.success(request, '인증 이메일이 전송되었습니다!\n이메일을 확인해주세요.')
             return redirect('accounts:login')
-        else:
-            # 🔥 폼 에러가 있을 때 기존 입력값을 유지하기 위해 form을 그대로 전달
-            # Django 폼은 자동으로 cleaned_data와 bound data를 유지함
-            print(f"회원가입 폼 에러: {form.errors}")  # 디버깅용
     else:
         form = CustomUserCreationForm()
     

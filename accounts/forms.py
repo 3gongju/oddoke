@@ -36,16 +36,14 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
     
+    # 🔥 프로필 이미지를 선택사항으로 변경
     profile_image = forms.ImageField(
-        required=True,  # 🔥 필수로 설정
+        required=False,  # 🔥 필수가 아님
         widget=forms.FileInput(attrs={
-            'class': 'hidden',
             'accept': 'image/*',
-            'id': 'profile-image-input'
+            'style': 'position: absolute; left: -9999px; opacity: 0;'
         }),
-        error_messages={
-            'required': '프로필 이미지를 선택해주세요.'
-        }
+        help_text='프로필 이미지를 설정해주세요. (선택사항)'
     )
     
     class Meta():
