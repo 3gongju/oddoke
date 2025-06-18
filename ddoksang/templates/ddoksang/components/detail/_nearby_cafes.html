@@ -17,7 +17,7 @@
           <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생카" class="w-4 h-4 filter brightness-0 invert">
         </div>
       </div>
-      {{ cafe.member.member_name }}의 다른 생카
+      {{ cafe.member.member_name }}
     {% else %}
       <!-- 멤버가 없을 때는 기본 아이콘 -->
       <div class="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center mr-3">
@@ -36,7 +36,7 @@
       <a href="{% url 'ddoksang:search' %}?q={{ cafe.member.member_name|urlencode }}" 
          class="block w-full bg-black hover:from-blue-600 hover:to-gray-500 text-white text-center py-3 px-4 rounded-xl font-medium transition-all duration-200 hover:shadow-lg">
         <div class="flex items-center justify-center space-x-2">
-          <span>{{ cafe.member.member_name }}의 모든 생카 (덕)보기</span>
+          <span>{{ cafe.member.member_name }} (덕)보기</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
@@ -44,7 +44,7 @@
       </a>
       {% if nearby_cafes %}
         <p class="text-xs text-gray-500 text-center mt-2">
-          가까운 {{ nearby_cafes|length }}개 카페 미리보기
+          어덕해에서 {{ cafe.member.member_name }}과 관련한 모든 카페 둘러보기
         </p>
       {% endif %}
     </div>
@@ -143,7 +143,11 @@
           {% if nearby_cafes|length >= 10 %}
             10개의 가까운 {{ cafe.member.member_name }} 카페를 표시 중
           {% else %}
+<<<<<<< HEAD
             {{ nearby_cafes|length }}개의 {{ cafe.member.member_name }} 카페 표시 중
+=======
+            5km 이내의 {{ nearby_cafes|length }}개의 카페 표시 중
+>>>>>>> 98e3d89deb122ad1b9403f6368dfcbba1c833006
           {% endif %}
         </p>
       </div>

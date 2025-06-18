@@ -7,8 +7,8 @@ export function setupUIManager(tradeCompletedStatus) {
   isTradeCompleted = tradeCompletedStatus;
   setupInitialObservers();
   
-  // 페이지 로드 시 스크롤
-  setTimeout(scrollToBottom, 100);
+  // 페이지 로드 시 즉시 맨 아래로 스크롤 (애니메이션 없음)
+  setTimeout(() => scrollToBottom(true), 100);
   
   // 입력/버튼 비활성화 (거래 완료 시)
   if (isTradeCompleted) {
@@ -19,32 +19,40 @@ export function setupUIManager(tradeCompletedStatus) {
   }
 }
 
-export function scrollToBottom() {
+export function scrollToBottom(instant = false) {
   if (chatLog) {
-    chatLog.scrollTop = chatLog.scrollHeight;
+    if (instant) {
+      // 즉시 이동 (애니메이션 없음)
+      chatLog.scrollTop = chatLog.scrollHeight;
+    } else {
+      // 부드러운 애니메이션
+      chatLog.scrollTo({
+        top: chatLog.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }
 }
 
 export function scrollToBottomAfterImageLoad(imgElement) {
   if (imgElement && imgElement.complete) {
-    // 이미 로딩 완료된 경우
-    scrollToBottom();
+    // 이미 로딩 완료된 경우 - 부드럽게 스크롤
+    scrollToBottom(false);
   } else if (imgElement) {
-    // 로딩 중인 경우 - 로딩 완료 시 스크롤
+    // 로딩 중인 경우 - 로딩 완료 시 부드럽게 스크롤
     imgElement.onload = function() {
-      scrollToBottom();
+      scrollToBottom(false);
     };
     imgElement.onerror = function() {
-      // 로딩 실패해도 스크롤
-      scrollToBottom();
+      scrollToBottom(false);
     };
     // 타임아웃 방어 로직
     setTimeout(() => {
-      scrollToBottom();
+      scrollToBottom(false);
     }, 1000);
   } else {
-    // 이미지 요소가 없는 경우 일반 스크롤
-    scrollToBottom();
+    // 이미지 요소가 없는 경우 부드럽게 스크롤
+    scrollToBottom(false);
   }
 }
 
@@ -206,6 +214,19 @@ export function updateSensitiveInfoCards() {
   });
   
   console.log('모든 민감한 정보 카드 업데이트 완료');
+}
+
+// 스크롤 동작 제어 함수들 (추가 옵션)
+export function enableSmoothScroll() {
+  if (chatLog) {
+    chatLog.style.scrollBehavior = 'smooth';
+  }
+}
+
+export function disableSmoothScroll() {
+  if (chatLog) {
+    chatLog.style.scrollBehavior = 'auto';
+  }
 }
 
 // IntersectionObserver 설정

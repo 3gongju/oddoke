@@ -183,8 +183,21 @@ def cafe_detail_view(request, cafe_id):
     logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
     logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
     
-    # 공통 함수 사용으로 중복 제거
-    context = get_cafe_detail_context(cafe, request.user)
+    # ✅ 주변 카페들 (map_utils 사용)
+    nearby_cafes = []
+    if cafe.latitude and cafe.longitude:
+        try:
+            approved_cafes = BdayCafe.objects.filter(status='approved', member=cafe.member).select_related('artist', 'member')
+            nearby_cafes = get_nearby_cafes(
+                user_lat=float(cafe.latitude), 
+                user_lng=float(cafe.longitude), 
+                cafes_queryset=approved_cafes,
+                radius_km=5, 
+                limit=5, 
+                exclude_id=cafe.id
+            )
+        except (ValueError, TypeError) as e:
+            logger.warning(f"주변 카페 조회 오류: {e}")
     
     # 디버깅: 컨텍스트 확인
     logger.info(f"nearby_cafes 개수: {len(context.get('nearby_cafes', []))}")

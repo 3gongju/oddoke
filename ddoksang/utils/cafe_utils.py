@@ -1,3 +1,4 @@
+from django.conf import settings 
 # 10개 제한 적용
 
 import logging

@@ -6,7 +6,46 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User, MannerReview, BankProfile, AddressProfile
 
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '이메일을 입력하세요'
+        })
+    )
+    
+    username = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '다른 사용자들에게 보여질 닉네임을 입력하세요'
+        })
+    )
+    
+    password1 = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '비밀번호를 입력하세요'
+        })
+    )
+    
+    password2 = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'placeholder': '비밀번호를 다시 입력하세요'
+        })
+    )
+    
+    # 🔥 프로필 이미지를 선택사항으로 변경
+    profile_image = forms.ImageField(
+        required=False,  # 🔥 필수가 아님
+        widget=forms.FileInput(attrs={
+            'accept': 'image/*',
+            'style': 'position: absolute; left: -9999px; opacity: 0;'
+        }),
+        help_text='프로필 이미지를 설정해주세요. (선택사항)'
+    )
+    
     class Meta():
         model = User
         fields = ['username', 'email', 'password1', 'password2', 'profile_image']
@@ -32,7 +71,7 @@ class CustomUserCreationForm(UserCreationForm):
         if len(username) > 20:
             raise forms.ValidationError("닉네임은 최대 20자까지 입력 가능합니다.")
         
-        # 🔥 공백 관련 검증
+        # 공백 관련 검증
         if username.startswith(' ') or username.endswith(' '):
             raise forms.ValidationError("닉네임 앞뒤에 공백은 사용할 수 없습니다.")
         
@@ -62,6 +101,8 @@ class CustomUserCreationForm(UserCreationForm):
 
         if password1 and password2 and password1 != password2:
             self.add_error('password2', "비밀번호가 일치하지 않습니다.")
+        
+        return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)

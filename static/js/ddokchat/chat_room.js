@@ -21,6 +21,38 @@ import {
 } from './ui_manager.js';
 import { setupFraudCheck } from './fraud_check.js';
 
+// CSRF 토큰 가져오는 함수
+function getCSRFToken() {
+  // 1순위: 전역변수에서 가져오기
+  if (window.csrfToken) {
+    return window.csrfToken;
+  }
+  
+  // 2순위: 메타태그에서 가져오기
+  const metaToken = document.querySelector('meta[name="csrf-token"]');
+  if (metaToken && metaToken.content) {
+    return metaToken.content;
+  }
+  
+  // 3순위: 쿠키에서 가져오기
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'csrftoken' && value) {
+      return decodeURIComponent(value);
+    }
+  }
+  
+  // 4순위: hidden input에서 가져오기
+  const hiddenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (hiddenInput && hiddenInput.value) {
+    return hiddenInput.value;
+  }
+  
+  console.error('CSRF 토큰을 찾을 수 없습니다!');
+  return null;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // 전역 변수에서 데이터 가져오기
   const roomId = window.roomId;
@@ -125,12 +157,19 @@ function handleImageUpload(file) {
   formData.append('image', file);
   formData.append('room_id', window.roomId);
 
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  // CSRF 토큰 가져오기
+  const csrfToken = getCSRFToken();
+  if (!csrfToken) {
+    hideLoadingToast(loadingToast);
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
 
   fetch("/ddokchat/upload_image/", {
     method: 'POST',
     headers: {
       'X-CSRFToken': csrfToken,
+      // FormData 사용시 Content-Type은 설정하지 않음!
     },
     body: formData,
   })
@@ -143,7 +182,8 @@ function handleImageUpload(file) {
         type: 'chat_image',
         room_id: window.roomId,
         image_url: data.image_url,
-        sender_id: window.currentUserId
+        sender_id: window.currentUserId,
+        message_id: data.message_id
       });
       showToast('이미지가 전송되었습니다.', 'success');
     } else {
@@ -225,7 +265,14 @@ function sendAccountInfo() {
   if (!checkTradeCompletedBeforeSend()) return;
 
   const loadingToast = showLoadingToast('계좌정보 전송 중...');
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  
+  // CSRF 토큰 가져오기
+  const csrfToken = getCSRFToken();
+  if (!csrfToken) {
+    hideLoadingToast(loadingToast);
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
 
   fetch(`/ddokchat/send-account/${window.roomId}/`, {
     method: 'POST',
@@ -273,7 +320,14 @@ function sendAddressInfo() {
   if (!checkTradeCompletedBeforeSend()) return;
 
   const loadingToast = showLoadingToast('주소정보 전송 중...');
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  
+  // CSRF 토큰 가져오기
+  const csrfToken = getCSRFToken();
+  if (!csrfToken) {
+    hideLoadingToast(loadingToast);
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
 
   fetch(`/ddokchat/send-address/${window.roomId}/`, {
     method: 'POST',
@@ -345,7 +399,14 @@ function setupTradeCompleteModal() {
       const originalText = confirmBtn.textContent;
       confirmBtn.textContent = '처리 중...';
       
-      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+      // CSRF 토큰 가져오기
+      const csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+        return;
+      }
       
       fetch(`/ddokchat/complete/${window.roomId}/`, {
         method: 'POST',
