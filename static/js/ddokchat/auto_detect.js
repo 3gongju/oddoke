@@ -13,7 +13,7 @@ export function setupAutoDetect() {
   }, 1500);
 }
 
-// 계좌번호 패턴 감지 함수
+// 계좌번호 패턴 감지 함수 - 실제 한국 은행 패턴 기반
 export function detectAccountNumber(message) {
   if (!message || typeof message !== 'string') return null;
   
@@ -21,9 +21,22 @@ export function detectAccountNumber(message) {
   if (message.includes('010')) return null;
   
   const patterns = [
-    /\b(?!010)\d{10,14}\b/g,                    // 010이 아닌 10-14자리 연속 숫자
-    /\b(?!010-)\d{3,6}-\d{2,6}-\d{6,8}\b/g,    // 하이픈 구분 (010- 제외)
-    /\b(?!010)\d{4}-\d{4}-\d{4,8}\b/g          // 4-4-4~ 패턴
+    // 1. 하이픈 없는 연속 숫자 (10~14자리)
+    /\b(?!010)\d{10,14}\b/g,
+    
+    // 2. 실제 은행 패턴들
+    /\b(?!010)\d{4}-\d{2}-\d{8}\b/g,          // KB국민은행: 1234-56-78901234
+    /\b(?!010)\d{3}-\d{8}-\d{1}\b/g,          // 신한은행: 123-45678901-2
+    /\b(?!010)\d{3}-\d{3}-\d{7}\b/g,          // 우리은행: 123-456-7890123
+    /\b(?!010)\d{3}-\d{6}-\d{2}-\d{3}\b/g,    // 하나은행: 123-456789-01-234
+    /\b(?!010)\d{3}-\d{2}-\d{7}\b/g,          // 농협은행: 123-45-6789012
+    /\b(?!010)\d{4}-\d{2}-\d{7}\b/g,          // 카카오뱅크: 3333-12-3456789
+    /\b(?!010)\d{4}-\d{4}-\d{4}\b/g,          // 토스뱅크: 1000-1234-5678
+    
+    // 3. 범용 패턴들 (위에서 안잡힌 것들)
+    /\b(?!010)\d{3,4}-\d{2,6}-\d{6,8}\b/g,    // 3~4자리-2~6자리-6~8자리
+    /\b(?!010)\d{3,4}-\d{6,8}-\d{1,3}\b/g,    // 3~4자리-6~8자리-1~3자리
+    /\b(?!010)\d{2,4}-\d{2,4}-\d{4,8}\b/g     // 유연한 패턴
   ];
   
   for (let pattern of patterns) {
@@ -64,10 +77,10 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
             </svg>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-base text-orange-800 font-semibold leading-relaxed mb-1">
+            <div class="text-sm text-orange-800 font-semibold leading-relaxed mb-1">
               계좌번호가 감지되었습니다
             </div>
-            <p class="text-sm text-orange-700 leading-relaxed">
+            <p class="text-xs text-orange-700 leading-relaxed">
               안전한 거래를 위해 사기이력 조회를 권장합니다
             </p>
           </div>
@@ -85,7 +98,7 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
         <div class="flex items-center justify-center">
           <button 
             onclick="quickFraudCheck('${detectedAccount}')" 
-            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors font-semibold text-base shadow-sm hover:shadow-md flex items-center gap-2"
+            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors font-semibold text-sm shadow-sm hover:shadow-md flex items-center gap-2"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>

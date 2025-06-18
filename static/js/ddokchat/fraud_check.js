@@ -1,4 +1,4 @@
-// static/js/ddokchat/fraud_check.js 완전 교체
+// static/js/ddokchat/fraud_check.js
 
 import { showToast } from './ui_manager.js';
 
@@ -65,13 +65,11 @@ export function openManualFraudCheck() {
   const inputStep = document.getElementById('fraudInputStep');
   const resultStep = document.getElementById('fraudResultStep');
   const accountInput = document.getElementById('fraudAccountNumberInput');
-  const holderInput = document.getElementById('fraudAccountHolderInput');
   
   if (!modal) return;
   
   // 입력 필드 초기화
   if (accountInput) accountInput.value = '';
-  if (holderInput) holderInput.value = '';
   
   // Step 1 표시, Step 2 숨김
   inputStep?.classList.remove('hidden');
@@ -85,19 +83,17 @@ export function openManualFraudCheck() {
   }, 100);
 }
 
-// 기존 계좌정보에서 사기조회 (자동입력)
+// 기존 계좌정보에서 사기조회 (자동입력) - 예금주명 제거
 export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
   const modal = document.getElementById('fraudCheckModal');
   const inputStep = document.getElementById('fraudInputStep');
   const resultStep = document.getElementById('fraudResultStep');
   const accountInput = document.getElementById('fraudAccountNumberInput');
-  const holderInput = document.getElementById('fraudAccountHolderInput');
   
   if (!modal) return;
   
-  // 기존 정보로 자동 입력
+  // 계좌번호만 자동 입력 (예금주명 제거)
   if (accountInput) accountInput.value = accountNumber || '';
-  if (holderInput) holderInput.value = accountHolder || '';
   
   // Step 1 표시, Step 2 숨김
   inputStep?.classList.remove('hidden');
@@ -109,7 +105,6 @@ export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
 // 조회 시작
 function startFraudCheck() {
   const accountNumber = document.getElementById('fraudAccountNumberInput')?.value?.trim();
-  const accountHolder = document.getElementById('fraudAccountHolderInput')?.value?.trim();
   
   if (!accountNumber) {
     showToast('계좌번호를 입력해주세요.', 'error');
@@ -124,14 +119,14 @@ function startFraudCheck() {
   }
   
   // Step 2로 전환
-  showResultStep(accountNumber, accountHolder);
+  showResultStep(accountNumber);
   
   // 실제 조회 실행
-  performFraudCheck(accountNumber, accountHolder);
+  performFraudCheck(accountNumber);
 }
 
-// 결과 단계로 전환
-function showResultStep(accountNumber, accountHolder) {
+// 결과 단계로 전환 - 예금주명 관련 코드 제거
+function showResultStep(accountNumber) {
   const inputStep = document.getElementById('fraudInputStep');
   const resultStep = document.getElementById('fraudResultStep');
   const loading = document.getElementById('fraudLoading');
@@ -149,25 +144,16 @@ function showResultStep(accountNumber, accountHolder) {
   hasReports?.classList.add('hidden');
   errorDiv?.classList.add('hidden');
   
-  // 조회된 계좌 정보 표시
+  // 조회된 계좌 정보 표시 (계좌번호만)
   const displayAccountNumber = document.getElementById('fraudDisplayAccountNumber');
-  const displayAccountHolder = document.getElementById('fraudDisplayAccountHolder');
-  const holderRow = document.getElementById('fraudDisplayHolderRow');
   
   if (displayAccountNumber) {
     displayAccountNumber.textContent = accountNumber;
   }
-  
-  if (accountHolder && accountHolder.trim()) {
-    if (displayAccountHolder) displayAccountHolder.textContent = accountHolder;
-    if (holderRow) holderRow.style.display = 'flex';
-  } else {
-    if (holderRow) holderRow.style.display = 'none';
-  }
 }
 
-// 실제 사기조회 API 호출
-function performFraudCheck(accountNumber, accountHolder) {
+// 실제 사기조회 API 호출 - 예금주명 제거
+function performFraudCheck(accountNumber) {
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   
@@ -178,9 +164,9 @@ function performFraudCheck(accountNumber, accountHolder) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      bank_code: '', // 일단 빈 값으로 (계좌번호만으로 조회)
+      bank_code: '', // 빈 값으로 (계좌번호만으로 조회)
       account_number: accountNumber,
-      account_holder: accountHolder || ''
+      account_holder: '' // 예금주명 제거
     })
   })
   .then(response => response.json())
@@ -213,7 +199,6 @@ function performFraudCheck(accountNumber, accountHolder) {
     }
   })
   .catch(error => {
-    console.error('사기 조회 오류:', error);
     const loading = document.getElementById('fraudLoading');
     loading?.classList.add('hidden');
     
@@ -310,7 +295,6 @@ export function copyAccountNumber(accountNumber) {
     
     showToast('계좌번호가 복사되었습니다.', 'success');
   }).catch(function(err) {
-    console.error('복사 실패:', err);
     showToast('계좌번호 복사에 실패했습니다.', 'error');
   });
 }
@@ -334,7 +318,6 @@ export function copyAddress(fullAddress) {
   navigator.clipboard.writeText(fullAddress).then(function() {
     showToast('주소가 복사되었습니다.', 'success');
   }).catch(function(err) {
-    console.error('복사 실패:', err);
     showToast('주소 복사에 실패했습니다.', 'error');
   });
 }
@@ -358,7 +341,6 @@ export function copyPhoneNumber(phoneNumber) {
   navigator.clipboard.writeText(phoneNumber).then(function() {
     showToast('연락처가 복사되었습니다.', 'success');
   }).catch(function(err) {
-    console.error('복사 실패:', err);
     showToast('연락처 복사에 실패했습니다.', 'error');
   });
 }
@@ -388,7 +370,6 @@ export function copyDeliveryInfo(phoneNumber, fullAddress) {
   navigator.clipboard.writeText(deliveryText).then(function() {
     showToast('배송정보가 복사되었습니다.', 'success');
   }).catch(function(err) {
-    console.error('복사 실패:', err);
     showToast('배송정보 복사에 실패했습니다.', 'error');
   });
 }
