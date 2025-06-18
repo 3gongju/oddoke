@@ -21,6 +21,38 @@ import {
 } from './ui_manager.js';
 import { setupFraudCheck } from './fraud_check.js';
 
+// CSRF 토큰 가져오는 함수
+function getCSRFToken() {
+  // 1순위: 전역변수에서 가져오기
+  if (window.csrfToken) {
+    return window.csrfToken;
+  }
+  
+  // 2순위: 메타태그에서 가져오기
+  const metaToken = document.querySelector('meta[name="csrf-token"]');
+  if (metaToken && metaToken.content) {
+    return metaToken.content;
+  }
+  
+  // 3순위: 쿠키에서 가져오기
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'csrftoken' && value) {
+      return decodeURIComponent(value);
+    }
+  }
+  
+  // 4순위: hidden input에서 가져오기
+  const hiddenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (hiddenInput && hiddenInput.value) {
+    return hiddenInput.value;
+  }
+  
+  console.error('CSRF 토큰을 찾을 수 없습니다!');
+  return null;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // 전역 변수에서 데이터 가져오기
   const roomId = window.roomId;
@@ -57,10 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function setupEventListeners() {
   const input = document.getElementById('chat-message-input');
   const submit = document.getElementById('chat-message-submit');
-<<<<<<< HEAD
-  const imageUpload = document.getElementById('chat-image-upload');
-=======
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   
   // 메시지 전송
   if (submit) {
@@ -80,16 +108,7 @@ function setupEventListeners() {
     input.focus();
   }
 
-<<<<<<< HEAD
-  // 이미지 업로드
-  if (imageUpload) {
-    imageUpload.addEventListener('change', handleImageUpload);
-  }
-
-  // + 버튼 메뉴 설정
-=======
   // 플러스 메뉴 설정 (이미지 업로드 포함)
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   setupPlusMenu();
   
   // 거래 완료 모달 설정
@@ -111,19 +130,10 @@ function sendTextMessage() {
   }
 }
 
-<<<<<<< HEAD
-function handleImageUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  
-  if (!checkTradeCompletedBeforeSend()) {
-    this.value = '';
-=======
 function handleImageUpload(file) {
   if (!file) return;
   
   if (!checkTradeCompletedBeforeSend()) {
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
     return;
   }
 
@@ -131,10 +141,6 @@ function handleImageUpload(file) {
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
     showToast('파일 크기가 10MB를 초과합니다.', 'error');
-<<<<<<< HEAD
-    this.value = '';
-=======
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
     return;
   }
 
@@ -142,10 +148,6 @@ function handleImageUpload(file) {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   if (!allowedTypes.includes(file.type)) {
     showToast('지원하지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 가능)', 'error');
-<<<<<<< HEAD
-    this.value = '';
-=======
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
     return;
   }
 
@@ -155,12 +157,19 @@ function handleImageUpload(file) {
   formData.append('image', file);
   formData.append('room_id', window.roomId);
 
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  // CSRF 토큰 가져오기
+  const csrfToken = getCSRFToken();
+  if (!csrfToken) {
+    hideLoadingToast(loadingToast);
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
 
   fetch("/ddokchat/upload_image/", {
     method: 'POST',
     headers: {
       'X-CSRFToken': csrfToken,
+      // FormData 사용시 Content-Type은 설정하지 않음!
     },
     body: formData,
   })
@@ -173,7 +182,8 @@ function handleImageUpload(file) {
         type: 'chat_image',
         room_id: window.roomId,
         image_url: data.image_url,
-        sender_id: window.currentUserId
+        sender_id: window.currentUserId,
+        message_id: data.message_id
       });
       showToast('이미지가 전송되었습니다.', 'success');
     } else {
@@ -184,27 +194,16 @@ function handleImageUpload(file) {
     hideLoadingToast(loadingToast);
     console.error('이미지 업로드 오류:', error);
     showToast('이미지 업로드 중 오류가 발생했습니다.', 'error');
-<<<<<<< HEAD
-  })
-  .finally(() => {
-    e.target.value = '';
-=======
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   });
 }
 
 function setupPlusMenu() {
   const plusMenuBtn = document.getElementById('plus-menu-btn');
   const plusMenu = document.getElementById('plus-menu');
-<<<<<<< HEAD
-  const sendAccountBtn = document.getElementById('send-account-btn');
-  const sendAddressBtn = document.getElementById('send-address-btn');
-=======
   const sendImageBtn = document.getElementById('send-image-btn');
   const sendAccountBtn = document.getElementById('send-account-btn');
   const sendAddressBtn = document.getElementById('send-address-btn');
   const imageUpload = document.getElementById('chat-image-upload');
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
 
   if (plusMenuBtn && plusMenu) {
     plusMenuBtn.addEventListener('click', function(e) {
@@ -223,8 +222,6 @@ function setupPlusMenu() {
     });
   }
 
-<<<<<<< HEAD
-=======
   // 이미지/동영상 버튼
   if (sendImageBtn && imageUpload) {
     sendImageBtn.addEventListener('click', function(e) {
@@ -244,7 +241,6 @@ function setupPlusMenu() {
   }
 
   // 계좌 공유 버튼
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   if (sendAccountBtn) {
     sendAccountBtn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -254,10 +250,7 @@ function setupPlusMenu() {
     });
   }
 
-<<<<<<< HEAD
-=======
   // 주소 공유 버튼
->>>>>>> 4611217bbc1c039e53f8c8a5b69959cd13d99258
   if (sendAddressBtn) {
     sendAddressBtn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -272,7 +265,14 @@ function sendAccountInfo() {
   if (!checkTradeCompletedBeforeSend()) return;
 
   const loadingToast = showLoadingToast('계좌정보 전송 중...');
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  
+  // CSRF 토큰 가져오기
+  const csrfToken = getCSRFToken();
+  if (!csrfToken) {
+    hideLoadingToast(loadingToast);
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
 
   fetch(`/ddokchat/send-account/${window.roomId}/`, {
     method: 'POST',
@@ -320,7 +320,14 @@ function sendAddressInfo() {
   if (!checkTradeCompletedBeforeSend()) return;
 
   const loadingToast = showLoadingToast('주소정보 전송 중...');
-  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  
+  // CSRF 토큰 가져오기
+  const csrfToken = getCSRFToken();
+  if (!csrfToken) {
+    hideLoadingToast(loadingToast);
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
 
   fetch(`/ddokchat/send-address/${window.roomId}/`, {
     method: 'POST',
@@ -392,7 +399,14 @@ function setupTradeCompleteModal() {
       const originalText = confirmBtn.textContent;
       confirmBtn.textContent = '처리 중...';
       
-      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+      // CSRF 토큰 가져오기
+      const csrfToken = getCSRFToken();
+      if (!csrfToken) {
+        showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = originalText;
+        return;
+      }
       
       fetch(`/ddokchat/complete/${window.roomId}/`, {
         method: 'POST',
