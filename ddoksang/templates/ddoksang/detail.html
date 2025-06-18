@@ -38,6 +38,8 @@ nav, header, .navbar, body > nav, body > header {
 }
 </style>
 
+
+
 <!-- 네비게이션 바는 이 wrapper 밖에 있어야 함 -->
 <div class="detail-content-wrapper">
   <div class="bg-gradient-to-br from-white">
@@ -118,6 +120,9 @@ nav, header, .navbar, body > nav, body > header {
 <!-- JavaScript 및 데이터 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
 
+<!-- ✅ 카카오톡 공유용 SDK 추가 -->
+<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+
 <script id="cafe-data" type="application/json">
 {
   "latitude": {{ cafe.latitude|default:"37.5665" }},
@@ -126,7 +131,8 @@ nav, header, .navbar, body > nav, body > header {
   "address": "{{ cafe.address|escapejs }}",
   "id": {{ cafe.id }},
   "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %},
-  "apiKey": "{{ kakao_api_key|escapejs }}"
+  "apiKey": "{{ kakao_api_key|escapejs }}",
+  "jsKey": "{{ settings.KAKAO_JAVASCRIPT_KEY|escapejs }}"
 }
 </script>
 
@@ -141,6 +147,19 @@ nav, header, .navbar, body > nav, body > header {
   }{% if not forloop.last %},{% endif %}
   {% endfor %}
 ]
+</script>
+
+<!-- 카카오 공유용 데이터 추가 -->
+<script id="share-data" type="application/json">
+{
+  "title": "{{ cafe.cafe_name|escapejs }}",
+  "description": "{{ cafe.artist.display_name|escapejs }}{% if cafe.member %} - {{ cafe.member.member_name|escapejs }}{% endif %}의 생일카페",
+  "imageUrl": "{% with first_image=cafe.images.first %}{% if first_image %}{{ request.scheme }}://{{ request.get_host }}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=🎂+생일카페{% endif %}{% endwith %}",
+  "linkUrl": "{{ request.scheme }}://{{ request.get_host }}{{ request.get_full_path }}",
+  "address": "{{ cafe.address|escapejs }}",
+  "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",
+  "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}"
+}
 </script>
 
 {% csrf_token %}

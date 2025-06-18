@@ -187,6 +187,9 @@ KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY')
 
 KAKAO_API_KEY = KAKAO_MAP_API_KEY
 
+# 카카오톡 공유하기 키 설정
+KAKAO_JAVASCRIPT_KEY = os.getenv('KAKAO_JAVASCRIPT_KEY')
+
 # 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
 ASGI_APPLICATION = 'oddoke.asgi.application'
 
