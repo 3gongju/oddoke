@@ -7,7 +7,7 @@ import {
   updateSensitiveInfoCards, 
   updateUIAfterTradeComplete 
 } from './ui_manager.js';
-import { handleMessageSent } from './auto_detect.js';
+import { handleReceivedMessage } from './auto_detect.js'; // ✅ 함수명 변경
 
 let currentUser = '';
 let currentUserId = '';
@@ -19,11 +19,22 @@ export function setupMessageHandlers(user, userId) {
   chatLog = document.getElementById('chat-log');
 }
 
+// message_handler.js의 handleTextMessage 함수만 수정
+
 export function handleTextMessage(data) {
-  const isMine = data.sender === currentUser;
+  console.log('📨 handleTextMessage 호출됨:', data);
   
+  const isMine = data.sender === currentUser;
+  console.log('isMine:', isMine, 'sender:', data.sender, 'currentUser:', currentUser);
+  
+  // ✅ 전체 메시지 래퍼 생성 (세로 배치) - 이게 핵심!
+  const messageWrapper = document.createElement("div");
+  messageWrapper.className = `message-wrapper mb-3`;
+  console.log('✅ messageWrapper 생성:', messageWrapper);
+  
+  // ✅ 기존 메시지 컨테이너 (가로 배치)
   const messageContainer = document.createElement("div");
-  messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} group message-enter mb-3`;
+  messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} group message-enter`;
   
   if (isMine) {
     // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
@@ -60,13 +71,34 @@ export function handleTextMessage(data) {
       </div>`;
   }
   
+  // ✅ 메시지를 래퍼에 추가
+  messageWrapper.appendChild(messageContainer);
+  console.log('✅ messageContainer를 messageWrapper에 추가');
+  
   if (chatLog) {
-    chatLog.appendChild(messageContainer);
+    // ✅ 래퍼를 채팅 로그에 추가
+    chatLog.appendChild(messageWrapper);
+    console.log('✅ messageWrapper를 chatLog에 추가');
+    
     registerObserver(messageContainer, data.sender);
     scrollToBottom();
+    
+    // ✅ 상대방이 보낸 메시지에서만 자동 감지 (래퍼를 전달)
+    if (!isMine) {
+      console.log('📞 상대방 메시지 - handleReceivedMessage 호출 예약');
+      setTimeout(() => {
+        console.log('⏰ setTimeout 실행 - handleReceivedMessage 호출');
+        handleReceivedMessage(data.message, messageWrapper, data.sender);
+      }, 1000);
+    } else {
+      console.log('⛔ 내 메시지 - 감지 안함');
+    }
+  } else {
+    console.error('❌ chatLog를 찾을 수 없음');
   }
 }
 
+// 나머지 함수들은 기존과 동일...
 export function handleImageMessage(data) {
   const isMine = data.sender === currentUser;
   const messageContainer = document.createElement("div");
@@ -217,177 +249,177 @@ export function handleAccountMessage(data) {
         <div class="max-w-sm">
           <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
             <div class="space-y-3">
-              <div class="flex items-center space-x-2 mb-2">
-                ${creditCardIcon}
-                <span class="text-sm">계좌정보 전송</span>
-              </div>
-              ${contentHtml}
-            </div>
-          </div>
-        </div>
-      </div>`;
-  } else {
-    // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
-    messageContainer.innerHTML = `
-      <div class="flex items-end gap-2">
-        <!-- 말풍선 (왼쪽) -->
-        <div class="max-w-sm">
-          <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
-            <div class="space-y-3">
-              <div class="flex items-center space-x-2 mb-2">
-                ${creditCardIcon}
-                <span class="text-sm">계좌정보</span>
-              </div>
-              ${contentHtml}
-            </div>
-          </div>
-        </div>
-        
-        <!-- 시간 (오른쪽) -->
-        <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
-          <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
-        </div>
-      </div>`;
-  }
-  
-  if (chatLog) {
-    chatLog.appendChild(messageContainer);
-    registerObserver(messageContainer, data.sender);
-    scrollToBottom();
-  }
+             <div class="flex items-center space-x-2 mb-2">
+               ${creditCardIcon}
+               <span class="text-sm">계좌정보 전송</span>
+             </div>
+             ${contentHtml}
+           </div>
+         </div>
+       </div>
+     </div>`;
+ } else {
+   // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
+   messageContainer.innerHTML = `
+     <div class="flex items-end gap-2">
+       <!-- 말풍선 (왼쪽) -->
+       <div class="max-w-sm">
+         <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+           <div class="space-y-3">
+             <div class="flex items-center space-x-2 mb-2">
+               ${creditCardIcon}
+               <span class="text-sm">계좌정보</span>
+             </div>
+             ${contentHtml}
+           </div>
+         </div>
+       </div>
+       
+       <!-- 시간 (오른쪽) -->
+       <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
+         <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
+       </div>
+     </div>`;
+ }
+ 
+ if (chatLog) {
+   chatLog.appendChild(messageContainer);
+   registerObserver(messageContainer, data.sender);
+   scrollToBottom();
+ }
 }
 
 export function handleAddressMessage(data) {
-  const addressInfo = data.address_info;
-  const isMine = data.sender === currentUser;
-  
-  const messageContainer = document.createElement("div");
-  messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} message-enter mb-3`;
+ const addressInfo = data.address_info;
+ const isMine = data.sender === currentUser;
+ 
+ const messageContainer = document.createElement("div");
+ messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} message-enter mb-3`;
 
-  let buttonsHtml = '';
-  if (!isMine && !addressInfo.is_deleted) {
-    buttonsHtml = `
-      <div class="flex space-x-2 mt-3">
-        <button onclick="copyDeliveryInfo('${addressInfo.phone_number}', '${addressInfo.full_address}')" 
-                class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
-          배송정보 복사
-        </button>
-        <button onclick="copyPhoneNumber('${addressInfo.phone_number}')" 
-                class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
-          연락처 복사
-        </button>
-      </div>
-    `;
-  }
+ let buttonsHtml = '';
+ if (!isMine && !addressInfo.is_deleted) {
+   buttonsHtml = `
+     <div class="flex space-x-2 mt-3">
+       <button onclick="copyDeliveryInfo('${addressInfo.phone_number}', '${addressInfo.full_address}')" 
+               class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
+         배송정보 복사
+       </button>
+       <button onclick="copyPhoneNumber('${addressInfo.phone_number}')" 
+               class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
+         연락처 복사
+       </button>
+     </div>
+   `;
+ }
 
-  let contentHtml = '';
-  if (addressInfo.is_deleted) {
-    contentHtml = `
-      <div class="bg-${isMine ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
-        <p class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'} font-medium">배송정보가 삭제되었습니다</p>
-        <p class="text-xs ${isMine ? 'text-gray-400' : 'text-gray-500'} mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
-      </div>
-    `;
-  } else {
-    contentHtml = `
-      <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-${isMine ? '4' : '3'} space-y-2 info-card ${isMine ? 'min-w-[220px]' : ''}">
-        <div class="flex justify-between">
-          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">연락처</span>
-          <span class="text-sm">${addressInfo.phone_number}</span>
-        </div>
-        <div class="flex justify-between">
-          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">우편번호</span>
-          <span class="text-sm">${addressInfo.postal_code}</span>
-        </div>
-        <div>
-          <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">배송주소</span>
-          <p class="text-sm mt-1">${addressInfo.full_address}</p>
-        </div>
-      </div>
-      ${buttonsHtml}
-    `;
-  }
+ let contentHtml = '';
+ if (addressInfo.is_deleted) {
+   contentHtml = `
+     <div class="bg-${isMine ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
+       <p class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'} font-medium">배송정보가 삭제되었습니다</p>
+       <p class="text-xs ${isMine ? 'text-gray-400' : 'text-gray-500'} mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
+     </div>
+   `;
+ } else {
+   contentHtml = `
+     <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-${isMine ? '4' : '3'} space-y-2 info-card ${isMine ? 'min-w-[220px]' : ''}">
+       <div class="flex justify-between">
+         <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">연락처</span>
+         <span class="text-sm">${addressInfo.phone_number}</span>
+       </div>
+       <div class="flex justify-between">
+         <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">우편번호</span>
+         <span class="text-sm">${addressInfo.postal_code}</span>
+       </div>
+       <div>
+         <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">배송주소</span>
+         <p class="text-sm mt-1">${addressInfo.full_address}</p>
+       </div>
+     </div>
+     ${buttonsHtml}
+   `;
+ }
 
-  // Heroicons Map Pin Icon SVG
-  const mapPinIcon = `
-    <svg class="w-4 h-4 ${isMine ? 'text-white' : 'text-green-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"></path>
-    </svg>
-  `;
+ // Heroicons Map Pin Icon SVG
+ const mapPinIcon = `
+   <svg class="w-4 h-4 ${isMine ? 'text-white' : 'text-green-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
+     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1 1 15 0Z"></path>
+   </svg>
+ `;
 
-  if (isMine) {
-    // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
-    messageContainer.innerHTML = `
-      <div class="flex items-end gap-2">
-        <!-- 시간/읽음상태 (왼쪽) -->
-        <div class="flex flex-col items-end text-xs text-gray-400 gap-0.5 mb-1">
-          ${!data.is_read ? '<span class="unread-label">안읽음</span>' : ''}
-          <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
-        </div>
-        
-        <!-- 말풍선 (오른쪽) -->
-        <div class="max-w-sm">
-          <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
-            <div class="space-y-3">
-              <div class="flex items-center space-x-2 mb-2">
-                ${mapPinIcon}
-                <span class="text-sm">배송정보 전송</span>
-              </div>
-              ${contentHtml}
-            </div>
-          </div>
-        </div>
-      </div>`;
-  } else {
-    // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
-    messageContainer.innerHTML = `
-      <div class="flex items-end gap-2">
-        <!-- 말풍선 (왼쪽) -->
-        <div class="max-w-sm">
-          <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
-            <div class="space-y-3">
-              <div class="flex items-center space-x-2 mb-2">
-                ${mapPinIcon}
-                <span class="text-sm">배송정보</span>
-              </div>
-              ${contentHtml}
-            </div>
-          </div>
-        </div>
-        
-        <!-- 시간 (오른쪽) -->
-        <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
-          <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
-        </div>
-      </div>`;
-  }
-  
-  if (chatLog) {
-    chatLog.appendChild(messageContainer);
-    registerObserver(messageContainer, data.sender);
-    scrollToBottom();
-  }
+ if (isMine) {
+   // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
+   messageContainer.innerHTML = `
+     <div class="flex items-end gap-2">
+       <!-- 시간/읽음상태 (왼쪽) -->
+       <div class="flex flex-col items-end text-xs text-gray-400 gap-0.5 mb-1">
+         ${!data.is_read ? '<span class="unread-label">안읽음</span>' : ''}
+         <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
+       </div>
+       
+       <!-- 말풍선 (오른쪽) -->
+       <div class="max-w-sm">
+         <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
+           <div class="space-y-3">
+             <div class="flex items-center space-x-2 mb-2">
+               ${mapPinIcon}
+               <span class="text-sm">배송정보 전송</span>
+             </div>
+             ${contentHtml}
+           </div>
+         </div>
+       </div>
+     </div>`;
+ } else {
+   // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
+   messageContainer.innerHTML = `
+     <div class="flex items-end gap-2">
+       <!-- 말풍선 (왼쪽) -->
+       <div class="max-w-sm">
+         <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+           <div class="space-y-3">
+             <div class="flex items-center space-x-2 mb-2">
+               ${mapPinIcon}
+               <span class="text-sm">배송정보</span>
+             </div>
+             ${contentHtml}
+           </div>
+         </div>
+       </div>
+       
+       <!-- 시간 (오른쪽) -->
+       <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
+         <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
+       </div>
+     </div>`;
+ }
+ 
+ if (chatLog) {
+   chatLog.appendChild(messageContainer);
+   registerObserver(messageContainer, data.sender);
+   scrollToBottom();
+ }
 }
 
 // 읽음 처리 관련 핸들러들
 export function handleReadUpdate(data) {
-  document.querySelectorAll(".unread-label").forEach(el => el.remove());
+ document.querySelectorAll(".unread-label").forEach(el => el.remove());
 }
 
 export function handleReadMessageSyncFinish(data) {
-  document.querySelectorAll(".unread-label").forEach(el => el.remove());
+ document.querySelectorAll(".unread-label").forEach(el => el.remove());
 }
 
 export function handleEnterChatroomFinish(data) {
-  const currentUser = window.currentUser || '';
-  if (data.reader !== currentUser) {
-    document.querySelectorAll(".unread-label").forEach(el => el.remove());
-  }
+ const currentUser = window.currentUser || '';
+ if (data.reader !== currentUser) {
+   document.querySelectorAll(".unread-label").forEach(el => el.remove());
+ }
 }
 
 export function handleTradeCompleted(data) {
-  console.log('거래 완료 알림 수신');
-  updateSensitiveInfoCards();
-  updateUIAfterTradeComplete(true);
+ console.log('거래 완료 알림 수신');
+ updateSensitiveInfoCards();
+ updateUIAfterTradeComplete(true);
 }
