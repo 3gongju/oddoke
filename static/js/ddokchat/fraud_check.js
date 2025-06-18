@@ -1,4 +1,4 @@
-// static/js/ddokchat/fraud_check.js 수정 및 추가
+// static/js/ddokchat/fraud_check.js 완전 교체
 
 import { showToast } from './ui_manager.js';
 
@@ -6,162 +6,168 @@ export function setupFraudCheck() {
   // 전역 함수로 노출 (템플릿에서 onclick으로 호출하기 위해)
   window.copyAccountNumber = copyAccountNumber;
   window.copyAddress = copyAddress;
-  window.copyPhoneNumber = copyPhoneNumber;  // 🔥 새로 추가
-  window.copyDeliveryInfo = copyDeliveryInfo;  // 🔥 새로 추가
+  window.copyPhoneNumber = copyPhoneNumber;
+  window.copyDeliveryInfo = copyDeliveryInfo;
   window.checkFraudHistory = checkFraudHistory;
   window.closeFraudModal = closeFraudModal;
+  window.openManualFraudCheck = openManualFraudCheck;
+  
+  // 이벤트 리스너 설정
+  setupFraudCheckEventListeners();
 }
 
-export function copyAccountNumber(accountNumber) {
-  if (!navigator.clipboard) {
-    // 클립보드 API가 지원되지 않는 경우 fallback
-    const textArea = document.createElement('textarea');
-    textArea.value = accountNumber;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      showToast('계좌번호가 복사되었습니다. 💳', 'success');
-    } catch (err) {
-      showToast('복사에 실패했습니다.', 'error');
-    }
-    document.body.removeChild(textArea);
-    return;
+function setupFraudCheckEventListeners() {
+  // 수동 사기조회 버튼 (+ 메뉴에서)
+  const manualFraudBtn = document.getElementById('manual-fraud-check-btn');
+  if (manualFraudBtn) {
+    manualFraudBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const plusMenu = document.getElementById('plus-menu');
+      if (plusMenu) plusMenu.classList.add('hidden');
+      openManualFraudCheck();
+    });
   }
-
-  navigator.clipboard.writeText(accountNumber).then(function() {
-    // 복사 로그 전송
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                     document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    
-    fetch('/ddokchat/copy-account/', {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        account_number: accountNumber
-      })
-    }).catch(error => {
-      console.error('복사 로그 전송 실패:', error);
+  
+  // 조회하기 버튼
+  const startCheckBtn = document.getElementById('startFraudCheckBtn');
+  if (startCheckBtn) {
+    startCheckBtn.addEventListener('click', startFraudCheck);
+  }
+  
+  // 뒤로가기 버튼
+  const backBtn = document.getElementById('fraudBackBtn');
+  if (backBtn) {
+    backBtn.addEventListener('click', goBackToInput);
+  }
+  
+  // 계좌번호 입력 시 숫자만 허용
+  const accountInput = document.getElementById('fraudAccountNumberInput');
+  if (accountInput) {
+    accountInput.addEventListener('input', function(e) {
+      // 숫자와 하이픈만 허용
+      e.target.value = e.target.value.replace(/[^0-9-]/g, '');
     });
     
-    showToast('계좌번호가 복사되었습니다. 💳', 'success');
-  }).catch(function(err) {
-    console.error('복사 실패:', err);
-    showToast('계좌번호 복사에 실패했습니다.', 'error');
-  });
-}
-
-export function copyAddress(fullAddress) {
-  if (!navigator.clipboard) {
-    const textArea = document.createElement('textarea');
-    textArea.value = fullAddress;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      showToast('주소가 복사되었습니다. 📍', 'success');
-    } catch (err) {
-      showToast('복사에 실패했습니다.', 'error');
-    }
-    document.body.removeChild(textArea);
-    return;
+    // 엔터키로 조회
+    accountInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        startFraudCheck();
+      }
+    });
   }
-
-  navigator.clipboard.writeText(fullAddress).then(function() {
-    showToast('주소가 복사되었습니다. 📍', 'success');
-  }).catch(function(err) {
-    console.error('복사 실패:', err);
-    showToast('주소 복사에 실패했습니다.', 'error');
-  });
 }
 
-// 🔥 새로 추가: 핸드폰 번호 복사 함수
-export function copyPhoneNumber(phoneNumber) {
-  if (!navigator.clipboard) {
-    const textArea = document.createElement('textarea');
-    textArea.value = phoneNumber;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      showToast('연락처가 복사되었습니다. 📞', 'success');
-    } catch (err) {
-      showToast('복사에 실패했습니다.', 'error');
-    }
-    document.body.removeChild(textArea);
-    return;
-  }
-
-  navigator.clipboard.writeText(phoneNumber).then(function() {
-    showToast('연락처가 복사되었습니다. 📞', 'success');
-  }).catch(function(err) {
-    console.error('복사 실패:', err);
-    showToast('연락처 복사에 실패했습니다.', 'error');
-  });
+// 수동 사기조회 모달 열기 (빈 상태)
+export function openManualFraudCheck() {
+  const modal = document.getElementById('fraudCheckModal');
+  const inputStep = document.getElementById('fraudInputStep');
+  const resultStep = document.getElementById('fraudResultStep');
+  const accountInput = document.getElementById('fraudAccountNumberInput');
+  const holderInput = document.getElementById('fraudAccountHolderInput');
+  
+  if (!modal) return;
+  
+  // 입력 필드 초기화
+  if (accountInput) accountInput.value = '';
+  if (holderInput) holderInput.value = '';
+  
+  // Step 1 표시, Step 2 숨김
+  inputStep?.classList.remove('hidden');
+  resultStep?.classList.add('hidden');
+  
+  modal.classList.remove('hidden');
+  
+  // 입력창에 포커스
+  setTimeout(() => {
+    accountInput?.focus();
+  }, 100);
 }
 
-// 🔥 새로 추가: 배송정보 전체 복사 함수
-export function copyDeliveryInfo(phoneNumber, fullAddress) {
-  const deliveryText = `
-📦 배송정보
-연락처: ${phoneNumber}
-주소: ${fullAddress}
-  `.trim();
-
-  if (!navigator.clipboard) {
-    const textArea = document.createElement('textarea');
-    textArea.value = deliveryText;
-    document.body.appendChild(textArea);
-    textArea.select();
-    try {
-      document.execCommand('copy');
-      showToast('배송정보가 복사되었습니다. 📦', 'success');
-    } catch (err) {
-      showToast('복사에 실패했습니다.', 'error');
-    }
-    document.body.removeChild(textArea);
-    return;
-  }
-
-  navigator.clipboard.writeText(deliveryText).then(function() {
-    showToast('배송정보가 복사되었습니다. 📦', 'success');
-  }).catch(function(err) {
-    console.error('복사 실패:', err);
-    showToast('배송정보 복사에 실패했습니다.', 'error');
-  });
-}
-
+// 기존 계좌정보에서 사기조회 (자동입력)
 export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
   const modal = document.getElementById('fraudCheckModal');
+  const inputStep = document.getElementById('fraudInputStep');
+  const resultStep = document.getElementById('fraudResultStep');
+  const accountInput = document.getElementById('fraudAccountNumberInput');
+  const holderInput = document.getElementById('fraudAccountHolderInput');
+  
+  if (!modal) return;
+  
+  // 기존 정보로 자동 입력
+  if (accountInput) accountInput.value = accountNumber || '';
+  if (holderInput) holderInput.value = accountHolder || '';
+  
+  // Step 1 표시, Step 2 숨김
+  inputStep?.classList.remove('hidden');
+  resultStep?.classList.add('hidden');
+  
+  modal.classList.remove('hidden');
+}
+
+// 조회 시작
+function startFraudCheck() {
+  const accountNumber = document.getElementById('fraudAccountNumberInput')?.value?.trim();
+  const accountHolder = document.getElementById('fraudAccountHolderInput')?.value?.trim();
+  
+  if (!accountNumber) {
+    showToast('계좌번호를 입력해주세요.', 'error');
+    document.getElementById('fraudAccountNumberInput')?.focus();
+    return;
+  }
+  
+  // 계좌번호 기본 검증 (최소 10자리)
+  if (accountNumber.length < 10) {
+    showToast('올바른 계좌번호를 입력해주세요. (최소 10자리)', 'error');
+    return;
+  }
+  
+  // Step 2로 전환
+  showResultStep(accountNumber, accountHolder);
+  
+  // 실제 조회 실행
+  performFraudCheck(accountNumber, accountHolder);
+}
+
+// 결과 단계로 전환
+function showResultStep(accountNumber, accountHolder) {
+  const inputStep = document.getElementById('fraudInputStep');
+  const resultStep = document.getElementById('fraudResultStep');
   const loading = document.getElementById('fraudLoading');
   const noReports = document.getElementById('fraudNoReports');
   const hasReports = document.getElementById('fraudHasReports');
   const errorDiv = document.getElementById('fraudError');
   
-  if (!modal) {
-    showToast('사기 조회 모달을 찾을 수 없습니다.', 'error');
-    return;
-  }
+  // Step 전환
+  inputStep?.classList.add('hidden');
+  resultStep?.classList.remove('hidden');
   
-  modal.classList.remove('hidden');
+  // 결과 영역 초기화
   loading?.classList.remove('hidden');
   noReports?.classList.add('hidden');
   hasReports?.classList.add('hidden');
   errorDiv?.classList.add('hidden');
   
-  // 계좌 정보 표시
-  const fraudBankName = document.getElementById('fraudBankName');
-  const fraudAccountNumber = document.getElementById('fraudAccountNumber');
-  const fraudAccountHolder = document.getElementById('fraudAccountHolder');
+  // 조회된 계좌 정보 표시
+  const displayAccountNumber = document.getElementById('fraudDisplayAccountNumber');
+  const displayAccountHolder = document.getElementById('fraudDisplayAccountHolder');
+  const holderRow = document.getElementById('fraudDisplayHolderRow');
   
-  if (fraudBankName) fraudBankName.textContent = getBankName(bankCode);
-  if (fraudAccountNumber) fraudAccountNumber.textContent = accountNumber;
-  if (fraudAccountHolder) fraudAccountHolder.textContent = accountHolder;
+  if (displayAccountNumber) {
+    displayAccountNumber.textContent = accountNumber;
+  }
   
-  // CSRF 토큰 가져오기
+  if (accountHolder && accountHolder.trim()) {
+    if (displayAccountHolder) displayAccountHolder.textContent = accountHolder;
+    if (holderRow) holderRow.style.display = 'flex';
+  } else {
+    if (holderRow) holderRow.style.display = 'none';
+  }
+}
+
+// 실제 사기조회 API 호출
+function performFraudCheck(accountNumber, accountHolder) {
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   
@@ -172,13 +178,14 @@ export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      bank_code: bankCode,
+      bank_code: '', // 일단 빈 값으로 (계좌번호만으로 조회)
       account_number: accountNumber,
-      account_holder: accountHolder
+      account_holder: accountHolder || ''
     })
   })
   .then(response => response.json())
   .then(data => {
+    const loading = document.getElementById('fraudLoading');
     loading?.classList.add('hidden');
     
     if (data.success) {
@@ -193,27 +200,43 @@ export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
           fraudReportCount.textContent = data.report_count;
         }
         displayFraudReports(data.reports);
-        hasReports?.classList.remove('hidden');
+        document.getElementById('fraudHasReports')?.classList.remove('hidden');
       } else {
-        noReports?.classList.remove('hidden');
+        document.getElementById('fraudNoReports')?.classList.remove('hidden');
       }
     } else {
       const fraudErrorMessage = document.getElementById('fraudErrorMessage');
       if (fraudErrorMessage) {
         fraudErrorMessage.textContent = data.error || '알 수 없는 오류가 발생했습니다.';
       }
-      errorDiv?.classList.remove('hidden');
+      document.getElementById('fraudError')?.classList.remove('hidden');
     }
   })
   .catch(error => {
     console.error('사기 조회 오류:', error);
+    const loading = document.getElementById('fraudLoading');
     loading?.classList.add('hidden');
+    
     const fraudErrorMessage = document.getElementById('fraudErrorMessage');
     if (fraudErrorMessage) {
       fraudErrorMessage.textContent = '네트워크 오류가 발생했습니다.';
     }
-    errorDiv?.classList.remove('hidden');
+    document.getElementById('fraudError')?.classList.remove('hidden');
   });
+}
+
+// 입력 단계로 돌아가기
+function goBackToInput() {
+  const inputStep = document.getElementById('fraudInputStep');
+  const resultStep = document.getElementById('fraudResultStep');
+  
+  inputStep?.classList.remove('hidden');
+  resultStep?.classList.add('hidden');
+  
+  // 입력창에 포커스
+  setTimeout(() => {
+    document.getElementById('fraudAccountNumberInput')?.focus();
+  }, 100);
 }
 
 function displayFraudReports(reports) {
@@ -251,23 +274,121 @@ export function closeFraudModal() {
   }
 }
 
-function getBankName(bankCode) {
-  const bankNames = {
-    '004': 'KB국민은행',
-    '088': '신한은행',
-    '020': '우리은행',
-    '003': 'IBK기업은행',
-    '011': 'NH농협은행',
-    '081': 'KEB하나은행',
-    '023': 'SC제일은행',
-    '090': '카카오뱅크',
-    '089': '케이뱅크',
-    '092': '토스뱅크',
-    '031': '대구은행',
-    '032': '부산은행',
-    '034': '광주은행',
-    '037': '전북은행',
-    '039': '경남은행'
-  };
-  return bankNames[bankCode] || `알 수 없는 은행(${bankCode})`;
+// 기존 복사 함수들 유지
+export function copyAccountNumber(accountNumber) {
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea');
+    textArea.value = accountNumber;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('계좌번호가 복사되었습니다.', 'success');
+    } catch (err) {
+      showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
+    return;
+  }
+
+  navigator.clipboard.writeText(accountNumber).then(function() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                     document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch('/ddokchat/copy-account/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        account_number: accountNumber
+      })
+    }).catch(error => {
+      console.error('복사 로그 전송 실패:', error);
+    });
+    
+    showToast('계좌번호가 복사되었습니다.', 'success');
+  }).catch(function(err) {
+    console.error('복사 실패:', err);
+    showToast('계좌번호 복사에 실패했습니다.', 'error');
+  });
+}
+
+export function copyAddress(fullAddress) {
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea');
+    textArea.value = fullAddress;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('주소가 복사되었습니다.', 'success');
+    } catch (err) {
+      showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
+    return;
+  }
+
+  navigator.clipboard.writeText(fullAddress).then(function() {
+    showToast('주소가 복사되었습니다.', 'success');
+  }).catch(function(err) {
+    console.error('복사 실패:', err);
+    showToast('주소 복사에 실패했습니다.', 'error');
+  });
+}
+
+export function copyPhoneNumber(phoneNumber) {
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea');
+    textArea.value = phoneNumber;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('연락처가 복사되었습니다.', 'success');
+    } catch (err) {
+      showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
+    return;
+  }
+
+  navigator.clipboard.writeText(phoneNumber).then(function() {
+    showToast('연락처가 복사되었습니다.', 'success');
+  }).catch(function(err) {
+    console.error('복사 실패:', err);
+    showToast('연락처 복사에 실패했습니다.', 'error');
+  });
+}
+
+export function copyDeliveryInfo(phoneNumber, fullAddress) {
+  const deliveryText = `
+배송정보
+연락처: ${phoneNumber}
+주소: ${fullAddress}
+  `.trim();
+
+  if (!navigator.clipboard) {
+    const textArea = document.createElement('textarea');
+    textArea.value = deliveryText;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      showToast('배송정보가 복사되었습니다.', 'success');
+    } catch (err) {
+      showToast('복사에 실패했습니다.', 'error');
+    }
+    document.body.removeChild(textArea);
+    return;
+  }
+
+  navigator.clipboard.writeText(deliveryText).then(function() {
+    showToast('배송정보가 복사되었습니다.', 'success');
+  }).catch(function(err) {
+    console.error('복사 실패:', err);
+    showToast('배송정보 복사에 실패했습니다.', 'error');
+  });
 }
