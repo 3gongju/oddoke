@@ -101,6 +101,14 @@ def post_detail(request, category, post_id):
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokdam:comment_create', kwargs={'category': category, 'post_id': post_id})
     is_owner = request.user == post.user
+    
+    # 카카오맵 API 키 추가
+    kakao_api_key = (
+        getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
+        getattr(settings, 'KAKAO_API_KEY', '') or
+        ''
+    )
+
 
     context = {
         'post': post,
@@ -115,6 +123,7 @@ def post_detail(request, category, post_id):
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokdam:comment_delete',
         'is_owner': is_owner,
+        'kakao_api_key': kakao_api_key,  # 카카오맵 API 키 추가
     }
 
     return render(request, 'ddokdam/detail.html', context)

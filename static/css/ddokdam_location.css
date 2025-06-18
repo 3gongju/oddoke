@@ -161,3 +161,34 @@
     ring-color: rgba(251, 191, 36, 0.5);
     box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
+
+/* 상세 페이지 지도 스타일 */
+#detail-map-row {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#detail-location-map {
+    border-radius: 0.5rem;
+}
+
+/* 지도 버튼 스타일 */
+#show-detail-map-btn,
+button[onclick="openKakaoMap()"] {
+    transition: all 0.2s ease-in-out;
+}
+
+#show-detail-map-btn:hover,
+button[onclick="openKakaoMap()"]:hover {
+    transform: translateY(-1px);
+}
