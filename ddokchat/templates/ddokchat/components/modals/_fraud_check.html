@@ -1,11 +1,11 @@
-<!-- fraud_check.html 모달 부분 - 주황색으로 변경 -->
+<!-- fraud_check.html 모달 부분 - 예금주명 제거 -->
 
 <div id="fraudCheckModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
   <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
     
-    <!-- Step 1: 계좌번호 입력 단계 - 주황색 헤더 -->
+    <!-- Step 1: 계좌번호 입력 단계 -->
     <div id="fraudInputStep" class="fraud-step">
-      <!-- 모달 헤더 - 주황색으로 변경 -->
+      <!-- 모달 헤더 -->
       <div class="bg-orange-500 text-white px-6 py-4">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-bold flex items-center">
@@ -48,23 +48,9 @@
             >
             <p class="text-xs text-gray-500 mt-1">예: 1234567890123</p>
           </div>
-          
-          <!-- 예금주명 (선택사항) -->
-          <div>
-            <label for="fraudAccountHolderInput" class="block text-sm font-medium text-gray-700 mb-2">
-              예금주명 <span class="text-gray-400">(선택사항)</span>
-            </label>
-            <input 
-              type="text" 
-              id="fraudAccountHolderInput" 
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              placeholder="예금주명"
-              maxlength="50"
-            >
-          </div>
         </div>
         
-        <!-- 조회 버튼 - 주황색으로 변경 -->
+        <!-- 조회 버튼 -->
         <div class="flex justify-end space-x-3 mt-6">
           <button 
             onclick="closeFraudModal()" 
@@ -82,9 +68,9 @@
       </div>
     </div>
 
-    <!-- Step 2: 조회 결과 단계 - 주황색 헤더 -->
+    <!-- Step 2: 조회 결과 단계 -->
     <div id="fraudResultStep" class="fraud-step hidden">
-      <!-- 모달 헤더 - 주황색으로 변경 -->
+      <!-- 모달 헤더 -->
       <div class="bg-orange-500 text-white px-6 py-4">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-bold flex items-center">
@@ -113,16 +99,12 @@
               <span class="text-gray-600">계좌번호:</span>
               <span id="fraudDisplayAccountNumber" class="font-mono"></span>
             </div>
-            <div class="flex justify-between" id="fraudDisplayHolderRow" style="display: none;">
-              <span class="text-gray-600">예금주:</span>
-              <span id="fraudDisplayAccountHolder" class="font-medium"></span>
-            </div>
           </div>
         </div>
         
         <!-- 조회 결과 -->
         <div id="fraudResults">
-          <!-- 로딩 상태 - 주황색 스피너 -->
+          <!-- 로딩 상태 -->
           <div id="fraudLoading" class="text-center py-8">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-3"></div>
             <p class="text-gray-600">신고 이력을 조회하고 있습니다...</p>
@@ -139,7 +121,7 @@
             <p class="text-green-600 text-sm">해당 계좌에 대한 사기 신고 내역이 발견되지 않았습니다.</p>
           </div>
           
-          <!-- 신고 이력 있음 - 주황색/빨간색 경고 -->
+          <!-- 신고 이력 있음 -->
           <div id="fraudHasReports" class="hidden">
             <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
               <div class="flex items-center mb-2">

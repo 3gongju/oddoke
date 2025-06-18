@@ -7,13 +7,13 @@ export function setupAutoDetect() {
   window.quickFraudCheck = quickFraudCheck;
   window.dismissAccountAlert = dismissAccountAlert;
   
-  // ✅ 페이지 로드 후 기존 메시지들 스캔
+  // 페이지 로드 후 기존 메시지들 스캔
   setTimeout(() => {
     scanExistingMessages();
-  }, 2000); // DOM이 완전히 로드된 후 실행
+  }, 1500);
 }
 
-// 계좌번호 패턴 감지 함수
+// 계좌번호 패턴 감지 함수 - 실제 한국 은행 패턴 기반
 export function detectAccountNumber(message) {
   if (!message || typeof message !== 'string') return null;
   
@@ -21,9 +21,22 @@ export function detectAccountNumber(message) {
   if (message.includes('010')) return null;
   
   const patterns = [
-    /\b(?!010)\d{10,14}\b/g,                    // 010이 아닌 10-14자리 연속 숫자
-    /\b(?!010-)\d{3,6}-\d{2,6}-\d{6,8}\b/g,    // 하이픈 구분 (010- 제외)
-    /\b(?!010)\d{4}-\d{4}-\d{4,8}\b/g          // 4-4-4~ 패턴
+    // 1. 하이픈 없는 연속 숫자 (10~14자리)
+    /\b(?!010)\d{10,14}\b/g,
+    
+    // 2. 실제 은행 패턴들
+    /\b(?!010)\d{4}-\d{2}-\d{8}\b/g,          // KB국민은행: 1234-56-78901234
+    /\b(?!010)\d{3}-\d{8}-\d{1}\b/g,          // 신한은행: 123-45678901-2
+    /\b(?!010)\d{3}-\d{3}-\d{7}\b/g,          // 우리은행: 123-456-7890123
+    /\b(?!010)\d{3}-\d{6}-\d{2}-\d{3}\b/g,    // 하나은행: 123-456789-01-234
+    /\b(?!010)\d{3}-\d{2}-\d{7}\b/g,          // 농협은행: 123-45-6789012
+    /\b(?!010)\d{4}-\d{2}-\d{7}\b/g,          // 카카오뱅크: 3333-12-3456789
+    /\b(?!010)\d{4}-\d{4}-\d{4}\b/g,          // 토스뱅크: 1000-1234-5678
+    
+    // 3. 범용 패턴들 (위에서 안잡힌 것들)
+    /\b(?!010)\d{3,4}-\d{2,6}-\d{6,8}\b/g,    // 3~4자리-2~6자리-6~8자리
+    /\b(?!010)\d{3,4}-\d{6,8}-\d{1,3}\b/g,    // 3~4자리-6~8자리-1~3자리
+    /\b(?!010)\d{2,4}-\d{2,4}-\d{4,8}\b/g     // 유연한 패턴
   ];
   
   for (let pattern of patterns) {
@@ -39,9 +52,8 @@ export function detectAccountNumber(message) {
   return null;
 }
 
-// 메시지 래퍼 하단에 계좌번호 감지 알림 추가
+// 메시지 래퍼 하단에 계좌번호 감지 알림 추가 - 크기 개선
 export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
-  // messageWrapper가 실제로 존재하는지 확인
   if (!messageWrapper) {
     return;
   }
@@ -53,34 +65,45 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
   
   const alertDiv = document.createElement('div');
   
-  // ✅ 더 안전한 고정 크기 (모바일: xs, 데스크톱: sm)
-  alertDiv.className = 'account-detection-alert mt-3 max-w-xs sm:max-w-sm ml-2 mr-2';
+  // ✅ 크기를 더 크게 조정 (max-w-md로 변경)
+  alertDiv.className = 'account-detection-alert mt-4 max-w-md mx-2';
   alertDiv.innerHTML = `
-    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all duration-300">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-start gap-2 flex-1 min-w-0">
-          <svg class="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"></path>
-          </svg>
-          <span class="text-sm text-orange-800 font-medium leading-relaxed">
-            계좌번호가 감지되었습니다.<br>사기이력 조회를 할까요?
-          </span>
-        </div>
-        <div class="flex items-center justify-end gap-2 flex-shrink-0">
-          <button 
-            onclick="quickFraudCheck('${detectedAccount}')" 
-            class="text-sm bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors font-medium"
-          >
-            조회하기
-          </button>
+    <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 transition-all duration-300 shadow-sm">
+      <div class="flex flex-col gap-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"></path>
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-orange-800 font-semibold leading-relaxed mb-1">
+              계좌번호가 감지되었습니다
+            </div>
+            <p class="text-xs text-orange-700 leading-relaxed">
+              안전한 거래를 위해 사기이력 조회를 권장합니다
+            </p>
+          </div>
           <button 
             onclick="dismissAccountAlert(this)" 
-            class="text-orange-400 hover:text-orange-600 transition-colors p-1"
+            class="flex-shrink-0 text-orange-400 hover:text-orange-600 transition-colors p-1 rounded-full hover:bg-orange-100"
             title="닫기"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
+          </button>
+        </div>
+        
+        <div class="flex items-center justify-center">
+          <button 
+            onclick="quickFraudCheck('${detectedAccount}')" 
+            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors font-semibold text-sm shadow-sm hover:shadow-md flex items-center gap-2"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            사기이력 조회하기
           </button>
         </div>
       </div>
@@ -96,14 +119,14 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
   
   // 등장 애니메이션
   alertDiv.style.opacity = '0';
-  alertDiv.style.transform = 'translateY(-10px)';
-  alertDiv.style.transition = 'all 0.3s ease-out';
+  alertDiv.style.transform = 'translateY(-15px)';
+  alertDiv.style.transition = 'all 0.4s ease-out';
   
   setTimeout(() => {
     alertDiv.style.opacity = '1';
     alertDiv.style.transform = 'translateY(0)';
     
-    // ✅ 애니메이션 완료 후 부드럽게 스크롤
+    // 애니메이션 완료 후 부드럽게 스크롤
     setTimeout(() => {
       if (window.scrollToBottom) {
         window.scrollToBottom();
@@ -141,7 +164,7 @@ function dismissAccountAlert(button) {
   const alert = button.closest('.account-detection-alert');
   if (alert) {
     alert.style.opacity = '0';
-    alert.style.transform = 'translateY(-10px)';
+    alert.style.transform = 'translateY(-15px)';
     setTimeout(() => {
       alert.remove();
     }, 300);
@@ -167,11 +190,11 @@ export function handleReceivedMessage(messageText, messageWrapper, senderName) {
   }
 }
 
-// ✅ 기존 메시지들 스캔 기능 추가
+// ✅ 기존 메시지들 스캔 기능 - 이제 .message-wrapper 클래스를 찾을 수 있음
 export function scanExistingMessages() {
   const currentUser = window.currentUser || '';
   
-  // 모든 메시지 래퍼 찾기
+  // 모든 메시지 래퍼 찾기 (템플릿에도 추가했으므로 이제 찾을 수 있음)
   const messageWrappers = document.querySelectorAll('.message-wrapper');
   
   messageWrappers.forEach((wrapper) => {
@@ -202,7 +225,7 @@ export function scanExistingMessages() {
   });
 }
 
-// ✅ 수동으로 스캔하는 함수 (필요시 호출 가능)
+// 수동으로 스캔하는 함수 (필요시 호출 가능)
 export function rescanAllMessages() {
   // 기존 알림창들 모두 제거
   document.querySelectorAll('.account-detection-alert').forEach(alert => {
