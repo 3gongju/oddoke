@@ -101,6 +101,14 @@ def post_detail(request, category, post_id):
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokdam:comment_create', kwargs={'category': category, 'post_id': post_id})
     is_owner = request.user == post.user
+    
+    # 카카오맵 API 키 추가
+    kakao_api_key = (
+        getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
+        getattr(settings, 'KAKAO_API_KEY', '') or
+        ''
+    )
+
 
     context = {
         'post': post,
@@ -115,6 +123,7 @@ def post_detail(request, category, post_id):
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokdam:comment_delete',
         'is_owner': is_owner,
+        'kakao_api_key': kakao_api_key,  # 카카오맵 API 키 추가
     }
 
     return render(request, 'ddokdam/detail.html', context)
@@ -176,6 +185,13 @@ def post_create(request):
     if default_artist_id:
         selected_members = Member.objects.filter(artist_name__id=default_artist_id).distinct()
 
+    # ✅ 카카오맵 API 키 추가
+    kakao_api_key = (
+        getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
+        getattr(settings, 'KAKAO_API_KEY', '') or
+        ''
+    )
+
     context = {
         'form': form,
         'category': category,
@@ -189,9 +205,11 @@ def post_create(request):
         **get_ajax_base_context(request),
         'mode': 'create',
         'categories': get_ddokdam_categories(),
+        'kakao_api_key': kakao_api_key,  # ✅ 카카오맵 API 키 추가
     }
 
     return render(request, 'ddokdam/create.html', context)
+
 
 # 아티스트 검색
 @login_required
@@ -216,6 +234,7 @@ def search_artists(request):
 
     return JsonResponse(data)
 
+# 게시글 수정
 # 게시글 수정
 @login_required
 def post_edit(request, category, post_id):
@@ -282,6 +301,13 @@ def post_edit(request, category, post_id):
     selected_member_ids = list(post.members.values_list('id', flat=True))
     selected_artist_id = post.artist.id if post.artist else None
 
+    # ✅ 카카오맵 API 키 추가
+    kakao_api_key = (
+        getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
+        getattr(settings, 'KAKAO_API_KEY', '') or
+        ''
+    )
+
     context = {
         'form': form,
         'post': post,
@@ -296,6 +322,7 @@ def post_edit(request, category, post_id):
         'categories': get_ddokdam_categories(),
         **get_ajax_base_context(request),
         'existing_images': existing_images,
+        'kakao_api_key': kakao_api_key,  # ✅ 카카오맵 API 키 추가
     }
 
     return render(request, 'ddokdam/edit.html', context)

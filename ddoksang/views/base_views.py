@@ -207,6 +207,9 @@ def cafe_detail_view(request, cafe_id):
     
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
+
+    # 현재 카페가 찜 목록에 있는지 확인
+    is_favorited = cafe.id in user_favorites if user_favorites else False
     
     # 지도 관련 컨텍스트 생성 (map_utils 사용)
     map_context = get_map_context()

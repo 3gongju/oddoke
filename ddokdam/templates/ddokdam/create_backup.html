@@ -1,11 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block extra_css %}
-<!-- 덕담 위치 검색 스타일 -->
-<link rel="stylesheet" href="{% static 'css/ddokdam_location.css' %}">
-{% endblock %}
-
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <!-- 헤더 -->
@@ -27,30 +22,9 @@
 <script>
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
-  
-  // 카카오맵 API 키 설정
-  window.KAKAO_API_KEY = "{{ kakao_api_key|default:'YOUR_KAKAO_API_KEY'|escapejs }}";
-  console.log('덕담 카카오맵 API 키:', window.KAKAO_API_KEY ? '설정됨' : '없음');
 </script>
-
-<!-- 카카오맵 API 로드 (조건부) -->
-{% if kakao_api_key %}
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services" 
-        onload="console.log('✅ 덕담 카카오맵 API 로드 완료')" 
-        onerror="console.error('❌ 덕담 카카오맵 API 로드 실패')">
-</script>
-{% else %}
-<script>
-console.warn('⚠️ 덕담: 카카오 API 키가 없어 위치 검색 기능이 비활성화됩니다.');
-</script>
-{% endif %}
-
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-<!-- 덕담 위치 검색 모듈 -->
-<script src="{% static 'js/post_form/location_search.js' %}"></script>
-
 <script type="module" src="{% static 'js/post_form/post_form.js' %}"></script>
 
 {% endblock %}
