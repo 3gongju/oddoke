@@ -189,7 +189,7 @@ def cafe_detail_view(request, cafe_id):
     nearby_cafes = []
     if cafe.latitude and cafe.longitude:
         try:
-            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
+            approved_cafes = BdayCafe.objects.filter(status='approved', member=cafe.member).select_related('artist', 'member')
             nearby_cafes = get_nearby_cafes(
                 user_lat=float(cafe.latitude), 
                 user_lng=float(cafe.longitude), 
