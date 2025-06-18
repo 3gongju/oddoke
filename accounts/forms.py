@@ -71,7 +71,7 @@ class CustomUserCreationForm(UserCreationForm):
         if len(username) > 20:
             raise forms.ValidationError("닉네임은 최대 20자까지 입력 가능합니다.")
         
-        # 🔥 공백 관련 검증
+        # 공백 관련 검증
         if username.startswith(' ') or username.endswith(' '):
             raise forms.ValidationError("닉네임 앞뒤에 공백은 사용할 수 없습니다.")
         
