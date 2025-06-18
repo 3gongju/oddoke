@@ -19,6 +19,9 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ✅ .env 파일 명시적으로 로드 (개선)
+env_path = BASE_DIR / '.env'
+load_dotenv(env_path, override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
