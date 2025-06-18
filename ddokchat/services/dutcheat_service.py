@@ -17,12 +17,12 @@ class DutcheatAPIService:
         self.service_name = "더치트 API 서비스"
         print(f"🔍 {self.service_name} 초기화 완료")
     
-    def check_account_fraud_history(self, bank_code, account_number, account_holder=None):
+    def check_account_fraud_history(self, bank_code=None, account_number=None, account_holder=None):
         """
         계좌 사기 신고 이력 조회
         
         Args:
-            bank_code (str): 은행 코드 (예: '004')
+            bank_code (str): 은행 코드 (선택사항)
             account_number (str): 계좌번호 (하이픈 제거된 숫자만)
             account_holder (str): 예금주명 (선택사항)
             
@@ -30,7 +30,8 @@ class DutcheatAPIService:
             dict: 조회 결과
         """
         print(f"🔍 계좌 사기 이력 조회 중...")
-        print(f"   은행: {self.get_bank_name(bank_code)}")
+        if bank_code:
+            print(f"   은행: {self.get_bank_name(bank_code)}")
         print(f"   계좌: {account_number[:4]}****")
         if account_holder:
             print(f"   예금주: {account_holder}")

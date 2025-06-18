@@ -157,7 +157,13 @@
 
 /* 스크롤 애니메이션 */
 #chat-log {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
+  opacity: 0; /* 처음엔 숨김 */
+  transition: opacity 0.2s ease; /* 부드러운 페이드인 */
+}
+
+#chat-log.ready {
+  opacity: 1; /* 준비되면 표시 */
 }
 
 /* 메시지 말풍선 개선 */

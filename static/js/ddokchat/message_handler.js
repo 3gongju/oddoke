@@ -7,6 +7,7 @@ import {
   updateSensitiveInfoCards, 
   updateUIAfterTradeComplete 
 } from './ui_manager.js';
+import { handleMessageSent } from './auto_detect.js';
 
 let currentUser = '';
 let currentUserId = '';

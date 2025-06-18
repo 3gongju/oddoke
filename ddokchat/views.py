@@ -472,24 +472,24 @@ def check_account_fraud(request):
     """계좌 사기 이력 조회"""
     try:
         data = json.loads(request.body)
-        bank_code = data.get('bank_code')
-        account_number = data.get('account_number')
-        account_holder = data.get('account_holder')
+        bank_code = data.get('bank_code', '').strip()  # 빈 값 허용
+        account_number = data.get('account_number', '').strip()
+        account_holder = data.get('account_holder', '').strip()
         
         # 입력값 검증
-        if not all([account_number, account_holder]):
+        if not all([account_number]):
             return JsonResponse({
                 'success': False,
-                'error': '계좌번호와 예금주를 모두 입력해주세요.'
+                'error': '계좌번호를 입력해주세요.'
             })
         
         # 더치트 서비스 사용
         try:
             dutcheat_service = get_dutcheat_service()
             result = dutcheat_service.check_account_fraud_history(
-                bank_code=bank_code,
+                bank_code=bank_code if bank_code else None,  # 빈 값이면 None 전달
                 account_number=account_number,
-                account_holder=account_holder
+                account_holder=account_holder if account_holder else None
             )
             
             if result.get('success'):

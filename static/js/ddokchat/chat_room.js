@@ -20,6 +20,7 @@ import {
   checkTradeCompletedBeforeSend 
 } from './ui_manager.js';
 import { setupFraudCheck } from './fraud_check.js';
+import { setupAutoDetect, handleMessageSent } from './auto_detect.js';
 
 // CSRF 토큰 가져오는 함수
 function getCSRFToken() {
