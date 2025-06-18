@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
 {% block body %}
 <!-- 전체 화면 높이 사용 -->
 <div class="h-screen flex flex-col bg-gray-50">
@@ -29,8 +33,8 @@
 <!-- CSS 파일들 로드 -->
 <link rel="stylesheet" href="{% static 'css/ddokchat/chat_room.css' %}">
 <link rel="stylesheet" href="{% static 'css/ddokchat/animations.css' %}">
-<link rel="stylesheet" href="{% static 'css/ddokchat/modals.css' %}">
-<link rel="stylesheet" href="{% static 'css/ddokchat/message_bubbles.css' %}">
+<link rel="stylesheet" href="{% static 'css/ddokchat/modal.css' %}">
+<link rel="stylesheet" href="{% static 'css/ddokchat/message_bubble.css' %}">
 
 <!-- 채팅방 전용 스타일 - chat_room.html의 style 태그 내용 -->
 <style>
@@ -128,6 +132,7 @@
   window.hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
   window.isFullyCompleted = {{ room.is_fully_completed|yesno:"true,false" }};
   window.roomBuyer = "{{ room.buyer.username }}";
+  window.csrfToken = "{{ csrf_token }}";
 </script>
 <script type="module" src="{% static 'js/ddokchat/chat_room.js' %}"></script>
 {% endblock %}
