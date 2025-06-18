@@ -112,9 +112,21 @@ def login(request):
 
             auth_login(request, user)
 
-            # next 파라미터 우선 적용
-            next_url = request.GET.get('next') or '/'
-            return redirect(next_url)
+            # 🔥 첫 로그인 감지: last_login이 None이거나 방금 전 설정된 경우
+            from django.utils import timezone
+            now = timezone.now()
+            is_first_login = (
+                user.last_login is None or 
+                (user.last_login and (now - user.last_login).total_seconds() < 10)
+            )
+
+            if is_first_login:
+                # 첫 로그인이면 아티스트 페이지로
+                return redirect('artist:index')
+            else:
+                # 기존 사용자는 next 파라미터 우선 적용
+                next_url = request.GET.get('next') or '/'
+                return redirect(next_url)
     else:
         form = EmailAuthenticationForm()
 
@@ -785,58 +797,39 @@ def address_delete(request, username):
 def social_signup_complete(request):
     """소셜 로그인 후 추가 정보 입력 페이지 (필수)"""
     
-    print(f"🔍 social_signup_complete 뷰 진입:")
-    print(f"   - 사용자: {request.user.username}")
-    print(f"   - 소셜 가입 완료: {request.user.social_signup_completed}")
-    print(f"   - 임시 사용자명: {request.user.is_temp_username}")
+    print(f"🔍 social_signup_complete 진입: {request.user.username}")
     
     # 이미 프로필을 완성한 사용자는 메인 페이지로 리다이렉트
     if request.user.social_signup_completed:
-        print("✅ 이미 프로필 완성된 사용자 → 메인으로")
-        return redirect('/')
-    
-    # 소셜 로그인 사용자가 아니면 메인 페이지로 리다이렉트
-    if not request.user.is_temp_username:
-        print("❌ 소셜 로그인 사용자가 아님 → 메인으로")
+        print("✅ 이미 프로필 완성됨 → 메인으로")
         return redirect('/')
     
     if request.method == 'POST':
-        print("📝 POST 요청 - 폼 처리 시작")
+        print("📝 POST 처리 시작")
         form = SocialSignupCompleteForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             print("✅ 폼 유효성 검사 통과")
             try:
                 user = form.save()
-                print(f"✅ 폼 저장 완료:")
-                print(f"   - 최종 username: {user.username}")
-                print(f"   - social_signup_completed: {user.social_signup_completed}")
-                print(f"   - is_temp_username: {user.is_temp_username}")
+                print(f"✅ 저장 완료: {user.username}")
+                messages.success(request, f'🎉 환영합니다, {user.username}님!')
                 
-                # 🔥 저장 후 다시 확인
-                user.refresh_from_db()
-                print(f"🔄 DB에서 다시 조회한 결과:")
-                print(f"   - username: {user.username}")
-                print(f"   - social_signup_completed: {user.social_signup_completed}")
-                print(f"   - is_temp_username: {user.is_temp_username}")
-                
-                messages.success(request, f'🎉 환영합니다, {user.username}님! 어덕해를 시작해보세요!')
+                # 🔥 임시로 메인 페이지로 리다이렉트 (테스트용)
+                print("🔍 메인 페이지로 리다이렉트")
                 return redirect('/')
+                
             except Exception as e:
-                print(f"❌ 폼 저장 중 오류: {e}")
+                print(f"❌ 저장 오류: {e}")
                 import traceback
                 traceback.print_exc()
-                messages.error(request, '프로필 저장 중 오류가 발생했습니다.')
+                messages.error(request, f'저장 중 오류: {str(e)}')
         else:
-            # 폼 에러가 있으면 에러 메시지 표시
-            print(f"❌ 폼 유효성 검사 실패: {form.errors}")
-            messages.error(request, '입력 정보를 다시 확인해주세요.')
+            print(f"❌ 폼 에러: {form.errors}")
+            messages.error(request, '입력 정보를 확인해주세요.')
     else:
-        print("📄 GET 요청 - 폼 표시")
         form = SocialSignupCompleteForm(instance=request.user)
     
-    return render(request, 'accounts/social_signup_complete.html', {
-        'form': form
-    })
+    return render(request, 'accounts/social_signup_complete.html', {'form': form})
 
 # @login_required
 # def social_complete_skip(request):
@@ -887,12 +880,16 @@ def kakao_callback(request):
     
     code = request.GET.get('code')
     if not code:
+        print("❌ 카카오 코드 없음")
         messages.error(request, '카카오 로그인에 실패했습니다.')
         return redirect('accounts:login')
+    
+    print(f"✅ 카카오 코드 받음: {code[:10]}...")
     
     service = KakaoAuthService()
     
     try:
+        print("🔍 카카오 콜백 처리 시작...")
         user = service.handle_callback(code)
         print(f"🔍 반환된 사용자: {user.username}")
         print(f"🔍 사용자 이메일: {user.email}")
@@ -901,6 +898,7 @@ def kakao_callback(request):
         
         # 이메일 기반 인증 (패스워드 없이)
         from django.contrib.auth import authenticate
+        print("🔍 이메일 기반 인증 시도...")
         authenticated_user = authenticate(
             request, 
             email=user.email, 
@@ -909,6 +907,7 @@ def kakao_callback(request):
         print(f"🔍 인증 결과: {authenticated_user}")
         
         if authenticated_user:
+            print("✅ 인증 성공, 로그인 처리...")
             auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
             print(f"🔍 로그인 성공: {request.user.is_authenticated}")
             
@@ -921,6 +920,7 @@ def kakao_callback(request):
                 messages.success(request, f'환영합니다, {authenticated_user.display_name}님! 🎉')
                 
             next_url = request.GET.get('next') or '/'
+            print(f"🔍 리다이렉트 URL: {next_url}")
             return redirect(next_url)
         else:
             print("❌ 인증 실패!")
@@ -936,7 +936,7 @@ def kakao_callback(request):
         if '이미' in str(e) and '가입된 계정' in str(e):
             messages.error(request, str(e))
         else:
-            messages.error(request, f'카카오 로그인 처리 중 오류가 발생했습니다.')
+            messages.error(request, f'카카오 로그인 처리 중 오류가 발생했습니다: {str(e)}')  # 🔥 구체적인 에러 메시지 표시
         return redirect('accounts:login')
 
 def kakao_logout(request):
