@@ -182,6 +182,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
 KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 
 
+
 # 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
 ASGI_APPLICATION = 'oddoke.asgi.application'
 
