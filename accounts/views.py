@@ -122,7 +122,7 @@ def login(request):
 
             if is_first_login:
                 # 첫 로그인이면 아티스트 페이지로
-                return redirect('/')
+                return redirect('artist:index')
             else:
                 # 기존 사용자는 next 파라미터 우선 적용
                 next_url = request.GET.get('next') or '/'
