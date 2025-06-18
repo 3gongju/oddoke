@@ -177,53 +177,19 @@ def cafe_detail_view(request, cafe_id):
     except Exception as e:
         logger.warning(f"조회수 업데이트 실패: {e}")
     
-    # 사용자 찜 상태 확인
-    is_favorited = False
-    if request.user.is_authenticated:
-        is_favorited = CafeFavorite.objects.filter(
-            user=request.user, 
-            cafe=cafe
-        ).exists()
+    # 디버깅: 카페 정보 확인
+    logger.info(f"카페 상세 조회: {cafe.cafe_name} (ID: {cafe.id})")
+    logger.info(f"카페 아티스트: {cafe.artist.display_name if cafe.artist else 'None'}")
+    logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
+    logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
     
-    # ✅ 주변 카페들 (map_utils 사용)
-    nearby_cafes = []
-    if cafe.latitude and cafe.longitude:
-        try:
-            approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
-            nearby_cafes = get_nearby_cafes(
-                user_lat=float(cafe.latitude), 
-                user_lng=float(cafe.longitude), 
-                cafes_queryset=approved_cafes,
-                radius_km=5, 
-                limit=5, 
-                exclude_id=cafe.id
-            )
-        except (ValueError, TypeError) as e:
-            logger.warning(f"주변 카페 조회 오류: {e}")
+    # 공통 함수 사용으로 중복 제거
+    context = get_cafe_detail_context(cafe, request.user)
     
-    # 같은 아티스트/멤버의 다른 카페들
-    related_cafes = BdayCafe.objects.filter(
-        Q(artist=cafe.artist) | Q(member=cafe.member),
-        status='approved'
-    ).exclude(id=cafe.id).select_related('artist', 'member')[:6]
-    
-    # 사용자 찜 목록
-    user_favorites = get_user_favorites(request.user)
-    
-    # ✅ 지도 관련 컨텍스트 생성 (map_utils 사용)
-    map_context = get_map_context()
-    
-    context = {
-        'cafe': cafe,
-        'is_favorited': is_favorited,
-        'nearby_cafes': nearby_cafes,
-        'related_cafes': related_cafes,
-        'user_favorites': user_favorites,
-        'is_preview': False,
-        'can_edit': False,
-        'preview_type': None,
-        **map_context,
-    }
+    # 디버깅: 컨텍스트 확인
+    logger.info(f"nearby_cafes 개수: {len(context.get('nearby_cafes', []))}")
+    for nearby in context.get('nearby_cafes', [])[:3]:  # 처음 3개만 로그
+        logger.info(f"  - {nearby.get('cafe_name', 'Unknown')} ({nearby.get('distance', 'Unknown')}km)")
     
     return render(request, 'ddoksang/detail.html', context)
 

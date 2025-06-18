@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def get_member_nearby_cafes(cafe, exclude_cafe_id=None, filter_type='active_and_upcoming', limit=10):
     """
-    같은 멤버의 다른 카페들을 거리순으로 반환 (제한된 개수)
+    ✅ 수정: 같은 멤버의 다른 카페들만 거리순으로 반환 (제한된 개수)
     cafe: 기준이 되는 카페 객체
     exclude_cafe_id: 제외할 카페 ID (보통 현재 카페)
     filter_type: 'all', 'active_only', 'active_and_upcoming'
@@ -18,25 +18,29 @@ def get_member_nearby_cafes(cafe, exclude_cafe_id=None, filter_type='active_and_
     
     logger.info(f"=== get_member_nearby_cafes 시작 ===")
     logger.info(f"현재 카페: {cafe.cafe_name} (ID: {cafe.id})")
+    logger.info(f"멤버: {cafe.member.member_name if cafe.member else 'None'}")
     logger.info(f"제한 개수: {limit}개")
     
     if not cafe.latitude or not cafe.longitude:
-        logger.warning(f" 카페 좌표가 없음: ({cafe.latitude}, {cafe.longitude})")
+        logger.warning(f"❌ 카페 좌표가 없음: ({cafe.latitude}, {cafe.longitude})")
         return []
     
+    # ✅ 멤버가 없으면 빈 리스트 반환 (관련 카페 없음)
     if not cafe.member:
-        logger.warning(f" 카페에 멤버가 연결되지 않음")
+        logger.warning(f"❌ 카페에 멤버가 연결되지 않음 - 관련 카페 없음")
         return []
     
     try:
         from ..models import BdayCafe
         from datetime import date
         
-        # 기본 필터: 같은 멤버의 승인된 카페들
+        # ✅ 수정: 같은 멤버의 승인된 카페들만 (아티스트 조건 제거)
         member_cafes = BdayCafe.objects.filter(
-            member=cafe.member,
+            member=cafe.member,  # 같은 멤버만
             status='approved'
         ).select_related('artist', 'member')
+        
+        logger.info(f"✅ 같은 멤버({cafe.member.member_name})의 카페만 필터링")
         
         # 운영 상태 필터링
         today = date.today()
@@ -66,7 +70,7 @@ def get_member_nearby_cafes(cafe, exclude_cafe_id=None, filter_type='active_and_
         logger.info(f"좌표가 있는 카페: {cafes_with_coords.count()}개")
         
         if not cafes_with_coords.exists():
-            logger.warning(f" 좌표가 있는 다른 카페가 없음")
+            logger.warning(f"⚠️ 좌표가 있는 다른 멤버 카페가 없음")
             return []
         
         # 거리 계산 및 정렬 (제한된 개수만)
@@ -80,14 +84,14 @@ def get_member_nearby_cafes(cafe, exclude_cafe_id=None, filter_type='active_and_
                 exclude_id=exclude_cafe_id
             )
             
-            logger.info(f" {cafe.member.member_name}의 근처 카페 {len(nearby_member_cafes)}개 반환 (최대 {limit}개 제한)")
+            logger.info(f"✅ {cafe.member.member_name}의 근처 카페 {len(nearby_member_cafes)}개 반환 (최대 {limit}개 제한)")
             
         except Exception as e:
-            logger.error(f" get_nearby_cafes 오류: {e}")
+            logger.error(f"❌ get_nearby_cafes 오류: {e}")
             return []
         
     except Exception as e:
-        logger.error(f" 멤버 카페 조회 오류: {e}", exc_info=True)
+        logger.error(f"❌ 멤버 카페 조회 오류: {e}", exc_info=True)
         return []
     
     return nearby_member_cafes
@@ -96,10 +100,11 @@ def get_member_nearby_cafes(cafe, exclude_cafe_id=None, filter_type='active_and_
 def get_cafe_detail_context(cafe, user, is_preview=False, can_edit=False, preview_type=None):
     """
     카페 상세 페이지용 공통 컨텍스트 생성
-    - 최대 10개의 근처 카페만 표시
+    - 최대 10개의 근처 카페만 표시 (같은 멤버만)
     """
     logger.info(f"=== get_cafe_detail_context 시작 ===")
     logger.info(f"카페: {cafe.cafe_name} (ID: {cafe.id})")
+    logger.info(f"멤버: {cafe.member.member_name if cafe.member else 'None'}")
     
     # 사용자 찜 상태 확인
     is_favorited = False
@@ -110,7 +115,7 @@ def get_cafe_detail_context(cafe, user, is_preview=False, can_edit=False, previe
             cafe=cafe
         ).exists()
     
-    # 근처 카페 최대 10개만 가져오기
+    # ✅ 근처 카페: 같은 멤버의 카페만 최대 10개
     nearby_cafes = get_member_nearby_cafes(
         cafe, 
         exclude_cafe_id=cafe.id,
@@ -118,7 +123,7 @@ def get_cafe_detail_context(cafe, user, is_preview=False, can_edit=False, previe
         limit=10  # 최대 10개로 제한
     )
     
-    logger.info(f"컨텍스트에 전달될 nearby_cafes: {len(nearby_cafes)}개 (최대 10개)")
+    logger.info(f"컨텍스트에 전달될 nearby_cafes: {len(nearby_cafes)}개 (같은 멤버만, 최대 10개)")
     
     # 사용자 찜 목록
     user_favorites = get_user_favorites(user)

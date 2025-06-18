@@ -90,7 +90,7 @@ def cafe_quick_view(request, cafe_id):
 
 @require_GET
 def nearby_cafes_api(request):
-    """주변 카페 검색 API"""
+    """주변 카페 검색 API - 🔧 수정: 모든 아티스트의 카페 반환"""
     try:
         lat = float(request.GET.get('lat'))
         lng = float(request.GET.get('lng'))
@@ -99,15 +99,12 @@ def nearby_cafes_api(request):
         if not is_valid_coordinates(lat, lng):
             return JsonResponse({'success': False, 'error': '유효하지 않은 좌표입니다.'}, status=400)
         
-        # 현재 운영중인 카페들만 검색
-        cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
-        operating_cafes = filter_operating_cafes(cafes)
+        # 🔧 수정: get_all_nearby_cafes 함수 사용 (모든 아티스트)
+        from ddoksang.utils.cafe_utils import get_all_nearby_cafes
         
-        # map_utils의 get_nearby_cafes 함수 사용
-        nearby_cafes = get_nearby_cafes(
+        nearby_cafes = get_all_nearby_cafes(
             user_lat=lat,
             user_lng=lng,
-            cafes_queryset=operating_cafes,
             radius_km=radius_km,
             limit=MAX_NEARBY_CAFES
         )
