@@ -7,6 +7,9 @@ export function setupUIManager(tradeCompletedStatus) {
   isTradeCompleted = tradeCompletedStatus;
   setupInitialObservers();
   
+  // ✅ scrollToBottom를 전역으로 노출 (auto_detect에서 사용)
+  window.scrollToBottom = scrollToBottom;
+  
   if (chatLog) {
     // 1. 숨긴 상태에서 스크롤 위치 먼저 설정
     chatLog.style.scrollBehavior = 'auto';
