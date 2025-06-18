@@ -20,6 +20,7 @@ import {
   checkTradeCompletedBeforeSend 
 } from './ui_manager.js';
 import { setupFraudCheck } from './fraud_check.js';
+import { setupAutoDetect } from './auto_detect.js';
 
 // CSRF 토큰 가져오는 함수
 function getCSRFToken() {
@@ -64,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupUIManager(isTradeCompleted);
   setupMessageHandlers(currentUser, currentUserId);
   setupFraudCheck();
+  setupAutoDetect();
   
   // WebSocket 메시지 핸들러 등록
   registerMessageHandler('showToast', showToast); // UI 업데이트용

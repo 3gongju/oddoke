@@ -42,16 +42,47 @@ class DdoksangHome {
         }
     }
 
+// ddoksang_home_main.js의 waitForKakaoMaps 함수 수정
+
     async waitForKakaoMaps() {
+        console.log('🔍 카카오맵 API 대기 시작...');
+        
         let attempts = 0;
-        while (typeof kakao === 'undefined' && attempts < 50) {
+        const maxAttempts = 100; // 10초 대기 (100 * 100ms)
+        
+        while (attempts < maxAttempts) {
+            // 더 구체적인 확인
+            if (typeof window.kakao !== 'undefined' && 
+                window.kakao && 
+                typeof window.kakao.maps !== 'undefined' && 
+                window.kakao.maps && 
+                typeof window.kakao.maps.Map !== 'undefined') {
+                
+                console.log('✅ 카카오맵 API 감지 성공!');
+                console.log('- kakao 객체:', typeof window.kakao);
+                console.log('- kakao.maps 객체:', typeof window.kakao.maps);
+                console.log('- kakao.maps.Map 클래스:', typeof window.kakao.maps.Map);
+                return;
+            }
+            
+            // 진행 상황 로그 (매 1초마다)
+            if (attempts % 10 === 0) {
+                console.log(`⏳ 카카오맵 API 대기 중... (${attempts/10}초)`);
+                console.log('- window.kakao:', typeof window.kakao);
+                console.log('- window.kakao.maps:', typeof window.kakao !== 'undefined' ? typeof window.kakao.maps : 'undefined');
+            }
+            
             await new Promise(resolve => setTimeout(resolve, 100));
             attempts++;
         }
-        if (typeof kakao === 'undefined') {
-            throw new Error('카카오맵 API 로드 실패');
-        }
-        console.log('✅ 카카오맵 API 대기 완료');
+        
+        // 최종 실패
+        console.error('❌ 카카오맵 API 로드 타임아웃');
+        console.error('- window.kakao:', typeof window.kakao);
+        console.error('- window.kakao.maps:', typeof window.kakao !== 'undefined' ? typeof window.kakao.maps : 'undefined');
+        console.error('- 시도 횟수:', attempts);
+        
+        throw new Error('카카오맵 API 로드 실패');
     }
 
     async initializeMap() {

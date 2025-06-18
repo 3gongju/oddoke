@@ -19,6 +19,9 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ✅ .env 파일 명시적으로 로드 (개선)
+env_path = BASE_DIR / '.env'
+load_dotenv(env_path, override=True)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -181,6 +184,11 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # 카카오맵 API 키 설정
 KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
 KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 
+
+KAKAO_API_KEY = KAKAO_MAP_API_KEY
+
+# 카카오톡 공유하기 키 설정
+KAKAO_JAVASCRIPT_KEY = os.getenv('KAKAO_JAVASCRIPT_KEY')
 
 # 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
 ASGI_APPLICATION = 'oddoke.asgi.application'

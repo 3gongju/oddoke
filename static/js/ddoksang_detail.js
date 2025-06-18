@@ -12,6 +12,8 @@
     let map = null;
     let marker = null;
     let cafeData = null;
+    let shareData = null;
+    let kakaoInitialized = false;
 
     // 이미지 갤러리 관련 함수들
     function showGalleryImage(index) {
@@ -293,6 +295,28 @@
         }
     }
 
+    function getShareData() {
+    try {
+        const shareDataElement = document.getElementById('share-data');
+        if (!shareDataElement) {
+            console.error('share-data 엘리먼트를 찾을 수 없습니다.');
+            return null;
+        }
+        
+        const textContent = shareDataElement.textContent;
+        if (!textContent) {
+            console.error('share-data가 비어있습니다.');
+            return null;
+        }
+        
+        return JSON.parse(textContent);
+    } catch (error) {
+        console.error('공유 데이터 파싱 오류:', error);
+        return null;
+    }
+}
+
+
     // 지도 초기화 함수
     function initMap() {
         cafeData = getCafeData();
@@ -465,9 +489,103 @@
         }, 3000);
     }
 
-    // 카카오톡 공유 (추후 구현)
+        // 카카오 SDK 초기화 함수
+    function initKakaoSDK() {
+        const cafeData = getCafeData();
+        if (!cafeData || !cafeData.jsKey) {
+            console.error('카카오 JavaScript 키가 설정되지 않았습니다.');
+            return false;
+        }
+
+        try {
+            if (typeof Kakao !== 'undefined') {
+                if (!Kakao.isInitialized()) {
+                    Kakao.init(cafeData.jsKey);
+                    console.log('✅ 카카오 SDK 초기화 완료:', Kakao.isInitialized());
+                }
+                kakaoInitialized = true;
+                return true;
+            } else {
+                console.error('Kakao SDK가 로드되지 않았습니다.');
+                return false;
+            }
+        } catch (error) {
+            console.error('카카오 SDK 초기화 오류:', error);
+            return false;
+        }
+    }
+
+    // 카카오톡 공유 함수 (기존 함수 교체)
     function shareKakao() {
-        showToast('카카오톡 공유 기능은 SDK 설정 후 사용 가능합니다.', 'info');
+        console.log('🔗 카카오톡 공유 시작');
+        
+        // 카카오 SDK 초기화 확인
+        if (!kakaoInitialized) {
+            const initialized = initKakaoSDK();
+            if (!initialized) {
+                showToast('카카오톡 공유 기능을 사용할 수 없습니다.', 'error');
+                return;
+            }
+        }
+
+        // 공유 데이터 가져오기
+        shareData = shareData || getShareData();
+        if (!shareData) {
+            showToast('공유할 데이터를 찾을 수 없습니다.', 'error');
+            return;
+        }
+
+        try {
+            // 카카오링크 공유 실행
+            Kakao.Link.sendDefault({
+                objectType: 'location',
+                address: shareData.address,
+                addressTitle: shareData.title,
+                content: {
+                    title: shareData.title,
+                    description: `${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}`,
+                    imageUrl: shareData.imageUrl,
+                    link: {
+                        mobileWebUrl: shareData.linkUrl,
+                        webUrl: shareData.linkUrl,
+                    },
+                },
+                buttons: [
+                    {
+                        title: '카페 보러가기',
+                        link: {
+                            mobileWebUrl: shareData.linkUrl,
+                            webUrl: shareData.linkUrl,
+                        },
+                    },
+                    {
+                        title: '또독이 홈',
+                        link: {
+                            mobileWebUrl: window.location.origin,
+                            webUrl: window.location.origin,
+                        },
+                    },
+                ],
+                installTalk: true,
+            });
+
+            console.log('✅ 카카오톡 공유 성공');
+            showToast('카카오톡 공유창이 열렸습니다!', 'success');
+
+        } catch (error) {
+            console.error('❌ 카카오톡 공유 오류:', error);
+            
+            // 에러 타입별 메시지
+            let errorMessage = '카카오톡 공유 중 오류가 발생했습니다.';
+            
+            if (error.message && error.message.includes('domain')) {
+                errorMessage = '도메인이 등록되지 않았습니다. 관리자에게 문의해주세요.';
+            } else if (error.message && error.message.includes('app')) {
+                errorMessage = 'API 키 설정을 확인해주세요.';
+            }
+            
+            showToast(errorMessage, 'error');
+        }
     }
 
     // 이미지 데이터 초기화
@@ -491,6 +609,29 @@
         
         // 이미지 데이터 초기화
         initImageData();
+
+        // 카카오 SDK 초기화 
+        shareData = getShareData();
+        
+        // 카카오 SDK 로드 확인 후 초기화
+        if (typeof Kakao !== 'undefined') {
+            initKakaoSDK();
+        } else {
+            console.warn('Kakao SDK 로드 대기 중...');
+            let retryCount = 0;
+            const maxRetries = 10;
+            
+            const checkKakaoLoaded = setInterval(() => {
+                retryCount++;
+                if (typeof Kakao !== 'undefined') {
+                    clearInterval(checkKakaoLoaded);
+                    initKakaoSDK();
+                } else if (retryCount >= maxRetries) {
+                    clearInterval(checkKakaoLoaded);
+                    console.error('Kakao SDK 로드 실패');
+                }
+            }, 100);
+        }
         
         // 이미지 로드 최적화
         const images = document.querySelectorAll('img[src]');
@@ -521,11 +662,6 @@
                     closeImageModal();
                 }
             });
-        }
-        
-        // 초기 첫 이미지 강제 적용
-        if (totalImages > 0) {
-            showGalleryImage(0);
         }
         
         // 갤러리와 모달에 터치 이벤트 추가
