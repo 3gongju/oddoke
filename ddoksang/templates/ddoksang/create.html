@@ -139,7 +139,7 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium mb-2">시작일 *</label>
-          <input type="date" 
+          <input type="text" 
                  id="start_date" 
                  name="start_date" 
                  class="w-full border rounded px-4 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10" 
@@ -148,7 +148,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-2">종료일 *</label>
-          <input type="date" 
+          <input type="text" 
                  id="end_date" 
                  name="end_date" 
                  class="w-full border rounded px-4 py-3 focus:border-gray-900 focus:ring-2 focus:ring-gray-900 focus:ring-opacity-10" 
@@ -815,6 +815,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // 즉시 실행
   imageInitSuccess = ensureImageUploadInit();
   autocompleteInitSuccess = initializeAutocomplete();
+
+  if (window.DdoksangDateUtils?.initDuplicateCheckPickers) {
+    window.DdoksangDateUtils.initDuplicateCheckPickers();
+  }
   
   // 지연된 재시도 및 연동 설정 (1초 후)
   setTimeout(() => {
