@@ -20,6 +20,39 @@ import {
   checkTradeCompletedBeforeSend 
 } from './ui_manager.js';
 import { setupFraudCheck } from './fraud_check.js';
+import { setupAutoDetect } from './auto_detect.js';
+
+// CSRF 토큰 가져오는 함수
+function getCSRFToken() {
+  // 1순위: 전역변수에서 가져오기
+  if (window.csrfToken) {
+    return window.csrfToken;
+  }
+  
+  // 2순위: 메타태그에서 가져오기
+  const metaToken = document.querySelector('meta[name="csrf-token"]');
+  if (metaToken && metaToken.content) {
+    return metaToken.content;
+  }
+  
+  // 3순위: 쿠키에서 가져오기
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'csrftoken' && value) {
+      return decodeURIComponent(value);
+    }
+  }
+  
+  // 4순위: hidden input에서 가져오기
+  const hiddenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+  if (hiddenInput && hiddenInput.value) {
+    return hiddenInput.value;
+  }
+  
+  console.error('CSRF 토큰을 찾을 수 없습니다!');
+  return null;
+}
 
 // CSRF 토큰 가져오는 함수
 function getCSRFToken() {
@@ -64,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupUIManager(isTradeCompleted);
   setupMessageHandlers(currentUser, currentUserId);
   setupFraudCheck();
+  setupAutoDetect();
   
   // WebSocket 메시지 핸들러 등록
   registerMessageHandler('showToast', showToast); // UI 업데이트용

@@ -183,7 +183,7 @@ def cafe_detail_view(request, cafe_id):
     logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
     logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
     
-    # ✅ 주변 카페들 (map_utils 사용)
+    # 주변 카페들 (map_utils 사용)
     nearby_cafes = []
     if cafe.latitude and cafe.longitude:
         try:
@@ -199,10 +199,30 @@ def cafe_detail_view(request, cafe_id):
         except (ValueError, TypeError) as e:
             logger.warning(f"주변 카페 조회 오류: {e}")
     
-    # 디버깅: 컨텍스트 확인
-    logger.info(f"nearby_cafes 개수: {len(context.get('nearby_cafes', []))}")
-    for nearby in context.get('nearby_cafes', [])[:3]:  # 처음 3개만 로그
-        logger.info(f"  - {nearby.get('cafe_name', 'Unknown')} ({nearby.get('distance', 'Unknown')}km)")
+    # 같은 아티스트/멤버의 다른 카페들
+    related_cafes = BdayCafe.objects.filter(
+        Q(artist=cafe.artist) | Q(member=cafe.member),
+        status='approved'
+    ).exclude(id=cafe.id).select_related('artist', 'member')[:6]
+    
+    # 사용자 찜 목록
+    user_favorites = get_user_favorites(request.user)
+    
+    # 지도 관련 컨텍스트 생성 (map_utils 사용)
+    map_context = get_map_context()
+    
+    context = {
+        'cafe': cafe,
+        'is_favorited': is_favorited,
+        'nearby_cafes': nearby_cafes,
+        'related_cafes': related_cafes,
+        'user_favorites': user_favorites,
+        'is_preview': False,
+        'can_edit': False,
+        'preview_type': None,
+        'settings': settings,
+        **map_context,
+    }
     
     return render(request, 'ddoksang/detail.html', context)
 

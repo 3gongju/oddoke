@@ -1,102 +1,190 @@
-<!-- ddokchat/templates/ddokchat/components/modals/fraud_check.html -->
+<!-- fraud_check.html 모달 부분 - 예금주명 제거 -->
 
 <div id="fraudCheckModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
   <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[80vh] overflow-hidden">
-    <!-- 모달 헤더 -->
-    <div class="bg-red-500 text-white px-6 py-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-bold flex items-center">
-          <span class="mr-2">🔍</span> 계좌 신고 이력 조회
-        </h2>
-        <button onclick="closeFraudModal()" class="text-white hover:text-gray-200">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
+    
+    <!-- Step 1: 계좌번호 입력 단계 -->
+    <div id="fraudInputStep" class="fraud-step">
+      <!-- 모달 헤더 -->
+      <div class="bg-orange-500 text-white px-6 py-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"></path>
+            </svg>
+            계좌 사기이력 조회
+          </h2>
+          <button onclick="closeFraudModal()" class="text-white hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 입력 폼 -->
+      <div class="p-6">
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-4 flex items-center">
+            <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            계좌번호를 입력하시면 사기 신고 이력을 조회해드립니다.
+          </p>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- 계좌번호 입력 -->
+          <div>
+            <label for="fraudAccountNumberInput" class="block text-sm font-medium text-gray-700 mb-2">
+              계좌번호 <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="text" 
+              id="fraudAccountNumberInput" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              placeholder="계좌번호를 입력하세요 (숫자만)"
+              maxlength="20"
+            >
+            <p class="text-xs text-gray-500 mt-1">예: 1234567890123</p>
+          </div>
+        </div>
+        
+        <!-- 조회 버튼 -->
+        <div class="flex justify-end space-x-3 mt-6">
+          <button 
+            onclick="closeFraudModal()" 
+            class="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+          >
+            취소
+          </button>
+          <button 
+            id="startFraudCheckBtn"
+            class="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium"
+          >
+            조회하기
+          </button>
+        </div>
       </div>
     </div>
-    
-    <!-- 모달 내용 -->
-    <div class="p-6">
-      <!-- 계좌 정보 -->
-      <div id="fraudAccountInfo" class="bg-gray-50 rounded-lg p-4 mb-4">
-        <h3 class="font-semibold text-gray-800 mb-2">조회 계좌</h3>
-        <div class="space-y-1 text-sm">
-          <div class="flex justify-between">
-            <span class="text-gray-600">은행:</span>
-            <span id="fraudBankName" class="font-medium"></span>
+
+    <!-- Step 2: 조회 결과 단계 -->
+    <div id="fraudResultStep" class="fraud-step hidden">
+      <!-- 모달 헤더 -->
+      <div class="bg-orange-500 text-white px-6 py-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-bold flex items-center">
+            <button id="fraudBackBtn" class="mr-2 p-1 hover:bg-orange-600 rounded">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            사기이력 조회 결과
+          </h2>
+          <button onclick="closeFraudModal()" class="text-white hover:text-gray-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 모달 내용 -->
+      <div class="p-6">
+        <!-- 조회된 계좌 정보 -->
+        <div id="fraudAccountInfoDisplay" class="bg-gray-50 rounded-lg p-4 mb-4">
+          <h3 class="font-semibold text-gray-800 mb-2">조회 계좌</h3>
+          <div class="space-y-1 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600">계좌번호:</span>
+              <span id="fraudDisplayAccountNumber" class="font-mono"></span>
+            </div>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-600">계좌번호:</span>
-            <span id="fraudAccountNumber" class="font-mono"></span>
+        </div>
+        
+        <!-- 조회 결과 -->
+        <div id="fraudResults">
+          <!-- 로딩 상태 -->
+          <div id="fraudLoading" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-3"></div>
+            <p class="text-gray-600">신고 이력을 조회하고 있습니다...</p>
           </div>
-          <div class="flex justify-between">
-            <span class="text-gray-600">예금주:</span>
-            <span id="fraudAccountHolder" class="font-medium"></span>
+          
+          <!-- 신고 이력 없음 -->
+          <div id="fraudNoReports" class="text-center py-8 hidden">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-green-800 mb-2">신고 이력이 없습니다</h3>
+            <p class="text-green-600 text-sm">해당 계좌에 대한 사기 신고 내역이 발견되지 않았습니다.</p>
+          </div>
+          
+          <!-- 신고 이력 있음 -->
+          <div id="fraudHasReports" class="hidden">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+              <div class="flex items-center mb-2">
+                <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-red-800">신고 이력 발견</h3>
+              </div>
+              <p class="text-red-700 text-sm mb-2">
+                총 <span id="fraudReportCount" class="font-bold"></span>건의 신고가 접수되었습니다.
+              </p>
+              <p class="text-red-600 text-xs">
+                거래 시 각별한 주의가 필요합니다.
+              </p>
+            </div>
+            
+            <!-- 신고 내역 리스트 -->
+            <div id="fraudReportsList" class="space-y-3 max-h-64 overflow-y-auto">
+              <!-- 동적으로 생성될 신고 내역들 -->
+            </div>
+          </div>
+          
+          <!-- 오류 상태 -->
+          <div id="fraudError" class="text-center py-8 hidden">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">조회 실패</h3>
+            <p id="fraudErrorMessage" class="text-gray-600 text-sm"></p>
           </div>
         </div>
       </div>
       
-      <!-- 조회 결과 -->
-      <div id="fraudResults">
-        <!-- 로딩 상태 -->
-        <div id="fraudLoading" class="text-center py-8">
-          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-3"></div>
-          <p class="text-gray-600">신고 이력을 조회하고 있습니다...</p>
-        </div>
-        
-        <!-- 신고 이력 없음 -->
-        <div id="fraudNoReports" class="text-center py-8 hidden">
-          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl">✅</span>
-          </div>
-          <h3 class="text-lg font-semibold text-green-800 mb-2">신고 이력이 없습니다</h3>
-          <p class="text-green-600 text-sm">해당 계좌에 대한 사기 신고 내역이 발견되지 않았습니다.</p>
-        </div>
-        
-        <!-- 신고 이력 있음 -->
-        <div id="fraudHasReports" class="hidden">
-          <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <div class="flex items-center mb-2">
-              <span class="text-red-500 text-xl mr-2">⚠️</span>
-              <h3 class="text-lg font-semibold text-red-800">신고 이력 발견</h3>
-            </div>
-            <p class="text-red-700 text-sm mb-2">
-              총 <span id="fraudReportCount" class="font-bold"></span>건의 신고가 접수되었습니다.
-            </p>
-            <p class="text-red-600 text-xs">
-              거래 시 각별한 주의가 필요합니다.
-            </p>
-          </div>
-          
-          <!-- 신고 내역 리스트 -->
-          <div id="fraudReportsList" class="space-y-3 max-h-64 overflow-y-auto">
-            <!-- 동적으로 생성될 신고 내역들 -->
-          </div>
-        </div>
-        
-        <!-- 오류 상태 -->
-        <div id="fraudError" class="text-center py-8 hidden">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span class="text-2xl">❌</span>
-          </div>
-          <h3 class="text-lg font-semibold text-gray-800 mb-2">조회 실패</h3>
-          <p id="fraudErrorMessage" class="text-gray-600 text-sm"></p>
+      <!-- 모달 푸터 -->
+      <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+        <div class="flex justify-between items-center">
+          <p class="text-xs text-gray-500">
+            최종 업데이트: <span id="fraudLastUpdated"></span>
+          </p>
+          <button onclick="closeFraudModal()" 
+                  class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+            닫기
+          </button>
         </div>
       </div>
     </div>
     
-    <!-- 모달 푸터 -->
-    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-      <div class="flex justify-between items-center">
-        <p class="text-xs text-gray-500">
-          최종 업데이트: <span id="fraudLastUpdated"></span>
-        </p>
-        <button onclick="closeFraudModal()" 
-                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
-          닫기
-        </button>
-      </div>
-    </div>
   </div>
 </div>
+
+<style>
+.fraud-step {
+  transition: all 0.3s ease-in-out;
+}
+
+.fraud-step.hidden {
+  display: none;
+}
+
+/* 계좌번호 입력시 숫자만 */
+#fraudAccountNumberInput {
+  font-family: 'SF Mono', Consolas, monospace;
+}
+</style>

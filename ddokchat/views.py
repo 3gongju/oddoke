@@ -469,27 +469,37 @@ def send_address_info(request, room_id):
 @require_POST
 @login_required
 def check_account_fraud(request):
-    """계좌 사기 이력 조회"""
+    """계좌 사기 이력 조회 - 예금주명 제거 버전"""
     try:
         data = json.loads(request.body)
-        bank_code = data.get('bank_code')
-        account_number = data.get('account_number')
-        account_holder = data.get('account_holder')
+        bank_code = data.get('bank_code', '').strip()  # 빈 값 허용
+        account_number = data.get('account_number', '').strip()
+        account_holder = data.get('account_holder', '').strip()  # 빈 값 허용
         
-        # 입력값 검증
-        if not all([account_number, account_holder]):
+        # ✅ 입력값 검증: 계좌번호만 필수
+        if not account_number:
             return JsonResponse({
                 'success': False,
-                'error': '계좌번호와 예금주를 모두 입력해주세요.'
+                'error': '계좌번호를 입력해주세요.'
+            })
+        
+        # ✅ 계좌번호 정규화 (하이픈, 공백 제거)
+        clean_account_number = account_number.replace('-', '').replace(' ', '')
+        
+        # ✅ 계좌번호 길이 검증 (최소 10자리)
+        if len(clean_account_number) < 10:
+            return JsonResponse({
+                'success': False,
+                'error': '올바른 계좌번호를 입력해주세요. (최소 10자리)'
             })
         
         # 더치트 서비스 사용
         try:
             dutcheat_service = get_dutcheat_service()
             result = dutcheat_service.check_account_fraud_history(
-                bank_code=bank_code,
-                account_number=account_number,
-                account_holder=account_holder
+                bank_code=bank_code if bank_code else None,  # 빈 값이면 None 전달
+                account_number=clean_account_number,  # ✅ 정규화된 계좌번호 사용
+                account_holder=account_holder if account_holder else None  # ✅ 빈 값이면 None 전달
             )
             
             if result.get('success'):
@@ -502,12 +512,11 @@ def check_account_fraud(request):
                 })
             else:
                 # 더치트 서비스 실패 시 더미 데이터로 폴백
-                return _get_dummy_fraud_data(account_number)
+                return _get_dummy_fraud_data(clean_account_number)
                 
         except Exception as e:
-            print(f"더치트 서비스 오류: {e}")
             # 서비스 오류 시 더미 데이터로 폴백
-            return _get_dummy_fraud_data(account_number)
+            return _get_dummy_fraud_data(clean_account_number)
         
     except json.JSONDecodeError:
         return JsonResponse({

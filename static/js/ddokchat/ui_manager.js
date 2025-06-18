@@ -7,8 +7,24 @@ export function setupUIManager(tradeCompletedStatus) {
   isTradeCompleted = tradeCompletedStatus;
   setupInitialObservers();
   
-  // 페이지 로드 시 즉시 맨 아래로 스크롤 (애니메이션 없음)
-  setTimeout(() => scrollToBottom(true), 100);
+  // ✅ scrollToBottom를 전역으로 노출 (auto_detect에서 사용)
+  window.scrollToBottom = scrollToBottom;
+  
+  if (chatLog) {
+    // 1. 숨긴 상태에서 스크롤 위치 먼저 설정
+    chatLog.style.scrollBehavior = 'auto';
+    chatLog.scrollTop = chatLog.scrollHeight;
+    
+    // 2. 잠깐 후 페이드인으로 표시 (자연스러움)
+    setTimeout(() => {
+      chatLog.classList.add('ready');
+      
+      // 3. 페이드인 완료 후 부드러운 스크롤 활성화
+      setTimeout(() => {
+        chatLog.style.scrollBehavior = 'smooth';
+      }, 200);
+    }, 50);
+  }
   
   // 입력/버튼 비활성화 (거래 완료 시)
   if (isTradeCompleted) {
