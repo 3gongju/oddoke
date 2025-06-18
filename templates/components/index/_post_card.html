@@ -27,12 +27,19 @@
       {% endif %}
     </a>
     
-    <!-- 찜하기 버튼 (이미지 위 우상단) -->
-    <button class="absolute top-2 right-2 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center text-pink-500 hover:bg-opacity-100 transition-all duration-200 shadow-sm"
-            onclick="toggleLike(event, {{ post.id }}, '{{ post.category_type }}')">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
-      </svg>
+    <!-- ✅ 찜하기 버튼 (이미지 위 우상단) - 초기 상태 설정 개선 -->
+    <button class="absolute top-2 right-2 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center text-pink-500 hover:bg-opacity-100 transition-all duration-200 shadow-sm like-btn-{{ post.id }}"
+            onclick="toggleLike(event, {{ post.id }}, '{{ post.category_type }}')"
+            data-liked="{% if user.is_authenticated and user in post.like.all %}true{% else %}false{% endif %}">
+      {% if user.is_authenticated and user in post.like.all %}
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-red-500">
+          <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+        </svg>
+      {% else %}
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+        </svg>
+      {% endif %}
     </button>
   </div>
 
@@ -92,7 +99,7 @@
         <!-- 유저명 -->
         <span class="truncate text-gray-700 font-medium">{{ post.user.username }}</span>
         
-        <!-- 팬덤 인증 마크 - 다양한 방식으로 체크 -->
+        <!-- 팬덤 인증 마크 -->
         {% if post.user.fandom_profile.is_verified_fandom or post.user.is_verified_fandom %}
           <span class="flex-shrink-0 text-pink-500 text-sm" title="팬덤 인증">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
@@ -109,7 +116,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
             <path d="M2 6.342a3.375 3.375 0 0 1 6-2.088 3.375 3.375 0 0 1 5.997 2.26c-.063 2.134-1.618 3.76-2.955 4.784a14.437 14.437 0 0 1-2.676 1.61c-.02.01-.038.017-.05.022l-.014.006-.004.002h-.002a.75.75 0 0 1-.592.001h-.002l-.004-.003-.015-.006a5.528 5.528 0 0 1-.232-.107 14.395 14.395 0 0 1-2.535-1.557C3.564 10.22 1.999 8.558 1.999 6.38L2 6.342Z" />
           </svg>
-          <span data-like-count>{{ post.like.count }}</span>
+          <span data-like-count-{{ post.id }}>{{ post.like.count }}</span>
         </div>
         
         <!-- 조회수 (있는 경우만) -->
@@ -139,7 +146,7 @@
   </div>
 </div>
 
-<!-- 찜하기 JavaScript -->
+<!-- ✅ 찜하기 JavaScript - 상태 유지 개선 -->
 <script>
 function toggleLike(event, postId, category) {
   event.preventDefault();
@@ -167,25 +174,11 @@ function toggleLike(event, postId, category) {
   })
   .then(response => response.json())
   .then(data => {
-    if (data.liked) {
-      // 채운 하트로 변경
-      icon.setAttribute('fill', 'currentColor');
-      icon.setAttribute('stroke', 'none');
-      icon.innerHTML = '<path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />';
-      button.classList.add('text-red-500');
-      button.classList.remove('text-pink-500');
-  } else {
-      // 빈 하트로 변경
-      icon.setAttribute('fill', 'none');
-      icon.setAttribute('stroke', 'currentColor');
-      icon.setAttribute('stroke-width', '1.5');
-      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />';
-      button.classList.add('text-pink-500');
-      button.classList.remove('text-red-500');
-    }
+    // ✅ 버튼 상태 업데이트 함수 호출
+    updateLikeButtonState(button, data.liked);
     
     // 찜 개수 업데이트
-    const likeCountSpan = button.closest('.bg-white').querySelector('[data-like-count]');
+    const likeCountSpan = document.querySelector(`[data-like-count-${postId}]`);
     if (likeCountSpan) {
       likeCountSpan.textContent = data.like_count;
     }
@@ -195,6 +188,38 @@ function toggleLike(event, postId, category) {
     alert('찜하기 처리 중 오류가 발생했습니다.');
   });
 }
+
+// ✅ 찜하기 버튼 상태 업데이트 함수
+function updateLikeButtonState(button, isLiked) {
+  button.dataset.liked = isLiked ? "true" : "false";
+  const icon = button.querySelector('svg');
+  
+  if (isLiked) {
+    // 채운 하트로 변경
+    icon.setAttribute('fill', 'currentColor');
+    icon.setAttribute('stroke', 'none');
+    icon.innerHTML = '<path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />';
+    icon.classList.add('text-red-500');
+    icon.classList.remove('text-pink-500');
+  } else {
+    // 빈 하트로 변경
+    icon.setAttribute('fill', 'none');
+    icon.setAttribute('stroke', 'currentColor');
+    icon.setAttribute('stroke-width', '1.5');
+    icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />';
+    icon.classList.add('text-pink-500');
+    icon.classList.remove('text-red-500');
+  }
+}
+
+// ✅ 페이지 로드 시 모든 찜하기 버튼 초기 상태 설정
+document.addEventListener('DOMContentLoaded', function() {
+  const likeButtons = document.querySelectorAll('[class*="like-btn-"]');
+  likeButtons.forEach(button => {
+    const isLiked = button.dataset.liked === 'true';
+    updateLikeButtonState(button, isLiked);
+  });
+});
 </script>
 
 <!-- CSS 추가 (Tailwind 보완용) -->
