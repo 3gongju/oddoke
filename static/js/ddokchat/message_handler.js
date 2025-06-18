@@ -7,7 +7,7 @@ import {
   updateSensitiveInfoCards, 
   updateUIAfterTradeComplete 
 } from './ui_manager.js';
-import { handleReceivedMessage } from './auto_detect.js'; // ✅ 함수명 변경
+import { handleReceivedMessage } from './auto_detect.js';
 
 let currentUser = '';
 let currentUserId = '';
@@ -19,20 +19,14 @@ export function setupMessageHandlers(user, userId) {
   chatLog = document.getElementById('chat-log');
 }
 
-// message_handler.js의 handleTextMessage 함수만 수정
-
 export function handleTextMessage(data) {
-  console.log('📨 handleTextMessage 호출됨:', data);
-  
   const isMine = data.sender === currentUser;
-  console.log('isMine:', isMine, 'sender:', data.sender, 'currentUser:', currentUser);
   
-  // ✅ 전체 메시지 래퍼 생성 (세로 배치) - 이게 핵심!
+  // 전체 메시지 래퍼 생성 (세로 배치)
   const messageWrapper = document.createElement("div");
   messageWrapper.className = `message-wrapper mb-3`;
-  console.log('✅ messageWrapper 생성:', messageWrapper);
   
-  // ✅ 기존 메시지 컨테이너 (가로 배치)
+  // 기존 메시지 컨테이너 (가로 배치)
   const messageContainer = document.createElement("div");
   messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} group message-enter`;
   
@@ -71,34 +65,25 @@ export function handleTextMessage(data) {
       </div>`;
   }
   
-  // ✅ 메시지를 래퍼에 추가
+  // 메시지를 래퍼에 추가
   messageWrapper.appendChild(messageContainer);
-  console.log('✅ messageContainer를 messageWrapper에 추가');
   
   if (chatLog) {
-    // ✅ 래퍼를 채팅 로그에 추가
+    // 래퍼를 채팅 로그에 추가
     chatLog.appendChild(messageWrapper);
-    console.log('✅ messageWrapper를 chatLog에 추가');
     
     registerObserver(messageContainer, data.sender);
     scrollToBottom();
     
-    // ✅ 상대방이 보낸 메시지에서만 자동 감지 (래퍼를 전달)
+    // 상대방이 보낸 메시지에서만 자동 감지 (래퍼를 전달)
     if (!isMine) {
-      console.log('📞 상대방 메시지 - handleReceivedMessage 호출 예약');
       setTimeout(() => {
-        console.log('⏰ setTimeout 실행 - handleReceivedMessage 호출');
         handleReceivedMessage(data.message, messageWrapper, data.sender);
       }, 1000);
-    } else {
-      console.log('⛔ 내 메시지 - 감지 안함');
     }
-  } else {
-    console.error('❌ chatLog를 찾을 수 없음');
   }
 }
 
-// 나머지 함수들은 기존과 동일...
 export function handleImageMessage(data) {
   const isMine = data.sender === currentUser;
   const messageContainer = document.createElement("div");
@@ -419,7 +404,6 @@ export function handleEnterChatroomFinish(data) {
 }
 
 export function handleTradeCompleted(data) {
- console.log('거래 완료 알림 수신');
  updateSensitiveInfoCards();
  updateUIAfterTradeComplete(true);
 }
