@@ -1,4 +1,4 @@
-// static/js/ddoksang_ui_components.js
+// static/js/ddoksang_ui_components.js - UI 컴포넌트 전용
 
 // 위치 권한 요청 모달
 function showLocationModal() {
@@ -83,7 +83,7 @@ function closeCafeModal() {
     document.getElementById('cafeModal').classList.add('hidden');
 }
 
-// 생일 아티스트 슬라이더 (CSS Transform 방식 - home.html 전용)
+// 생일 아티스트 슬라이더 (home.html 전용)
 function initBirthdayNavigation() {
     const slider = document.getElementById('birthdaySlider');
     const prevBtn = document.getElementById('birthdayPrevBtn');
@@ -113,15 +113,12 @@ function initBirthdayNavigation() {
         
         for (let i = 0; i < totalPages; i++) {
             const dot = document.createElement('button');
-            // 인라인 스타일 제거, 표준 클래스만 사용
             dot.className = `w-1 h-1 rounded-full transition-colors mx-1 ${i === Math.floor(currentIndex / visibleCards) ? 'bg-gray-600' : 'bg-gray-300'}`;
-            // dot.style.width = '6px';  ← 이 줄 삭제
-            // dot.style.height = '6px'; ← 이 줄 삭제
             dot.addEventListener('click', () => goToPage(i));
             indicatorsContainer.appendChild(dot);
         }
     }
-        
+    
     function goToPage(pageIndex) {
         currentIndex = Math.min(pageIndex * visibleCards, maxIndex);
         updateSlider();
@@ -142,7 +139,6 @@ function initBirthdayNavigation() {
         const currentPage = Math.floor(currentIndex / visibleCards);
         
         for (let i = 0; i < dots.length; i++) {
-            // 🔧 w-2 h-2에서 w-1 h-1로 변경 (더 작게)
             dots[i].className = `w-1 h-1 rounded-full transition-colors mx-1 ${i === currentPage ? 'bg-gray-600' : 'bg-gray-300'}`;
         }
     }
@@ -181,40 +177,6 @@ function initBirthdayNavigation() {
     });
 }
 
-
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-
-  Object.assign(toast.style, {
-    position: 'fixed',
-    bottom: '60px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    backgroundColor: 
-      type === 'success' ? '#10b981' : 
-      type === 'warning' ? '#4b5563' : 
-      '#333',
-    color: '#fff',
-    padding: '12px 20px',
-    borderRadius: '9999px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    zIndex: 9999,
-    opacity: 0,
-    transition: 'opacity 0.4s ease',
-  });
-
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => (toast.style.opacity = 1));
-
-  setTimeout(() => {
-    toast.style.opacity = 0;
-    toast.addEventListener('transitionend', () => toast.remove());
-  }, 2000);
-}
-
-
 // 아티스트 검색
 function searchArtist(artistName) {
     window.location.href = `/ddoksang/search/?q=${encodeURIComponent(artistName)}`;
@@ -223,3 +185,6 @@ function searchArtist(artistName) {
 // 전역 함수로 설정
 window.closeCafeModal = closeCafeModal;
 window.searchArtist = searchArtist;
+window.initBirthdayNavigation = initBirthdayNavigation;
+window.showLocationModal = showLocationModal;
+window.showCafeModal = showCafeModal;

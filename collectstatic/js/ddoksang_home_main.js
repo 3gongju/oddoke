@@ -1,4 +1,3 @@
-
 class DdoksangHome {
     constructor() {
         this.currentLocation = null;
@@ -6,6 +5,9 @@ class DdoksangHome {
         this.isLocationRequesting = false;
         this.mapManager = null;
         this.cafesData = [];
+        // ✅ 기본 중심점을 서울로 고정
+        this.defaultCenter = { lat: 37.5665, lng: 126.9780 }; // 서울 시청
+        this.defaultZoom = 8; // 서울 전체가 보이는 줌 레벨
     }
 
     async init() {
@@ -15,7 +17,7 @@ class DdoksangHome {
             // 1. 카카오맵 API 확인
             await this.waitForKakaoMaps();
             
-            // 2. 지도 초기화
+            // 2. 지도 초기화 (서울 중심으로 고정)
             const mapInitialized = await this.initializeMap();
             if (!mapInitialized) {
                 throw new Error('지도 초기화 실패');
@@ -40,16 +42,47 @@ class DdoksangHome {
         }
     }
 
+// ddoksang_home_main.js의 waitForKakaoMaps 함수 수정
+
     async waitForKakaoMaps() {
+        console.log('🔍 카카오맵 API 대기 시작...');
+        
         let attempts = 0;
-        while (typeof kakao === 'undefined' && attempts < 50) {
+        const maxAttempts = 100; // 10초 대기 (100 * 100ms)
+        
+        while (attempts < maxAttempts) {
+            // 더 구체적인 확인
+            if (typeof window.kakao !== 'undefined' && 
+                window.kakao && 
+                typeof window.kakao.maps !== 'undefined' && 
+                window.kakao.maps && 
+                typeof window.kakao.maps.Map !== 'undefined') {
+                
+                console.log('✅ 카카오맵 API 감지 성공!');
+                console.log('- kakao 객체:', typeof window.kakao);
+                console.log('- kakao.maps 객체:', typeof window.kakao.maps);
+                console.log('- kakao.maps.Map 클래스:', typeof window.kakao.maps.Map);
+                return;
+            }
+            
+            // 진행 상황 로그 (매 1초마다)
+            if (attempts % 10 === 0) {
+                console.log(`⏳ 카카오맵 API 대기 중... (${attempts/10}초)`);
+                console.log('- window.kakao:', typeof window.kakao);
+                console.log('- window.kakao.maps:', typeof window.kakao !== 'undefined' ? typeof window.kakao.maps : 'undefined');
+            }
+            
             await new Promise(resolve => setTimeout(resolve, 100));
             attempts++;
         }
-        if (typeof kakao === 'undefined') {
-            throw new Error('카카오맵 API 로드 실패');
-        }
-        console.log('✅ 카카오맵 API 대기 완료');
+        
+        // 최종 실패
+        console.error('❌ 카카오맵 API 로드 타임아웃');
+        console.error('- window.kakao:', typeof window.kakao);
+        console.error('- window.kakao.maps:', typeof window.kakao !== 'undefined' ? typeof window.kakao.maps : 'undefined');
+        console.error('- 시도 횟수:', attempts);
+        
+        throw new Error('카카오맵 API 로드 실패');
     }
 
     async initializeMap() {
@@ -58,14 +91,18 @@ class DdoksangHome {
                 throw new Error('DdoksangMap 모듈이 로드되지 않았습니다.');
             }
             
-            this.mapManager = new window.DdoksangMap.MapManager('mapContainer');
+            // ✅ 수정: 서울 중심으로 지도 초기화 (카페 위치와 무관하게)
+            this.mapManager = new window.DdoksangMap.MapManager('mapContainer', {
+                center: this.defaultCenter,
+                zoom: this.defaultZoom
+            });
             const mapReady = await this.mapManager.init();
             
             if (!mapReady) {
                 throw new Error('지도 초기화 실패');
             }
             
-            console.log('✅ 지도 초기화 완료');
+            console.log('✅ 지도 초기화 완료 - 서울 중심으로 설정');
             return true;
             
         } catch (error) {
@@ -109,12 +146,15 @@ class DdoksangHome {
                 }
             }
             
-            // 3. 지도에 마커 로드
+            // 3. ✅ 수정: 지도에 마커 로드하되 중심점은 변경하지 않음
             if (this.mapManager && this.cafesData.length > 0) {
                 await this.mapManager.loadCafes(this.cafesData, (cafe) => {
                     this.handleMarkerClick(cafe);
-                });
-                console.log('✅ 지도 마커 로드 완료');
+                }, false); // ✅ 중심점 이동 비활성화
+                console.log('✅ 지도 마커 로드 완료 (중심점 유지)');
+                
+                // ✅ 지도 중심점을 다시 서울로 설정 (혹시 모를 변경 방지)
+                this.mapManager.setCenter(this.defaultCenter.lat, this.defaultCenter.lng, this.defaultZoom);
             }
             
             // 4. 카페 수 업데이트
@@ -148,32 +188,42 @@ class DdoksangHome {
     }
 
     setupSidebarEvents() {
-        document.addEventListener('click', (e) => {
-            const cafeCard = e.target.closest('.cafe-card-mini');
-            if (cafeCard) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // 상세 페이지 링크가 아닌 경우에만 지도 이동
-                if (!e.target.closest('a[href*="/ddoksang/cafe/"]')) {
+            document.addEventListener('click', (e) => {
+                const cafeCard = e.target.closest('.cafe-card-mini');
+                if (cafeCard) {
+                    // ✅ 상세보기 버튼(.detail-link) 클릭은 기본 동작 허용
+                    if (e.target.closest('.detail-link')) {
+                        console.log('📋 상세보기 버튼 클릭 - 상세 페이지로 이동');
+                        return; // 기본 링크 동작 허용 (detail.html로 이동)
+                    }
+                    
+                    // ✅ 카드 자체 클릭은 지도 이동만 수행
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     const lat = parseFloat(cafeCard.dataset.cafeLat);
                     const lng = parseFloat(cafeCard.dataset.cafeLng);
                     const cafeId = cafeCard.dataset.cafeId;
                     
                     if (!isNaN(lat) && !isNaN(lng)) {
+                        // ✅ 사이드바 카드 클릭 시 해당 카페 위치로 이동 (줌 레벨 5)
                         this.mapManager.moveToLocation(lat, lng, 5);
                         this.highlightCafeCard(cafeId);
                         
-                        // 해당 카페 데이터 찾아서 모달 표시
-                        const cafeData = this.cafesData.find(c => c.id == cafeId);
-                        if (cafeData) {
-                            this.handleMarkerClick(cafeData);
-                        }
+                        // 선택사항: 해당 카페 데이터 찾아서 모달 표시 (원하면 주석 해제)
+                        // const cafeData = this.cafesData.find(c => c.id == cafeId);
+                        // if (cafeData) {
+                        //     this.handleMarkerClick(cafeData);
+                        // }
+                        
+                        console.log(`📍 사이드바 클릭: ${cafeId}번 카페로 지도 이동 (상세보기 X)`);
+                        
+                        // 시각적 피드백
+                        this.showToast(`${cafeCard.querySelector('h4')?.textContent} 위치로 이동했습니다`, 'success');
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
     initializeUI() {
         // UI 관련 초기화 작업들
@@ -252,6 +302,7 @@ class DdoksangHome {
             
             this.currentLocation = userLocation;
             
+            // ✅ 내 위치 버튼 클릭 시에만 사용자 위치로 이동
             if (this.mapManager) {
                 this.mapManager.moveToLocation(userLocation.lat, userLocation.lng, 6);
                 this.mapManager.addUserLocationMarker(userLocation.lat, userLocation.lng);
@@ -359,9 +410,13 @@ class DdoksangHome {
     }
 
     updateCafeCount() {
-        const operatingCafes = this.cafesData.filter(cafe => 
-            window.DdoksangMap.Utils.isCafeOperating(cafe)
-        );
+        // ✅ 수정: 운영중인 카페만 카운트 (상태에 관계없이 표시하지 않음)
+        const operatingCafes = this.cafesData.filter(cafe => {
+            const today = new Date();
+            const startDate = new Date(cafe.start_date);
+            const endDate = new Date(cafe.end_date);
+            return startDate <= today && today <= endDate;
+        });
         
         const countElements = document.querySelectorAll('#cafeCountDisplay');
         countElements.forEach(element => {
@@ -369,6 +424,8 @@ class DdoksangHome {
                 element.textContent = `${operatingCafes.length}개 운영중`;
             }
         });
+        
+        console.log(`📊 카페 수 업데이트: 전체 ${this.cafesData.length}개, 운영중 ${operatingCafes.length}개`);
     }
 
     showError(message) {
@@ -424,4 +481,3 @@ window.moveToLocationHome = function(lat, lng) {
         window.ddoksangHome.mapManager.moveToLocation(lat, lng, 5);
     }
 };
-
