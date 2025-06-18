@@ -1,0 +1,163 @@
+/* 덕담 위치 검색 스타일 */
+
+/* 검색 결과 리스트 */
+#location-results {
+    position: absolute;
+    z-index: 1000;
+    max-height: 240px;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+#location-results li {
+    transition: all 0.15s ease-in-out;
+}
+
+#location-results li:hover {
+    background-color: #f3f4f6;
+    transform: translateX(2px);
+}
+
+/* 선택된 장소 표시 */
+#selected-location {
+    animation: slideInFromTop 0.3s ease-out;
+    border: 2px solid #10b981;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 지도 컨테이너 */
+#location-map-container {
+    animation: fadeInScale 0.3s ease-out;
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 검색 버튼 호버 효과 */
+#locationSearchBtn {
+    transition: all 0.2s ease-in-out;
+}
+
+#locationSearchBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#locationSearchBtn:active {
+    transform: translateY(0);
+}
+
+/* 지도 보기 버튼 */
+#show-map-btn-container button {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+#show-map-btn-container button:hover {
+    color: #1e40af;
+    transform: translateX(2px);
+}
+
+#show-map-btn-container button:before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #3b82f6;
+    transition: width 0.3s ease;
+}
+
+#show-map-btn-container button:hover:before {
+    width: 100%;
+}
+
+/* 지도 닫기 버튼 */
+#location-map-container button {
+    transition: all 0.2s ease-in-out;
+    backdrop-filter: blur(4px);
+}
+
+#location-map-container button:hover {
+    background-color: rgba(255, 255, 255, 0.95);
+    transform: scale(1.05);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 640px) {
+    #location-results {
+        max-height: 200px;
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    #location-map-container {
+        height: 200px !important;
+    }
+    
+    #selected-location {
+        font-size: 0.875rem;
+    }
+    
+    #locationSearchBtn {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* 로딩 상태 (필요시 사용) */
+.location-loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.location-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translateY(-50%) rotate(0deg); }
+    100% { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* 검색 입력 필드 포커스 스타일 */
+#location-search:focus {
+    border-color: #fbbf24;
+    ring-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}

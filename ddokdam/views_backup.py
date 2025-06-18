@@ -1,3 +1,4 @@
+import logging
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -22,6 +23,8 @@ from .utils import (
     get_ddokdam_categories,
     get_ddokdam_category_urls,
 )
+
+logger = logging.getLogger(__name__)
 
 def index(request):
     category = request.GET.get('category')
@@ -420,3 +423,72 @@ def get_members_by_artist(request, artist_id):
     ]
     
     return JsonResponse({"members": member_data})
+
+# 생카후기 작성 시 덕생 카페 자동완성 API
+
+@require_GET
+def search_ddoksang_cafes(request):
+    """생카후기 작성 시 덕생 카페 자동완성 API"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'success': True, 'cafes': []})
+    
+    try:
+        # ddoksang 앱 import
+        try:
+            from ddoksang.models import BdayCafe
+        except ImportError:
+            return JsonResponse({
+                'success': False, 
+                'error': 'ddoksang 앱을 찾을 수 없습니다.'
+            })
+        
+        # 검색 쿼리 실행
+        cafes = BdayCafe.objects.filter(
+            status='approved',
+            cafe_name__icontains=query
+        ).select_related('artist', 'member')[:10]
+        
+        # 결과 처리
+        cafe_results = []
+        
+        for cafe in cafes:
+            try:
+                # 유사도 계산
+                from difflib import SequenceMatcher
+                similarity = SequenceMatcher(None, query.lower(), cafe.cafe_name.lower()).ratio()
+                
+                cafe_data = {
+                    'id': cafe.id,
+                    'cafe_name': cafe.cafe_name,
+                    'artist_id': cafe.artist.id if cafe.artist else None,
+                    'artist_name': cafe.artist.display_name if cafe.artist else '',
+                    'member_id': cafe.member.id if cafe.member else None,
+                    'member_name': cafe.member.member_name if cafe.member else '',
+                    'address': cafe.address,
+                    'main_image': getattr(cafe, 'get_main_image', lambda: None)(),
+                    'is_active': getattr(cafe, 'is_active', False),
+                    'detail_url': f'/ddoksang/cafe/{cafe.id}/',
+                    'similarity': similarity,
+                    'start_date': cafe.start_date.strftime('%Y-%m-%d'),
+                    'end_date': cafe.end_date.strftime('%Y-%m-%d'),
+                }
+                cafe_results.append(cafe_data)
+                
+            except Exception:
+                continue
+        
+        # 유사도 순으로 정렬
+        cafe_results.sort(key=lambda x: x['similarity'], reverse=True)
+        
+        return JsonResponse({
+            'success': True, 
+            'cafes': cafe_results
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'error': str(e)
+        }, status=500)
