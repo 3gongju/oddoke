@@ -270,71 +270,91 @@
 
 {% endblock %}
 
-{% block extra_js %}
-<!-- 외부 라이브러리 -->
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
-<script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- 기존 덕생 모듈들 -->
+{% block extra_js %}
+<!-- ✅ 1. 카카오맵 API를 동기적으로 먼저 로드 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
+
+<!-- ✅ 2. 카카오맵 로드 확인 -->
+<script>
+console.log('=== 카카오맵 API 로드 상태 확인 ===');
+console.log('kakao 객체:', typeof kakao);
+console.log('kakao.maps:', typeof kakao !== 'undefined' ? typeof kakao.maps : 'undefined');
+console.log('kakao.maps.Map:', typeof kakao !== 'undefined' && kakao.maps ? typeof kakao.maps.Map : 'undefined');
+
+if (typeof kakao === 'undefined' || !kakao.maps) {
+    console.error('❌ 카카오맵 API 로드 실패!');
+    console.error('API 키:', '{{ kakao_api_key }}');
+} else {
+    console.log('✅ 카카오맵 API 로드 성공!');
+}
+</script>
+
+<!-- ✅ 3. 다른 스크립트들 -->
+<script src="{% static 'js/autocomplete.js' %}"></script>
 <script src="{% static 'js/ddoksang_maps.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
-<!-- 새로 분리된 홈페이지 전용 모듈들 -->
+<!-- ✅ 4. 홈페이지 관련 스크립트들 -->
 <script src="{% static 'js/ddoksang_home_main.js' %}"></script>
 <script src="{% static 'js/ddoksang_home_modals.js' %}"></script>
 <script src="{% static 'js/ddoksang_home_location.js' %}"></script>
 
-<!-- ✅ 수정된 초기화 스크립트 -->
+<!-- ✅ 5. 초기화 스크립트 (간소화) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-
+    console.log('🚀 홈페이지 초기화 시작...');
     
-    // ✅ 메인 앱 초기화 (수정됨)
+    // 카카오맵 API가 이미 로드되어 있는지 다시 한번 확인
+    if (typeof kakao === 'undefined' || !kakao.maps) {
+        console.error('❌ 초기화 시점에 카카오맵 API가 없습니다');
+        console.error('페이지를 새로고침해주세요.');
+        return;
+    }
+    
+    console.log('✅ 카카오맵 API 확인됨, 앱 초기화 시작');
+    
+    // 메인 앱 초기화
     if (window.ddoksangHome) {
         window.ddoksangHome.init().then(() => {
-            
-            // ✅ 초기화 완료 후 추가 설정
-            console.log('🎯 마커 클릭 → 모달 표시');
-            console.log('📌 사이드바 카드 클릭 → 지도 이동');
-            
+            console.log('✅ DdoksangHome 초기화 완료');
         }).catch(error => {
-            console.error('❌ 홈페이지 초기화 실패:', error);
+            console.error('❌ DdoksangHome 초기화 실패:', error);
         });
     } else {
         console.error('❌ ddoksangHome 인스턴스를 찾을 수 없습니다');
     }
     
-    // ✅ 위치 관리 초기화 (기존 유지)
+    // 위치 관리 초기화
     if (window.DdoksangLocation) {
         window.DdoksangLocation.init();
-    } else {
-        console.error('❌ DdoksangLocation 클래스를 찾을 수 없습니다');
+        console.log('✅ 위치 관리 초기화 완료');
     }
     
-    // ✅ 모달 시스템 초기화 (기존 유지)
+    // 모달 시스템 초기화
     if (window.DdoksangModals) {
         window.DdoksangModals.init();
+        console.log('✅ 모달 시스템 초기화 완료');
     }
     
-    // ✅ 찜하기 기능 초기화 (추가)
+    // 찜하기 기능 초기화
     if (window.Ddoksang && window.Ddoksang.favoriteManager) {
-        // 찜하기 버튼이 있는 경우에만 초기화
         if (document.querySelector('[data-favorite-btn]')) {
             new window.Ddoksang.FavoriteManager();
-            console.log('✅ 찜하기 기능 초기화');
+            console.log('✅ 찜하기 기능 초기화 완료');
         }
     }
     
-    // ✅ 생일 아티스트 슬라이더 초기화 (기존 유지)
+    // 생일 아티스트 슬라이더 초기화
     if (typeof initBirthdayNavigation === 'function') {
         setTimeout(() => {
             initBirthdayNavigation();
-            console.log('✅ 생일 아티스트 슬라이더 초기화');
+            console.log('✅ 생일 아티스트 슬라이더 초기화 완료');
         }, 100);
     }
 });
 
-// ✅ 전역 함수 설정 (하위 호환성)
+// 전역 함수들
 window.moveToLocationHome = function(lat, lng) {
     console.log('🗺️ moveToLocationHome 호출:', lat, lng);
     if (window.ddoksangHome && window.ddoksangHome.mapManager) {
@@ -358,7 +378,5 @@ window.closeCafeInfoModal = function(event) {
         window.DdoksangModals.closeCafeInfo(event);
     }
 };
-
-
 </script>
 {% endblock %}

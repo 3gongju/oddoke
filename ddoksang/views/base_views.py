@@ -185,7 +185,7 @@ def cafe_detail_view(request, cafe_id):
             cafe=cafe
         ).exists()
     
-    # ✅ 주변 카페들 (map_utils 사용)
+    # 주변 카페들 (map_utils 사용)
     nearby_cafes = []
     if cafe.latitude and cafe.longitude:
         try:
@@ -210,7 +210,7 @@ def cafe_detail_view(request, cafe_id):
     # 사용자 찜 목록
     user_favorites = get_user_favorites(request.user)
     
-    # ✅ 지도 관련 컨텍스트 생성 (map_utils 사용)
+    # 지도 관련 컨텍스트 생성 (map_utils 사용)
     map_context = get_map_context()
     
     context = {
@@ -222,6 +222,7 @@ def cafe_detail_view(request, cafe_id):
         'is_preview': False,
         'can_edit': False,
         'preview_type': None,
+        'settings': settings,
         **map_context,
     }
     

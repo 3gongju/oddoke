@@ -160,7 +160,7 @@ def serialize_cafe_for_map(cafe) -> Dict[str, Any]:
 def get_map_context(cafes_queryset=None) -> Dict[str, Any]:
     """지도 관련 컨텍스트 생성"""
     
-    # 기본 지도 설정
+    # 기본 지도 설정 (원래대로)
     context = {
         'kakao_api_key': getattr(settings, 'KAKAO_MAP_API_KEY', ''),
         'default_center': {'lat': 37.5665, 'lng': 126.9780},  # 서울 시청
