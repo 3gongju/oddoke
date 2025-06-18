@@ -1,5 +1,5 @@
-// static/js/ddoksang_date_utils.js - 최종 버전
-// 덕생 날짜 관련 유틸리티 - flatpickr 중앙화
+// static/js/ddoksang_date_utils.js - 수정된 버전
+// Flatpickr와 자동 하이픈 입력 충돌 해결
 
 window.DdoksangDateUtils = {
     // 기본 flatpickr 설정
@@ -9,8 +9,9 @@ window.DdoksangDateUtils = {
             allowInput: true,
             clickOpens: true,
             altInput: false,
+            // ✅ 파싱 로직 단순화
             parseDate: (datestr, format) => {
-                if (typeof datestr === 'string') {
+                if (typeof datestr === 'string' && datestr.trim()) {
                     // 숫자만 추출
                     const numbers = datestr.replace(/\D/g, '');
                     
@@ -19,18 +20,12 @@ window.DdoksangDateUtils = {
                         const year = numbers.substring(0, 4);
                         const month = numbers.substring(4, 6);
                         const day = numbers.substring(6, 8);
-                        const formatted = `${year}-${month}-${day}`;
-                        const date = new Date(formatted);
-                        if (!isNaN(date.getTime())) {
-                            return date;
-                        }
+                        return new Date(`${year}-${month}-${day}`);
                     }
                     
-                    // 기존 하이픈 포맷 지원
-                    const cleaned = datestr.replace(/[.\-\/]/g, '-');
-                    const date = new Date(cleaned);
-                    if (!isNaN(date.getTime())) {
-                        return date;
+                    // 기존 형식 지원 (YYYY-MM-DD)
+                    if (datestr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        return new Date(datestr);
                     }
                 }
                 return undefined;
@@ -49,16 +44,24 @@ window.DdoksangDateUtils = {
         };
     },
 
-    // 자동 하이픈 입력 리스너 추가
-    addAutoHyphenListener(element) {
+    // ✅ Flatpickr와 충돌하지 않는 자동 하이픈 로직
+    addAutoHyphenListener(element, flatpickrInstance = null) {
         if (!element) return;
         
         // 기존 리스너 제거
-        element.removeEventListener('input', this._handleInput);
-        element.removeEventListener('keydown', this._handleKeydown);
+        if (element._handleInput) {
+            element.removeEventListener('input', element._handleInput);
+        }
+        if (element._handleKeydown) {
+            element.removeEventListener('keydown', element._handleKeydown);
+        }
         
-        // 새 리스너 추가
         const handleInput = (e) => {
+            // ✅ Flatpickr가 설정되어 있으면 자동 하이픈 로직 비활성화
+            if (flatpickrInstance) {
+                return;
+            }
+            
             let value = e.target.value.replace(/\D/g, ''); // 숫자만 추출
             
             if (value.length >= 4) {
@@ -74,9 +77,19 @@ window.DdoksangDateUtils = {
             }
             
             e.target.value = value;
+            
+            // ✅ 값 변경 후 상태 업데이트 트리거
+            if (window.updateDuplicateButtonState) {
+                setTimeout(() => window.updateDuplicateButtonState(), 50);
+            }
         };
         
         const handleKeydown = (e) => {
+            // ✅ Flatpickr가 설정되어 있으면 백스페이스 로직 비활성화
+            if (flatpickrInstance) {
+                return;
+            }
+            
             if (e.key === 'Backspace') {
                 const value = e.target.value;
                 if (value.endsWith('-')) {
@@ -86,15 +99,18 @@ window.DdoksangDateUtils = {
             }
         };
         
-        element.addEventListener('input', handleInput);
-        element.addEventListener('keydown', handleKeydown);
+        // ✅ Flatpickr가 없을 때만 자동 하이픈 로직 적용
+        if (!flatpickrInstance) {
+            element.addEventListener('input', handleInput);
+            element.addEventListener('keydown', handleKeydown);
+        }
         
         // 정리를 위해 참조 저장
         element._handleInput = handleInput;
         element._handleKeydown = handleKeydown;
     },
 
-    // 단일 날짜 선택기 초기화
+    // ✅ 단일 날짜 선택기 초기화 (개선됨)
     initSinglePicker(elementId, options = {}) {
         const element = document.getElementById(elementId);
         if (!element) {
@@ -104,28 +120,52 @@ window.DdoksangDateUtils = {
         
         if (typeof flatpickr === 'undefined') {
             console.warn(`날짜 선택기 초기화 실패: flatpickr 라이브러리가 로드되지 않음`);
+            // ✅ Flatpickr가 없을 때는 자동 하이픈 로직만 적용
+            this.addAutoHyphenListener(element, null);
             return null;
         }
 
         const config = {
             ...this.getDefaultConfig(),
+            // ✅ onChange 콜백 강화
+            onChange: (selectedDates, dateStr, instance) => {
+                console.log(`📅 ${elementId} 날짜 변경됨: ${dateStr}`);
+                
+                // 사용자 정의 onChange 실행
+                if (options.onChange) {
+                    options.onChange(selectedDates, dateStr, instance);
+                }
+                
+                // ✅ 상태 업데이트 트리거
+                setTimeout(() => {
+                    if (window.updateDuplicateButtonState) {
+                        window.updateDuplicateButtonState();
+                    }
+                    if (window.ddoksangApp?.updateNextButtonState) {
+                        window.ddoksangApp.updateNextButtonState();
+                    }
+                }, 50);
+            },
             ...options
         };
-
-        // 자동 하이픈 입력 이벤트 리스너 추가
-        this.addAutoHyphenListener(element);
 
         try {
             const picker = flatpickr(element, config);
             console.log(`✅ ${elementId} 날짜 선택기 초기화 완료`);
+            
+            // ✅ Flatpickr 인스턴스와 함께 자동 하이픈 로직 설정
+            this.addAutoHyphenListener(element, picker);
+            
             return picker;
         } catch (error) {
             console.error(`❌ ${elementId} 날짜 선택기 초기화 실패:`, error);
+            // ✅ 실패 시에도 자동 하이픈 로직 적용
+            this.addAutoHyphenListener(element, null);
             return null;
         }
     },
 
-    // 기간 선택기 초기화 (시작일-종료일 연동)
+    // ✅ 기간 선택기 초기화 (개선됨)
     initRangePickers(startId, endId, options = {}) {
         const startElement = document.getElementById(startId);
         const endElement = document.getElementById(endId);
@@ -137,22 +177,23 @@ window.DdoksangDateUtils = {
         
         if (typeof flatpickr === 'undefined') {
             console.warn(`기간 선택기 초기화 실패: flatpickr 라이브러리가 로드되지 않음`);
+            // ✅ Flatpickr가 없을 때는 자동 하이픈 로직만 적용
+            this.addAutoHyphenListener(startElement, null);
+            this.addAutoHyphenListener(endElement, null);
             return { start: null, end: null };
         }
 
         const baseConfig = this.getDefaultConfig();
         let startPicker, endPicker;
 
-        // 자동 하이픈 입력 이벤트 리스너 추가
-        this.addAutoHyphenListener(startElement);
-        this.addAutoHyphenListener(endElement);
-
         try {
-            // 시작일 선택기
+            // ✅ 시작일 선택기
             startPicker = flatpickr(startElement, {
                 ...baseConfig,
                 ...options.start,
                 onChange: (selectedDates, dateStr, instance) => {
+                    console.log(`📅 ${startId} 변경됨: ${dateStr}`);
+                    
                     if (selectedDates[0] && endPicker) {
                         // 종료일의 최소 날짜를 시작일로 설정
                         endPicker.set('minDate', selectedDates[0]);
@@ -169,14 +210,26 @@ window.DdoksangDateUtils = {
                     if (options.start?.onChange) {
                         options.start.onChange(selectedDates, dateStr, instance);
                     }
+                    
+                    // ✅ 상태 업데이트 트리거
+                    setTimeout(() => {
+                        if (window.updateDuplicateButtonState) {
+                            window.updateDuplicateButtonState();
+                        }
+                        if (window.ddoksangApp?.updateNextButtonState) {
+                            window.ddoksangApp.updateNextButtonState();
+                        }
+                    }, 50);
                 }
             });
 
-            // 종료일 선택기
+            // ✅ 종료일 선택기
             endPicker = flatpickr(endElement, {
                 ...baseConfig,
                 ...options.end,
                 onChange: (selectedDates, dateStr, instance) => {
+                    console.log(`📅 ${endId} 변경됨: ${dateStr}`);
+                    
                     // 종료일이 시작일보다 이른지 검증
                     const startDate = startPicker.selectedDates[0];
                     if (startDate && selectedDates[0] && selectedDates[0] < startDate) {
@@ -189,14 +242,32 @@ window.DdoksangDateUtils = {
                     if (options.end?.onChange) {
                         options.end.onChange(selectedDates, dateStr, instance);
                     }
+                    
+                    // ✅ 상태 업데이트 트리거
+                    setTimeout(() => {
+                        if (window.updateDuplicateButtonState) {
+                            window.updateDuplicateButtonState();
+                        }
+                        if (window.ddoksangApp?.updateNextButtonState) {
+                            window.ddoksangApp.updateNextButtonState();
+                        }
+                    }, 50);
                 }
             });
 
             console.log(`✅ ${startId}, ${endId} 기간 선택기 초기화 완료`);
+            
+            // ✅ 자동 하이픈 로직 설정 (Flatpickr와 함께)
+            this.addAutoHyphenListener(startElement, startPicker);
+            this.addAutoHyphenListener(endElement, endPicker);
+            
             return { start: startPicker, end: endPicker };
 
         } catch (error) {
             console.error(`❌ 기간 선택기 초기화 실패:`, error);
+            // ✅ 실패 시에도 자동 하이픈 로직 적용
+            this.addAutoHyphenListener(startElement, null);
+            this.addAutoHyphenListener(endElement, null);
             return { start: null, end: null };
         }
     },
@@ -401,4 +472,4 @@ window.debugDatePickers = function() {
     console.log('🔍 날짜 선택기 디버그 정보:', window.DdoksangDateUtils.debug());
 };
 
-console.log('✅ DdoksangDateUtils 로드 완료');
+console.log('✅ DdoksangDateUtils 로드 완료 (수정된 버전)');
