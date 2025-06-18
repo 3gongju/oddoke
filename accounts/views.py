@@ -112,9 +112,21 @@ def login(request):
 
             auth_login(request, user)
 
-            # next 파라미터 우선 적용
-            next_url = request.GET.get('next') or '/'
-            return redirect(next_url)
+            # 🔥 첫 로그인 감지: last_login이 None이거나 방금 전 설정된 경우
+            from django.utils import timezone
+            now = timezone.now()
+            is_first_login = (
+                user.last_login is None or 
+                (user.last_login and (now - user.last_login).total_seconds() < 10)
+            )
+
+            if is_first_login:
+                # 첫 로그인이면 아티스트 페이지로
+                return redirect('artist:index')
+            else:
+                # 기존 사용자는 next 파라미터 우선 적용
+                next_url = request.GET.get('next') or '/'
+                return redirect(next_url)
     else:
         form = EmailAuthenticationForm()
 
@@ -820,7 +832,7 @@ def social_signup_complete(request):
                 print(f"   - is_temp_username: {user.is_temp_username}")
                 
                 messages.success(request, f'🎉 환영합니다, {user.username}님! 어덕해를 시작해보세요!')
-                return redirect('/')
+                return redirect('artist:index')
             except Exception as e:
                 print(f"❌ 폼 저장 중 오류: {e}")
                 import traceback
