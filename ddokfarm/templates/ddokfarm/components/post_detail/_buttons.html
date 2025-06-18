@@ -1,5 +1,5 @@
 <div class="flex gap-2 mt-4">
-  <!-- 찜하기 버튼 -->
+  <!-- ✅ 찜하기 버튼 - 초기 상태 개선 -->
   <button id="like-button-top" data-liked="{{ is_liked|yesno:'true,false' }}"
           class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-600 font-semibold py-2 rounded-lg flex items-center justify-center gap-2">
     {% if is_liked %}
@@ -45,7 +45,7 @@
   </div>
 </div>
 
-<!-- ✅ 거래 완료 알림 모달 자바 -->
+<!-- ✅ 거래 완료 알림 모달 자바스크립트 -->
 <script>
   function showCompletedModal() {
     document.getElementById('completedModal').classList.remove('hidden');
