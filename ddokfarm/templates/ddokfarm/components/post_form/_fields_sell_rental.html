@@ -56,9 +56,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // 1. DOM 요소 선택
   const shippingElements = document.querySelectorAll('input[name="shipping"]');
   const locationField = document.getElementById('location-field');
   
+  // 2. 필드 표시/숨김 제어 함수
   function toggleLocationField() {
     const selectedShipping = document.querySelector('input[name="shipping"]:checked');
     if (selectedShipping) {
@@ -72,10 +74,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // 초기 상태 설정 (수정 모드에서 기존 값이 있을 경우)
+  // 3. 초기 상태 설정 (수정 모드에서 기존 값이 있을 경우)
   toggleLocationField();
   
-  // 배송 방법 변경 감지
+  // 4. 배송 방법 변경 감지
   shippingElements.forEach(function(element) {
     element.addEventListener('change', toggleLocationField);
   });
