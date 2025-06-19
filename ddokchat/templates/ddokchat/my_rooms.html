@@ -10,232 +10,21 @@
     </div>
 
     <!-- 탭 네비게이션 -->
-    <div class="bg-white rounded-xl shadow-sm mb-6 border border-gray-200">
-        <div class="flex">
-            <button id="activeTab" class="tab-button flex-1 px-6 py-4 bg-gray-900 text-white font-medium text-sm rounded-l-xl transition-all duration-200">
-                거래중
-            </button>
-            <button id="completedTab" class="tab-button flex-1 px-6 py-4 bg-white text-gray-600 font-medium text-sm rounded-r-xl hover:bg-gray-50 transition-all duration-200">
-                거래완료
-            </button>
-        </div>
-    </div>
+    {% include 'ddokchat/components/rooms/_room_tabs.html' %}
 
     <!-- 거래중 채팅 목록 -->
     <div id="activeContent" class="tab-content">
-        {% if active_rooms %}
-            <div class="space-y-3">
-                {% for room in active_rooms %}
-                    <div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 chat-item">
-                        <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block p-4">
-                            <div class="space-y-4">
-                                <!-- 상품 정보 (최상단) -->
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shadow-sm flex-shrink-0">
-                                        <img src="{{ room.post.get_main_image }}" alt="{{ room.post.title }}" class="w-full h-full object-cover">
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-base text-gray-900 font-semibold truncate">{{ room.post.title }}</p>
-                                        <p class="text-lg text-orange-600 font-bold">
-                                            {% if room.post.category_type == 'sell' %}
-                                                {{ room.post.price|floatformat:0|add:"0"|intcomma }}원
-                                            {% elif room.post.category_type == 'rental' %}
-                                                {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원
-                                            {% elif room.post.category_type == 'split' %}
-                                                <!-- 분철의 경우 총 가격 표시 -->
-                                                {% if split_info %}
-                                                    {{ split_info.total_price|floatformat:0|add:"0"|intcomma }}원
-                                                {% else %}
-                                                    가격 협의
-                                                {% endif %}
-                                            {% else %}
-                                                가격 협의
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        {% if room.last_message %}
-                                            <span class="text-xs text-gray-500">{{ room.last_message.timestamp|timesince }} 전</span>
-                                        {% endif %}
-                                        {% if room.unread_count %}
-                                            <span class="unread-badge bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-medium">
-                                                {{ room.unread_count }}
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                
-                                <!-- 사용자 정보 + 메시지 -->
-                                <div class="flex items-start space-x-3">
-                                    <!-- 프로필 영역 (작아진 크기) -->
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
-                                            {% if room.partner.profile_image %}
-                                                <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover rounded-full">
-                                            {% else %}
-                                                {{ room.partner.username|first|upper }}
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- 사용자명 + 마지막 메시지 -->
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="font-semibold text-gray-900 mb-2">{{ room.partner.username }}</h3>
-                                        
-                                        {% if room.last_message %}
-                                            {% if room.last_message.sender == current_user %}
-                                                <!-- 내가 보낸 메시지 -->
-                                                <div class="flex justify-end">
-                                                    <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl rounded-br-md max-w-xs">
-                                                        {% if room.last_message.message_type == 'text' %}
-                                                            <p class="text-sm">{{ room.last_message.text_content.content|truncatechars:50 }}</p>
-                                                        {% elif room.last_message.message_type == 'image' %}
-                                                            <p class="text-sm italic">사진을 보냈습니다.</p>
-                                                        {% elif room.last_message.message_type == 'account_info' %}
-                                                            <p class="text-sm italic">계좌정보를 보냈습니다.</p>
-                                                        {% elif room.last_message.message_type == 'address_info' %}
-                                                            <p class="text-sm italic">배송정보를 보냈습니다.</p>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            {% else %}
-                                                <!-- 상대방이 보낸 메시지 -->
-                                                <div class="bg-gray-100 px-3 py-2 rounded-2xl rounded-bl-md inline-block max-w-xs">
-                                                    {% if room.last_message.message_type == 'text' %}
-                                                        <p class="text-sm text-gray-800">{{ room.last_message.text_content.content|truncatechars:50 }}</p>
-                                                    {% elif room.last_message.message_type == 'image' %}
-                                                        <p class="text-sm italic text-gray-600">사진을 보냈습니다.</p>
-                                                    {% elif room.last_message.message_type == 'account_info' %}
-                                                        <p class="text-sm italic text-gray-600">계좌정보를 보냈습니다.</p>
-                                                    {% elif room.last_message.message_type == 'address_info' %}
-                                                        <p class="text-sm italic text-gray-600">배송정보를 보냈습니다.</p>
-                                                    {% endif %}
-                                                </div>
-                                            {% endif %}
-                                        {% else %}
-                                            <div class="bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-500">
-                                                첫 메시지를 보내보세요!
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <!-- 거래중 채팅방 없음 -->
-            <div class="text-center py-12">
-                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-                <p class="text-sm text-gray-400">거래중인 채팅이 없습니다.</p>
-            </div>
-        {% endif %}
+        {% include 'ddokchat/components/rooms/_room_list.html' with items=active_items type='active' %}
     </div>
 
     <!-- 거래완료 채팅 목록 -->
     <div id="completedContent" class="tab-content hidden">
-        {% if completed_rooms %}
-            <div class="space-y-3">
-                {% for room in completed_rooms %}
-                    <div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 opacity-75 chat-item">
-                        <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block p-4">
-                            <div class="space-y-4">
-                                <!-- 상품 정보 (최상단) -->
-                                <div class="flex items-center space-x-3">
-                                    <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shadow-sm flex-shrink-0">
-                                        <img src="{{ room.post.get_main_image }}" alt="{{ room.post.title }}" class="w-full h-full object-cover opacity-75">
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-base text-gray-700 font-semibold truncate">{{ room.post.title }}</p>
-                                        <p class="text-lg text-gray-500 font-bold">
-                                            {% if room.post.category_type == 'sell' %}
-                                                {{ room.post.price|floatformat:0|add:"0"|intcomma }}원
-                                            {% elif room.post.category_type == 'rental' %}
-                                                {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원/일
-                                            {% elif room.post.category_type == 'split' %}
-                                                {% if split_info %}
-                                                    {{ split_info.total_price|floatformat:0|add:"0"|intcomma }}원
-                                                {% else %}
-                                                    가격 협의
-                                                {% endif %}
-                                            {% else %}
-                                                가격 협의
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        {% if room.last_message %}
-                                            <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
-                                        {% endif %}
-                                        <div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                                            <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- 사용자 정보 + 완료 상태 -->
-                                <div class="flex items-start space-x-3">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center text-white font-medium text-sm">
-                                            {% if room.partner.profile_image %}
-                                                <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover rounded-full opacity-75">
-                                            {% else %}
-                                                {{ room.partner.username|first|upper }}
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="font-semibold text-gray-700 mb-2">{{ room.partner.username }}</h3>
-                                        <div class="bg-green-50 border border-green-200 rounded-lg px-3 py-2 inline-block">
-                                            <div class="flex items-center space-x-2">
-                                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                                </svg>
-                                                <span class="text-sm text-green-800 font-medium">거래가 완료되었습니다</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <!-- 거래완료 채팅방 없음 -->
-            <div class="text-center py-12">
-                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                </div>
-                <p class="text-sm text-gray-400">거래완료된 채팅이 없습니다.</p>
-            </div>
-        {% endif %}
+        {% include 'ddokchat/components/rooms/_room_list.html' with items=completed_items type='completed' %}
     </div>
 
     <!-- 전체적으로 채팅방이 없을 때 -->
-    {% if not active_rooms and not completed_rooms %}
-        <div class="text-center py-16">
-            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 채팅방이 없어요</h3>
-            <p class="text-gray-500 mb-6">관심있는 상품에 메시지를 보내보세요!</p>
-            <a href="{% url 'ddokfarm:index' %}" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors inline-block">
-                상품 둘러보기
-            </a>
-        </div>
+    {% if not active_items and not completed_items %}
+        {% include 'ddokchat/components/rooms/_empty_state.html' with type='all' %}
     {% endif %}
 </div>
 
@@ -282,9 +71,51 @@
 .unread-badge {
     box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
 }
+
+/* 분철 그룹 전용 스타일 */
+.split-group-content {
+    transition: all 0.3s ease;
+}
+
+.toggle-icon {
+    transition: transform 0.2s ease;
+}
+
+.split-group-header:hover .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.split-group-content[style*="block"] + .split-group-header .toggle-icon {
+    transform: rotate(0deg);
+}
+
+.split-group-content[style*="none"] + .split-group-header .toggle-icon {
+    transform: rotate(-90deg);
+}
 </style>
 
 <script>
+// 분철 그룹 접기/펼치기 함수
+function toggleSplitGroup(headerElement) {
+    const groupElement = headerElement.closest('.chat-card');
+    const contentElement = groupElement.querySelector('.split-group-content');
+    const toggleIcon = groupElement.querySelector('.toggle-icon');
+    
+    if (contentElement.style.display === 'none' || !contentElement.style.display) {
+        // 펼치기
+        contentElement.style.display = 'block';
+        if (toggleIcon) {
+            toggleIcon.style.transform = 'rotate(0deg)';
+        }
+    } else {
+        // 접기
+        contentElement.style.display = 'none';
+        if (toggleIcon) {
+            toggleIcon.style.transform = 'rotate(-90deg)';
+        }
+    }
+}
+
 // 탭 전환 기능
 document.getElementById('activeTab').addEventListener('click', function() {
     // 탭 스타일 변경
