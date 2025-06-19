@@ -16,14 +16,14 @@
     <div class="flex-1 min-w-0">
       <div id="active-filters" class="flex flex-wrap gap-1 sm:gap-2">
         {% if selected_shipping %}
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
             <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ selected_shipping_display }}</span>
             <button type="button" onclick="removeFilter('shipping')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
         {% endif %}
         
         {% if wantto %}
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
             <span class="truncate max-w-[60px] sm:max-w-[120px]">
             {% if category == 'sell' %}
                 {% if wantto == 'buy' %}삽니다
@@ -42,7 +42,7 @@
         
         {% if selected_conditions %}
             {% for condition in selected_conditions %}
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
                 <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ condition_display_map|get_item:condition }}</span>
                 <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
@@ -51,7 +51,7 @@
         
         {% if selected_md %}
             {% for md in selected_md %}
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
                 <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ md_display_map|get_item:md }}</span>
                 <button type="button" onclick="removeFilter('md', '{{ md }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
@@ -59,7 +59,7 @@
         {% endif %}
         
         {% if min_price or max_price %}
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
             <span class="truncate max-w-[80px] sm:max-w-[140px]">
             {% if min_price and max_price %}{{ min_price|floatformat:0 }}-{{ max_price|floatformat:0 }}원
             {% elif min_price %}{{ min_price|floatformat:0 }}원+
@@ -492,6 +492,43 @@ numberInputs.forEach(input => {
   white-space: nowrap;
 }
 
+/* 필터 태그 스타일 - 얇고 깔끔하게 */
+.filter-tag {
+  padding: 0.25rem 0.75rem !important; /* 4px 12px - 더 얇게 */
+  font-size: 0.75rem !important; /* 12px */
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  min-height: 24px !important; /* 24px 고정 높이 - 더 얇게 */
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.filter-tag span {
+  font-size: 0.75rem !important; /* 12px */
+  line-height: 1.2 !important;
+}
+
+.filter-tag button {
+  font-size: 0.875rem !important; /* 14px */
+  font-weight: 600 !important;
+  margin-left: 0.25rem !important;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  color: #ffffff !important;
+  cursor: pointer;
+  min-width: 16px;
+  min-height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 모바일 최적화 - 동일한 크기 유지 */
 @media (max-width: 640px) {
   #filter-toggle-btn {
@@ -508,6 +545,30 @@ numberInputs.forEach(input => {
   
   #filter-toggle-btn span {
     font-size: 0.875rem !important; /* 웹과 동일한 텍스트 크기 */
+  }
+  
+  /* 필터 태그 모바일 최적화 - 더 얇게 */
+  .filter-tag {
+    padding: 0.25rem 0.75rem !important; /* 4px 12px - 웹과 동일하게 얇게 */
+    font-size: 0.75rem !important; /* 12px */
+    min-height: 24px !important; /* 24px - 더 얇게 */
+    gap: 0.25rem !important;
+  }
+  
+  .filter-tag span {
+    font-size: 0.75rem !important; /* 12px */
+    max-width: 80px !important; /* 모바일에서 텍스트 길이 제한 */
+  }
+  
+  .filter-tag button {
+    font-size: 0.875rem !important; /* 14px */
+    min-width: 16px !important;
+    min-height: 16px !important;
+  }
+  
+  /* 필터 태그 간격 최적화 */
+  #active-filters {
+    gap: 0.25rem !important; /* 4px - 간격을 좁게 */
   }
   
   /* 모달 사이즈 및 위치 조정 */
@@ -537,7 +598,7 @@ numberInputs.forEach(input => {
   }
   
   /* 버튼 터치 영역 확대 */
-  button:not(#filter-toggle-btn) {
+  button:not(#filter-toggle-btn):not(.filter-tag button) {
     min-height: 44px;
     min-width: 44px;
   }
