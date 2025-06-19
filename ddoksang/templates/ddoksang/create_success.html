@@ -159,6 +159,19 @@
           </div>
           {% endif %}
         </div>
+
+          <!-- 트위터 출처 정보 계정 연결 -->
+        {% if cafe.x_source %}
+          <div class="bg-gray-50 border rounded-lg p-4 mt-6">
+            <p class="text-sm font-bold text-gray-800 mb-2">📎 X(트위터) 출처</p>
+            <p class="text-sm text-blue-700">
+              <a href="{{ cafe.x_source }}" target="_blank" class="hover:underline">
+                @{{ cafe.x_source|cut:"https://x.com/" }}
+              </a>
+            </p>
+          </div>
+        {% endif %}
+
       </div>
       {% else %}
       <!-- 이미지가 없는 경우 -->
@@ -173,21 +186,24 @@
       {% endif %}
     </div>
 
-    <!-- 버튼 영역 -->
-    <div class="flex flex-col sm:flex-row justify-center items-center gap-3 mb-12">
+
+
+    <!-- 버튼 영역 개선 -->
+    <div class="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-12">
       <a href="{% url 'ddoksang:user_preview' cafe.id %}"
-          class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-          내 카페 미리보기
+        class="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow whitespace-nowrap">
+        미리보기
       </a>
       <a href="{% url 'ddoksang:my_cafes' %}"
-          class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-          내 등록 현황 보기
+        class="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow whitespace-nowrap">
+        내 등록 현황 보기
       </a>
       <a href="{% url 'ddoksang:create' %}"
-          class="px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow">
-          다른 생일카페 등록하기
+        class="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow whitespace-nowrap">
+        다른 생카 등록하기
       </a>
     </div>
+
 
     <!-- 홈으로 안내 -->
     <div class="text-center text-sm text-gray-600 mb-20 p-6 bg-gray-50 rounded-xl border border-gray-200">

@@ -5,7 +5,7 @@ from .models import BdayCafe, BdayCafeImage, CafeFavorite, TourPlan, TourStop
 
 class BdayCafeForm(forms.ModelForm):
     """생일카페 등록/수정 폼"""
-    
+
     class Meta:
         model = BdayCafe
         fields = [
@@ -29,6 +29,14 @@ class BdayCafeForm(forms.ModelForm):
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
         }
+
+    def clean_x_source(self):
+        """사용자가 @아이디 형태로 입력한 경우 자동 URL로 변환"""
+        x_source = self.cleaned_data.get('x_source', '').strip()
+        if x_source and not x_source.startswith('http'):
+            username = x_source.lstrip('@')
+            return f"https://x.com/{username}"
+        return x_source
 
 class BdayCafeImageForm(forms.ModelForm):
     """생일카페 이미지 업로드 폼"""

@@ -5,15 +5,18 @@
     <span class="mr-2">🔗</span> 출처
   </h2>
   <div class="space-y-3">
-    <a href="{{ cafe.x_source }}" target="_blank" rel="noopener noreferrer"
+    <a href="https://x.com/{{ cafe.x_source|cut:'@' }}" target="_blank" rel="noopener noreferrer"
       class="flex items-center gap-3 p-3 bg-black rounded-lg hover:bg-gray-100 transition-colors">
+      
+      <!-- ✅ Heroicon 스타일 아이콘 (링크 아이콘) -->
       <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 13L21 2m0 0v6m0-6h-6M14 10l-4 4m0 0l-3 3a3 3 0 01-4.243 0 3 3 0 010-4.243l3-3m4 4l3-3" />
         </svg>
       </div>
+
       <div>
-        <p class="font-medium text-white">X (클릭시 해당 X 계정으로 이동)</p>
+        <p class="font-medium text-white">X (클릭 시 해당 계정 이동)</p>
         <p class="text-sm text-white">{{ cafe.x_source }}</p>
       </div>
     </a>

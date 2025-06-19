@@ -1,4 +1,4 @@
-// ddoksang_image_upload.js - 간단하고 안정적인 버전
+// ddoksang_image_upload.js - 이미지 압축 기능 포함 버전
 
 console.log('🚀 이미지 업로드 모듈 로드 시작');
 
@@ -20,6 +20,166 @@ window.initDdoksangImageUpload = function() {
     } else {
         console.error('❌ 이미지 업로더 초기화 실패');
         return null;
+    }
+};
+
+// 이미지 압축 유틸리티
+const ImageCompressor = {
+    // 이미지 압축 설정
+    config: {
+        maxWidth: 1200,
+        maxHeight: 1200,
+        quality: 0.85,
+        maxSizeKB: 800, // 800KB
+        format: 'image/jpeg'
+    },
+
+    // 이미지 압축 함수
+    async compressImage(file, options = {}) {
+        const config = { ...this.config, ...options };
+        
+        console.log('🔄 이미지 압축 시작:', {
+            원본파일: file.name,
+            원본크기: `${(file.size / 1024).toFixed(1)}KB`,
+            설정: config
+        });
+
+        return new Promise((resolve) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+
+            img.onload = () => {
+                try {
+                    // 압축 처리
+                    const result = this.processImage(img, canvas, ctx, config, file);
+                    console.log('✅ 이미지 압축 완료:', {
+                        압축파일: result.name,
+                        압축크기: `${(result.size / 1024).toFixed(1)}KB`,
+                        압축률: `${((1 - result.size / file.size) * 100).toFixed(1)}%`
+                    });
+                    resolve(result);
+                } catch (error) {
+                    console.error('❌ 이미지 압축 실패:', error);
+                    resolve(file); // 실패시 원본 반환
+                }
+            };
+
+            img.onerror = () => {
+                console.error('❌ 이미지 로딩 실패');
+                resolve(file); // 실패시 원본 반환
+            };
+
+            img.src = URL.createObjectURL(file);
+        });
+    },
+
+    // 이미지 처리 로직
+    processImage(img, canvas, ctx, config, originalFile) {
+        const { maxWidth, maxHeight, quality, maxSizeKB, format } = config;
+
+        // 원본 크기가 작으면 압축하지 않음
+        if (originalFile.size <= maxSizeKB * 1024 && 
+            img.width <= maxWidth && 
+            img.height <= maxHeight) {
+            console.log('⚡ 압축 불필요 - 원본 반환');
+            return originalFile;
+        }
+
+        // 리사이즈 계산
+        const dimensions = this.calculateDimensions(img.width, img.height, maxWidth, maxHeight);
+        
+        // 캔버스 설정
+        canvas.width = dimensions.width;
+        canvas.height = dimensions.height;
+
+        // 고품질 렌더링 설정
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        // 이미지 그리기
+        ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
+
+        // Blob 변환 시도
+        let attempt = 0;
+        let currentQuality = quality;
+        let result = null;
+
+        // 최대 3번 시도하며 품질 조정
+        while (attempt < 3) {
+            try {
+                const dataURL = canvas.toDataURL(format, currentQuality);
+                const blob = this.dataURLToBlob(dataURL);
+                
+                console.log(`🔄 압축 시도 ${attempt + 1}:`, {
+                    품질: currentQuality,
+                    크기: `${(blob.size / 1024).toFixed(1)}KB`
+                });
+
+                // 목표 크기 달성시 성공
+                if (blob.size <= maxSizeKB * 1024 || attempt === 2) {
+                    result = new File([blob], this.generateFileName(originalFile, format), {
+                        type: format,
+                        lastModified: Date.now()
+                    });
+                    break;
+                }
+
+                // 품질 낮춰서 재시도
+                currentQuality *= 0.8;
+                attempt++;
+            } catch (error) {
+                console.error(`❌ 압축 시도 ${attempt + 1} 실패:`, error);
+                break;
+            }
+        }
+
+        return result || originalFile; // 실패시 원본 반환
+    },
+
+    // 크기 계산
+    calculateDimensions(width, height, maxWidth, maxHeight) {
+        let newWidth = width;
+        let newHeight = height;
+
+        // 비율 유지하며 리사이즈
+        if (width > maxWidth) {
+            newHeight = (height * maxWidth) / width;
+            newWidth = maxWidth;
+        }
+
+        if (newHeight > maxHeight) {
+            newWidth = (newWidth * maxHeight) / newHeight;
+            newHeight = maxHeight;
+        }
+
+        return {
+            width: Math.round(newWidth),
+            height: Math.round(newHeight)
+        };
+    },
+
+    // DataURL을 Blob으로 변환
+    dataURLToBlob(dataURL) {
+        const arr = dataURL.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        
+        return new Blob([u8arr], { type: mime });
+    },
+
+    // 파일명 생성
+    generateFileName(originalFile, format) {
+        const nameWithoutExt = originalFile.name.replace(/\.[^/.]+$/, '');
+        const ext = format === 'image/jpeg' ? '.jpg' : 
+                   format === 'image/png' ? '.png' : '.jpg';
+        return `${nameWithoutExt}_compressed${ext}`;
     }
 };
 
@@ -157,6 +317,14 @@ function setupImageUploader() {
         // 드래그 핸들
         const dragHandle = createDragHandle();
 
+        // ✅ 압축 상태 표시 추가
+        if (item.isCompressed) {
+            const compressedBadge = document.createElement("div");
+            compressedBadge.className = "absolute bottom-1 left-1 bg-green-600 bg-opacity-90 text-white text-xs px-1 py-0.5 rounded z-10";
+            compressedBadge.textContent = "압축됨";
+            wrapper.appendChild(compressedBadge);
+        }
+
         wrapper.appendChild(img);
         wrapper.appendChild(closeBtn);
         wrapper.appendChild(dragHandle);
@@ -262,8 +430,8 @@ function setupImageUploader() {
         return addWrapper;
     }
 
-    // 파일 선택 처리
-    function handleFileSelection(newFiles) {
+    // ✅ 파일 선택 처리 - 압축 기능 추가
+    async function handleFileSelection(newFiles) {
         console.log('📁 파일 선택 처리:', newFiles.length, '개');
 
         const remainingSlots = maxFiles - selectedFiles.length;
@@ -287,22 +455,70 @@ function setupImageUploader() {
             return;
         }
 
-        // 파일 객체 생성
-        filesToAdd.forEach(file => {
-            const fileObj = {
-                id: `new_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
-                type: "new",
-                file: file,
-                name: file.name,
-                size: file.size,
-                previewUrl: null
-            };
-            
-            selectedFiles.push(fileObj);
-            console.log('📁 파일 추가됨:', fileObj.name);
-        });
+        // ✅ 압축 진행 표시
+        if (filesToAdd.length > 0) {
+            showToast('이미지 압축 중...', 'info', 5000);
+        }
+
+        // ✅ 파일 압축 및 객체 생성
+        for (const file of filesToAdd) {
+            try {
+                console.log('🔄 파일 압축 시작:', file.name);
+                
+                // 이미지 압축
+                const compressedFile = await ImageCompressor.compressImage(file);
+                const isCompressed = compressedFile !== file;
+                
+                const fileObj = {
+                    id: `new_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
+                    type: "new",
+                    file: compressedFile,
+                    originalFile: file,
+                    name: compressedFile.name,
+                    size: compressedFile.size,
+                    originalSize: file.size,
+                    isCompressed: isCompressed,
+                    previewUrl: null
+                };
+                
+                selectedFiles.push(fileObj);
+                
+                if (isCompressed) {
+                    console.log('✅ 압축 완료:', {
+                        파일명: file.name,
+                        원본크기: `${(file.size / 1024).toFixed(1)}KB`,
+                        압축크기: `${(compressedFile.size / 1024).toFixed(1)}KB`,
+                        압축률: `${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`
+                    });
+                } else {
+                    console.log('⚡ 압축 불필요:', file.name);
+                }
+                
+            } catch (error) {
+                console.error('❌ 파일 처리 오류:', error);
+                
+                // 실패시 원본 파일로 추가
+                const fileObj = {
+                    id: `new_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
+                    type: "new",
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    isCompressed: false,
+                    previewUrl: null
+                };
+                
+                selectedFiles.push(fileObj);
+            }
+        }
         
         updatePreview();
+        
+        // ✅ 압축 완료 알림
+        const compressedCount = selectedFiles.filter(f => f.isCompressed).length;
+        if (compressedCount > 0) {
+            showToast(`${compressedCount}개 이미지가 압축되었습니다.`, 'success');
+        }
     }
 
     // Sortable 초기화
@@ -372,7 +588,9 @@ function setupImageUploader() {
             fileCount.textContent = "선택된 파일 없음";
             fileCount.className = "text-sm text-gray-500";
         } else {
-            fileCount.textContent = `${selectedFiles.length}개 파일 선택됨 (최대 ${maxFiles}장)`;
+            const compressedCount = selectedFiles.filter(f => f.isCompressed).length;
+            const compressedText = compressedCount > 0 ? ` (${compressedCount}개 압축됨)` : '';
+            fileCount.textContent = `${selectedFiles.length}개 파일 선택됨${compressedText} (최대 ${maxFiles}장)`;
             fileCount.className = "text-sm text-gray-700 font-medium";
         }
     }
@@ -416,6 +634,7 @@ function setupImageUploader() {
             detail: {
                 selectedCount: selectedFiles.length,
                 formFileCount: fileInput.files.length,
+                compressedCount: selectedFiles.filter(f => f.isCompressed).length,
                 isReady: selectedFiles.length > 0
             }
         });
@@ -429,9 +648,9 @@ function setupImageUploader() {
     }
 
     // 토스트 메시지
-    function showToast(message, type = 'info') {
+    function showToast(message, type = 'info', duration = 3000) {
         if (window.showToast) {
-            window.showToast(message, type);
+            window.showToast(message, type, duration);
         } else {
             console.log(`Toast: ${message}`);
         }
@@ -464,6 +683,23 @@ function setupImageUploader() {
         getFileCount: () => selectedFiles.length,
         getSelectedFiles: () => [...selectedFiles],
         getFormFileCount: () => fileInput.files.length,
+        getCompressionStats: () => {
+            const total = selectedFiles.length;
+            const compressed = selectedFiles.filter(f => f.isCompressed).length;
+            const totalOriginalSize = selectedFiles.reduce((sum, f) => sum + (f.originalSize || f.size), 0);
+            const totalCompressedSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
+            
+            return {
+                total,
+                compressed,
+                compressionRate: total > 0 ? ((compressed / total) * 100).toFixed(1) + '%' : '0%',
+                totalOriginalSize,
+                totalCompressedSize,
+                spaceSaved: totalOriginalSize - totalCompressedSize,
+                spaceSavedPercent: totalOriginalSize > 0 ? 
+                    (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1) + '%' : '0%'
+            };
+        },
         removeFileById: (fileId) => removeImage(fileId),
         clear: () => {
             selectedFiles.forEach(item => {
