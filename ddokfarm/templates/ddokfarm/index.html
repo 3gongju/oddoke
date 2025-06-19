@@ -40,8 +40,8 @@
   </div>
 
   {% if posts %}
-    <!-- 웹 100% 기준으로 더 작은 그리드 적용 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+    <!-- 웹 100% 기준: 한 줄에 5개씩 표시 -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
       {% for post in posts %}
         {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url app_name='ddokfarm' %}
       {% endfor %}

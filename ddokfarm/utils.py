@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 def get_ddokfarm_category_urls():
     return [
         ("전체", "", reverse("ddokfarm:index")),
-        ("판매/구매", "sell", reverse("ddokfarm:sell_index")),
+        ("양도", "sell", reverse("ddokfarm:sell_index")),
         ("대여", "rental", reverse("ddokfarm:rental_index")),
         ("분철", "split", reverse("ddokfarm:split_index")),
     ]
@@ -18,7 +18,7 @@ def get_ddokfarm_category_urls():
 # 카테고리 버튼
 def get_ddokfarm_categories():
     return [
-        SimpleNamespace(label='구매/판매', value='sell'),
+        SimpleNamespace(label='양도', value='sell'),
         SimpleNamespace(label='대여', value='rental'),
         SimpleNamespace(label='분철', value='split'),
     ]
