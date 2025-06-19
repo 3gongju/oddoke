@@ -327,31 +327,60 @@ document.addEventListener('DOMContentLoaded', function() {
     // ✅ 중복 카페 목록 표시 함수 (2개씩 배치로 개선)
     function showDuplicateCafes(duplicates) {
         console.log('중복 카페 목록 표시:', duplicates);
-        
-        // 기본 폼 숨기기
+
+        // 중복 확인 폼 숨김
         const duplicateForm = document.getElementById('duplicate-check-form');
         if (duplicateForm) duplicateForm.style.display = 'none';
-        
+
         // 중복 카페 섹션 표시
         const duplicateSection = document.getElementById('duplicate-cafes-section');
-        if (duplicateSection) {
-            duplicateSection.classList.remove('hidden');
-            
-            // ✅ 카페 카드 생성 (2개씩 배치)
-            const gridContainer = document.getElementById('duplicate-cafes-grid');
-            if (gridContainer) {
-                gridContainer.innerHTML = '';
-                
-                // 2개씩 배치하도록 클래스 수정
-                gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto';
-                
-                duplicates.forEach(cafe => {
-                    const card = createDuplicateCafeCard(cafe);
-                    gridContainer.appendChild(card);
-                });
-            }
+        if (duplicateSection) duplicateSection.classList.remove('hidden');
+
+        const gridContainer = document.getElementById('duplicate-cafes-grid');
+        if (!gridContainer) {
+            console.error('❌ duplicate-cafes-grid 요소를 찾을 수 없습니다.');
+            return;
         }
+
+        //  카드 생성 (템플릿 사용)
+        if (window.DuplicateCardTemplate) {
+            //  카드에 .duplicate-cafe-card 및 data-cafe-id 추가 보장
+            const cardsHtml = window.DuplicateCardTemplate.createCards(duplicates)
+                .replaceAll('<div class="relative ', '<div class="duplicate-cafe-card relative ')
+                .replaceAll('<div class="relative"', '<div class="duplicate-cafe-card relative"');
+
+            gridContainer.innerHTML = cardsHtml;
+        } else {
+            console.error('❌ DuplicateCardTemplate이 로드되지 않았습니다.');
+            gridContainer.innerHTML = '<p class="text-red-500">카드 템플릿을 로드할 수 없습니다.</p>';
+            return;
+        }
+
+        //  카드 선택 이벤트 바인딩
+        document.querySelectorAll('.duplicate-cafe-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // 기존 선택 해제
+                document.querySelectorAll('.duplicate-cafe-card').forEach(c => {
+                    c.classList.remove('selected', 'ring-2', 'ring-blue-500');
+                });
+
+                // 현재 선택
+                card.classList.add('selected', 'ring-2', 'ring-blue-500');
+
+                // 선택 ID 저장
+                const selectedId = card.dataset.cafeId;
+                const hiddenInput = document.getElementById('selected_duplicate_cafe_id');
+                if (hiddenInput) {
+                    hiddenInput.value = selectedId;
+                }
+
+                console.log('✅ 선택된 중복 카페 ID:', selectedId);
+            });
+        });
+
+        // ✅ 선택된 상태 강조를 위한 CSS가 없으면 아래 스타일도 포함해주세요
     }
+
     
     // ✅ 중복 카페 카드 생성 함수 (유사도 퍼센트 제거)
     function createDuplicateCafeCard(cafe) {
