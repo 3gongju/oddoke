@@ -306,6 +306,7 @@
               <li><strong>파일 형식:</strong> JPG, PNG, GIF 형식만 업로드 가능합니다</li>
               <li><strong>파일 크기:</strong> 파일당 최대 5MB까지 업로드할 수 있습니다</li>
               <li><strong>업로드 개수:</strong> 최대 10장까지 업로드할 수 있습니다</li>
+              <li><strong>자동 압축:</strong> 큰 이미지는 자동으로 압축되어 용량을 절약합니다</li>
             </ul>
           </div>
         </div>
@@ -577,6 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
     opacity: 1 !important;
   }
 </style>
+
 <!-- Scripts - 로딩 순서 중요! -->
 
 <!-- 1. 외부 라이브러리 -->
@@ -817,21 +819,21 @@ window.DdoksangMapUtils = {
 };
 </script>
 
-<!-- 5. 이미지 업로드 모듈 (순서 중요: 메인 앱보다 먼저!) -->
-<script src="{% static 'js/ddoksang_image_upload.js' %}?v=4.0"></script>
+<!-- 5. 이미지 업로드 모듈 (압축 기능 포함) -->
+<script src="{% static 'js/ddoksang_image_upload.js' %}?v=5.0"></script>
 
-<!-- 6. 메인 앱 (이미지 업로드 이후) -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=6.0"></script>
+<!-- 6. 메인 앱 (수정된 버전) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=7.0"></script>
 
 <!-- 7. 자동완성 -->
 <script src="{% static 'js/autocomplete.js' %}?v=2.0"></script>
 
-<!-- 8. 초기화 및 확인 -->
+<!-- 8. 초기화 및 확인 (수정된 버전) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 페이지 초기화 시작');
     
-    // 모듈 로딩 상태 확인
+    // 모듈 로딩 상태 확인 (이미지 업로더는 Step 6에서만 체크)
     setTimeout(() => {
         const moduleStatus = {
             토스트: !!window.showToast,
@@ -839,19 +841,13 @@ document.addEventListener('DOMContentLoaded', function() {
             폼유틸: !!window.DdoksangFormUtils,
             지도유틸: !!window.DdoksangMapUtils,
             이미지업로드초기화함수: !!window.initDdoksangImageUpload,
-            이미지업로드설정함수: !!window.setupDdoksangImageUpload,
             메인앱: !!window.ddoksangApp
         };
         
         console.log('📊 모듈 로딩 상태:', moduleStatus);
         
-        // 필수 함수 누락 확인
-        const requiredFunctions = [
-            'initDdoksangImageUpload',
-            'setupDdoksangImageUpload',
-            'showToast'
-        ];
-        
+        // 필수 함수 누락 확인 (이미지 업로더 제외)
+        const requiredFunctions = ['showToast'];
         const missingFunctions = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
         
         if (missingFunctions.length > 0) {
@@ -902,12 +898,9 @@ window.addEventListener('load', function() {
             console.log('✅ 모든 날짜 필드 정상');
         }
         
-        // 이미지 업로더 상태 확인
-        if (window.ddoksangImageUploader) {
-            console.log('📷 이미지 업로더 상태:', window.ddoksangImageUploader.isInitialized);
-        } else {
-            console.log('📷 이미지 업로더: 아직 초기화되지 않음 (Step 6에서 초기화됨)');
-        }
+        // ✅ 이미지 업로더는 Step 6에서만 초기화되므로 여기서는 체크하지 않음
+        console.log('📷 이미지 업로더: Step 6에서 초기화 예정');
+        
     }, 1000);
 });
 </script>

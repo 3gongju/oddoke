@@ -1,4 +1,4 @@
-// ddoksang_create.js - 이미지 업로드 연동 수정 버전
+// ddoksang_create.js - 이미지 업로드 연동 수정 버전 (에러 수정)
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('덕생 등록 페이지 초기화 시작');
@@ -111,10 +111,44 @@ document.addEventListener('DOMContentLoaded', function() {
         // 버튼 클릭 이벤트
         button.addEventListener('click', performDuplicateCheck);
         
+        // 중복 카페 섹션 이벤트 설정
+        setupDuplicateCafeSection();
+        
         // 초기 버튼 상태 업데이트
         updateDuplicateButton();
         
         console.log('중복 확인 설정 완료');
+    }
+    
+    // ✅ 중복 카페 섹션 이벤트 설정 추가
+    function setupDuplicateCafeSection() {
+        const confirmBtn = document.getElementById('confirm-duplicate-btn');
+        const denyBtn = document.getElementById('deny-duplicate-btn');
+        
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                const selectedCafeId = document.getElementById('selected_duplicate_cafe_id')?.value;
+                if (!selectedCafeId) {
+                    alert('먼저 해당하는 카페를 선택해주세요.');
+                    return;
+                }
+                
+                // 선택된 카페 페이지로 이동
+                if (confirm('선택하신 카페 페이지로 이동하시겠습니까?')) {
+                    window.location.href = `/ddoksang/detail/${selectedCafeId}/`;
+                }
+            });
+        }
+        
+        if (denyBtn) {
+            denyBtn.addEventListener('click', function() {
+                // 다른 카페입니다 - 새로운 등록 진행
+                duplicateChecked = true;
+                isDuplicate = false;
+                hideDuplicateSection();
+                showDuplicateSuccess();
+            });
+        }
     }
     
     function updateDuplicateButton() {
@@ -163,10 +197,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('중복 확인 결과:', data);
                 
-                if (data.exists) {
-                    alert(`유사한 생일카페가 ${data.similar_count || 1}개 발견되었습니다.`);
+                if (data.exists && data.duplicates && data.duplicates.length > 0) {
+                    // ✅ 중복 카페가 있는 경우 - 카페 목록 표시
+                    showDuplicateCafes(data.duplicates);
                     isDuplicate = true;
                 } else {
+                    // 중복 없음 - 성공 화면 표시
                     isDuplicate = false;
                     duplicateChecked = true;
                     showDuplicateSuccess();
@@ -182,10 +218,104 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // ✅ 중복 카페 목록 표시 함수 추가
+    function showDuplicateCafes(duplicates) {
+        console.log('중복 카페 목록 표시:', duplicates);
+        
+        // 기본 폼 숨기기
+        const duplicateForm = document.getElementById('duplicate-check-form');
+        if (duplicateForm) duplicateForm.style.display = 'none';
+        
+        // 중복 카페 섹션 표시
+        const duplicateSection = document.getElementById('duplicate-cafes-section');
+        if (duplicateSection) {
+            duplicateSection.classList.remove('hidden');
+            
+            // 카페 카드 생성
+            const gridContainer = document.getElementById('duplicate-cafes-grid');
+            if (gridContainer) {
+                gridContainer.innerHTML = '';
+                
+                duplicates.forEach(cafe => {
+                    const card = createDuplicateCafeCard(cafe);
+                    gridContainer.appendChild(card);
+                });
+            }
+        }
+    }
+    
+    // ✅ 중복 카페 카드 생성 함수 추가
+    function createDuplicateCafeCard(cafe) {
+        const card = document.createElement('div');
+        card.className = 'duplicate-cafe-card bg-white border-2 border-transparent rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200';
+        card.dataset.cafeId = cafe.id;
+        
+        card.innerHTML = `
+            <div class="selected-indicator absolute top-2 right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center opacity-0">
+                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            
+            <div class="mb-3">
+                <h4 class="font-semibold text-gray-900 text-sm mb-1">${cafe.cafe_name}</h4>
+                <p class="text-xs text-gray-600">${cafe.artist_name}${cafe.member_name ? ' - ' + cafe.member_name : ''}</p>
+            </div>
+            
+            <div class="space-y-2 text-xs text-gray-600">
+                <div class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>${cafe.start_date} ~ ${cafe.end_date}</span>
+                </div>
+                
+                <div class="flex items-start">
+                    <svg class="w-3 h-3 mr-1 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="leading-tight">${cafe.address}</span>
+                </div>
+            </div>
+        `;
+        
+        // 카드 클릭 이벤트
+        card.addEventListener('click', function() {
+            // 다른 카드들 선택 해제
+            document.querySelectorAll('.duplicate-cafe-card').forEach(c => {
+                c.classList.remove('selected');
+            });
+            
+            // 현재 카드 선택
+            card.classList.add('selected');
+            
+            // hidden input에 선택된 카페 ID 저장
+            const hiddenInput = document.getElementById('selected_duplicate_cafe_id');
+            if (hiddenInput) {
+                hiddenInput.value = cafe.id;
+            }
+            
+            console.log('카페 선택됨:', cafe.cafe_name, cafe.id);
+        });
+        
+        return card;
+    }
+    
+    // ✅ 중복 섹션 숨기기 함수 추가
+    function hideDuplicateSection() {
+        const duplicateSection = document.getElementById('duplicate-cafes-section');
+        if (duplicateSection) {
+            duplicateSection.classList.add('hidden');
+        }
+    }
+    
     function showDuplicateSuccess() {
         // 현재 폼 숨기기
         const currentForm = document.getElementById('duplicate-check-form');
         if (currentForm) currentForm.style.display = 'none';
+        
+        // 중복 섹션도 숨기기
+        hideDuplicateSection();
         
         // 제목, 설명, 진행바 숨기기
         const section = document.querySelector('section.max-w-4xl');
@@ -342,14 +472,27 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    // ✅ 이미지 검증 함수 추가
+    // ✅ 이미지 검증 함수 - 안전한 체크 추가
     function validateImages() {
         console.log('📸 이미지 검증 시작');
         
+        // ✅ Step 6이 아닌 경우 검증 건너뛰기
+        if (currentStep !== 6) {
+            console.log('✅ Step 6이 아니므로 이미지 검증 건너뛰기');
+            return true;
+        }
+        
+        // ✅ 이미지 업로더가 없는 경우 초기화 시도
         if (!window.ddoksangImageUploader) {
-            console.error('❌ 이미지 업로더가 초기화되지 않았습니다');
-            alert('이미지 업로더를 초기화하는 중입니다. 잠시 후 다시 시도해주세요.');
-            return false;
+            console.log('⚠️ 이미지 업로더가 없어서 초기화 시도');
+            initializeImageUploader();
+            
+            // 초기화 후 재확인
+            if (!window.ddoksangImageUploader) {
+                console.error('❌ 이미지 업로더 초기화 실패');
+                alert('이미지 업로더를 초기화하는 중입니다. 잠시 후 다시 시도해주세요.');
+                return false;
+            }
         }
         
         const fileCount = window.ddoksangImageUploader.getFileCount();
@@ -419,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 100);
         }
         
-        // ✅ Step 6에서 이미지 업로더 초기화
+        // ✅ Step 6에서만 이미지 업로더 초기화
         if (index === 6) {
             setTimeout(() => {
                 initializeImageUploader();
@@ -427,9 +570,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ✅ 이미지 업로더 초기화 함수 추가
+    // ✅ 이미지 업로더 초기화 함수 - 안전한 체크 추가
     function initializeImageUploader() {
         console.log('🖼️ 이미지 업로더 초기화 시작');
+        
+        // ✅ Step 6이 아닌 경우 초기화하지 않음
+        if (currentStep !== 6) {
+            console.log('⚠️ Step 6이 아니므로 이미지 업로더 초기화 건너뛰기');
+            return;
+        }
         
         // 이미 초기화된 경우 재사용
         if (window.ddoksangImageUploader && window.ddoksangImageUploader.isInitialized) {
@@ -459,6 +608,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // ✅ 초기화 함수 존재 확인
+        if (typeof window.initDdoksangImageUpload !== 'function') {
+            console.error('❌ initDdoksangImageUpload 함수를 찾을 수 없습니다');
+            return;
+        }
+        
         // 이미지 업로더 초기화
         try {
             const uploader = window.initDdoksangImageUpload();
@@ -483,7 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ✅ 다음 버튼 상태 업데이트 함수 추가
+    // ✅ 다음 버튼 상태 업데이트 함수 - 안전한 체크 추가
     function updateNextButtonState() {
         if (currentStep !== 6 || !nextBtn) return;
         
@@ -745,13 +900,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (searchInput) searchInput.classList.remove('hidden');
     };
     
-    // ✅ 전역 앱 객체 생성 (다른 모듈에서 접근 가능)
+    // ✅ 전역 앱 객체 생성 - 안전한 체크 추가
     window.ddoksangApp = {
         currentStep: () => currentStep,
         moveToStep: showStep,
         updateNextButtonState: updateNextButtonState,
         validateCurrentStep: validateCurrentStep,
-        initializeImageUploader: initializeImageUploader
+        initializeImageUploader: initializeImageUploader,
+        isImageUploaderReady: () => {
+            return window.ddoksangImageUploader && window.ddoksangImageUploader.isInitialized;
+        }
     };
     
     console.log('덕생 등록 페이지 초기화 완료');
