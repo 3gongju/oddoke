@@ -1,4 +1,4 @@
-// ddoksang_create.js - 이미지 업로드 연동 수정 버전 (UI 개선)
+// 이미지 업로드 연동 수정 버전 (UI 개선)
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('덕생 등록 페이지 초기화 시작');
@@ -218,11 +218,17 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid: isValid
         });
         
-        // ✅ 항상 클릭 가능하도록 설정
-        button.disabled = false;
-        button.style.pointerEvents = 'auto';
+        // ✅ DuplicateChecker 상태 확인
+        const isChecking = window.DuplicateChecker ? window.DuplicateChecker.state.isChecking : false;
         
-        if (isValid) {
+        // 항상 클릭 가능하도록 설정 (확인 중이 아닐 때)
+        button.disabled = isChecking;
+        button.style.pointerEvents = isChecking ? 'none' : 'auto';
+        
+        if (isChecking) {
+            // 확인 중 상태
+            button.className = 'w-full px-6 py-3 bg-gray-400 text-gray-200 rounded-lg font-medium cursor-not-allowed';
+        } else if (isValid) {
             // 활성화 상태 (검정색)
             button.className = 'w-full px-6 py-3 bg-gray-900 text-white rounded-lg font-medium transition-colors hover:bg-gray-800 cursor-pointer';
             console.log('✅ 중복 확인 버튼 활성화됨');

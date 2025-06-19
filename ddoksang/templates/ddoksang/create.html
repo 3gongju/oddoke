@@ -834,7 +834,10 @@ window.DdoksangMapUtils = {
 <!-- 7. 자동완성 -->
 <script src="{% static 'js/autocomplete.js' %}?v=2.0"></script>
 
-<!-- 8. 초기화 및 확인 (수정된 버전) -->
+<!-- ✅ 8. 중복 확인 모듈들 (새로 추가) -->
+<script src="{% static 'js/ddoksang_duplicate_card_template.js' %}"></script>
+<script src="{% static 'js/ddoksang_duplicate_check.js' %}"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 페이지 초기화 시작');
@@ -847,7 +850,10 @@ document.addEventListener('DOMContentLoaded', function() {
             폼유틸: !!window.DdoksangFormUtils,
             지도유틸: !!window.DdoksangMapUtils,
             이미지업로드초기화함수: !!window.initDdoksangImageUpload,
-            메인앱: !!window.ddoksangApp
+            메인앱: !!window.ddoksangApp,
+            카드템플릿: !!window.DuplicateCardTemplate,
+            중복확인: !!window.DuplicateChecker,
+            아티스트배지: !!window.ArtistBadgeUtils
         };
         
         console.log('📊 모듈 로딩 상태:', moduleStatus);
