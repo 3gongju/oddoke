@@ -44,55 +44,66 @@
                 
                 <!-- 마지막 메시지 표시 -->
                 <div class="flex items-start space-x-3">
-                    {% with latest_room=group.rooms.0 %}
-                        <div class="flex-shrink-0">
-                            <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
-                                {% if latest_room.last_message %}
-                                    {% if latest_room.last_message.sender == current_user %}
-                                        {% if current_user.profile_image %}
-                                            <img src="{{ current_user.profile_image.url }}" alt="{{ current_user.username }}" class="w-full h-full object-cover rounded-full">
+                    <!-- 동적 프로필 표시 - 대화 상대방들 기준 -->
+                    <div class="flex-shrink-0">
+                        {% if group.has_multiple_partners %}
+                            <!-- 2명 이상과 최근에 대화 - 상대방들 프로필 나란히 -->
+                            <div class="flex -space-x-2">
+                                {% for partner in group.recent_partners|slice:":2" %}
+                                    <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm border-2 border-white">
+                                        {% if partner.profile_image %}
+                                            <img src="{{ partner.profile_image.url }}" alt="{{ partner.username }}" class="w-full h-full object-cover rounded-full">
                                         {% else %}
-                                            {{ current_user.username|first|upper }}
+                                            {{ partner.username|first|upper }}
                                         {% endif %}
-                                    {% else %}
-                                        {% if latest_room.partner.profile_image %}
-                                            <img src="{{ latest_room.partner.profile_image.url }}" alt="{{ latest_room.partner.username }}" class="w-full h-full object-cover rounded-full">
-                                        {% else %}
-                                            {{ latest_room.partner.username|first|upper }}
-                                        {% endif %}
-                                    {% endif %}
-                                {% else %}
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
-                                {% endif %}
+                                    </div>
+                                {% endfor %}
                             </div>
-                        </div>
-                        
-                        <div class="flex-1 min-w-0">
-                            {% if latest_room.last_message %}
-                                <h3 class="font-semibold text-gray-900 mb-2">
-                                    {% if latest_room.last_message.sender == current_user %}
-                                        나 → {{ group.room_count }}명
+                        {% else %}
+                            <!-- 1명과만 최근에 대화 - 단일 상대방 프로필 -->
+                            {% with single_partner=group.primary_partner %}
+                                <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
+                                    {% if single_partner.profile_image %}
+                                        <img src="{{ single_partner.profile_image.url }}" alt="{{ single_partner.username }}" class="w-full h-full object-cover rounded-full">
                                     {% else %}
-                                        {{ latest_room.last_message.sender.username }}
+                                        {{ single_partner.username|first|upper }}
                                     {% endif %}
-                                </h3>
-                                
-                                <!-- 메시지 미리보기 -->
-                                {% if latest_room.last_message.sender == current_user %}
-                                    {% include 'ddokchat/components/rooms/_message_preview.html' with message=latest_room.last_message is_mine=True truncate=50 %}
-                                {% else %}
-                                    {% include 'ddokchat/components/rooms/_message_preview.html' with message=latest_room.last_message is_mine=False truncate=50 %}
-                                {% endif %}
-                            {% else %}
-                                <h3 class="font-semibold text-gray-900 mb-2">{{ group.room_count }}명의 참여자</h3>
-                                <div class="bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-500">
-                                    첫 메시지를 보내보세요!
                                 </div>
-                            {% endif %}
-                        </div>
-                    {% endwith %}
+                            {% endwith %}
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 닉네임과 메시지 -->
+                    <div class="flex-1 min-w-0">
+                        {% if group.latest_message %}
+                            <!-- 동적 닉네임 표시 - 대화 상대방들 기준 -->
+                            <h3 class="font-semibold text-gray-900 mb-2">
+                                {% if group.has_multiple_partners %}
+                                    <!-- 여러 명과 대화: "testuser 외 N명" -->
+                                    {% with first_partner=group.recent_partners.0 others_count=group.recent_partners|length|add:"-1" %}
+                                        {{ first_partner.username }} 외 {{ others_count }}명
+                                    {% endwith %}
+                                {% else %}
+                                    <!-- 한 명과만 대화: 그 사람 이름 -->
+                                    {{ group.primary_partner.username }}
+                                {% endif %}
+                            </h3>
+                            
+                            <!-- 메시지 미리보기 (발신자 구분 없이) -->
+                            {% with latest_message=group.latest_message %}
+                                {% if latest_message.sender == current_user %}
+                                    {% include 'ddokchat/components/rooms/_message_preview.html' with message=latest_message is_mine=True truncate=50 %}
+                                {% else %}
+                                    {% include 'ddokchat/components/rooms/_message_preview.html' with message=latest_message is_mine=False truncate=50 %}
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            <h3 class="font-semibold text-gray-900 mb-2">{{ group.room_count }}명의 참여자</h3>
+                            <div class="bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-500">
+                                첫 메시지를 보내보세요!
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -119,7 +130,21 @@
                             <!-- 사용자명 + 마지막 메시지 -->
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center justify-between mb-2">
-                                    <h4 class="font-semibold text-gray-900">{{ room.partner.username }}</h4>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="font-semibold text-gray-900">{{ room.partner.username }}</h4>
+                                        <!-- ✅ 멤버 배지 추가 -->
+                                        {% if room.partner == group.post.user %}
+                                            <!-- 총대(게시글 작성자)인 경우 -->
+                                            <span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-medium">덕장</span>
+                                        {% else %}
+                                            <!-- 일반 참여자인 경우 - 멤버 이름 찾기 -->
+                                            {% for user, member_name in group.partner_member_map.items %}
+                                                {% if user == room.partner %}
+                                                    <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">{{ member_name }}</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
                                     <div class="flex items-center space-x-2">
                                         {% if room.last_message %}
                                             <span class="text-xs text-gray-500">{{ room.last_message.timestamp|timesince }} 전</span>
