@@ -10,13 +10,14 @@ class UserAdmin(BaseUserAdmin):
     # ✅ User 모델에 실제 있는 필드들만 사용
     list_display = (
         'username', 'email', 'is_active', 'date_joined',
-        'is_temp_username', 'social_signup_completed'
+        'is_temp_username', 'social_signup_completed', 'suspension_status_display'
     )
     
     # ✅ User 모델의 실제 필드들로 필터 수정
     list_filter = (
         'is_active', 'is_staff', 'is_superuser', 
-        'is_temp_username', 'social_signup_completed', 'date_joined'
+        'is_temp_username', 'social_signup_completed', 'date_joined',
+        'suspension_start', 'suspension_end'
     )
     
     # ✅ User 모델의 실제 필드들로 검색 수정
@@ -31,6 +32,8 @@ class UserAdmin(BaseUserAdmin):
                 'is_temp_username',
                 'social_signup_completed', 
                 'is_profile_completed',
+                'kakao_id',
+                'naver_id',
             ),
         }),
         ('프로필 정보', {
@@ -39,7 +42,27 @@ class UserAdmin(BaseUserAdmin):
                 'bio',
             ),
         }),
+        ('제재 정보', {
+            'fields': (
+                'suspension_start',
+                'suspension_end', 
+                'suspension_reason',
+            ),
+        }),
     )
+    
+    def suspension_status_display(self, obj):
+        """제재 상태 표시"""
+        if obj.is_suspended:
+            if obj.suspension_end:
+                return format_html(
+                    '<span style="color: red; font-weight: bold;">제재중 ({})</span>',
+                    obj.suspension_status
+                )
+            else:
+                return format_html('<span style="color: red; font-weight: bold;">영구정지</span>')
+        return format_html('<span style="color: green;">정상</span>')
+    suspension_status_display.short_description = '제재 상태'
 
 @admin.register(FandomProfile)
 class FandomProfileAdmin(admin.ModelAdmin):

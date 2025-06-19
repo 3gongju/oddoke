@@ -9,6 +9,7 @@ admin.site.register(DamMannerPost)
 admin.site.register(DamBdaycafePost)
 admin.site.register(DamComment) 
 
+
 @admin.register(DamPostReport)
 class DamPostReportAdmin(admin.ModelAdmin):
     list_display = (
