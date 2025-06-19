@@ -10,7 +10,16 @@
     </div>
 
     <!-- 탭 네비게이션 -->
-    {% include 'ddokchat/components/rooms/_room_tabs.html' %}
+    <div class="bg-white rounded-xl shadow-sm mb-6 border border-gray-200">
+        <div class="flex">
+            <button id="activeTab" class="tab-button flex-1 px-6 py-4 bg-gray-900 text-white font-medium text-sm rounded-l-xl transition-all duration-200">
+                거래중
+            </button>
+            <button id="completedTab" class="tab-button flex-1 px-6 py-4 bg-white text-gray-600 font-medium text-sm rounded-r-xl hover:bg-gray-50 transition-all duration-200">
+                거래완료
+            </button>
+        </div>
+    </div>
 
     <!-- 거래중 채팅 목록 -->
     <div id="activeContent" class="tab-content">
@@ -24,117 +33,10 @@
 
     <!-- 전체적으로 채팅방이 없을 때 -->
     {% if not active_items and not completed_items %}
-        {% include 'ddokchat/components/rooms/_empty_state.html' with type='all' %}
+        {% include 'ddokchat/components/rooms/_empty_state.html' %}
     {% endif %}
 </div>
 
-<style>
-/* 부드러운 애니메이션 */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.chat-item {
-    animation: fadeIn 0.3s ease-out;
-}
-
-.chat-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-/* 스크롤바 */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #f8fafc;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
-}
-
-/* 탭 전환 */
-.tab-content {
-    transition: opacity 0.2s ease-in-out;
-}
-
-/* 읽지 않은 메시지 배지 */
-.unread-badge {
-    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.1);
-}
-
-/* 분철 그룹 전용 스타일 */
-.split-group-content {
-    transition: all 0.3s ease;
-}
-
-.toggle-icon {
-    transition: transform 0.2s ease;
-}
-
-.split-group-header:hover .toggle-icon {
-    transform: rotate(-90deg);
-}
-
-.split-group-content[style*="block"] + .split-group-header .toggle-icon {
-    transform: rotate(0deg);
-}
-
-.split-group-content[style*="none"] + .split-group-header .toggle-icon {
-    transform: rotate(-90deg);
-}
-</style>
-
-<script>
-// 분철 그룹 접기/펼치기 함수
-function toggleSplitGroup(headerElement) {
-    const groupElement = headerElement.closest('.chat-card');
-    const contentElement = groupElement.querySelector('.split-group-content');
-    const toggleIcon = groupElement.querySelector('.toggle-icon');
-    
-    if (contentElement.style.display === 'none' || !contentElement.style.display) {
-        // 펼치기
-        contentElement.style.display = 'block';
-        if (toggleIcon) {
-            toggleIcon.style.transform = 'rotate(0deg)';
-        }
-    } else {
-        // 접기
-        contentElement.style.display = 'none';
-        if (toggleIcon) {
-            toggleIcon.style.transform = 'rotate(-90deg)';
-        }
-    }
-}
-
-// 탭 전환 기능
-document.getElementById('activeTab').addEventListener('click', function() {
-    // 탭 스타일 변경
-    this.className = 'tab-button flex-1 px-6 py-4 bg-gray-900 text-white font-medium text-sm rounded-l-xl transition-all duration-200';
-    document.getElementById('completedTab').className = 'tab-button flex-1 px-6 py-4 bg-white text-gray-600 font-medium text-sm rounded-r-xl hover:bg-gray-50 transition-all duration-200';
-    
-    // 컨텐츠 전환
-    document.getElementById('activeContent').classList.remove('hidden');
-    document.getElementById('completedContent').classList.add('hidden');
-});
-
-document.getElementById('completedTab').addEventListener('click', function() {
-    // 탭 스타일 변경
-    this.className = 'tab-button flex-1 px-6 py-4 bg-gray-900 text-white font-medium text-sm rounded-r-xl transition-all duration-200';
-    document.getElementById('activeTab').className = 'tab-button flex-1 px-6 py-4 bg-white text-gray-600 font-medium text-sm rounded-l-xl hover:bg-gray-50 transition-all duration-200';
-    
-    // 컨텐츠 전환
-    document.getElementById('completedContent').classList.remove('hidden');
-    document.getElementById('activeContent').classList.add('hidden');
-});
-</script>
+<!-- 스타일과 스크립트 -->
+{% include 'ddokchat/components/rooms/_scripts_styles.html' %}
 {% endblock %}
