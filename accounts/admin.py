@@ -348,30 +348,63 @@ class PostReportAdmin(admin.ModelAdmin):
     app_name_display.short_description = '앱'
     
     def post_title_display(self, obj):
-        """게시글 제목 표시 (링크 포함)"""
+        """게시글 제목 표시 (링크 포함) - DamBdaycafePost 지원"""
         try:
             if obj.content_object:
                 post = obj.content_object
-                category = getattr(post, 'category_type', 'unknown')
                 title = getattr(post, 'title', '제목 없음')
                 app_name = obj.get_app_name()
-                return format_html(
-                    '<a href="/{}/{}/{}/" target="_blank">{}</a>',
-                    app_name, category, post.id, title[:30] + ('...' if len(title) > 30 else '')
-                )
+                
+                # 🔥 모델 타입에 따른 URL 생성
+                model_name = post.__class__.__name__
+                
+                if model_name == 'DamBdaycafePost':
+                    # 생카후기는 특별한 URL 구조
+                    return format_html(
+                        '<a href="/ddokdam/bdaycafe/{}/" target="_blank">{}</a><br><small>생카후기</small>',
+                        post.id, title[:30] + ('...' if len(title) > 30 else '')
+                    )
+                elif hasattr(post, 'category_type'):
+                    # 일반 Post 모델
+                    category = post.category_type
+                    return format_html(
+                        '<a href="/{}/{}/{}/" target="_blank">{}</a><br><small>{}</small>',
+                        app_name, category, post.id, 
+                        title[:30] + ('...' if len(title) > 30 else ''),
+                        category
+                    )
+                else:
+                    # 기타 모델
+                    return format_html(
+                        '{}<br><small>모델: {}</small>',
+                        title[:30] + ('...' if len(title) > 30 else ''),
+                        model_name
+                    )
         except Exception as e:
             print(f"post_title_display 오류: {e}")
+            if obj.content_object:
+                print(f"모델: {obj.content_object.__class__.__name__}")
+                print(f"게시글 ID: {obj.content_object.id}")
         return '삭제된 게시글'
     post_title_display.short_description = '게시글'
     
     def post_preview(self, obj):
-        """게시글 미리보기"""
+        """게시글 미리보기 - DamBdaycafePost 지원"""
         try:
             if obj.content_object:
                 post = obj.content_object
                 title = getattr(post, 'title', '제목 없음')
                 content = getattr(post, 'content', '내용 없음')
                 content_preview = content[:100] + ('...' if len(content) > 100 else '')
+                
+                # 🔥 모델별 추가 정보 표시
+                model_name = post.__class__.__name__
+                extra_info = ''
+                
+                if model_name == 'DamBdaycafePost':
+                    cafe_name = getattr(post, 'cafe_name', '')
+                    if cafe_name:
+                        extra_info = f'<br><strong>카페명:</strong> {cafe_name}'
                 
                 # 첫 번째 이미지가 있으면 표시
                 image_html = ''
@@ -390,8 +423,8 @@ class PostReportAdmin(admin.ModelAdmin):
                     '<div style="max-width: 300px;">'
                     '<strong>제목:</strong> {}<br>'
                     '<strong>내용:</strong> {}'
-                    '{}</div>',
-                    title, content_preview, image_html
+                    '{}{}</div>',
+                    title, content_preview, extra_info, image_html
                 )
         except Exception as e:
             print(f"post_preview 오류: {e}")
