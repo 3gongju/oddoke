@@ -50,27 +50,95 @@
 {% endif %}
 
 <!-- 이미지 라이트박스 모달 -->
+<!-- 개선된 이미지 라이트박스 모달 -->
 <div id="imageLightbox" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
   <!-- 닫기 버튼 -->
-  <button id="closeLightbox" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10 transition-colors">
-    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <button id="closeLightbox" class="absolute top-4 right-4 text-white hover:text-gray-300 z-20 transition-colors bg-black bg-opacity-50 rounded-full p-2">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
     </svg>
   </button>
   
+  <!-- 줌 컨트롤 (데스크탑 전용) -->
+  <div id="zoomControls" class="absolute top-4 left-4 z-20 hidden md:flex flex-col space-y-2">
+    <button id="zoomInBtn" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all">
+      <svg id="zoomIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+      </svg>
+    </button>
+    <button id="zoomOutBtn" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
+      </svg>
+    </button>
+    <button id="resetBtn" class="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-all">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+      </svg>
+    </button>
+  </div>
+  
   <!-- 이미지 컨테이너 -->
-  <div class="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center">
+  <div class="relative max-w-[90vw] max-h-[90vh] md:max-w-md md:max-h-[65vh] flex items-center justify-center mx-auto">
     <img id="lightboxImage" src="" alt="확대 이미지" 
-         class="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-opacity duration-300">
+         class="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-opacity duration-300"
+         style="touch-action: pinch-zoom;">
   </div>
   
   <!-- 하단 정보 영역 -->
-  <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded-lg">
-    <span id="lightboxInfo"></span>
+  <div id="lightboxInfo" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded-lg hidden">
+    <!-- JavaScript에서 동적으로 내용 채워짐 -->
   </div>
   
   <!-- 로딩 인디케이터 -->
   <div id="lightboxLoading" class="absolute inset-0 flex items-center justify-center">
     <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
   </div>
+  
+  <!-- 모바일 사용법 안내 (처음에만 표시) -->
+  <div id="mobileHint" class="absolute bottom-16 left-1/2 transform -translate-x-1/2 text-white text-xs bg-black bg-opacity-50 px-3 py-2 rounded-lg md:hidden">
+    두 손가락으로 확대/축소 가능
+  </div>
 </div>
+
+<style>
+/* 라이트박스 관련 스타일 */
+#lightboxImage {
+  transition: transform 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#lightboxImage.dragging {
+  cursor: grabbing !important;
+}
+
+/* 줌 컨트롤 버튼 호버 효과 */
+#zoomControls button:hover {
+  transform: scale(1.1);
+}
+
+/* 모바일에서 핀치 줌 활성화 */
+@media (max-width: 767px) {
+  #lightboxImage {
+    touch-action: pinch-zoom;
+  }
+}
+
+/* 데스크탑에서 터치 액션 비활성화 */
+@media (min-width: 768px) {
+  #lightboxImage {
+    touch-action: none;
+  }
+}
+
+/* 모바일 힌트 애니메이션 */
+#mobileHint {
+  animation: fadeInOut 4s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  10%, 90% { opacity: 1; }
+}
+</style>

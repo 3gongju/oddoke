@@ -154,7 +154,7 @@
             {% if room.post.category_type == 'sell' %}
               {{ room.post.price|floatformat:0|add:"0"|intcomma }}원
             {% elif room.post.category_type == 'rental' %}
-              {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원/일
+              {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원
             {% elif room.post.category_type == 'split' %}
               <!-- 분철의 경우 총 가격 또는 개별 가격 표시 -->
               {% if split_info %}
