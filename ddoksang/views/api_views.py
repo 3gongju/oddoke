@@ -553,11 +553,34 @@ def check_duplicate_cafe(request):
         
         # 카페명 유사성 검사
         def normalize_name(name):
+            """카페명 정규화 - 더 강력한 비교를 위해 개선"""
             import re
             try:
-                normalized = re.sub(r'[^\w\s]', '', name.lower())
-                return ''.join(normalized.split())
-            except Exception:
+                # 1. 소문자 변환
+                normalized = name.lower()
+                
+                # 2. 특수문자 제거 (한글, 영문, 숫자만 남김)
+                normalized = re.sub(r'[^\w\s가-힣]', '', normalized)
+                
+                # 3. 공통 단어 정규화
+                replacements = {
+                    '생일카페': '생카',
+                    '생일 카페': '생카', 
+                    'birthday': '생일',
+                    'cafe': '카페',
+                    'coffee': '커피',
+                }
+                
+                for old, new in replacements.items():
+                    normalized = normalized.replace(old, new)
+                
+                # 4. 공백 제거
+                normalized = ''.join(normalized.split())
+                
+                logger.debug(f"정규화: '{name}' -> '{normalized}'")
+                return normalized
+            except Exception as e:
+                logger.warning(f"이름 정규화 오류: {e}")
                 return name.lower().replace(' ', '')
         
         normalized_input_name = normalize_name(cafe_name)
@@ -565,7 +588,7 @@ def check_duplicate_cafe(request):
         
         # 유사한 이름의 카페 찾기
         similar_cafes = []
-        similarity_threshold = 0.8
+        similarity_threshold = 0.6  # ✅ 임계값을 0.8에서 0.6으로 낮춤 (더 민감하게)
         
         try:
             from difflib import SequenceMatcher
@@ -579,8 +602,25 @@ def check_duplicate_cafe(request):
                     logger.info(f"완전 일치 발견: {cafe.cafe_name}")
                     similar_cafes.append(cafe)
                     continue
+                
+                # ✅ 2. 포함 관계 확인 (새로 추가)
+                if (normalized_input_name in normalized_existing_name or 
+                    normalized_existing_name in normalized_input_name):
+                    logger.info(f"포함 관계 발견: {cafe.cafe_name}")
+                    similar_cafes.append(cafe)
+                    continue
                     
-                # 2. 유사도 확인
+                # ✅ 3. 공통 단어 확인 (새로 추가)
+                input_words = set(normalized_input_name.split())
+                existing_words = set(normalized_existing_name.split())
+                if input_words and existing_words:
+                    common_words = input_words.intersection(existing_words)
+                    if len(common_words) >= 2 or (len(common_words) >= 1 and len(input_words) <= 2):
+                        logger.info(f"공통 단어 발견: {cafe.cafe_name} (공통: {common_words})")
+                        similar_cafes.append(cafe)
+                        continue
+                    
+                # 4. 유사도 확인 (기존 로직)
                 try:
                     similarity = SequenceMatcher(None, normalized_input_name, normalized_existing_name).ratio()
                     logger.debug(f"유사도: {similarity:.2f}")
@@ -602,6 +642,22 @@ def check_duplicate_cafe(request):
         # 결과 반환
         exists = len(similar_cafes) > 0
         
+        # ✅ 상세 디버깅 로그 추가
+        logger.info(f"""
+🔍 중복 확인 최종 결과:
+- 입력 카페명: {cafe_name}
+- 정규화된 이름: {normalized_input_name}
+- 검색된 기존 카페 수: {len(existing_cafes_list)}
+- 유사한 카페 수: {len(similar_cafes)}
+- 중복 존재 여부: {exists}
+- 검색 조건: 아티스트={artist_id}, 멤버={member_id}, 기간={start_date}~{end_date}
+        """)
+        
+        if exists:
+            logger.info("🚨 발견된 유사 카페들:")
+            for i, cafe in enumerate(similar_cafes, 1):
+                logger.info(f"  {i}. {cafe.cafe_name} (ID: {cafe.id})")
+        
         result = {
             'exists': exists,
             'message': (
@@ -609,7 +665,19 @@ def check_duplicate_cafe(request):
                 if exists 
                 else get_message('DUPLICATE_CHECK', 'NO_DUPLICATE')
             ),
-            'similar_count': len(similar_cafes)
+            'similar_count': len(similar_cafes),
+            # ✅ 디버깅 정보 추가 (개발 환경에서만)
+            'debug_info': {
+                'normalized_input': normalized_input_name,
+                'existing_cafes_count': len(existing_cafes_list),
+                'similarity_threshold': similarity_threshold,
+                'search_conditions': {
+                    'artist_id': artist_id,
+                    'member_id': member_id,
+                    'start_date': start_date,
+                    'end_date': end_date,
+                }
+            } if settings.DEBUG else None
         }
         
         # ✅ 중복 카페 정보 추가 (similar_cafes 필드명 사용)
@@ -705,8 +773,8 @@ def check_duplicate_cafe(request):
             'exists': False,
             'error': get_message('DUPLICATE_CHECK', 'SERVER_ERROR')
         }, status=500)
-        
-        
+
+
 def normalize(text):
     """기존 함수 유지 (하위 호환성)"""
     return ''.join(text.lower().split())

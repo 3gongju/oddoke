@@ -66,9 +66,15 @@
         <!-- 선택된 아티스트 표시 -->
         <div id="final-selected-artist" class="mb-4 p-3 border rounded bg-green-50 hidden">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="font-medium text-green-800" id="final-selected-artist-text"></p>
-              <p class="text-sm text-green-600">새로 선택된 아티스트/멤버입니다</p>
+            <div class="flex items-center gap-2">
+              <!--  아티스트/멤버 구분 배지 추가 (Step 0과 동일한 구조) -->
+              <span id="final-selected-artist-type-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <!-- 아티스트/멤버 구분 배지가 여기에 표시됩니다 -->
+              </span>
+              <div>
+                <p class="font-medium text-green-800" id="final-selected-artist-text"></p>
+                <p class="text-sm text-green-600">새로 선택된 아티스트/멤버입니다</p>
+              </div>
             </div>
             <button type="button" onclick="clearFinalSelection()" class="text-green-600 hover:text-green-800 text-sm">변경</button>
           </div>
