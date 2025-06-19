@@ -27,7 +27,7 @@ def chat_room(request, room_id):
     # N+1 해결: 관련 데이터 한번에 로드
     room = get_object_or_404(
         ChatRoom.objects.select_related(
-            'buyer', 'seller',
+            'buyer', 'seller', 'content_type'  # content_type도 추가
         ),
         id=room_id
     )
@@ -35,6 +35,18 @@ def chat_room(request, room_id):
     current_user = request.user
     other_user = room.seller if room.buyer == current_user else room.buyer
     room.other_user = other_user
+
+    # 🔧 카테고리 설정 개선
+    # ContentType을 이용해서 정확한 카테고리 문자열 설정
+    if room.content_type.model == 'farmsellpost':
+        room.category = 'sell'
+    elif room.content_type.model == 'farmrentalpost':
+        room.category = 'rental'
+    elif room.content_type.model == 'farmsplitpost':
+        room.category = 'split'
+    else:
+        # 기본값 설정 (혹시 모를 다른 타입)
+        room.category = 'sell'
 
     # 리뷰 여부 확인 최적화
     has_already_reviewed = False
@@ -65,7 +77,7 @@ def chat_room(request, room_id):
     
     # 분철 관련 정보 추가 (기존 코드 유지)
     split_info = None
-    if hasattr(room.post, 'category_type') and room.post.category_type == 'split':
+    if room.category == 'split':  # 🔧 수정된 카테고리 사용
         from ddokfarm.models import SplitApplication
         # N+1 최적화: prefetch_related 사용
         application = SplitApplication.objects.filter(
@@ -78,13 +90,16 @@ def chat_room(request, room_id):
         ).first()
         
         if application:
+            # 신청한 멤버들의 가격 합계 계산
+            total_price = sum(
+                room.post.member_prices.filter(
+                    member__in=application.members.all()
+                ).values_list('price', flat=True)
+            )
+            
             split_info = {
                 'applied_members': application.members.all(),
-                'total_price': sum(
-                    room.post.member_prices.filter(
-                        member__in=application.members.all()
-                    ).values_list('price', flat=True)
-                )
+                'total_price': total_price  # 신청한 멤버들의 가격 합계
             }
 
     context = {
@@ -95,7 +110,7 @@ def chat_room(request, room_id):
         'form': MannerReviewForm(),
         'has_already_reviewed': has_already_reviewed,
         'is_fully_completed': room.is_fully_completed,
-        'split_info': split_info,  # split 정보 추가
+        'split_info': split_info,
     }
 
     return render(request, 'ddokchat/chat_room.html', context)

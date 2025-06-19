@@ -1,0 +1,76 @@
+<!-- ddokchat/templates/ddokchat/components/modals/_common_modals.html -->
+
+<!-- 거래 완료 확인 모달 -->
+<div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
+  <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+    <h2 class="text-lg font-bold mb-4">정말 거래를 완료하시겠습니까?</h2>
+    <p class="text-sm text-gray-600 mb-6">
+      구매자, 판매자 모두 거래 완료 시 해당 채팅이 종료되며, 구매자는 매너 리뷰를 작성하실 수 있습니다.
+    </p>
+    <div class="flex justify-end gap-3">
+      <button id="cancelBtn" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">취소</button>
+      <button id="confirmBtn" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">거래 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- 리뷰 모달 -->
+{% if current_user == room.buyer and not has_already_reviewed %}
+<dialog id="reviewModal" class="backdrop:bg-black backdrop:bg-opacity-50 bg-white rounded-2xl shadow-2xl p-0 max-w-lg w-full mx-4 border-0">
+  <div class="bg-white rounded-2xl overflow-hidden">
+    <!-- 헤더 -->
+    <div class="bg-black text-white px-6 py-4">
+      <h2 class="text-xl font-bold">매너 리뷰 작성</h2>
+      <p class="text-gray-300 text-sm mt-1">거래 경험을 공유해주세요</p>
+    </div>
+    
+    <!-- 폼 내용 -->
+    <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}" class="p-6">
+      {% csrf_token %}
+      <input type="hidden" name="chatroom_id" value="{{ room.id }}">
+      
+      <div class="space-y-6">
+        {{ form.as_p }}
+      </div>
+      
+      <!-- 버튼 영역 -->
+      <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-100">
+        <button type="button" onclick="document.getElementById('reviewModal').close()" 
+                class="px-6 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200">
+          취소
+        </button>
+        <button type="submit" 
+                class="px-6 py-2.5 bg-black text-white hover:bg-gray-800 rounded-lg transition-colors font-medium">
+          리뷰 제출
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+{% endif %}
+
+<!-- 이미지 라이트박스 모달 -->
+<div id="imageLightbox" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
+  <!-- 닫기 버튼 -->
+  <button id="closeLightbox" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10 transition-colors">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+  
+  <!-- 이미지 컨테이너 -->
+  <div class="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center">
+    <img id="lightboxImage" src="" alt="확대 이미지" 
+         class="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-opacity duration-300">
+  </div>
+  
+  <!-- 하단 정보 영역 -->
+  <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-4 py-2 rounded-lg">
+    <span id="lightboxInfo">이미지를 확대해서 보고 있습니다</span>
+  </div>
+  
+  <!-- 로딩 인디케이터 -->
+  <div id="lightboxLoading" class="absolute inset-0 flex items-center justify-center">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+  </div>
+</div>
