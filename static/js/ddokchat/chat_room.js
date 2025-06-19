@@ -155,13 +155,21 @@ function setupEventListeners() {
   setupImageLightbox();
 }
 
-// ✅ 수정된 이미지 라이트박스 설정 함수 (촬영시간 표시 포함)
+// ✅ 개선된 이미지 라이트박스 설정 함수 (확대/축소 기능 포함)
 function setupImageLightbox() {
   const lightbox = document.getElementById('imageLightbox');
   const lightboxImage = document.getElementById('lightboxImage');
   const closeLightboxBtn = document.getElementById('closeLightbox');
   const lightboxInfo = document.getElementById('lightboxInfo');
   const lightboxLoading = document.getElementById('lightboxLoading');
+  const zoomControls = document.getElementById('zoomControls');
+
+  let currentScale = 1;
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let translateX = 0;
+  let translateY = 0;
 
   // ✅ 촬영시간 포맷팅 함수
   function formatTakenDateTime(takenDatetime) {
@@ -171,7 +179,6 @@ function setupImageLightbox() {
       const date = new Date(takenDatetime);
       if (isNaN(date.getTime())) return null;
       
-      // "2024.06.19 14:30" 형식으로 포맷
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -185,9 +192,64 @@ function setupImageLightbox() {
     }
   }
 
-  // ✅ 수정된 라이트박스 열기 함수
+  // ✅ 확대/축소 적용 함수
+  function applyTransform() {
+    if (lightboxImage) {
+      lightboxImage.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+      lightboxImage.style.cursor = currentScale > 1 ? 'grab' : 'default';
+      
+      // 줌 컨트롤 아이콘 업데이트
+      updateZoomIcon();
+    }
+  }
+
+  // ✅ 줌 아이콘 업데이트
+  function updateZoomIcon() {
+    const zoomIcon = document.getElementById('zoomIcon');
+    if (zoomIcon) {
+      if (currentScale > 1) {
+        // 축소 아이콘
+        zoomIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM13.5 10.5h-6" />
+        `;
+      } else {
+        // 확대 아이콘
+        zoomIcon.innerHTML = `
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+        `;
+      }
+    }
+  }
+
+  // ✅ 줌 레벨 조정
+  function setZoom(scale, centerX = 0, centerY = 0) {
+    const prevScale = currentScale;
+    currentScale = Math.min(Math.max(scale, 0.5), 3); // 0.5x ~ 3x 제한
+    
+    // 줌 중심점 조정
+    if (prevScale !== currentScale) {
+      const scaleChange = currentScale / prevScale;
+      translateX = centerX + (translateX - centerX) * scaleChange;
+      translateY = centerY + (translateY - centerY) * scaleChange;
+    }
+    
+    applyTransform();
+  }
+
+  // ✅ 위치 리셋
+  function resetPosition() {
+    currentScale = 1;
+    translateX = 0;
+    translateY = 0;
+    applyTransform();
+  }
+
+  // ✅ 라이트박스 열기 함수
   function openLightbox(imageSrc, imageAlt = '', takenDatetime = null) {
     if (lightbox && lightboxImage) {
+      // 상태 초기화
+      resetPosition();
+      
       // 로딩 표시
       if (lightboxLoading) {
         lightboxLoading.classList.remove('hidden');
@@ -197,11 +259,10 @@ function setupImageLightbox() {
       lightboxImage.src = imageSrc;
       lightboxImage.alt = imageAlt;
       
-      // ✅ 라이트박스 하단 정보 설정
+      // 라이트박스 하단 정보 설정
       if (lightboxInfo) {
         const formattedDate = formatTakenDateTime(takenDatetime);
         if (formattedDate) {
-          // 촬영시간 아이콘과 함께 표시
           lightboxInfo.innerHTML = `
             <div class="flex items-center justify-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
@@ -211,42 +272,57 @@ function setupImageLightbox() {
               <span>${formattedDate} 촬영</span>
             </div>
           `;
+          lightboxInfo.classList.remove('hidden');
         } else {
-          lightboxInfo.textContent = '이미지를 확대해서 보고 있습니다';
+          lightboxInfo.classList.add('hidden');
         }
       }
       
-      lightbox.classList.remove('hidden');
+      // 줌 컨트롤 표시 (데스크탑에서만)
+      if (zoomControls && window.innerWidth >= 768) {
+        zoomControls.classList.remove('hidden');
+      }
       
-      // 바디 스크롤 방지
+      lightbox.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
       
       // 이미지 로드 완료 시
       lightboxImage.onload = function() {
-        lightboxImage.style.opacity = '1';
+        this.style.opacity = '1';
         if (lightboxLoading) {
           lightboxLoading.classList.add('hidden');
         }
+        updateZoomIcon();
       };
     }
   }
 
-  // 라이트박스 닫기 함수
+  // ✅ 라이트박스 닫기 함수
   function closeLightbox() {
     if (lightbox) {
       lightbox.classList.add('hidden');
-      
-      // 바디 스크롤 복원
       document.body.style.overflow = '';
       
-      // 이미지 소스 초기화 (메모리 절약)
       if (lightboxImage) {
         lightboxImage.src = '';
       }
+      
+      if (lightboxInfo) {
+        lightboxInfo.innerHTML = '';
+        lightboxInfo.classList.add('hidden');
+      }
+      
+      if (zoomControls) {
+        zoomControls.classList.add('hidden');
+      }
+      
+      resetPosition();
     }
   }
 
-  // 닫기 버튼 이벤트
+  // ✅ 이벤트 리스너 설정
+
+  // 닫기 버튼
   if (closeLightboxBtn) {
     closeLightboxBtn.addEventListener('click', closeLightbox);
   }
@@ -267,7 +343,134 @@ function setupImageLightbox() {
     }
   });
 
-  // ✅ 수정된 채팅 이미지들에 클릭 이벤트 추가
+  // ✅ 데스크탑 전용 이벤트 (마우스 휠, 클릭)
+  if (lightboxImage) {
+    // 마우스 휠 줌
+    lightboxImage.addEventListener('wheel', function(e) {
+      if (window.innerWidth >= 768) { // 데스크탑에서만
+        e.preventDefault();
+        const rect = this.getBoundingClientRect();
+        const centerX = e.clientX - rect.left - rect.width / 2;
+        const centerY = e.clientY - rect.top - rect.height / 2;
+        
+        const zoomFactor = e.deltaY < 0 ? 1.2 : 0.8;
+        setZoom(currentScale * zoomFactor, centerX, centerY);
+      }
+    });
+
+    // 더블클릭으로 줌 토글
+    lightboxImage.addEventListener('dblclick', function(e) {
+      if (window.innerWidth >= 768) { // 데스크탑에서만
+        e.preventDefault();
+        if (currentScale > 1) {
+          resetPosition();
+        } else {
+          const rect = this.getBoundingClientRect();
+          const centerX = e.clientX - rect.left - rect.width / 2;
+          const centerY = e.clientY - rect.top - rect.height / 2;
+          setZoom(2, centerX, centerY);
+        }
+      }
+    });
+
+    // 드래그 기능 (확대된 상태에서)
+    lightboxImage.addEventListener('mousedown', function(e) {
+      if (currentScale > 1 && window.innerWidth >= 768) {
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        this.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (isDragging && currentScale > 1) {
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        applyTransform();
+      }
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (isDragging) {
+        isDragging = false;
+        if (lightboxImage) {
+          lightboxImage.style.cursor = currentScale > 1 ? 'grab' : 'default';
+        }
+      }
+    });
+
+    // ✅ 모바일 터치 이벤트 (핀치 줌)
+    let initialDistance = 0;
+    let initialScale = 1;
+
+    lightboxImage.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        initialDistance = getDistance(e.touches[0], e.touches[1]);
+        initialScale = currentScale;
+      } else if (e.touches.length === 1 && currentScale > 1) {
+        isDragging = true;
+        const touch = e.touches[0];
+        startX = touch.clientX - translateX;
+        startY = touch.clientY - translateY;
+      }
+    });
+
+    lightboxImage.addEventListener('touchmove', function(e) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const currentDistance = getDistance(e.touches[0], e.touches[1]);
+        const scale = (currentDistance / initialDistance) * initialScale;
+        setZoom(scale);
+      } else if (e.touches.length === 1 && isDragging && currentScale > 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        translateX = touch.clientX - startX;
+        translateY = touch.clientY - startY;
+        applyTransform();
+      }
+    });
+
+    lightboxImage.addEventListener('touchend', function(e) {
+      if (e.touches.length === 0) {
+        isDragging = false;
+      }
+    });
+
+    // 터치 거리 계산 함수
+    function getDistance(touch1, touch2) {
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+  }
+
+  // ✅ 줌 컨트롤 버튼 이벤트
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener('click', function() {
+      setZoom(currentScale * 1.3);
+    });
+  }
+
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener('click', function() {
+      setZoom(currentScale * 0.7);
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function() {
+      resetPosition();
+    });
+  }
+
+  // ✅ 이미지 클릭 이벤트 추가 함수
   function addImageClickEvents() {
     const chatImages = document.querySelectorAll('#chat-log img');
     chatImages.forEach(img => {
@@ -279,12 +482,11 @@ function setupImageLightbox() {
           e.preventDefault();
           e.stopPropagation();
           
-          // ✅ data-taken-datetime 속성에서 촬영시간 가져오기
           const takenDatetime = this.getAttribute('data-taken-datetime');
           openLightbox(this.src, this.alt || '채팅 이미지', takenDatetime);
         });
         
-        // 호버 효과 추가
+        // 호버 효과
         img.addEventListener('mouseenter', function() {
           this.style.transform = 'scale(1.02)';
           this.style.transition = 'transform 0.2s ease';
@@ -308,7 +510,6 @@ function setupImageLightbox() {
     const observer = new MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          // 약간의 지연을 두고 이벤트 추가 (DOM이 완전히 렌더링된 후)
           setTimeout(() => {
             addImageClickEvents();
           }, 100);
@@ -322,7 +523,7 @@ function setupImageLightbox() {
     });
   }
 
-  // 전역 함수로 노출 (필요시)
+  // 전역 함수로 노출
   window.openImageLightbox = openLightbox;
   window.closeImageLightbox = closeLightbox;
 }
