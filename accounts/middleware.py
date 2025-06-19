@@ -74,25 +74,39 @@ class SuspensionCheckMiddleware:
                                 )
                                 return redirect('/')
                             
-                            # GET 요청도 특정 페이지 차단
+                            # GET 요청 중 게시글 작성과 상세보기만 차단
                             restricted_patterns = [
                                 '/ddokdam/create/',          # 🔥 덕담 게시글 작성
                                 '/ddokfarm/create/',         # 덕팜 게시글 작성
                                 '/ddoksang/create/',         # 덕상 게시글 작성
-                                '/ddokdam/community/',       # 덕담 커뮤니티 목록
-                                '/ddokdam/manner/',          # 덕담 매너 목록
-                                '/ddokdam/bdaycafe/',        # 덕담 생일카페 목록
-                                '/ddokfarm/',                # 덕팜 전체
-                                '/ddoksang/',                # 덕상 전체
                             ]
                             
+                            # 🔥 게시글 상세보기 패턴 체크 (문자열 매칭)
+                            path_parts = request.path.strip('/').split('/')
+                            if (len(path_parts) >= 3 and 
+                                path_parts[0] in ['ddokdam', 'ddokfarm', 'ddoksang'] and
+                                path_parts[2].isdigit()):
+                                print(f"🚫 게시글 상세보기 접근 차단: {request.path}")
+                                try:
+                                    messages.warning(
+                                        request,
+                                        f'이용이 제한되어 게시글을 볼 수 없습니다. '
+                                        f'제재 상태: {request.user.suspension_status}'
+                                    )
+                                except Exception as msg_error:
+                                    print(f"메시지 추가 실패: {msg_error}")
+                                
+                                print("🔄 메인 페이지로 리다이렉트 실행")
+                                return redirect('/')
+                            
+                            # 게시글 작성 페이지 차단
                             for pattern in restricted_patterns:
                                 if request.path.startswith(pattern):
-                                    print(f"🚫 제한된 URL 접근 차단: {pattern}")
+                                    print(f"🚫 게시글 작성 페이지 접근 차단: {pattern}")
                                     try:
                                         messages.warning(
                                             request,
-                                            f'이용이 제한되어 해당 페이지에 접근할 수 없습니다. '
+                                            f'이용이 제한되어 게시글을 작성할 수 없습니다. '
                                             f'제재 상태: {request.user.suspension_status}'
                                         )
                                     except Exception as msg_error:
@@ -101,7 +115,7 @@ class SuspensionCheckMiddleware:
                                     print("🔄 메인 페이지로 리다이렉트 실행")
                                     return redirect('/')
                             
-                            print("제한된 패턴에 매치되지 않음 - 접근 허용")
+                            print("목록 페이지 접근 허용 - 게시글 작성/상세보기만 차단")
                         else:
                             print(f"허용된 URL 접근: {request.path}")
                     else:
