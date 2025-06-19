@@ -184,6 +184,10 @@
       subcategoryLinks.forEach(link => {
         link.addEventListener('click', function(e) {
           e.preventDefault();
+          e.stopPropagation();
+          
+          // 드롭다운 즉시 닫기 (애니메이션과 함께)
+          closeAllDropdowns();
           
           const url = new URL(window.location);
           const linkUrl = new URL(this.href, window.location.origin);
@@ -197,22 +201,16 @@
           if (currentSort) linkUrl.searchParams.set('sort', currentSort);
           if (currentAvailableOnly) linkUrl.searchParams.set('available_only', currentAvailableOnly);
           
-          // 드롭다운 즉시 닫기
-          closeAllDropdowns();
-          
-          // 페이지 이동
-          window.location.href = linkUrl.toString();
+          // 짧은 지연 후 페이지 이동 (드롭다운 닫힘 애니메이션 완료 대기)
+          setTimeout(() => {
+            window.location.href = linkUrl.toString();
+          }, 100);
         });
       });
 
-      // 초기 로드 시: wantto가 있으면 해당 드롭다운을 열어두기
-      if (currentCategory === 'sell' && currentWantto) {
-        sellDropdown.classList.remove('hidden');
-        sellArrow.style.transform = 'rotate(180deg)';
-      } else if (currentCategory === 'rental' && currentWantto) {
-        rentalDropdown.classList.remove('hidden');
-        rentalArrow.style.transform = 'rotate(180deg)';
-      }
+      // 초기 로드 시: wantto가 있어도 드롭다운을 열지 않음 (서브 카테고리 선택 후이므로)
+      // 페이지 로드 시에는 드롭다운을 닫힌 상태로 유지
+      closeAllDropdowns();
     });
     </script>
 
