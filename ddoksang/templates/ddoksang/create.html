@@ -2,6 +2,11 @@
 {% load static %}
 {% load filters %}
 
+{% block head %}
+<!-- Flatpickr CSS 추가 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
 {% block body %}
 <section class="max-w-4xl mx-auto px-4 py-10">
   <h1 class="text-2xl font-bold mb-6 flex items-center space-x-3">
@@ -132,7 +137,7 @@
       <input type="hidden" name="kakao_place_id" id="kakao_place_id">
     </div>
 
-    <!-- ✅ STEP 3: 일정 (type="text"로 변경) -->
+    <!-- STEP 3: 일정 -->
     <div id="step-3" class="step hidden">
       <h2 class="text-lg font-semibold mb-6">운영 기간</h2>
       
@@ -307,7 +312,7 @@
       </div>
     </div>
 
-    <!-- 네비게이션 버튼 (FAQ와 완전히 겹치지 않게 수정) -->
+    <!-- 네비게이션 버튼 -->
     <div id="navigationButtons" class="mt-8 w-full">
       <!-- 이전 버튼 -->
       <button type="button" id="prevBtn"
@@ -326,14 +331,14 @@
   </form>
 </section>
 
-<!-- ✅ 메시지 시스템 -->
+<!-- 메시지 시스템 -->
 <script type="application/json" id="ddoksang-messages">
 {{ messages_json|safe }}
 </script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 메시지 시스템 초기화');
+    console.log('메시지 시스템 초기화');
     
     // messages.py에서 온 데이터 로드
     let DDOKSANG_MESSAGES = {};
@@ -341,18 +346,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageElement = document.getElementById('ddoksang-messages');
         if (messageElement && messageElement.textContent.trim()) {
             DDOKSANG_MESSAGES = JSON.parse(messageElement.textContent);
-            console.log('✅ messages.py 데이터 로드 성공:', Object.keys(DDOKSANG_MESSAGES));
+            console.log('messages.py 데이터 로드 성공:', Object.keys(DDOKSANG_MESSAGES));
             
-            // DUPLICATE_CHECK 메시지 확인
             if (DDOKSANG_MESSAGES.DUPLICATE_CHECK) {
-                console.log('✅ DUPLICATE_CHECK 메시지들:', Object.keys(DDOKSANG_MESSAGES.DUPLICATE_CHECK));
+                console.log('DUPLICATE_CHECK 메시지들:', Object.keys(DDOKSANG_MESSAGES.DUPLICATE_CHECK));
             }
         } else {
             throw new Error('메시지 요소가 비어있음');
         }
     } catch (error) {
-        console.error('❌ messages.py 데이터 로드 실패:', error);
-        // messages.py가 실패했을 때만 기본값 사용
+        console.error('messages.py 데이터 로드 실패:', error);
         DDOKSANG_MESSAGES = {
             DUPLICATE_CHECK: {
                 NO_DUPLICATE: '해당 덕의 생카를 어덕해에 등록해주세요',
@@ -376,14 +379,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             let message = DDOKSANG_MESSAGES[category][key];
             
-            // 파라미터 치환 (messages.py의 {count} 같은 것들)
             if (params && typeof params === 'object') {
                 Object.entries(params).forEach(([paramKey, value]) => {
                     message = message.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), value);
                 });
             }
             
-            console.log(`✅ 메시지 반환: ${category}.${key} = "${message}"`);
             return message;
         } catch (error) {
             console.error('메시지 처리 오류:', error);
@@ -391,7 +392,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // 전역 변수로도 설정 (다른 스크립트에서 접근 가능)
     window.DDOKSANG_MESSAGES = DDOKSANG_MESSAGES;
 });
 </script>
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 48px;
   }
 
-  /* ✅ FAQ 버튼과 완전히 겹치지 않는 위치 설정 */
+  /* FAQ 버튼과 완전히 겹치지 않는 위치 설정 */
   #prevBtn, #nextBtn {
     display: none !important;
   }
@@ -478,40 +478,37 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: scale(0.95);
   }
 
-  /* FAQ 버튼 위치를 고려한 이전 버튼 위치 (더 큰 간격) */
+  /* FAQ 버튼 위치를 고려한 이전 버튼 위치 */
   #prevBtn {
-    /* FAQ 버튼 (left: 24px, width: ~80px) + 여유공간 40px = 144px */
     left: 144px !important;
   }
 
   #nextBtn {
-    /* 오른쪽 하단 고정 */
     right: 24px !important;
   }
 
-  /* 모바일에서 FAQ 버튼 위치에 맞춘 조정 (더 큰 간격) */
+  /* 모바일에서 FAQ 버튼 위치에 맞춘 조정 */
   @media (max-width: 640px) {
     #prevBtn, #nextBtn {
       width: 48px !important;
       height: 48px !important;
       font-size: 18px !important;
-      bottom: 16px !important; /* FAQ와 같은 bottom 값 */
+      bottom: 16px !important;
     }
 
     #prevBtn {
-      /* 모바일 FAQ 버튼 (left: 16px, width: ~80px) + 여유공간 40px = 136px */
       left: 136px !important;
     }
 
     #nextBtn {
-      right: 16px !important; /* FAQ와 같은 margin 값 */
+      right: 16px !important;
     }
   }
 
   /* 아주 작은 화면에서 추가 조정 */
   @media (max-width: 480px) {
     #prevBtn {
-      left: 120px !important; /* 조금 더 좁힌 간격 */
+      left: 120px !important;
       width: 44px !important;
       height: 44px !important;
       font-size: 16px !important;
@@ -571,11 +568,19 @@ document.addEventListener('DOMContentLoaded', function() {
     opacity: 0.7;
     transition: opacity 0.2s;
   }
+
+  /* 날짜 입력 필드 강제 활성화 스타일 */
+  input[type="text"][id*="date"] {
+    pointer-events: auto !important;
+    background-color: white !important;
+    cursor: text !important;
+    opacity: 1 !important;
+  }
 </style>
 
 <!-- Scripts - 순서 중요 -->
 
-<!-- ✅ 외부 라이브러리 먼저 로드 -->
+<!-- 외부 라이브러리 먼저 로드 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <!-- 카카오맵 API 로드 (조건부) -->
@@ -610,425 +615,102 @@ window.KAKAO_MAP_READY = false;
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<!-- ✅ 덕생 유틸리티 모듈들 (순서 중요) -->
-<script src="{% static 'js/ddoksang_date_utils.js' %}"></script>
+<!-- 덕생 유틸리티 모듈들 (순서 중요) -->
+<script src="{% static 'js/ddoksang_date_utils.js' %}?v=5.0"></script>
 <script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
 
-<!-- ✅ 이미지 업로드 모듈 (독립 실행) -->
+<!-- 이미지 업로드 모듈 (독립 실행) -->
 <script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
 
-<!-- ✅ 메인 폼 스크립트 (수정된 버전) -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=4.2"></script>
+<!-- 메인 폼 스크립트 -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=5.0"></script>
 
 <!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 
-<!-- ✅ 통합 초기화 스크립트 (개선됨) -->
+<!-- 날짜 필드 강제 활성화 스크립트 -->
 <script>
-// 초기화 스크립트 (디버깅 강화)
-
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 초기화 스크립트 시작');
-
-  // ✅ 1단계: 이미지 업로드 모듈 초기화 확인/재시도
-  function ensureImageUploadInit() {
-    if (window.ddoksangImageUploader?.isInitialized) {
-      console.log('✅ 이미지 업로더 이미 초기화됨');
-      return true;
-    }
-    
-    if (typeof window.initDdoksangImageUpload === 'function') {
-      const result = window.initDdoksangImageUpload();
-      if (result && result.isInitialized) {
-        console.log('✅ 이미지 업로더 초기화 성공');
-        return true;
-      } else {
-        console.warn('⚠️ 이미지 업로더 초기화 실패');
-        return false;
-      }
-    } else {
-      console.warn('⚠️ initDdoksangImageUpload 함수를 찾을 수 없음');
-      return false;
-    }
-  }
-
-  // ✅ 2단계: 자동완성 초기화 (중복 방지)
-  function initializeAutocomplete() {
-    if (typeof initAutocomplete !== 'function') {
-      console.warn('⚠️ initAutocomplete 함수를 찾을 수 없음');
-      return false;
-    }
-
-    // 기존 이벤트 핸들러 완전 제거
-    const artistInput = document.getElementById('artist-member-search');
-    const resultsList = document.getElementById('artist-member-results');
-    
-    if (!artistInput || !resultsList) {
-      console.warn('⚠️ 자동완성 요소를 찾을 수 없음');
-      return false;
-    }
-
-    // 기존 핸들러 제거를 위해 요소 복제
-    const newInput = artistInput.cloneNode(true);
-    artistInput.parentNode.replaceChild(newInput, artistInput);
-
-    try {
-      initAutocomplete('artist-member-search', 'artist-member-results', {
-        showBirthday: true,
-        showArtistTag: true,
-        submitOnSelect: false,
-        artistOnly: false,
-        apiUrl: '/artist/autocomplete/',
-        onSelect: function(result) {
-          handleArtistSelection(result);
-        }
-      });
-      
-      console.log('✅ 자동완성 초기화 성공');
-      return true;
-    } catch (error) {
-      console.error('❌ 자동완성 초기화 실패:', error);
-      return false;
-    }
-  }
-
-  // ✅ 3단계: 아티스트 선택 처리 (단일 함수)
-  function handleArtistSelection(result) {
-    const FormUtils = window.DdoksangFormUtils;
-    if (!FormUtils) {
-      console.warn('⚠️ FormUtils를 찾을 수 없음');
-      return;
-    }
-
-    try {
-      // 데이터 정규화
-      const data = FormUtils.normalizeArtistData({
-        member_name: result.name,
-        artist_display: result.artist || result.artist_name,
-        artist_id: result.artist_id,
-        member_id: result.id || result.member_id
-      });
-
-      // 폼 필드 업데이트
-      FormUtils.setValue('check_artist_id', data.artistId);
-      FormUtils.setValue('check_member_id', data.memberId);
-      FormUtils.setValue('artist-member-search', data.displayText);
-      FormUtils.setText('selected-artist-text', `✓ ${data.displayText} 선택됨`);
-      
-      // UI 업데이트
-      FormUtils.toggleClass('artist-member-results', 'hidden', true);
-      FormUtils.toggleClass('selected-artist', 'hidden', false);
-      
-      console.log('✅ 아티스트 선택 처리 완료:', data.displayText);
-      
-      // 중복 확인 버튼 상태 업데이트
-      setTimeout(() => {
-        if (window.updateDuplicateButtonState) {
-          window.updateDuplicateButtonState();
-          console.log('✅ 중복 확인 버튼 상태 업데이트 완료');
-        }
-      }, 50);
-      
-    } catch (error) {
-      console.error('❌ 아티스트 선택 처리 오류:', error);
-    }
-  }
-
-  // ✅ 4단계: 날짜 선택기 초기화 (콜백 강화)
-  function initializeDatePickers() {
-    console.log('📅 날짜 선택기 초기화 시작');
-    
-    if (!window.DdoksangDateUtils?.isReady()) {
-      console.warn('⚠️ flatpickr 라이브러리가 로드되지 않았습니다');
-      return false;
-    }
-
-    try {
-      // 중복 확인용 날짜 선택기
-      const duplicatePickers = window.DdoksangDateUtils.initDuplicateCheckPickers(() => {
-        console.log('📅 중복 확인 날짜 변경됨');
-        setTimeout(() => {
-          if (window.updateDuplicateButtonState) {
-            window.updateDuplicateButtonState();
-          }
-        }, 100);
-      });
-      
-      // 메인 폼용 날짜 선택기
-      const formPickers = window.DdoksangDateUtils.initCreateFormPickers(() => {
-        console.log('📅 메인 폼 날짜 변경됨');
-        setTimeout(() => {
-          if (window.ddoksangApp?.updateNextButtonState) {
-            window.ddoksangApp.updateNextButtonState();
-          }
-        }, 100);
-      });
-      
-      const success = (duplicatePickers.start && duplicatePickers.end && 
-                      formPickers.start && formPickers.end);
-      
-      if (success) {
-        console.log('✅ 날짜 선택기 초기화 성공');
-      } else {
-        console.warn('⚠️ 날짜 선택기 일부 초기화 실패');
-      }
-      
-      return success;
-      
-    } catch (error) {
-      console.error('❌ 날짜 선택기 초기화 오류:', error);
-      return false;
-    }
-  }
-
-  // ✅ 5단계: 모듈 연동 설정 강화
-  function setupModuleIntegration() {
-    // 이미지 업로드 ↔ 폼 검증 연동 강화
-    if (window.ddoksangApp && window.ddoksangImageUploader?.isInitialized) {
-      // 메인 앱의 검증 함수에 이미지 검증 로직 추가
-      const originalUpdateNext = window.ddoksangApp.updateNextButtonState;
-      
-      if (originalUpdateNext) {
-        window.ddoksangApp.updateNextButtonState = function() {
-          // 기본 검증 실행
-          originalUpdateNext.call(this);
-          
-          // Step 6에서 이미지 검증 강화
-          if (this.currentStep === 6) {
-            const fileCount = window.ddoksangImageUploader.getFileCount();
-            const nextBtn = document.getElementById('nextBtn');
-            
-            if (nextBtn) {
-              if (fileCount > 0) {
-                nextBtn.disabled = false;
-                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                nextBtn.classList.add('bg-gray-900', 'hover:bg-gray-800', 'text-white');
-                nextBtn.textContent = '제출하기';
-                nextBtn.style.fontSize = '14px';
-                nextBtn.style.fontWeight = '600';
-              } else {
-                nextBtn.disabled = true;
-                nextBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                nextBtn.classList.remove('bg-gray-900', 'hover:bg-gray-800');
-                nextBtn.textContent = '이미지를 업로드해주세요';
-                nextBtn.style.fontSize = '14px';
-                nextBtn.style.fontWeight = '600';
-              }
-            }
-          }
-        };
+    // 즉시 실행
+    setTimeout(() => {
+        console.log('🔧 날짜 필드 강제 활성화 실행');
         
-        console.log('✅ 이미지 업로드 ↔ 폼 검증 연동 완료');
-      }
-      
-      // 이미지 업로더의 triggerValidation을 메인 앱과 연결
-      const originalTriggerValidation = window.ddoksangImageUploader.triggerValidation;
-      if (originalTriggerValidation) {
-        window.ddoksangImageUploader.triggerValidation = function() {
-          // 원본 로직 실행
-          if (originalTriggerValidation) {
-            originalTriggerValidation.call(this);
-          }
-          
-          // 메인 앱 검증도 실행
-          if (window.ddoksangApp?.updateNextButtonState) {
+        const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
+        dateFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                // 모든 비활성화 속성 제거
+                field.disabled = false;
+                field.readOnly = false;
+                field.removeAttribute('disabled');
+                field.removeAttribute('readonly');
+                
+                // 강제 스타일 적용
+                field.style.pointerEvents = 'auto';
+                field.style.backgroundColor = 'white';
+                field.style.cursor = 'text';
+                field.style.opacity = '1';
+                field.style.border = '1px solid #d1d5db';
+                
+                console.log(`✅ 강제 활성화: ${fieldId}`);
+            }
+        });
+        
+        // flatpickr 초기화 시도
+        if (typeof flatpickr !== 'undefined' && window.DdoksangDateUtils) {
             setTimeout(() => {
-              window.ddoksangApp.updateNextButtonState();
-            }, 50);
-          }
-        };
-        
-        console.log('✅ 이미지 업로더 검증 콜백 연동 완료');
-      }
-      
-      return true;
-    }
-    
-    console.warn('⚠️ 모듈 연동 설정 실패 (일부 모듈 없음)');
-    return false;
-  }
-
-  // ✅ 6단계: Step 6 진입 감지 및 검증
-  function watchStepChanges() {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          const target = mutation.target;
-          if (target.id && target.id.startsWith('step-') && !target.classList.contains('hidden')) {
-            const stepNumber = parseInt(target.id.split('-')[1]);
-            
-            if (stepNumber === 6) {
-              console.log('📸 Step 6 진입 감지 - 검증 실행');
-              setTimeout(() => {
-                if (window.ddoksangApp?.updateNextButtonState) {
-                  window.ddoksangApp.updateNextButtonState();
-                }
-              }, 200);
-            }
-          }
+                window.DdoksangDateUtils.initDuplicateCheckPickers();
+                window.DdoksangDateUtils.initCreateFormPickers();
+                console.log('✅ flatpickr 초기화 완료');
+            }, 500);
         }
-      });
-    });
+    }, 500);
     
-    // 모든 step 요소 관찰
-    document.querySelectorAll('[id^="step-"]').forEach(step => {
-      observer.observe(step, { attributes: true, attributeFilter: ['class'] });
-    });
-    
-    console.log('✅ 스텝 변경 감지 설정 완료');
-  }
-
-  // ✅ 초기화 단계별 실행
-  let imageInitSuccess = false;
-  let autocompleteInitSuccess = false;
-  let datePickersInitSuccess = false;
-  
-  console.log('🔄 1단계: 즉시 초기화 실행');
-  
-  // 즉시 실행
-  imageInitSuccess = ensureImageUploadInit();
-  autocompleteInitSuccess = initializeAutocomplete();
-  datePickersInitSuccess = initializeDatePickers();
-  
-  console.log('📊 즉시 초기화 결과:', {
-    image: imageInitSuccess,
-    autocomplete: autocompleteInitSuccess,
-    datePickers: datePickersInitSuccess
-  });
-  
-  // ✅ 지연된 재시도 및 연동 설정 (1초 후)
-  setTimeout(() => {
-    console.log('🔄 2단계: 지연 초기화 및 연동 설정');
-    
-    if (!imageInitSuccess) {
-      console.log('🔄 이미지 업로더 재시도');
-      imageInitSuccess = ensureImageUploadInit();
-    }
-    
-    if (!autocompleteInitSuccess) {
-      console.log('🔄 자동완성 재시도');
-      autocompleteInitSuccess = initializeAutocomplete();
-    }
-    
-    if (!datePickersInitSuccess) {
-      console.log('🔄 날짜 선택기 재시도');
-      datePickersInitSuccess = initializeDatePickers();
-    }
-    
-    // 모듈 연동 설정
-    const integrationSuccess = setupModuleIntegration();
-    
-    // 스텝 변경 감지 설정
-    watchStepChanges();
-    
-    console.log('📊 최종 초기화 결과:', {
-      image: imageInitSuccess,
-      autocomplete: autocompleteInitSuccess,
-      datePickers: datePickersInitSuccess,
-      integration: integrationSuccess
-    });
-    
-    console.log('🎉 전체 초기화 완료');
-    
-  }, 1000);
-  
-  // ✅ 전역 함수 설정 (하위 호환성)
-  window.selectArtistForDuplicateCheck = handleArtistSelection;
-  
-  window.restartAutocomplete = function() {
-    console.log('🔄 자동완성 재시작');
-    return initializeAutocomplete();
-  };
-  
-  window.restartImageUpload = function() {
-    console.log('🔄 이미지 업로드 재시작');
-    return ensureImageUploadInit();
-  };
-  
-  window.restartDatePickers = function() {
-    console.log('🔄 날짜 선택기 재시작');
-    return initializeDatePickers();
-  };
-  
-  // 디버깅용 즉시 검증 함수
-  window.forceValidation = function() {
-    console.log('🔧 강제 검증 실행');
-    if (window.ddoksangApp?.updateNextButtonState) {
-      window.ddoksangApp.updateNextButtonState();
-    }
-    if (window.updateDuplicateButtonState) {
-      window.updateDuplicateButtonState();
-    }
-  };
+    // 추가로 1초 후 재실행 (확실하게)
+    setTimeout(() => {
+        console.log('🔧 날짜 필드 재확인 및 재활성화');
+        
+        const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
+        dateFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && (field.disabled || field.readOnly)) {
+                field.disabled = false;
+                field.readOnly = false;
+                field.style.pointerEvents = 'auto';
+                field.style.backgroundColor = 'white';
+                console.log(`🔄 재활성화: ${fieldId}`);
+            }
+        });
+    }, 2000);
 });
 
-// ✅ 디버깅 도구들 (강화됨)
-window.debugDdoksang = {
-  checkModules: function() {
-    console.log('🔍 덕생 모듈 상태:');
-    console.log('- FormUtils:', !!window.DdoksangFormUtils);
-    console.log('- MapUtils:', !!window.DdoksangMapUtils);
-    console.log('- DateUtils:', !!window.DdoksangDateUtils);
-    console.log('- ImageUploader:', !!window.ddoksangImageUploader?.isInitialized);
-    console.log('- MainApp:', !!window.ddoksangApp);
-    console.log('- Autocomplete:', typeof window.initAutocomplete);
-    console.log('- External libs:', {
-      sortable: typeof window.Sortable,
-      flatpickr: typeof window.flatpickr,
-      kakao: !!window.kakao?.maps
-    });
-  },
-  
-  imageUpload: function() {
-    if (window.ddoksangImageUploader?.debug) {
-      console.log('📸 이미지 업로드 상태:', window.ddoksangImageUploader.debug());
-    } else {
-      console.log('❌ 이미지 업로더가 초기화되지 않았습니다.');
-    }
-  },
-  
-  datePickers: function() {
-    if (window.DdoksangDateUtils?.debug) {
-      console.log('📅 날짜 선택기 상태:', window.DdoksangDateUtils.debug());
-    } else {
-      console.log('❌ 날짜 유틸리티가 로드되지 않았습니다.');
-    }
-  },
-  
-  duplicateButton: function() {
-    if (window.debugDuplicateCheckState) {
-      window.debugDuplicateCheckState();
-    } else {
-      console.log('❌ 중복 확인 디버그 함수를 찾을 수 없습니다.');
-    }
-  },
-  
-  compression: function() {
-    if (window.showCompressionStats) {
-      window.showCompressionStats();
-    } else {
-      console.log('❌ 압축 통계 함수를 찾을 수 없습니다.');
-    }
-  },
-  
-  restartAll: function() {
-    console.log('🔄 모든 모듈 재시작...');
-    if (window.cleanupImageUploadHandlers) {
-      window.cleanupImageUploadHandlers();
-    }
-    if (window.restartImageUpload) {
-      window.restartImageUpload();
-    }
-    if (window.restartAutocomplete) {
-      window.restartAutocomplete();
-    }
-    if (window.restartDatePickers) {
-      window.restartDatePickers();
-    }
-    console.log('✅ 재시작 완료');
-  }
-};
+// 페이지 완전 로드 후에도 재확인
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        console.log('🔧 페이지 로드 완료 후 날짜 필드 최종 확인');
+        
+        const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
+        let needsReactivation = false;
+        
+        dateFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && (field.disabled || field.readOnly)) {
+                field.disabled = false;
+                field.readOnly = false;
+                field.style.pointerEvents = 'auto';
+                field.style.backgroundColor = 'white';
+                needsReactivation = true;
+                console.log(`🔄 최종 재활성화: ${fieldId}`);
+            }
+        });
+        
+        if (needsReactivation) {
+            console.log('⚠️ 일부 날짜 필드가 다시 비활성화되어 재활성화했습니다.');
+        } else {
+            console.log('✅ 모든 날짜 필드가 정상적으로 활성화되어 있습니다.');
+        }
+    }, 1000);
+});
 </script>
-
 
 {% endblock %}

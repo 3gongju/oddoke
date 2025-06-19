@@ -20,6 +20,11 @@ DUPLICATE_CHECK = {
     'REGISTER_NEW_CAFE': '새로운 생카 등록을 진행합니다',
     'CHECKING_DUPLICATE': '중복 확인 중...',
     'BACK_TO_DUPLICATE_CHECK': '중복 확인 단계로 돌아갑니다',
+    'COMPLETE_SUCCESS': '중복 확인 완료! 3초 후 다음 단계로 이동합니다.',
+    'COMPLETE_TITLE': '중복 확인 완료!',
+    'COMPLETE_MESSAGE': '동일한 생일카페가 없습니다. 새로운 카페를 등록하세요.',
+    'COMPLETE_BUTTON': '다음 단계로 진행',
+    'FIELD_REQUIRED_LIST': '다음 항목을 입력해주세요: {fields}',
 }
 
 # 폼 검증 관련 메시지
@@ -27,6 +32,8 @@ FORM_VALIDATION = {
     'REQUIRED_FIELD': '{field}을(를) 입력해주세요',
     'IMAGE_REQUIRED': '최소 1개의 이미지를 업로드해주세요',
     'DATE_RANGE_ERROR': '종료일은 시작일보다 늦어야 합니다',
+    'DATE_REQUIRED': '시작일과 종료일을 모두 선택해주세요',
+    'DATE_AUTO_ADJUSTED': '종료일이 시작일과 같은 날짜로 자동 조정되었습니다',
     'SEARCH_KEYWORD_REQUIRED': '검색어를 입력해주세요',
     'INVALID_DATE_FORMAT': '날짜 형식이 올바르지 않습니다. (YYYY-MM-DD)',
     'INVALID_COORDINATES': '유효하지 않은 좌표입니다',
@@ -41,6 +48,10 @@ FIELD_LABELS = {
     'start_date': '시작일',
     'end_date': '종료일',
     'event_description': '이벤트 설명',
+    'check_artist_id': '아티스트/멤버',
+    'check_cafe_name': '카페명',
+    'check_start_date': '시작일',
+    'check_end_date': '종료일',
 }
 
 # 성공 메시지
@@ -49,6 +60,8 @@ SUCCESS_MESSAGES = {
     'FAVORITE_ADDED': '찜 목록에 추가했어요!',
     'FAVORITE_REMOVED': '찜 목록에서 제거했어요!',
     'IMAGE_UPLOADED': '이미지가 업로드되었습니다',
+    'DUPLICATE_CHECK_COMPLETE': '중복 확인이 완료되었습니다',
+    'NEW_CAFE_PROCEED': '새로운 생카 등록을 진행합니다',
 }
 
 # 토스트 메시지 타입별 기본 메시지
