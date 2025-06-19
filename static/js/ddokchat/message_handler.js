@@ -102,18 +102,18 @@ export function handleImageMessage(data) {
         <!-- 말풍선 (오른쪽) -->
         <div class="max-w-xs">
           <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl rounded-br-md shadow-sm message-image">
-            <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover image-loading">
+            <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover image-loading" data-taken-datetime="${data.taken_datetime || ''}">
           </div>
         </div>
       </div>`;
   } else {
-    // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
+    // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
         <!-- 말풍선 (왼쪽) -->
         <div class="max-w-xs">
           <div class="bg-white text-gray-800 border border-gray-200 px-3 py-2 rounded-2xl rounded-bl-md shadow-sm message-image">
-            <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover image-loading">
+            <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover image-loading" data-taken-datetime="${data.taken_datetime || ''}">
           </div>
         </div>
         

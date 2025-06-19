@@ -28,12 +28,12 @@
                   </div>
                   
                 {% elif message.message_type == 'image' %}
-                  <!-- 이미지 메시지 -->
+                  <!-- ✅ 이미지 메시지 수정: data-taken-datetime 속성 추가 -->
                   <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl rounded-br-md shadow-sm">
-                    <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
-                    {% if message.image_content.caption %}
-                      <p class="text-sm mt-2 text-gray-200">{{ message.image_content.caption }}</p>
-                    {% endif %}
+                    <img src="{{ message.image_content.image.url }}" 
+                         alt="전송 이미지" 
+                         class="w-full max-h-64 rounded-lg object-cover"
+                         data-taken-datetime="{% if message.image_content.taken_datetime %}{{ message.image_content.taken_datetime|date:'c' }}{% endif %}">
                   </div>
                   
                 {% elif message.message_type == 'account_info' %}
@@ -134,12 +134,12 @@
                   </div>
                   
                 {% elif message.message_type == 'image' %}
-                  <!-- 이미지 메시지 -->
+                  <!-- ✅ 이미지 메시지 수정: data-taken-datetime 속성 추가 -->
                   <div class="bg-white text-gray-800 border border-gray-200 px-3 py-2 rounded-2xl rounded-bl-md shadow-sm">
-                    <img src="{{ message.image_content.image.url }}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover">
-                    {% if message.image_content.caption %}
-                      <p class="text-sm mt-2 text-gray-600">{{ message.image_content.caption }}</p>
-                    {% endif %}
+                    <img src="{{ message.image_content.image.url }}" 
+                         alt="전송 이미지" 
+                         class="w-full max-h-64 rounded-lg object-cover"
+                         data-taken-datetime="{% if message.image_content.taken_datetime %}{{ message.image_content.taken_datetime|date:'c' }}{% endif %}">
                   </div>
                   
                 {% elif message.message_type == 'account_info' %}

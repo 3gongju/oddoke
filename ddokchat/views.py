@@ -208,7 +208,8 @@ def my_chatrooms(request):
     }
     return render(request, 'ddokchat/my_rooms.html', context)
 
-# ✅ 수정된 이미지 업로드 함수 (receiver 설정 추가)
+# ddokchat/views.py에서 upload_image 함수 수정
+
 @login_required
 @require_POST
 def upload_image(request):
@@ -217,7 +218,9 @@ def upload_image(request):
 
     image_file = request.FILES['image']
     room_id = request.POST['room_id']
-    caption = request.POST.get('caption', '')  # 이미지 설명 (선택사항)
+    
+    # ✅ EXIF 데이터 받기
+    taken_datetime_str = request.POST.get('taken_datetime')  # ISO 8601 형식
 
     try:
         room = ChatRoom.objects.get(id=room_id)
@@ -232,26 +235,51 @@ def upload_image(request):
         if room.is_fully_completed:
             return JsonResponse({'success': False, 'error': '이미 완료된 거래입니다.'}, status=400)
         
+        # ✅ taken_datetime 파싱
+        taken_datetime = None
+        if taken_datetime_str:
+            try:
+                from django.utils import timezone
+                from datetime import datetime
+                
+                # ISO 8601 형식 파싱
+                parsed_datetime = datetime.fromisoformat(taken_datetime_str.replace('Z', '+00:00'))
+                
+                # 타임존 인식 datetime으로 변환
+                if timezone.is_naive(parsed_datetime):
+                    taken_datetime = timezone.make_aware(parsed_datetime, timezone.utc)
+                else:
+                    taken_datetime = parsed_datetime
+                    
+                print(f"✅ EXIF 촬영시간 파싱 성공: {taken_datetime}")
+                
+            except (ValueError, TypeError) as e:
+                print(f"❌ EXIF 날짜 파싱 실패: {e}")
+                taken_datetime = None
+        
         # 트랜잭션으로 메시지와 이미지 정보를 함께 생성
         with transaction.atomic():
             message = Message.objects.create(
                 room=room,
                 sender=sender,
-                receiver=receiver,  # ✅ receiver 추가
+                receiver=receiver,
                 message_type='image'
             )
             
+            # ✅ taken_datetime 포함해서 이미지 메시지 생성
             image_message = ImageMessage.objects.create(
                 message=message,
                 image=image_file,
-                caption=caption
+                taken_datetime=taken_datetime  # EXIF 촬영시간 저장
             )
         
         return JsonResponse({
             'success': True, 
             'image_url': image_message.image.url,
-            'message_id': message.id
+            'message_id': message.id,
+            'taken_datetime': taken_datetime.isoformat() if taken_datetime else None  # ✅ 추가
         })
+        
     except ChatRoom.DoesNotExist:
         return JsonResponse({'success': False, 'error': '존재하지 않는 채팅방입니다.'}, status=404)
     except Exception as e:

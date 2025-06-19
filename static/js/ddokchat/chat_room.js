@@ -123,7 +123,7 @@ function setupEventListeners() {
   setupImageLightbox();
 }
 
-// ✅ 새로 추가: 이미지 라이트박스 설정 함수
+// ✅ 수정된 이미지 라이트박스 설정 함수 (촬영시간 표시 포함)
 function setupImageLightbox() {
   const lightbox = document.getElementById('imageLightbox');
   const lightboxImage = document.getElementById('lightboxImage');
@@ -131,8 +131,30 @@ function setupImageLightbox() {
   const lightboxInfo = document.getElementById('lightboxInfo');
   const lightboxLoading = document.getElementById('lightboxLoading');
 
-  // 라이트박스 열기 함수
-  function openLightbox(imageSrc, imageAlt = '') {
+  // ✅ 촬영시간 포맷팅 함수
+  function formatTakenDateTime(takenDatetime) {
+    if (!takenDatetime) return null;
+    
+    try {
+      const date = new Date(takenDatetime);
+      if (isNaN(date.getTime())) return null;
+      
+      // "2024.06.19 14:30" 형식으로 포맷
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}.${month}.${day} ${hours}:${minutes}`;
+    } catch (error) {
+      console.error('날짜 포맷팅 오류:', error);
+      return null;
+    }
+  }
+
+  // ✅ 수정된 라이트박스 열기 함수
+  function openLightbox(imageSrc, imageAlt = '', takenDatetime = null) {
     if (lightbox && lightboxImage) {
       // 로딩 표시
       if (lightboxLoading) {
@@ -143,8 +165,23 @@ function setupImageLightbox() {
       lightboxImage.src = imageSrc;
       lightboxImage.alt = imageAlt;
       
+      // ✅ 라이트박스 하단 정보 설정
       if (lightboxInfo) {
-        lightboxInfo.textContent = imageAlt || '이미지를 확대해서 보고 있습니다';
+        const formattedDate = formatTakenDateTime(takenDatetime);
+        if (formattedDate) {
+          // 촬영시간 아이콘과 함께 표시
+          lightboxInfo.innerHTML = `
+            <div class="flex items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                <path d="M12.75 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM7.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM8.25 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM9.75 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM10.5 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM12 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM12.75 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM14.25 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 17.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 15.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5ZM15 12.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0ZM16.5 13.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" />
+                <path fill-rule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z" clip-rule="evenodd" />
+              </svg>
+              <span>${formattedDate} 촬영</span>
+            </div>
+          `;
+        } else {
+          lightboxInfo.textContent = '이미지를 확대해서 보고 있습니다';
+        }
       }
       
       lightbox.classList.remove('hidden');
@@ -198,7 +235,7 @@ function setupImageLightbox() {
     }
   });
 
-  // 채팅 이미지들에 클릭 이벤트 추가
+  // ✅ 수정된 채팅 이미지들에 클릭 이벤트 추가
   function addImageClickEvents() {
     const chatImages = document.querySelectorAll('#chat-log img');
     chatImages.forEach(img => {
@@ -209,7 +246,10 @@ function setupImageLightbox() {
         img.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
-          openLightbox(this.src, this.alt || '채팅 이미지');
+          
+          // ✅ data-taken-datetime 속성에서 촬영시간 가져오기
+          const takenDatetime = this.getAttribute('data-taken-datetime');
+          openLightbox(this.src, this.alt || '채팅 이미지', takenDatetime);
         });
         
         // 호버 효과 추가
@@ -412,6 +452,7 @@ function sendTextMessage() {
   }
 }
 
+// ✅ 수정된 handleImageUpload 함수 (EXIF 데이터 추출 포함)
 function handleImageUpload(file) {
   if (!file) return;
   
@@ -435,48 +476,119 @@ function handleImageUpload(file) {
 
   const loadingToast = showLoadingToast('이미지 업로드 중...');
 
-  const formData = new FormData();
-  formData.append('image', file);
-  formData.append('room_id', window.roomId);
+  // ✅ EXIF 데이터 추출 함수 호출
+  extractExifData(file, function(exifData) {
+    // FormData 생성
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('room_id', window.roomId);
+    
+    // ✅ EXIF 데이터가 있으면 추가
+    if (exifData && exifData.taken_datetime) {
+      formData.append('taken_datetime', exifData.taken_datetime);
+    }
 
-  // CSRF 토큰 가져오기
-  const csrfToken = getCSRFToken();
-  if (!csrfToken) {
-    hideLoadingToast(loadingToast);
-    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    // CSRF 토큰 가져오기
+    const csrfToken = getCSRFToken();
+    if (!csrfToken) {
+      hideLoadingToast(loadingToast);
+      showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+      return;
+    }
+
+    fetch("/ddokchat/upload_image/", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        // FormData 사용시 Content-Type은 설정하지 않음!
+      },
+      body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+      hideLoadingToast(loadingToast);
+      
+      if (data.success) {
+        sendMessage({
+          type: 'chat_image',
+          room_id: window.roomId,
+          image_url: data.image_url,
+          sender_id: window.currentUserId,
+          message_id: data.message_id,
+          taken_datetime: exifData ? exifData.taken_datetime : null // ✅ 추가
+        });
+        showToast('이미지가 전송되었습니다.', 'success');
+      } else {
+        showToast('이미지 업로드 실패: ' + (data.error || ''), 'error');
+      }
+    })
+    .catch(error => {
+      hideLoadingToast(loadingToast);
+      console.error('이미지 업로드 오류:', error);
+      showToast('이미지 업로드 중 오류가 발생했습니다.', 'error');
+    });
+  });
+}
+
+// ✅ 새로 추가: EXIF 데이터 추출 함수
+function extractExifData(file, callback) {
+  // JPEG가 아닌 경우 EXIF 데이터 없음
+  if (!file.type.includes('jpeg') && !file.type.includes('jpg')) {
+    callback(null);
     return;
   }
 
-  fetch("/ddokchat/upload_image/", {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrfToken,
-      // FormData 사용시 Content-Type은 설정하지 않음!
-    },
-    body: formData,
-  })
-  .then(response => response.json())
-  .then(data => {
-    hideLoadingToast(loadingToast);
-    
-    if (data.success) {
-      sendMessage({
-        type: 'chat_image',
-        room_id: window.roomId,
-        image_url: data.image_url,
-        sender_id: window.currentUserId,
-        message_id: data.message_id
-      });
-      showToast('이미지가 전송되었습니다.', 'success');
-    } else {
-      showToast('이미지 업로드 실패: ' + (data.error || ''), 'error');
-    }
-  })
-  .catch(error => {
-    hideLoadingToast(loadingToast);
-    console.error('이미지 업로드 오류:', error);
-    showToast('이미지 업로드 중 오류가 발생했습니다.', 'error');
-  });
+  // 파일을 이미지 객체로 변환
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  
+  img.onload = function() {
+    // EXIF 데이터 추출
+    EXIF.getData(img, function() {
+      try {
+        // DateTimeOriginal 추출 (실제 촬영시간)
+        const dateTimeOriginal = EXIF.getTag(this, "DateTimeOriginal");
+        
+        let takenDatetime = null;
+        
+        if (dateTimeOriginal) {
+          // EXIF 날짜 형식: "2024:06:19 14:30:25"
+          // JavaScript Date 형식으로 변환: "2024-06-19T14:30:25"
+          const formattedDate = dateTimeOriginal.replace(/:/g, '-').replace(' ', 'T');
+          const date = new Date(formattedDate);
+          
+          // 유효한 날짜인지 확인
+          if (!isNaN(date.getTime())) {
+            // ISO 8601 형식으로 변환 (서버에서 파싱하기 쉽게)
+            takenDatetime = date.toISOString();
+          }
+        }
+        
+        // URL 해제 (메모리 절약)
+        URL.revokeObjectURL(url);
+        
+        // 콜백 호출
+        callback({
+          taken_datetime: takenDatetime
+        });
+        
+        console.log('EXIF 추출 완료:', { taken_datetime: takenDatetime });
+        
+      } catch (error) {
+        console.error('EXIF 데이터 추출 오류:', error);
+        URL.revokeObjectURL(url);
+        callback(null);
+      }
+    });
+  };
+  
+  img.onerror = function() {
+    console.error('이미지 로딩 실패');
+    URL.revokeObjectURL(url);
+    callback(null);
+  };
+  
+  img.src = url;
 }
 
 function setupPlusMenu() {

@@ -167,6 +167,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         image_url = data.get('image_url')
         sender_id = data.get('sender_id')
         message_id = data.get('message_id')
+        taken_datetime = data.get('taken_datetime')  # ✅ 추가: 촬영시간
         
         if not all([image_url, sender_id]):
             await self.send_error("이미지 정보가 부족합니다.")
@@ -184,6 +185,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'image_url': image_url,
                 'sender_id': sender_id,
                 'message_id': message_id,
+                'taken_datetime': taken_datetime,  # ✅ 추가: 촬영시간 전달
                 'is_read': False,
             }
         )
@@ -280,6 +282,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'image_url': event['image_url'],
                 'sender': sender,
                 'message_id': event.get('message_id'),
+                'taken_datetime': event.get('taken_datetime'),  # ✅ 추가: 촬영시간 전달
                 'is_read': event.get('is_read', False), 
             }))
         except Exception as e:
