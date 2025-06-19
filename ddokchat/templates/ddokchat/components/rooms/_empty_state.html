@@ -1,41 +1,12 @@
-<!-- ddokchat/templates/ddokchat/components/rooms/empty_state.html -->
-
-{% if type == 'active' %}
-  <div class="text-center py-8">
-    <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-      <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-    </div>
-    <p class="text-sm text-gray-400">거래중인 채팅이 없습니다.</p>
-  </div>
-{% elif type == 'completed' %}
-  <div class="text-center py-8">
-    <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-100 to-blue-100 rounded-full flex items-center justify-center">
-      <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-      </svg>
-    </div>
-    <p class="text-sm text-gray-400">거래완료된 채팅이 없습니다.</p>
-  </div>
-{% else %}
-  <!-- 전체적으로 채팅방이 없을 때 -->
-  <div class="bg-white rounded-xl shadow-sm">
-    <div class="text-center py-16">
-      <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+<div class="text-center py-16">
+    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
         <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-      </div>
-      <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 채팅방이 없어요</h3>
-      <p class="text-gray-500 mb-6">관심있는 상품에 메시지를 보내보세요!</p>
-      <a href="{% url 'ddokfarm:index' %}" class="inline-flex items-center gap-2 bg-blue-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-600 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        상품 둘러보기
-      </a>
     </div>
-  </div>
-{% endif %}
+    <h3 class="text-xl font-semibold text-gray-800 mb-2">아직 채팅방이 없어요</h3>
+    <p class="text-gray-500 mb-6">관심있는 상품에 메시지를 보내보세요!</p>
+    <a href="{% url 'ddokfarm:index' %}" class="bg-gray-900 text-white px-6 py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors inline-block">
+        상품 둘러보기
+    </a>
+</div>

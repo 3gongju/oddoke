@@ -1,22 +1,20 @@
-<!-- ddokchat/templates/ddokchat/components/rooms/_single_room_card.html -->
-
 {% load humanize %}
 
-<div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 {% if is_completed %}opacity-75{% endif %} chat-item">
+<div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 chat-item">
     <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block p-4">
         <div class="space-y-4">
-            <!-- 상품 정보 (최상단) -->
+            <!-- 상품 정보 -->
             <div class="flex items-center space-x-3">
                 <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shadow-sm flex-shrink-0">
-                    <img src="{{ room.post.get_main_image }}" alt="{{ room.post.title }}" class="w-full h-full object-cover {% if is_completed %}opacity-75{% endif %}">
+                    <img src="{{ room.post.get_main_image }}" alt="{{ room.post.title }}" class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-base {% if is_completed %}text-gray-700{% else %}text-gray-900{% endif %} font-semibold truncate">{{ room.post.title }}</p>
-                    <p class="text-lg {% if is_completed %}text-gray-500{% else %}text-orange-600{% endif %} font-bold">
+                    <p class="text-base text-gray-900 font-semibold truncate">{{ room.post.title }}</p>
+                    <p class="text-lg text-orange-600 font-bold">
                         {% if room.post.category_type == 'sell' %}
                             {{ room.post.price|floatformat:0|add:"0"|intcomma }}원
                         {% elif room.post.category_type == 'rental' %}
-                            {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원{% if is_completed %}/일{% endif %}
+                            {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원
                         {% elif room.post.category_type == 'split' %}
                             가격 협의
                         {% else %}
@@ -25,19 +23,10 @@
                     </p>
                 </div>
                 <div class="flex items-center space-x-2">
-                    {% if room.last_message and not is_completed %}
+                    {% if room.last_message %}
                         <span class="text-xs text-gray-500">{{ room.last_message.timestamp|timesince }} 전</span>
-                    {% elif is_completed %}
-                        <span class="text-xs text-gray-400">{{ room.last_message.timestamp|timesince }} 전</span>
                     {% endif %}
-                    
-                    {% if is_completed %}
-                        <div class="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"/>
-                            </svg>
-                        </div>
-                    {% elif room.unread_count %}
+                    {% if room.unread_count %}
                         <span class="unread-badge bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-medium">
                             {{ room.unread_count }}
                         </span>
@@ -49,20 +38,20 @@
             <div class="flex items-start space-x-3">
                 <!-- 프로필 영역 -->
                 <div class="flex-shrink-0">
-                    <div class="w-10 h-10 rounded-full {% if is_completed %}bg-gray-600{% else %}bg-gray-900{% endif %} flex items-center justify-center text-white font-medium text-sm">
+                    <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
                         {% if room.partner.profile_image %}
-                            <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover rounded-full {% if is_completed %}opacity-75{% endif %}">
+                            <img src="{{ room.partner.profile_image.url }}" alt="{{ room.partner.username }}" class="w-full h-full object-cover rounded-full {% if type == 'completed' %}opacity-75{% endif %}">
                         {% else %}
                             {{ room.partner.username|first|upper }}
                         {% endif %}
                     </div>
                 </div>
                 
-                <!-- 사용자명 + 마지막 메시지 -->
+                <!-- 거래완료 상태 또는 메시지 -->
                 <div class="flex-1 min-w-0">
-                    <h3 class="font-semibold {% if is_completed %}text-gray-700{% else %}text-gray-900{% endif %} mb-2">{{ room.partner.username }}</h3>
+                    <h3 class="font-semibold {% if type == 'completed' %}text-gray-700{% else %}text-gray-900{% endif %} mb-2">{{ room.partner.username }}</h3>
                     
-                    {% if is_completed %}
+                    {% if type == 'completed' %}
                         <!-- 거래완료 상태 -->
                         <div class="bg-green-50 border border-green-200 rounded-lg px-3 py-2 inline-block">
                             <div class="flex items-center space-x-2">
@@ -72,14 +61,17 @@
                                 <span class="text-sm text-green-800 font-medium">거래가 완료되었습니다</span>
                             </div>
                         </div>
-                    {% elif room.last_message %}
-                        <!-- 마지막 메시지 -->
-                        {% include 'ddokchat/components/rooms/_message_preview.html' with message=room.last_message is_mine=room.last_message.sender|stringformat:"s" == current_user.username|stringformat:"s" truncate_length=50 %}
                     {% else %}
-                        <!-- 첫 메시지 없음 -->
-                        <div class="bg-gray-50 px-3 py-2 rounded-xl text-sm text-gray-500">
-                            첫 메시지를 보내보세요!
-                        </div>
+                        <!-- 마지막 메시지 미리보기 -->
+                        {% if room.last_message %}
+                            {% if room.last_message.sender == current_user %}
+                                {% include 'ddokchat/components/rooms/_message_preview.html' with message=room.last_message is_mine=True truncate=50 %}
+                            {% else %}
+                                {% include 'ddokchat/components/rooms/_message_preview.html' with message=room.last_message is_mine=False truncate=50 %}
+                            {% endif %}
+                        {% else %}
+                            {% include 'ddokchat/components/rooms/_message_preview.html' with message=None is_mine=False truncate=50 %}
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
