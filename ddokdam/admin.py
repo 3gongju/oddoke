@@ -14,7 +14,7 @@ admin.site.register(DamComment)
 class DamPostReportAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'reporter_link', 'reported_user_link', 'reason', 
-        'post_link', 'status', 'created_at', 'processed_at'
+        'post_title_display', 'status', 'created_at', 'processed_at'
     )
     
     list_filter = (
@@ -43,8 +43,8 @@ class DamPostReportAdmin(admin.ModelAdmin):
         }),
         ('처리 정보', {
             'fields': (
-                'status', 'admin_note', 'processed_at', 
-                'suspension_start', 'suspension_end'
+                'status', 'admin_notes', 'processed_at', 
+                'restriction_start', 'restriction_end'
             )
         }),
     )
@@ -69,51 +69,65 @@ class DamPostReportAdmin(admin.ModelAdmin):
         return '-'
     reported_user_link.short_description = '신고당한 사용자'
     
-    def post_link(self, obj):
-        """게시글 링크"""
-        if obj.content_object:
-            post = obj.content_object
-            category = post.category_type
-            return format_html(
-                '<a href="/ddokdam/{}/{}/" target="_blank">{}</a>',
-                category, post.id, post.title[:30] + ('...' if len(post.title) > 30 else '')
-            )
+    def post_title_display(self, obj):
+        """게시글 제목 표시 (링크 포함)"""
+        try:
+            if obj.content_object:
+                post = obj.content_object
+                category = getattr(post, 'category_type', 'unknown')
+                title = getattr(post, 'title', '제목 없음')
+                return format_html(
+                    '<a href="/ddokdam/{}/{}/" target="_blank">{}</a>',
+                    category, post.id, title[:30] + ('...' if len(title) > 30 else '')
+                )
+        except Exception as e:
+            print(f"post_title_display 오류: {e}")
         return '삭제된 게시글'
-    post_link.short_description = '게시글'
+    post_title_display.short_description = '게시글'
     
     def post_preview(self, obj):
         """게시글 미리보기"""
-        if obj.content_object:
-            post = obj.content_object
-            content_preview = post.content[:100] + ('...' if len(post.content) > 100 else '')
-            
-            # 첫 번째 이미지가 있으면 표시
-            first_image = post.images.first()
-            image_html = ''
-            if first_image:
-                image_html = format_html(
-                    '<br><img src="{}" style="max-width: 200px; max-height: 150px; margin-top: 10px;">',
-                    first_image.image.url
+        try:
+            if obj.content_object:
+                post = obj.content_object
+                title = getattr(post, 'title', '제목 없음')
+                content = getattr(post, 'content', '내용 없음')
+                content_preview = content[:100] + ('...' if len(content) > 100 else '')
+                
+                # 첫 번째 이미지가 있으면 표시
+                image_html = ''
+                try:
+                    if hasattr(post, 'images'):
+                        first_image = post.images.first()
+                        if first_image and hasattr(first_image, 'image'):
+                            image_html = format_html(
+                                '<br><img src="{}" style="max-width: 200px; max-height: 150px; margin-top: 10px;">',
+                                first_image.image.url
+                            )
+                except Exception:
+                    pass
+                
+                return format_html(
+                    '<div style="max-width: 300px;">'
+                    '<strong>제목:</strong> {}<br>'
+                    '<strong>내용:</strong> {}'
+                    '{}</div>',
+                    title, content_preview, image_html
                 )
-            
-            return format_html(
-                '<div style="max-width: 300px;">'
-                '<strong>제목:</strong> {}<br>'
-                '<strong>내용:</strong> {}'
-                '{}</div>',
-                post.title, content_preview, image_html
-            )
+        except Exception as e:
+            print(f"post_preview 오류: {e}")
         return '삭제된 게시글'
     post_preview.short_description = '게시글 미리보기'
     
-    @admin.action(description="🟡 경고 처리 (1-7일 제한)")
+    @admin.action(description="🟡 경고 처리 (3일 제한)")
     def action_warning(self, request, queryset):
         """경미한 위반 - 경고 처리"""
         for report in queryset.filter(status='pending'):
             # 신고 상태 업데이트
-            report.status = 'processed'
+            report.status = 'resolved'
             report.processed_at = timezone.now()
-            report.admin_note = f"경고 처리됨 - 관리자: {request.user.username}"
+            report.processed_by = request.user
+            report.admin_notes = f"경고 처리됨 - 관리자: {request.user.username}"
             
             # 사용자 제재 (3일)
             user = report.reported_user
@@ -124,25 +138,29 @@ class DamPostReportAdmin(admin.ModelAdmin):
                     suspension_end=timezone.now() + timedelta(days=3),
                     suspension_reason=f"신고 처리 - {report.get_reason_display()}"
                 )
-                report.suspension_start = timezone.now()
-                report.suspension_end = timezone.now() + timedelta(days=3)
+                report.restriction_start = timezone.now()
+                report.restriction_end = timezone.now() + timedelta(days=3)
             
             report.save()
             
         self.message_user(request, f"{queryset.count()}건의 신고를 경고 처리했습니다. (3일 제한)")
     
-    @admin.action(description="🟠 일시정지 처리 (7-30일 제한)")
+    @admin.action(description="🟠 일시정지 처리 (14일 제한)")
     def action_suspension(self, request, queryset):
         """중간 수준 위반 - 일시정지 및 게시글 삭제"""
         for report in queryset.filter(status='pending'):
             # 게시글 삭제
-            if report.content_object:
-                report.content_object.delete()
+            try:
+                if report.content_object:
+                    report.content_object.delete()
+            except Exception:
+                pass
             
             # 신고 상태 업데이트
-            report.status = 'processed'
+            report.status = 'resolved'
             report.processed_at = timezone.now()
-            report.admin_note = f"일시정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
+            report.processed_by = request.user
+            report.admin_notes = f"일시정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
             
             # 사용자 제재 (14일)
             user = report.reported_user
@@ -153,8 +171,8 @@ class DamPostReportAdmin(admin.ModelAdmin):
                     suspension_end=timezone.now() + timedelta(days=14),
                     suspension_reason=f"신고 처리 - {report.get_reason_display()}"
                 )
-                report.suspension_start = timezone.now()
-                report.suspension_end = timezone.now() + timedelta(days=14)
+                report.restriction_start = timezone.now()
+                report.restriction_end = timezone.now() + timedelta(days=14)
             
             report.save()
             
@@ -165,13 +183,17 @@ class DamPostReportAdmin(admin.ModelAdmin):
         """심각한 위반 - 영구 정지"""
         for report in queryset.filter(status='pending'):
             # 게시글 삭제
-            if report.content_object:
-                report.content_object.delete()
+            try:
+                if report.content_object:
+                    report.content_object.delete()
+            except Exception:
+                pass
             
             # 신고 상태 업데이트
-            report.status = 'processed'
+            report.status = 'resolved'
             report.processed_at = timezone.now()
-            report.admin_note = f"영구정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
+            report.processed_by = request.user
+            report.admin_notes = f"영구정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
             
             # 사용자 영구 제재
             user = report.reported_user
@@ -183,8 +205,8 @@ class DamPostReportAdmin(admin.ModelAdmin):
                     suspension_end=None,  # 영구정지는 종료일 없음
                     suspension_reason=f"신고 처리 - {report.get_reason_display()} (영구정지)"
                 )
-                report.suspension_start = timezone.now()
-                report.suspension_end = None
+                report.restriction_start = timezone.now()
+                report.restriction_end = None
             
             report.save()
             
@@ -194,9 +216,10 @@ class DamPostReportAdmin(admin.ModelAdmin):
     def action_dismiss(self, request, queryset):
         """신고 기각 처리"""
         for report in queryset.filter(status='pending'):
-            report.status = 'dismissed'
+            report.status = 'rejected'
             report.processed_at = timezone.now()
-            report.admin_note = f"신고 기각됨 - 관리자: {request.user.username}"
+            report.processed_by = request.user
+            report.admin_notes = f"신고 기각됨 - 관리자: {request.user.username}"
             report.save()
             
         self.message_user(request, f"{queryset.count()}건의 신고를 기각 처리했습니다.")

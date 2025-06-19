@@ -117,12 +117,6 @@ class DamPostReport(models.Model):
         ('resolved', '처리 완료'),
     ]
     
-    VIOLATION_LEVELS = [
-        ('minor', '경미한 위반'),
-        ('moderate', '중간 수준의 위반'),
-        ('severe', '심각한 위반'),
-    ]
-    
     # 신고 기본 정보
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
@@ -131,17 +125,17 @@ class DamPostReport(models.Model):
         verbose_name='신고자'
     )
     
-    # 신고 대상 게시글 (Generic Foreign Key)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    reported_post = GenericForeignKey('content_type', 'object_id')
-    
     reported_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='dam_reports_received',
         verbose_name='신고 대상 유저'
     )
+    
+    # 🔥 GenericForeignKey 설정 (이 부분이 핵심!)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')  # 🔥 이 라인이 중요!
     
     reason = models.CharField(
         max_length=20,
@@ -160,14 +154,6 @@ class DamPostReport(models.Model):
         choices=STATUS_CHOICES,
         default='pending',
         verbose_name='처리 상태'
-    )
-    
-    violation_level = models.CharField(
-        max_length=20,
-        choices=VIOLATION_LEVELS,
-        blank=True,
-        null=True,
-        verbose_name='위반 수준'
     )
     
     admin_notes = models.TextField(
@@ -191,12 +177,6 @@ class DamPostReport(models.Model):
     )
     
     # 제재 정보
-    action_taken = models.CharField(
-        max_length=100,
-        blank=True,
-        verbose_name='취한 조치'
-    )
-    
     restriction_start = models.DateTimeField(
         null=True,
         blank=True,
@@ -216,8 +196,6 @@ class DamPostReport(models.Model):
         verbose_name = '덕담 게시글 신고'
         verbose_name_plural = '덕담 게시글 신고 목록'
         ordering = ['-created_at']
-        
-        # 같은 유저가 같은 게시글을 중복 신고하는 것 방지
         unique_together = ['reporter', 'content_type', 'object_id']
     
     def __str__(self):
@@ -225,19 +203,19 @@ class DamPostReport(models.Model):
     
     def get_post_title(self):
         """신고된 게시글 제목 반환"""
-        if self.reported_post:
-            return getattr(self.reported_post, 'title', 'N/A')
+        if self.content_object:
+            return getattr(self.content_object, 'title', 'N/A')
         return 'N/A'
     
     def get_post_category(self):
         """신고된 게시글 카테고리 반환"""
-        if self.reported_post:
-            return getattr(self.reported_post, 'category_type', 'N/A')
+        if self.content_object:
+            return getattr(self.content_object, 'category_type', 'N/A')
         return 'N/A'
     
     def get_post_url(self):
         """신고된 게시글 URL 반환"""
-        if self.reported_post:
+        if self.content_object:
             category = self.get_post_category()
             try:
                 from django.urls import reverse

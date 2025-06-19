@@ -3,29 +3,27 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile
 from django.utils.html import format_html
+from django.utils import timezone
+from datetime import timedelta
 
 # Register your models here.
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    # ✅ User 모델에 실제 있는 필드들만 사용
     list_display = (
         'username', 'email', 'is_active', 'date_joined',
         'is_temp_username', 'social_signup_completed', 'suspension_status_display'
     )
     
-    # ✅ User 모델의 실제 필드들로 필터 수정
     list_filter = (
         'is_active', 'is_staff', 'is_superuser', 
         'is_temp_username', 'social_signup_completed', 'date_joined',
         'suspension_start', 'suspension_end'
     )
     
-    # ✅ User 모델의 실제 필드들로 검색 수정
     search_fields = ('username', 'email', 'first_name', 'last_name')
     
     ordering = ('-date_joined',)
 
-    # ✅ User 모델의 실제 필드들로 fieldsets 수정
     fieldsets = BaseUserAdmin.fieldsets + (
         ('소셜 로그인 정보', {
             'fields': (
@@ -53,16 +51,71 @@ class UserAdmin(BaseUserAdmin):
     
     def suspension_status_display(self, obj):
         """제재 상태 표시"""
-        if obj.is_suspended:
-            if obj.suspension_end:
-                return format_html(
-                    '<span style="color: red; font-weight: bold;">제재중 ({})</span>',
-                    obj.suspension_status
-                )
-            else:
-                return format_html('<span style="color: red; font-weight: bold;">영구정지</span>')
-        return format_html('<span style="color: green;">정상</span>')
+        try:
+            if obj.is_suspended:
+                if obj.suspension_end:
+                    return format_html(
+                        '<span style="color: red; font-weight: bold;">제재중 ({})</span>',
+                        obj.suspension_status
+                    )
+                else:
+                    return format_html('<span style="color: red; font-weight: bold;">영구정지</span>')
+            return format_html('<span style="color: green;">정상</span>')
+        except Exception as e:
+            # 오류 발생 시 기본값 반환
+            return format_html('<span style="color: gray;">확인 불가</span>')
     suspension_status_display.short_description = '제재 상태'
+
+    @admin.action(description="🔓 제재 해제")
+    def lift_suspension(self, request, queryset):
+        """선택된 사용자들의 제재 해제"""
+        count = 0
+        for user in queryset:
+            if user.is_suspended:
+                user.lift_suspension()
+                count += 1
+        
+        self.message_user(request, f"{count}명의 사용자 제재를 해제했습니다.")
+
+    @admin.action(description="🟡 3일 제재")
+    def suspend_3_days(self, request, queryset):
+        """선택된 사용자들을 3일 제재"""
+        count = 0
+        for user in queryset:
+            if not user.is_suspended:
+                user.suspend_user("관리자 수동 제재", days=3)
+                count += 1
+        
+        self.message_user(request, f"{count}명의 사용자를 3일 제재했습니다.")
+
+    @admin.action(description="🟠 14일 제재")
+    def suspend_14_days(self, request, queryset):
+        """선택된 사용자들을 14일 제재"""
+        count = 0
+        for user in queryset:
+            if not user.is_suspended:
+                user.suspend_user("관리자 수동 제재", days=14)
+                count += 1
+        
+        self.message_user(request, f"{count}명의 사용자를 14일 제재했습니다.")
+
+    @admin.action(description="🔴 영구정지")
+    def permanent_ban(self, request, queryset):
+        """선택된 사용자들을 영구정지"""
+        count = 0
+        for user in queryset:
+            if not user.is_suspended:
+                user.suspend_user("관리자 수동 영구정지")
+                user.is_active = False
+                user.save(update_fields=['is_active'])
+                count += 1
+        
+        self.message_user(request, f"{count}명의 사용자를 영구정지했습니다.")
+
+    actions = [
+        'lift_suspension', 'suspend_3_days', 
+        'suspend_14_days', 'permanent_ban'
+    ]
 
 @admin.register(FandomProfile)
 class FandomProfileAdmin(admin.ModelAdmin):
