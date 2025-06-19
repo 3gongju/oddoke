@@ -66,12 +66,7 @@ class SuspensionCheckMiddleware:
                                         'suspended': True
                                     }, status=403)
                                 
-                                # 일반 POST 요청인 경우
-                                messages.error(
-                                    request, 
-                                    f'이용이 제한되어 해당 작업을 수행할 수 없습니다. '
-                                    f'제재 상태: {request.user.suspension_status}'
-                                )
+                                # 일반 POST 요청인 경우 - messages 제거
                                 return redirect('/')
                             
                             # GET 요청 중 게시글 작성과 상세보기만 차단
@@ -87,15 +82,7 @@ class SuspensionCheckMiddleware:
                                 path_parts[0] in ['ddokdam', 'ddokfarm', 'ddoksang'] and
                                 path_parts[2].isdigit()):
                                 print(f"🚫 게시글 상세보기 접근 차단: {request.path}")
-                                try:
-                                    messages.warning(
-                                        request,
-                                        f'이용이 제한되어 게시글을 볼 수 없습니다. '
-                                        f'제재 상태: {request.user.suspension_status}'
-                                    )
-                                except Exception as msg_error:
-                                    print(f"메시지 추가 실패: {msg_error}")
-                                
+                                # messages 제거 - 모달로 처리할 예정
                                 print("🔄 메인 페이지로 리다이렉트 실행")
                                 return redirect('/')
                             
@@ -103,15 +90,7 @@ class SuspensionCheckMiddleware:
                             for pattern in restricted_patterns:
                                 if request.path.startswith(pattern):
                                     print(f"🚫 게시글 작성 페이지 접근 차단: {pattern}")
-                                    try:
-                                        messages.warning(
-                                            request,
-                                            f'이용이 제한되어 게시글을 작성할 수 없습니다. '
-                                            f'제재 상태: {request.user.suspension_status}'
-                                        )
-                                    except Exception as msg_error:
-                                        print(f"메시지 추가 실패: {msg_error}")
-                                    
+                                    # messages 제거 - 모달로 처리할 예정
                                     print("🔄 메인 페이지로 리다이렉트 실행")
                                     return redirect('/')
                             
