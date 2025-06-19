@@ -220,18 +220,52 @@ def my_chatrooms(request):
                 # 그룹 내에서 최신 메시지 시간순으로 정렬
                 group_rooms_list.sort(key=lambda x: x.last_message_time or timezone.make_aware(datetime.min), reverse=True)
                 
+                # ✅ 새로 추가: 최근 활동한 대화 상대방들 분석
+                recent_partners = []
+                latest_message = None
+                latest_message_time = None
+                
+                # ✅ 새로 추가: 각 참여자의 멤버 정보 매핑
+                partner_member_map = {}
+                split_post = group_rooms_list[0].post  # FarmSplitPost 객체
+                
+                # 분철 신청 정보들을 가져와서 각 참여자가 어떤 멤버인지 매핑
+                from ddokfarm.models import SplitApplication
+                applications = SplitApplication.objects.filter(
+                    post=split_post,
+                    status='approved'
+                ).prefetch_related('members')
+                
+                for application in applications:
+                    user = application.user
+                    applied_members = application.members.all()
+                    if applied_members:
+                        # 첫 번째 멤버를 대표로 사용 (보통 하나만 선택하므로)
+                        partner_member_map[user] = applied_members[0].member_name
+                
+                # 최근 활동 기준: 읽지 않은 메시지가 있거나, 최근 메시지가 있는 상대방
+                for room in group_rooms_list:
+                    # 전체 중 가장 최근 메시지 찾기
+                    if room.last_message:
+                        if not latest_message or room.last_message.timestamp > latest_message_time:
+                            latest_message = room.last_message
+                            latest_message_time = room.last_message.timestamp
+                    
+                    # 최근 활동 기준: 읽지 않은 메시지가 있거나, 최근 메시지가 있는 상대방
+                    partner = room.get_other_user(current_user)  # 상대방 가져오기
+                    
+                    # 읽지 않은 메시지가 있는 상대방이거나, 가장 최근 메시지를 주고받은 상대방
+                    has_unread = room.unread_count > 0
+                    has_recent_activity = room.last_message and room.last_message.timestamp
+                    
+                    if (has_unread or has_recent_activity) and partner not in recent_partners:
+                        recent_partners.append(partner)
+                
+                # ✅ 2명 이상이 최근에 활동했는지 확인
+                has_multiple_partners = len(recent_partners) >= 2
+                
                 # 그룹 정보 생성
                 first_room = group_rooms_list[0]
-                
-                # 분철 참여자들의 총 가격 계산 (필요시)
-                total_price = None
-                try:
-                    if hasattr(first_room.post, 'member_prices'):
-                        # 실제 참여자들의 가격 합계 계산 로직
-                        # (이 부분은 실제 분철 모델 구조에 따라 조정 필요)
-                        pass
-                except:
-                    pass
                 
                 group_info = {
                     'type': 'split_group',
@@ -245,7 +279,16 @@ def my_chatrooms(request):
                         default=timezone.make_aware(datetime.min)
                     ),
                     'is_completed': all(room.is_fully_completed for room in group_rooms_list),
-                    'total_price': total_price,
+                    'total_price': None,  # 필요시 계산 로직 추가
+                    
+                    # ✅ 수정된 필드들 - 대화 상대방들 기준
+                    'has_multiple_partners': has_multiple_partners,
+                    'recent_partners': recent_partners,  # 최근 활동한 상대방들
+                    'latest_message': latest_message,
+                    'primary_partner': recent_partners[0] if recent_partners else None,  # 대표 상대방
+                    
+                    # ✅ 새로 추가: 멤버 정보 매핑
+                    'partner_member_map': partner_member_map,  # {user: member_name} 매핑
                 }
                 split_groups.append(group_info)
     
