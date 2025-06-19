@@ -400,24 +400,42 @@ class PostReportAdmin(admin.ModelAdmin):
     
     @admin.action(description="🟡 경고 처리 (3일 제한)")
     def action_warning(self, request, queryset):
-        """경미한 위반 - 경고 처리"""
+        """경미한 위반 - 경고 처리 + 게시글 삭제"""
+        deleted_posts = 0
+        suspended_users = 0
+        
         for report in queryset.filter(status='pending'):
-            # 신고 상태 업데이트
-            report.status = 'resolved'
-            report.processed_at = timezone.now()
-            report.processed_by = request.user
-            report.admin_notes = f"경고 처리됨 - 관리자: {request.user.username}"
+            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제) - 추가됨
+            try:
+                if report.content_object:
+                    post_title = getattr(report.content_object, 'title', '제목 없음')
+                    report.content_object.delete()  # 실제 게시글 삭제
+                    deleted_posts += 1
+                    print(f"게시글 삭제됨: {post_title}")
+            except Exception as e:
+                print(f"게시글 삭제 실패: {e}")
             
             # 사용자 제재 (3일)
             user = report.reported_user
             if user:
-                user.suspend_user(f"신고 처리 - {report.get_reason_display()}", days=3)
+                try:
+                    user.suspend_user(f"신고 처리 - {report.get_reason_display()}", days=3)
+                    suspended_users += 1
+                    print(f"사용자 제재됨: {user.username}")
+                except Exception as e:
+                    print(f"사용자 제재 실패: {e}")
+                
                 report.restriction_start = timezone.now()
                 report.restriction_end = timezone.now() + timedelta(days=3)
             
+            # 신고 상태 업데이트
+            report.status = 'resolved'
+            report.processed_at = timezone.now()
+            report.processed_by = request.user
+            report.admin_notes = f"경고 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
             report.save()
             
-        self.message_user(request, f"{queryset.count()}건의 신고를 경고 처리했습니다. (3일 제한)")
+        self.message_user(request, f"{queryset.count()}건의 신고를 경고 처리했습니다. (게시글 {deleted_posts}개 삭제, 사용자 {suspended_users}명 3일 제재)")
     
     @admin.action(description="🟠 일시정지 처리 (14일 제한)")
     def action_suspension(self, request, queryset):
@@ -426,13 +444,25 @@ class PostReportAdmin(admin.ModelAdmin):
         suspended_users = 0
         
         for report in queryset.filter(status='pending'):
-            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제)
+            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제) - 강화된 삭제 로직
             try:
                 if report.content_object:
                     post_title = getattr(report.content_object, 'title', '제목 없음')
+                    post_id = report.content_object.id
+                    
+                    # 게시글과 관련된 이미지들도 함께 삭제
+                    if hasattr(report.content_object, 'images'):
+                        images = report.content_object.images.all()
+                        for image in images:
+                            try:
+                                if image.image:
+                                    image.image.delete()  # 실제 파일 삭제
+                            except Exception:
+                                pass
+                    
                     report.content_object.delete()  # 실제 게시글 삭제
                     deleted_posts += 1
-                    print(f"게시글 삭제됨: {post_title}")
+                    print(f"게시글 삭제됨: ID {post_id} - {post_title}")
             except Exception as e:
                 print(f"게시글 삭제 실패: {e}")
             
@@ -448,15 +478,15 @@ class PostReportAdmin(admin.ModelAdmin):
                 
                 report.restriction_start = timezone.now()
                 report.restriction_end = timezone.now() + timedelta(days=14)
-                # 신고 상태 업데이트
-                report.status = 'resolved'
-                report.processed_at = timezone.now()
-                report.processed_by = request.user
-                report.admin_notes = f"일시정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
-                report.save()
-                
-            self.message_user(request, f"{queryset.count()}건의 신고를 처리했습니다. (게시글 {deleted_posts}개 삭제, 사용자 {suspended_users}명 14일 제재)")
-
+            
+            # 신고 상태 업데이트
+            report.status = 'resolved'
+            report.processed_at = timezone.now()
+            report.processed_by = request.user
+            report.admin_notes = f"일시정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
+            report.save()
+            
+        self.message_user(request, f"{queryset.count()}건의 신고를 처리했습니다. (게시글 {deleted_posts}개 삭제, 사용자 {suspended_users}명 14일 제재)")
 
     @admin.action(description="🔴 영구정지 처리")
     def action_permanent_ban(self, request, queryset):
@@ -465,13 +495,25 @@ class PostReportAdmin(admin.ModelAdmin):
         banned_users = 0
         
         for report in queryset.filter(status='pending'):
-            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제)
+            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제) - 강화된 삭제 로직
             try:
                 if report.content_object:
                     post_title = getattr(report.content_object, 'title', '제목 없음')
+                    post_id = report.content_object.id
+                    
+                    # 게시글과 관련된 이미지들도 함께 삭제
+                    if hasattr(report.content_object, 'images'):
+                        images = report.content_object.images.all()
+                        for image in images:
+                            try:
+                                if image.image:
+                                    image.image.delete()  # 실제 파일 삭제
+                            except Exception:
+                                pass
+                    
                     report.content_object.delete()  # 실제 게시글 삭제
                     deleted_posts += 1
-                    print(f"게시글 삭제됨: {post_title}")
+                    print(f"게시글 삭제됨: ID {post_id} - {post_title}")
             except Exception as e:
                 print(f"게시글 삭제 실패: {e}")
             
