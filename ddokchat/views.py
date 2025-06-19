@@ -13,11 +13,14 @@ from django.views.decorators.http import require_POST
 from django.core.files.storage import default_storage
 from django.urls import reverse
 from django.db import transaction
-
+from django.utils import timezone
+from django.contrib.auth import get_user_model
+from datetime import datetime
+from itertools import groupby
+from operator import attrgetter
 from .services import get_dutcheat_service
 
 import json
-from django.contrib.auth import get_user_model
 
 # Create your views here.
 
@@ -146,7 +149,7 @@ def get_or_create_chatroom(request, category, post_id):
 
     return redirect('ddokchat:chat_room', room_id=room.id)
 
-# 내 채팅 목록 (성능 최적화)
+# 내 채팅 목록
 @login_required
 def my_chatrooms(request):
     current_user = request.user
@@ -155,10 +158,8 @@ def my_chatrooms(request):
     rooms = ChatRoom.objects.filter(
         Q(buyer=current_user) | Q(seller=current_user)
     ).select_related(
-        # 관련 사용자 정보 미리 로드
-        'buyer', 'seller',
+        'buyer', 'seller', 'content_type'
     ).prefetch_related(
-        # 마지막 메시지만 효율적으로 가져오기
         Prefetch(
             'messages',
             queryset=Message.objects.select_related('sender', 'receiver')
@@ -167,7 +168,6 @@ def my_chatrooms(request):
             to_attr='latest_messages'
         )
     ).annotate(
-        # 안읽은 메시지 수를 서브쿼리로 한번에 계산
         unread_count=Count(
             'messages',
             filter=Q(
@@ -175,10 +175,7 @@ def my_chatrooms(request):
                 messages__is_read=False
             )
         ),
-        # 마지막 메시지 시간
         last_message_time=Max('messages__timestamp'),
-        
-        # 상대방 정보를 Case/When으로 한번에 결정
         partner_id=Case(
             When(buyer=current_user, then='seller_id'),
             default='buyer_id'
@@ -191,24 +188,109 @@ def my_chatrooms(request):
     
     # 한번에 가져온 데이터로 추가 처리
     for room in rooms:
-        # 이미 annotate로 계산된 값 사용
         room.partner = room.get_other_user(current_user)
         room.last_message = room.latest_messages[0] if room.latest_messages else None
         room.category = room.post.category_type if hasattr(room.post, 'category_type') else 'unknown'
     
+    # ✅ 분철 채팅방과 일반 채팅방 분리 (사용자 역할 고려)
+    split_rooms = []
+    other_rooms = []
+    
+    for room in rooms:
+        if room.content_type.model == 'farmsplitpost':
+            # 총대(판매자)인 경우만 그룹핑, 참여자는 일반 채팅처럼 처리
+            if current_user == room.seller:
+                split_rooms.append(room)
+            else:
+                other_rooms.append(room)
+        else:
+            other_rooms.append(room)
+    
+    # ✅ 분철 채팅방들을 게시글별로 그룹핑
+    split_groups = []
+    if split_rooms:
+        # 같은 게시글별로 정렬
+        split_rooms_sorted = sorted(split_rooms, key=lambda x: x.object_id)
+        
+        # itertools.groupby로 그룹핑
+        for post_id, group_rooms in groupby(split_rooms_sorted, key=attrgetter('object_id')):
+            group_rooms_list = list(group_rooms)  # iterator를 리스트로 변환
+            
+            if group_rooms_list:
+                # 그룹 내에서 최신 메시지 시간순으로 정렬
+                group_rooms_list.sort(key=lambda x: x.last_message_time or timezone.make_aware(datetime.min), reverse=True)
+                
+                # 그룹 정보 생성
+                first_room = group_rooms_list[0]
+                
+                # 분철 참여자들의 총 가격 계산 (필요시)
+                total_price = None
+                try:
+                    if hasattr(first_room.post, 'member_prices'):
+                        # 실제 참여자들의 가격 합계 계산 로직
+                        # (이 부분은 실제 분철 모델 구조에 따라 조정 필요)
+                        pass
+                except:
+                    pass
+                
+                group_info = {
+                    'type': 'split_group',
+                    'post': first_room.post,
+                    'post_id': post_id,
+                    'rooms': group_rooms_list,
+                    'room_count': len(group_rooms_list),
+                    'total_unread': sum(room.unread_count for room in group_rooms_list),
+                    'latest_message_time': max(
+                        (room.last_message_time for room in group_rooms_list if room.last_message_time), 
+                        default=timezone.make_aware(datetime.min)
+                    ),
+                    'is_completed': all(room.is_fully_completed for room in group_rooms_list),
+                    'total_price': total_price,
+                }
+                split_groups.append(group_info)
+    
+    # ✅ 일반 채팅방에 type 추가
+    for room in other_rooms:
+        room.type = 'single_room'
+    
+    # ✅ 모든 아이템을 최신 메시지 시간순으로 통합 정렬
+    def get_latest_time(item):
+        if isinstance(item, dict) and item.get('type') == 'split_group':
+            return item['latest_message_time'] or timezone.make_aware(datetime.min)
+        else:
+            return item.last_message_time or timezone.make_aware(datetime.min)
+    
     # 거래중/완료 분리
-    active_rooms = [room for room in rooms if not room.is_fully_completed]
-    completed_rooms = [room for room in rooms if room.is_fully_completed]
+    active_split_groups = [group for group in split_groups if not group['is_completed']]
+    completed_split_groups = [group for group in split_groups if group['is_completed']]
+    
+    active_other_rooms = [room for room in other_rooms if not room.is_fully_completed]
+    completed_other_rooms = [room for room in other_rooms if room.is_fully_completed]
+    
+    # 통합하여 시간순 정렬
+    active_items = sorted(
+        active_split_groups + active_other_rooms,
+        key=get_latest_time,
+        reverse=True
+    )
+    
+    completed_items = sorted(
+        completed_split_groups + completed_other_rooms,
+        key=get_latest_time,
+        reverse=True
+    )
 
     context = {
         'rooms': rooms,
-        'active_rooms': active_rooms,
-        'completed_rooms': completed_rooms,
+        'active_rooms': active_other_rooms,  # 기존 호환성을 위해 유지
+        'completed_rooms': completed_other_rooms,  # 기존 호환성을 위해 유지
+        'active_items': active_items,  # ✅ 새로 추가: 통합된 아이템 리스트
+        'completed_items': completed_items,  # ✅ 새로 추가: 통합된 아이템 리스트
+        'active_split_groups': active_split_groups,  # 빈 상태 체크용
+        'completed_split_groups': completed_split_groups,  # 빈 상태 체크용
         'current_user': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
-
-# ddokchat/views.py에서 upload_image 함수 수정
 
 @login_required
 @require_POST

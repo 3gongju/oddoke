@@ -1,27 +1,15 @@
-<!-- ddokchat/templates/ddokchat/components/rooms/room_list.html -->
+<!-- ddokchat/templates/ddokchat/components/rooms/_room_list.html -->
 
-<!-- 거래중 채팅 탭 내용 -->
-<div id="activeContent" class="tab-content active p-6">
-  {% if active_rooms %}
-    <div class="space-y-4">
-      {% for room in active_rooms %}
-        {% include 'ddokchat/components/rooms/_room_item.html' with room=room is_completed=False %}
-      {% endfor %}
+{% if items %}
+    <div class="space-y-3">
+        {% for item in items %}
+            {% if item.type == 'split_group' %}
+                {% include 'ddokchat/components/rooms/_split_group_card.html' with group=item is_completed=type|cut:'completed' %}
+            {% else %}
+                {% include 'ddokchat/components/rooms/_single_room_card.html' with room=item is_completed=type|cut:'completed' %}
+            {% endif %}
+        {% endfor %}
     </div>
-  {% else %}
-    {% include 'ddokchat/components/rooms/_empty_state.html' with type='active' %}
-  {% endif %}
-</div>
-
-<!-- 거래완료 채팅 탭 내용 -->
-<div id="completedContent" class="tab-content p-6">
-  {% if completed_rooms %}
-    <div class="space-y-4">
-      {% for room in completed_rooms %}
-        {% include 'ddokchat/components/rooms/_room_item.html' with room=room is_completed=True %}
-      {% endfor %}
-    </div>
-  {% else %}
-    {% include 'ddokchat/components/rooms/_empty_state.html' with type='completed' %}
-  {% endif %}
-</div>
+{% else %}
+    {% include 'ddokchat/components/rooms/_empty_state.html' with type=type %}
+{% endif %}

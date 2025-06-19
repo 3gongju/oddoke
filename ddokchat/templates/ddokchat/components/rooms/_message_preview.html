@@ -1,11 +1,31 @@
-<!-- ddokchat/templates/ddokchat/components/rooms/message_preview.html -->
+<!-- ddokchat/templates/ddokchat/components/rooms/_message_preview.html -->
 
-{% if message.message_type == 'text' %}
-  <p class="text-sm break-words">{{ message.text_content.content|truncatechars:50 }}</p>
-{% elif message.message_type == 'image' %}
-  <p class="text-sm italic {% if is_completed %}text-gray-200{% else %}text-gray-300{% endif %}">사진을 보냈습니다.</p>
-{% elif message.message_type == 'account_info' %}
-  <p class="text-sm italic {% if is_completed %}text-gray-200{% else %}text-gray-300{% endif %}">계좌정보를 보냈습니다.</p>
-{% elif message.message_type == 'address_info' %}
-  <p class="text-sm italic {% if is_completed %}text-gray-200{% else %}text-gray-300{% endif %}">배송정보를 보냈습니다.</p>
+{% if is_mine %}
+    <!-- 내가 보낸 메시지 -->
+    <div class="flex justify-end">
+        <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl rounded-br-md max-w-xs">
+            {% if message.message_type == 'text' %}
+                <p class="text-sm">{{ message.text_content.content|truncatechars:truncate_length|default:50 }}</p>
+            {% elif message.message_type == 'image' %}
+                <p class="text-sm italic">사진을 보냈습니다.</p>
+            {% elif message.message_type == 'account_info' %}
+                <p class="text-sm italic">계좌정보를 보냈습니다.</p>
+            {% elif message.message_type == 'address_info' %}
+                <p class="text-sm italic">배송정보를 보냈습니다.</p>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <!-- 상대방이 보낸 메시지 -->
+    <div class="bg-gray-100 px-3 py-2 rounded-2xl rounded-bl-md inline-block max-w-xs">
+        {% if message.message_type == 'text' %}
+            <p class="text-sm text-gray-800">{{ message.text_content.content|truncatechars:truncate_length|default:50 }}</p>
+        {% elif message.message_type == 'image' %}
+            <p class="text-sm italic text-gray-600">사진을 보냈습니다.</p>
+        {% elif message.message_type == 'account_info' %}
+            <p class="text-sm italic text-gray-600">계좌정보를 보냈습니다.</p>
+        {% elif message.message_type == 'address_info' %}
+            <p class="text-sm italic text-gray-600">배송정보를 보냈습니다.</p>
+        {% endif %}
+    </div>
 {% endif %}
