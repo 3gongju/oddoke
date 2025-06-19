@@ -6,7 +6,7 @@
     <div class="flex flex-wrap gap-2 mb-6">
       <!-- 전체 버튼 -->
       <a href="{% url 'ddokfarm:index' %}" 
-         class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not category %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+        class="px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not category %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
         전체
       </a>
 
@@ -216,61 +216,98 @@
 
     <!-- 덕팜 전용: 모바일 최적화 스타일 -->
     <style>
-    @media (max-width: 640px) {
-      .flex.flex-wrap.gap-2 {
-        gap: 0.5rem;
-      }
-      
-      .px-4.py-2 {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-      }
-      
-      /* 드롭다운 모바일 최적화 */
-      #sell-subcategory, #rental-subcategory {
-        position: fixed;
-        top: auto;
-        left: 1rem;
-        right: 1rem;
-        margin-top: 0.5rem;
-        z-index: 50;
-      }
-      
-      /* 터치 영역 확대 */
-      #sell-subcategory a, #rental-subcategory a {
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-      }
-    }
+/* 덕팜 전용: 모바일 최적화 스타일 - 버튼을 얇게 수정 */
+@media (max-width: 640px) {
+  .flex.flex-wrap.gap-2 {
+    gap: 0.375rem !important; /* 8px에서 6px로 줄임 */
+  }
+  
+  /* 카테고리 버튼들을 얇게 수정 - 더 구체적인 선택자 사용 */
+  .mb-6 .flex.flex-wrap.gap-2 a.px-4.py-2,
+  .mb-6 .flex.flex-wrap.gap-2 button.px-4.py-2,
+  .px-4.py-2.rounded-full {
+    padding: 0.375rem 0.75rem !important; /* 6px 12px */
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.2 !important; /* 라인 높이 조정으로 더 얇게 */
+    height: auto !important; /* 고정 높이 제거 */
+  }
+  
+  /* 드롭다운 버튼의 SVG 아이콘도 작게 */
+  .mb-6 .flex.flex-wrap.gap-2 button svg,
+  .px-4.py-2 svg {
+    width: 0.6875rem !important; /* 11px - 기존 12px에서 줄임 */
+    height: 0.6875rem !important;
+  }
+  
+  /* 드롭다운 모바일 최적화 */
+  #sell-subcategory, #rental-subcategory {
+    position: fixed !important;
+    top: auto !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    margin-top: 0.375rem !important; /* 6px로 줄임 */
+    z-index: 50 !important;
+  }
+  
+  /* 터치 영역은 유지하되 시각적으로는 얇게 */
+  #sell-subcategory a, #rental-subcategory a {
+    padding: 0.625rem 0.875rem !important; /* 10px 14px - 기존 12px 16px에서 줄임 */
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.2 !important;
+  }
+}
 
-    /* 태블릿 최적화 */
-    @media (min-width: 641px) and (max-width: 1024px) {
-      #filter-modal .max-w-md {
-        max-width: 28rem;
-      }
-    }
+/* 아주 작은 모바일 화면 (375px 이하) */
+@media (max-width: 375px) {
+  .mb-6 .flex.flex-wrap.gap-2 a.px-4.py-2,
+  .mb-6 .flex.flex-wrap.gap-2 button.px-4.py-2,
+  .px-4.py-2.rounded-full {
+    padding: 0.3125rem 0.625rem !important; /* 5px 10px - 더 얇게 */
+    font-size: 0.75rem !important; /* 12px */
+  }
+  
+  .mb-6 .flex.flex-wrap.gap-2 button svg,
+  .px-4.py-2 svg {
+    width: 0.625rem !important; /* 10px */
+    height: 0.625rem !important;
+  }
+}
 
-    /* 드롭다운 애니메이션 */
-    #sell-subcategory, #rental-subcategory {
-      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-    }
+/* 태블릿 최적화 - 중간 크기 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .mb-6 .flex.flex-wrap.gap-2 a.px-4.py-2,
+  .mb-6 .flex.flex-wrap.gap-2 button.px-4.py-2,
+  .px-4.py-2.rounded-full {
+    padding: 0.4375rem 0.875rem !important; /* 7px 14px */
+    font-size: 0.875rem !important; /* 14px */
+  }
+  
+  #filter-modal .max-w-md {
+    max-width: 28rem;
+  }
+}
 
-    #sell-subcategory.hidden, #rental-subcategory.hidden {
-      opacity: 0;
-      transform: translateY(-10px);
-      pointer-events: none;
-    }
+/* 드롭다운 애니메이션 - 기존 유지 */
+#sell-subcategory, #rental-subcategory {
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
 
-    #sell-subcategory:not(.hidden), #rental-subcategory:not(.hidden) {
-      opacity: 1;
-      transform: translateY(0);
-    }
+#sell-subcategory.hidden, #rental-subcategory.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
 
-    /* 화살표 애니메이션 */
-    #sell-arrow, #rental-arrow {
-      transition: transform 0.2s ease-out;
-    }
-    </style>
+#sell-subcategory:not(.hidden), #rental-subcategory:not(.hidden) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 화살표 애니메이션 - 기존 유지 */
+#sell-arrow, #rental-arrow {
+  transition: transform 0.2s ease-out;
+}
+</style>
 
   {% else %}
     <!-- 덕담: 간단한 카테고리 필터 (드롭다운 없음) -->
