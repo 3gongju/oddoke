@@ -64,7 +64,7 @@ window.DuplicateCardTemplate = {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M8 7V3m8 4V3m-9 8h10m-6 8h10a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
-                <span class="${this.styles.text.info}">${cafe.formatted_start_date} ~ ${cafe.formatted_end_date}</span>
+                <span class="${this.styles.text.info}">${cafe.start_date} ~ ${cafe.end_date}</span>
             </div>
         `;
     },
