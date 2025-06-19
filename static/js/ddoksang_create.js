@@ -1,4 +1,4 @@
-// ddoksang_create.js - 이미지 업로드 연동 수정 버전 (에러 수정)
+// ddoksang_create.js - 이미지 업로드 연동 수정 버전 (UI 개선)
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('덕생 등록 페이지 초기화 시작');
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('중복 확인 설정 완료');
     }
     
-    // ✅ 중복 카페 섹션 이벤트 설정 추가
+    // ✅ 중복 카페 섹션 이벤트 설정 (개선됨)
     function setupDuplicateCafeSection() {
         const confirmBtn = document.getElementById('confirm-duplicate-btn');
         const denyBtn = document.getElementById('deny-duplicate-btn');
@@ -142,11 +142,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (denyBtn) {
             denyBtn.addEventListener('click', function() {
-                // 다른 카페입니다 - 새로운 등록 진행
+                // ✅ 다른 카페입니다 - 바로 다음 단계로 + 토스트 메시지
                 duplicateChecked = true;
                 isDuplicate = false;
                 hideDuplicateSection();
-                showDuplicateSuccess();
+                
+                // 토스트 메시지 표시
+                if (window.showSuccessToast) {
+                    window.showSuccessToast('새로운 생카 등록을 진행합니다.', 2000);
+                }
+                
+                // 바로 데이터 복사하고 다음 단계로 이동
+                copyFormData();
+                setTimeout(() => {
+                    showStep(1);
+                }, 100);
             });
         }
     }
@@ -197,15 +207,25 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('중복 확인 결과:', data);
                 
-                if (data.exists && data.duplicates && data.duplicates.length > 0) {
-                    // ✅ 중복 카페가 있는 경우 - 카페 목록 표시
-                    showDuplicateCafes(data.duplicates);
+                if (data.exists && data.similar_cafes && data.similar_cafes.length > 0) {
+                    // 중복 카페가 있는 경우 - 카페 목록 표시
+                    showDuplicateCafes(data.similar_cafes);
                     isDuplicate = true;
                 } else {
-                    // 중복 없음 - 성공 화면 표시
+                    // ✅ 중복 없음 - 토스트 메시지 표시 후 바로 다음 단계로
                     isDuplicate = false;
                     duplicateChecked = true;
-                    showDuplicateSuccess();
+                    
+                    // 토스트 메시지 표시
+                    if (window.showSuccessToast) {
+                        window.showSuccessToast('중복 확인 완료! 새로운 생카를 등록할 수 있습니다.', 2000);
+                    }
+                    
+                    // 바로 데이터 복사하고 다음 단계로 이동
+                    copyFormData();
+                    setTimeout(() => {
+                        showStep(1);
+                    }, 100);
                 }
             })
             .catch(error => {
@@ -218,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // ✅ 중복 카페 목록 표시 함수 추가
+    // ✅ 중복 카페 목록 표시 함수 (2개씩 배치로 개선)
     function showDuplicateCafes(duplicates) {
         console.log('중복 카페 목록 표시:', duplicates);
         
@@ -231,10 +251,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (duplicateSection) {
             duplicateSection.classList.remove('hidden');
             
-            // 카페 카드 생성
+            // ✅ 카페 카드 생성 (2개씩 배치)
             const gridContainer = document.getElementById('duplicate-cafes-grid');
             if (gridContainer) {
                 gridContainer.innerHTML = '';
+                
+                // 2개씩 배치하도록 클래스 수정
+                gridContainer.className = 'grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto';
                 
                 duplicates.forEach(cafe => {
                     const card = createDuplicateCafeCard(cafe);
@@ -244,13 +267,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // ✅ 중복 카페 카드 생성 함수 추가
+    // ✅ 중복 카페 카드 생성 함수 (유사도 퍼센트 제거)
     function createDuplicateCafeCard(cafe) {
         const card = document.createElement('div');
-        card.className = 'duplicate-cafe-card bg-white border-2 border-transparent rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200 relative';
+        card.className = 'duplicate-cafe-card bg-white border-2 border-transparent rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200 relative cursor-pointer';
         card.dataset.cafeId = cafe.id;
         
-        // ✅ 이미지 HTML 추가
+        // 이미지 HTML
         const imageHtml = cafe.main_image ? 
             `<img src="${cafe.main_image}" alt="${cafe.cafe_name}" class="w-full h-32 object-cover rounded-lg mb-3">` :
             `<div class="w-full h-32 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg mb-3 flex items-center justify-center">
@@ -267,9 +290,14 @@ document.addEventListener('DOMContentLoaded', function() {
             ${imageHtml}
             
             <div class="mb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    ${cafe.member_name ? 
+                        `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">멤버</span>` :
+                        `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">아티스트</span>`
+                    }
+                </div>
                 <h4 class="font-semibold text-gray-900 text-sm mb-1">${cafe.cafe_name}</h4>
                 <p class="text-xs text-gray-600">${cafe.artist_name}${cafe.member_name ? ' - ' + cafe.member_name : ''}</p>
-                ${cafe.similarity_percent ? `<p class="text-xs text-blue-600 font-medium">유사도: ${cafe.similarity_percent}</p>` : ''}
             </div>
             
             <div class="space-y-2 text-xs text-gray-600">
@@ -325,56 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (duplicateSection) {
             duplicateSection.classList.add('hidden');
         }
-    }
-    
-    function showDuplicateSuccess() {
-        // 현재 폼 숨기기
-        const currentForm = document.getElementById('duplicate-check-form');
-        if (currentForm) currentForm.style.display = 'none';
-        
-        // 중복 섹션도 숨기기
-        hideDuplicateSection();
-        
-        // 제목, 설명, 진행바 숨기기
-        const section = document.querySelector('section.max-w-4xl');
-        if (section) {
-            const title = section.querySelector('h1');
-            const description = section.querySelector('p');
-            const progressBarContainer = section.querySelector('.w-full.bg-gray-200.rounded-full');
-            
-            if (title) title.style.display = 'none';
-            if (description) description.style.display = 'none';
-            if (progressBarContainer) progressBarContainer.style.display = 'none';
-        }
-        
-        // 성공 메시지 표시
-        const step0 = document.getElementById('step-0');
-        if (step0) {
-            const successDiv = document.createElement('div');
-            successDiv.className = 'text-center mb-8 p-6 bg-green-50 border border-green-200 rounded-lg';
-            successDiv.innerHTML = `
-                <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <h2 class="text-xl font-bold text-green-800 mb-2">중복 확인 완료!</h2>
-                <p class="text-green-700 mb-4">새로운 카페를 등록할 수 있습니다.</p>
-                <button id="proceed-to-next" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors">
-                    다음 단계로 진행 →
-                </button>
-            `;
-            
-            step0.appendChild(successDiv);
-            
-            // 진행 버튼 이벤트
-            document.getElementById('proceed-to-next').addEventListener('click', function() {
-                copyFormData();
-                showStep(1);
-            });
-        }
-        
-        console.log('중복 확인 성공 화면 표시');
     }
     
     function copyFormData() {
