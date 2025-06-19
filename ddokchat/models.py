@@ -197,16 +197,23 @@ class TextMessage(models.Model):
     def __str__(self):
         return f"텍스트: {self.content[:50]}"
 
-
 class ImageMessage(models.Model):
     """이미지 메시지 상세 정보"""
     message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='image_content')
     image = models.ImageField(upload_to='chat_images/')
-    caption = models.TextField(blank=True, help_text="이미지 설명 (선택사항)")
+    
+    # ✅ 새로 추가: EXIF 메타데이터 필드 (촬영시간만)
+    taken_datetime = models.DateTimeField(null=True, blank=True, help_text="촬영 날짜/시간")
 
     def __str__(self):
-        caption_text = f" - {self.caption[:30]}" if self.caption else ""
-        return f"이미지{caption_text}"
+        datetime_text = f" ({self.taken_datetime.strftime('%Y.%m.%d %H:%M')})" if self.taken_datetime else ""
+        return f"이미지{datetime_text}"
+    
+    def get_metadata_display(self):
+        """촬영시간을 표시용으로 포맷팅"""
+        if self.taken_datetime:
+            return self.taken_datetime.strftime('%Y.%m.%d %H:%M')
+        return None
 
 
 class AccountInfoMessage(models.Model):
