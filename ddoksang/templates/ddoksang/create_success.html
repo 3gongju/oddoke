@@ -6,120 +6,196 @@
 {% block title %}등록 완료 - 덕생{% endblock %}
 
 {% block body %}
-<div class="min-h-screen bg-white py-8 px-4">
+<div class="min-h-screen bg-gray-50 py-8 px-4">
   <div class="max-w-screen-md mx-auto">
     
-    <!--  상단 성공 메시지 -->
-    <div class="text-center mb-10">
-      <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- 상단 성공 메시지 - 빨강 하이라이트 -->
+    <div class="text-center mb-12">
+      <div class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h1 class="text-2xl font-bold text-gray-800 mb-2">생일카페 등록 완료</h1>
-      <p class="text-sm text-gray-600">성공적으로 등록되었습니다!</p>
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">등록이 완료되었습니다</h1>
+      <p class="text-gray-600">생일카페 정보가 성공적으로 등록되었어요!</p>
     </div>
 
-    <!--  승인 대기 안내 -->
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 mb-6">
-      <div class="flex items-start space-x-3">
-        <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- 승인 대기 안내 - 블랙앤화이트 -->
+    <div class="bg-white border-2 border-gray-900 rounded-xl p-6 mb-8 shadow-sm">
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         <div>
-          <h3 class="text-base font-bold text-gray-800">관리자 승인 대기 중</h3>
-          <p class="text-sm text-gray-700">
-            보통 <span class="font-semibold text-yellow-700">1-2일 내 승인</span>되며, 승인되면 바로 공개됩니다.
+          <h3 class="text-lg font-bold text-gray-900 mb-1">관리자 승인 진행 중</h3>
+          <p class="text-gray-600">
+            보통 <span class="font-semibold text-gray-900">1-2일 내</span>에 승인되며, 승인 후 바로 공개됩니다.
           </p>
         </div>
       </div>
     </div>
 
-    <!--  요약 카드 -->
-    <div class="bg-white rounded-xl shadow border border-gray-200 overflow-hidden mb-6">
-      <div class="p-6 space-y-6">
+    <!-- 메인 카드 - 블랙앤화이트 -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-8">
+      <div class="p-8 space-y-8">
         
-        <!--  카페명, 아티스트명 -->
-        <div class="text-center">
-          <div class="inline-block px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full border border-gray-300 mb-3">
-            {% if cafe.cafe_type == 'bday' %}🎂 생일 카페
-            {% elif cafe.cafe_type == 'debut' %}✨ 데뷔 카페
-            {% elif cafe.cafe_type == 'comeback' %}🎵 컴백 카페
-            {% elif cafe.cafe_type == 'concert' %}🎤 콘서트 카페
-            {% else %}🎁 이벤트 카페{% endif %}
+        <!-- 카페명, 아티스트명 -->
+        <div class="text-center border-b border-gray-100 pb-8">
+          <div class="inline-flex items-center px-4 py-2 text-sm font-semibold bg-gray-900 text-white rounded-full mb-4">
+            {% if cafe.cafe_type == 'bday' %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+              </svg>
+              생일 카페
+            {% elif cafe.cafe_type == 'debut' %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+              </svg>
+              데뷔 카페
+            {% elif cafe.cafe_type == 'comeback' %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+              </svg>
+              컴백 카페
+            {% elif cafe.cafe_type == 'concert' %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+              </svg>
+              콘서트 카페
+            {% else %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+              </svg>
+              이벤트 카페
+            {% endif %}
           </div>
-          <h2 class="text-xl font-bold text-gray-900 mb-2">{{ cafe.cafe_name }}</h2>
-          <div class="flex justify-center items-center space-x-2 text-sm text-gray-700">
-            <span class="bg-gray-100 px-3 py-1 rounded-md border">{{ cafe.artist.display_name }}</span>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ cafe.cafe_name }}</h2>
+          <div class="flex justify-center items-center space-x-3 text-sm">
+            <span class="px-4 py-2 bg-gray-100 text-gray-900 rounded-lg border font-medium">{{ cafe.artist.display_name }}</span>
             {% if cafe.member %}
-            <span>•</span>
-            <span class="bg-gray-100 px-3 py-1 rounded-md border">{{ cafe.member.member_name }}</span>
+            <span class="text-gray-400">•</span>
+            <span class="px-4 py-2 bg-gray-100 text-gray-900 rounded-lg border font-medium">{{ cafe.member.member_name }}</span>
             {% endif %}
           </div>
         </div>
 
-        <!-- 🗓 기간 / 위치 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-gray-50 border rounded-lg p-4">
-            <p class="text-sm text-gray-500 font-semibold mb-1">운영 기간</p>
-            <p class="text-sm text-gray-700 font-medium">{{ cafe.start_date|date:"Y년 m월 d일" }} ~ {{ cafe.end_date|date:"Y년 m월 d일" }}</p>
+        <!-- 기간 / 위치 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+            <div class="flex items-center mb-3">
+              <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+              <h3 class="font-semibold text-gray-900">운영 기간</h3>
+            </div>
+            <p class="text-gray-700 font-medium">{{ cafe.start_date|date:"Y년 m월 d일" }}</p>
+            <p class="text-gray-500 text-sm mb-1">~</p>
+            <p class="text-gray-700 font-medium">{{ cafe.end_date|date:"Y년 m월 d일" }}</p>
           </div>
-          <div class="bg-gray-50 border rounded-lg p-4">
-            <p class="text-sm text-gray-500 font-semibold mb-1">카페 위치</p>
-            <p class="text-sm text-gray-800">{{ cafe.place_name }}</p>
-            <p class="text-sm text-gray-700">{{ cafe.address }}</p>
+          
+          <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+            <div class="flex items-center mb-3">
+              <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <h3 class="font-semibold text-gray-900">위치</h3>
+            </div>
+            <p class="text-gray-900 font-medium">{{ cafe.place_name }}</p>
+            <p class="text-gray-600 text-sm mt-1">{{ cafe.address }}</p>
             {% if cafe.road_address %}
-            <p class="text-xs text-gray-500">(도로명) {{ cafe.road_address }}</p>
+            <p class="text-gray-500 text-xs mt-1">{{ cafe.road_address }}</p>
             {% endif %}
           </div>
         </div>
 
-        <!-- 특전 정보 표시 개선 -->
+        <!-- 특전 정보 -->
         {% with grouped_benefits=cafe.special_benefits|parse_benefits %}
           {% if grouped_benefits %}
-            <div class="mb-4">
-              <p class="text-sm font-semibold text-gray-800 mb-3">🎁 특전 정보</p>
-              <div class="space-y-2">
-
+            <div class="border-t border-gray-100 pt-8">
+              <div class="flex items-center mb-4">
+                <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                </svg>
+                <h3 class="font-semibold text-gray-900">특전 정보</h3>
+              </div>
+              <div class="space-y-3">
                 {% for category, items in grouped_benefits.items %}
-                  <div class="flex items-start flex-wrap gap-2">
-                    <span class="inline-block px-2 py-1 text-xs font-medium rounded-full {{ category|get_category_color }}">
+                  <div class="flex items-start gap-3">
+                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gray-900 text-white">
                       {{ category }}
                     </span>
-                    <span class="text-sm text-gray-700">
+                    <span class="text-sm text-gray-700 leading-relaxed">
                       {{ items|join:", " }}
                     </span>
                   </div>
                 {% endfor %}
-
               </div>
             </div>
           {% endif %}
         {% endwith %}
 
-        <!--  설명 -->
+        <!-- 이벤트 설명 -->
         {% if cafe.event_description %}
-        <div class="border rounded-lg bg-gray-50 p-4">
-          <p class="text-sm font-bold text-gray-800 mb-2">이벤트 설명</p>
-          <p class="text-sm text-gray-700 whitespace-pre-line">{{ cafe.event_description }}</p>
+        <div class="border-t border-gray-100 pt-8">
+          <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h3 class="font-semibold text-gray-900">이벤트 설명</h3>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ cafe.event_description }}</p>
+          </div>
         </div>
         {% endif %}
+
+        <!-- X(트위터) 출처 정보 -->
+        {% if cafe.x_source %}
+        <div class="border-t border-gray-100 pt-8">
+          <div class="flex items-center mb-4">
+            <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+            </svg>
+            <h3 class="font-semibold text-gray-900">X(트위터) 출처</h3>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+            <a href="{{ cafe.x_source }}" 
+               target="_blank" 
+               class="inline-flex items-center text-gray-900 hover:text-red-500 font-medium transition-colors group">
+              <svg class="w-4 h-4 mr-2 group-hover:text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              @{{ cafe.x_source|cut:"https://x.com/" }}
+              <svg class="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
       </div>
 
-      <!--  이미지 섹션 개선 -->
+      <!-- 이미지 섹션 -->
       {% if cafe.images.all %}
-      <div class="p-6 border-t bg-gray-50">
-        <h4 class="text-sm font-bold text-gray-800 mb-4">첨부된 이미지 ({{ cafe.images.count }}장)</h4>
+      <div class="border-t border-gray-100 p-8">
+        <div class="flex items-center mb-6">
+          <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <h3 class="font-semibold text-gray-900">첨부된 이미지 ({{ cafe.images.count }}장)</h3>
+        </div>
         
         {% if cafe.images.count == 1 %}
         <!-- 단일 이미지 -->
         <div class="flex justify-center">
           {% for image in cafe.images.all %}
-          <div class="max-w-xs w-full aspect-[3/4] overflow-hidden rounded-xl border shadow bg-white relative">
-            <img src="{{ image.image.url }}" alt="대표 이미지" class="w-full h-full object-cover cursor-pointer" onclick="openImageModal('{{ image.image.url }}', '{{ image.caption|default:"대표 이미지" }}')" />
-            <span class="absolute top-2 left-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">대표</span>
+          <div class="max-w-sm w-full aspect-[3/4] overflow-hidden rounded-2xl border-2 border-gray-200 shadow-lg bg-white relative group cursor-pointer" onclick="openImageModal('{{ image.image.url }}', '{{ image.caption|default:"대표 이미지" }}')">
+            <img src="{{ image.image.url }}" alt="대표 이미지" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <span class="absolute top-3 left-3 bg-gray-900 text-white text-xs px-3 py-1 rounded-full font-medium">대표</span>
           </div>
           {% endfor %}
         </div>
@@ -127,15 +203,15 @@
         <!-- 다중 이미지 그리드 -->
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {% for image in cafe.images.all %}
-          <div class="aspect-[3/4] rounded-lg overflow-hidden border shadow bg-white relative">
-            <img src="{{ image.image.url }}" alt="{{ image.caption|default:"카페 이미지" }}" class="w-full h-full object-cover cursor-pointer" onclick="openImageModal('{{ image.image.url }}', '{{ image.caption|default:"카페 이미지" }}')" />
+          <div class="aspect-[3/4] rounded-xl overflow-hidden border-2 border-gray-200 shadow-md bg-white relative group cursor-pointer" onclick="openImageModal('{{ image.image.url }}', '{{ image.caption|default:"카페 이미지" }}')">
+            <img src="{{ image.image.url }}" alt="{{ image.caption|default:"카페 이미지" }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
             {% if image.is_main %}
-            <span class="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">대표</span>
+            <span class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">대표</span>
             {% else %}
-            <span class="absolute top-2 left-2 bg-gray-700 text-white text-xs px-2 py-0.5 rounded-full">{{ forloop.counter }}</span>
+            <span class="absolute top-2 left-2 bg-gray-900 text-white text-xs px-2 py-1 rounded-full font-medium">{{ forloop.counter }}</span>
             {% endif %}
             {% if image.image_type and image.image_type != 'other' %}
-            <span class="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">{{ image.get_image_type_display }}</span>
+            <span class="absolute top-2 right-2 bg-gray-900 text-white text-xs px-2 py-1 rounded-full font-medium">{{ image.get_image_type_display }}</span>
             {% endif %}
           </div>
           {% endfor %}
@@ -143,14 +219,19 @@
         {% endif %}
         
         <!-- 이미지 정보 -->
-        <div class="mt-4 text-xs text-gray-500">
-          <p>💡 이미지를 클릭하면 크게 볼 수 있습니다</p>
+        <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <p class="text-sm text-gray-600 mb-3 flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            이미지를 클릭하면 크게 볼 수 있습니다
+          </p>
           {% if cafe.images.all %}
-          <div class="mt-2 space-y-1">
+          <div class="space-y-2">
             {% for image in cafe.images.all %}
-            <div class="flex items-center justify-between">
-              <span>{{ forloop.counter }}. {{ image.caption|default:"이미지" }}</span>
-              <span class="text-gray-400">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-gray-700">{{ forloop.counter }}. {{ image.caption|default:"이미지" }}</span>
+              <span class="text-gray-500">
                 {% if image.width and image.height %}{{ image.width }}×{{ image.height }}px{% endif %}
                 {% if image.file_size %} · {{ image.file_size|filesizeformat }}{% endif %}
               </span>
@@ -159,75 +240,64 @@
           </div>
           {% endif %}
         </div>
-
-          <!-- 트위터 출처 정보 계정 연결 -->
-        {% if cafe.x_source %}
-          <div class="bg-gray-50 border rounded-lg p-4 mt-6">
-            <p class="text-sm font-bold text-gray-800 mb-2">📎 X(트위터) 출처</p>
-            <p class="text-sm text-blue-700">
-              <a href="{{ cafe.x_source }}" target="_blank" class="hover:underline">
-                @{{ cafe.x_source|cut:"https://x.com/" }}
-              </a>
-            </p>
-          </div>
-        {% endif %}
-
       </div>
       {% else %}
       <!-- 이미지가 없는 경우 -->
-      <div class="p-6 border-t bg-gray-50 text-center">
+      <div class="border-t border-gray-100 p-8 text-center">
         <div class="text-gray-400">
-          <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
-          <p class="text-sm text-gray-500">첨부된 이미지가 없습니다</p>
+          <p class="text-gray-600">첨부된 이미지가 없습니다</p>
         </div>
       </div>
       {% endif %}
     </div>
 
-
-
-    <!-- 버튼 영역 개선 -->
-    <div class="flex flex-wrap justify-center items-center gap-2 sm:gap-3 mb-12">
+    <!-- 액션 버튼들 - 빨강 하이라이트 포인트 -->
+    <div class="flex flex-wrap justify-center items-center gap-4 mb-12">
       <a href="{% url 'ddoksang:user_preview' cafe.id %}"
-        class="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow whitespace-nowrap">
+        class="inline-flex items-center justify-center px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-lg">
         미리보기
       </a>
       <a href="{% url 'ddoksang:my_cafes' %}"
-        class="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow whitespace-nowrap">
-        내 등록 현황 보기
+        class="inline-flex items-center justify-center px-6 py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all shadow-lg">
+        내 등록 현황
       </a>
       <a href="{% url 'ddoksang:create' %}"
-        class="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-3 bg-black text-white rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-800 transition-all shadow whitespace-nowrap">
-        다른 생카 등록하기
+        class="inline-flex items-center justify-center px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-all shadow-lg">
+        + 다른 생카 등록
       </a>
     </div>
 
-
-    <!-- 홈으로 안내 -->
-    <div class="text-center text-sm text-gray-600 mb-20 p-6 bg-gray-50 rounded-xl border border-gray-200">
-      <p class="mb-2">문의사항은 <span class="font-semibold text-gray-800">관리자</span>에게 연락해주세요.</p>
-      <a href="{% url 'ddoksang:home' %}" class="underline font-medium hover:text-gray-800">홈으로 돌아가기</a>
+    <!-- 하단 안내 -->
+    <div class="text-center p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+      <p class="text-gray-600 mb-3">문의사항은 <span class="font-semibold text-gray-900">관리자</span>에게 연락해주세요.</p>
+      <a href="{% url 'ddoksang:home' %}" class="inline-flex items-center text-gray-900 hover:text-red-500 font-medium transition-colors">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        홈으로 돌아가기
+      </a>
     </div>
   </div>
 </div>
 
-<!-- 이미지 모달 개선 -->
-<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
-  <div class="max-w-5xl max-h-full relative">
-    <img id="modalImage" src="" alt="확대 이미지" class="max-w-full max-h-full object-contain rounded-lg">
-    <div id="modalCaption" class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-4 text-center rounded-b-lg">
-      <!-- 캡션이 여기에 표시됩니다 -->
+<!-- 이미지 모달 -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4">
+  <div class="max-w-7xl max-h-full relative">
+    <img id="modalImage" src="" alt="확대 이미지" class="max-w-full max-h-[90vh] object-contain rounded-xl">
+    <div id="modalCaption" class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+      <!-- 캡션 -->
     </div>
-    <button onclick="closeImageModal()" class="absolute -top-4 -right-4 w-12 h-12 bg-white text-gray-800 rounded-full text-2xl hover:bg-gray-100 shadow-lg font-bold transition-colors">
+    <button onclick="closeImageModal()" class="absolute top-4 right-4 w-10 h-10 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full text-xl backdrop-blur-sm transition-all">
       ×
     </button>
   </div>
 </div>
 
 <script>
-// 이미지 모달 개선
+// 이미지 모달
 function openImageModal(imageSrc, caption) {
   const modal = document.getElementById('imageModal');
   const modalImage = document.getElementById('modalImage');
@@ -248,7 +318,7 @@ function closeImageModal() {
 document.addEventListener('DOMContentLoaded', function () {
   const modal = document.getElementById('imageModal');
   
-  // 모달 외부 클릭 시 닫기
+  // 모달 외부 클릭으로 닫기
   modal.addEventListener('click', e => {
     if (e.target === modal) closeImageModal();
   });
@@ -257,26 +327,17 @@ document.addEventListener('DOMContentLoaded', function () {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeImageModal();
   });
-  
-  // 디버깅: 이미지 정보 출력
-  console.log('📊 페이지 로드 완료');
-  console.log('이미지 개수:', document.querySelectorAll('[onclick^="openImageModal"]').length);
 });
 </script>
 
 <style>
-.btn-primary {
-  @apply flex items-center justify-center px-5 py-2 border-2 border-gray-700 text-gray-700 font-semibold rounded-xl transition-all shadow hover:bg-gray-700 hover:text-white;
+/* 커스텀 호버 효과 */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
 }
 
-/* 이미지 호버 효과 */
-img[onclick] {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-img[onclick]:hover {
-  transform: scale(1.02);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
 }
 
 /* 모달 애니메이션 */
@@ -284,18 +345,28 @@ img[onclick]:hover {
   animation: fadeIn 0.3s ease;
 }
 
-#imageModal.hidden {
-  animation: fadeOut 0.3s ease;
-}
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+/* 스크롤바 스타일링 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>
 {% endblock %}

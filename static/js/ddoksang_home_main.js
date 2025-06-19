@@ -254,14 +254,6 @@ class DdoksangHome {
             });
         }
 
-        // 주변 카페 패널 닫기
-        const closeNearbyPanel = document.querySelector('#closeNearbyPanel');
-        if (closeNearbyPanel) {
-            closeNearbyPanel.addEventListener('click', () => {
-                const panel = document.querySelector('#nearbyPanel');
-                if (panel) panel.classList.add('hidden');
-            });
-        }
 
         // 검색
         const searchInput = document.querySelector('#ddok-search');
@@ -308,7 +300,7 @@ class DdoksangHome {
                 this.mapManager.addUserLocationMarker(userLocation.lat, userLocation.lng);
             }
             
-            await this.findAndDisplayNearbyCafes(userLocation);
+          
             this.showToast('내 위치로 이동했습니다.', 'success');
             
         } catch (error) {
@@ -344,47 +336,8 @@ class DdoksangHome {
         });
     }
 
-    async findAndDisplayNearbyCafes(userLocation) {
-        try {
-            if (!this.cafesData || this.cafesData.length === 0) {
-                await this.loadCafesData();
-            }
 
-            this.nearbyCafes = window.DdoksangMap.Utils.findNearbyCafes(
-                userLocation.lat,
-                userLocation.lng,
-                this.cafesData,
-                3
-            );
 
-            this.displayNearbyCafesList(this.nearbyCafes);
-
-            const nearbyPanel = document.querySelector('#nearbyPanel');
-            if (nearbyPanel) nearbyPanel.classList.remove('hidden');
-
-        } catch (error) {
-            console.error('❌ 주변 카페 검색 오류:', error);
-            this.showError('주변 카페를 찾는 중 오류가 발생했습니다.');
-        }
-    }
-
-    displayNearbyCafesList(cafes) {
-        const listContainer = document.querySelector('#nearbyList');
-        if (!listContainer) return;
-
-        if (cafes.length === 0) {
-            listContainer.innerHTML = `
-                <div class="text-center text-gray-500 py-4">
-                    <p class="text-sm">주변 3km 이내에 운영중인 카페가 없습니다.</p>
-                </div>
-            `;
-            return;
-        }
-
-        window.DdoksangMap.displayNearbyCafes(cafes, 'nearbyList', (cafe) => {
-            this.handleMarkerClick(cafe);
-        });
-    }
 
     handleCafeClick(cafe) {
         if (cafe.id) {
