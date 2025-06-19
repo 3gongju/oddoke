@@ -1,5 +1,5 @@
 from django import forms
-from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
+from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment, DamPostReport
 
 COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400'
 
@@ -95,3 +95,25 @@ class DamCommentForm(forms.ModelForm):
         widgets = {
             'parent': forms.HiddenInput()
         }
+
+
+class DamPostReportForm(forms.ModelForm):
+    class Meta:
+        model = DamPostReport
+        fields = ['reason', 'additional_info']
+        widgets = {
+            'reason': forms.RadioSelect(attrs={
+                'class': 'space-y-3'
+            }),
+            'additional_info': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500',
+                'rows': 3,
+                'placeholder': '추가로 설명할 내용이 있다면 작성해주세요 (선택사항)',
+            }),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['reason'].label = '신고 사유'
+        self.fields['additional_info'].label = '추가 설명'
+        self.fields['additional_info'].required = False

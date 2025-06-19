@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'accounts.middleware.SuspensionCheckMiddleware',  # 제재 확인 미들웨어 추가
 ]
 
 ROOT_URLCONF = 'oddoke.urls'

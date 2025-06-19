@@ -591,5 +591,133 @@
     outline-offset: 2px;
   }
 </style>
+
+<script>
+// 🔥 제재 상태 확인 및 모달 표시
+document.addEventListener('DOMContentLoaded', function() {
+    // URL 파라미터에서 제재 정보 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const suspended = urlParams.get('suspended');
+    
+    if (suspended === 'true') {
+        showSuspensionModal();
+        // URL에서 파라미터 제거 (뒤로가기 시 모달 재출현 방지)
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // 제재된 사용자가 차단된 링크 클릭 시 모달 표시
+    {% if user.is_authenticated and user.is_suspended %}
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (!link) return;
+        
+        const href = link.getAttribute('href');
+        if (!href) return;
+        
+        // 차단해야 할 URL 패턴들
+        const blockedPatterns = [
+            /\/ddokdam\/create\//,
+            /\/ddokfarm\/create\//,
+            /\/ddoksang\/create\//,
+            /\/ddokdam\/\w+\/\d+\//,    // 게시글 상세보기
+            /\/ddokfarm\/\w+\/\d+\//,
+            /\/ddoksang\/\w+\/\d+\//
+        ];
+        
+        // 차단된 URL인지 확인
+        const isBlocked = blockedPatterns.some(pattern => pattern.test(href));
+        
+        if (isBlocked) {
+            e.preventDefault();
+            showSuspensionModal();
+        }
+    });
+    {% endif %}
+});
+
+// 제재 모달 표시 함수
+function showSuspensionModal() {
+    // 기존 모달이 있으면 제거
+    const existingModal = document.getElementById('suspensionModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // 모달 HTML 생성
+    const modalHTML = `
+        <div id="suspensionModal" class="fixed inset-0 z-[9999] flex items-center justify-center" style="background: rgba(0,0,0,0.5);">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md mx-4 w-full transform scale-95 opacity-0 transition-all duration-300" id="suspensionModalContent">
+                <div class="p-6 text-center">
+                    <!-- 아이콘 -->
+                    <div class="mb-4">
+                        <div class="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 6.5c-.77.833-.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- 제목 -->
+                    <h3 class="text-xl font-bold text-gray-900 mb-2 font-heading">이용 제한 안내</h3>
+                    
+                    <!-- 메시지 -->
+                    <p class="text-gray-600 mb-2 font-body">이용이 제한되어 해당 기능을 사용할 수 없습니다.</p>
+                    
+                    <!-- 제재 상태 -->
+                    {% if user.is_authenticated and user.is_suspended %}
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-6">
+                        <p class="text-sm text-red-700 font-medium font-body">
+                            <strong>제재 상태:</strong> {{ user.suspension_status|default:"제재 중" }}
+                        </p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- 확인 버튼 -->
+                    <button onclick="closeSuspensionModal()" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-full transition-colors duration-300 font-body">
+                        확인
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // body에 모달 추가
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 애니메이션 효과
+    setTimeout(() => {
+        const modalContent = document.getElementById('suspensionModalContent');
+        if (modalContent) {
+            modalContent.classList.remove('scale-95', 'opacity-0');
+            modalContent.classList.add('scale-100', 'opacity-100');
+        }
+    }, 10);
+    
+    // ESC 키로 모달 닫기
+    const handleEscape = function(e) {
+        if (e.key === 'Escape') {
+            closeSuspensionModal();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+}
+
+// 모달 닫기 함수
+function closeSuspensionModal() {
+    const modal = document.getElementById('suspensionModal');
+    if (modal) {
+        const modalContent = document.getElementById('suspensionModalContent');
+        if (modalContent) {
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+        }
+        
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
+</script>
 </body>
 </html>

@@ -31,6 +31,11 @@ class User(AbstractUser):
     kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
     naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
 
+    # 🔥 제재 관련 필드 추가
+    suspension_start = models.DateTimeField(blank=True, null=True, verbose_name="제재 시작일")
+    suspension_end = models.DateTimeField(blank=True, null=True, verbose_name="제재 종료일")
+    suspension_reason = models.TextField(blank=True, null=True, verbose_name="제재 사유")
+
    # 편의 메서드들
     def get_fandom_profile(self):
        try:
@@ -88,6 +93,68 @@ class User(AbstractUser):
     @property
     def is_social_user(self):
         return self.username.startswith(('temp_kakao_', 'temp_naver_'))
+
+    @property
+    def is_suspended(self):
+        """현재 제재 중인지 확인"""
+        if not self.suspension_start:
+            return False
+        
+        from django.utils import timezone
+        now = timezone.now()
+        
+        # 제재 시작일이 현재보다 미래면 아직 제재 아님
+        if self.suspension_start > now:
+            return False
+        
+        # 제재 종료일이 없으면 영구정지
+        if not self.suspension_end:
+            return True
+        
+        # 제재 종료일이 현재보다 미래면 제재 중
+        return self.suspension_end > now
+
+    @property
+    def suspension_status(self):
+        """제재 상태 문자열 반환"""
+        if not self.is_suspended:
+            return "정상"
+        
+        if not self.suspension_end:
+            return "영구정지"
+        
+        from django.utils import timezone
+        remaining = self.suspension_end - timezone.now()
+        
+        if remaining.days > 0:
+            return f"{remaining.days}일 {remaining.seconds // 3600}시간 남음"
+        elif remaining.seconds > 3600:
+            return f"{remaining.seconds // 3600}시간 {(remaining.seconds % 3600) // 60}분 남음"
+        else:
+            return f"{remaining.seconds // 60}분 남음"
+
+    def suspend_user(self, reason, days=None, end_datetime=None):
+        """사용자 제재"""
+        from django.utils import timezone
+        
+        self.suspension_start = timezone.now()
+        self.suspension_reason = reason
+        
+        if end_datetime:
+            self.suspension_end = end_datetime
+        elif days:
+            self.suspension_end = timezone.now() + timezone.timedelta(days=days)
+        else:
+            self.suspension_end = None  # 영구정지
+        
+        self.save(update_fields=['suspension_start', 'suspension_end', 'suspension_reason'])
+
+    def lift_suspension(self):
+        """제재 해제"""
+        self.suspension_start = None
+        self.suspension_end = None
+        self.suspension_reason = None
+        self.save(update_fields=['suspension_start', 'suspension_end', 'suspension_reason'])
 
 class FandomProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
