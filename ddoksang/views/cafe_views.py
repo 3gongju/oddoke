@@ -60,14 +60,32 @@ def cafe_create_view(request):
                 messages.error(request, '유효한 이미지 파일이 없습니다.')
                 return redirect('ddoksang:create')
 
-            # x_source 처리
+            # x_source 처리 
             raw_x_source = request.POST.get('x_source', '').strip()
-            if raw_x_source.startswith('@'):
-                x_source = f"https://x.com/{raw_x_source[1:]}"
-            elif raw_x_source.startswith('https://x.com/'):
-                x_source = raw_x_source
+            x_source = ''
+
+            if raw_x_source:
+                print(f"📝 원본 X 소스 입력: '{raw_x_source}'")
+                
+                if raw_x_source.startswith('@'):
+                    # @ENHYPEN → https://x.com/ENHYPEN
+                    username = raw_x_source[1:].strip()
+                    if username:  # 사용자명이 있는 경우만
+                        x_source = f"https://x.com/{username}"
+                elif raw_x_source.startswith('https://x.com/') or raw_x_source.startswith('https://twitter.com/'):
+                    # 이미 완전한 URL
+                    x_source = raw_x_source
+                elif raw_x_source and '/' not in raw_x_source:
+                    # ✅ 단순 사용자명: ENHYPEN → https://x.com/ENHYPEN
+                    x_source = f"https://x.com/{raw_x_source}"
+                else:
+                    # 잘못된 형식인 경우 빈 값
+                    print(f"⚠️ 잘못된 X 소스 형식: '{raw_x_source}'")
+                    x_source = ''
+                
+                print(f"✅ 최종 X 소스: '{x_source}'")
             else:
-                x_source = ''
+                print("📝 X 소스 입력 없음")
 
             cafe_data = {
                 'submitted_by': request.user,
@@ -155,7 +173,9 @@ def cafe_create_success(request, cafe_id):
         print(f"   카페명: {cafe.cafe_name}")
         print(f"   아티스트: {cafe.artist.display_name if cafe.artist else 'N/A'}")
         print(f"   멤버: {cafe.member.member_name if cafe.member else 'N/A'}")
-        print(f"   트위터 출처: {cafe.x_source}")  
+        print(f"   트위터 출처: '{cafe.x_source}'")  # 🔍 이 부분을 확인하세요
+        print(f"   트위터 출처 타입: {type(cafe.x_source)}")
+        print(f"   트위터 출처 길이: {len(cafe.x_source) if cafe.x_source else 0}")
         
         # 이미지 정보 출력
         images = cafe.images.all()
@@ -201,7 +221,7 @@ def cafe_create_success(request, cafe_id):
         traceback.print_exc()
         messages.error(request, '페이지 로드 중 오류가 발생했습니다.')
         return redirect('ddoksang:home')
-
+    
 
 @login_required
 def my_cafes(request):
