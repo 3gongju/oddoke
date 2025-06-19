@@ -577,23 +577,22 @@ document.addEventListener('DOMContentLoaded', function() {
     opacity: 1 !important;
   }
 </style>
+<!-- Scripts - 로딩 순서 중요! -->
 
-<!-- Scripts - 순서 중요 -->
-
-<!-- 외부 라이브러리 먼저 로드 -->
+<!-- 1. 외부 라이브러리 -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-<!-- 카카오맵 API 로드 (조건부) -->
+<!-- 2. 카카오맵 API -->
 {% if kakao_api_key %}
 <script>
-console.log('🔄 카카오맵 API 스크립트 로드 시작...');
+console.log('🔄 카카오맵 API 로드 시작...');
 </script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services" 
         onload="console.log('✅ 카카오맵 API 로드 완료')" 
         onerror="console.error('❌ 카카오맵 API 로드 실패')">
 </script>
 <script>
-// 카카오맵 로드 확인
 setTimeout(() => {
     if (typeof kakao !== 'undefined' && kakao.maps) {
         console.log('✅ 카카오맵 객체 사용 가능');
@@ -607,88 +606,281 @@ setTimeout(() => {
 </script>
 {% else %}
 <script>
-console.warn('⚠️ 카카오 API 키가 없어 지도 기능이 비활성화됩니다.');
+console.warn('⚠️ 카카오 API 키가 없음');
 window.KAKAO_MAP_DISABLED = true;
 window.KAKAO_MAP_READY = false;
 </script>
 {% endif %}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-
-<!-- 덕생 유틸리티 모듈들 (순서 중요) -->
-<script src="{% static 'js/ddoksang_date_utils.js' %}?v=5.0"></script>
-<script src="{% static 'js/ddoksang_form_utils.js' %}"></script>
-
-<!-- 이미지 업로드 모듈 (독립 실행) -->
-<script src="{% static 'js/ddoksang_image_upload.js' %}?v=3.0"></script>
-
-<!-- 메인 폼 스크립트 -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=5.0"></script>
-
-<!-- 자동완성 스크립트 -->
-<script src="{% static 'js/autocomplete.js' %}"></script>
-
-<!-- 날짜 필드 강제 활성화 스크립트 -->
+<!-- 3. 토스트 메시지 -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 즉시 실행
+window.showToast = function(message, type = 'info', duration = 3000) {
+    const existing = document.querySelector('.ddoksang-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'ddoksang-toast';
+    
+    const colors = {
+        success: '#10b981',
+        warning: '#f59e0b', 
+        error: '#ef4444',
+        info: '#3b82f6'
+    };
+
+    Object.assign(toast.style, {
+        position: 'fixed',
+        bottom: '80px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: colors[type] || colors.info,
+        color: 'white',
+        padding: '12px 20px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+        zIndex: '9999',
+        opacity: '0',
+        transition: 'all 0.3s ease',
+        maxWidth: '90vw',
+        textAlign: 'center'
+    });
+
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+    });
+
     setTimeout(() => {
-        console.log('🔧 날짜 필드 강제 활성화 실행');
-        
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, duration);
+
+    return toast;
+};
+</script>
+
+<!-- 4. 유틸리티 함수들 (인라인) -->
+<script>
+// 날짜 유틸리티
+window.DdoksangDateUtils = {
+    forceEnableAllDateFields() {
+        console.log('🔧 날짜 필드 강제 활성화');
         const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
         dateFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
-                // 모든 비활성화 속성 제거
                 field.disabled = false;
                 field.readOnly = false;
                 field.removeAttribute('disabled');
                 field.removeAttribute('readonly');
-                
-                // 강제 스타일 적용
                 field.style.pointerEvents = 'auto';
                 field.style.backgroundColor = 'white';
                 field.style.cursor = 'text';
                 field.style.opacity = '1';
-                field.style.border = '1px solid #d1d5db';
-                
-                console.log(`✅ 강제 활성화: ${fieldId}`);
+                console.log(`✅ 활성화: ${fieldId}`);
             }
         });
+    },
+    
+    initDuplicateCheckPickers() {
+        console.log('📅 중복 확인 날짜 피커 초기화');
+        if (typeof flatpickr !== 'undefined') {
+            ['check_start_date', 'check_end_date'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    flatpickr(element, { dateFormat: "Y-m-d", locale: "ko" });
+                }
+            });
+        }
+    },
+    
+    initCreateFormPickers() {
+        console.log('📅 메인 폼 날짜 피커 초기화');
+        if (typeof flatpickr !== 'undefined') {
+            ['start_date', 'end_date'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    flatpickr(element, { dateFormat: "Y-m-d", locale: "ko" });
+                }
+            });
+        }
+    }
+};
+
+// 폼 유틸리티
+window.DdoksangFormUtils = {
+    getValue(id) {
+        const el = document.getElementById(id);
+        return el ? el.value.trim() : '';
+    },
+    setValue(id, value) {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+    },
+    showToast(message, type = 'info') {
+        if (window.showToast) {
+            window.showToast(message, type);
+        } else {
+            console.log(`Toast: ${message}`);
+        }
+    }
+};
+
+// 지도 유틸리티
+window.DdoksangMapUtils = {
+    map: null,
+    ps: null,
+    marker: null,
+    isInitialized: false,
+
+    initMap(containerId = 'map') {
+        const container = document.getElementById(containerId);
+        if (!container || typeof kakao === 'undefined' || !kakao.maps) {
+            console.error('지도 초기화 실패');
+            return null;
+        }
+
+        try {
+            container.style.display = 'block';
+            const placeholder = document.getElementById('mapPlaceholder');
+            if (placeholder) placeholder.style.display = 'none';
+
+            const options = {
+                center: new kakao.maps.LatLng(37.5665, 126.9780),
+                level: 8
+            };
+
+            this.map = new kakao.maps.Map(container, options);
+            this.ps = new kakao.maps.services.Places();
+            this.marker = new kakao.maps.Marker({ map: this.map, position: options.center });
+            this.marker.setMap(null);
+
+            this.isInitialized = true;
+            console.log('✅ 지도 초기화 완료');
+            return this.map;
+        } catch (error) {
+            console.error('지도 초기화 오류:', error);
+            return null;
+        }
+    },
+
+    searchPlaces(keyword, callback) {
+        if (!this.ps) {
+            callback(false, []);
+            return;
+        }
         
-        // flatpickr 초기화 시도
-        if (typeof flatpickr !== 'undefined' && window.DdoksangDateUtils) {
+        this.ps.keywordSearch(keyword, (data, status) => {
+            const success = status === kakao.maps.services.Status.OK;
+            callback(success, data || []);
+        });
+    },
+
+    selectPlace(place) {
+        if (!this.map || !this.marker) return null;
+
+        try {
+            const latlng = new kakao.maps.LatLng(place.y, place.x);
+            this.map.setCenter(latlng);
+            this.map.setLevel(3);
+            this.marker.setPosition(latlng);
+            this.marker.setMap(this.map);
+
+            const fields = {
+                place_name: place.place_name || '',
+                address: place.address_name || '',
+                road_address: place.road_address_name || '',
+                latitude: place.y || '',
+                longitude: place.x || '',
+                kakao_place_id: place.id || ''
+            };
+
+            Object.entries(fields).forEach(([id, value]) => {
+                window.DdoksangFormUtils.setValue(id, value);
+            });
+
+            return place;
+        } catch (error) {
+            console.error('장소 선택 오류:', error);
+            return null;
+        }
+    }
+};
+</script>
+
+<!-- 5. 이미지 업로드 모듈 (순서 중요: 메인 앱보다 먼저!) -->
+<script src="{% static 'js/ddoksang_image_upload.js' %}?v=4.0"></script>
+
+<!-- 6. 메인 앱 (이미지 업로드 이후) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=6.0"></script>
+
+<!-- 7. 자동완성 -->
+<script src="{% static 'js/autocomplete.js' %}?v=2.0"></script>
+
+<!-- 8. 초기화 및 확인 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 페이지 초기화 시작');
+    
+    // 모듈 로딩 상태 확인
+    setTimeout(() => {
+        const moduleStatus = {
+            토스트: !!window.showToast,
+            날짜유틸: !!window.DdoksangDateUtils,
+            폼유틸: !!window.DdoksangFormUtils,
+            지도유틸: !!window.DdoksangMapUtils,
+            이미지업로드초기화함수: !!window.initDdoksangImageUpload,
+            이미지업로드설정함수: !!window.setupDdoksangImageUpload,
+            메인앱: !!window.ddoksangApp
+        };
+        
+        console.log('📊 모듈 로딩 상태:', moduleStatus);
+        
+        // 필수 함수 누락 확인
+        const requiredFunctions = [
+            'initDdoksangImageUpload',
+            'setupDdoksangImageUpload',
+            'showToast'
+        ];
+        
+        const missingFunctions = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
+        
+        if (missingFunctions.length > 0) {
+            console.error('❌ 필수 함수 누락:', missingFunctions);
+            showToast('스크립트 로딩 오류 발생. 페이지를 새로고침해주세요.', 'error');
+        } else {
+            console.log('✅ 모든 필수 함수 로딩 완료');
+        }
+    }, 1000);
+    
+    // 날짜 필드 강제 활성화
+    setTimeout(() => {
+        if (window.DdoksangDateUtils) {
+            window.DdoksangDateUtils.forceEnableAllDateFields();
+            
             setTimeout(() => {
                 window.DdoksangDateUtils.initDuplicateCheckPickers();
                 window.DdoksangDateUtils.initCreateFormPickers();
-                console.log('✅ flatpickr 초기화 완료');
             }, 500);
         }
     }, 500);
-    
-    // 추가로 1초 후 재실행 (확실하게)
-    setTimeout(() => {
-        console.log('🔧 날짜 필드 재확인 및 재활성화');
-        
-        const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
-        dateFields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field && (field.disabled || field.readOnly)) {
-                field.disabled = false;
-                field.readOnly = false;
-                field.style.pointerEvents = 'auto';
-                field.style.backgroundColor = 'white';
-                console.log(`🔄 재활성화: ${fieldId}`);
-            }
-        });
-    }, 2000);
 });
 
-// 페이지 완전 로드 후에도 재확인
+// 페이지 완전 로드 후 최종 확인
 window.addEventListener('load', function() {
     setTimeout(() => {
-        console.log('🔧 페이지 로드 완료 후 날짜 필드 최종 확인');
+        console.log('🔧 페이지 로드 완료 후 최종 확인');
         
+        // 날짜 필드 재활성화
         const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
         let needsReactivation = false;
         
@@ -705,12 +897,18 @@ window.addEventListener('load', function() {
         });
         
         if (needsReactivation) {
-            console.log('⚠️ 일부 날짜 필드가 다시 비활성화되어 재활성화했습니다.');
+            console.log('⚠️ 일부 날짜 필드 재활성화됨');
         } else {
-            console.log('✅ 모든 날짜 필드가 정상적으로 활성화되어 있습니다.');
+            console.log('✅ 모든 날짜 필드 정상');
+        }
+        
+        // 이미지 업로더 상태 확인
+        if (window.ddoksangImageUploader) {
+            console.log('📷 이미지 업로더 상태:', window.ddoksangImageUploader.isInitialized);
+        } else {
+            console.log('📷 이미지 업로더: 아직 초기화되지 않음 (Step 6에서 초기화됨)');
         }
     }, 1000);
 });
 </script>
-
 {% endblock %}
