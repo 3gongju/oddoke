@@ -1,28 +1,31 @@
 {% load static %}
 {% load dict_filters %}
 <!-- 고급 필터링 모달 버튼 -->
-<div class="flex items-center justify-between mb-4">
-  <div class="flex items-center gap-2">
+<div class="flex items-start justify-between mb-4">
+  <div class="flex items-start gap-2 flex-1 min-w-0">
     <!-- 필터 토글 버튼 -->
     <button id="filter-toggle-btn" 
-            class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            class="flex items-center gap-1 sm:gap-2 px-2 py-1.5 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-shrink-0 text-sm sm:text-base">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 sm:w-5 sm:h-5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
       </svg>
-      <span class="text-sm font-medium">필터링</span>
+      <span class="text-xs sm:text-sm font-medium hidden sm:inline">필터링</span>
+      <span class="text-xs sm:text-sm font-medium sm:hidden">필터</span>
     </button>
     
-    <!-- 선택된 필터 표시 -->
-    <div id="active-filters" class="flex items-center gap-2">
+    <!-- 선택된 필터 표시 (모바일 최적화) -->
+    <div class="flex-1 min-w-0">
+      <div id="active-filters" class="flex flex-wrap gap-1 sm:gap-2">
         {% if selected_shipping %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-            {{ selected_shipping_display }}
-            <button type="button" onclick="removeFilter('shipping')" class="ml-2 text-white hover:text-gray-300">×</button>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ selected_shipping_display }}</span>
+            <button type="button" onclick="removeFilter('shipping')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
         {% endif %}
         
         {% if wantto %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="truncate max-w-[60px] sm:max-w-[120px]">
             {% if category == 'sell' %}
                 {% if wantto == 'buy' %}삽니다
                 {% elif wantto == 'sell' %}팝니다  
@@ -33,46 +36,52 @@
                 {% elif wantto == 'buy' %}빌려주세요
                 {% endif %}
             {% endif %}
-            <button type="button" onclick="removeFilter('wantto')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+            <button type="button" onclick="removeFilter('wantto')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
         {% endif %}
         
         {% if selected_conditions %}
             {% for condition in selected_conditions %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-                {{ condition_display_map|get_item:condition }}
-                <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-2 text-white hover:text-gray-300">×</button>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+                <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ condition_display_map|get_item:condition }}</span>
+                <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
             {% endfor %}
         {% endif %}
         
         {% if selected_md %}
             {% for md in selected_md %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-                {{ md_display_map|get_item:md }}
-                <button type="button" onclick="removeFilter('md', '{{ md }}')" class="ml-2 text-white hover:text-gray-300">×</button>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+                <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ md_display_map|get_item:md }}</span>
+                <button type="button" onclick="removeFilter('md', '{{ md }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
             {% endfor %}
         {% endif %}
         
         {% if min_price or max_price %}
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-black text-white">
-            {% if min_price and max_price %}{{ min_price|floatformat:0 }}원 - {{ max_price|floatformat:0 }}원
-            {% elif min_price %}{{ min_price|floatformat:0 }}원 이상
-            {% elif max_price %}{{ max_price|floatformat:0 }}원 이하
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+            <span class="truncate max-w-[80px] sm:max-w-[140px]">
+            {% if min_price and max_price %}{{ min_price|floatformat:0 }}-{{ max_price|floatformat:0 }}원
+            {% elif min_price %}{{ min_price|floatformat:0 }}원+
+            {% elif max_price %}{{ max_price|floatformat:0 }}원-
             {% endif %}
-            <button type="button" onclick="removeFilter('price')" class="ml-2 text-white hover:text-gray-300">×</button>
+            </span>
+            <button type="button" onclick="removeFilter('price')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
             </span>
         {% endif %}
-        </div>
+      </div>
 
-        <!-- 필터 초기화 버튼 -->
-        {% if selected_shipping or selected_conditions or selected_md or min_price or max_price or wantto %}
+      <!-- 필터 초기화 버튼 (모바일에서는 아래로) -->
+      {% if selected_shipping or selected_conditions or selected_md or min_price or max_price or wantto %}
+      <div class="mt-1">
         <button onclick="clearAllFilters()" 
-                class="text-sm text-gray-500 hover:text-gray-700 underline">
+                class="text-xs text-gray-500 hover:text-gray-700 underline">
             전체 해제
         </button>
-        {% endif %}
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
@@ -112,7 +121,7 @@
         <!-- 상품 종류 -->
         <div class="mb-6">
           <h4 class="font-semibold mb-3 text-gray-900">상품 종류</h4>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label class="flex items-center">
               <input type="checkbox" name="md" value="poca" class="mr-2" {% if 'poca' in selected_md %}checked{% endif %}>
               <span class="text-sm">포토카드</span>
@@ -139,7 +148,7 @@
         <!-- 상품 상태 -->
         <div class="mb-6">
           <h4 class="font-semibold mb-3 text-gray-900">상품 상태</h4>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <label class="flex items-center">
               <input type="checkbox" name="condition" value="new" class="mr-2" {% if 'new' in selected_conditions %}checked{% endif %}>
               <span class="text-sm">미개봉</span>
@@ -163,17 +172,24 @@
         <div class="mb-6">
           <h4 class="font-semibold mb-3 text-gray-900">가격</h4>
           <div class="space-y-3">
-            <div class="flex items-center gap-2">
-              <input type="number" name="min_price" placeholder="0" 
-                     value="{{ min_price|default:'' }}"
-                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <span class="text-sm text-gray-500">~</span>
-              <input type="number" name="max_price" placeholder="500,000" 
-                     value="{{ max_price|default:'' }}"
-                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">최소 가격</label>
+                <input type="number" name="min_price" placeholder="0" 
+                       value="{{ min_price|default:'' }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       inputmode="numeric" pattern="[0-9]*">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">최대 가격</label>
+                <input type="number" name="max_price" placeholder="500,000" 
+                       value="{{ max_price|default:'' }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       inputmode="numeric" pattern="[0-9]*">
+              </div>
             </div>
             
-            <!-- 가격 범위 슬라이더 (모바일 친화적) -->
+            <!-- 가격 범위 슬라이더 -->
             <div class="px-1">
               <input type="range" id="price-range-slider" 
                      min="0" max="500000" step="1000"
@@ -447,86 +463,86 @@ numberInputs.forEach(input => {
 
 /* 모바일 최적화 */
 @media (max-width: 640px) {
+  /* 필터 버튼 크기 최적화 */
+  #filter-toggle-btn {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    min-height: 36px;
+  }
+  
+  #filter-toggle-btn svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+  
+  /* 슬라이더 터치 영역 확대 */
   .slider::-webkit-slider-thumb {
-    height: 24px;
-    width: 24px;
+    height: 28px;
+    width: 28px;
   }
   
   .slider::-moz-range-thumb {
-    height: 24px;
-    width: 24px;
+    height: 28px;
+    width: 28px;
   }
   
+  /* 모달 사이즈 및 위치 조정 */
   #filter-modal .max-w-md {
-    max-width: calc(100vw - 2rem);
-    margin: 1rem;
+    max-width: calc(100vw - 1rem);
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
   }
   
+  /* 모달 내용 패딩 조정 */
   #filter-modal .p-4 {
     padding: 1rem;
   }
   
-  /* 선택된 필터 태그 모바일 스타일 */
-  #active-filters {
-    flex-wrap: wrap;
-  }
-  
-  #active-filters span {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-  }
-  
-  /* 필터 폼 모바일 최적화 */
-  .grid.grid-cols-2 {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  
-  /* 가격 입력 필드 모바일 */
-  .flex.gap-2 input[type="number"] {
-    font-size: 16px; /* iOS 확대 방지 */
-  }
-  
   /* 체크박스/라디오 버튼 터치 영역 확대 */
   input[type="radio"], input[type="checkbox"] {
-    transform: scale(1.2);
-    margin-right: 0.75rem;
+    transform: scale(1.3);
+    margin-right: 1rem;
   }
   
   label {
-    padding: 0.5rem 0;
+    padding: 0.75rem 0;
     cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* 버튼 터치 영역 확대 */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 모달 푸터 버튼 */
+  #filter-modal .border-t .flex.gap-3 button {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
   }
 }
 
 /* 태블릿 최적화 */
 @media (min-width: 641px) and (max-width: 1024px) {
   #filter-modal .max-w-md {
-    max-width: 28rem;
+    max-width: 32rem;
+  }
+  
+  .grid.grid-cols-1.gap-2.sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   }
 }
 
-/* 선택된 필터 스타일 */
-.filter-tag-active {
-  background-color: #000000;
-  color: #ffffff;
-  border-radius: 9999px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.filter-tag-active button {
-  color: #ffffff;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-
-.filter-tag-active button:hover {
-  opacity: 1;
+/* 데스크톱 */
+@media (min-width: 1025px) {
+  .grid.grid-cols-1.gap-2.sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
 }
 
 /* 필터 버튼 호버 효과 */
@@ -553,5 +569,48 @@ numberInputs.forEach(input => {
 .slider:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* 스크롤바 개선 */
+#filter-modal .overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+#filter-modal .overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+#filter-modal .overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#filter-modal .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 필터 선택 상태 시각화 개선 */
+input[type="radio"]:checked + span,
+input[type="checkbox"]:checked + span {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* 반응형 그리드 확실히 적용 */
+@media (max-width: 640px) {
+  .grid.grid-cols-1.sm\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .sm\:gap-4 {
+    gap: 0.5rem !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .grid.grid-cols-1.sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 </style>
