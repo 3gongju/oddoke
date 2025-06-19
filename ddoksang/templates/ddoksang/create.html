@@ -319,22 +319,18 @@
       </div>
     </div>
 
-    <!-- 네비게이션 버튼 -->
-    <div id="navigationButtons" class="mt-8 w-full">
-      <!-- 이전 버튼 -->
-      <button type="button" id="prevBtn"
-              class="fixed bottom-4 w-14 h-14 bg-gray-900 text-white text-2xl font-bold rounded-full hover:bg-gray-800 shadow-lg transition-all duration-200 hidden z-50 items-center justify-center"
-              title="이전 단계">
-        ‹
-      </button>
+        <!-- 네비게이션 버튼 -->
+<div id="navigationButtons" class="mt-12 flex justify-between items-center">
+  <button type="button" id="prevBtn"
+          class="w-12 h-12 bg-gray-900 text-white text-xl rounded-full hover:bg-gray-800 shadow-md transition-all duration-200 hidden items-center justify-center"
+          title="이전 단계">‹</button>
 
-      <!-- 다음 버튼 -->
-      <button type="button" id="nextBtn"
-              class="fixed bottom-4 right-4 w-14 h-14 bg-gray-900 text-white text-2xl font-bold rounded-full hover:bg-gray-800 shadow-lg transition-all duration-200 hidden z-50 items-center justify-center"
-              title="다음 단계">
-        ›
-      </button>
-    </div>
+  <button type="button" id="nextBtn"
+          class="w-12 h-12 bg-gray-900 text-white text-xl rounded-full hover:bg-gray-800 shadow-md transition-all duration-200 hidden items-center justify-center"
+          title="다음 단계">›</button>
+</div>
+
+
   </form>
 </section>
 
@@ -468,22 +464,36 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   /* FAQ 버튼과 완전히 겹치지 않는 위치 설정 */
+  /* 새 버튼 스타일 */
   #prevBtn, #nextBtn {
-    display: none !important;
-  }
-
-  #prevBtn:not(.hidden), #nextBtn:not(.hidden) {
-    display: flex !important;
+    display: none;            /* 자바스크립트로 토글 */
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+    border-radius: 9999px;
+    background-color: #111827;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
   }
 
   #prevBtn:hover, #nextBtn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+    background-color: #1f2937;
   }
 
   #prevBtn:active, #nextBtn:active {
     transform: scale(0.95);
   }
+
+  #navigationButtons {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
 
   /* FAQ 버튼 위치를 고려한 이전 버튼 위치 */
   #prevBtn {
@@ -494,23 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
     right: 24px !important;
   }
 
-  /* 모바일에서 FAQ 버튼 위치에 맞춘 조정 */
-  @media (max-width: 640px) {
-    #prevBtn, #nextBtn {
-      width: 48px !important;
-      height: 48px !important;
-      font-size: 18px !important;
-      bottom: 16px !important;
-    }
 
-    #prevBtn {
-      left: 136px !important;
-    }
-
-    #nextBtn {
-      right: 16px !important;
-    }
-  }
 
   /* 아주 작은 화면에서 추가 조정 */
   @media (max-width: 480px) {
