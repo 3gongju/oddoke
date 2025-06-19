@@ -1,17 +1,95 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load member_images %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/main.min.css" rel="stylesheet" />
+
+<style>
+  @font-face {
+    font-family: 'NanumSquareRound';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  body,
+  #calendar,
+  h2,
+  h2 span,
+  .fc,
+  .fc-toolbar-title,
+  .fc-button,
+  .fc-col-header-cell-cushion {
+    font-family: 'NanumSquareRound', sans-serif !important;
+    color: #111827;
+  }
+
+  #calendar {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+  }
+
+  .fc .fc-daygrid-day-number {
+    font-weight: bold;
+    font-size: 1rem;
+  }
+
+  .fc .fc-daygrid-event {
+    background-color: transparent !important;
+    border: none !important;
+    font-size: 0.85rem;
+    font-weight: normal;
+    padding: 2px 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .member-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .fc-button {
+    background-color: #efefef;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.875rem;
+  }
+
+  .fc-button-primary:not(:disabled).fc-button-active,
+  .fc-button-primary:not(:disabled):active {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  @media (max-width: 768px) {
+    #calendar {
+      padding: 1rem;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block body %}
 <section class="max-w-6xl mx-auto px-4 py-10">
-  <h2 class="text-2xl font-bold mb-6">🎂 전체 생일 멤버 (월간)</h2>
-  <div id="calendar" class="bg-white p-4 rounded shadow"></div>
+  <h2 class="text-2xl font-bold mb-6 flex items-center space-x-2">
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-8 h-8">
+    <span>전체 생일 멤버 (월간)</span>
+  </h2>
+  <div id="calendar"></div>
 </section>
 
-<!-- rrule 먼저 (✅ 반드시 cdnjs 사용!) -->
+<!-- rrule -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rrule/2.6.8/rrule.min.js"></script>
-
-<!-- FullCalendar JS + CSS -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/main.min.css" rel="stylesheet" />
+<!-- FullCalendar -->
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js"></script>
 
 <script>
@@ -26,14 +104,44 @@
         center: 'title',
         right: 'dayGridMonth,dayGridWeek'
       },
-      events: '{% url "bday_calendar:events_api" %}',
-      eventColor: '#f472b6',
+      height: 'auto',
       nowIndicator: true,
-      height: 'auto'
+      dayMaxEventRows: true,
+      eventDisplay: 'block',
+
+      eventDidMount: function(info) {
+        const member = info.event.extendedProps.member_name;
+        const artist = info.event.extendedProps.artist_display_name;
+
+        // 이미지 경로를 서버에서 렌더링된 상태로 구성
+        const imgMap = {
+          {% for e in events %}
+          "{{ e.member_name }}::{{ e.artist_display_name }}": "{% member_image e.member_name e.artist_display_name %}",
+          {% endfor %}
+        };
+
+        const key = `${member}::${artist}`;
+        const imgSrc = imgMap[key] || "{% static 'image/default_member.svg' %}";
+
+        const avatar = document.createElement('img');
+        avatar.src = imgSrc;
+        avatar.alt = member;
+        avatar.className = 'member-avatar';
+
+        const textEl = info.el.querySelector('.fc-event-title, .fc-event-main');
+        if (textEl) {
+          textEl.style.color = '#111827';
+          textEl.style.fontWeight = 'normal';
+          textEl.prepend(avatar);
+        }
+
+        info.el.setAttribute('title', info.event.title);
+      },
+
+      events: "{% url 'bday_calendar:events_api' %}"
     });
 
     calendar.render();
   });
 </script>
-
 {% endblock %}
