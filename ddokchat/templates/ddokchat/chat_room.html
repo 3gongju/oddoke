@@ -24,103 +24,100 @@
 
 <!-- 모달들 -->
 {% include 'ddokchat/components/modals/_fraud_check.html' %}
-{% include 'ddokchat/components/modals/_trade_complete.html' %}
+{% include 'ddokchat/components/modals/_common_modals.html' %}
 
-<!-- 리뷰 모달 -->
-{% if current_user == room.buyer and not has_already_reviewed %}
-  {% include 'ddokchat/components/modals/_review.html' %}
-{% endif %}
 <!-- CSS 파일들 로드 -->
 <link rel="stylesheet" href="{% static 'css/ddokchat/chat_room.css' %}">
 <link rel="stylesheet" href="{% static 'css/ddokchat/animations.css' %}">
 <link rel="stylesheet" href="{% static 'css/ddokchat/modal.css' %}">
 <link rel="stylesheet" href="{% static 'css/ddokchat/message_bubble.css' %}">
 
-<!-- 채팅방 전용 스타일 - chat_room.html의 style 태그 내용 -->
 <style>
-  /* 기존 스타일들 */
-  body {
-    overflow: hidden !important;
-  }
-  
-  #faqButton, #faqModal {
+/* 기존 스타일들 */
+body {
+  overflow: hidden !important;
+}
+
+#faqButton, #faqModal {
+  display: none !important;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* 모든 하단 여백 강제 제거 */
+body > *:last-child {
+  display: none !important;
+}
+
+.h-32, .h-48 {
+  display: none !important;
+}
+
+body {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 🔥 채팅 컨테이너 너비 제한 및 중앙 정렬 */
+.h-screen {
+  height: 100vh !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 100vw !important;
+  max-width: 800px !important; /* PC에서 최대 너비 제한 */
+}
+
+/* 🔥 반응형 네비게이션 및 헤더 위치 조정 */
+@media (max-width: 767px) {
+  /* 모바일: 네비바 숨김 */
+  nav {
     display: none !important;
   }
   
-  html, body {
-    height: 100%;
-    overflow-x: hidden;
-  }
-  
-  /* 모든 하단 여백 강제 제거 */
-  body > *:last-child {
-    display: none !important;
-  }
-  
-  .h-32, .h-48 {
-    display: none !important;
-  }
-  
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-  
-  /* 🔥 채팅 컨테이너 너비 제한 및 중앙 정렬 */
+  /* 채팅 헤더 위치 조정 */
   .h-screen {
-    height: 100vh !important;
-    position: fixed !important;
     top: 0 !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
     width: 100vw !important;
-    max-width: 800px !important; /* PC에서 최대 너비 제한 */
+    max-width: none !important; /* 모바일에서는 너비 제한 없음 */
   }
   
-  /* 🔥 반응형 네비게이션 및 헤더 위치 조정 */
-  @media (max-width: 767px) {
-    /* 모바일: 네비바 숨김 */
-    nav {
-      display: none !important;
-    }
-    
-    /* 채팅 헤더 위치 조정 */
-    .h-screen {
-      top: 0 !important;
-      width: 100vw !important;
-      max-width: none !important; /* 모바일에서는 너비 제한 없음 */
-    }
-    
-    #chat-log {
-      height: calc(100vh - 110px) !important;
-      padding-bottom: 2.5rem !important; /* 하단 여백 증가 */
-    }
+  /* 🔧 모바일 메시지 영역 높이 조정 (여백 최적화) */
+  #chat-log {
+    height: calc(100vh - 170px - 70px) !important; /* 여백 20px 복구 */
+    padding-bottom: 1rem !important; /* 하단 여백 축소 */
+  }
+}
+
+@media (min-width: 768px) {
+  /* PC: 네비바 유지 */
+  .h-screen {
+    top: 64px !important; /* 네비바 높이만큼 아래로 */
+    height: calc(100vh - 64px) !important; /* 네비바 높이 제외 */
   }
   
-  @media (min-width: 768px) {
-    /* PC: 네비바 유지 */
-    .h-screen {
-      top: 64px !important; /* 네비바 높이만큼 아래로 */
-      height: calc(100vh - 64px) !important; /* 네비바 높이 제외 */
-    }
-    
-    #chat-log {
-      height: calc(100vh - 174px) !important;
-      padding-bottom: 2.5rem !important; /* 하단 여백 증가 */
-    }
-    
-    /* PC에서 좌우 여백 추가 */
-    #messageInputArea {
-      padding-left: 1rem !important;
-      padding-right: 1rem !important;
-    }
+  /* 🔧 PC 메시지 영역 높이 조정 (여백 최적화) */
+  #chat-log {
+    height: calc(100vh - 64px - 166px - 70px) !important; /* 여백 20px 복구 */
+    padding-bottom: 1rem !important; /* 하단 여백 축소 */
   }
   
-  /* 입력창 상단 여백 제거 */
+  /* PC에서 좌우 여백 추가 */
   #messageInputArea {
-    padding-bottom: 0.75rem !important; /* pb-3만 유지 */
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
+}
+
+/* 입력창 상단 여백 제거 */
+#messageInputArea {
+  padding-bottom: 0.75rem !important; /* pb-3만 유지 */
+}
 </style>
 
 <script>
