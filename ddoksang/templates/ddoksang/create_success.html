@@ -5,7 +5,16 @@
 
 {% block title %}등록 완료 - 덕생{% endblock %}
 
+{% block head %}
+<!-- 카카오맵 API 로드 -->
+{% if kakao_api_key %}
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
+{% endif %}
+{% endblock %}
+
 {% block body %}
+
+
 <div class="min-h-screen bg-gray-50 py-8 px-4">
   <div class="max-w-screen-md mx-auto">
     
@@ -96,12 +105,15 @@
           </div>
           
           <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
-            <div class="flex items-center mb-3">
-              <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-              </svg>
-              <h3 class="font-semibold text-gray-900">위치</h3>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-gray-900 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <h3 class="font-semibold text-gray-900">위치</h3>
+              </div>
+
             </div>
             <p class="text-gray-900 font-medium">{{ cafe.place_name }}</p>
             <p class="text-gray-600 text-sm mt-1">{{ cafe.address }}</p>
@@ -109,6 +121,29 @@
             <p class="text-gray-500 text-xs mt-1">{{ cafe.road_address }}</p>
             {% endif %}
           </div>
+        </div>
+
+        <!-- 지도 (기본으로 표시) -->
+        <div class="relative w-full h-64 bg-gray-100 rounded-lg border overflow-hidden" id="location-preview-map">
+          <div id="preview-map" class="w-full h-full"></div>
+          <div class="absolute top-3 right-3">
+            <button type="button" 
+                    onclick="togglePreviewMap()" 
+                    class="bg-white/90 hover:bg-white px-3 py-2 rounded-lg text-sm border shadow-sm font-medium"
+                    id="show-preview-map-btn">
+              지도 접기
+            </button>
+          </div>
+        </div>
+
+        <!-- 지도 접기 버튼 (지도 아래) -->
+        <div class="text-center" id="map-toggle-section">
+          <button type="button" 
+                  onclick="togglePreviewMap()" 
+                  class="text-blue-600 hover:text-blue-800 text-sm underline"
+                  id="bottom-map-toggle-btn">
+             지도 접기
+          </button>
         </div>
 
         <!-- 특전 정보 -->
@@ -124,9 +159,23 @@
               <div class="space-y-3">
                 {% for category, items in grouped_benefits.items %}
                   <div class="flex items-start gap-3">
-                    <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gray-900 text-white">
-                      {{ category }}
-                    </span>
+                    {% if category == "일반 특전" %}
+                      <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-sky-500 text-white">
+                        {{ category }}
+                      </span>
+                    {% elif category == "선착 특전" %}
+                      <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-white">
+                        {{ category }}
+                      </span>
+                    {% elif category == "그 외 특전" %}
+                      <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-500 text-white">
+                        {{ category }}
+                      </span>
+                    {% else %}
+                      <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-purple-500 text-white">
+                        {{ category }}
+                      </span>
+                    {% endif %}
                     <span class="text-sm text-gray-700 leading-relaxed">
                       {{ items|join:", " }}
                     </span>
@@ -173,6 +222,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
               </svg>
             </a>
+            <p class="text-xs text-gray-500 mt-3">클릭 시 해당 X(트위터) 계정으로 연결됩니다.</p>
           </div>
         </div>
         {% endif %}
@@ -218,22 +268,21 @@
         </div>
         {% endif %}
         
-        <!-- 이미지 정보 -->
+        <!-- 이미지 정보 (가운데 왼쪽 정렬로 수정) -->
         <div class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <p class="text-sm text-gray-600 mb-3 flex items-center">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            이미지를 클릭하면 크게 볼 수 있습니다
-          </p>
+          <div class="flex items-center justify-center">
+            <p class="text-sm text-gray-600 mb-3 flex items-center">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              이미지를 클릭하면 크게 볼 수 있습니다
+            </p>
+          </div>
           {% if cafe.images.all %}
           <div class="space-y-2">
             {% for image in cafe.images.all %}
             <div class="flex items-center justify-between text-sm">
-              <span class="text-gray-700">{{ forloop.counter }}. {{ image.caption|default:"이미지" }}</span>
               <span class="text-gray-500">
-                {% if image.width and image.height %}{{ image.width }}×{{ image.height }}px{% endif %}
-                {% if image.file_size %} · {{ image.file_size|filesizeformat }}{% endif %}
               </span>
             </div>
             {% endfor %}
@@ -315,6 +364,83 @@ function closeImageModal() {
   document.body.style.overflow = 'auto';
 }
 
+// 카카오맵에서 보기
+function openKakaoMap(lat, lng, placeName) {
+  const url = `https://map.kakao.com/link/map/${encodeURIComponent(placeName)},${lat},${lng}`;
+  window.open(url, '_blank');
+}
+
+// 미리보기 지도 관련 (수정됨)
+let previewMap = null;
+let previewMarker = null;
+let isMapVisible = true; // 기본적으로 지도가 열려있음
+
+function togglePreviewMap() {
+  const mapContainer = document.getElementById('location-preview-map');
+  const topBtn = document.getElementById('show-preview-map-btn');
+  const bottomBtn = document.getElementById('bottom-map-toggle-btn');
+  const mapToggleSection = document.getElementById('map-toggle-section');
+  
+  if (isMapVisible) {
+    // 지도 닫기
+    mapContainer.style.display = 'none';
+    mapToggleSection.style.display = 'block';
+    bottomBtn.textContent = '지도 열기';
+    isMapVisible = false;
+  } else {
+    // 지도 열기
+    mapContainer.style.display = 'block';
+    mapToggleSection.style.display = 'none';
+    topBtn.textContent = '지도 접기';
+    isMapVisible = true;
+    
+    // 지도 초기화 (처음 열 때만)
+    if (!previewMap) {
+      initPreviewMap();
+    }
+  }
+}
+
+function initPreviewMap() {
+  // 카카오맵 API 확인
+  if (typeof kakao === 'undefined' || !kakao.maps) {
+    console.error('카카오맵 API가 로드되지 않았습니다.');
+    return;
+  }
+
+  try {
+    const container = document.getElementById('preview-map');
+    const options = {
+      center: new kakao.maps.LatLng({{ cafe.latitude }}, {{ cafe.longitude }}),
+      level: 3
+    };
+
+    previewMap = new kakao.maps.Map(container, options);
+    
+    // 마커 생성
+    const markerPosition = new kakao.maps.LatLng({{ cafe.latitude }}, {{ cafe.longitude }});
+    previewMarker = new kakao.maps.Marker({
+      position: markerPosition,
+      map: previewMap
+    });
+
+    // 인포윈도우 생성
+    const infowindow = new kakao.maps.InfoWindow({
+      content: `
+        <div style="padding:8px; font-size:12px; width:150px; text-align:center;">
+          <strong>{{ cafe.place_name|escapejs }}</strong>
+        </div>
+      `
+    });
+
+    infowindow.open(previewMap, previewMarker);
+    
+    console.log('미리보기 지도 초기화 완료');
+  } catch (error) {
+    console.error('미리보기 지도 초기화 오류:', error);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const modal = document.getElementById('imageModal');
   
@@ -327,6 +453,9 @@ document.addEventListener('DOMContentLoaded', function () {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeImageModal();
   });
+
+  // 페이지 로드 시 지도 초기화
+  initPreviewMap();
 });
 </script>
 
@@ -367,6 +496,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* 지도 토글 섹션 초기 숨김 */
+#map-toggle-section {
+  display: none;
 }
 </style>
 {% endblock %}

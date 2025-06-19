@@ -208,6 +208,7 @@ def cafe_create_success(request, cafe_id):
         context = {
             'cafe': cafe,
             'parsed_benefits': parsed_benefits,
+            'kakao_api_key': getattr(settings, 'KAKAO_API_KEY', ''),
         }
         
         return render(request, 'ddoksang/create_success.html', context)
