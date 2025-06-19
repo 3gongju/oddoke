@@ -31,6 +31,11 @@ class User(AbstractUser):
     kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
     naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
 
+    # 🔥 제재 관련 필드 추가
+    suspension_start = models.DateTimeField(blank=True, null=True, verbose_name="제재 시작일")
+    suspension_end = models.DateTimeField(blank=True, null=True, verbose_name="제재 종료일")
+    suspension_reason = models.TextField(blank=True, null=True, verbose_name="제재 사유")
+
    # 편의 메서드들
     def get_fandom_profile(self):
        try:
