@@ -768,7 +768,6 @@ def check_duplicate_cafe(request):
         
     except Exception as e:
         # 최상위 예외 처리
-        logger.error(f"중복 확인 API 예상치 못한 오류: {e}", exc_info=True)
         return JsonResponse({
             'exists': False,
             'error': get_message('DUPLICATE_CHECK', 'SERVER_ERROR')
