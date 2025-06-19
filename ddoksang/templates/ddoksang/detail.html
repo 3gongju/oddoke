@@ -20,6 +20,10 @@
 <div class="detail-content-wrapper">
   <div class="bg-gradient-to-br from-white">
     {% include "ddoksang/components/detail/_status_banner.html" %}
+    
+    <!-- 상단 여백 추가 -->
+    <div class="pt-12"></div>
+    
     {% include "ddoksang/components/detail/_image_header.html" %}
 
     <div id="page-identifier" data-page="detail" style="display: none;"></div>
@@ -77,10 +81,10 @@
 
         <!-- 오른쪽 사이드바 영역 (2칸) -->
         <div class="sidebar-container space-y-4 lg:col-span-2">
-          {% include "ddoksang/components/detail/_quick_view_section.html" %}
+          {% include "ddoksang/components/detail/_address_duration_info.html" %}
          
           <div class="sidebar-card map-card">
-           {% include "ddoksang/components/detail/_address_duration_info.html" %}
+           {% include "ddoksang/components/detail/_quick_view_section.html" %}
           </div>
 
           <!-- 공유 섹션 -->

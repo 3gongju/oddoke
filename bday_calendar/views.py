@@ -1,12 +1,14 @@
 # bday_calendar/views.py
-from datetime import datetime, timedelta
+from datetime import date
 from django.shortcuts import render
 from django.http import JsonResponse
 from artist.models import Member
-from datetime import date
 
 def birthday_calendar(request):
-    return render(request, 'bday_calendar/calendar.html')
+    all_members = Member.objects.select_related().all()
+    return render(request, 'bday_calendar/calendar.html', {
+        'all_members': all_members
+    })
 
 def birthday_events_api(request):
     today = date.today()
@@ -26,7 +28,10 @@ def birthday_events_api(request):
             events.append({
                 "title": f"{member.member_name} ({artist_display})",
                 "start": birthday.isoformat(),
-                "allDay": True
+                "allDay": True,
+                # ✅ 프로필 이미지 삽입을 위한 추가 필드
+                "member_name": member.member_name,
+                "artist_display_name": artist_names[0].display_name if artist_names else ""
             })
         except Exception as e:
             continue
