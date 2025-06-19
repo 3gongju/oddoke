@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // 선택된 카페 페이지로 이동
                 if (confirm('선택하신 카페 페이지로 이동하시겠습니까?')) {
-                    window.location.href = `/ddoksang/detail/${selectedCafeId}/`;
+                    window.location.href = `/ddoksang/cafe/${selectedCafeId}/`;
                 }
             });
         }
@@ -247,8 +247,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // ✅ 중복 카페 카드 생성 함수 추가
     function createDuplicateCafeCard(cafe) {
         const card = document.createElement('div');
-        card.className = 'duplicate-cafe-card bg-white border-2 border-transparent rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200';
+        card.className = 'duplicate-cafe-card bg-white border-2 border-transparent rounded-lg p-4 shadow-md hover:shadow-lg transition-all duration-200 relative';
         card.dataset.cafeId = cafe.id;
+        
+        // ✅ 이미지 HTML 추가
+        const imageHtml = cafe.main_image ? 
+            `<img src="${cafe.main_image}" alt="${cafe.cafe_name}" class="w-full h-32 object-cover rounded-lg mb-3">` :
+            `<div class="w-full h-32 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg mb-3 flex items-center justify-center">
+                <span class="text-pink-400 text-2xl">🏪</span>
+            </div>`;
         
         card.innerHTML = `
             <div class="selected-indicator absolute top-2 right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center opacity-0">
@@ -257,9 +264,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
             </div>
             
+            ${imageHtml}
+            
             <div class="mb-3">
                 <h4 class="font-semibold text-gray-900 text-sm mb-1">${cafe.cafe_name}</h4>
                 <p class="text-xs text-gray-600">${cafe.artist_name}${cafe.member_name ? ' - ' + cafe.member_name : ''}</p>
+                ${cafe.similarity_percent ? `<p class="text-xs text-blue-600 font-medium">유사도: ${cafe.similarity_percent}</p>` : ''}
             </div>
             
             <div class="space-y-2 text-xs text-gray-600">
@@ -276,6 +286,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     </svg>
                     <span class="leading-tight">${cafe.address}</span>
                 </div>
+                
+                ${cafe.status_display ? `
+                <div class="flex items-center">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${cafe.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                        ${cafe.status_display}
+                    </span>
+                </div>
+                ` : ''}
             </div>
         `;
         
