@@ -5,6 +5,9 @@ from django_resized import ResizedImageField
 from django.utils import timezone
 from datetime import timedelta
 from .utils import AccountEncryption, AddressEncryption
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 
 class User(AbstractUser):
     email = models.EmailField(unique=True, error_messages={
@@ -357,3 +360,138 @@ def default_profile_image():
     return 'profile/default.png'
 
 # profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
+
+
+class PostReport(models.Model):
+    """게시글 신고 모델 (덕담, 덕팜 공통)"""
+    REPORT_REASONS = [
+        ('profanity', '욕설, 불쾌한 표현 사용'),
+        ('hate_spam', '혐오 발언, 반복적 광고, 선정적 내용'),
+        ('illegal', '불법 콘텐츠, 범죄, 개인정보 노출'),
+        ('irrelevant', '관련성이 낮은 게시글'),  # 🔥 새로운 신고 사유 추가
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', '검토 중'),
+        ('approved', '신고 승인'),
+        ('rejected', '신고 반려'),
+        ('resolved', '처리 완료'),
+    ]
+    
+    # 신고 기본 정보
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='reports_made',
+        verbose_name='신고자'
+    )
+    
+    reported_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reports_received',
+        verbose_name='신고 대상 유저'
+    )
+    
+    # GenericForeignKey로 덕담, 덕팜 게시글 모두 지원
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    reason = models.CharField(
+        max_length=20,
+        choices=REPORT_REASONS,
+        verbose_name='신고 사유'
+    )
+    
+    additional_info = models.TextField(
+        blank=True,
+        verbose_name='추가 설명'
+    )
+    
+    # 관리자 처리 정보
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='처리 상태'
+    )
+    
+    admin_notes = models.TextField(
+        blank=True,
+        verbose_name='관리자 메모'
+    )
+    
+    processed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reports_processed',
+        verbose_name='처리한 관리자'
+    )
+    
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='처리 일시'
+    )
+    
+    # 제재 정보
+    restriction_start = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='제재 시작일'
+    )
+    
+    restriction_end = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='제재 종료일'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='신고 일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정 일시')
+    
+    class Meta:
+        verbose_name = '게시글 신고'
+        verbose_name_plural = '게시글 신고 목록'
+        ordering = ['-created_at']
+        unique_together = ['reporter', 'content_type', 'object_id']
+    
+    def __str__(self):
+        return f"{self.reporter.username} → {self.get_reason_display()} ({self.get_status_display()})"
+    
+    def get_post_title(self):
+        """신고된 게시글 제목 반환"""
+        if self.content_object:
+            return getattr(self.content_object, 'title', 'N/A')
+        return 'N/A'
+    
+    def get_post_category(self):
+        """신고된 게시글 카테고리 반환"""
+        if self.content_object:
+            return getattr(self.content_object, 'category_type', 'N/A')
+        return 'N/A'
+    
+    def get_app_name(self):
+        """신고된 게시글의 앱 이름 반환 (덕담/덕팜 구분)"""
+        if self.content_object:
+            model_name = self.content_type.model
+            if model_name.startswith('dam'):
+                return 'ddokdam'
+            elif model_name.startswith('farm'):
+                return 'ddokfarm'
+        return 'unknown'
+    
+    def get_post_url(self):
+        """신고된 게시글 URL 반환"""
+        if self.content_object:
+            app_name = self.get_app_name()
+            category = self.get_post_category()
+            try:
+                from django.urls import reverse
+                return reverse(f'{app_name}:post_detail', args=[category, self.object_id])
+            except:
+                return '#'
+        return '#'
