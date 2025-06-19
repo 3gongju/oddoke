@@ -365,4 +365,59 @@
         fetch(reportForm.action, {
           method: 'POST',
           body: formData,
-          headers:
+          headers: {
+            'X-CSRFToken': window.csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            closeReportModalFunction();
+            showSuccessModal();
+          } else {
+            alert(data.error || data.message || '신고 처리 중 오류가 발생했습니다.');
+            submitReportBtn.disabled = false;
+            submitReportBtn.textContent = '신고하기';
+          }
+        })
+        .catch(error => {
+          console.error('신고 오류:', error);
+          alert('신고 처리 중 오류가 발생했습니다.');
+          submitReportBtn.disabled = false;
+          submitReportBtn.textContent = '신고하기';
+        });
+      });
+    }
+
+    // 🔥 성공 모달 표시
+    function showSuccessModal() {
+      if (reportSuccessModal) {
+        reportSuccessModal.classList.remove('hidden');
+      }
+    }
+
+    // 🔥 성공 모달 닫기
+    if (closeSuccessModal) {
+      closeSuccessModal.addEventListener('click', function() {
+        reportSuccessModal.classList.add('hidden');
+      });
+    }
+
+    // 🔥 ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        if (!reportModal.classList.contains('hidden')) {
+          closeReportModalFunction();
+        }
+        if (!reportSuccessModal.classList.contains('hidden')) {
+          reportSuccessModal.classList.add('hidden');
+        }
+      }
+    });
+  });
+</script>
+
+<!-- ✅ 댓글 비동기 처리 스크립트 추가 -->
+<script src="{% static 'js/comment.js' %}"></script>
+{% endblock %}
