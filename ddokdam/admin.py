@@ -148,69 +148,82 @@ class DamPostReportAdmin(admin.ModelAdmin):
     @admin.action(description="🟠 일시정지 처리 (14일 제한)")
     def action_suspension(self, request, queryset):
         """중간 수준 위반 - 일시정지 및 게시글 삭제"""
+        deleted_posts = 0
+        suspended_users = 0
+        
         for report in queryset.filter(status='pending'):
-            # 게시글 삭제
+            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제)
             try:
                 if report.content_object:
-                    report.content_object.delete()
-            except Exception:
-                pass
+                    post_title = getattr(report.content_object, 'title', '제목 없음')
+                    report.content_object.delete()  # 실제 게시글 삭제
+                    deleted_posts += 1
+                    print(f"게시글 삭제됨: {post_title}")
+            except Exception as e:
+                print(f"게시글 삭제 실패: {e}")
+            
+            # 사용자 제재 (14일)
+            user = report.reported_user
+            if user:
+                try:
+                    user.suspend_user(f"신고 처리 - {report.get_reason_display()}", days=14)
+                    suspended_users += 1
+                    print(f"사용자 제재됨: {user.username}")
+                except Exception as e:
+                    print(f"사용자 제재 실패: {e}")
+                
+                report.restriction_start = timezone.now()
+                report.restriction_end = timezone.now() + timedelta(days=14)
             
             # 신고 상태 업데이트
             report.status = 'resolved'
             report.processed_at = timezone.now()
             report.processed_by = request.user
             report.admin_notes = f"일시정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
-            
-            # 사용자 제재 (14일)
-            user = report.reported_user
-            if user:
-                from accounts.models import User
-                User.objects.filter(id=user.id).update(
-                    suspension_start=timezone.now(),
-                    suspension_end=timezone.now() + timedelta(days=14),
-                    suspension_reason=f"신고 처리 - {report.get_reason_display()}"
-                )
-                report.restriction_start = timezone.now()
-                report.restriction_end = timezone.now() + timedelta(days=14)
-            
             report.save()
             
-        self.message_user(request, f"{queryset.count()}건의 신고를 일시정지 처리했습니다. (14일 제한, 게시글 삭제)")
+        self.message_user(request, f"{queryset.count()}건의 신고를 처리했습니다. (게시글 {deleted_posts}개 삭제, 사용자 {suspended_users}명 14일 제재)")
     
     @admin.action(description="🔴 영구정지 처리")
     def action_permanent_ban(self, request, queryset):
         """심각한 위반 - 영구 정지"""
+        deleted_posts = 0
+        banned_users = 0
+        
         for report in queryset.filter(status='pending'):
-            # 게시글 삭제
+            # 🔥 신고된 게시글 삭제 (실제 게시글 삭제)
             try:
                 if report.content_object:
-                    report.content_object.delete()
-            except Exception:
-                pass
+                    post_title = getattr(report.content_object, 'title', '제목 없음')
+                    report.content_object.delete()  # 실제 게시글 삭제
+                    deleted_posts += 1
+                    print(f"게시글 삭제됨: {post_title}")
+            except Exception as e:
+                print(f"게시글 삭제 실패: {e}")
+            
+            # 사용자 영구 제재
+            user = report.reported_user
+            if user:
+                try:
+                    user.suspend_user(f"신고 처리 - {report.get_reason_display()} (영구정지)")
+                    user.is_active = False  # 🔥 계정 비활성화
+                    user.save(update_fields=['is_active'])
+                    banned_users += 1
+                    print(f"사용자 영구정지됨: {user.username}")
+                except Exception as e:
+                    print(f"사용자 영구정지 실패: {e}")
+                
+                report.restriction_start = timezone.now()
+                report.restriction_end = None
             
             # 신고 상태 업데이트
             report.status = 'resolved'
             report.processed_at = timezone.now()
             report.processed_by = request.user
             report.admin_notes = f"영구정지 처리 및 게시글 삭제됨 - 관리자: {request.user.username}"
-            
-            # 사용자 영구 제재
-            user = report.reported_user
-            if user:
-                from accounts.models import User
-                User.objects.filter(id=user.id).update(
-                    is_active=False,
-                    suspension_start=timezone.now(),
-                    suspension_end=None,  # 영구정지는 종료일 없음
-                    suspension_reason=f"신고 처리 - {report.get_reason_display()} (영구정지)"
-                )
-                report.restriction_start = timezone.now()
-                report.restriction_end = None
-            
             report.save()
             
-        self.message_user(request, f"{queryset.count()}건의 신고를 영구정지 처리했습니다. (게시글 삭제)")
+        self.message_user(request, f"{queryset.count()}건의 신고를 처리했습니다. (게시글 {deleted_posts}개 삭제, 사용자 {banned_users}명 영구정지)")
     
     @admin.action(description="✅ 신고 기각")
     def action_dismiss(self, request, queryset):
