@@ -95,7 +95,7 @@
               <label class="flex items-start space-x-3 cursor-pointer">
                 <input type="radio" name="reason" value="profanity" class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
                 <div>
-                  <div class="text-sm font-medium text-gray-900">욕설, 불쾌한 표현 사용</div>
+                  <div class="text-sm font-medium text-gray-900">욕설, 불쾌한 표현 사용 / 게시글과 무관한 내용 작성</div>
                   <div class="text-xs text-gray-500">모욕적이거나 불쾌감을 주는 언어 사용</div>
                 </div>
               </label>
@@ -113,6 +113,15 @@
                 <div>
                   <div class="text-sm font-medium text-gray-900">불법 콘텐츠, 범죄, 개인정보 노출</div>
                   <div class="text-xs text-gray-500">법적 문제가 있는 내용이나 개인정보 침해</div>
+                </div>
+              </label>
+
+              <!-- 🔥 새로운 신고 사유 추가 -->
+              <label class="flex items-start space-x-3 cursor-pointer">
+                <input type="radio" name="reason" value="irrelevant" class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
+                <div>
+                  <div class="text-sm font-medium text-gray-900">관련성이 낮은 게시글</div>
+                  <div class="text-xs text-gray-500">카테고리와 맞지 않거나 관련성이 낮은 내용</div>
                 </div>
               </label>
             </div>
@@ -283,7 +292,7 @@
         
         // 폼 액션 URL 설정
         if (reportForm) {
-          reportForm.action = `{% url 'ddokdam:report_post' category=category post_id=post.id %}`;
+          reportForm.action = `{% url 'accounts:report_post' app_name='ddokdam' category=category post_id=post.id %}`;
         }
       }
     }

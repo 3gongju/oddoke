@@ -23,9 +23,12 @@ from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmCom
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
-from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile
-from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm
+from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport
+from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm, PostReportForm
 from .services import KakaoAuthService, NaverAuthService
+
+from django.views.decorators.http import require_POST, require_GET
+from django.contrib.contenttypes.models import ContentType
 
 load_dotenv()
 
@@ -1142,3 +1145,117 @@ def account_info(request, username):
         'user_profile': user_profile,
     }
     return render(request, 'accounts/account_info.html', context)
+
+
+# 공통 신고 
+@login_required
+@require_POST
+def report_post(request, app_name, category, post_id):
+    """게시글 신고 처리 (덕담, 덕팜 공통)"""
+    # 앱별 모델 가져오기
+    if app_name == 'ddokdam':
+        from ddokdam.utils import get_post_model
+    elif app_name == 'ddokfarm':
+        from ddokfarm.utils import get_post_model
+    else:
+        raise Http404("지원하지 않는 앱입니다.")
+    
+    model = get_post_model(category)
+    if not model:
+        raise Http404("존재하지 않는 카테고리입니다.")
+    
+    post = get_object_or_404(model, id=post_id)
+    
+    # 자신의 게시글은 신고할 수 없음
+    if request.user == post.user:
+        return JsonResponse({
+            'success': False, 
+            'error': '자신의 게시글은 신고할 수 없습니다.'
+        })
+    
+    # 이미 신고한 경우 중복 신고 방지
+    existing_report = PostReport.objects.filter(
+        reporter=request.user,
+        content_type=ContentType.objects.get_for_model(post.__class__),
+        object_id=post.id
+    ).first()
+    
+    if existing_report:
+        return JsonResponse({
+            'success': False,
+            'error': '이미 신고한 게시글입니다.'
+        })
+    
+    form = PostReportForm(request.POST)
+    
+    if form.is_valid():
+        report = form.save(commit=False)
+        report.reporter = request.user
+        report.reported_user = post.user
+        report.content_type = ContentType.objects.get_for_model(post.__class__)
+        report.object_id = post.id
+        report.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': '신고가 접수되었습니다. 검토 후 조치하겠습니다.'
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'error': '신고 정보를 확인해주세요.',
+            'form_errors': form.errors
+        })
+
+@login_required
+@require_GET  
+def get_report_form(request, app_name, category, post_id):
+    """신고 폼 HTML 반환 (덕담, 덕팜 공통)"""
+    # 앱별 모델 가져오기
+    if app_name == 'ddokdam':
+        from ddokdam.utils import get_post_model
+    elif app_name == 'ddokfarm':
+        from ddokfarm.utils import get_post_model
+    else:
+        raise Http404("지원하지 않는 앱입니다.")
+    
+    model = get_post_model(category)
+    if not model:
+        raise Http404("존재하지 않는 카테고리입니다.")
+    
+    post = get_object_or_404(model, id=post_id)
+    
+    # 자신의 게시글은 신고할 수 없음
+    if request.user == post.user:
+        return JsonResponse({
+            'success': False,
+            'error': '자신의 게시글은 신고할 수 없습니다.'
+        })
+    
+    # 이미 신고한 경우
+    existing_report = PostReport.objects.filter(
+        reporter=request.user,
+        content_type=ContentType.objects.get_for_model(post.__class__),
+        object_id=post.id
+    ).first()
+    
+    if existing_report:
+        return JsonResponse({
+            'success': False,
+            'error': '이미 신고한 게시글입니다.'
+        })
+    
+    form = PostReportForm()
+    
+    # 폼 HTML 렌더링
+    form_html = render_to_string('components/_report_form.html', {
+        'form': form,
+        'post': post,
+        'category': category,
+        'app_name': app_name,
+    }, request=request)
+    
+    return JsonResponse({
+        'success': True,
+        'form_html': form_html
+    })

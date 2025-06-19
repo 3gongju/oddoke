@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, MannerReview, BankProfile, AddressProfile
+from .models import User, MannerReview, BankProfile, AddressProfile, PostReport
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
@@ -508,3 +508,25 @@ class AddressForm(forms.ModelForm):
         address_profile.sigungu = self.cleaned_data['sigungu']
         address_profile.save()
         return address_profile
+
+class PostReportForm(forms.ModelForm):
+    """게시글 신고 폼 (덕담, 덕팜 공통)"""
+    class Meta:
+        model = PostReport
+        fields = ['reason', 'additional_info']
+        widgets = {
+            'reason': forms.RadioSelect(attrs={
+                'class': 'space-y-3'
+            }),
+            'additional_info': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500',
+                'rows': 3,
+                'placeholder': '추가로 설명할 내용이 있다면 작성해주세요 (선택사항)',
+            }),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['reason'].label = '신고 사유'
+        self.fields['additional_info'].label = '추가 설명'
+        self.fields['additional_info'].required = False

@@ -57,4 +57,8 @@ urlpatterns = [
     path('<str:username>/address/', views.address_registration, name='address_registration'),
     path('<str:username>/address/modify/', views.address_modify, name='address_modify'),
     path('<str:username>/address/delete/', views.address_delete, name='address_delete'),
+
+    # 공통 신고 기능 URL 추가
+    path('report/<str:app_name>/<str:category>/<int:post_id>/', views.report_post, name='report_post'),
+    path('report/<str:app_name>/<str:category>/<int:post_id>/form/', views.get_report_form, name='get_report_form'),
 ]
