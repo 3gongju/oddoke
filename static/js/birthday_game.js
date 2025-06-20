@@ -92,6 +92,9 @@ function showMemberSelection(members) {
   
   gameDOM.memberGrid.innerHTML = '';
   
+  // 멤버 수에 따른 그리드 스타일 적용
+  gameDOM.memberGrid.setAttribute('data-count', members.length);
+  
   members.forEach(member => {
     const memberCard = document.createElement('div');
     memberCard.className = 'member-card';

@@ -15,9 +15,44 @@
 
 .member-selector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.2rem;
   margin-bottom: 2rem;
+  max-width: 800px; /* 최대 폭 제한 */
+  margin-left: auto;
+  margin-right: auto;
+  justify-items: center;
+}
+
+/* 멤버 수에 따른 그리드 조정 */
+.member-selector-grid[data-count="1"] {
+  grid-template-columns: 1fr;
+  max-width: 200px;
+}
+
+.member-selector-grid[data-count="2"] {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 400px;
+}
+
+.member-selector-grid[data-count="3"] {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 600px;
+}
+
+.member-selector-grid[data-count="4"] {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 400px;
+}
+
+.member-selector-grid[data-count="5"] {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 600px;
+}
+
+.member-selector-grid[data-count="6"] {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 600px;
 }
 
 .member-card {
@@ -231,7 +266,25 @@
   }
 
   .member-selector-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem;
+    max-width: none !important;
+    margin: 0 0 2rem 0 !important;
+  }
+
+  /* 모바일에서 5명 이상일 때 3열로 */
+  .member-selector-grid[data-count="5"],
+  .member-selector-grid[data-count="6"] {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+
+  .member-selector-grid[data-count="5"] .member-card:nth-child(4),
+  .member-selector-grid[data-count="5"] .member-card:nth-child(5) {
+    grid-column: span 1;
+  }
+
+  /* 5명일 때 마지막 하나를 가운데 정렬 */
+  .member-selector-grid[data-count="5"] .member-card:nth-child(5) {
+    grid-column: 2;
   }
 }
