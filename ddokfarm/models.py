@@ -18,6 +18,37 @@ class FarmBasePost(models.Model):
     class Meta:
         abstract = True
 
+class ItemPrice(models.Model):
+    """개별 물건 가격 정보 (양도/대여 공통)"""
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    post = GenericForeignKey('content_type', 'object_id')
+    
+    item_name = models.CharField(max_length=20, blank=True, help_text="물건명 (비어있으면 '덕N'으로 자동 표시)")
+    price = models.PositiveIntegerField(help_text="개별 물건 가격")
+    is_sold = models.BooleanField(default=False, help_text="개별 판매 완료 여부 (향후 기능)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['id']  # 생성 순서대로 정렬
+        
+    def __str__(self):
+        display_name = self.item_name or f"덕{self.get_display_number()}"
+        return f"{self.post.title} - {display_name} ({self.price:,}원)"
+    
+    def get_display_number(self):
+        """덕1, 덕2... 표시용 번호 반환"""
+        # 같은 게시글의 ItemPrice들 중에서 현재 아이템의 순서
+        same_post_items = ItemPrice.objects.filter(
+            content_type=self.content_type, 
+            object_id=self.object_id
+        ).order_by('id')
+        return list(same_post_items).index(self) + 1
+    
+    def get_display_name(self):
+        """표시용 이름 반환 (물건명이 있으면 물건명, 없으면 '덕N')"""
+        return self.item_name or f"덕{self.get_display_number()}"
+
 class FarmMarketPost(FarmBasePost):
     # 상품 상태 선택지
     CONDITION_CHOICES = [
@@ -34,6 +65,54 @@ class FarmMarketPost(FarmBasePost):
         ('both', '직거래, 택배'),
     ]
 
+    price = models.PositiveIntegerField() # 가격
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES) # 상태
+    shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES)  # 배송방법
+    location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
+    members = models.ManyToManyField(Member, blank=True)
+
+    class Meta:
+        abstract = True
+    
+    def get_item_prices(self):
+        """현재 게시글의 개별 가격 목록"""
+        content_type = ContentType.objects.get_for_model(self.__class__)
+        return ItemPrice.objects.filter(content_type=content_type, object_id=self.id)
+    
+    def has_multiple_items(self):
+        """여러 물건이 있는지 확인"""
+        return self.get_item_prices().exists()
+    
+    def get_price_range(self):
+        """가격 범위 반환 (개별 가격이 있으면 그걸로, 없으면 기본 가격)"""
+        if self.has_multiple_items():
+            prices = list(self.get_item_prices().values_list('price', flat=True))
+            return min(prices), max(prices)
+        return self.price, self.price
+    
+    def get_display_price(self):
+        """표시용 가격 문자열"""
+        if self.has_multiple_items():
+            min_price, max_price = self.get_price_range()
+            if min_price == max_price:
+                return f"{min_price:,}원"
+            return f"{min_price:,}원 ~ {max_price:,}원"
+        return f"{self.price:,}원"
+    
+    @property
+    def effective_price(self):
+        """정렬용 가격 (개별 가격이 있으면 최소값, 없으면 기본 가격)"""
+        if self.has_multiple_items():
+            return self.get_price_range()[0]
+        return self.price
+
+class FarmSellPost(FarmMarketPost):
+    WANTTO_CHOICES = [
+        ('sell', '팝니다'),
+        ('buy', '삽니다'),
+        ('exchange', '교환해요'),
+    ]
+
     # 굿즈 종류 선택지
     MD_CHOICES = [
         ('poca', '포토카드'),
@@ -43,24 +122,8 @@ class FarmMarketPost(FarmBasePost):
         ('etc', '기타'),
     ]
 
-    price = models.PositiveIntegerField() # 가격
-    md = models.CharField(max_length=20, choices=MD_CHOICES) # 굿즈 종류
-    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES) # 상태
-    shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES)  # 배송방법
-    location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
-    members = models.ManyToManyField(Member, blank=True)
-
-    class Meta:
-        abstract = True
-
-class FarmSellPost(FarmMarketPost):
-    WANTTO_CHOICES = [
-        ('sell', '팝니다'),
-        ('buy', '삽니다'),
-        ('exchange', '교환해요'),
-    ]
-
     want_to = models.CharField(max_length=20, choices=WANTTO_CHOICES)
+    md = models.CharField(max_length=20, choices=MD_CHOICES) # 굿즈 종류
     images = GenericRelation('ddokfarm.FarmPostImage')  # 역참조용
     
     @property
@@ -158,6 +221,13 @@ class FarmSplitPost(FarmBasePost):
             return False
         
         return True
+    
+    def get_display_price(self):
+        """표시용 가격 문자열 (판매/대여와 통일)"""
+        min_price, max_price = self.get_price_range()
+        if min_price == max_price:
+            return f"{min_price:,}원"
+        return f"{min_price:,}원 ~ {max_price:,}원"
 
 # 멤버별 가격 설정 필드
 class SplitPrice(models.Model):

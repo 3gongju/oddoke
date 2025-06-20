@@ -1,19 +1,20 @@
-{# 덕팜 전용 - 판매, 대여, 분철 카테고리별 정보 #}
+{# ddokfarm/templates/ddokfarm/components/post_detail/_extra_info.html 업데이트 #}
 {% load humanize %}
+
 {% if category == 'sell' or category == 'rental' or category == 'split' %}
   <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <tbody>
           {% if category == 'sell' or category == 'rental' %}
-            <tr>
-              <th class="text-left py-2 text-gray-700">가격</th>
-              <td class="text-right py-2 text-gray-800">{{ post.price|intcomma }}원</td>
-            </tr>
-            <tr>
-              <th class="text-left py-2 text-gray-700">종류</th>
-              <td class="text-right py-2 text-gray-800">{{ post.get_md_display }}</td>
-            </tr>
+            
+            <!-- ✅ 개별 가격이 있어도 기본 정보만 표시 (가격은 아래 개별 가격 섹션에서 처리) -->
+            {% if post.md %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">종류</th>
+                <td class="text-right py-2 text-gray-800">{{ post.get_md_display }}</td>
+              </tr>
+            {% endif %}
             <tr>
               <th class="text-left py-2 text-gray-700">거래 방식</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_want_to_display }}</td>
@@ -26,10 +27,12 @@
               <th class="text-left py-2 text-gray-700">배송 방법</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_shipping_display }}</td>
             </tr>
-            <tr>
-              <th class="text-left py-2 text-gray-700">직거래 희망 장소</th>
-              <td class="text-right py-2 text-gray-800">{{ post.location|default:"-" }}</td>
-            </tr>
+            {% if post.location %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">직거래 희망 장소</th>
+                <td class="text-right py-2 text-gray-800">{{ post.location }}</td>
+              </tr>
+            {% endif %}
             {% if category == 'rental' %}
               <tr>
                 <th class="text-left py-2 text-gray-700">대여 시작일</th>
@@ -40,17 +43,8 @@
                 <td class="text-right py-2 text-gray-800">{{ post.end_date }}</td>
               </tr>
             {% endif %}
+            
           {% elif category == 'split' %}
-            <tr>
-              <th class="text-left py-2 text-gray-700">가격</th>
-              <td class="text-right py-2 text-gray-800">
-                {% if min_price == max_price %}
-                  {{ min_price|intcomma }}원
-                {% else %}
-                  {{ min_price|intcomma }}원 ~ {{ max_price|intcomma }}원
-                {% endif %}
-              </td>
-            </tr>
             <tr>
               <th class="text-left py-2 text-gray-700">앨범 포함 여부</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_album_display }}</td>
@@ -80,4 +74,17 @@
       </table>
     </div>
   </div>
+
+  <!-- ✅ 개별 가격 상세 정보 (판매/대여만, 테이블 아래에 추가) -->
+  {% if category == 'sell' or category == 'rental' %}
+    {% include 'ddokfarm/components/post_detail/_individual_prices.html' %}
+  {% elif category == 'split' %}
+    <!-- 분철 가격 정보 (통일감 있게) -->
+    <div class="mt-4 border-t border-gray-200 pt-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">가격</h3>
+        <span class="text-2xl font-bold text-gray-900">{{ post.get_display_price }}</span>
+      </div>
+    </div>
+  {% endif %}
 {% endif %}
