@@ -43,19 +43,19 @@ def main(request):
 # 전체 게시글 보기
 def index(request):
     category = request.GET.get('category')
-    wantto = request.GET.get('wantto')  # URL 파라미터는 wantto로 유지
+    wantto = request.GET.get('wantto')
     query = request.GET.get('q', '').strip()
     sort_by = request.GET.get('sort', 'latest')
     show_available_only = request.GET.get('available_only') == 'on'
     
-    # 필터링 파라미터 (기존과 동일)
+    # 필터링 파라미터
     selected_shipping = request.GET.get('shipping', '')
     selected_conditions = request.GET.getlist('condition')
-    selected_md = request.GET.getlist('md')  # ✅ 새로 추가: MD 종류 필터
+    selected_md = request.GET.getlist('md')
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
 
-    # 기본 필터링 조건 구성 (기존과 동일)
+    # 기본 필터링 조건 구성
     filter_conditions = Q()
     
     if selected_shipping:
@@ -67,14 +67,15 @@ def index(request):
             condition_q |= Q(condition=condition)
         filter_conditions &= condition_q
     
-    # ✅ 새로 추가: MD 종류 필터링
+    # ✅ MD 필터링 - 판매 게시글에만 적용
+    sell_md_conditions = Q()
     if selected_md:
         md_q = Q()
         for md in selected_md:
             md_q |= Q(md=md)
-        filter_conditions &= md_q
+        sell_md_conditions = md_q
     
-    # 가격 필터링 (기존과 동일)
+    # 가격 필터링
     price_conditions = Q()
     if min_price:
         try:
@@ -90,13 +91,13 @@ def index(request):
         except ValueError:
             max_price = ''
 
-    # want_to 필터링 추가 (DB 필드명이 want_to라면)
+    # want_to 필터링
     wantto_conditions = Q()
     if wantto:
-        wantto_conditions &= Q(want_to=wantto)  # 실제 DB 필드명 사용
+        wantto_conditions &= Q(want_to=wantto)
 
     if query:
-        # 검색 로직 (want_to 필터 추가)
+        # 검색 로직
         artist_filter = (
             Q(artist__display_name__icontains=query) |
             Q(artist__korean_name__icontains=query) |
@@ -107,15 +108,17 @@ def index(request):
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
         common_filter = text_filter | artist_filter | member_filter
 
+        # ✅ 판매 게시글 - MD 필터 포함
         sell_results = FarmSellPost.objects.filter(
-            common_filter & filter_conditions & price_conditions & wantto_conditions
+            common_filter & filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
         ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
+        # ✅ 대여 게시글 - MD 필터 제외
         rental_results = FarmRentalPost.objects.filter(
             common_filter & filter_conditions & price_conditions & wantto_conditions
         ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
-        # 분철은 want_to 필터링 없음
+        # 분철은 기존과 동일
         split_filter = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
         split_price_filter = Q()
         if min_price:
@@ -135,17 +138,19 @@ def index(request):
 
         posts = list(chain(sell_results, rental_results, split_results))
     else:
-        # 카테고리별 필터링 (want_to 필터 추가)
+        # 카테고리별 필터링
         if category == 'sell':
+            # ✅ 판매 - MD 필터 포함
             posts = FarmSellPost.objects.filter(
-                filter_conditions & price_conditions & wantto_conditions
+                filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'rental':
+            # ✅ 대여 - MD 필터 제외
             posts = FarmRentalPost.objects.filter(
                 filter_conditions & price_conditions & wantto_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'split':
-            # 분철은 want_to 필터링 없음
+            # 분철은 기존과 동일
             split_price_filter = Q()
             if min_price:
                 try:
@@ -161,9 +166,9 @@ def index(request):
                 split_price_filter
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
         else:
-            # 전체 카테고리 (want_to 필터 적용)
+            # ✅ 전체 카테고리 - 각각 다르게 필터링
             sell_posts = FarmSellPost.objects.filter(
-                filter_conditions & price_conditions & wantto_conditions
+                filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
             
             rental_posts = FarmRentalPost.objects.filter(

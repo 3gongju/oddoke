@@ -22,7 +22,7 @@
         </button>
         
         <!-- 서브 카테고리 드롭다운 -->
-        <div id="sell-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
+        <div id="sell-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-[120px] hidden">
           <a href="?category=sell&wantto=buy" 
              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg subcategory-link {% if wantto == 'buy' %}bg-gray-50 font-medium{% endif %}">
             삽니다
@@ -50,7 +50,7 @@
         </button>
         
         <!-- 서브 카테고리 드롭다운 -->
-        <div id="rental-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
+        <div id="rental-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-[120px] hidden">
           <a href="?category=rental&wantto=sell" 
              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg subcategory-link {% if wantto == 'sell' %}bg-gray-50 font-medium{% endif %}">
             빌려줍니다
@@ -80,151 +80,206 @@
 
     <!-- 덕팜 전용: 드롭다운 JavaScript (2단계 클릭 로직 추가) -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // 판매/구매 드롭다운 처리
-      const sellBtn = document.getElementById('sell-category-btn');
-      const sellDropdown = document.getElementById('sell-subcategory');
-      const sellArrow = document.getElementById('sell-arrow');
-      
-      // 대여 드롭다운 처리
-      const rentalBtn = document.getElementById('rental-category-btn');
-      const rentalDropdown = document.getElementById('rental-subcategory');
-      const rentalArrow = document.getElementById('rental-arrow');
-
-      // 현재 페이지 카테고리 확인
-      const currentCategory = '{{ category }}';
-      const currentWantto = '{{ wantto }}';
-
-      // 모든 드롭다운 닫기 함수
-      function closeAllDropdowns() {
-        sellDropdown.classList.add('hidden');
-        rentalDropdown.classList.add('hidden');
-        sellArrow.style.transform = 'rotate(0deg)';
-        rentalArrow.style.transform = 'rotate(0deg)';
-      }
-
-      // 드롭다운 토글 함수
-      function toggleDropdown(dropdown, arrow) {
-        const isOpen = !dropdown.classList.contains('hidden');
+    // ✅ 즉시 실행하여 DOM 로드 문제 해결
+    (function() {
+      // ✅ 안전한 DOM 로드 대기
+      function initCategoryDropdown() {
+        console.log('카테고리 드롭다운 초기화 시작');
         
-        // 모든 드롭다운 닫기
-        closeAllDropdowns();
+        // DOM 요소들
+        const sellBtn = document.getElementById('sell-category-btn');
+        const sellDropdown = document.getElementById('sell-subcategory');
+        const sellArrow = document.getElementById('sell-arrow');
         
-        // 클릭한 드롭다운만 토글
-        if (!isOpen) {
-          dropdown.classList.remove('hidden');
-          arrow.style.transform = 'rotate(180deg)';
+        const rentalBtn = document.getElementById('rental-category-btn');
+        const rentalDropdown = document.getElementById('rental-subcategory');
+        const rentalArrow = document.getElementById('rental-arrow');
+
+        // ✅ 템플릿 변수를 JavaScript 변수로 안전하게 전달
+        const currentCategory = '{{ category|escapejs }}';
+        const currentWantto = '{{ wantto|escapejs }}';
+        
+        console.log('현재 카테고리:', currentCategory, '현재 wantto:', currentWantto);
+        
+        // 요소 존재 확인
+        if (!sellBtn || !sellDropdown || !rentalBtn || !rentalDropdown) {
+          console.error('필수 DOM 요소를 찾을 수 없습니다.');
+          return;
         }
-      }
 
-      // 카테고리 페이지로 이동하는 함수
-      function navigateToCategory(category) {
-        const url = new URL(window.location);
-        const params = new URLSearchParams(url.search);
-        
-        // 기존 파라미터 유지하면서 카테고리만 변경
-        const currentQuery = params.get('q');
-        const currentSort = params.get('sort');
-        const currentAvailableOnly = params.get('available_only');
-        
-        // 새 URL 생성
-        const newUrl = new URL(window.location.origin + window.location.pathname);
-        const newParams = new URLSearchParams();
-        
-        newParams.set('category', category);
-        if (currentQuery) newParams.set('q', currentQuery);
-        if (currentSort) newParams.set('sort', currentSort);
-        if (currentAvailableOnly) newParams.set('available_only', currentAvailableOnly);
-        
-        newUrl.search = newParams.toString();
-        window.location.href = newUrl.toString();
-      }
+        // 모든 드롭다운 닫기 함수
+        function closeAllDropdowns() {
+          sellDropdown.classList.add('hidden');
+          rentalDropdown.classList.add('hidden');
+          sellArrow.style.transform = 'rotate(0deg)';
+          rentalArrow.style.transform = 'rotate(0deg)';
+        }
 
-      // 판매/구매 버튼 클릭 이벤트
-      if (sellBtn) {
+        // 드롭다운 토글 함수
+        function toggleDropdown(dropdown, arrow) {
+          const isOpen = !dropdown.classList.contains('hidden');
+          console.log('드롭다운 토글 - 현재 상태:', isOpen ? '열림' : '닫힘');
+          
+          // 모든 드롭다운 닫기
+          closeAllDropdowns();
+          
+          // 클릭한 드롭다운만 토글
+          if (!isOpen) {
+            dropdown.classList.remove('hidden');
+            arrow.style.transform = 'rotate(180deg)';
+            console.log('드롭다운 열기 완료');
+          }
+        }
+
+        // 카테고리 페이지로 이동하는 함수
+        function navigateToCategory(category) {
+          const url = new URL(window.location);
+          const params = new URLSearchParams(url.search);
+          
+          // 기존 파라미터 유지하면서 카테고리만 변경
+          const currentQuery = params.get('q');
+          const currentSort = params.get('sort');
+          const currentAvailableOnly = params.get('available_only');
+          
+          // 새 URL 생성
+          const newUrl = new URL(window.location.origin + window.location.pathname);
+          const newParams = new URLSearchParams();
+          
+          newParams.set('category', category);
+          if (currentQuery) newParams.set('q', currentQuery);
+          if (currentSort) newParams.set('sort', currentSort);
+          if (currentAvailableOnly) newParams.set('available_only', currentAvailableOnly);
+          
+          newUrl.search = newParams.toString();
+          console.log('페이지 이동:', newUrl.toString());
+          window.location.href = newUrl.toString();
+        }
+
+        // 판매/구매 버튼 클릭 이벤트
         sellBtn.addEventListener('click', function(e) {
+          console.log('판매 버튼 클릭됨');
           e.preventDefault();
           e.stopPropagation();
           
           const targetCategory = this.dataset.category;
+          console.log('타겟 카테고리:', targetCategory, '현재 카테고리:', currentCategory);
           
           // 1단계: 현재 카테고리가 아니면 카테고리 페이지로 이동
           if (currentCategory !== targetCategory) {
+            console.log('다른 카테고리로 이동');
             navigateToCategory(targetCategory);
             return;
           }
           
           // 2단계: 이미 해당 카테고리에 있으면 드롭다운 토글
+          console.log('드롭다운 토글 실행');
           toggleDropdown(sellDropdown, sellArrow);
         });
-      }
 
-      // 대여 버튼 클릭 이벤트
-      if (rentalBtn) {
+        // 대여 버튼 클릭 이벤트
         rentalBtn.addEventListener('click', function(e) {
+          console.log('대여 버튼 클릭됨');
           e.preventDefault();
           e.stopPropagation();
           
           const targetCategory = this.dataset.category;
+          console.log('타겟 카테고리:', targetCategory, '현재 카테고리:', currentCategory);
           
           // 1단계: 현재 카테고리가 아니면 카테고리 페이지로 이동
           if (currentCategory !== targetCategory) {
+            console.log('다른 카테고리로 이동');
             navigateToCategory(targetCategory);
             return;
           }
           
           // 2단계: 이미 해당 카테고리에 있으면 드롭다운 토글
+          console.log('드롭다운 토글 실행');
           toggleDropdown(rentalDropdown, rentalArrow);
         });
+
+        // 외부 클릭시 드롭다운 닫기
+        document.addEventListener('click', function(e) {
+          const sellWrapper = document.getElementById('sell-category-wrapper');
+          const rentalWrapper = document.getElementById('rental-category-wrapper');
+          
+          if (!sellWrapper.contains(e.target) && !rentalWrapper.contains(e.target)) {
+            closeAllDropdowns();
+          }
+        });
+
+        // 서브 카테고리 링크 클릭 시 자동 닫힘 및 URL 이동
+        const subcategoryLinks = document.querySelectorAll('.subcategory-link');
+        subcategoryLinks.forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            console.log('서브 카테고리 링크 클릭됨:', this.href);
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 드롭다운 즉시 닫기
+            closeAllDropdowns();
+            
+            const url = new URL(window.location);
+            const linkUrl = new URL(this.href, window.location.origin);
+            
+            // 기존 검색어와 정렬 파라미터 유지
+            const currentQuery = url.searchParams.get('q');
+            const currentSort = url.searchParams.get('sort');
+            const currentAvailableOnly = url.searchParams.get('available_only');
+            
+            if (currentQuery) linkUrl.searchParams.set('q', currentQuery);
+            if (currentSort) linkUrl.searchParams.set('sort', currentSort);
+            if (currentAvailableOnly) linkUrl.searchParams.set('available_only', currentAvailableOnly);
+            
+            // 짧은 지연 후 페이지 이동
+            setTimeout(function() {
+              window.location.href = linkUrl.toString();
+            }, 100);
+          });
+        });
+
+        // 초기 로드 시 드롭다운을 닫힌 상태로 유지
+        closeAllDropdowns();
+        
+        console.log('카테고리 드롭다운 초기화 완료');
       }
 
-      // 외부 클릭시 드롭다운 닫기
-      document.addEventListener('click', function(e) {
-        const sellWrapper = document.getElementById('sell-category-wrapper');
-        const rentalWrapper = document.getElementById('rental-category-wrapper');
-        
-        if (!sellWrapper.contains(e.target) && !rentalWrapper.contains(e.target)) {
-          closeAllDropdowns();
+      // ✅ DOM 로드 완료 후 실행 (여러 방법으로 안전하게 처리)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCategoryDropdown);
+      } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        // DOM이 이미 로드된 경우 즉시 실행
+        setTimeout(initCategoryDropdown, 0);
+      }
+      
+      // ✅ 추가 안전장치: 윈도우 로드 완료 후에도 한 번 더 시도
+      window.addEventListener('load', function() {
+        // DOM 요소가 아직 없다면 다시 시도
+        if (!document.getElementById('sell-category-btn')) {
+          setTimeout(initCategoryDropdown, 100);
         }
       });
-
-      // 서브 카테고리 링크 클릭 시 자동 닫힘 및 URL 이동
-      const subcategoryLinks = document.querySelectorAll('.subcategory-link');
-      subcategoryLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          
-          // 드롭다운 즉시 닫기 (애니메이션과 함께)
-          closeAllDropdowns();
-          
-          const url = new URL(window.location);
-          const linkUrl = new URL(this.href, window.location.origin);
-          
-          // 기존 검색어와 정렬 파라미터 유지
-          const currentQuery = url.searchParams.get('q');
-          const currentSort = url.searchParams.get('sort');
-          const currentAvailableOnly = url.searchParams.get('available_only');
-          
-          if (currentQuery) linkUrl.searchParams.set('q', currentQuery);
-          if (currentSort) linkUrl.searchParams.set('sort', currentSort);
-          if (currentAvailableOnly) linkUrl.searchParams.set('available_only', currentAvailableOnly);
-          
-          // 짧은 지연 후 페이지 이동 (드롭다운 닫힘 애니메이션 완료 대기)
-          setTimeout(() => {
-            window.location.href = linkUrl.toString();
-          }, 100);
-        });
-      });
-
-      // 초기 로드 시: wantto가 있어도 드롭다운을 열지 않음 (서브 카테고리 선택 후이므로)
-      // 페이지 로드 시에는 드롭다운을 닫힌 상태로 유지
-      closeAllDropdowns();
-    });
+    })();
     </script>
 
-    <!-- 덕팜 전용: 카테고리 버튼과 필터 태그 통합 스타일 -->
-    <style>
+  {% else %}
+    <!-- 덕담: 간단한 카테고리 필터 (드롭다운 없음) - 모바일 최적화 -->
+    <div class="ddokdam-category-container flex gap-2 mb-6 text-sm font-medium justify-center">
+      {% for label, value, url in category_urls %}
+        <a href="{{ url }}"
+            class="category-btn px-4 py-2 rounded-full border flex-shrink-0
+                    {% if category == value or not category and value == '' %}
+                    bg-black text-white
+                    {% else %}
+                    bg-white text-gray-700 hover:bg-gray-100
+                    {% endif %}">
+            {{ label }}
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<style>
 /* 카테고리 버튼 기본 스타일 - advanced_filter의 스타일과 통일 */
 .category-btn {
   padding: 0.5rem 1rem !important; /* 8px 16px - 표준 버튼 크기 */
@@ -269,7 +324,15 @@
   border-color: #9ca3af !important;
 }
 
-/* 컨테이너 flex 개선 - 줄바꿈 방지 */
+/* 드롭다운 스타일 개선 - 너비 고정 */
+#sell-subcategory, #rental-subcategory {
+  z-index: 50 !important; /* 높은 z-index로 설정 */
+  width: 120px !important; /* 고정 너비 */
+  max-width: 120px !important; /* 최대 너비 제한 */
+  min-width: 120px !important; /* 최소 너비 유지 */
+}
+
+/* 덕팜 카테고리 컨테이너 - 줄바꿈 방지 */
 .flex.flex-wrap.gap-2.mb-4.justify-center.items-center {
   flex-wrap: nowrap !important; /* 줄바꿈 방지 */
   overflow-x: auto; /* 가로 스크롤 허용 */
@@ -281,14 +344,27 @@
   margin: 0 -1rem 1rem -1rem; /* 음수 마진으로 패딩 보정 */
 }
 
+/* 덕담 카테고리 컨테이너 - 모바일 최적화 */
+.ddokdam-category-container {
+  flex-wrap: nowrap !important; /* 줄바꿈 방지 */
+  overflow-x: auto; /* 가로 스크롤 허용 */
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  justify-content: center !important; /* 가운데 정렬 */
+  padding: 0 1rem; /* 좌우 패딩 */
+  margin: 0 -1rem 1.5rem -1rem; /* 음수 마진으로 패딩 보정 */
+}
+
 /* 웹킷 스크롤바 숨기기 */
-.flex.flex-wrap.gap-2.mb-4.justify-center.items-center::-webkit-scrollbar {
+.flex.flex-wrap.gap-2.mb-4.justify-center.items-center::-webkit-scrollbar,
+.ddokdam-category-container::-webkit-scrollbar {
   display: none;
 }
 
 /* 모바일 최적화 */
 @media (max-width: 640px) {
-  /* 카테고리 섹션 간격 */
+  /* 덕팜 카테고리 섹션 간격 */
   .flex.flex-wrap.gap-2.mb-4.justify-center.items-center {
     gap: 0.5rem !important; /* 8px */
     margin-bottom: 1rem !important;
@@ -296,6 +372,16 @@
     justify-content: center !important; /* 가운데 정렬 유지 */
     padding: 0 1rem !important;
     margin: 0 -1rem 1rem -1rem !important;
+  }
+  
+  /* 덕담 카테고리 섹션 간격 */
+  .ddokdam-category-container {
+    gap: 0.5rem !important; /* 8px */
+    margin-bottom: 1.5rem !important;
+    flex-wrap: nowrap !important; /* 모바일에서도 줄바꿈 방지 */
+    justify-content: center !important; /* 가운데 정렬 유지 */
+    padding: 0 1rem !important;
+    margin: 0 -1rem 1.5rem -1rem !important;
   }
   
   /* 카테고리 버튼 크기 - 모바일에서 약간 작게 */
@@ -332,7 +418,9 @@
     right: 1rem !important;
     margin-top: 0.5rem !important;
     z-index: 50 !important;
-    max-width: calc(100vw - 2rem);
+    width: calc(100vw - 2rem) !important; /* 모바일에서는 화면 너비에 맞춤 */
+    max-width: calc(100vw - 2rem) !important;
+    min-width: auto !important;
   }
   
   /* 드롭다운 링크 - 터치 친화적 크기 */
@@ -355,18 +443,34 @@
   }
   
   /* 태블릿에서는 중앙 정렬 */
-  .flex.flex-wrap.gap-2.mb-4.justify-center.items-center {
+  .flex.flex-wrap.gap-2.mb-4.justify-center.items-center,
+  .ddokdam-category-container {
     justify-content: center !important;
     flex-wrap: wrap !important; /* 태블릿에서는 줄바꿈 허용 */
+  }
+  
+  /* 태블릿에서 드롭다운 크기 유지 */
+  #sell-subcategory, #rental-subcategory {
+    width: 120px !important;
+    max-width: 120px !important;
+    min-width: 120px !important;
   }
 }
 
 /* 데스크톱에서는 중앙 정렬과 줄바꿈 허용 */
 @media (min-width: 1025px) {
-  .flex.flex-wrap.gap-2.mb-4.justify-center.items-center {
+  .flex.flex-wrap.gap-2.mb-4.justify-center.items-center,
+  .ddokdam-category-container {
     justify-content: center !important;
     flex-wrap: wrap !important;
     overflow-x: visible !important;
+  }
+  
+  /* 데스크톱에서 드롭다운 크기 유지 */
+  #sell-subcategory, #rental-subcategory {
+    width: 120px !important;
+    max-width: 120px !important;
+    min-width: 120px !important;
   }
 }
 
@@ -383,7 +487,8 @@
     height: 0.625rem !important;
   }
   
-  .flex.flex-wrap.gap-2.mb-4.justify-center.items-center {
+  .flex.flex-wrap.gap-2.mb-4.justify-center.items-center,
+  .ddokdam-category-container {
     gap: 0.375rem !important; /* 6px */
   }
 }
@@ -424,21 +529,3 @@
   background-color: #e5e7eb !important;
 }
 </style>
-
-  {% else %}
-    <!-- 덕담: 간단한 카테고리 필터 (드롭다운 없음) -->
-    <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium justify-center">
-      {% for label, value, url in category_urls %}
-        <a href="{{ url }}"
-            class="category-btn px-4 py-2 rounded-full border
-                    {% if category == value or not category and value == '' %}
-                    bg-black text-white
-                    {% else %}
-                    bg-white text-gray-700 hover:bg-gray-100
-                    {% endif %}">
-            {{ label }}
-        </a>
-      {% endfor %}
-    </div>
-  {% endif %}
-</div>

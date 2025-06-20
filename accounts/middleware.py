@@ -13,16 +13,9 @@ class SuspensionCheckMiddleware:
         self.get_response = get_response
     
     def __call__(self, request):
-        # 🔥 디버깅: 미들웨어 실행 확인
-        print(f"=== 미들웨어 실행: {request.path} ===")
-        
         # 로그인한 사용자이고 제재 중인 경우
         if request.user.is_authenticated:
-            print(f"사용자: {request.user.username}")
-            
             if hasattr(request.user, 'is_suspended'):
-                print(f"is_suspended 속성 존재: {request.user.is_suspended}")
-                
                 try:
                     # 제재 해제된 경우 정리
                     if (hasattr(request.user, 'suspension_end') and
@@ -33,6 +26,9 @@ class SuspensionCheckMiddleware:
                         request.user.lift_suspension()
                     
                     elif request.user.is_suspended:
+                        print(f"=== 미들웨어 실행: {request.path} ===")
+                        print(f"사용자: {request.user.username}")
+                        print(f"is_suspended 속성 존재: {request.user.is_suspended}")
                         print(f"🚫 제재 중인 사용자 감지! 상태: {request.user.suspension_status}")
                         
                         # 🔥 제재 중인 사용자가 접근 가능한 URL만 허용 (더 구체적으로)
@@ -82,7 +78,6 @@ class SuspensionCheckMiddleware:
                                 path_parts[0] in ['ddokdam', 'ddokfarm', 'ddoksang'] and
                                 path_parts[2].isdigit()):
                                 print(f"🚫 게시글 상세보기 접근 차단: {request.path}")
-                                # messages 제거 - 모달로 처리할 예정
                                 print("🔄 메인 페이지로 리다이렉트 실행")
                                 return redirect('/')
                             
@@ -90,23 +85,20 @@ class SuspensionCheckMiddleware:
                             for pattern in restricted_patterns:
                                 if request.path.startswith(pattern):
                                     print(f"🚫 게시글 작성 페이지 접근 차단: {pattern}")
-                                    # messages 제거 - 모달로 처리할 예정
                                     print("🔄 메인 페이지로 리다이렉트 실행")
                                     return redirect('/')
                             
                             print("목록 페이지 접근 허용 - 게시글 작성/상세보기만 차단")
                         else:
                             print(f"허용된 URL 접근: {request.path}")
-                    else:
-                        print("✅ 제재되지 않은 사용자")
+                    
+                    # 제재되지 않은 사용자는 로그 출력하지 않음
                 
                 except Exception as e:
                     # 오류 발생 시 로그만 남기고 계속 진행
                     print(f"SuspensionCheckMiddleware 오류: {e}")
             else:
                 print("❌ is_suspended 속성이 없음!")
-        else:
-            print("비로그인 사용자")
         
         response = self.get_response(request)
         return response
