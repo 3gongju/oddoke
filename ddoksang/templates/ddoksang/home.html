@@ -6,7 +6,7 @@
 {% block title %} 덕생 - 생일카페 투어맵{% endblock %}
 
 {% block ddoksang_content %}
-
+{% include 'ddoksang/components/_header.html' %}
 <!-- JSON 데이터 전달 -->
 {% csrf_token %}
 {{ cafes_json|json_script:"cafes-data" }}
