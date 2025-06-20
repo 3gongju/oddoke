@@ -1,4 +1,4 @@
-<!-- ddokchat/templates/ddokchat/components/chat/_header.html -->
+<!-- ddokchat/templates/ddokchat/components/chat/_header.html 수정 -->
 {% load humanize %}
 
 <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 shadow-sm">
@@ -149,23 +149,66 @@
           <!-- 상품 제목 -->
           <h3 class="font-medium text-gray-900 truncate text-sm">{{ room.post.title }}</h3>
           
-          <!-- 가격 정보 -->
-          <p class="text-sm font-bold text-orange-600">
+          <!-- ✅ 개선된 가격 정보 -->
+          <div class="flex items-center space-x-2">
             {% if room.post.category_type == 'sell' %}
-              {{ room.post.price|floatformat:0|add:"0"|intcomma }}원
-            {% elif room.post.category_type == 'rental' %}
-              {{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원
-            {% elif room.post.category_type == 'split' %}
-              <!-- 분철의 경우 총 가격 또는 개별 가격 표시 -->
-              {% if split_info %}
-                {{ split_info.total_price|floatformat:0|add:"0"|intcomma }}원
+              {% if room.post.has_multiple_items %}
+                {% with min_price=room.post.get_price_range.0 max_price=room.post.get_price_range.1 %}
+                  {% if min_price == max_price %}
+                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원</p>
+                  {% else %}
+                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원 ~ {{ max_price|floatformat:0|add:"0"|intcomma }}원</p>
+                    <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
+                      {{ room.post.get_item_prices.count }}개
+                    </span>
+                  {% endif %}
+                {% endwith %}
               {% else %}
-                가격 협의
+                <p class="text-sm font-bold text-orange-600">{{ room.post.price|floatformat:0|add:"0"|intcomma }}원</p>
               {% endif %}
+              
+            {% elif room.post.category_type == 'rental' %}
+              {% if room.post.has_multiple_items %}
+                {% with min_price=room.post.get_price_range.0 max_price=room.post.get_price_range.1 %}
+                  {% if min_price == max_price %}
+                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원</p>
+                  {% else %}
+                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원 ~ {{ max_price|floatformat:0|add:"0"|intcomma }}원</p>
+                    <span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">
+                      {{ room.post.get_item_prices.count }}개
+                    </span>
+                  {% endif %}
+                {% endwith %}
+              {% else %}
+                <p class="text-sm font-bold text-orange-600">{{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원</p>
+              {% endif %}
+              
+            {% elif room.post.category_type == 'split' %}
+              <!-- 분철의 경우 멤버별 가격 범위 표시 -->
+              {% if room.post.member_prices.exists %}
+                {% with min_price=room.post.get_price_range.0 max_price=room.post.get_price_range.1 %}
+                  {% if min_price == max_price %}
+                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원</p>
+                  {% else %}
+                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원 ~ {{ max_price|floatformat:0|add:"0"|intcomma }}원</p>
+                    <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">
+                      멤버별
+                    </span>
+                  {% endif %}
+                {% endwith %}
+              {% else %}
+                <!-- 분철 신청 정보가 있으면 총 가격 표시 -->
+                {% if split_info %}
+                  <p class="text-sm font-bold text-orange-600">{{ split_info.total_price|floatformat:0|add:"0"|intcomma }}원</p>
+                {% else %}
+                  <p class="text-sm font-bold text-orange-600">가격 협의</p>
+                {% endif %}
+              {% endif %}
+              
             {% else %}
-              가격 협의
+              <p class="text-sm font-bold text-orange-600">가격 협의</p>
             {% endif %}
-          </p>
+          </div>
         </div>
         
         <!-- 상세보기 아이콘 -->
