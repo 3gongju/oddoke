@@ -1,9 +1,267 @@
-<form action="{{ search_action }}" method="get" class="flex items-stretch mb-6">
-  <input type="text" name="q" value="{{ query }}" placeholder="검색어를 입력하세요"
-         class="border px-3 py-2 rounded-l w-full sm:max-w-xs">
-  <button type="submit" class="bg-black text-white px-4 py-2 rounded-r flex items-center justify-center">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
-      <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
-    </svg>
-  </button>
-</form>
+<!-- <div class="flex justify-center mb-6">
+  <form action="{{ search_action }}" method="get" class="flex items-stretch">
+    <input type="text" name="q" value="{{ query }}" placeholder="검색어를 입력하세요"
+           class="border px-3 py-2 rounded-l w-80 sm:w-96">
+    <button type="submit" class="bg-black text-white px-4 py-2 rounded-r flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+        <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
+      </svg>
+    </button>
+  </form>
+</div> -->
+
+<!-- 덕생 스타일 검색바 -->
+<div class="flex justify-center mb-6">
+  <form action="{{ search_action }}" method="get" class="relative w-full max-w-4xl">
+    <!-- 숨겨진 파라미터 유지 -->
+    {% for key, value in request.GET.items %}
+      {% if key != 'q' %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endif %}
+    {% endfor %}
+    
+    <div class="relative">
+      <input 
+        type="text" 
+        name="q" 
+        value="{{ query|default:'' }}" 
+        placeholder="검색어를 입력하세요"
+        class="w-full py-3 px-6 pr-14 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent text-base bg-white shadow-sm"
+        autocomplete="off">
+      
+      <button 
+        type="submit" 
+        class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+        </svg>
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+/* 검색바 스타일 개선 */
+.search-container {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* 검색 입력 필드 스타일 */
+input[type="text"][name="q"] {
+  transition: all 0.2s ease-in-out;
+  font-size: 16px; /* iOS 줌 방지 */
+}
+
+input[type="text"][name="q"]:focus {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 검색 버튼 호버 효과 */
+button[type="submit"]:hover svg {
+  transform: scale(1.1);
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
+  .flex.justify-center.mb-6 {
+    padding: 0 1rem; /* 모바일에서 좌우 패딩 */
+  }
+  
+  .relative.w-full.max-w-2xl {
+    max-width: 100%;
+  }
+  
+  input[type="text"][name="q"] {
+    padding: 0.875rem 3.5rem 0.875rem 1.5rem; /* 모바일에서 패딩 조정 */
+    font-size: 16px; /* iOS 자동 줌 방지 */
+    border-radius: 0.5rem;
+  }
+  
+  button[type="submit"] {
+    right: 0.75rem; /* 모바일에서 버튼 위치 조정 */
+    padding: 0.5rem;
+  }
+  
+  button[type="submit"] svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* 태블릿 최적화 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .relative.w-full.max-w-2xl {
+    max-width: 36rem; /* 태블릿에서 약간 더 넓게 */
+  }
+  
+  input[type="text"][name="q"] {
+    padding: 0.875rem 3.5rem 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* 데스크톱 최적화 */
+@media (min-width: 1025px) {
+  .relative.w-full.max-w-2xl {
+    max-width: 32rem; /* 데스크톱에서 적당한 너비 */
+  }
+  
+  input[type="text"][name="q"] {
+    padding: 0.75rem 3.5rem 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* 포커스 상태 개선 */
+input[type="text"][name="q"]:focus + button[type="submit"] {
+  color: #374151; /* 포커스 시 검색 아이콘 색상 변경 */
+}
+
+/* 접근성 개선 */
+button[type="submit"]:focus {
+  outline: 2px solid #374151;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* 플레이스홀더 스타일 */
+input[type="text"][name="q"]::placeholder {
+  color: #9CA3AF;
+  font-weight: 400;
+}
+
+/* 로딩 상태 (선택사항) */
+.search-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.search-loading button[type="submit"] svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 다크모드 대응 (필요시) */
+@media (prefers-color-scheme: dark) {
+  input[type="text"][name="q"] {
+    background-color: #1F2937;
+    border-color: #374151;
+    color: #F9FAFB;
+  }
+  
+  input[type="text"][name="q"]::placeholder {
+    color: #6B7280;
+  }
+  
+  input[type="text"][name="q"]:focus {
+    ring-color: #6B7280;
+    border-color: #6B7280;
+  }
+}
+
+/* 검색 결과 하이라이트 (선택사항) */
+.search-highlight {
+  background-color: #FEF3C7;
+  padding: 0 0.25rem;
+  border-radius: 0.125rem;
+}
+</style>
+
+<!-- 검색 개선 JavaScript (선택사항) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const searchForm = document.querySelector('form[action="{{ search_action }}"]');
+  const searchInput = searchForm?.querySelector('input[name="q"]');
+  const searchButton = searchForm?.querySelector('button[type="submit"]');
+  
+  if (searchForm && searchInput && searchButton) {
+    // 엔터 키 처리
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchForm.submit();
+      }
+    });
+    
+    // 검색어 자동 포커스 (데스크톱에서만)
+    if (window.innerWidth >= 768 && !searchInput.value) {
+      searchInput.focus();
+    }
+    
+    // 검색어 입력 시 실시간 유효성 검사
+    searchInput.addEventListener('input', function() {
+      const query = this.value.trim();
+      
+      if (query.length > 0) {
+        searchButton.classList.remove('text-gray-400');
+        searchButton.classList.add('text-gray-600');
+      } else {
+        searchButton.classList.remove('text-gray-600');
+        searchButton.classList.add('text-gray-400');
+      }
+    });
+    
+    // 폼 제출 시 로딩 상태
+    searchForm.addEventListener('submit', function() {
+      const query = searchInput.value.trim();
+      
+      if (query.length === 0) {
+        searchInput.focus();
+        return false;
+      }
+      
+      // 로딩 상태 표시
+      searchForm.classList.add('search-loading');
+      searchButton.disabled = true;
+      
+      return true;
+    });
+    
+    // 검색어 길이 제한 (선택사항)
+    searchInput.addEventListener('input', function() {
+      if (this.value.length > 100) {
+        this.value = this.value.substring(0, 100);
+      }
+    });
+  }
+});
+
+// 검색 기록 관리 (localStorage 사용)
+function saveSearchHistory(query) {
+  if (!query || query.length < 2) return;
+  
+  let history = JSON.parse(localStorage.getItem('ddokfarm_search_history') || '[]');
+  
+  // 중복 제거
+  history = history.filter(item => item !== query);
+  
+  // 맨 앞에 추가
+  history.unshift(query);
+  
+  // 최대 10개까지만 저장
+  if (history.length > 10) {
+    history = history.slice(0, 10);
+  }
+  
+  localStorage.setItem('ddokfarm_search_history', JSON.stringify(history));
+}
+
+// 검색 제출 시 기록 저장
+document.addEventListener('submit', function(e) {
+  if (e.target.matches('form[action="{{ search_action }}"]')) {
+    const searchInput = e.target.querySelector('input[name="q"]');
+    if (searchInput && searchInput.value.trim()) {
+      saveSearchHistory(searchInput.value.trim());
+    }
+  }
+});
+</script>

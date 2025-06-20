@@ -2,9 +2,10 @@
 {% load static %}
 {% block body %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <!-- ✅ 검색바를 헤더 바로 아래로 이동 (웹에서 상단으로) -->
   {% include 'ddokfarm/components/_header.html' %}
-
   {% include 'components/index/_search_bar.html' with search_action=search_action query=query %}
+
 
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category app_name='ddokfarm' %}
 
@@ -13,33 +14,35 @@
 
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
-  <!-- 순서 정렬 (게시글 작성 바로 밑으로 이동) -->
-  <div class="flex justify-end mb-4">
-    <div class="flex items-center gap-2">
-      <label for="sort-select" class="text-sm font-medium text-gray-700">정렬:</label>
+  <!-- 순서 정렬 및 판매중 필터 (모바일 최적화) -->
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4">
+    <!-- 정렬 (왼쪽) -->
+    <div class="flex items-center gap-2 order-2 sm:order-1">
+      <label for="sort-select" class="text-sm font-medium text-gray-700 flex-shrink-0">정렬:</label>
       <select id="sort-select" 
-              class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-400">
+              class="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 min-w-[120px]">
         <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>최신순</option>
         <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>낮은 가격순</option>
         <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>높은 가격순</option>
         <option value="likes" {% if sort_by == 'likes' %}selected{% endif %}>찜 많은 순</option>
       </select>
     </div>
-  </div>
 
-  <!-- 판매중 상품만 보기 (필터링 바로 밑으로 이동) -->
-  <div class="flex items-center gap-2 mb-6">
-    <input type="checkbox" 
-           id="available-only" 
-           {% if show_available_only %}checked{% endif %}
-           class="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
-    <label for="available-only" class="text-sm font-medium text-gray-700">
-      판매중인 상품만 보기
-    </label>
+    <!-- 판매중 필터 (오른쪽) -->
+    <div class="flex items-center gap-2 order-1 sm:order-2">
+      <input type="checkbox" 
+             id="available-only" 
+             {% if show_available_only %}checked{% endif %}
+             class="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+      <label for="available-only" class="text-sm font-medium text-gray-700 select-none cursor-pointer">
+        판매중인 상품만 보기
+      </label>
+    </div>
   </div>
 
   {% if posts %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+    <!-- 웹 100% 기준: 한 줄에 5개씩 표시 -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
       {% for post in posts %}
         {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url app_name='ddokfarm' %}
       {% endfor %}
