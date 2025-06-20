@@ -3,7 +3,7 @@
   <!-- 덕팜과 덕담 공통: 기본 카테고리 필터 -->
   {% if app_name == 'ddokfarm' %}
     <!-- 덕팜: 드롭다운이 있는 고급 카테고리 필터 -->
-    <div class="flex flex-wrap gap-2 mb-4">
+    <div class="flex flex-wrap gap-2 mb-4 justify-center">
       <!-- 전체 버튼 -->
       <a href="{% url 'ddokfarm:index' %}" 
         class="category-btn px-4 py-2 rounded-full text-sm font-medium transition-colors {% if not category %}bg-black text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
@@ -253,6 +253,7 @@
   .flex.flex-wrap.gap-2.mb-4 {
     gap: 0.5rem !important; /* 8px */
     margin-bottom: 1rem !important;
+    justify-content: center !important; /* 모바일에서도 중앙 정렬 유지 */
   }
   
   /* 카테고리 버튼 크기 - 모바일에서도 표준 크기 유지 */
@@ -353,14 +354,14 @@
 @media (max-width: 640px) {
   .flex.flex-wrap {
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center; /* 모바일에서 중앙 정렬 */
   }
 }
 </style>
 
   {% else %}
     <!-- 덕담: 간단한 카테고리 필터 (드롭다운 없음) -->
-    <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium">
+    <div class="flex flex-wrap gap-2 mb-6 text-sm font-medium justify-center">
       {% for label, value, url in category_urls %}
         <a href="{{ url }}"
             class="category-btn px-4 py-2 rounded-full border
