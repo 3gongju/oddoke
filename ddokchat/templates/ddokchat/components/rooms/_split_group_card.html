@@ -19,40 +19,39 @@
                         </div>
                         <p class="text-base text-gray-900 font-semibold truncate">{{ group.post.title }}</p>
                         
-                        <!-- ✅ 개선된 가격 표시 -->
+                        <!-- ✅ 수정된 분철 가격 표시 -->
                         {% if group.post %}
-                            {% with price_info=group.post|get_split_post_price_info %}
-                                {% if price_info %}
-                                    <div class="flex items-center space-x-2">
-                                        <p class="text-lg text-orange-600 font-bold">
-                                            {{ price_info.display_price }}
-                                        </p>
-                                        {% if price_info.has_range %}
-                                            <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">
-                                                멤버별
-                                            </span>
-                                        {% endif %}
-                                    </div>
-                                    
-                                    <!-- 멤버 수 정보 -->
-                                    {% if group.post.member_prices.exists %}
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            총 {{ group.post.member_prices.count }}명 멤버 가격
-                                        </p>
-                                    {% endif %}
-                                {% else %}
-                                    <!-- Fallback: 기존 방식 -->
+                            {% get_post_price_info group.post as price_info %}
+                            {% if price_info and price_info.category_type == 'split' %}
+                                <div class="flex items-center space-x-2">
                                     <p class="text-lg text-orange-600 font-bold">
-                                        {% if group.total_price %}
-                                            {{ group.total_price|floatformat:0|add:"0"|intcomma }}원
-                                        {% else %}
-                                            가격 협의
-                                        {% endif %}
+                                        {{ price_info.display_price }}
+                                    </p>
+                                    {% if price_info.has_range %}
+                                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">
+                                            멤버별
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- 멤버 수 정보 -->
+                                {% if price_info.item_count > 0 %}
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        총 {{ price_info.item_count }}명 멤버 가격
                                     </p>
                                 {% endif %}
-                            {% endwith %}
+                            {% else %}
+                                <!-- 가격 정보 조회 실패 시 폴백 -->
+                                <p class="text-lg text-orange-600 font-bold">
+                                    {% if group.total_price %}
+                                        {{ group.total_price|floatformat:0|add:"0"|intcomma }}원
+                                    {% else %}
+                                        가격 협의
+                                    {% endif %}
+                                </p>
+                            {% endif %}
                         {% else %}
-                            <!-- Fallback: 기존 방식 -->
+                            <!-- group.post가 없는 경우 폴백 -->
                             <p class="text-lg text-orange-600 font-bold">
                                 {% if group.total_price %}
                                     {{ group.total_price|floatformat:0|add:"0"|intcomma }}원
@@ -100,13 +99,15 @@
                         {% else %}
                             <!-- 1명과만 최근에 대화 - 단일 상대방 프로필 -->
                             {% with single_partner=group.primary_partner %}
-                                <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
-                                    {% if single_partner.profile_image %}
-                                        <img src="{{ single_partner.profile_image.url }}" alt="{{ single_partner.username }}" class="w-full h-full object-cover rounded-full">
-                                    {% else %}
-                                        {{ single_partner.username|first|upper }}
-                                    {% endif %}
-                                </div>
+                                {% if single_partner %}
+                                    <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
+                                        {% if single_partner.profile_image %}
+                                            <img src="{{ single_partner.profile_image.url }}" alt="{{ single_partner.username }}" class="w-full h-full object-cover rounded-full">
+                                        {% else %}
+                                            {{ single_partner.username|first|upper }}
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
                             {% endwith %}
                         {% endif %}
                     </div>
@@ -123,7 +124,11 @@
                                     {% endwith %}
                                 {% else %}
                                     <!-- 한 명과만 대화: 그 사람 이름 -->
-                                    {{ group.primary_partner.username }}
+                                    {% if group.primary_partner %}
+                                        {{ group.primary_partner.username }}
+                                    {% else %}
+                                        {{ group.room_count }}명의 참여자
+                                    {% endif %}
                                 {% endif %}
                             </h3>
                             
