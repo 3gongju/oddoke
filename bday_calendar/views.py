@@ -253,11 +253,11 @@ def _get_birthday_color(birthday, today):
         return "#f97316"  # 이번 주 생일 - 주황색
     return "#3b82f6"      # 기본 - 파란색
 
-# --- '똑' 포인트 저장을 위한 API 뷰 함수 ---
+# --- '덕' 포인트 저장을 위한 API 뷰 함수 ---
 @login_required
 @require_POST
 def save_ddok_point(request):
-    """생일시 맞추기 게임에서 획득한 '똑' 포인트를 저장하고 로그를 남깁니다."""
+    """생일시 맞추기 게임에서 획득한 '덕' 포인트를 저장하고 로그 남기기"""
     try:
         data = json.loads(request.body)
         points = int(data.get('points', 0))
@@ -267,17 +267,17 @@ def save_ddok_point(request):
             return JsonResponse({'status': 'fail', 'message': '유효하지 않은 포인트 또는 멤버 정보입니다.'}, status=400)
 
         with transaction.atomic():
-            # 1. User 모델의 편의 메서드를 사용하여 DdokPoint 인스턴스를 가져옵니다.
+            # 1. User 모델의 편의 메서드를 사용하여 DdokPoint 인스턴스를 가져오기
             user_ddok_point = request.user.get_or_create_ddok_point()
 
-            # 2. 포인트 총합을 업데이트합니다.
+            # 2. 포인트 총합을 업데이트
             user_ddok_point.total_points += points
             user_ddok_point.save()
 
-            # 3. 관련 멤버 인스턴스를 가져옵니다.
+            # 3. 관련 멤버 인스턴스를 가져오기
             related_member = Member.objects.get(id=member_id)
 
-            # 4. 포인트 변동 로그(DdokPointLog)를 생성합니다.
+            # 4. 포인트 변동 로그(DdokPointLog)를 생성
             DdokPointLog.objects.create(
                 point_owner=user_ddok_point,
                 points_change=points,
@@ -285,10 +285,10 @@ def save_ddok_point(request):
                 related_member=related_member
             )
 
-        logger.info(f"사용자 {request.user.username}님이 멤버 {related_member.member_name}의 생일 축하로 {points}똑을 획득했습니다.")
+        logger.info(f"사용자 {request.user.username}님이 멤버 {related_member.member_name}의 생일 축하로 {points}덕을 쌓았습니다.")
         return JsonResponse({
             'status': 'success', 
-            'message': f'{points}똑이 성공적으로 쌓였어요!',
+            'message': f'{points}덕이 성공적으로 쌓였어요!',
             'total_points': user_ddok_point.total_points
         })
 

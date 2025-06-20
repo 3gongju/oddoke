@@ -96,19 +96,21 @@ function showMemberSelection(members) {
   gameDOM.memberGrid.setAttribute('data-count', members.length);
   
   members.forEach(member => {
-    const memberCard = document.createElement('div');
-    memberCard.className = 'member-card';
-    memberCard.innerHTML = `
+    const memberItem = document.createElement('div');
+    memberItem.className = 'member-item';
+    memberItem.innerHTML = `
       <img src="${member.image_url || '/static/image/default_member.svg'}" 
            alt="${member.member_name}" 
            class="member-image"
            onerror="this.src='/static/image/default_member.svg'">
-      <h4 class="font-bold text-sm text-white">${member.member_name}</h4>
-      <p class="text-xs text-gray-300">${member.artist_full_name}</p>
+      <div class="member-info">
+        <h4 class="member-name">${member.member_name}</h4>
+        <p class="artist-name">${member.artist_full_name}</p>
+      </div>
     `;
     
-    memberCard.addEventListener('click', () => selectMember(member));
-    gameDOM.memberGrid.appendChild(memberCard);
+    memberItem.addEventListener('click', () => selectMember(member));
+    gameDOM.memberGrid.appendChild(memberItem);
   });
 }
 
@@ -197,16 +199,16 @@ function showResult(timeDiff, ddok) {
     resultEl.textContent = `PERFECT! (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-pink-400';
   } else if (timeDiff < 200) {
-    resultEl.textContent = `성공! (+${ddok.toLocaleString()}똑)`;
+    resultEl.textContent = `덕이 쌓입니다! (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-white';
   } else if (timeDiff < 500) {
     resultEl.textContent = `${diffSeconds}초 차이! (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-gray-300';
   } else if (timeDiff < 1000) {
-    resultEl.textContent = `아쉬워요... (+${ddok.toLocaleString()}똑)`;
+    resultEl.textContent = `아쉽지만 덕을 쌓을 정도는 아니네요... (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-gray-400';
   } else {
-    resultEl.textContent = `너무 멀어요... (+0똑)`;
+    resultEl.textContent = `덕 못 쌓음... (+0덕)`;
     resultEl.className += ' text-gray-500';
   }
   
@@ -253,8 +255,8 @@ function backToSelection() {
   }
   
   // 선택 상태 초기화
-  document.querySelectorAll('.member-card').forEach(card => {
-    card.classList.remove('selected');
+  document.querySelectorAll('.member-item').forEach(item => {
+    item.classList.remove('selected');
   });
 }
 

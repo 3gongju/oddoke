@@ -503,7 +503,7 @@ class PostReport(models.Model):
 
 class DdokPoint(models.Model):
     """
-    사용자의 '똑' 포인트 총합을 관리하는 모델입니다.
+    사용자의 '덕덕포인트 총합을 관리
     """
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -513,7 +513,7 @@ class DdokPoint(models.Model):
     )
     total_points = models.PositiveIntegerField(
         default=0,
-        verbose_name='총 보유 똑'
+        verbose_name='쌓인 덕'
     )
     updated_at = models.DateTimeField(
         auto_now=True,
@@ -521,16 +521,16 @@ class DdokPoint(models.Model):
     )
 
     def __str__(self):
-        return f"{self.user.username}의 똑: {self.total_points:,}똑"
+        return f"{self.user.username}의 덕 {self.total_points:,}덕"
 
     class Meta:
-        verbose_name = '똑 포인트'
-        verbose_name_plural = '똑 포인트 목록'
+        verbose_name = '덕 포인트'
+        verbose_name_plural = '덕 포인트 목록'
 
 
 class DdokPointLog(models.Model):
     """
-    '똑' 포인트의 모든 적립 및 사용 내역을 기록하는 로그 모델입니다.
+    '덕' 포인트의 모든 적립 및 사용 내역을 기록하는 로그 모델
     """
     POINT_REASON_CHOICES = [
         ('BIRTHDAY_GAME', '생일시 맞추기'),
@@ -546,7 +546,7 @@ class DdokPointLog(models.Model):
         verbose_name='포인트 소유자'
     )
     points_change = models.IntegerField(
-        verbose_name='변동된 똑'
+        verbose_name='변동된 덕'
     )
     reason = models.CharField(
         max_length=50,
@@ -569,6 +569,6 @@ class DdokPointLog(models.Model):
         return f"[{self.get_reason_display()}] {self.point_owner.user.username}에게 {self.points_change:,}똑 {change_type}"
 
     class Meta:
-        verbose_name = '똑 포인트 로그'
-        verbose_name_plural = '똑 포인트 로그 목록'
+        verbose_name = '덕 포인트 로그'
+        verbose_name_plural = '덕덕 포인트 로그 목록'
         ordering = ['-created_at']

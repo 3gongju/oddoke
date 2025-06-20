@@ -1,105 +1,146 @@
-/* birthday_game.css - 검정색 네온사인 스타일 */
+/* birthday_game.css - 검정색 네온사인 스타일 - 게임 영역에만 적용 */
 
 /* === 생일시 맞추기 게임 스타일 === */
 .game-container {
-  background: linear-gradient(125deg, #1a1a1a, #2d2d2d);
+  background: rgb(245, 245, 245);
   border-radius: 1rem;
   padding: 1.5rem;
-  margin-bottom: 2rem;
-  color: white;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  margin-bottom: 3rem;
+  color: rgb(0, 0, 0);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.5s ease;
 }
 
-.member-selector-grid {
+.game-container .member-selector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1.2rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 2rem;
   margin-bottom: 2rem;
-  max-width: 800px; /* 최대 폭 제한 */
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
   justify-items: center;
 }
 
 /* 멤버 수에 따른 그리드 조정 */
-.member-selector-grid[data-count="1"] {
+.game-container .member-selector-grid[data-count="1"] {
   grid-template-columns: 1fr;
-  max-width: 200px;
+  max-width: 220px;
 }
 
-.member-selector-grid[data-count="2"] {
+.game-container .member-selector-grid[data-count="2"] {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 400px;
+  max-width: 460px;
 }
 
-.member-selector-grid[data-count="3"] {
+.game-container .member-selector-grid[data-count="3"] {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 600px;
+  max-width: 690px;
 }
 
-.member-selector-grid[data-count="4"] {
+.game-container .member-selector-grid[data-count="4"] {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 400px;
+  max-width: 460px;
 }
 
-.member-selector-grid[data-count="5"] {
+.game-container .member-selector-grid[data-count="5"] {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 600px;
+  max-width: 690px;
 }
 
-.member-selector-grid[data-count="6"] {
+.game-container .member-selector-grid[data-count="6"] {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 600px;
+  max-width: 690px;
 }
 
-.member-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  padding: 1rem;
+/* 멤버 아이템 스타일 - 완전한 카드 제거, 세로 배치 */
+.game-container .member-item {
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
+  padding: 1rem;
+  position: relative;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 1rem;
 }
 
-.member-card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(64, 64, 64, 0.4);
+.game-container .member-item:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.02) !important;
 }
 
-.member-card.selected {
-  background: rgba(64, 64, 64, 0.3);
-  border-color: #404040;
-  box-shadow: 0 0 20px rgba(64, 64, 64, 0.6);
+.game-container .member-item.selected {
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
 }
 
-.member-image {
-  width: 80px;
-  height: 80px;
+.game-container .member-item.selected .member-image {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.game-container .member-image {
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #d1d5db;
-  margin: 0 auto 0.5rem;
+  margin: 0 auto 0.75rem;
   box-shadow: 0 0 15px rgba(209, 213, 219, 0.3);
+  transition: all 0.3s ease;
 }
 
-.game-idol-image {
+.game-container .member-item:hover .member-image {
+  box-shadow: 0 0 25px rgba(209, 213, 219, 0.5);
+  transform: scale(1.02);
+  border-color: #f3f4f6;
+}
+
+.game-container .member-name {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #000000;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+.game-container .artist-name {
+  font-size: 0.7rem;
+  color: #2c2c2c;
+  margin: 0.5rem 0 0 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.game-container .member-item:hover .member-name {
+  color: #000000;
+}
+
+.game-container .member-item:hover .artist-name {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.game-container .game-idol-image {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #d1d5db;
   margin: 0 auto 1rem;
-  box-shadow: 0 0 20px rgba(209, 213, 219, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
-.birthday-badge {
-  background-color: #1f2937;
+.game-container .birthday-badge {
+  background-color: #f62f3d;
   color: white;
   font-size: 0.75rem;
   font-weight: bold;
@@ -109,41 +150,43 @@
   top: 0;
   right: 0;
   transform: translate(25%, -25%);
-  box-shadow: 0 0 10px rgba(31, 41, 55, 0.5);
 }
 
-.target-time-box {
-  background-color: rgba(0, 0, 0, 0.3);
+.game-container .target-time-box {
+  background-color: rgba(0, 0, 0, 0.3) !important;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.game-time-display {
+.game-container .game-time-display {
   font-family: 'Noto Sans KR', monospace;
   font-weight: 900;
   font-size: 3rem;
   text-align: center;
   margin: 1rem 0;
-  color: #e5e7eb;
-  text-shadow: 0 0 10px rgba(229, 231, 235, 0.5);
+  color: #000000;
   line-height: 1;
   display: flex;
   align-items: end;
   justify-content: center;
 }
 
-.game-time-ms {
+.game-container .game-time-ms {
   font-size: 1.5rem;
-  color: #e5e7eb;
+  color: #cd1212;
   opacity: 0.8;
   padding-bottom: 0.35rem;
 }
 
-.ddok-button {
-  background: linear-gradient(90deg, #1f2937, #374151);
-  color: white;
+.game-container .ddok-button {
+  background: #e9efb9;
+  color: rgb(0, 0, 0);
   padding: 1rem 2rem;
   border-radius: 0.75rem;
   border: none;
@@ -151,28 +194,27 @@
   font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(31, 41, 55, 0.4);
-  width: 100%;
+  width: 70%;
 }
 
-.ddok-button:hover {
+.game-container .ddok-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.6);
+  box-shadow: 0 6px 20px rgba(12, 80, 175, 0.6);
   background: linear-gradient(90deg, #111827, #1f2937);
 }
 
-.ddok-button:active {
+.game-container .ddok-button:active {
   transform: scale(0.98);
   filter: brightness(1.2);
 }
 
-.button-click-effect {
+.game-container .button-click-effect {
   transform: scale(0.98);
   filter: brightness(1.2);
   transition: all 0.1s ease-in-out;
 }
 
-.result-popup {
+.game-container .result-popup {
   animation: fadeInOut 2.5s ease-in-out forwards;
   font-weight: bold;
   font-size: 1.25rem;
@@ -187,104 +229,123 @@
   100% { opacity: 0; transform: translateY(-15px); }
 }
 
-.total-ddok-display {
+.game-container .total-ddok-display {
   text-align: center;
   font-size: 1.5rem;
   font-weight: bold;
-  color: #e5e7eb;
+  color: #000000;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
-.member-card h4 {
+.game-container .target-time-box p {
   color: #ffffff;
-  transition: color 0.3s ease;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
 }
 
-.member-card p {
-  color: #d1d5db;
-  transition: color 0.3s ease;
+.game-container .target-time-box #target-time {
+  color: #000000;
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin: 0;
 }
 
-.target-time-box p {
-  color: #d1d5db;
-}
+/* 결과 색상 스타일 - 검정 배경에 맞게 조정 - 게임 영역에만 적용 */
+.game-container .text-pink-400 { color: #22c55e !important; }
+.game-container .text-white { color: #ffffff !important; }
+.game-container .text-gray-300 { color: #151515 !important; }
+.game-container .text-gray-400 { color: #ffffff !important; }
+.game-container .text-gray-500 { color: #6b7280 !important; }
 
-.target-time-box #target-time {
-  color: #ffffff;
-}
-
-/* 결과 색상 스타일 - 검정 배경에 맞게 조정 */
-.text-pink-400 { color: #22c55e !important; }
-.text-white { color: #ffffff !important; }
-.text-gray-300 { color: #d1d5db !important; }
-.text-gray-400 { color: #9ca3af !important; }
-.text-gray-500 { color: #6b7280 !important; }
-
-/* 템플릿 색상 오버라이드 */
-#no-birthday-view h2 {
+/* 템플릿 색상 오버라이드 - 게임 영역에만 적용 */
+.game-container #no-birthday-view h2 {
   color: #ffffff !important;
 }
 
-#no-birthday-view p {
+.game-container #no-birthday-view p {
   color: #d1d5db !important;
 }
 
-#no-birthday-view svg {
+.game-container #no-birthday-view svg {
   color: #9ca3af !important;
 }
 
 /* 모바일 게임 스타일 */
 @media (max-width: 768px) {
   .game-container {
-    margin: 0.5rem;
+    margin: 0.5rem 0.5rem 2rem 0.5rem;
     padding: 1rem;
   }
 
-  .member-card {
-    padding: 0.75rem;
+  /* 모바일에서는 세로 리스트 형태로 변경 - 카드 제거 */
+  .game-container .member-selector-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+    max-width: none !important;
+    margin: 0 0 2rem 0 !important;
+    justify-items: flex-start !important;
+    padding: 0 1rem !important;
   }
 
-  .member-image {
-    width: 60px;
-    height: 60px;
+  .game-container .member-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    text-align: left;
+    padding: 0.5rem 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    width: 100%;
   }
 
-  .game-idol-image {
-    width: 100px;
-    height: 100px;
+  .game-container .member-item:hover {
+    background: transparent !important;
+    transform: none;
   }
 
-  .game-time-display {
+  .game-container .member-image {
+    width: 50px;
+    height: 50px;
+    margin: 0 1rem 0 0;
+    flex-shrink: 0;
+  }
+
+  /* 모바일에서는 텍스트 정보 */
+  .game-container .member-name {
+    font-size: 1rem;
+    margin-bottom: 0.125rem;
+    color: #000000;
+  }
+
+  .game-container .artist-name {
+    font-size: 0.85rem;
+    opacity: 1 !important;
+    transform: none !important;
+    white-space: normal !important;
+    margin: 0 !important;
+    color: #000000;
+  }
+
+  .game-container .target-time-box {
+    padding: 0.5rem 0.75rem;
+    max-width: 250px;
+  }
+
+  .game-container .target-time-box #target-time {
+    font-size: 1.5rem;
+  }
+
+  .game-container .game-time-display {
     font-size: 2rem;
   }
 
-  .ddok-button {
+  .game-container .ddok-button {
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
-  }
-
-  .member-selector-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem;
-    max-width: none !important;
-    margin: 0 0 2rem 0 !important;
-  }
-
-  /* 모바일에서 5명 이상일 때 3열로 */
-  .member-selector-grid[data-count="5"],
-  .member-selector-grid[data-count="6"] {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-
-  .member-selector-grid[data-count="5"] .member-card:nth-child(4),
-  .member-selector-grid[data-count="5"] .member-card:nth-child(5) {
-    grid-column: span 1;
-  }
-
-  /* 5명일 때 마지막 하나를 가운데 정렬 */
-  .member-selector-grid[data-count="5"] .member-card:nth-child(5) {
-    grid-column: 2;
   }
 }
