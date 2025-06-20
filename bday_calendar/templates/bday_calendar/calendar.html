@@ -38,39 +38,32 @@
     font-style: normal;
 }
 
-/* 특정 영역에만 NanumSquareRound 폰트 적용 (네비바 제외) */
-section {
-    font-family: 'NanumSquareRound', sans-serif !important;
-}
-
-section * {
-    font-family: 'NanumSquareRound', sans-serif !important;
-}
-
-/* 캘린더 영역에 폰트 적용 */
+/* 캘린더와 게임 영역에만 폰트 적용 (네비바와 헤더 제외) */
 #calendar,
 #calendar-mobile,
 #calendar *,
-#calendar-mobile * {
-    font-family: 'NanumSquareRound', sans-serif !important;
-}
-
-/* 게임 영역에 폰트 적용 */
+#calendar-mobile *,
 #birthday-game-container,
 #birthday-game-container * {
     font-family: 'NanumSquareRound', sans-serif !important;
 }
 
-/* 굵기별 폰트 적용 */
-.font-light {
+/* 굵기별 폰트 적용 - 캘린더/게임 영역에만 */
+#calendar .font-light,
+#calendar-mobile .font-light,
+#birthday-game-container .font-light {
     font-family: 'NanumSquareRoundLight', sans-serif !important;
 }
 
-.font-bold, strong, b {
+#calendar .font-bold, #calendar strong, #calendar b,
+#calendar-mobile .font-bold, #calendar-mobile strong, #calendar-mobile b,
+#birthday-game-container .font-bold, #birthday-game-container strong, #birthday-game-container b {
     font-family: 'NanumSquareRoundBold', sans-serif !important;
 }
 
-.font-black, .font-extrabold {
+#calendar .font-black, #calendar .font-extrabold,
+#calendar-mobile .font-black, #calendar-mobile .font-extrabold,
+#birthday-game-container .font-black, #birthday-game-container .font-extrabold {
     font-family: 'NanumSquareRoundExtraBold', sans-serif !important;
 }
 </style>
@@ -81,11 +74,10 @@ section * {
 {% endblock %}
 
 {% block body %}
+<!-- 생일 캘린더 전용 헤더 추가 -->
+{% include 'bday_calendar/components/_header.html' %}
+
 <section class="max-w-6xl mx-auto px-4 py-10">
-  <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
-    <span>생일 덕 축하해!</span>
-  </h2>
 
   <!-- 생일시 맞추기 게임 컨테이너 -->
   <div id="birthday-game-container" class="game-container hidden">
