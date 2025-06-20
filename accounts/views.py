@@ -73,7 +73,13 @@ def signup(request):
             msg.attach_alternative(html_content, "text/html")
             msg.send()
 
-            messages.success(request, '인증 이메일이 전송되었습니다!\n이메일을 확인해주세요.')
+            # 🔥 특별한 태그를 가진 메시지로 변경
+            messages.add_message(
+                request, 
+                messages.SUCCESS, 
+                '인증 이메일이 전송되었습니다!\n이메일을 확인해주세요.',
+                extra_tags='modal_required'  # 🔥 특별 태그 추가
+            )
             return redirect('accounts:login')
     else:
         form = CustomUserCreationForm()
@@ -95,9 +101,16 @@ def activate(request, uidb64, token):
     if user and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-        messages.success(request, '🎉 이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.')
+        # 🔥 모달용 태그 추가
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            '🎉 이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.',
+            extra_tags='modal_required'  # 🔥 특별 태그 추가
+        )
         return redirect('accounts:login')
     else:
+        # 🔥 일반 에러 메시지 (모달 없음) - 기존 방식 유지
         messages.error(request, '⚠️ 인증 링크가 유효하지 않거나 만료되었습니다.')
         return redirect('accounts:login')
 

@@ -5,16 +5,24 @@
 <div class="min-h-screen bg-white flex items-center justify-center px-4">
   <div class="w-full max-w-md">
     
-    <!-- 로그인 메시지 -->
+    <!-- 🔥 수정된 로그인 메시지 - 태그 기반 필터링... -->
     {% if messages %}
-      <div id="message-modal" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
-        <div class="bg-white rounded-2xl shadow-2xl w-96 max-w-full p-6 text-center">
-          {% for message in messages %}
-            <p class="text-gray-800 text-sm">{{ message|linebreaksbr }}</p>
-          {% endfor %}
-          <button id="close-modal" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">확인</button>
-        </div>
-      </div>
+      {% for message in messages %}
+        <!-- 🔥 이중 체크: modal_required 태그 또는 특정 키워드가 있는 메시지만 모달로 표시 -->
+        {% if 'modal_required' in message.extra_tags or '인증' in message or '가입' in message or '환영' in message %}
+          <div id="message-modal" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+            <div class="bg-white rounded-2xl shadow-2xl w-96 max-w-full p-6 text-center">
+              <p class="text-gray-800 text-sm">{{ message|linebreaksbr }}</p>
+              <button id="close-modal" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">확인</button>
+            </div>
+          </div>
+        {% else %}
+          <!-- 일반 메시지는 상단에 표시 -->
+          <div class="mb-4 p-3 {% if message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 border border-yellow-400 text-yellow-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %} rounded">
+            <p class="text-sm">{{ message }}</p>
+          </div>
+        {% endif %}
+      {% endfor %}
     {% endif %}
 
     <!-- 로고 -->
