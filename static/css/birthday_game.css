@@ -4,7 +4,7 @@
 .game-container {
   background: rgb(245, 245, 245);
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: 1.2rem;
   margin-bottom: 3rem;
   color: rgb(0, 0, 0);
   backdrop-filter: blur(10px);
@@ -153,7 +153,7 @@
 }
 
 .game-container .target-time-box {
-  background-color: rgba(0, 0, 0, 0.3) !important;
+  background-color: #000000 !important;
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   margin-bottom: 1.5rem;
@@ -185,8 +185,8 @@
 }
 
 .game-container .ddok-button {
-  background: #e9efb9;
-  color: rgb(0, 0, 0);
+  background: #000000;
+  color: rgb(255, 255, 255);
   padding: 1rem 2rem;
   border-radius: 0.75rem;
   border: none;
@@ -199,8 +199,8 @@
 
 .game-container .ddok-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(12, 80, 175, 0.6);
-  background: linear-gradient(90deg, #111827, #1f2937);
+  box-shadow: 0 6px 20px rgba(219, 30, 30, 0.6);
+  background: #e13b3b;
 }
 
 .game-container .ddok-button:active {
@@ -240,13 +240,13 @@
 }
 
 .game-container .target-time-box p {
-  color: #ffffff;
+  color: #ffffff !important;
   margin: 0 0 0.5rem 0;
   font-size: 0.875rem;
 }
 
 .game-container .target-time-box #target-time {
-  color: #000000;
+  color: #ffffff !important;
   font-size: 1.75rem;
   font-weight: bold;
   margin: 0;
