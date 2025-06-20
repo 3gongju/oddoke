@@ -822,11 +822,13 @@ window.DdoksangMapUtils = {
 <!-- 5. 이미지 업로드 모듈 (압축 기능 포함) -->
 <script src="{% static 'js/ddoksang_image_upload.js' %}?v=5.0"></script>
 
-<!-- 6. 메인 앱 (수정된 버전) -->
-<script src="{% static 'js/ddoksang_create.js' %}?v=7.0"></script>
+<!-- 6. 자동완성 -->
+<script src="{% static 'js/autocomplete.js' %}?v=3.0"></script>
 
-<!-- 7. 자동완성 -->
-<script src="{% static 'js/autocomplete.js' %}?v=2.0"></script>
+<!-- 7. 메인 앱 (수정된 버전) -->
+<script src="{% static 'js/ddoksang_create.js' %}?v=8.0"></script>
+
+
 
 <!-- 8. 중복 확인 모듈들 (새로 추가) -->
 <script src="{% static 'js/ddoksang_duplicate_card_template.js' %}"></script>
@@ -847,7 +849,8 @@ document.addEventListener('DOMContentLoaded', function() {
             메인앱: !!window.ddoksangApp,
             카드템플릿: !!window.DuplicateCardTemplate,
             중복확인: !!window.DuplicateChecker,
-            아티스트배지: !!window.ArtistBadgeUtils
+            아티스트배지: !!window.ArtistBadgeUtils,
+            자동완성: !!window.initAutocomplete
         };
         
         console.log('📊 모듈 로딩 상태:', moduleStatus);
