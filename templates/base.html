@@ -9,32 +9,51 @@
   <link rel="icon" type="image/png" href="{% static 'image/favicon.png' %}">
   <meta name="description" content="팬들을 위한 특별한 공간에서 굿즈 거래부터 덕질 기록까지">
   
-  <!-- 나눔스퀘어 & 배민체 -->
+  <!-- 스위트(SUITE) 폰트 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <style>
+    /* 스위트(SUITE) 폰트 - 모든 굵기 */
     @font-face {
-      font-family: 'BMJUA';
-      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff');
-      font-weight: normal;
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Light.woff2') format('woff2');
+      font-weight: 300;
       font-style: normal;
     }
     @font-face {
-      font-family: 'NanumSquare';
-      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareRegular.woff') format('woff');
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Regular.woff2') format('woff2');
       font-weight: 400;
       font-style: normal;
     }
     @font-face {
-      font-family: 'NanumSquare';
-      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareBold.woff') format('woff');
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-SemiBold.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Bold.woff2') format('woff2');
       font-weight: 700;
       font-style: normal;
     }
     @font-face {
-      font-family: 'NanumSquare';
-      src: url('https://cdn.jsdelivr.net/gh/moonspam/NanumSquare@1.0/NanumSquareLight.woff') format('woff');
-      font-weight: 300;
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-ExtraBold.woff2') format('woff2');
+      font-weight: 800;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'SUITE';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Heavy.woff2') format('woff2');
+      font-weight: 900;
       font-style: normal;
     }
   </style>
@@ -46,10 +65,10 @@
       theme: {
         extend: {
           fontFamily: {
-            'cute': ['BMJUA', 'NanumSquare', 'system-ui', 'sans-serif'],
-            'sans': ['NanumSquare', 'system-ui', 'sans-serif'],
-            'heading': ['BMJUA', 'system-ui', 'sans-serif'],
-            'body': ['NanumSquare', 'system-ui', 'sans-serif'],
+            'cute': ['SUITE', 'system-ui', 'sans-serif'],      // 귀여운 텍스트용 (기존 배민체 대체)
+            'sans': ['SUITE', 'system-ui', 'sans-serif'],      // 기본 폰트
+            'heading': ['SUITE', 'system-ui', 'sans-serif'],   // 헤딩용 (기존 배민체 대체)
+            'body': ['SUITE', 'system-ui', 'sans-serif'],      // 본문용 (기존 나눔스퀘어 대체)
           },
           colors: {
             // 레퍼런스에 맞는 부드러운 크림/노랑 색상
@@ -505,7 +524,7 @@
 
 <!-- ✅ 추가 스타일 - 반응형 및 폰트 최적화 -->
 <style>
-  /* 한글 폰트 최적화 */
+  /* 스위트 폰트 최적화 */
   .font-heading {
     font-feature-settings: "kern" 1;
     text-rendering: optimizeLegibility;

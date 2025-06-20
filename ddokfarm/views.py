@@ -21,7 +21,8 @@ from .models import (
     FarmSplitPost, 
     FarmPostImage,
     SplitPrice,
-    SplitApplication
+    SplitApplication,
+    ItemPrice,
 )
 from .forms import FarmCommentForm, SplitPriceForm
 from .utils import (
@@ -297,6 +298,12 @@ def post_detail(request, category, post_id):
         'is_owner': is_owner,
     }
 
+    # 개별 가격 정보 추가
+    if category in ['sell', 'rental']:
+        item_prices = post.get_item_prices().order_by('id')
+        context['item_prices'] = item_prices
+        context['has_individual_prices'] = item_prices.exists()
+
     if category == 'split':
         # 승인된 신청에서 멤버들을 가져와서 checked_out_members에 추가
         approved_applications = SplitApplication.objects.filter(
@@ -390,7 +397,18 @@ def post_create(request):
                 post.user = request.user
                 if selected_artist_id:
                     post.artist_id = selected_artist_id
+
+                # 개별 가격 설정 처리
+                use_individual_prices = request.POST.get('use_individual_prices')
+                if use_individual_prices and category in ['sell', 'rental']:
+                    # 개별 가격 설정이 체크된 경우 기본 가격을 0으로 설정
+                    post.price = 0
+
                 post.save()
+
+                # 개별 가격 저장 (판매/대여만)
+                if use_individual_prices and category in ['sell', 'rental']:
+                    save_individual_prices(request, post)
 
                 if category == 'split' and formset:
                     for idx, sp_form in enumerate(formset.forms):
@@ -412,6 +430,7 @@ def post_create(request):
                     post.members.set(selected_member_ids)
 
                 form.save_m2m()
+
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
                     FarmPostImage.objects.create(
@@ -536,7 +555,7 @@ def post_edit(request, category, post_id):
         return render(request, 'ddokfarm/error_message.html', context)
 
     if request.method == 'POST':
-        # ✅ artist 수정 불가: 기존 artist로 강제 세팅
+        # artist 수정 불가: 기존 artist로 강제 세팅
         post_data = request.POST.copy()
         post_data['artist'] = post.artist.id
 
@@ -578,6 +597,22 @@ def post_edit(request, category, post_id):
 
         if form.is_valid() and formset_valid:
             post = form.save(commit=False)
+
+            # 개별 가격 설정 처리
+            use_individual_prices = post_data.get('use_individual_prices')
+            if category in ['sell', 'rental']:
+                if use_individual_prices:
+                    # 개별 가격 설정이 체크된 경우
+                    # 기존 개별 가격들 삭제
+                    post.get_item_prices().delete()
+                    # 새로운 개별 가격들 저장
+                    save_individual_prices(request, post)
+                    # 기본 가격을 0으로 설정
+                    post.price = 0
+                else:
+                    # 개별 가격 설정이 해제된 경우 기존 개별 가격들 삭제
+                    post.get_item_prices().delete()
+
             post.save()
 
             if category == 'split' and formset_with_names:
@@ -626,7 +661,7 @@ def post_edit(request, category, post_id):
                 sp_form.fields['member'].initial = member.id
                 formset_with_names.append((sp_form, member.member_name))
 
-            # ✅ dummy formset for management_form
+            # dummy formset for management_form
             SplitPriceFormSet = modelformset_factory(SplitPrice, form=SplitPriceForm, extra=0, can_delete=False)
             dummy_formset = SplitPriceFormSet(queryset=SplitPrice.objects.none(), prefix='splitprice')
         else:
@@ -664,6 +699,31 @@ def post_edit(request, category, post_id):
     }
 
     return render(request, 'ddokfarm/edit.html', context)
+
+# 개별 가격 저장 헬퍼 함수
+def save_individual_prices(request, post):
+    """개별 가격 정보를 저장하는 헬퍼 함수"""
+    content_type = ContentType.objects.get_for_model(post.__class__)
+    
+    # POST 데이터에서 개별 가격 정보 추출
+    total_forms = int(request.POST.get('item_prices-TOTAL_FORMS', 0))
+    
+    for i in range(total_forms):
+        item_name = request.POST.get(f'item_prices-{i}-item_name', '').strip()
+        price_str = request.POST.get(f'item_prices-{i}-price', '')
+        
+        if price_str:  # 가격이 입력된 경우만 저장
+            try:
+                price = int(price_str)
+                if price > 0:  # 양수인 경우만 저장
+                    ItemPrice.objects.create(
+                        content_type=content_type,
+                        object_id=post.id,
+                        item_name=item_name,
+                        price=price
+                    )
+            except (ValueError, TypeError):
+                continue  # 잘못된 가격 형식은 무시
 
 # 게시글 삭제
 @login_required

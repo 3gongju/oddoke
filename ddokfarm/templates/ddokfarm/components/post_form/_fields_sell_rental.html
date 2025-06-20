@@ -1,3 +1,5 @@
+<!-- ddokfarm/components/post_form/_fields_sell_rental.html 업데이트 -->
+
 <!-- 가격 -->
 <div class="mb-6">
   <label for="{{ form.price.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">가격</label>
@@ -5,31 +7,70 @@
   {% if form.price.errors %}<p class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</p>{% endif %}
 </div>
 
-<!-- 종류-->
+<!-- 개별 가격 설정 추가 -->
+{% include "ddokfarm/components/post_form/_individual_prices.html" %}
+
+<!-- 종류 (체크박스로 변경) -->
 <div class="mb-6">
-  <label for="{{ form.md.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">종류</label>
-  {{ form.md }}
+  <label for="{{ form.md.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">종류</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.md.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="checkbox" name="{{ form.md.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+               {% if choice.0 in form.md.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
   {% if form.md.errors %}<p class="text-red-500 text-sm mt-1">{{ form.md.errors.0 }}</p>{% endif %}
 </div>
 
 <!-- 거래 방식 -->
 <div class="mb-6">
-  <label for="{{ form.want_to.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">거래 방식</label>
-  {{ form.want_to }}
+  <label for="{{ form.want_to.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">거래 방식</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.want_to.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.want_to.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+               {% if choice.0 == form.want_to.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
   {% if form.want_to.errors %}<p class="text-red-500 text-sm mt-1">{{ form.want_to.errors.0 }}</p>{% endif %}
 </div>
 
 <!-- 상품 상태 -->
 <div class="mb-6">
-  <label for="{{ form.condition.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">상품 상태</label>
-  {{ form.condition }}
+  <label for="{{ form.condition.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">상품 상태</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.condition.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.condition.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+               {% if choice.0 == form.condition.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
   {% if form.condition.errors %}<p class="text-red-500 text-sm mt-1">{{ form.condition.errors.0 }}</p>{% endif %}
 </div>
 
 <!-- 배송 방법 -->
 <div class="mb-6">
-  <label for="{{ form.shipping.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">배송 방법</label>
-  {{ form.shipping }}
+  <label for="{{ form.shipping.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">배송 방법</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.shipping.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.shipping.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+               {% if choice.0 == form.shipping.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
   {% if form.shipping.errors %}<p class="text-red-500 text-sm mt-1">{{ form.shipping.errors.0 }}</p>{% endif %}
 </div>
 
@@ -42,15 +83,20 @@
 
 {# rental 전용 필드 #}
 {% if category == 'rental' %}
-  <div class="mb-6">
-    <label for="{{ form.start_date.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">대여 시작일</label>
-    {{ form.start_date }}
-    {% if form.start_date.errors %}<p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>{% endif %}
-  </div>
-  <div class="mb-6">
-    <label for="{{ form.end_date.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">대여 종료일</label>
-    {{ form.end_date }}
-    {% if form.end_date.errors %}<p class="text-red-500 text-sm mt-1">{{ form.end_date.errors.0 }}</p>{% endif %}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+    <!-- 대여 시작일 -->
+    <div>
+      <label for="{{ form.start_date.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">대여 시작일</label>
+      {{ form.start_date }}
+      {% if form.start_date.errors %}<p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>{% endif %}
+    </div>
+    
+    <!-- 대여 종료일 -->
+    <div>
+      <label for="{{ form.end_date.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">대여 종료일</label>
+      {{ form.end_date }}
+      {% if form.end_date.errors %}<p class="text-red-500 text-sm mt-1">{{ form.end_date.errors.0 }}</p>{% endif %}
+    </div>
   </div>
 {% endif %}
 

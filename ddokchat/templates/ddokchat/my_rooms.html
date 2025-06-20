@@ -23,15 +23,43 @@
 
     <!-- 거래중 채팅 목록 -->
     <div id="activeContent" class="tab-content">
-        {% include 'ddokchat/components/rooms/_room_list.html' with items=active_items type='active' %}
+        {% if active_items %}
+            {% include 'ddokchat/components/rooms/_room_list.html' with items=active_items type='active' %}
+        {% else %}
+            <!-- ✅ 거래중 탭이 비어있을 때만 (전체가 비어있지 않은 경우) -->
+            {% if completed_items %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-400">거래중인 채팅이 없습니다.</p>
+                </div>
+            {% endif %}
+        {% endif %}
     </div>
 
     <!-- 거래완료 채팅 목록 -->
     <div id="completedContent" class="tab-content hidden">
-        {% include 'ddokchat/components/rooms/_room_list.html' with items=completed_items type='completed' %}
+        {% if completed_items %}
+            {% include 'ddokchat/components/rooms/_room_list.html' with items=completed_items type='completed' %}
+        {% else %}
+            <!-- ✅ 거래완료 탭이 비어있을 때만 (전체가 비어있지 않은 경우) -->
+            {% if active_items %}
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-400">거래완료된 채팅이 없습니다.</p>
+                </div>
+            {% endif %}
+        {% endif %}
     </div>
 
-    <!-- 전체적으로 채팅방이 없을 때 -->
+    <!-- ✅ 수정된 조건: 둘 다 없을 때만 전체 빈 상태 표시 -->
     {% if not active_items and not completed_items %}
         {% include 'ddokchat/components/rooms/_empty_state.html' %}
     {% endif %}
