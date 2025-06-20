@@ -3,13 +3,9 @@
 {% load member_images %}
 
 {% block head %}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/main.min.css" rel="stylesheet" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-
-<!-- 분리된 CSS 파일들 로드 -->
-<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
 <link rel="stylesheet" href="{% static 'css/birthday_game.css' %}">
 {% endblock %}
 
@@ -17,11 +13,11 @@
 <section class="max-w-6xl mx-auto px-4 py-10">
   <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
     <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
-    <span>생일을 축하해똑!</span>
+    <span>생일시 맞추기 게임</span>
   </h2>
 
   <!-- 생일시 맞추기 게임 컨테이너 -->
-  <div id="birthday-game-container" class="game-container hidden">
+  <div id="birthday-game-container" class="game-container">
     <!-- 멤버 선택 화면 -->
     <div id="member-selection-view">
       <h3 class="text-2xl font-bold text-center mb-2">🎉 오늘 생일인 멤버</h3>
@@ -73,58 +69,16 @@
       <p class="text-gray-300">내일 다시 확인해주세요!</p>
     </div>
   </div>
-  
-  <!-- 데스크톱용 화살표 네비게이션 -->
-  <div class="hidden md:flex items-center justify-center relative mb-6">
-    <button id="prevBtn" class="absolute left-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-md transition-all duration-200 hover:shadow-lg">
-      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-      </svg>
-    </button>
-    
-    <div id="calendar" class="flex-1 mx-16"></div>
-    
-    <button id="nextBtn" class="absolute right-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-md transition-all duration-200 hover:shadow-lg">
-      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-      </svg>
-    </button>
-  </div>
-  
-  <!-- 모바일용 캘린더 -->
-  <div class="md:hidden flex items-center justify-center relative mb-6">
-    <div id="calendar-mobile" class="w-full"></div>
-  </div>
 </section>
 
-<!-- rrule -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/rrule/2.6.8/rrule.min.js"></script>
-<!-- FullCalendar -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js"></script>
-
-<!-- API URL들을 JavaScript 변수로 전달 -->
-<script>
-  // Django 템플릿에서 API URL들을 JavaScript 변수로 전달
-  window.API_URLS = {
-    events: "{% url 'bday_calendar:events_api' %}",
-    todayBirthdays: "{% url 'bday_calendar:today_birthdays_api' %}",
-    savePoints: "{% url 'bday_calendar:save_ddok_point' %}"
-  };
-</script>
-
-<!-- 분리된 JavaScript 파일들 로드 -->
-<script src="{% static 'js/calendar.js' %}"></script>
 <script src="{% static 'js/birthday_game.js' %}"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // 캘린더 초기화 (API URL 전달)
-    initializeCalendar(window.API_URLS.events);
-    
-    // 게임 초기화 (API URL들 전달)
+    // 게임만 초기화
     initializeBirthdayGame(
-      window.API_URLS.todayBirthdays,
-      window.API_URLS.savePoints
+      "{% url 'bday_calendar:today_birthdays_api' %}",
+      "{% url 'bday_calendar:save_ddok_point' %}"
     );
   });
 </script>
