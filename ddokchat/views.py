@@ -4,7 +4,7 @@ from accounts.models import MannerReview, User
 from accounts.forms import MannerReviewForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, ItemPrice
 from django.db.models import Q, Max, Count, Prefetch, Case, When, OuterRef, Subquery
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -19,6 +19,7 @@ from datetime import datetime
 from itertools import groupby
 from operator import attrgetter
 from .services import get_dutcheat_service
+from django.contrib.contenttypes.models import ContentType
 
 import json
 
@@ -154,7 +155,7 @@ def get_or_create_chatroom(request, category, post_id):
 def my_chatrooms(request):
     current_user = request.user
     
-    # N+1 해결: 모든 데이터를 한 번의 쿼리로 가져오기
+    # 기본 쿼리 (GenericForeignKey와 member_prices 제외)
     rooms = ChatRoom.objects.filter(
         Q(buyer=current_user) | Q(seller=current_user)
     ).select_related(
@@ -186,12 +187,108 @@ def my_chatrooms(request):
         )
     ).order_by('-last_message_time')
     
-    # 한번에 가져온 데이터로 추가 처리
+    # ✅ 게시글 타입별로 ID 수집
+    sell_post_ids = []
+    rental_post_ids = []
+    split_post_ids = []
+    
+    for room in rooms:
+        if hasattr(room.post, 'category_type'):
+            if room.post.category_type == 'sell':
+                sell_post_ids.append(room.post.id)
+            elif room.post.category_type == 'rental':
+                rental_post_ids.append(room.post.id)
+            elif room.post.category_type == 'split':
+                split_post_ids.append(room.post.id)
+    
+    # ✅ 모든 관련 데이터 한 번에 가져오기
+    item_prices_dict = {}
+    member_prices_dict = {}
+    
+    # ItemPrice 가져오기 (양도/대여용)
+    if sell_post_ids:
+        try:
+            sell_ct = ContentType.objects.get_for_model(FarmSellPost)
+            sell_prices = ItemPrice.objects.filter(
+                content_type=sell_ct, 
+                object_id__in=sell_post_ids
+            ).select_related()
+            
+            for price in sell_prices:
+                key = f"sell_{price.object_id}"
+                if key not in item_prices_dict:
+                    item_prices_dict[key] = []
+                item_prices_dict[key].append(price)
+        except Exception as e:
+            print(f"양도 ItemPrice 조회 오류: {e}")
+    
+    if rental_post_ids:
+        try:
+            rental_ct = ContentType.objects.get_for_model(FarmRentalPost)
+            rental_prices = ItemPrice.objects.filter(
+                content_type=rental_ct, 
+                object_id__in=rental_post_ids
+            ).select_related()
+            
+            for price in rental_prices:
+                key = f"rental_{price.object_id}"
+                if key not in item_prices_dict:
+                    item_prices_dict[key] = []
+                item_prices_dict[key].append(price)
+        except Exception as e:
+            print(f"대여 ItemPrice 조회 오류: {e}")
+    
+    # MemberPrice 가져오기 (분철용)
+    if split_post_ids:
+        try:
+            split_posts = FarmSplitPost.objects.filter(
+                id__in=split_post_ids
+            ).prefetch_related('member_prices')
+            
+            for post in split_posts:
+                key = f"split_{post.id}"
+                member_prices_dict[key] = list(post.member_prices.all())
+        except Exception as e:
+            print(f"분철 MemberPrice 조회 오류: {e}")
+    
+    # ✅ 캐시된 데이터를 각 room의 post에 설정
+    for room in rooms:
+        if hasattr(room.post, 'category_type'):
+            category = room.post.category_type
+            post_id = room.post.id
+            
+            if category in ['sell', 'rental']:
+                # ItemPrice 설정
+                key = f"{category}_{post_id}"
+                if key in item_prices_dict:
+                    room.post._prefetched_objects_cache = getattr(room.post, '_prefetched_objects_cache', {})
+                    room.post._prefetched_objects_cache['item_prices'] = item_prices_dict[key]
+                    # 템플릿 접근용 속성도 추가
+                    room.post.cached_item_prices = item_prices_dict[key]
+                else:
+                    room.post.cached_item_prices = []
+                    
+            elif category == 'split':
+                # MemberPrice 설정
+                key = f"split_{post_id}"
+                if key in member_prices_dict:
+                    room.post._prefetched_objects_cache = getattr(room.post, '_prefetched_objects_cache', {})
+                    room.post._prefetched_objects_cache['member_prices'] = member_prices_dict[key]
+                    # 템플릿 접근용 속성도 추가
+                    room.post.cached_member_prices = member_prices_dict[key]
+                else:
+                    room.post.cached_member_prices = []
+        else:
+            # 타입을 알 수 없는 경우 빈 리스트로 설정
+            room.post.cached_item_prices = []
+            room.post.cached_member_prices = []
+    
+    # 기본 후처리
     for room in rooms:
         room.partner = room.get_other_user(current_user)
         room.last_message = room.latest_messages[0] if room.latest_messages else None
         room.category = room.post.category_type if hasattr(room.post, 'category_type') else 'unknown'
-    
+
     # ✅ 분철 채팅방과 일반 채팅방 분리 (사용자 역할 고려)
     split_rooms = []
     other_rooms = []
