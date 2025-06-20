@@ -7,73 +7,334 @@
 
 <style>
   @font-face {
+    font-family: 'EF_YOONY';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-01@1.0/EF_YOONY.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
     font-family: 'NanumSquareRound';
     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
   }
 
   body,
   #calendar,
-  h2,
-  h2 span,
+  #calendar-mobile,
   .fc,
-  .fc-toolbar-title,
-  .fc-button,
-  .fc-col-header-cell-cushion {
-    font-family: 'NanumSquareRound', sans-serif !important;
+  .fc * {
+    font-family: 'EF_YOONY', 'NanumSquareRound', sans-serif !important;
     color: #111827;
   }
 
-  #calendar {
-    background-color: white;
-    border-radius: 1rem;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    padding: 1.5rem;
-  }
-
-  .fc .fc-daygrid-day-number {
-    font-weight: bold;
-    font-size: 1rem;
-  }
-
-  .fc .fc-daygrid-event {
+  /* 주황색 배경 제거를 위한 CSS 추가 */
+  .fc-daygrid-day-events {
+    background: transparent !important;
     background-color: transparent !important;
-    border: none !important;
-    font-size: 0.75rem;
-    font-weight: normal;
-    padding: 1px 4px;
-    margin-bottom: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
   }
 
-  .fc .fc-event-main {
+  .fc-daygrid-event-harness {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .fc-daygrid-event-harness-abs,
+  .fc-daygrid-event-harness-inset {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .fc-highlight {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .fc-daygrid-day.fc-day-selected {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .custom-events-container {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .fc-toolbar-title {
+    font-size: 1.125rem; /* 기본값보다 약간 작게 */
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* 모바일에서 타이틀 크기 조정 */
+  @media (max-width: 768px) {
+    .fc-toolbar-title {
+      font-size: 1rem !important;
+    }
+    
+    .fc-toolbar {
+      padding: 0.5rem 0 !important;
+    }
+
+    /* 모바일 전용 화살표 버튼 스타일 */
+    .fc-prevMobile-button,
+    .fc-nextMobile-button {
+      background-color: transparent !important;
+      border: none !important;
+      color: #374151 !important;
+      font-size: 1.5rem !important;
+      font-weight: bold !important;
+      padding: 0.25rem 0.5rem !important;
+      border-radius: 0.375rem !important;
+      min-width: auto !important;
+    }
+
+    .fc-prevMobile-button:hover,
+    .fc-nextMobile-button:hover {
+      background-color: #f3f4f6 !important;
+      color: #111827 !important;
+    }
+
+    /* 모바일에서 캘린더 전체 폭 사용 */
+    #calendar-mobile {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    
+    /* 모바일에서 캘린더 크기 키우기 */
+    .fc-daygrid-day-frame {
+      min-height: 55px !important; /* 더 줄이기 */
+      padding: 0.1rem !important;
+    }
+    
+    .fc .fc-daygrid-day-number {
+      font-size: 0.7rem !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      line-height: 1 !important;
+      position: absolute !important; /* 절대 위치로 변경 */
+      top: 0.5px !important;
+      left: 1px !important;
+      z-index: 1 !important;
+      background: rgba(255, 255, 255, 0.8) !important;
+      border-radius: 2px !important;
+      min-width: auto !important;
+      height: auto !important;
+    }
+    
+    /* 요일 헤더 크기 */
+    .fc-col-header-cell {
+      padding: 0.2rem 0 !important; /* 줄이기 */
+    }
+    
+    .fc-col-header-cell-cushion {
+      font-size: 0.75rem !important;
+    }
+    
+    .birthday-date-header {
+      display: none !important;
+    }
+    
+    /* 모바일에서 아바타 크기 더 키우기 */
+    .fc .fc-daygrid-event {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 1px !important;
+      display: inline-block !important;
+      width: auto !important;
+      height: auto !important;
+      position: relative !important;
+    }
+    
+    .fc .fc-event-main {
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+    
+    .member-avatar {
+      width: 18px !important; /* 약간 작게 */
+      height: 18px !important;
+      margin: 1px !important;
+      border: 1px solid #e5e7eb !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .member-name {
+      display: none !important;
+    }
+    
+    /* 모바일에서 캘린더 높이 제한 해제 (스크롤 허용) */
+    #calendar-mobile {
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    
+    .fc {
+      height: auto !important;
+      font-size: 0.8rem !important;
+    }
+    
+    .fc-daygrid-body {
+      overflow: visible !important;
+    }
+    
+    .fc-daygrid-day-events {
+      margin: 0 !important;
+      padding: 0 !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      overflow: visible !important;
+      gap: 1px !important;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    
+    /* 더보기 표시 스타일 */
+    .more-members {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #6b7280;
+      color: white;
+      border-radius: 50%;
+      width: 18px; /* 약간 작게 */
+      height: 18px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      margin: 1px;
+      cursor: pointer;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 모바일에서 날짜 셀 클릭 영역 확보 */
+    .fc-daygrid-day {
+      cursor: pointer;
+    }
+
+    /* 전체 섹션 패딩 */
+    section.max-w-6xl {
+      padding: 0.5rem !important; /* 패딩 줄이기 */
+    }
+
+    h2.text-xl {
+      font-size: 1rem !important;
+      margin-bottom: 0.75rem !important; /* 마진 줄이기 */
+    }
+
+    /* 모바일에서 캘린더 컨테이너 여백 제거 */
+    .md\\:hidden {
+      margin-bottom: 0.5rem !important; /* 기본 mb-6에서 줄이기 */
+    }
+
+    /* 캘린더 자체 여백 조정 */
+    .fc {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .fc-header-toolbar {
+      margin-bottom: 0.5rem !important; /* 헤더와 캘린더 사이 간격 줄이기 */
+    }
+
+    /* 모바일에서 화살표 버튼 크기 조정 */
+    #prevBtnMobile, #nextBtnMobile {
+      padding: 0.5rem !important;
+    }
+
+    #prevBtnMobile svg, #nextBtnMobile svg {
+      width: 1.2rem !important;
+      height: 1.2rem !important;
+    }
+  }
+
+  /* 멤버 리스트 팝업 스타일 */
+  .member-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    max-width: 300px;
+    width: 90%;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .member-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+  }
+
+  .member-popup h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .member-item {
     display: flex;
     align-items: center;
-    gap: 4px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background: #f9fafb;
   }
 
-  .member-avatar {
-    width: 14px;
-    height: 14px;
-    border-radius: 9999px;
+  .member-item img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     object-fit: cover;
-    flex-shrink: 0;
   }
 
-  .member-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    flex: 1;
-    min-width: 0;
+  .popup-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #6b7280;
+  }
+
+  .fc-toolbar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .fc-toolbar-chunk {
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .fc-toolbar-chunk:nth-child(2) {
+    flex: 1 !important;
+    justify-content: center !important;
   }
 
   .fc-button {
@@ -90,102 +351,276 @@
     color: #ffffff;
   }
 
-  @media (max-width: 768px) {
-    #calendar {
-      padding: 0.5rem;
-    }
-    
-    .fc .fc-toolbar {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .fc .fc-toolbar-chunk {
-      display: flex;
-      justify-content: center;
-    }
-    
-    .fc .fc-daygrid-event {
-      font-size: 0.7rem;
-      padding: 1px 2px;
-      margin-bottom: 1px;
-    }
-    
-    .member-avatar {
-      width: 12px;
-      height: 12px;
-    }
-    
-    .fc .fc-event-main {
-      gap: 2px;
-    }
-    
-    .fc .fc-daygrid-day-number {
-      font-size: 0.875rem;
-      padding: 2px;
-    }
-    
-    .fc .fc-col-header-cell-cushion {
-      font-size: 0.75rem;
-      padding: 4px 2px;
-    }
-    
-    .fc .fc-daygrid-day-frame {
-      min-height: 60px;
-    }
-    
-    .fc .fc-button {
-      padding: 2px 6px;
-      font-size: 0.75rem;
-    }
-    
-    .fc .fc-toolbar-title {
-      font-size: 1.1rem;
+  /* today 버튼 수정 */
+  .fc-today-button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+
+  .fc-button:disabled {
+    pointer-events: none;
+  }
+
+  .fc-day-today {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+  }
+
+  .fc-day-today .fc-daygrid-day-number {
+    background: #3b82f6;
+    color: white;
+    font-weight: bold;
+  }
+
+  .fc-daygrid-day-frame {
+    position: relative;
+    overflow: hidden;
+    padding: 0.25rem;
+    min-height: 120px; /* 높이 증가 */
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  .fc .fc-daygrid-day-number {
+    font-weight: 600;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.25rem;
+    z-index: 2;
+    position: relative;
+    text-align: center;
+    margin-bottom: 0; /* 하단 마진 완전 제거 */
+  }
+
+  .birthday-date-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #f3f4f6;
+    color: #374151;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: right;
+    padding: 2px 6px;
+    border-radius: 0.25rem 0.25rem 0 0;
+    z-index: 3;
+    border-bottom: 1px solid #e5e7eb;
+    height: 20px; /* 고정 높이 설정 */
+  }
+
+  /* 월간 뷰에서만 birthday 헤더 표시 */
+  .fc-dayGridMonth .fc-daygrid-day-frame.has-birthday .fc-daygrid-day-events {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* 데스크톱에서는 birthday 헤더 고려한 마진 */
+  @media (min-width: 769px) {
+    .fc-dayGridMonth .fc-daygrid-day-frame.has-birthday .fc-daygrid-day-events {
+      margin-top: 1.5rem !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: calc(100% - 2rem) !important;
+      overflow: visible !important;
     }
   }
 
-  @media (max-width: 480px) {
-    .member-avatar {
-      width: 10px;
-      height: 10px;
-    }
-    
-    .fc .fc-daygrid-event {
-      font-size: 0.65rem;
-      padding: 0px 1px;
-    }
-    
-    .fc .fc-event-main {
-      gap: 1px;
-    }
-    
-    .fc .fc-daygrid-day-frame {
-      min-height: 50px;
-    }
-    
-    .fc .fc-button {
-      padding: 1px 4px;
-      font-size: 0.7rem;
-    }
-    
-    .fc .fc-toolbar-title {
-      font-size: 1rem;
-    }
-    
-    .fc .fc-daygrid-day-number {
-      font-size: 0.8rem;
+  /* 모바일에서는 높이 0 유지 */
+  @media (max-width: 768px) {
+    .fc-dayGridMonth .fc-daygrid-day-frame.has-birthday .fc-daygrid-day-events {
+      height: 0 !important;
+      min-height: 0 !important;
+      overflow: visible !important;
     }
   }
+
+  /* 모든 뷰에서 이벤트 영역 기본 설정 - 데스크톱용 */
+  .fc-daygrid-day-events {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* 데스크톱에서는 정상적인 높이 유지 */
+  @media (min-width: 769px) {
+    .fc-daygrid-day-events {
+      margin-top: 1.5rem !important;
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* 모바일에서만 높이 0으로 설정 */
+  @media (max-width: 768px) {
+    .fc-daygrid-day-events {
+      height: 0 !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* 주간 뷰에서는 birthday 헤더 숨기기 */
+  .fc-dayGridWeek .birthday-date-header {
+    display: none !important;
+  }
+
+  .fc-dayGridWeek .fc-daygrid-day-frame {
+    padding: 0.25rem;
+    min-height: 100px;
+  }
+
+  /* 주간 뷰에서 이벤트 영역 조정 */
+  .fc-dayGridWeek .fc-daygrid-day-events {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  /* 데스크톱 주간 뷰 */
+  @media (min-width: 769px) {
+    .fc-dayGridWeek .fc-daygrid-day-events {
+      margin-top: 0.25rem !important;
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* 모바일 주간 뷰 */
+  @media (max-width: 768px) {
+    .fc-dayGridWeek .fc-daygrid-day-events {
+      height: 0 !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+  }
+
+  /* 주간 뷰에서 날짜 번호 스타일 조정 */
+  .fc-dayGridWeek .fc-daygrid-day-number {
+    position: static !important;
+    background: transparent !important;
+    font-size: 0.875rem !important;
+    padding: 0.125rem !important;
+    margin-bottom: 0.25rem;
+  }
+
+  .fc .fc-daygrid-event {
+    background: transparent !important;
+    border: transparent !important;
+    font-size: 0.75rem;
+    padding: 1px 2px;
+    line-height: 1.2;
+    border-radius: 0.25rem;
+    margin-bottom: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .fc .fc-daygrid-event:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    transform: translateY(-1px);
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .fc .fc-event-main {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .member-avatar {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    object-fit: cover;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+  }
+
+  .member-name {
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+
+  .member-tooltip {
+    position: fixed;
+    background: #1f2937;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    z-index: 9999;
+    white-space: nowrap;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.2s ease;
+    pointer-events: none;
+  }
+
+  .member-tooltip.show {
+    visibility: visible;
+    opacity: 1;
+  }
 </style>
+
 {% endblock %}
 
 {% block body %}
 <section class="max-w-6xl mx-auto px-4 py-10">
-  <h2 class="text-2xl font-bold mb-6 flex items-center space-x-2">
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-8 h-8">
-    <span>전체 생일 멤버 (월간)</span>
+  <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
+    <span>생일을 축하해덕!</span>
   </h2>
-  <div id="calendar"></div>
+  
+  <!-- 데스크톱용 화살표 네비게이션 -->
+  <div class="hidden md:flex items-center justify-center relative mb-6">
+    <button id="prevBtn" class="absolute left-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-md transition-all duration-200 hover:shadow-lg">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    
+    <div id="calendar" class="flex-1 mx-16"></div>
+    
+    <button id="nextBtn" class="absolute right-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-md transition-all duration-200 hover:shadow-lg">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- 모바일용 화살표 네비게이션 -->
+  <div class="md:hidden flex items-center justify-center relative mb-6">
+    <!-- 화살표 버튼들을 숨김 -->
+    <button id="prevBtnMobile" class="hidden absolute left-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-2 shadow-md transition-all duration-200 hover:shadow-lg">
+      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    
+    <!-- 캘린더가 전체 폭 사용 -->
+    <div id="calendar-mobile" class="w-full"></div>
+    
+    <button id="nextBtnMobile" class="hidden absolute right-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-2 shadow-md transition-all duration-200 hover:shadow-lg">
+      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </div>
 </section>
 
 <!-- rrule -->
@@ -194,95 +629,524 @@
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js"></script>
 
 <script>
+  let calendar; // 전역 변수로 선언
+  
   document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
+    const calendarMobileEl = document.getElementById('calendar-mobile');
+    const isMobile = window.innerWidth <= 768;
+    const targetEl = isMobile ? calendarMobileEl : calendarEl;
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: window.innerWidth <= 768 ? 'dayGridWeek' : 'dayGridMonth',
+    calendar = new FullCalendar.Calendar(targetEl, {
+      initialView: 'dayGridMonth', // 모바일/데스크톱 모두 월간 뷰로 통일
       locale: 'ko',
-      headerToolbar: {
-        left: 'prev,next today',
+      headerToolbar: isMobile ? {
+        left: 'prevMobile',
         center: 'title',
-        right: window.innerWidth <= 768 ? 'dayGridWeek' : 'dayGridMonth,dayGridWeek'
+        right: 'nextMobile'
+      } : {
+        left: '',
+        center: 'title',
+        right: 'today'
       },
-      height: window.innerWidth <= 768 ? 'auto' : 'auto',
-      aspectRatio: window.innerWidth <= 768 ? 1.0 : 1.35,
-      nowIndicator: true,
-      dayMaxEventRows: 10,
-      eventDisplay: 'block',
-      eventMaxStack: 10,
-
-      eventDidMount: function(info) {
-        const member = info.event.extendedProps.member_name;
-        const imageUrl = info.event.extendedProps.image_url;
-
-        // 아바타 이미지 생성
-        const avatar = document.createElement('img');
-        avatar.src = imageUrl || "{% static 'image/default_member.svg' %}";
-        avatar.alt = member || 'Member';
-        avatar.className = 'member-avatar';
-        
-        // 이미지 로드 실패시 기본 이미지로 대체
-        avatar.onerror = function() {
-          this.src = "{% static 'image/default_member.svg' %}";
-        };
-
-        // 텍스트 요소 찾기 및 이미지 추가
-        const titleEl = info.el.querySelector('.fc-event-title');
-        const mainEl = info.el.querySelector('.fc-event-main');
-        const textEl = titleEl || mainEl;
-        
-        if (textEl) {
-          textEl.style.color = '#111827';
-          textEl.style.fontWeight = 'normal';
-          textEl.style.display = 'flex';
-          textEl.style.alignItems = 'center';
-          textEl.style.gap = '4px';
-          textEl.style.overflow = 'hidden';
-          textEl.style.whiteSpace = 'nowrap';
-          textEl.style.textOverflow = 'ellipsis';
-          textEl.style.maxWidth = '100%';
-          
-          // 기존 텍스트 내용 저장
-          const originalText = textEl.textContent;
-          textEl.textContent = '';
-          
-          // 이미지와 텍스트 추가
-          textEl.appendChild(avatar);
-          const textSpan = document.createElement('span');
-          textSpan.textContent = originalText;
-          textSpan.className = 'member-name';
-          textEl.appendChild(textSpan);
+      height: 'auto',
+      aspectRatio: isMobile ? 1.0 : 1.35,
+      nowIndicator: false,
+      dayMaxEventRows: false, // 행 제한 해제
+      eventDisplay: 'none', // 기본 이벤트 완전히 숨김
+      eventMaxStack: false,
+      
+      // 이벤트 데이터 로드 완료 후 커스텀 렌더링
+      eventsSet: function(events) {
+        console.log('eventsSet 호출됨, 이벤트 수:', events.length);
+        if (events.length > 0) {
+          console.log('첫 번째 이벤트 샘플:', events[0]);
+          events.forEach((event, index) => {
+            if (index < 3) { // 처음 3개만 로깅
+              console.log(`이벤트 ${index}:`, {
+                title: event.title,
+                start: event.start,
+                extendedProps: event.extendedProps
+              });
+            }
+          });
+        } else {
+          console.log('이벤트가 없습니다!');
         }
-
-        info.el.setAttribute('title', info.event.title);
+        
+        // 모든 이벤트 데이터를 날짜별로 그룹화
+        setTimeout(() => {
+          console.log('groupAndRenderEventsByDate 호출 시작');
+          if (typeof calendar !== 'undefined' && calendar.getEvents) {
+            groupAndRenderEventsByDate();
+          } else {
+            console.error('calendar 객체가 준비되지 않음');
+          }
+        }, 500);
+      },
+      
+      // 커스텀 버튼들 정의
+      customButtons: {
+        today: {
+          text: 'today',
+          click: function() {
+            calendar.today();
+            console.log('Today button clicked - calendar moved to today');
+          }
+        },
+        prevMobile: {
+          text: '‹',
+          click: function() {
+            calendar.prev();
+          }
+        },
+        nextMobile: {
+          text: '›',
+          click: function() {
+            calendar.next();
+          }
+        }
+      },
+      
+      // 날짜 헤더 형식 설정 (첫 줄에 요일 표시)
+      dayHeaderFormat: {
+        weekday: 'short'
+      },
+      
+      // 날짜 숫자 형식 설정 (월간 뷰에서만)
+      dayCellContent: function(info) {
+        const currentView = calendar.view.type;
+        if (currentView === 'dayGridMonth') {
+          return {
+            text: info.dayNumberText.replace('일', '')
+          };
+        }
+        // 주간 뷰에서는 기본 표시 사용
+        return { text: info.dayNumberText.replace('일', '') };
       },
 
-      events: "{% url 'bday_calendar:events_api' %}"
+      // 기본 이벤트 완전히 숨김
+      eventDidMount: function(info) {
+        info.el.style.display = 'none';
+      },
+
+      // 날짜 셀 기본 설정만
+      dayCellDidMount: function(info) {
+        const currentView = calendar.view.type;
+        
+        if (currentView === 'dayGridMonth') {
+          const dayNumber = info.date.getDate();
+          const monthNumber = info.date.getMonth() + 1;
+          const dayEl = info.el.querySelector('.fc-daygrid-day-frame');
+          
+          // 데스크톱에서만 날짜 헤더 추가
+          if (window.innerWidth > 768 && dayEl && !dayEl.querySelector('.date-header')) {
+            const dateHeader = document.createElement('div');
+            dateHeader.className = 'birthday-date-header date-header';
+            
+            if (dayNumber === 1) {
+              dateHeader.textContent = `${monthNumber}월 ${dayNumber}일`;
+            } else {
+              dateHeader.textContent = `${dayNumber}일`;
+            }
+            
+            dayEl.insertBefore(dateHeader, dayEl.firstChild);
+            dayEl.classList.add('has-birthday');
+          }
+        }
+      },
+
+      events: {
+        url: "{% url 'bday_calendar:events_api' %}",
+        success: function(data) {
+          console.log('=== API 응답 성공 ===');
+          console.log('응답 데이터:', data);
+          console.log('데이터 타입:', typeof data);
+          console.log('배열인가?', Array.isArray(data));
+          console.log('데이터 길이:', data ? data.length : 'undefined');
+          if (data && data.length > 0) {
+            console.log('첫 번째 데이터 항목:', data[0]);
+          }
+        },
+        failure: function(error) {
+          console.error('=== API 로드 실패 ===', error);
+        }
+      }
     });
 
     calendar.render();
 
-    // 화면 크기 변경 시 뷰 자동 조정
-    window.addEventListener('resize', function() {
-      if (window.innerWidth <= 768) {
-        calendar.changeView('dayGridWeek');
-        calendar.setOption('aspectRatio', 1.0);
-        calendar.setOption('headerToolbar', {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridWeek'
+    // today 버튼 이벤트 바인딩만 유지
+    setTimeout(function() {
+      const todayButton = document.querySelector('.fc-today-button');
+      if (todayButton) {
+        console.log('Today button found, adding click event');
+        todayButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          calendar.today();
+          console.log('Today button clicked - going to today');
         });
       } else {
-        calendar.changeView('dayGridMonth');
-        calendar.setOption('aspectRatio', 1.35);
-        calendar.setOption('headerToolbar', {
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,dayGridWeek'
+        console.log('Today button not found');
+      }
+    }, 200);
+
+    // 데스크톱용 화살표 버튼 이벤트
+    if (!isMobile) {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      
+      if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', function() {
+          calendar.prev();
+        });
+        
+        nextBtn.addEventListener('click', function() {
+          calendar.next();
         });
       }
+    } else {
+      // 모바일: 커스텀 버튼 사용하므로 별도 이벤트 불필요
+      console.log('모바일: 헤더 화살표 버튼 사용');
+    }
+
+    // 화면 크기 변경 시 페이지 새로고침으로 처리
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function() {
+        const nowMobile = window.innerWidth <= 768;
+        if (isMobile !== nowMobile) {
+          location.reload();
+        }
+      }, 150);
     });
   });
+
+  // 멤버 팝업 표시 함수
+  function showMembersPopup(date) {
+    const events = calendar.getEvents().filter(event => {
+      const eventDate = new Date(event.start);
+      return eventDate.toDateString() === date.toDateString();
+    });
+
+    if (events.length === 0) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'member-popup-overlay';
+    
+    const popup = document.createElement('div');
+    popup.className = 'member-popup';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'popup-close';
+    closeBtn.innerHTML = '×';
+    closeBtn.onclick = function() {
+      document.body.removeChild(overlay);
+    };
+    
+    const title = document.createElement('h3');
+    title.textContent = `${date.getMonth() + 1}월 ${date.getDate()}일 생일`;
+    
+    const memberList = document.createElement('div');
+    memberList.className = 'member-list';
+    
+    events.forEach(event => {
+      const memberItem = document.createElement('div');
+      memberItem.className = 'member-item';
+      
+      const avatar = document.createElement('img');
+      avatar.src = event.extendedProps?.image_url || "{% static 'image/default_member.svg' %}";
+      avatar.alt = event.extendedProps?.member_name || 'Member';
+      avatar.onerror = function() {
+        this.src = "{% static 'image/default_member.svg' %}";
+      };
+      
+      const info = document.createElement('div');
+      info.innerHTML = `
+        <div style="font-weight: bold;">${event.extendedProps?.member_name || '이름없음'}</div>
+        <div style="font-size: 0.8rem; color: #6b7280;">${event.extendedProps?.artist_full_name || ''}</div>
+      `;
+      
+      memberItem.appendChild(avatar);
+      memberItem.appendChild(info);
+      memberList.appendChild(memberItem);
+    });
+    
+    popup.appendChild(closeBtn);
+    popup.appendChild(title);
+    popup.appendChild(memberList);
+    overlay.appendChild(popup);
+    
+    overlay.onclick = function(e) {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    };
+    
+    document.body.appendChild(overlay);
+  }
+
+  // 모든 이벤트를 날짜별로 그룹화하여 렌더링
+  function groupAndRenderEventsByDate() {
+    console.log('groupAndRenderEventsByDate 시작');
+    
+    // 기존 커스텀 컨테이너들 모두 제거
+    document.querySelectorAll('.custom-events-container').forEach(el => el.remove());
+    
+    const allEvents = calendar.getEvents();
+    console.log('전체 이벤트 수:', allEvents.length);
+    
+    const eventsByDate = {};
+    
+    // 날짜별로 이벤트 그룹화
+    allEvents.forEach(event => {
+      const dateKey = event.start.toDateString();
+      if (!eventsByDate[dateKey]) {
+        eventsByDate[dateKey] = [];
+      }
+      eventsByDate[dateKey].push(event);
+      console.log('이벤트 그룹화:', dateKey, event.extendedProps?.member_name);
+    });
+    
+    console.log('그룹화된 날짜 수:', Object.keys(eventsByDate).length);
+    
+    // 각 날짜 셀에 그룹화된 이벤트들 렌더링
+    Object.keys(eventsByDate).forEach(dateKey => {
+      const events = eventsByDate[dateKey];
+      const date = new Date(dateKey);
+      
+      console.log(`${dateKey}의 이벤트 ${events.length}개 처리 중`);
+      
+      // 해당 날짜의 셀 찾기
+      const dayEl = findDayCellByDate(date);
+      if (dayEl && events.length > 0) {
+        console.log(`${dateKey} 셀 찾음, 렌더링 시작`);
+        renderCustomEvents(dayEl, events, date);
+        
+        // 모바일에서 셀 클릭 이벤트 추가
+        if (window.innerWidth <= 768) {
+          dayEl.addEventListener('click', function(e) {
+            e.preventDefault();
+            showMembersPopup(date);
+          });
+        }
+      } else {
+        console.log(`${dateKey} 셀을 찾을 수 없음 또는 이벤트 없음`);
+      }
+    });
+  }
+
+  // 날짜로 해당 셀 찾기
+  function findDayCellByDate(targetDate) {
+    console.log('셀 찾기 시도:', targetDate.toDateString());
+    const allCells = document.querySelectorAll('.fc-daygrid-day');
+    console.log('전체 셀 수:', allCells.length);
+    
+    for (let cell of allCells) {
+      const cellDate = new Date(cell.getAttribute('data-date'));
+      if (cellDate.toDateString() === targetDate.toDateString()) {
+        console.log('셀 찾음:', cell);
+        return cell.querySelector('.fc-daygrid-day-frame');
+      }
+    }
+    console.log('셀을 찾지 못함');
+    return null;
+  }
+
+  // 날짜 셀에 커스텀 이벤트 렌더링
+  function renderCustomEvents(dayEl, events, date) {
+    console.log('renderCustomEvents 시작:', date.toDateString(), '이벤트 수:', events.length);
+    
+    if (!dayEl || events.length === 0) {
+      console.log('dayEl 없음 또는 이벤트 없음');
+      return;
+    }
+
+    // 기존 커스텀 이벤트 컨테이너 제거
+    const existingContainer = dayEl.querySelector('.custom-events-container');
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+
+    // 커스텀 이벤트 컨테이너 생성
+    const eventsContainer = document.createElement('div');
+    eventsContainer.className = 'custom-events-container';
+    
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // 모바일: 아바타들을 한 줄에 배치
+      eventsContainer.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1px;
+        margin-top: 12px;
+        padding: 0;
+        max-height: 30px;
+        overflow: hidden;
+        cursor: pointer;
+        justify-content: flex-start;
+        align-content: flex-start;
+        background: transparent !important;
+        background-color: transparent !important;
+      `;
+
+      const maxVisible = 5;
+      const visibleEvents = events.slice(0, maxVisible);
+      
+      // 아바타들 추가
+      visibleEvents.forEach(event => {
+        const avatar = document.createElement('img');
+        avatar.src = event.extendedProps?.image_url || "{% static 'image/default_member.svg' %}";
+        avatar.alt = event.extendedProps?.member_name || 'Member';
+        avatar.className = 'member-avatar mobile-avatar';
+        avatar.style.cssText = `
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          pointer-events: none;
+          margin: 1px;
+        `;
+        
+        avatar.onerror = function() {
+          this.src = "{% static 'image/default_member.svg' %}";
+        };
+        
+        eventsContainer.appendChild(avatar);
+      });
+
+      // 더보기 버튼 추가
+      if (events.length > maxVisible) {
+        const moreButton = document.createElement('div');
+        moreButton.className = 'more-members';
+        moreButton.textContent = `+${events.length - maxVisible}`;
+        moreButton.style.cssText = `
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: #6b7280;
+          color: white;
+          border-radius: 50%;
+          width: 18px;
+          height: 18px;
+          font-size: 0.65rem;
+          font-weight: bold;
+          cursor: pointer;
+          border: 1px solid #e5e7eb;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          pointer-events: none;
+          margin: 1px;
+        `;
+        
+        eventsContainer.appendChild(moreButton);
+      }
+
+      // 전체 컨테이너 클릭 이벤트
+      eventsContainer.addEventListener('click', function(e) {
+        e.stopPropagation();
+        showMembersPopup(date);
+      });
+
+    } else {
+      // 데스크톱: 기존 방식 (세로로 나열)
+      eventsContainer.style.cssText = `
+        margin-top: 0.25rem;
+        padding: 0;
+        background: transparent !important;
+        background-color: transparent !important;
+      `;
+
+      events.forEach(event => {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'custom-event-item';
+        eventDiv.style.cssText = `
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          max-width: 100%;
+          color: #111827;
+          font-weight: normal;
+          padding: 2px 4px;
+          background: rgba(248, 250, 252, 0.8);
+          border: 1px solid rgba(226, 232, 240, 0.6);
+          font-size: 0.75rem;
+          line-height: 1.2;
+          border-radius: 0.25rem;
+          margin-bottom: 1px;
+          cursor: pointer;
+        `;
+
+        const avatar = document.createElement('img');
+        avatar.src = event.extendedProps?.image_url || "{% static 'image/default_member.svg' %}";
+        avatar.alt = event.extendedProps?.member_name || 'Member';
+        avatar.className = 'member-avatar';
+        avatar.style.cssText = `
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(226, 232, 240, 0.6);
+          flex-shrink: 0;
+        `;
+        
+        avatar.onerror = function() {
+          this.src = "{% static 'image/default_member.svg' %}";
+        };
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = event.extendedProps?.member_name || '이름없음';
+        textSpan.style.cssText = `
+          font-size: 0.75rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          flex: 1;
+        `;
+
+        eventDiv.appendChild(avatar);
+        eventDiv.appendChild(textSpan);
+        eventsContainer.appendChild(eventDiv);
+
+        // 데스크톱 툴팁
+        const tooltip = document.getElementById('member-tooltip') || createTooltip();
+        eventDiv.addEventListener('mouseenter', function(e) {
+          if (event.extendedProps?.artist_full_name) {
+            tooltip.innerHTML = `<div><strong>${event.extendedProps.member_name}</strong></div><div>${event.extendedProps.artist_full_name}</div>`;
+            tooltip.classList.add('show');
+            
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
+            tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + 'px';
+          }
+        });
+
+        eventDiv.addEventListener('mouseleave', function() {
+          tooltip.classList.remove('show');
+        });
+      });
+    }
+
+    dayEl.appendChild(eventsContainer);
+  }
+
+  // 툴팁 생성 함수
+  function createTooltip() {
+    let tooltip = document.getElementById('member-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.id = 'member-tooltip';
+      tooltip.className = 'member-tooltip';
+      document.body.appendChild(tooltip);
+    }
+    return tooltip;
+  }
 </script>
 {% endblock %}
