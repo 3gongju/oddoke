@@ -737,6 +737,71 @@
 
 <script>
   let calendar; // 전역 변수로 선언
+
+    /** 게임 결과 팝업 표시 */
+  function showResult(diff, ddok) { // deok -> ddok
+    gameDOM.resultContainer.innerHTML = '';
+    const diffSeconds = (diff / 1000).toFixed(3);
+    const resultEl = document.createElement('div');
+    resultEl.className = 'result-popup text-xl font-bold';
+    
+    if (diff < 50) {
+      resultEl.textContent = `PERFECT! (+${ddok.toLocaleString()}똑)`; // 덕 -> 똑
+      resultEl.className += ' text-purple-400';
+    } else if (diff < 200) {
+      resultEl.textContent = `성공! (+${ddok.toLocaleString()}똑)`; // 덕 -> 똑
+      resultEl.className += ' text-white';
+    } else {
+      resultEl.textContent = `${diffSeconds}초 차이! (+${ddok.toLocaleString()}똑)`; // 덕 -> 똑
+      resultEl.className += ' text-gray-400';
+    }
+    gameDOM.resultContainer.appendChild(resultEl);
+  }
+
+  /** 포인트를 서버에 저장하는 함수 */
+  async function savePoints(points, memberId) {
+    if (!csrftoken) {
+      console.error('CSRF 토큰을 찾을 수 없습니다.');
+      return;
+    }
+    try {
+      // --- fetch URL을 'ddok'으로 수정합니다. ---
+      const response = await fetch("{% url 'bday_calendar:save_ddok_point' %}", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({
+          points: points,
+          member_id: memberId,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log('포인트 저장 성공:', data.message);
+      } else {
+        console.error('포인트 저장 실패:', data.message);
+      }
+    } catch (error) {
+      console.error('포인트 저장 중 네트워크 오류 발생:', error);
+    }
+  }
+
+  // '똑 쌓기' 버튼 클릭 이벤트
+  gameDOM.clickButton.addEventListener('click', () => {
+    if (!currentGame.targetTime) return;
+    const diff = Math.abs(new Date().getTime() - currentGame.targetTime.getTime());
+    const ddok = Math.max(0, 1000 - diff); // deok -> ddok
+    currentGame.totalDdok += ddok; // totalDeok -> totalDdok
+
+    gameDOM.score.textContent = currentGame.totalDdok.toLocaleString();
+    showResult(diff, ddok);
+    
+    if (ddok > 0) {
+      savePoints(ddok, currentGame.selectedMember.id);
+    }
+  });
   
   document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
