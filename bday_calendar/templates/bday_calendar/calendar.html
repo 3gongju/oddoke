@@ -8,6 +8,73 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 
+<!-- NanumSquareRound 폰트 패밀리 추가 -->
+<style>
+@font-face {
+    font-family: 'NanumSquareRoundLight';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundL.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRoundBold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundB.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRoundExtraBold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundEB.woff') format('woff');
+    font-weight: 800;
+    font-style: normal;
+}
+
+/* 특정 영역에만 NanumSquareRound 폰트 적용 (네비바 제외) */
+section {
+    font-family: 'NanumSquareRound', sans-serif !important;
+}
+
+section * {
+    font-family: 'NanumSquareRound', sans-serif !important;
+}
+
+/* 캘린더 영역에 폰트 적용 */
+#calendar,
+#calendar-mobile,
+#calendar *,
+#calendar-mobile * {
+    font-family: 'NanumSquareRound', sans-serif !important;
+}
+
+/* 게임 영역에 폰트 적용 */
+#birthday-game-container,
+#birthday-game-container * {
+    font-family: 'NanumSquareRound', sans-serif !important;
+}
+
+/* 굵기별 폰트 적용 */
+.font-light {
+    font-family: 'NanumSquareRoundLight', sans-serif !important;
+}
+
+.font-bold, strong, b {
+    font-family: 'NanumSquareRoundBold', sans-serif !important;
+}
+
+.font-black, .font-extrabold {
+    font-family: 'NanumSquareRoundExtraBold', sans-serif !important;
+}
+</style>
+
 <!-- 분리된 CSS 파일들 로드 -->
 <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
 <link rel="stylesheet" href="{% static 'css/birthday_game.css' %}">
@@ -67,7 +134,7 @@
     <!-- 오늘 생일인 멤버가 없을 때 -->
     <div id="no-birthday-view" class="text-center hidden">
       <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
       <h2 class="text-2xl font-bold text-white mb-2">오늘은 생일인 멤버가 없어요</h2>
       <p class="text-gray-300">내일 다시 확인해주세요!</p>
