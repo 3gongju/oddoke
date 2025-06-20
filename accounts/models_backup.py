@@ -39,36 +39,37 @@ class User(AbstractUser):
     suspension_end = models.DateTimeField(blank=True, null=True, verbose_name="제재 종료일")
     suspension_reason = models.TextField(blank=True, null=True, verbose_name="제재 사유")
 
-    # 편의 메서드들
+   # 편의 메서드들
     def get_fandom_profile(self):
-        try:
-            return self.fandom_profile
-        except FandomProfile.DoesNotExist:
-            return None
+       try:
+           return self.fandom_profile
+       except FandomProfile.DoesNotExist:
+           return None
    
     def get_or_create_fandom_profile(self):
-        profile, created = FandomProfile.objects.get_or_create(user=self)
-        return profile
+       profile, created = FandomProfile.objects.get_or_create(user=self)
+       return profile
    
     def get_bank_profile(self):
-        try:
-            return self.bank_profile
-        except BankProfile.DoesNotExist:
-            return None
+       try:
+           return self.bank_profile
+       except BankProfile.DoesNotExist:
+           return None
    
     def get_or_create_bank_profile(self):
-        profile, created = BankProfile.objects.get_or_create(user=self)
-        return profile
+       profile, created = BankProfile.objects.get_or_create(user=self)
+       return profile
        
     def get_address_profile(self):
-        try:
-            return self.address_profile
-        except AddressProfile.DoesNotExist:
-            return None
+       try:
+           return self.address_profile
+       except AddressProfile.DoesNotExist:
+           return None
    
     def get_or_create_address_profile(self):
-        profile, created = AddressProfile.objects.get_or_create(user=self)
-        return profile
+       profile, created = AddressProfile.objects.get_or_create(user=self)
+       return profile
+   
 
     @property
     def display_name(self):
@@ -158,12 +159,6 @@ class User(AbstractUser):
         self.suspension_end = None
         self.suspension_reason = None
         self.save(update_fields=['suspension_start', 'suspension_end', 'suspension_reason'])
-
-    def get_or_create_ddok_point(self):
-        """사용자의 DdokPoint 인스턴스를 가져오거나 생성합니다."""
-        ddok_point, created = DdokPoint.objects.get_or_create(user=self)
-        return ddok_point
-
 
 class FandomProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
@@ -365,6 +360,8 @@ class MannerReview(models.Model):
 def default_profile_image():
     return 'profile/default.png'
 
+# profile_image = models.ImageField(upload_to='profile/', blank=True, null=True, default=default_profile_image)
+
 
 class PostReport(models.Model):
     """게시글 신고 모델 (덕담, 덕팜 공통)"""
@@ -499,76 +496,3 @@ class PostReport(models.Model):
             except:
                 return '#'
         return '#'
-
-
-class DdokPoint(models.Model):
-    """
-    사용자의 '똑' 포인트 총합을 관리하는 모델입니다.
-    """
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='ddok_point',
-        verbose_name='사용자'
-    )
-    total_points = models.PositiveIntegerField(
-        default=0,
-        verbose_name='총 보유 똑'
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name='최근 변동 일시'
-    )
-
-    def __str__(self):
-        return f"{self.user.username}의 똑: {self.total_points:,}똑"
-
-    class Meta:
-        verbose_name = '똑 포인트'
-        verbose_name_plural = '똑 포인트 목록'
-
-
-class DdokPointLog(models.Model):
-    """
-    '똑' 포인트의 모든 적립 및 사용 내역을 기록하는 로그 모델입니다.
-    """
-    POINT_REASON_CHOICES = [
-        ('BIRTHDAY_GAME', '생일시 맞추기'),
-        ('EVENT_PARTICIPATION', '이벤트 참여'),
-        ('POST_REWARD', '게시글 작성 보상'),
-        # ... 추후 다양한 포인트 획득/사용처 추가 가능
-    ]
-
-    point_owner = models.ForeignKey(
-        DdokPoint,
-        on_delete=models.CASCADE,
-        related_name='logs',
-        verbose_name='포인트 소유자'
-    )
-    points_change = models.IntegerField(
-        verbose_name='변동된 똑'
-    )
-    reason = models.CharField(
-        max_length=50,
-        choices=POINT_REASON_CHOICES,
-        verbose_name='변동 사유'
-    )
-    related_member = models.ForeignKey(
-        'artist.Member',
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        verbose_name='관련 멤버'
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='기록 일시'
-    )
-
-    def __str__(self):
-        change_type = "적립" if self.points_change > 0 else "사용"
-        return f"[{self.get_reason_display()}] {self.point_owner.user.username}에게 {self.points_change:,}똑 {change_type}"
-
-    class Meta:
-        verbose_name = '똑 포인트 로그'
-        verbose_name_plural = '똑 포인트 로그 목록'
-        ordering = ['-created_at']
