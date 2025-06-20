@@ -1,5 +1,4 @@
 from datetime import date, datetime
-import json
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.cache import cache
@@ -8,13 +7,6 @@ from artist.models import Member
 from artist.templatetags.member_images import member_image
 import logging
 from collections import defaultdict
-
-from django.db import transaction
-from accounts.models import DdokPoint, DdokPointLog
-from artist.models import Member
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
@@ -46,62 +38,6 @@ def birthday_events_api(request):
 
     except Exception as e:
         logger.error(f"birthday_events_api 오류: {e}", exc_info=True)
-        return JsonResponse([], safe=False)
-
-def today_birthdays_api(request):
-    """오늘 생일인 멤버들을 반환하는 API"""
-    try:
-        today = date.today()
-        today_str = f"{today.month:02d}-{today.day:02d}"
-        
-        # 오늘 생일인 멤버들 조회
-        birthday_members = Member.objects.select_related().prefetch_related(
-            'artist_name'
-        ).filter(
-            member_bday=today_str
-        ).exclude(
-            member_bday__isnull=True
-        ).exclude(
-            member_bday__exact=''
-        )
-        
-        members_data = []
-        processed_combinations = set()
-        
-        for member in birthday_members:
-            artist_names = list(member.artist_name.all())
-            if not artist_names:
-                continue
-                
-            first_artist_display = artist_names[0].display_name.strip()
-            combo_key = (member.member_name.strip(), first_artist_display)
-            
-            # 중복 체크
-            if combo_key in processed_combinations:
-                continue
-                
-            # 아티스트 정보 생성
-            artist_display = ', '.join(a.display_name for a in artist_names)
-            
-            # 이미지 URL 처리
-            image_url = _get_member_image_url(member.member_name, first_artist_display)
-            
-            members_data.append({
-                'id': member.id,
-                'member_name': member.member_name,
-                'artist_display_name': first_artist_display,
-                'artist_full_name': artist_display,
-                'image_url': image_url,
-                'birth_month': today.month,
-                'birth_day': today.day,
-            })
-            
-            processed_combinations.add(combo_key)
-        
-        return JsonResponse(members_data, safe=False, json_dumps_params={'ensure_ascii': False})
-        
-    except Exception as e:
-        logger.error(f"today_birthdays_api 오류: {e}", exc_info=True)
         return JsonResponse([], safe=False)
 
 def _generate_grouped_birthday_events():
@@ -187,7 +123,6 @@ def _process_member_for_grouping(member, current_year, processed_combinations):
         'artist_display_name': first_artist_display,
         'artist_full_name': artist_display,
         'image_url': image_url,
-        'member_id': member.id,  # member ID 추가
     }
 
 def _create_individual_event(member_data):
@@ -201,7 +136,6 @@ def _create_individual_event(member_data):
         "start": member_data['date_key'],
         "allDay": True,
         "extendedProps": {
-            "member_id": member_data['member_id'],  # member ID 추가
             "member_name": member_data['member_name'],
             "artist_display_name": member_data['artist_display_name'],
             "artist_full_name": member_data['artist_full_name'],
@@ -252,50 +186,3 @@ def _get_birthday_color(birthday, today):
     elif birthday.replace(year=today.year) == today:
         return "#f97316"  # 이번 주 생일 - 주황색
     return "#3b82f6"      # 기본 - 파란색
-
-# --- '똑' 포인트 저장을 위한 API 뷰 함수 ---
-@login_required
-@require_POST
-def save_ddok_point(request):
-    """생일시 맞추기 게임에서 획득한 '똑' 포인트를 저장하고 로그를 남깁니다."""
-    try:
-        data = json.loads(request.body)
-        points = int(data.get('points', 0))
-        member_id = int(data.get('member_id', 0))
-        
-        if points <= 0 or member_id <= 0:
-            return JsonResponse({'status': 'fail', 'message': '유효하지 않은 포인트 또는 멤버 정보입니다.'}, status=400)
-
-        with transaction.atomic():
-            # 1. User 모델의 편의 메서드를 사용하여 DdokPoint 인스턴스를 가져옵니다.
-            user_ddok_point = request.user.get_or_create_ddok_point()
-
-            # 2. 포인트 총합을 업데이트합니다.
-            user_ddok_point.total_points += points
-            user_ddok_point.save()
-
-            # 3. 관련 멤버 인스턴스를 가져옵니다.
-            related_member = Member.objects.get(id=member_id)
-
-            # 4. 포인트 변동 로그(DdokPointLog)를 생성합니다.
-            DdokPointLog.objects.create(
-                point_owner=user_ddok_point,
-                points_change=points,
-                reason='BIRTHDAY_GAME',
-                related_member=related_member
-            )
-
-        logger.info(f"사용자 {request.user.username}님이 멤버 {related_member.member_name}의 생일 축하로 {points}똑을 획득했습니다.")
-        return JsonResponse({
-            'status': 'success', 
-            'message': f'{points}똑이 성공적으로 쌓였어요!',
-            'total_points': user_ddok_point.total_points
-        })
-
-    except Member.DoesNotExist:
-        return JsonResponse({'status': 'fail', 'message': '존재하지 않는 멤버입니다.'}, status=404)
-    except json.JSONDecodeError:
-        return JsonResponse({'status': 'fail', 'message': '잘못된 요청 형식입니다.'}, status=400)
-    except Exception as e:
-        logger.error(f"포인트 저장 중 오류 발생: {e}", exc_info=True)
-        return JsonResponse({'status': 'error', 'message': '서버 오류로 포인트 저장에 실패했습니다.'}, status=500)
