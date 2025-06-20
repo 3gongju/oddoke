@@ -40,20 +40,40 @@
   .fc .fc-daygrid-event {
     background-color: transparent !important;
     border: none !important;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: normal;
-    padding: 2px 6px;
+    padding: 1px 4px;
+    margin-bottom: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  .fc .fc-event-main {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .member-avatar {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
     border-radius: 9999px;
     object-fit: cover;
     flex-shrink: 0;
+  }
+
+  .member-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
   }
 
   .fc-button {
@@ -72,7 +92,88 @@
 
   @media (max-width: 768px) {
     #calendar {
-      padding: 1rem;
+      padding: 0.5rem;
+    }
+    
+    .fc .fc-toolbar {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .fc .fc-toolbar-chunk {
+      display: flex;
+      justify-content: center;
+    }
+    
+    .fc .fc-daygrid-event {
+      font-size: 0.7rem;
+      padding: 1px 2px;
+      margin-bottom: 1px;
+    }
+    
+    .member-avatar {
+      width: 12px;
+      height: 12px;
+    }
+    
+    .fc .fc-event-main {
+      gap: 2px;
+    }
+    
+    .fc .fc-daygrid-day-number {
+      font-size: 0.875rem;
+      padding: 2px;
+    }
+    
+    .fc .fc-col-header-cell-cushion {
+      font-size: 0.75rem;
+      padding: 4px 2px;
+    }
+    
+    .fc .fc-daygrid-day-frame {
+      min-height: 60px;
+    }
+    
+    .fc .fc-button {
+      padding: 2px 6px;
+      font-size: 0.75rem;
+    }
+    
+    .fc .fc-toolbar-title {
+      font-size: 1.1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .member-avatar {
+      width: 10px;
+      height: 10px;
+    }
+    
+    .fc .fc-daygrid-event {
+      font-size: 0.65rem;
+      padding: 0px 1px;
+    }
+    
+    .fc .fc-event-main {
+      gap: 1px;
+    }
+    
+    .fc .fc-daygrid-day-frame {
+      min-height: 50px;
+    }
+    
+    .fc .fc-button {
+      padding: 1px 4px;
+      font-size: 0.7rem;
+    }
+    
+    .fc .fc-toolbar-title {
+      font-size: 1rem;
+    }
+    
+    .fc .fc-daygrid-day-number {
+      font-size: 0.8rem;
     }
   }
 </style>
@@ -97,42 +198,61 @@
     const calendarEl = document.getElementById('calendar');
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'dayGridMonth',
+      initialView: window.innerWidth <= 768 ? 'dayGridWeek' : 'dayGridMonth',
       locale: 'ko',
       headerToolbar: {
         left: 'prev,next today',
         center: 'title',
-        right: 'dayGridMonth,dayGridWeek'
+        right: window.innerWidth <= 768 ? 'dayGridWeek' : 'dayGridMonth,dayGridWeek'
       },
-      height: 'auto',
+      height: window.innerWidth <= 768 ? 'auto' : 'auto',
+      aspectRatio: window.innerWidth <= 768 ? 1.0 : 1.35,
       nowIndicator: true,
-      dayMaxEventRows: true,
+      dayMaxEventRows: 10,
       eventDisplay: 'block',
+      eventMaxStack: 10,
 
       eventDidMount: function(info) {
         const member = info.event.extendedProps.member_name;
-        const artist = info.event.extendedProps.artist_display_name;
+        const imageUrl = info.event.extendedProps.image_url;
 
-        // 이미지 경로를 서버에서 렌더링된 상태로 구성
-        const imgMap = {
-          {% for e in events %}
-          "{{ e.member_name }}::{{ e.artist_display_name }}": "{% member_image e.member_name e.artist_display_name %}",
-          {% endfor %}
+        // 아바타 이미지 생성
+        const avatar = document.createElement('img');
+        avatar.src = imageUrl || "{% static 'image/default_member.svg' %}";
+        avatar.alt = member || 'Member';
+        avatar.className = 'member-avatar';
+        
+        // 이미지 로드 실패시 기본 이미지로 대체
+        avatar.onerror = function() {
+          this.src = "{% static 'image/default_member.svg' %}";
         };
 
-        const key = `${member}::${artist}`;
-        const imgSrc = imgMap[key] || "{% static 'image/default_member.svg' %}";
-
-        const avatar = document.createElement('img');
-        avatar.src = imgSrc;
-        avatar.alt = member;
-        avatar.className = 'member-avatar';
-
-        const textEl = info.el.querySelector('.fc-event-title, .fc-event-main');
+        // 텍스트 요소 찾기 및 이미지 추가
+        const titleEl = info.el.querySelector('.fc-event-title');
+        const mainEl = info.el.querySelector('.fc-event-main');
+        const textEl = titleEl || mainEl;
+        
         if (textEl) {
           textEl.style.color = '#111827';
           textEl.style.fontWeight = 'normal';
-          textEl.prepend(avatar);
+          textEl.style.display = 'flex';
+          textEl.style.alignItems = 'center';
+          textEl.style.gap = '4px';
+          textEl.style.overflow = 'hidden';
+          textEl.style.whiteSpace = 'nowrap';
+          textEl.style.textOverflow = 'ellipsis';
+          textEl.style.maxWidth = '100%';
+          
+          // 기존 텍스트 내용 저장
+          const originalText = textEl.textContent;
+          textEl.textContent = '';
+          
+          // 이미지와 텍스트 추가
+          textEl.appendChild(avatar);
+          const textSpan = document.createElement('span');
+          textSpan.textContent = originalText;
+          textSpan.className = 'member-name';
+          textEl.appendChild(textSpan);
         }
 
         info.el.setAttribute('title', info.event.title);
@@ -142,6 +262,27 @@
     });
 
     calendar.render();
+
+    // 화면 크기 변경 시 뷰 자동 조정
+    window.addEventListener('resize', function() {
+      if (window.innerWidth <= 768) {
+        calendar.changeView('dayGridWeek');
+        calendar.setOption('aspectRatio', 1.0);
+        calendar.setOption('headerToolbar', {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridWeek'
+        });
+      } else {
+        calendar.changeView('dayGridMonth');
+        calendar.setOption('aspectRatio', 1.35);
+        calendar.setOption('headerToolbar', {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,dayGridWeek'
+        });
+      }
+    });
   });
 </script>
 {% endblock %}
