@@ -1,0 +1,410 @@
+/* calendar.css - 캘린더 전용 스타일 */
+
+@font-face {
+  font-family: 'EF_YOONY';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-01@1.0/EF_YOONY.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NanumSquareRound';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 폰트 설정 */
+body,
+#calendar,
+#calendar-mobile,
+.fc,
+.fc * {
+  font-family: 'EF_YOONY', 'NanumSquareRound', sans-serif !important;
+  color: #111827;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 캘린더 기본 스타일 */
+.fc-toolbar-title {
+  font-size: 1.125rem;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+.fc-toolbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.fc-toolbar-chunk {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.fc-toolbar-chunk:nth-child(2) {
+  flex: 1 !important;
+  justify-content: center !important;
+}
+
+.fc-button {
+  background-color: #efefef;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.875rem;
+}
+
+.fc-button-primary:not(:disabled).fc-button-active,
+.fc-button-primary:not(:disabled):active {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+.fc-today-button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.fc-day-today {
+  background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+.fc-day-today .fc-daygrid-day-number {
+  background: #3b82f6;
+  color: white;
+  font-weight: bold;
+}
+
+/* 날짜 셀 스타일 */
+.fc-daygrid-day-frame {
+  position: relative;
+  overflow: visible;
+  padding: 0.25rem;
+  min-height: 120px;
+  background: transparent !important;
+}
+
+.fc .fc-daygrid-day-number {
+  font-weight: 600;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+  z-index: 2;
+  position: relative;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+/* 이벤트 영역 투명화 */
+.fc-daygrid-day-events,
+.fc-daygrid-event-harness,
+.fc-daygrid-event-harness-abs,
+.fc-daygrid-event-harness-inset,
+.fc-highlight,
+.fc-daygrid-day.fc-day-selected,
+.custom-events-container {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* 데스크톱 이벤트 영역 */
+@media (min-width: 769px) {
+  .fc-daygrid-day-events {
+    margin-top: 1.5rem !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* 데스크톱 멤버 이벤트 스타일 */
+.custom-event-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  color: #111827;
+  font-weight: normal;
+  padding: 2px 4px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  border-radius: 0.25rem;
+  margin-bottom: 1px;
+  cursor: pointer;
+}
+
+.custom-event-item:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  transform: translateY(-1px);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.member-avatar {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  flex-shrink: 0;
+}
+
+.member-name {
+  font-size: 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* 툴팁 스타일 */
+.member-tooltip {
+  position: fixed;
+  background: #1f2937;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  z-index: 9999;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transition: all 0.2s ease;
+  pointer-events: none;
+}
+
+.member-tooltip.show {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* 모바일 스타일 */
+@media (max-width: 768px) {
+  .fc-toolbar-title {
+    font-size: 1rem !important;
+  }
+  
+  .fc-toolbar {
+    padding: 0.5rem 0 !important;
+  }
+
+  .fc-prevMobile-button,
+  .fc-nextMobile-button {
+    background-color: transparent !important;
+    border: none !important;
+    color: #374151 !important;
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.375rem !important;
+    min-width: auto !important;
+  }
+
+  .fc-prevMobile-button:hover,
+  .fc-nextMobile-button:hover {
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+  }
+
+  #calendar-mobile {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  
+  .fc-daygrid-day-frame {
+    min-height: 100px !important;
+    padding: 0.1rem !important;
+    overflow: visible !important;
+  }
+  
+  .fc .fc-daygrid-day-number {
+    font-size: 0.7rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: absolute !important;
+    top: 0.5px !important;
+    left: 1px !important;
+    z-index: 1 !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+    border-radius: 2px !important;
+  }
+  
+  .fc-col-header-cell {
+    padding: 0.2rem 0 !important;
+  }
+  
+  .fc-col-header-cell-cushion {
+    font-size: 0.75rem !important;
+  }
+  
+  .fc-daygrid-day-events {
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 1px !important;
+    margin-top: 16px !important;
+  }
+
+  /* 모바일 아바타 스타일 */
+  .mobile-avatar {
+    width: 18px !important;
+    height: 18px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    margin: 1px !important;
+    display: block !important;
+  }
+  
+  .more-members {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #6b7280;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    margin: 1px;
+    cursor: pointer;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .fc-daygrid-day {
+    cursor: pointer;
+    overflow: visible !important;
+  }
+
+  /* 전체 캘린더 오버플로 허용 */
+  .fc *,
+  .fc,
+  .fc-view-harness,
+  .fc-view-harness-active,
+  .fc-daygrid,
+  .fc-daygrid-body,
+  .fc-scrollgrid,
+  .fc-scrollgrid-section,
+  .fc-scrollgrid-section-body,
+  .fc-scrollgrid-sync-table,
+  .fc-daygrid-day-top,
+  .fc-daygrid-day-bg,
+  table,
+  tbody,
+  tr,
+  td {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  /* 모바일 레이아웃 조정 */
+  section.max-w-6xl {
+    padding: 0.5rem !important;
+  }
+
+  h2.text-xl {
+    font-size: 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .md\\:hidden {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .fc {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    font-size: 0.8rem !important;
+  }
+
+  .fc-header-toolbar {
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* 팝업 스타일 */
+.member-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  max-width: 300px;
+  width: 90%;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.member-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+.member-popup h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  background: #f9fafb;
+}
+
+.member-item img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.popup-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6b7280;
+}

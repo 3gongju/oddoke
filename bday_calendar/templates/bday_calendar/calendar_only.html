@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load member_images %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/main.min.css" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block body %}
+<section class="max-w-6xl mx-auto px-4 py-10">
+  <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
+    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
+    <span>생일 캘린더</span>
+  </h2>
+  
+  <!-- 데스크톱용 화살표 네비게이션 -->
+  <div class="hidden md:flex items-center justify-center relative mb-6">
+    <button id="prevBtn" class="absolute left-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-md transition-all duration-200 hover:shadow-lg">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+      </svg>
+    </button>
+    
+    <div id="calendar" class="flex-1 mx-16"></div>
+    
+    <button id="nextBtn" class="absolute right-0 z-10 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-md transition-all duration-200 hover:shadow-lg">
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- 모바일용 캘린더 -->
+  <div class="md:hidden flex items-center justify-center relative mb-6">
+    <div id="calendar-mobile" class="w-full"></div>
+  </div>
+</section>
+
+<!-- rrule -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rrule/2.6.8/rrule.min.js"></script>
+<!-- FullCalendar -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.5/index.global.min.js"></script>
+<script src="{% static 'js/calendar.js' %}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 캘린더만 초기화
+    initializeCalendar("{% url 'bday_calendar:events_api' %}");
+  });
+</script>
+{% endblock %}

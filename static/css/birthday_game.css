@@ -1,0 +1,237 @@
+/* birthday_game.css - 검정색 네온사인 스타일 */
+
+/* === 생일시 맞추기 게임 스타일 === */
+.game-container {
+  background: linear-gradient(125deg, #1a1a1a, #2d2d2d);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: white;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.5s ease;
+}
+
+.member-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.member-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.member-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(64, 64, 64, 0.4);
+}
+
+.member-card.selected {
+  background: rgba(64, 64, 64, 0.3);
+  border-color: #404040;
+  box-shadow: 0 0 20px rgba(64, 64, 64, 0.6);
+}
+
+.member-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #d1d5db;
+  margin: 0 auto 0.5rem;
+  box-shadow: 0 0 15px rgba(209, 213, 219, 0.3);
+}
+
+.game-idol-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #d1d5db;
+  margin: 0 auto 1rem;
+  box-shadow: 0 0 20px rgba(209, 213, 219, 0.3);
+}
+
+.birthday-badge {
+  background-color: #1f2937;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(25%, -25%);
+  box-shadow: 0 0 10px rgba(31, 41, 55, 0.5);
+}
+
+.target-time-box {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-time-display {
+  font-family: 'Noto Sans KR', monospace;
+  font-weight: 900;
+  font-size: 3rem;
+  text-align: center;
+  margin: 1rem 0;
+  color: #e5e7eb;
+  text-shadow: 0 0 10px rgba(229, 231, 235, 0.5);
+  line-height: 1;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+}
+
+.game-time-ms {
+  font-size: 1.5rem;
+  color: #e5e7eb;
+  opacity: 0.8;
+  padding-bottom: 0.35rem;
+}
+
+.ddok-button {
+  background: linear-gradient(90deg, #1f2937, #374151);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  border: none;
+  font-weight: bold;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(31, 41, 55, 0.4);
+  width: 100%;
+}
+
+.ddok-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.6);
+  background: linear-gradient(90deg, #111827, #1f2937);
+}
+
+.ddok-button:active {
+  transform: scale(0.98);
+  filter: brightness(1.2);
+}
+
+.button-click-effect {
+  transform: scale(0.98);
+  filter: brightness(1.2);
+  transition: all 0.1s ease-in-out;
+}
+
+.result-popup {
+  animation: fadeInOut 2.5s ease-in-out forwards;
+  font-weight: bold;
+  font-size: 1.25rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(15px); }
+  15% { opacity: 1; transform: translateY(0); }
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-15px); }
+}
+
+.total-ddok-display {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #e5e7eb;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.member-card h4 {
+  color: #ffffff;
+  transition: color 0.3s ease;
+}
+
+.member-card p {
+  color: #d1d5db;
+  transition: color 0.3s ease;
+}
+
+.target-time-box p {
+  color: #d1d5db;
+}
+
+.target-time-box #target-time {
+  color: #ffffff;
+}
+
+/* 결과 색상 스타일 - 검정 배경에 맞게 조정 */
+.text-pink-400 { color: #22c55e !important; }
+.text-white { color: #ffffff !important; }
+.text-gray-300 { color: #d1d5db !important; }
+.text-gray-400 { color: #9ca3af !important; }
+.text-gray-500 { color: #6b7280 !important; }
+
+/* 템플릿 색상 오버라이드 */
+#no-birthday-view h2 {
+  color: #ffffff !important;
+}
+
+#no-birthday-view p {
+  color: #d1d5db !important;
+}
+
+#no-birthday-view svg {
+  color: #9ca3af !important;
+}
+
+/* 모바일 게임 스타일 */
+@media (max-width: 768px) {
+  .game-container {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  .member-card {
+    padding: 0.75rem;
+  }
+
+  .member-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .game-idol-image {
+    width: 100px;
+    height: 100px;
+  }
+
+  .game-time-display {
+    font-size: 2rem;
+  }
+
+  .ddok-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .member-selector-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
