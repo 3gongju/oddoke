@@ -1,88 +1,83 @@
 {% load static %}
 {% load dict_filters %}
-<!-- 고급 필터링 모달 버튼 -->
-<div class="flex items-start justify-between mb-4">
-  <div class="flex items-start gap-2 flex-1 min-w-0">
-    <!-- 필터 토글 버튼 - 웹과 앱 통합 스타일 -->
-    <button id="filter-toggle-btn" 
-            class="flex items-center gap-1 px-2 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex-shrink-0 text-sm">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
-      </svg>
-      <span class="font-medium">필터</span>
-    </button>
-    
-    <!-- 선택된 필터 표시 (모바일 최적화) -->
-    <div class="flex-1 min-w-0">
-      <div id="active-filters" class="flex flex-wrap gap-1 sm:gap-2">
-        {% if selected_shipping %}
-            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
-            <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ selected_shipping_display }}</span>
-            <button type="button" onclick="removeFilter('shipping')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
-            </span>
-        {% endif %}
-        
-        {% if wantto %}
-            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
-            <span class="truncate max-w-[60px] sm:max-w-[120px]">
-            {% if category == 'sell' %}
-                {% if wantto == 'buy' %}삽니다
-                {% elif wantto == 'sell' %}팝니다  
-                {% elif wantto == 'exchange' %}교환해요
-                {% endif %}
-            {% elif category == 'rental' %}
-                {% if wantto == 'sell' %}빌려줍니다
-                {% elif wantto == 'buy' %}빌려주세요
-                {% endif %}
-            {% endif %}
-            </span>
-            <button type="button" onclick="removeFilter('wantto')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
-            </span>
-        {% endif %}
-        
-        {% if selected_conditions %}
-            {% for condition in selected_conditions %}
-            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
-                <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ condition_display_map|get_item:condition }}</span>
-                <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
-            </span>
-            {% endfor %}
-        {% endif %}
-        
-        {% if selected_md %}
-            {% for md in selected_md %}
-            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
-                <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ md_display_map|get_item:md }}</span>
-                <button type="button" onclick="removeFilter('md', '{{ md }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
-            </span>
-            {% endfor %}
-        {% endif %}
-        
-        {% if min_price or max_price %}
-            <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
-            <span class="truncate max-w-[80px] sm:max-w-[140px]">
-            {% if min_price and max_price %}{{ min_price|floatformat:0 }}-{{ max_price|floatformat:0 }}원
-            {% elif min_price %}{{ min_price|floatformat:0 }}원+
-            {% elif max_price %}{{ max_price|floatformat:0 }}원-
-            {% endif %}
-            </span>
-            <button type="button" onclick="removeFilter('price')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
-            </span>
-        {% endif %}
-      </div>
+<!-- 필터 토글 버튼 - 카테고리와 같은 줄에 배치 -->
+<!-- <button id="filter-toggle-btn" 
+        class="category-btn px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 ml-2">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+  </svg>
+  <span class="font-medium">필터</span>
+</button> -->
 
-      <!-- 필터 초기화 버튼 (모바일에서는 아래로) -->
-      {% if selected_shipping or selected_conditions or selected_md or min_price or max_price or wantto %}
-      <div class="mt-1">
-        <button onclick="clearAllFilters()" 
-                class="text-xs text-gray-500 hover:text-gray-700 underline">
-            전체 해제
-        </button>
-      </div>
+<!-- 선택된 필터 표시 -->
+{% if selected_shipping or selected_conditions or selected_md or min_price or max_price or wantto %}
+<div class="flex justify-center mb-4">
+  <div class="flex flex-wrap gap-1 sm:gap-2 justify-center items-center">
+    <div id="active-filters" class="flex flex-wrap gap-1 sm:gap-2 justify-center">
+      {% if selected_shipping %}
+          <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+          <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ selected_shipping_display }}</span>
+          <button type="button" onclick="removeFilter('shipping')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
+          </span>
+      {% endif %}
+      
+      {% if wantto %}
+          <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+          <span class="truncate max-w-[60px] sm:max-w-[120px]">
+          {% if category == 'sell' %}
+              {% if wantto == 'buy' %}삽니다
+              {% elif wantto == 'sell' %}팝니다  
+              {% elif wantto == 'exchange' %}교환해요
+              {% endif %}
+          {% elif category == 'rental' %}
+              {% if wantto == 'sell' %}빌려줍니다
+              {% elif wantto == 'buy' %}빌려주세요
+              {% endif %}
+          {% endif %}
+          </span>
+          <button type="button" onclick="removeFilter('wantto')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
+          </span>
+      {% endif %}
+      
+      {% if selected_conditions %}
+          {% for condition in selected_conditions %}
+          <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+              <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ condition_display_map|get_item:condition }}</span>
+              <button type="button" onclick="removeFilter('condition', '{{ condition }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
+          </span>
+          {% endfor %}
+      {% endif %}
+      
+      {% if selected_md %}
+          {% for md in selected_md %}
+          <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+              <span class="truncate max-w-[60px] sm:max-w-[120px]">{{ md_display_map|get_item:md }}</span>
+              <button type="button" onclick="removeFilter('md', '{{ md }}')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
+          </span>
+          {% endfor %}
+      {% endif %}
+      
+      {% if min_price or max_price %}
+          <span class="filter-tag inline-flex items-center px-3 py-1 rounded-full text-xs bg-black text-white flex-shrink-0">
+          <span class="truncate max-w-[80px] sm:max-w-[140px]">
+          {% if min_price and max_price %}{{ min_price|floatformat:0 }}-{{ max_price|floatformat:0 }}원
+          {% elif min_price %}{{ min_price|floatformat:0 }}원+
+          {% elif max_price %}{{ max_price|floatformat:0 }}원-
+          {% endif %}
+          </span>
+          <button type="button" onclick="removeFilter('price')" class="ml-1 text-white hover:text-gray-300 flex-shrink-0">×</button>
+          </span>
       {% endif %}
     </div>
+
+    <!-- 필터 초기화 버튼 -->
+    <button onclick="clearAllFilters()" 
+            class="text-xs text-gray-500 hover:text-gray-700 underline flex-shrink-0 ml-2">
+        전체 해제
+    </button>
   </div>
 </div>
+{% endif %}
 
 <!-- 필터링 모달 -->
 <div id="filter-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
@@ -462,26 +457,34 @@ numberInputs.forEach(input => {
 
 /* 웹과 앱 통합 필터 버튼 스타일 */
 #filter-toggle-btn {
-  /* 기본적으로 작은 크기 (웹 스타일) */
-  padding: 0.375rem 0.5rem !important; /* 6px 8px */
+  /* 카테고리 버튼과 동일한 스타일 적용 */
+  padding: 0.5rem 1rem !important; /* 8px 16px - 카테고리 버튼과 동일 */
   font-size: 0.875rem !important; /* 14px */
-  border: 1px solid #d1d5db;
-  background-color: #ffffff;
-  border-radius: 0.5rem;
-  min-height: 32px; /* 32px 고정 높이 */
-  display: flex;
+  font-weight: 500 !important;
+  line-height: 1.25 !important;
+  border-radius: 9999px; /* rounded-full */
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
   align-items: center;
+  white-space: nowrap;
+  min-height: 40px; /* 표준 버튼 높이 */
+  text-decoration: none;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  box-sizing: border-box;
   gap: 0.25rem;
 }
 
 #filter-toggle-btn:hover {
   background-color: #f9fafb;
   border-color: #9ca3af;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #filter-toggle-btn svg {
-  width: 1rem !important; /* 16px */
-  height: 1rem !important;
+  width: 0.75rem !important; /* 12px - 카테고리 버튼 아이콘과 동일 */
+  height: 0.75rem !important;
   flex-shrink: 0;
 }
 
@@ -531,20 +534,30 @@ numberInputs.forEach(input => {
 
 /* 모바일 최적화 - 동일한 크기 유지 */
 @media (max-width: 640px) {
+  /* 전체 컨테이너 중앙 정렬 유지 */
+  .flex.justify-center {
+    justify-content: center !important;
+  }
+  
+  .flex.items-start.gap-2.flex-wrap.justify-center {
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+  
   #filter-toggle-btn {
-    padding: 0.375rem 0.5rem !important; /* 웹과 동일한 크기 유지 */
+    padding: 0.5rem 1rem !important; /* 카테고리 버튼과 동일한 크기 유지 */
     font-size: 0.875rem !important;
-    min-height: 32px !important; /* 웹과 동일한 높이 */
+    min-height: 40px !important; /* 카테고리 버튼과 동일한 높이 */
     gap: 0.25rem !important;
   }
   
   #filter-toggle-btn svg {
-    width: 1rem !important; /* 웹과 동일한 아이콘 크기 */
-    height: 1rem !important;
+    width: 0.75rem !important; /* 카테고리 버튼 아이콘과 동일한 크기 */
+    height: 0.75rem !important;
   }
   
   #filter-toggle-btn span {
-    font-size: 0.875rem !important; /* 웹과 동일한 텍스트 크기 */
+    font-size: 0.875rem !important; /* 카테고리 버튼과 동일한 텍스트 크기 */
   }
   
   /* 필터 태그 모바일 최적화 - 더 얇게 */
@@ -569,6 +582,7 @@ numberInputs.forEach(input => {
   /* 필터 태그 간격 최적화 */
   #active-filters {
     gap: 0.25rem !important; /* 4px - 간격을 좁게 */
+    justify-content: center !important; /* 중앙 정렬 */
   }
   
   /* 모달 사이즈 및 위치 조정 */
