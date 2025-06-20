@@ -8,17 +8,76 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 
+<!-- NanumSquareRound 폰트 패밀리 추가 -->
+<style>
+@font-face {
+    font-family: 'NanumSquareRoundLight';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundL.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRound';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRoundBold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundB.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRoundExtraBold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundEB.woff') format('woff');
+    font-weight: 800;
+    font-style: normal;
+}
+
+/* 캘린더와 게임 영역에만 폰트 적용 (네비바와 헤더 제외) */
+#calendar,
+#calendar-mobile,
+#calendar *,
+#calendar-mobile *,
+#birthday-game-container,
+#birthday-game-container * {
+    font-family: 'NanumSquareRound', sans-serif !important;
+}
+
+/* 굵기별 폰트 적용 - 캘린더/게임 영역에만 */
+#calendar .font-light,
+#calendar-mobile .font-light,
+#birthday-game-container .font-light {
+    font-family: 'NanumSquareRoundLight', sans-serif !important;
+}
+
+#calendar .font-bold, #calendar strong, #calendar b,
+#calendar-mobile .font-bold, #calendar-mobile strong, #calendar-mobile b,
+#birthday-game-container .font-bold, #birthday-game-container strong, #birthday-game-container b {
+    font-family: 'NanumSquareRoundBold', sans-serif !important;
+}
+
+#calendar .font-black, #calendar .font-extrabold,
+#calendar-mobile .font-black, #calendar-mobile .font-extrabold,
+#birthday-game-container .font-black, #birthday-game-container .font-extrabold {
+    font-family: 'NanumSquareRoundExtraBold', sans-serif !important;
+}
+</style>
+
 <!-- 분리된 CSS 파일들 로드 -->
 <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
 <link rel="stylesheet" href="{% static 'css/birthday_game.css' %}">
 {% endblock %}
 
 {% block body %}
+<!-- 생일 캘린더 전용 헤더 추가 -->
+{% include 'bday_calendar/components/_header.html' %}
+
 <section class="max-w-6xl mx-auto px-4 py-10">
-  <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
-    <span>생일 덕 축하해!</span>
-  </h2>
 
   <!-- 생일시 맞추기 게임 컨테이너 -->
   <div id="birthday-game-container" class="game-container hidden">
@@ -67,7 +126,7 @@
     <!-- 오늘 생일인 멤버가 없을 때 -->
     <div id="no-birthday-view" class="text-center hidden">
       <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
       <h2 class="text-2xl font-bold text-white mb-2">오늘은 생일인 멤버가 없어요</h2>
       <p class="text-gray-300">내일 다시 확인해주세요!</p>

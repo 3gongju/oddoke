@@ -1,23 +1,26 @@
-/* birthday_game.css - 검정색 네온사인 스타일 - 게임 영역에만 적용 */
+/* birthday_game.css - 비율 축소 버전 */
 
 /* === 생일시 맞추기 게임 스타일 === */
 .game-container {
   background: rgb(245, 245, 245);
-  border-radius: 1rem;
-  padding: 1.2rem;
-  margin-bottom: 3rem;
+  border-radius: 0.8rem;
+  padding: 1rem;
+  margin-bottom: 2.4rem;
   color: rgb(0, 0, 0);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.5s ease;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .game-container .member-selector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 2rem;
-  margin-bottom: 2rem;
-  max-width: 800px;
+  grid-template-columns: repeat(auto-fit, minmax(144px, 1fr));
+  gap: 1.6rem;
+  margin-bottom: 1.6rem;
+  max-width: 640px;
   margin-left: auto;
   margin-right: auto;
   justify-items: center;
@@ -26,32 +29,32 @@
 /* 멤버 수에 따른 그리드 조정 */
 .game-container .member-selector-grid[data-count="1"] {
   grid-template-columns: 1fr;
-  max-width: 220px;
+  max-width: 176px;
 }
 
 .game-container .member-selector-grid[data-count="2"] {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 460px;
+  max-width: 368px;
 }
 
 .game-container .member-selector-grid[data-count="3"] {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 690px;
+  max-width: 552px;
 }
 
 .game-container .member-selector-grid[data-count="4"] {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 460px;
+  max-width: 368px;
 }
 
 .game-container .member-selector-grid[data-count="5"] {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 690px;
+  max-width: 552px;
 }
 
 .game-container .member-selector-grid[data-count="6"] {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 690px;
+  max-width: 552px;
 }
 
 /* 멤버 아이템 스타일 - 완전한 카드 제거, 세로 배치 */
@@ -59,7 +62,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
-  padding: 1rem;
+  padding: 0.8rem;
   position: relative;
   background: transparent !important;
   border: none !important;
@@ -67,43 +70,43 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 1rem;
+  border-radius: 0.8rem;
 }
 
 .game-container .member-item:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.02) !important;
 }
 
 .game-container .member-item.selected {
   background: rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.1);
 }
 
 .game-container .member-item.selected .member-image {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 24px rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
 }
 
 .game-container .member-image {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #d1d5db;
-  margin: 0 auto 0.75rem;
-  box-shadow: 0 0 15px rgba(209, 213, 219, 0.3);
+  border: 2.4px solid #d1d5db;
+  margin: 0 auto 0.6rem;
+  box-shadow: 0 0 12px rgba(209, 213, 219, 0.3);
   transition: all 0.3s ease;
 }
 
 .game-container .member-item:hover .member-image {
-  box-shadow: 0 0 25px rgba(209, 213, 219, 0.5);
+  box-shadow: 0 0 20px rgba(209, 213, 219, 0.5);
   transform: scale(1.02);
   border-color: #f3f4f6;
 }
 
 .game-container .member-name {
-  font-size: 0.9rem;
+  font-size: 0.72rem;
   font-weight: bold;
   color: #000000;
   margin: 0;
@@ -111,11 +114,11 @@
 }
 
 .game-container .artist-name {
-  font-size: 0.7rem;
+  font-size: 0.56rem;
   color: #2c2c2c;
-  margin: 0.5rem 0 0 0;
+  margin: 0.4rem 0 0 0;
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-8px);
   transition: all 0.3s ease;
   white-space: nowrap;
 }
@@ -130,21 +133,21 @@
 }
 
 .game-container .game-idol-image {
-  width: 120px;
-  height: 120px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #d1d5db;
-  margin: 0 auto 1rem;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  border: 2.4px solid #d1d5db;
+  margin: 0 auto 0.8rem;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.3);
 }
 
 .game-container .birthday-badge {
   background-color: #f62f3d;
   color: white;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: bold;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 9999px;
   position: absolute;
   top: 0;
@@ -154,12 +157,12 @@
 
 .game-container .target-time-box {
   background-color: #000000 !important;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.5rem;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1.2rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   text-align: center;
-  max-width: 300px;
+  max-width: 240px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -167,9 +170,9 @@
 .game-container .game-time-display {
   font-family: 'Noto Sans KR', monospace;
   font-weight: 900;
-  font-size: 3rem;
+  font-size: 2.4rem;
   text-align: center;
-  margin: 1rem 0;
+  margin: 0.8rem 0;
   color: #000000;
   line-height: 1;
   display: flex;
@@ -178,20 +181,20 @@
 }
 
 .game-container .game-time-ms {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #cd1212;
   opacity: 0.8;
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.28rem;
 }
 
 .game-container .ddok-button {
   background: #000000;
   color: rgb(255, 255, 255);
-  padding: 1rem 2rem;
-  border-radius: 0.75rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.6rem;
   border: none;
   font-weight: bold;
-  font-size: 1.25rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   width: 70%;
@@ -199,7 +202,7 @@
 
 .game-container .ddok-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(219, 30, 30, 0.6);
+  box-shadow: 0 4.8px 16px rgba(219, 30, 30, 0.6);
   background: #e13b3b;
 }
 
@@ -217,39 +220,50 @@
 .game-container .result-popup {
   animation: fadeInOut 2.5s ease-in-out forwards;
   font-weight: bold;
-  font-size: 1.25rem;
+  font-size: 1rem;
   text-align: center;
-  margin: 1rem 0;
+  margin: 0.8rem 0;
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(15px); }
+  0% { opacity: 0; transform: translateY(12px); }
   15% { opacity: 1; transform: translateY(0); }
   85% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-15px); }
+  100% { opacity: 0; transform: translateY(-12px); }
 }
 
 .game-container .total-ddok-display {
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: bold;
   color: #000000;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
   border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .game-container .target-time-box p {
   color: #ffffff !important;
-  margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
+  margin: 0 0 0.4rem 0;
+  font-size: 0.7rem;
 }
 
 .game-container .target-time-box #target-time {
   color: #ffffff !important;
-  font-size: 1.75rem;
+  font-size: 1.4rem;
   font-weight: bold;
   margin: 0;
+}
+
+/* 게임 뷰 제목 크기 조정 */
+.game-container #idol-name {
+  font-size: 1.6rem !important;
+  margin-bottom: 0.08rem !important;
+}
+
+.game-container #idol-group {
+  font-size: 0.8rem !important;
+  margin-bottom: 0.8rem !important;
 }
 
 /* 결과 색상 스타일 - 검정 배경에 맞게 조정 - 게임 영역에만 적용 */
@@ -275,18 +289,18 @@
 /* 모바일 게임 스타일 */
 @media (max-width: 768px) {
   .game-container {
-    margin: 0.5rem 0.5rem 2rem 0.5rem;
-    padding: 1rem;
+    margin: 0.4rem 0.4rem 1.6rem 0.4rem;
+    padding: 0.8rem;
   }
 
   /* 모바일에서는 세로 리스트 형태로 변경 - 카드 제거 */
   .game-container .member-selector-grid {
     grid-template-columns: 1fr !important;
-    gap: 1.5rem !important;
+    gap: 1.2rem !important;
     max-width: none !important;
-    margin: 0 0 2rem 0 !important;
+    margin: 0 0 1.6rem 0 !important;
     justify-items: flex-start !important;
-    padding: 0 1rem !important;
+    padding: 0 0.8rem !important;
   }
 
   .game-container .member-item {
@@ -294,7 +308,7 @@
     flex-direction: row !important;
     align-items: center;
     text-align: left;
-    padding: 0.5rem 0 !important;
+    padding: 0.4rem 0 !important;
     background: transparent !important;
     border: none !important;
     border-radius: 0 !important;
@@ -309,43 +323,43 @@
   }
 
   .game-container .member-image {
-    width: 50px;
-    height: 50px;
-    margin: 0 1rem 0 0;
+    width: 40px;
+    height: 40px;
+    margin: 0 0.8rem 0 0;
     flex-shrink: 0;
   }
 
   /* 모바일에서는 텍스트 정보 */
   .game-container .member-name {
-    font-size: 1rem;
-    margin-bottom: 0.125rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.1rem;
     color: #000000;
   }
 
   .game-container .artist-name {
-    font-size: 0.85rem;
+    font-size: 0.6rem;
     opacity: 1 !important;
     transform: none !important;
     white-space: normal !important;
     margin: 0 !important;
-    color: #000000;
+    color: #1e1d1d;
   }
 
   .game-container .target-time-box {
-    padding: 0.5rem 0.75rem;
-    max-width: 250px;
+    padding: 0.4rem 0.6rem;
+    max-width: 200px;
   }
 
   .game-container .target-time-box #target-time {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
   }
 
   .game-container .game-time-display {
-    font-size: 2rem;
+    font-size: 1.6rem;
   }
 
   .game-container .ddok-button {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.8rem;
   }
 }
