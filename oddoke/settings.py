@@ -34,6 +34,7 @@ DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 if DEBUG:
     # 개발 환경 설정
     print("🔧 개발 환경으로 실행 중...")
+    print(f"📍 현재 ALLOWED_HOSTS: {['127.0.0.1', 'localhost']}")
     SECURE_SSL_REDIRECT = False
     ALLOWED_HOSTS = [
         '127.0.0.1',
@@ -96,9 +97,9 @@ INSTALLED_APPS = [
     'oddmin',
 ]
 
-# 개발 환경에서만 django_browser_reload 추가
-if DEBUG:
-    INSTALLED_APPS.append('django_browser_reload')
+# 개발 환경에서만 django_browser_reload 추가 (속도 문제로 임시 비활성화)
+# if DEBUG:
+#     INSTALLED_APPS.append('django_browser_reload')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -139,6 +140,10 @@ if DEBUG:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
+            'OPTIONS': {
+                'timeout': 20,
+                'init_command': "PRAGMA journal_mode=WAL;",
+            }
         }
     }
 else:
