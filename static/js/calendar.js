@@ -72,6 +72,14 @@ function groupAndRenderEventsByDate() {
   // 기존 커스텀 컨테이너들 모두 제거
   document.querySelectorAll('.custom-events-container').forEach(el => el.remove());
   
+  // FullCalendar 기본 이벤트 요소들 숨기기
+  document.querySelectorAll('.fc-event, .fc-daygrid-event').forEach(el => {
+    el.style.display = 'none';
+    el.style.visibility = 'hidden';
+    el.style.opacity = '0';
+    el.style.pointerEvents = 'none';
+  });
+  
   const allEvents = calendar.getEvents();
   console.log('전체 이벤트 수:', allEvents.length);
   
@@ -137,7 +145,7 @@ function renderCustomEvents(dayEl, events, date) {
   const isMobile = window.innerWidth <= 768;
   
   if (isMobile) {
-    // 모바일: 아바타들을 한 줄에 배치
+    // 모바일: 아바타들을 한 줄에 배치 - 날짜와 더 가깝게
     eventsContainer.style.cssText = `
       display: flex;
       flex-wrap: wrap;
@@ -187,9 +195,9 @@ function renderCustomEvents(dayEl, events, date) {
     });
 
   } else {
-    // 데스크톱: 세로로 나열
+    // 데스크톱: 세로로 나열 - 날짜와 더 가깝게
     eventsContainer.style.cssText = `
-      margin-top: 1.5rem;
+      margin-top: 1.2rem;
       padding: 0;
       background: transparent !important;
       background-color: transparent !important;
@@ -277,6 +285,32 @@ function initializeCalendar(eventsApiUrl) {
     eventDisplay: 'none',
     eventMaxStack: false,
     
+    // 날짜 표시 강제 설정
+    dayHeaderFormat: {
+      weekday: 'short'
+    },
+    
+    // 날짜 셀 내용을 빈 값으로 설정 (기본 요소 생성 방지)
+    dayCellContent: function(info) {
+      return '';
+    },
+    
+    // 날짜 셀이 렌더링된 후 기본 요소 제거 및 새로 생성
+    dayCellDidMount: function(info) {
+      // 모든 기본 날짜 번호 요소 제거
+      const existingNumbers = info.el.querySelectorAll('.fc-daygrid-day-number');
+      existingNumbers.forEach(el => el.remove());
+      
+      // 새로운 날짜 번호 생성
+      const dayFrame = info.el.querySelector('.fc-daygrid-day-frame');
+      if (dayFrame) {
+        const numberEl = document.createElement('div');
+        numberEl.className = 'custom-day-number';
+        numberEl.textContent = info.date.getDate();
+        dayFrame.insertBefore(numberEl, dayFrame.firstChild);
+      }
+    },
+    
     eventsSet: function(events) {
       console.log('eventsSet 호출됨, 이벤트 수:', events.length);
       
@@ -319,16 +353,6 @@ function initializeCalendar(eventsApiUrl) {
           calendar.next();
         }
       }
-    },
-    
-    dayHeaderFormat: {
-      weekday: 'short'
-    },
-    
-    dayCellContent: function(info) {
-      return {
-        text: info.dayNumberText.replace('일', '')
-      };
     },
 
     eventDidMount: function(info) {

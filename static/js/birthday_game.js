@@ -96,19 +96,21 @@ function showMemberSelection(members) {
   gameDOM.memberGrid.setAttribute('data-count', members.length);
   
   members.forEach(member => {
-    const memberCard = document.createElement('div');
-    memberCard.className = 'member-card';
-    memberCard.innerHTML = `
+    const memberItem = document.createElement('div');
+    memberItem.className = 'member-item';
+    memberItem.innerHTML = `
       <img src="${member.image_url || '/static/image/default_member.svg'}" 
            alt="${member.member_name}" 
            class="member-image"
            onerror="this.src='/static/image/default_member.svg'">
-      <h4 class="font-bold text-sm text-white">${member.member_name}</h4>
-      <p class="text-xs text-gray-300">${member.artist_full_name}</p>
+      <div class="member-info">
+        <h4 class="member-name">${member.member_name}</h4>
+        <p class="artist-name">${member.artist_full_name}</p>
+      </div>
     `;
     
-    memberCard.addEventListener('click', () => selectMember(member));
-    gameDOM.memberGrid.appendChild(memberCard);
+    memberItem.addEventListener('click', () => selectMember(member));
+    gameDOM.memberGrid.appendChild(memberItem);
   });
 }
 
@@ -253,8 +255,8 @@ function backToSelection() {
   }
   
   // 선택 상태 초기화
-  document.querySelectorAll('.member-card').forEach(card => {
-    card.classList.remove('selected');
+  document.querySelectorAll('.member-item').forEach(item => {
+    item.classList.remove('selected');
   });
 }
 

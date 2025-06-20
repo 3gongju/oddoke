@@ -17,15 +17,15 @@
 <section class="max-w-6xl mx-auto px-4 py-10">
   <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
     <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
-    <span>생일을 축하해똑!</span>
+    <span>생일 덕 축하해!</span>
   </h2>
 
   <!-- 생일시 맞추기 게임 컨테이너 -->
   <div id="birthday-game-container" class="game-container hidden">
     <!-- 멤버 선택 화면 -->
     <div id="member-selection-view">
-      <h3 class="text-2xl font-bold text-center mb-2">🎉 오늘 생일인 멤버</h3>
-      <p class="text-center text-gray-300 mb-6">누구의 생일시를 축하해줄까요?</p>
+      <h3 class="text-2xl font-bold text-center mb-2"> 오늘 생일인 멤버</h3>
+      <p class="text-center text-gray-300 mb-6">누구의 생일시를 맞춰서 덕을 쌓을까요?</p>
       <div id="member-selector-grid" class="member-selector-grid"></div>
     </div>
 
@@ -52,12 +52,12 @@
           </div>
         </div>
 
-        <button id="ddok-button" class="ddok-button">똑 쌓기</button>
+        <button id="ddok-button" class="ddok-button">덕 쌓기</button>
 
         <div id="result-container" class="mt-6 h-12 flex items-center justify-center"></div>
 
         <div class="total-ddok-display">
-          <p class="text-lg text-gray-300">총 쌓은 똑: <span id="total-score" class="font-bold text-2xl text-white">0</span></p>
+          <p class="text-lg text-gray-300">총 쌓은 덕: <span id="total-score" class="font-bold text-2xl text-white">0</span></p>
         </div>
 
         <button id="back-to-selection" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">‹ 다른 멤버 선택하기</button>
