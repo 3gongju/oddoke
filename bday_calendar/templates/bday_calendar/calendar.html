@@ -106,8 +106,10 @@
     
     /* 모바일에서 캘린더 크기 키우기 */
     .fc-daygrid-day-frame {
-      min-height: 55px !important; /* 더 줄이기 */
+      min-height: 100px !important; /* 높이 더 늘리기 */
       padding: 0.1rem !important;
+      overflow: visible !important;
+      position: relative !important;
     }
     
     .fc .fc-daygrid-day-number {
@@ -161,6 +163,8 @@
       margin: 1px !important;
       border: 1px solid #e5e7eb !important;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+      border-radius: 50% !important;
+      object-fit: cover !important;
     }
     
     .member-name {
@@ -179,6 +183,40 @@
     }
     
     .fc-daygrid-body {
+      overflow: visible !important;
+    }
+    
+    /* 모바일에서 셀 자체의 오버플로 허용 */
+    .fc-daygrid-day {
+      overflow: visible !important;
+      position: relative !important;
+    }
+
+    /* 모바일에서 테이블 셀들도 오버플로 허용 */
+    .fc-daygrid-day-top,
+    .fc-daygrid-day-bg {
+      overflow: visible !important;
+    }
+
+    /* 모바일에서 캘린더 전체 테이블 오버플로 허용 */
+    .fc-scrollgrid,
+    .fc-scrollgrid-sync-table,
+    .fc-scrollgrid-section,
+    .fc-scrollgrid-section-body,
+    .fc-daygrid-body,
+    .fc-daygrid,
+    .fc-view-harness,
+    .fc-view-harness-active {
+      overflow: visible !important;
+    }
+
+    /* 모바일에서 테이블 자체도 오버플로 허용 */
+    table.fc-scrollgrid-sync-table {
+      overflow: visible !important;
+    }
+
+    /* 모바일에서 전체 캘린더 컨테이너 오버플로 허용 */
+    #calendar-mobile {
       overflow: visible !important;
     }
     
@@ -216,6 +254,8 @@
     /* 모바일에서 날짜 셀 클릭 영역 확보 */
     .fc-daygrid-day {
       cursor: pointer;
+      position: relative !important;
+      overflow: visible !important;
     }
 
     /* 전체 섹션 패딩 */
@@ -420,10 +460,10 @@
   /* 데스크톱에서는 birthday 헤더 고려한 마진 */
   @media (min-width: 769px) {
     .fc-dayGridMonth .fc-daygrid-day-frame.has-birthday .fc-daygrid-day-events {
-      margin-top: 1.5rem !important;
+      margin-top: 2.5rem !important;
       height: auto !important;
       min-height: auto !important;
-      max-height: calc(100% - 2rem) !important;
+      max-height: calc(100% - 3rem) !important;
       overflow: visible !important;
     }
   }
@@ -455,12 +495,52 @@
     }
   }
 
-  /* 모바일에서만 높이 0으로 설정 */
+  /* 모바일에서 모든 아바타를 강제로 원형으로 */
   @media (max-width: 768px) {
+    .member-avatar,
+    .mobile-avatar,
+    img[class*="avatar"],
+    img[alt*="Member"] {
+      border-radius: 50% !important;
+      object-fit: cover !important;
+      width: 18px !important;
+      height: 18px !important;
+      display: block !important;
+    }
+    
+    body, html {
+      overflow-x: visible !important;
+    }
+    
     .fc-daygrid-day-events {
       height: 0 !important;
       min-height: 0 !important;
       overflow: visible !important;
+    }
+    
+    /* 모든 FullCalendar 요소의 오버플로 허용 */
+    .fc *,
+    .fc,
+    #calendar-mobile,
+    .fc-view-harness,
+    .fc-view-harness-active,
+    .fc-daygrid,
+    .fc-daygrid-body,
+    .fc-scrollgrid,
+    .fc-scrollgrid-section,
+    .fc-scrollgrid-section-body,
+    .fc-scrollgrid-sync-table,
+    .fc-daygrid-day,
+    .fc-daygrid-day-frame,
+    .fc-daygrid-day-top,
+    .fc-daygrid-day-bg,
+    table,
+    tbody,
+    tr,
+    td {
+      overflow: visible !important;
+      max-height: none !important;
+      height: auto !important;
     }
   }
 
@@ -485,7 +565,7 @@
   /* 데스크톱 주간 뷰 */
   @media (min-width: 769px) {
     .fc-dayGridWeek .fc-daygrid-day-events {
-      margin-top: 0.25rem !important;
+      margin-top: 1.5rem !important;
       height: auto !important;
       min-height: auto !important;
       overflow: visible !important;
@@ -982,8 +1062,12 @@
         display: flex;
         flex-wrap: wrap;
         gap: 1px;
-        margin-top: 12px;
+        margin-top: 16px;
         padding: 0;
+        max-height: 40px;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
         max-height: 30px;
         overflow: hidden;
         cursor: pointer;
@@ -993,7 +1077,7 @@
         background-color: transparent !important;
       `;
 
-      const maxVisible = 5;
+      const maxVisible = 6; // 다시 6개로 설정
       const visibleEvents = events.slice(0, maxVisible);
       
       // 아바타들 추가
@@ -1003,14 +1087,15 @@
         avatar.alt = event.extendedProps?.member_name || 'Member';
         avatar.className = 'member-avatar mobile-avatar';
         avatar.style.cssText = `
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 1px solid #e5e7eb;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          pointer-events: none;
-          margin: 1px;
+          width: 18px !important;
+          height: 18px !important;
+          border-radius: 50% !important;
+          object-fit: cover !important;
+          border: 1px solid #e5e7eb !important;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+          pointer-events: auto !important;
+          margin: 1px !important;
+          display: block !important;
         `;
         
         avatar.onerror = function() {
@@ -1039,7 +1124,7 @@
           cursor: pointer;
           border: 1px solid #e5e7eb;
           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          pointer-events: none;
+          pointer-events: auto;
           margin: 1px;
         `;
         
@@ -1055,7 +1140,7 @@
     } else {
       // 데스크톱: 기존 방식 (세로로 나열)
       eventsContainer.style.cssText = `
-        margin-top: 0.25rem;
+        margin-top: 1.5rem;
         padding: 0;
         background: transparent !important;
         background-color: transparent !important;
