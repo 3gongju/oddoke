@@ -155,6 +155,11 @@ def get_or_create_chatroom(request, category, post_id):
 def my_chatrooms(request):
     current_user = request.user
     
+    # ✅ ContentType 미리 캐싱
+    sell_ct = ContentType.objects.get_for_model(FarmSellPost)
+    rental_ct = ContentType.objects.get_for_model(FarmRentalPost)
+    split_ct = ContentType.objects.get_for_model(FarmSplitPost)
+    
     # 기본 쿼리 (GenericForeignKey와 member_prices 제외)
     rooms = ChatRoom.objects.filter(
         Q(buyer=current_user) | Q(seller=current_user)
@@ -187,28 +192,30 @@ def my_chatrooms(request):
         )
     ).order_by('-last_message_time')
     
-    # ✅ 게시글 타입별로 ID 수집
+    # ✅ 게시글 타입별로 ID 수집 - ContentType으로 더 정확하게
     sell_post_ids = []
     rental_post_ids = []
     split_post_ids = []
     
     for room in rooms:
-        if hasattr(room.post, 'category_type'):
-            if room.post.category_type == 'sell':
-                sell_post_ids.append(room.post.id)
-            elif room.post.category_type == 'rental':
-                rental_post_ids.append(room.post.id)
-            elif room.post.category_type == 'split':
-                split_post_ids.append(room.post.id)
+        try:
+            if room.content_type == sell_ct:
+                sell_post_ids.append(room.object_id)
+            elif room.content_type == rental_ct:
+                rental_post_ids.append(room.object_id)
+            elif room.content_type == split_ct:
+                split_post_ids.append(room.object_id)
+        except Exception as e:
+            print(f"ContentType 확인 오류: {e}")
+            continue
     
     # ✅ 모든 관련 데이터 한 번에 가져오기
     item_prices_dict = {}
     member_prices_dict = {}
     
     # ItemPrice 가져오기 (양도/대여용)
-    if sell_post_ids:
-        try:
-            sell_ct = ContentType.objects.get_for_model(FarmSellPost)
+    try:
+        if sell_post_ids:
             sell_prices = ItemPrice.objects.filter(
                 content_type=sell_ct, 
                 object_id__in=sell_post_ids
@@ -219,12 +226,8 @@ def my_chatrooms(request):
                 if key not in item_prices_dict:
                     item_prices_dict[key] = []
                 item_prices_dict[key].append(price)
-        except Exception as e:
-            print(f"양도 ItemPrice 조회 오류: {e}")
-    
-    if rental_post_ids:
-        try:
-            rental_ct = ContentType.objects.get_for_model(FarmRentalPost)
+        
+        if rental_post_ids:
             rental_prices = ItemPrice.objects.filter(
                 content_type=rental_ct, 
                 object_id__in=rental_post_ids
@@ -235,12 +238,13 @@ def my_chatrooms(request):
                 if key not in item_prices_dict:
                     item_prices_dict[key] = []
                 item_prices_dict[key].append(price)
-        except Exception as e:
-            print(f"대여 ItemPrice 조회 오류: {e}")
+                
+    except Exception as e:
+        print(f"ItemPrice 조회 오류: {e}")
     
     # MemberPrice 가져오기 (분철용)
-    if split_post_ids:
-        try:
+    try:
+        if split_post_ids:
             split_posts = FarmSplitPost.objects.filter(
                 id__in=split_post_ids
             ).prefetch_related('member_prices')
@@ -248,38 +252,56 @@ def my_chatrooms(request):
             for post in split_posts:
                 key = f"split_{post.id}"
                 member_prices_dict[key] = list(post.member_prices.all())
-        except Exception as e:
-            print(f"분철 MemberPrice 조회 오류: {e}")
+                
+    except Exception as e:
+        print(f"분철 MemberPrice 조회 오류: {e}")
     
-    # ✅ 캐시된 데이터를 각 room의 post에 설정
+    # ✅ 캐시된 데이터를 각 room의 post에 설정 - 속성명 통일
     for room in rooms:
-        if hasattr(room.post, 'category_type'):
-            category = room.post.category_type
-            post_id = room.post.id
+        try:
+            # ContentType으로 카테고리 판단
+            if room.content_type == sell_ct:
+                category = 'sell'
+            elif room.content_type == rental_ct:
+                category = 'rental'
+            elif room.content_type == split_ct:
+                category = 'split'
+            else:
+                category = 'unknown'
+            
+            post_id = room.object_id
             
             if category in ['sell', 'rental']:
-                # ItemPrice 설정
+                # ItemPrice 설정 - 속성명 통일
                 key = f"{category}_{post_id}"
-                if key in item_prices_dict:
-                    room.post._prefetched_objects_cache = getattr(room.post, '_prefetched_objects_cache', {})
-                    room.post._prefetched_objects_cache['item_prices'] = item_prices_dict[key]
-                    # 템플릿 접근용 속성도 추가
-                    room.post.cached_item_prices = item_prices_dict[key]
-                else:
-                    room.post.cached_item_prices = []
+                cached_prices = item_prices_dict.get(key, [])
+                
+                # ✅ 속성명 통일: _cached_item_prices로 설정
+                room.post._cached_item_prices = cached_prices
+                # 템플릿 접근용도 유지
+                room.post.cached_item_prices = cached_prices
                     
             elif category == 'split':
-                # MemberPrice 설정
+                # MemberPrice 설정 - 속성명 통일
                 key = f"split_{post_id}"
-                if key in member_prices_dict:
-                    room.post._prefetched_objects_cache = getattr(room.post, '_prefetched_objects_cache', {})
-                    room.post._prefetched_objects_cache['member_prices'] = member_prices_dict[key]
-                    # 템플릿 접근용 속성도 추가
-                    room.post.cached_member_prices = member_prices_dict[key]
-                else:
-                    room.post.cached_member_prices = []
-        else:
-            # 타입을 알 수 없는 경우 빈 리스트로 설정
+                cached_prices = member_prices_dict.get(key, [])
+                
+                # ✅ 속성명 통일: _cached_member_prices로 설정
+                room.post._cached_member_prices = cached_prices
+                # 템플릿 접근용도 유지
+                room.post.cached_member_prices = cached_prices
+            else:
+                # 알 수 없는 타입의 경우 빈 리스트로 설정
+                room.post._cached_item_prices = []
+                room.post._cached_member_prices = []
+                room.post.cached_item_prices = []
+                room.post.cached_member_prices = []
+                
+        except Exception as e:
+            print(f"캐시 설정 오류 (room {room.id}): {e}")
+            # 오류 시 안전하게 빈 리스트 설정
+            room.post._cached_item_prices = []
+            room.post._cached_member_prices = []
             room.post.cached_item_prices = []
             room.post.cached_member_prices = []
     
@@ -287,14 +309,23 @@ def my_chatrooms(request):
     for room in rooms:
         room.partner = room.get_other_user(current_user)
         room.last_message = room.latest_messages[0] if room.latest_messages else None
-        room.category = room.post.category_type if hasattr(room.post, 'category_type') else 'unknown'
+        
+        # ✅ ContentType으로 카테고리 설정
+        if room.content_type == sell_ct:
+            room.category = 'sell'
+        elif room.content_type == rental_ct:
+            room.category = 'rental'
+        elif room.content_type == split_ct:
+            room.category = 'split'
+        else:
+            room.category = 'unknown'
 
     # ✅ 분철 채팅방과 일반 채팅방 분리 (사용자 역할 고려)
     split_rooms = []
     other_rooms = []
     
     for room in rooms:
-        if room.content_type.model == 'farmsplitpost':
+        if room.content_type == split_ct:
             # 총대(판매자)인 경우만 그룹핑, 참여자는 일반 채팅처럼 처리
             if current_user == room.seller:
                 split_rooms.append(room)
@@ -431,7 +462,7 @@ def my_chatrooms(request):
         'current_user': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
-
+    
 @login_required
 @require_POST
 def upload_image(request):
