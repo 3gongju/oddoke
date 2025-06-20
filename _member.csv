@@ -23,7 +23,7 @@ id,artist_name,member_name,member_bday
 22,뉴이스트,백호,07-09
 23,뉴이스트,민현,08-09
 24,뉴이스트,렌,11-03
-25,NewJeans,민지,03-31
+25,NewJeans,민지,05-07
 26,NewJeans,하니,10-06
 27,NewJeans,다니엘,04-11
 28,NewJeans,해린,05-15
@@ -44,7 +44,7 @@ id,artist_name,member_name,member_bday
 43,DAY6,원필,04-28
 44,DAY6,도운,08-25
 45,드림캐쳐,지유,05-17
-46,드림캐쳐,수아,07-01
+46,드림캐쳐,수아,08-10
 47,드림캐쳐,시연,05-16
 48,드림캐쳐,유현,01-07
 49,드림캐쳐,다미,03-07
@@ -56,7 +56,7 @@ id,artist_name,member_name,member_bday
 55,RIIZE,원빈,01-02
 56,RIIZE,소희,11-21
 57,RIIZE,앤톤,03-21
-58,Red Velvet,웬디,02-21
+58,Red Velvet,웨디,02-21
 59,Red Velvet,아이린,03-29
 60,Red Velvet,슬기,02-08
 61,Red Velvet,조이,09-03
@@ -77,7 +77,7 @@ id,artist_name,member_name,member_bday
 76,마마무,솔라,02-21
 77,마마무,문별,12-22
 78,마마무,휘인,04-17
-79,마마무,화사,07-01
+79,마마무,화사,07-23
 80,몬스타엑스,셔누,06-18
 81,몬스타엑스,민혁,11-03
 82,몬스타엑스,기현,11-22
@@ -135,13 +135,13 @@ id,artist_name,member_name,member_bday
 134,SHINee,종현,04-08
 135,SHINee,키,09-23
 136,SHINee,민호,12-09
-137,SHINee,태민,07-01
+137,SHINee,태민,07-18
 138,세븐틴,에스쿱스,08-08
 139,세븐틴,정한,10-04
 140,세븐틴,조슈아,12-30
 141,세븐틴,준,06-02
 142,세븐틴,호시,06-15
-143,세븐틴,원우,07-01
+143,세븐틴,원우,07-17
 144,세븐틴,우지,11-22
 145,세븐틴,디에잇,11-07
 146,세븐틴,민규,01-09
@@ -165,7 +165,7 @@ id,artist_name,member_name,member_bday
 164,소녀시대,윤아,05-30
 165,소녀시대,서현,06-28
 166,SUPER JUNIOR,이특,07-01
-167,SUPER JUNIOR,희철,07-01
+167,SUPER JUNIOR,희철,07-10
 168,SUPER JUNIOR,예성,08-24
 169,SUPER JUNIOR,신동,09-28
 170,SUPER JUNIOR,은혁,04-04
@@ -233,7 +233,7 @@ id,artist_name,member_name,member_bday
 232,&TEAM,의주,09-07
 233,&TEAM,후마,06-29
 234,&TEAM,케이,10-21
-235,&TEAM,니콜라스,07-01
+235,&TEAM,니콜라스,07-09
 236,&TEAM,유마,02-07
 237,&TEAM,조,05-13
 238,&TEAM,하루아,05-01
@@ -247,10 +247,10 @@ id,artist_name,member_name,member_bday
 246,앰퍼샌드원,마카야,01-21
 247,앰퍼샌드원,김승모,07-03
 248,SF9,영빈,11-23
-249,SF9,인성,07-01
+249,SF9,인성,07-12
 250,SF9,재윤,08-09
-251,SF9,다원,07-01
-252,SF9,주호,07-01
+251,SF9,다원,07-24
+252,SF9,주호,07-04
 253,SF9,유태양,02-28
 254,SF9,휘영,05-11
 255,SF9,찬희,01-17
@@ -272,7 +272,7 @@ id,artist_name,member_name,member_bday
 271,ATEEZ,성화,04-03
 272,ATEEZ,윤호,03-23
 273,ATEEZ,여상,06-15
-274,ATEEZ,산,07-01
+274,ATEEZ,산,07-10
 275,ATEEZ,민기,08-09
 276,ATEEZ,우영,11-26
 277,ATEEZ,종호,10-12
@@ -286,7 +286,7 @@ id,artist_name,member_name,member_bday
 285,Apink,윤보미,08-13
 286,Apink,정은지,08-18
 287,Apink,김남주,04-15
-288,Apink,오하영,07-01
+288,Apink,오하영,07-19
 289,8TURN,재윤,07-02
 290,8TURN,명호,10-12
 291,8TURN,민호,10-14
@@ -304,7 +304,7 @@ id,artist_name,member_name,member_bday
 303,EXO,시우민,03-26
 304,EXO,첸,09-21
 305,EXO,레이,10-07
-306,Xdinary Heroses,건일,07-01
+306,Xdinary Heroses,건일,07-24
 307,Xdinary Heroses,정수,06-26
 308,Xdinary Heroses,가온,01-14
 309,Xdinary Heroses,O.de,06-11
@@ -359,7 +359,7 @@ id,artist_name,member_name,member_bday
 358,여자친구,유주,03-05
 359,"VIVIZ,여자친구",신비,06-03
 360,"VIVIZ,여자친구",엄지,08-19
-361,오마이걸,효정,07-01
+361,오마이걸,효정,07-28
 362,오마이걸,미미,05-01
 363,오마이걸,유아,09-17
 364,오마이걸,승희,01-25
@@ -393,7 +393,7 @@ id,artist_name,member_name,member_bday
 392,우주소녀,루다,04-06
 393,우주소녀,다원,11-21
 394,원어스,서호,06-07
-395,원어스,이도,07-01
+395,원어스,이도,07-26
 396,원어스,건희,06-27
 397,원어스,환웅,08-26
 398,원어스,시온,01-10
@@ -407,7 +407,7 @@ id,artist_name,member_name,member_bday
 406,WINNER,송민호,03-30
 407,WINNER,이승훈,01-11
 408,위아이,장대현,02-11
-409,위아이,김동한,07-01
+409,위아이,김동한,07-03
 410,위아이,유용하,01-11
 411,위아이,김요한,09-22
 412,위아이,강석화,12-01
@@ -428,13 +428,13 @@ id,artist_name,member_name,member_bday
 427,UNIS,엘리시아,04-18
 428,UNIS,오윤아,10-07
 429,UNIS,임서원,01-27
-430,EVNNE,케이타,07-01
+430,EVNNE,케이타,07-04
 431,EVNNE,박한빈,03-01
 432,EVNNE,이정현,09-11
 433,EVNNE,유승언,01-02
 434,EVNNE,지윤서,10-15
 435,EVNNE,문정현,03-31
-436,EVNNE,박지후,07-01
+436,EVNNE,박지후,07-14
 437,izna,마이,10-28
 438,izna,방지민,05-08
 439,izna,윤지윤,11-06
@@ -457,15 +457,15 @@ id,artist_name,member_name,member_bday
 456,인피니트,엘,03-13
 457,인피니트,이성종,09-03
 458,ITZY,예지,05-26
-459,ITZY,리아,07-01
+459,ITZY,리아,07-21
 460,ITZY,류진,04-17
 461,ITZY,채령,06-05
 462,ITZY,유나,04-06
 463,ZEROBASEONE,성한빈,06-13
 464,ZEROBASEONE,김지웅,12-14
-465,ZEROBASEONE,장하오,07-01
+465,ZEROBASEONE,장하오,07-25
 466,ZEROBASEONE,석매튜,05-28
-467,ZEROBASEONE,김태래,07-01
+467,ZEROBASEONE,김태래,07-14
 468,ZEROBASEONE,리키,05-20
 469,ZEROBASEONE,김규빈,08-30
 470,ZEROBASEONE,박건욱,01-10
@@ -477,7 +477,7 @@ id,artist_name,member_name,member_bday
 476,Kep1er,김채현,04-26
 477,Kep1er,김다연,03-02
 478,Kep1er,히카루,03-12
-479,Kep1er,휴닝바히에,07-01
+479,Kep1er,휴닝바히에,07-27
 480,Kep1er,서영은,12-27
 481,CRAVITY,세림,03-03
 482,CRAVITY,앨런,04-26
@@ -532,7 +532,7 @@ id,artist_name,member_name,member_bday
 531,TREASURE,지훈,03-14
 532,TREASURE,요시,05-15
 533,TREASURE,준규,09-09
-534,TREASURE,윤재혁,07-01
+534,TREASURE,윤재혁,07-23
 535,TREASURE,아사히,08-20
 536,TREASURE,도영,12-04
 537,TREASURE,하루토,04-05
@@ -547,7 +547,7 @@ id,artist_name,member_name,member_bday
 546,TWICE,다현,05-28
 547,TWICE,채영,04-23
 548,TWICE,쯔위,06-14
-549,FANTASY BOYS,강민서,07-01
+549,FANTASY BOYS,강민서,07-22
 550,FANTASY BOYS,이한빈,11-20
 551,FANTASY BOYS,히카리,01-21
 552,FANTASY BOYS,링치,06-04
@@ -572,7 +572,7 @@ id,artist_name,member_name,member_bday
 571,프로미스나인,이나경,06-01
 572,프로미스나인,백지헌,04-17
 573,PLAVE,하민,11-01
-574,PLAVE,밤비,07-01
+574,PLAVE,밤비,07-15
 575,PLAVE,은호,09-04
 576,PLAVE,예준,09-12
 577,PLAVE,노아,02-08

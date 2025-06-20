@@ -17,7 +17,9 @@ class UnifiedFavoriteManager {
     initializeExistingStates() {
         document.querySelectorAll('[data-favorite-btn][data-cafe-id]').forEach(btn => {
             const cafeId = btn.dataset.cafeId;
-            const isFavorited = btn.textContent.includes('♥');
+            // ✅ SVG fill 속성으로 찜 상태 확인 (fill="currentColor"면 찜됨)
+            const heartSvg = btn.querySelector('svg');
+            const isFavorited = heartSvg && heartSvg.getAttribute('fill') === 'currentColor';
             this.favoriteStates.set(cafeId.toString(), isFavorited);
         });
     }
@@ -76,8 +78,6 @@ class UnifiedFavoriteManager {
                     const toastType = data.is_favorited ? 'success' : 'warning';
                     showToast(toastMessage, toastType);
                 }
-            
-                
             }
         } catch (err) {
             console.error('찜 오류:', err);
@@ -109,25 +109,22 @@ class UnifiedFavoriteManager {
     }
 
     updateButtonIcon(button, isFavorited) {
-        // ✅ span 태그 안의 하트만 변경 (크기 유지)
-        const heartSpan = button.querySelector('span');
-        const heartIcon = button.querySelector('.favorite-icon');
-        
-        const newIcon = isFavorited ? '♥' : '♡';
-        
-        if (heartSpan) {
-            heartSpan.textContent = newIcon;
-        } else if (heartIcon) {
-            heartIcon.textContent = newIcon;
+        // ✅ 버튼 직접 수정 (span 제거)
+        if (isFavorited) {
+            // 채워진 하트
+            button.innerHTML = `
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.218l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/>
+                </svg>`;
         } else {
-            // ✅ span이 없으면 버튼 전체 텍스트 변경 (하지만 기존 클래스 유지)
-            const originalClasses = button.className;
-            button.textContent = newIcon;
-            button.className = originalClasses;
+            // 빈 하트
+            button.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 000-6.364 4.5 4.5 0 00-6.364 0L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>`;
         }
     }
 
-    
     addCardHtmlToCarousel(html, cafeId) {
         const favoriteCarousel = document.getElementById('favoriteCarousel');
         if (!favoriteCarousel) return;
@@ -170,19 +167,11 @@ class UnifiedFavoriteManager {
             button.disabled = isLoading;
             
             if (isLoading) {
-                // ✅ 로딩 상태: 원래 클래스 유지하면서 아이콘만 변경
-                const heartSpan = button.querySelector('span');
-                const heartIcon = button.querySelector('.favorite-icon');
-                
-                if (heartSpan) {
-                    heartSpan.textContent = '⏳';
-                } else if (heartIcon) {
-                    heartIcon.textContent = '⏳';
-                } else {
-                    const originalClasses = button.className;
-                    button.textContent = '⏳';
-                    button.className = originalClasses;
-                }
+                // ✅ 로딩 상태: 회전하는 아이콘으로 변경
+                button.innerHTML = `
+                    <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>`;
             } else {
                 // ✅ 로딩 완료: 원래 상태로 복원
                 const isFavorited = this.favoriteStates.get(button.dataset.cafeId);

@@ -338,29 +338,7 @@
             </div>
           </div>
           
-          <!-- 네비게이션 버튼 (카드 외부, 데스크톱에서만 표시) -->
-          {% if birthday_artists|length > 1 %}
-            <button id="prevBtn" class="hidden sm:flex absolute -left-12 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 z-20 items-center justify-center">
-              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-            </button>
-            <button id="nextBtn" class="hidden sm:flex absolute -right-12 top-1/2 transform -translate-y-1/2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 z-20 items-center justify-center">
-              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </button>
-          {% endif %}
-          
-          <!-- 인디케이터 (모바일에서만 표시, 작은 크기) -->
-          {% if birthday_artists|length > 1 %}
-            <div class="flex justify-center mt-4 space-x-1 sm:hidden" id="indicators">
-              {% for artist in birthday_artists %}
-                <button class="w-1 h-1 rounded-full transition-all duration-300 indicator-dot {% if forloop.first %}bg-cream-dark{% else %}bg-gray-300{% endif %}" 
-                        data-slide="{{ forloop.counter0 }}"></button>
-              {% endfor %}
-            </div>
-          {% endif %}
+
           
         {% else %}
           <!-- 빈 상태 -->

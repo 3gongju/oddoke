@@ -14,8 +14,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,22 +25,53 @@ load_dotenv(env_path, override=True)
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2*cvgp4g-ut870+fv-u#9v*#lr$#$7ip&h=4yjc-k&)g3s(5g2'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-2*cvgp4g-ut870+fv-u#9v*#lr$#$7ip&h=4yjc-k&)g3s(5g2')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '.compute.amazonaws.com',
-    'oddoke.com',
+# 환경별 설정 분기
+if DEBUG:
+    # 개발 환경 설정
+    print("🔧 개발 환경으로 실행 중...")
+    SECURE_SSL_REDIRECT = False
+    ALLOWED_HOSTS = [
+        '127.0.0.1',
+        'localhost',
     ]
-
+    # 개발용 채널 레이어
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
+    # Mock 서비스 사용
+    USE_MOCK_BANK_SERVICE = True
+else:
+    # 프로덕션 환경 설정
+    print("🚀 프로덕션 환경으로 실행 중...")
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    ALLOWED_HOSTS = [
+        '.compute.amazonaws.com',
+        'oddoke.com',
+        'www.oddoke.com',
+    ]
+    # 프로덕션용 채널 레이어 (Redis 사용 권장)
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [('127.0.0.1', 6379)],
+            },
+        },
+    }
+    # 실제 뱅킹 서비스 사용
+    USE_MOCK_BANK_SERVICE = False
 
 # Application definition
-
 INSTALLED_APPS = [
     "daphne",
     'django.contrib.admin',
@@ -54,7 +83,6 @@ INSTALLED_APPS = [
     'ddokfarm',
     'ddokdam',
     'accounts',
-    'django_browser_reload',
     'widget_tweaks',
     'import_export',
     'artist',
@@ -67,6 +95,10 @@ INSTALLED_APPS = [
     'faq',
     'oddmin',
 ]
+
+# 개발 환경에서만 django_browser_reload 추가
+if DEBUG:
+    INSTALLED_APPS.append('django_browser_reload')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -98,17 +130,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'oddoke.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    # 개발 환경: SQLite 사용
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
+else:
+    # 프로덕션 환경: PostgreSQL 사용 (환경변수에서 설정 읽기)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'oddoke'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -128,31 +172,24 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LOGIN_REDIRECT_URL = '/'#로그인 시 home.html로 리다이렉트
-LOGOUT_REDIRECT_URL = '/' #로그아웃 시 home.html로 리다이렉트
-
+LOGIN_REDIRECT_URL = '/'  # 로그인 시 home.html로 리다이렉트
+LOGOUT_REDIRECT_URL = '/'  # 로그아웃 시 home.html로 리다이렉트
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'ko-kr'
-
 TIME_ZONE = 'Asia/Seoul'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
-
 STATIC_ROOT = BASE_DIR / 'collectstatic'
 
 # Default primary key field type
@@ -161,7 +198,6 @@ STATIC_ROOT = BASE_DIR / 'collectstatic'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = BASE_DIR / 'media'
-
 MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -180,12 +216,9 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# TAILWIND_APP_NAME = 'theme'
-
 # 카카오맵 API 키 설정
 KAKAO_MAP_API_KEY = os.getenv('KAKAO_MAP_API_KEY')
 KAKAO_REST_API_KEY = os.getenv('KAKAO_REST_API_KEY') 
-
 KAKAO_API_KEY = KAKAO_MAP_API_KEY
 
 # 카카오톡 공유하기 키 설정
@@ -194,13 +227,6 @@ KAKAO_JAVASCRIPT_KEY = os.getenv('KAKAO_JAVASCRIPT_KEY')
 # 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
 ASGI_APPLICATION = 'oddoke.asgi.application'
 
-
-# 채널 레이어 설정
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # 개발용: 메모리 기반
-    },
-}
 # 오픈 API 키 설정
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -209,7 +235,6 @@ NEARBY_CAFE_RADIUS = 5  # km
 WALKING_SPEED_KMPH = 5  # km/h
 DEFAULT_PAGE_SIZE = 10
 MAX_NEARBY_CAFES = 50
-WALKING_SPEED_KMPH = 5   # 도보 속도 (km/h)
 
 CACHES = {
     'default': {
@@ -222,21 +247,21 @@ CACHES = {
     }
 }
 
-
 # 더치트 API 설정
 DUTCHEAT_API_KEY = os.getenv('DUTCHEAT_API_KEY', 'test_api_key')
 DUTCHEAT_API_URL = os.getenv('DUTCHEAT_API_URL', 'https://api.dutcheat.com')
-
-# Mock 서비스 사용 여부 (개발/테스트용)
-USE_MOCK_BANK_SERVICE = True  # 실제 운영시에는 False로 변경
 
 # 암호화 키 설정
 ACCOUNT_ENCRYPTION_KEY = os.getenv('ACCOUNT_ENCRYPTION_KEY')
 
 if not ACCOUNT_ENCRYPTION_KEY:
-    raise ValueError("ACCOUNT_ENCRYPTION_KEY 환경변수가 설정되지 않았습니다.")
+    if not DEBUG:  # 프로덕션에서만 필수
+        raise ValueError("ACCOUNT_ENCRYPTION_KEY 환경변수가 설정되지 않았습니다.")
+    else:
+        # 개발환경에서는 기본값 사용
+        ACCOUNT_ENCRYPTION_KEY = 'dev-key-only-for-development-use'
 
-
+# 로깅 설정
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -258,19 +283,19 @@ LOGGING = {
             'formatter': 'verbose',
         },
         'console': {
-            'level': 'DEBUG',
+            'level': 'INFO',  # 개발환경에서도 INFO 레벨로 변경
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',
+        'level': 'WARNING',  # WARNING 레벨로 고정
     },
     'loggers': {
         'django': {
             'handlers': ['file', 'console'],
-            'level': 'INFO',
+            'level': 'INFO',  # INFO 레벨로 고정
             'propagate': False,
         },
         'ddoksang': {
@@ -278,14 +303,14 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        # Django의 자동 리로더 로그 숨기기
+        'django.utils.autoreload': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
+        },
     },
 }
 
 # logs 디렉토리 생성
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
-
-
-# 나중에 실제 API 사용시 설정
-# REAL_BANK_API_KEY = 'your_api_key_here'
-# USE_MOCK_BANK_SERVICE = False
-
