@@ -2,12 +2,11 @@
 
 /* === 생일시 맞추기 게임 스타일 === */
 .game-container {
-  background: linear-gradient(125deg, #1a1a1a, #2d2d2d);
+  background: rgb(245, 245, 245);
   border-radius: 1rem;
   padding: 1.5rem;
-  margin-bottom: 2rem;
-  color: white;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  margin-bottom: 3rem;
+  color: rgb(0, 0, 0);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.5s ease;
@@ -104,16 +103,16 @@
 }
 
 .game-container .member-name {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: bold;
-  color: #ffffff;
+  color: #000000;
   margin: 0;
   transition: all 0.3s ease;
 }
 
 .game-container .artist-name {
-  font-size: 0.9rem;
-  color: #d1d5db;
+  font-size: 0.7rem;
+  color: #2c2c2c;
   margin: 0.5rem 0 0 0;
   opacity: 0;
   transform: translateY(-10px);
@@ -122,7 +121,7 @@
 }
 
 .game-container .member-item:hover .member-name {
-  color: #f9fafb;
+  color: #000000;
 }
 
 .game-container .member-item:hover .artist-name {
@@ -137,11 +136,11 @@
   object-fit: cover;
   border: 3px solid #d1d5db;
   margin: 0 auto 1rem;
-  box-shadow: 0 0 20px rgba(209, 213, 219, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
 }
 
 .game-container .birthday-badge {
-  background-color: #1f2937;
+  background-color: #f62f3d;
   color: white;
   font-size: 0.75rem;
   font-weight: bold;
@@ -151,15 +150,18 @@
   top: 0;
   right: 0;
   transform: translate(25%, -25%);
-  box-shadow: 0 0 10px rgba(31, 41, 55, 0.5);
 }
 
 .game-container .target-time-box {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: rgba(0, 0, 0, 0.3) !important;
   border-radius: 0.5rem;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   margin-bottom: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .game-container .game-time-display {
@@ -168,8 +170,7 @@
   font-size: 3rem;
   text-align: center;
   margin: 1rem 0;
-  color: #e5e7eb;
-  text-shadow: 0 0 10px rgba(229, 231, 235, 0.5);
+  color: #000000;
   line-height: 1;
   display: flex;
   align-items: end;
@@ -178,14 +179,14 @@
 
 .game-container .game-time-ms {
   font-size: 1.5rem;
-  color: #e5e7eb;
+  color: #cd1212;
   opacity: 0.8;
   padding-bottom: 0.35rem;
 }
 
 .game-container .ddok-button {
-  background: linear-gradient(90deg, #1f2937, #374151);
-  color: white;
+  background: #e9efb9;
+  color: rgb(0, 0, 0);
   padding: 1rem 2rem;
   border-radius: 0.75rem;
   border: none;
@@ -193,13 +194,12 @@
   font-size: 1.25rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 15px rgba(31, 41, 55, 0.4);
-  width: 100%;
+  width: 70%;
 }
 
 .game-container .ddok-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.6);
+  box-shadow: 0 6px 20px rgba(12, 80, 175, 0.6);
   background: linear-gradient(90deg, #111827, #1f2937);
 }
 
@@ -233,25 +233,30 @@
   text-align: center;
   font-size: 1.5rem;
   font-weight: bold;
-  color: #e5e7eb;
+  color: #000000;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .game-container .target-time-box p {
-  color: #d1d5db;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
 }
 
 .game-container .target-time-box #target-time {
-  color: #ffffff;
+  color: #000000;
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin: 0;
 }
 
 /* 결과 색상 스타일 - 검정 배경에 맞게 조정 - 게임 영역에만 적용 */
 .game-container .text-pink-400 { color: #22c55e !important; }
 .game-container .text-white { color: #ffffff !important; }
-.game-container .text-gray-300 { color: #d1d5db !important; }
-.game-container .text-gray-400 { color: #9ca3af !important; }
+.game-container .text-gray-300 { color: #151515 !important; }
+.game-container .text-gray-400 { color: #ffffff !important; }
 .game-container .text-gray-500 { color: #6b7280 !important; }
 
 /* 템플릿 색상 오버라이드 - 게임 영역에만 적용 */
@@ -270,16 +275,18 @@
 /* 모바일 게임 스타일 */
 @media (max-width: 768px) {
   .game-container {
-    margin: 0.5rem;
+    margin: 0.5rem 0.5rem 2rem 0.5rem;
     padding: 1rem;
   }
 
-  /* 모바일에서는 세로 리스트 형태로 변경 */
+  /* 모바일에서는 세로 리스트 형태로 변경 - 카드 제거 */
   .game-container .member-selector-grid {
     grid-template-columns: 1fr !important;
-    gap: 1rem !important;
+    gap: 1.5rem !important;
     max-width: none !important;
     margin: 0 0 2rem 0 !important;
+    justify-items: flex-start !important;
+    padding: 0 1rem !important;
   }
 
   .game-container .member-item {
@@ -287,42 +294,50 @@
     flex-direction: row !important;
     align-items: center;
     text-align: left;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 0.75rem !important;
-    backdrop-filter: blur(10px);
+    padding: 0.5rem 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    width: 100%;
   }
 
   .game-container .member-item:hover {
-    background: rgba(255, 255, 255, 0.1) !important;
-    transform: translateY(-1px);
+    background: transparent !important;
+    transform: none;
   }
 
   .game-container .member-image {
-    width: 70px;
-    height: 70px;
+    width: 50px;
+    height: 50px;
     margin: 0 1rem 0 0;
     flex-shrink: 0;
   }
 
-  /* 모바일에서는 기본 동작 유지 */
+  /* 모바일에서는 텍스트 정보 */
   .game-container .member-name {
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
+    font-size: 1rem;
+    margin-bottom: 0.125rem;
+    color: #000000;
   }
 
   .game-container .artist-name {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     opacity: 1 !important;
     transform: none !important;
     white-space: normal !important;
     margin: 0 !important;
+    color: #000000;
   }
 
-  .game-container .game-idol-image {
-    width: 100px;
-    height: 100px;
+  .game-container .target-time-box {
+    padding: 0.5rem 0.75rem;
+    max-width: 250px;
+  }
+
+  .game-container .target-time-box #target-time {
+    font-size: 1.5rem;
   }
 
   .game-container .game-time-display {

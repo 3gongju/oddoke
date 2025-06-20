@@ -199,16 +199,16 @@ function showResult(timeDiff, ddok) {
     resultEl.textContent = `PERFECT! (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-pink-400';
   } else if (timeDiff < 200) {
-    resultEl.textContent = `성공! (+${ddok.toLocaleString()}똑)`;
+    resultEl.textContent = `덕이 쌓입니다! (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-white';
   } else if (timeDiff < 500) {
     resultEl.textContent = `${diffSeconds}초 차이! (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-gray-300';
   } else if (timeDiff < 1000) {
-    resultEl.textContent = `아쉬워요... (+${ddok.toLocaleString()}똑)`;
+    resultEl.textContent = `아쉽지만 덕을 쌓을 정도는 아니네요... (+${ddok.toLocaleString()}똑)`;
     resultEl.className += ' text-gray-400';
   } else {
-    resultEl.textContent = `너무 멀어요... (+0똑)`;
+    resultEl.textContent = `덕 못 쌓음... (+0덕)`;
     resultEl.className += ' text-gray-500';
   }
   
