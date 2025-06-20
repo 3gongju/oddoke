@@ -739,5 +739,39 @@ function closeSuspensionModal() {
     }
 }
 </script>
+
+{% if messages and request.resolver_match.url_name != 'login' %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      {% for message in messages %}
+        // modal_required 태그가 없는 메시지만 토스트로 표시
+        {% if 'modal_required' not in message.extra_tags %}
+          // 토스트 메시지 함수가 있으면 사용, 없으면 기본 alert
+          if (typeof showToast === 'function') {
+            showToast('{{ message|escapejs }}', '{{ message.tags|default:"info" }}');
+          } else if (typeof window.ddoksangToast !== 'undefined') {
+            window.ddoksangToast.{{ message.tags|default:"info" }}('{{ message|escapejs }}');
+          } else {
+            // 최후의 수단: 간단한 토스트 생성
+            const toast = document.createElement('div');
+            toast.textContent = '{{ message|escapejs }}';
+            toast.style.cssText = `
+              position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+              padding: 12px 20px; border-radius: 8px; color: white;
+              background: {% if message.tags == 'error' %}#ef4444{% elif message.tags == 'success' %}#10b981{% elif message.tags == 'warning' %}#f59e0b{% else %}#3b82f6{% endif %};
+              opacity: 0; transition: opacity 0.3s;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.style.opacity = '1', 10);
+            setTimeout(() => {
+              toast.style.opacity = '0';
+              setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+          }
+        {% endif %}
+      {% endfor %}
+    });
+  </script>
+{% endif %}
 </body>
 </html>
