@@ -1,9 +1,14 @@
+<!-- ddokfarm/components/post_form/_fields_sell_rental.html 업데이트 -->
+
 <!-- 가격 -->
 <div class="mb-6">
   <label for="{{ form.price.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">가격</label>
   {{ form.price }}
   {% if form.price.errors %}<p class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</p>{% endif %}
 </div>
+
+<!-- 개별 가격 설정 추가 -->
+{% include "ddokfarm/components/post_form/_individual_prices.html" %}
 
 <!-- 종류-->
 <div class="mb-6">
