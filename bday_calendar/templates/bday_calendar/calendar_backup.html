@@ -661,37 +661,10 @@
 
 {% block body %}
 <section class="max-w-6xl mx-auto px-4 py-10">
-  <h2 class="text-xl font-bold mb-4 flex items-center space-x-2">
+  <h2 class="text-xl font-bold mb-6 flex items-center space-x-2">
     <img src="{% static 'image/ddok_logo_filled.png' %}" alt="로고" class="w-10 h-10">
-    <span>생일을 축하해똑!</span> {# 덕 -> 똑 #}
+    <span>생일을 축하해덕!</span>
   </h2>
-
-  <!-- 생일시 맞추기 게임 컨테이너 -->
-  <div id="birthday-game-container" class="game-container hidden">
-      <!-- 멤버 선택 화면 -->
-      <div id="member-selection-view">
-          <h3 class="text-2xl font-bold text-center mb-2">오늘 생일인 멤버</h3>
-          <p class="text-center text-gray-400 mb-8">누구의 생일시를 축하해줄까요?</p>
-          <div id="member-selector-grid" class="member-selector-grid"></div>
-      </div>
-
-      <!-- 실제 게임 화면 -->
-      <div id="game-view" class="hidden">
-          {# ... (게임 화면의 HTML 구조) ... #}
-          <p id="idol-name" class="text-2xl font-black text-center">아이돌 이름</p>
-          
-          {# ... #}
-
-          <button id="click-button" class="deok-button ...">똑 쌓기</button> {# 덕 -> 똑 #}
-
-          <div id="result-container" class="mt-6 h-12 flex items-center justify-center"></div>
-
-          <div class="total-deok-display ...">
-              <p class="text-lg text-gray-400 text-center">오늘 쌓은 똑: <span id="score" class="font-bold text-2xl text-white">0</span></p> {# 덕 -> 똑 #}
-          </div>
-          <button id="back-to-selection" class="mt-4 ...">‹ 다른 멤버 선택하기</button>
-      </div>
-  </div>
   
   <!-- 데스크톱용 화살표 네비게이션 -->
   <div class="hidden md:flex items-center justify-center relative mb-6">

@@ -8,4 +8,5 @@ urlpatterns = [
     path('', views.birthday_calendar, name='calendar'),
     path('events/', views.birthday_events_api, name='events_api'), 
     path('events/weekly/', views.birthday_events_api, name='weekly_events_api'),  # 선택적으로 분리 가능
+    path('save-ddok-point/', views.save_ddok_point, name='save_ddok_point'),
 ]
