@@ -22,7 +22,7 @@
         </button>
         
         <!-- 서브 카테고리 드롭다운 -->
-        <div id="sell-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
+        <div id="sell-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-[120px] hidden">
           <a href="?category=sell&wantto=buy" 
              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg subcategory-link {% if wantto == 'buy' %}bg-gray-50 font-medium{% endif %}">
             삽니다
@@ -50,7 +50,7 @@
         </button>
         
         <!-- 서브 카테고리 드롭다운 -->
-        <div id="rental-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px] hidden">
+        <div id="rental-subcategory" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-[120px] hidden">
           <a href="?category=rental&wantto=sell" 
              class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg subcategory-link {% if wantto == 'sell' %}bg-gray-50 font-medium{% endif %}">
             빌려줍니다
@@ -324,9 +324,12 @@
   border-color: #9ca3af !important;
 }
 
-/* 드롭다운 스타일 개선 */
+/* 드롭다운 스타일 개선 - 너비 고정 */
 #sell-subcategory, #rental-subcategory {
   z-index: 50 !important; /* 높은 z-index로 설정 */
+  width: 120px !important; /* 고정 너비 */
+  max-width: 120px !important; /* 최대 너비 제한 */
+  min-width: 120px !important; /* 최소 너비 유지 */
 }
 
 /* 덕팜 카테고리 컨테이너 - 줄바꿈 방지 */
@@ -415,7 +418,9 @@
     right: 1rem !important;
     margin-top: 0.5rem !important;
     z-index: 50 !important;
-    max-width: calc(100vw - 2rem);
+    width: calc(100vw - 2rem) !important; /* 모바일에서는 화면 너비에 맞춤 */
+    max-width: calc(100vw - 2rem) !important;
+    min-width: auto !important;
   }
   
   /* 드롭다운 링크 - 터치 친화적 크기 */
@@ -443,6 +448,13 @@
     justify-content: center !important;
     flex-wrap: wrap !important; /* 태블릿에서는 줄바꿈 허용 */
   }
+  
+  /* 태블릿에서 드롭다운 크기 유지 */
+  #sell-subcategory, #rental-subcategory {
+    width: 120px !important;
+    max-width: 120px !important;
+    min-width: 120px !important;
+  }
 }
 
 /* 데스크톱에서는 중앙 정렬과 줄바꿈 허용 */
@@ -452,6 +464,13 @@
     justify-content: center !important;
     flex-wrap: wrap !important;
     overflow-x: visible !important;
+  }
+  
+  /* 데스크톱에서 드롭다운 크기 유지 */
+  #sell-subcategory, #rental-subcategory {
+    width: 120px !important;
+    max-width: 120px !important;
+    min-width: 120px !important;
   }
 }
 
@@ -509,6 +528,4 @@
 .category-btn.bg-gray-100:hover {
   background-color: #e5e7eb !important;
 }
-
-
 </style>
