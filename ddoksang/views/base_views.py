@@ -253,7 +253,98 @@ def map_view(request):
     
     return render(request, 'ddoksang/map.html', context)
 
+# 최신 본 글 저장
+def cafe_detail_view(request, cafe_id):
+    """생일카페 상세 뷰"""
+    cafe = get_object_or_404(
+        BdayCafe.objects.select_related('artist', 'member').prefetch_related('images'),
+        id=cafe_id,
+        status='approved'
+    )
+    
+    # 조회수 증가
+    try:
+        BdayCafe.objects.filter(id=cafe_id).update(view_count=F('view_count') + 1)
+        cafe.refresh_from_db()
+    except Exception as e:
+        logger.warning(f"조회수 업데이트 실패: {e}")
+    
+    # 🔥 조회 기록 저장 (로그인된 사용자만) - 새로 추가된 부분
+    if request.user.is_authenticated:
+        try:
+            from ddoksang.models import CafeViewHistory
+            
+            # get_or_create로 중복 방지, viewed_at만 업데이트
+            view_history, created = CafeViewHistory.objects.get_or_create(
+                user=request.user,
+                cafe=cafe,
+                defaults={
+                    'ip_address': request.META.get('REMOTE_ADDR'),
+                }
+            )
+            
+            # 기존 기록이 있으면 조회 시간만 업데이트
+            if not created:
+                view_history.viewed_at = timezone.now()
+                view_history.save(update_fields=['viewed_at'])
+                
+        except Exception as e:
+            logger.warning(f"조회 기록 저장 실패: {e}")
+    
+    # 디버깅: 카페 정보 확인
+    logger.info(f"카페 상세 조회: {cafe.cafe_name} (ID: {cafe.id})")
+    logger.info(f"카페 아티스트: {cafe.artist.display_name if cafe.artist else 'None'}")
+    logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
+    logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
+    
+    # 주변 카페들 (map_utils 사용)
+    nearby_cafes = []
+    if cafe.latitude and cafe.longitude:
+        try:
+            approved_cafes = BdayCafe.objects.filter(status='approved', member=cafe.member).select_related('artist', 'member')
+            nearby_cafes = get_nearby_cafes(
+                user_lat=float(cafe.latitude), 
+                user_lng=float(cafe.longitude), 
+                cafes_queryset=approved_cafes,
+                radius_km=5, 
+                limit=5, 
+                exclude_id=cafe.id
+            )
+        except (ValueError, TypeError) as e:
+            logger.warning(f"주변 카페 조회 오류: {e}")
+    
+    # 같은 아티스트/멤버의 다른 카페들
+    related_cafes = BdayCafe.objects.filter(
+        Q(artist=cafe.artist) | Q(member=cafe.member),
+        status='approved'
+    ).exclude(id=cafe.id).select_related('artist', 'member')[:6]
+    
+    # 사용자 찜 목록
+    user_favorites = get_user_favorites(request.user)
 
+    # 현재 카페가 찜 목록에 있는지 확인
+    is_favorited = cafe.id in user_favorites if user_favorites else False
+    
+    # 지도 관련 컨텍스트 생성 (map_utils 사용)
+    map_context = get_map_context()
+    
+    context = {
+        'cafe': cafe,
+        'is_favorited': is_favorited,
+        'nearby_cafes': nearby_cafes,
+        'related_cafes': related_cafes,
+        'user_favorites': user_favorites,
+        'is_preview': False,
+        'can_edit': False,
+        'preview_type': None,
+        'settings': settings,
+        **map_context,
+    }
+    
+    # 이 return 문이 꼭 있어야 함
+    return render(request, 'ddoksang/detail.html', context)
+    
+ 
 #  추가: 투어맵 뷰 (cafe_views.py에서 이동)
 def tour_map_view(request):
     """투어맵 뷰 - map_utils 사용으로 간소화"""

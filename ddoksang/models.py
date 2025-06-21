@@ -278,7 +278,26 @@ class CafeFavorite(models.Model):
         unique_together = ('user', 'cafe')
         verbose_name = '카페 즐겨찾기'
 
-
+# 최신 본 글
+class CafeViewHistory(models.Model):
+    """카페 조회 기록"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='사용자')
+    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, verbose_name='카페')
+    viewed_at = models.DateTimeField(auto_now=True, verbose_name='조회 시간')
+    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP 주소')
+    
+    class Meta:
+        verbose_name = '카페 조회 기록'
+        verbose_name_plural = '카페 조회 기록들'
+        unique_together = ('user', 'cafe')  # 사용자당 카페마다 하나의 기록만
+        ordering = ['-viewed_at']
+        indexes = [
+            models.Index(fields=['user', '-viewed_at']),
+            models.Index(fields=['cafe', '-viewed_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.cafe.cafe_name} ({self.viewed_at})"
 
 
 class TourPlan(models.Model):

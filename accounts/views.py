@@ -367,29 +367,38 @@ def mypage(request):
         comment.target_post = target_post
         comment.category = getattr(target_post, 'category_type', None)
 
-    # 🔥 덕생(생일카페) 관련 데이터 추가
-    from ddoksang.models import BdayCafe, CafeFavorite  # ddoksang 앱의 모델 import
+    # 덕생(생일카페) 관련 데이터
+    from ddoksang.models import BdayCafe, CafeFavorite, CafeViewHistory
     
     # 내가 등록한 생일카페
     my_cafes = BdayCafe.objects.filter(submitted_by=user_profile).order_by('-created_at')
     
-    # 찜한 생일카페 (CafeFavorite 모델을 통해)
+    # 찜한 생일카페
     favorite_cafes = BdayCafe.objects.filter(
         id__in=CafeFavorite.objects.filter(user=user_profile).values_list('cafe_id', flat=True)
     ).order_by('-created_at')
     
-    # 최근 본 생일카페 - ddoksang에는 조회 기록 모델이 없으므로 빈 쿼리셋으로 처리
-    # 추후 CafeView 모델을 만들거나, 세션/쿠키로 관리할 수 있음
-    recent_cafes = BdayCafe.objects.none()
+    # 최근 본 생일카페 (최대 20개, 최근 순)
+    recent_view_histories = CafeViewHistory.objects.filter(
+        user=user_profile,
+        cafe__status='approved'  # 승인된 카페만
+    ).select_related('cafe__artist', 'cafe__member').order_by('-viewed_at')[:10]
     
-    # 덕생 통계 (status 필드 사용)
+    # 카페 객체만 추출하되 조회 시간 정보도 함께 전달
+    recent_cafes = []
+    for history in recent_view_histories:
+        cafe = history.cafe
+        cafe.viewed_at = history.viewed_at  # 조회 시간 정보 추가
+        recent_cafes.append(cafe)
+    
+    # 덕생 통계
     cafe_stats = {
         'total': my_cafes.count(),
         'pending': my_cafes.filter(status='pending').count(),
         'approved': my_cafes.filter(status='approved').count(), 
         'rejected': my_cafes.filter(status='rejected').count(),
     }
-
+    
     # ✅ 멤버-아티스트 매핑
     for member in favorite_members:
         matched = next(
@@ -405,9 +414,9 @@ def mypage(request):
     
     context = {
         'user_profile': user_profile,
-        'fandom_profile': fandom_profile,      # 🔥 추가
-        'bank_profile': bank_profile,          # 🔥 추가 
-        'address_profile': address_profile,    # 🔥 추가
+        'fandom_profile': fandom_profile,      # 추가
+        'bank_profile': bank_profile,          # 추가 
+        'address_profile': address_profile,    # 추가
         'favorite_artists': favorite_artists,
         'favorite_members': favorite_members,
         'followed_artist_ids': json.dumps(followed_artist_ids),
@@ -418,7 +427,7 @@ def mypage(request):
         'liked_dam_posts': liked_dam_posts,    # 내가 찜한 글
         'dam_comments': dam_comments,          # 내가 쓴 댓글
         'my_reviews': my_reviews,              # 내가 쓴 리뷰
-        # 🔥 덕생 관련 데이터 추가
+        #  덕생 관련 데이터 
         'my_cafes': my_cafes,                  # 내가 등록한 카페
         'favorite_cafes': favorite_cafes,      # 찜한 카페
         'recent_cafes': recent_cafes,          # 최근 본 카페
