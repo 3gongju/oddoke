@@ -913,42 +913,72 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-        margin: 0 2px;
-        font-size: 14px;
+        width: 28px;
+        height: 28px;
+        margin: 0 1px;
+        font-size: 12px;
         font-weight: 500;
         border: 1px solid #d1d5db;
-        border-radius: 8px;
+        border-radius: 6px;
         transition: all 0.2s;
         cursor: pointer;
         background: white;
         color: #374151;
       }
-      
+
       @media (min-width: 640px) {
         .pagination-btn {
-          width: 40px;
-          height: 40px;
-          margin: 0 4px;
-          font-size: 16px;
+          width: 32px;
+          height: 32px;
+          margin: 0 2px;
+          font-size: 14px;
+          border-radius: 8px;
         }
       }
-      
+
+      @media (min-width: 1024px) {
+        .pagination-btn {
+          width: 36px;
+          height: 36px;
+          margin: 0 3px;
+          font-size: 14px;
+        }
+      }
+
       .pagination-btn:hover:not(.disabled) {
         background: #f9fafb;
         border-color: #9ca3af;
       }
-      
+
       .pagination-btn.active {
-        background: #111827;
+        background: #9ca3af;
         color: white;
-        border-color: #111827;
+        border-color: #9ca3af;
       }
-      
+
       .pagination-btn.disabled {
         opacity: 0.5;
         cursor: not-allowed;
+      }
+
+      /* 아이콘 크기 조정 */
+      .pagination-btn svg {
+        width: 12px;
+        height: 12px;
+      }
+
+      @media (min-width: 640px) {
+        .pagination-btn svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .pagination-btn svg {
+          width: 16px;
+          height: 16px;
+        }
       }
     </style>
 
@@ -960,7 +990,7 @@
       // 페이지네이션 관리 객체
       const paginationManager = {
         itemsPerPage: 3,
-        maxVisiblePages: 5, // 한 번에 보여줄 최대 페이지 수
+        maxVisiblePages: 4, // 5에서 4로 변경
         
         // 페이지네이션 생성
         createPagination: function(type, category) {
@@ -1008,7 +1038,7 @@
           if (startPage > 1) {
             paginationHTML += `
               <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${startPage - 1})">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
                 </svg>
               </button>
@@ -1020,7 +1050,7 @@
             <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
                     onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage - 1})"
                     ${currentPage === 1 ? 'disabled' : ''}>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
             </button>
@@ -1041,7 +1071,7 @@
             <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
                     onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage + 1})"
                     ${currentPage === totalPages ? 'disabled' : ''}>
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </button>
@@ -1051,7 +1081,7 @@
           if (endPage < totalPages) {
             paginationHTML += `
               <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${endPage + 1})">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
                 </svg>
               </button>
