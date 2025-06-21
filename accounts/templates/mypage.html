@@ -620,10 +620,10 @@
           {% if my_cafes %}
             <div class="space-y-3 sm:space-y-4" id="cafe-registered-items">
               {% for cafe in my_cafes %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow cafe-registered-item" style="display: none;">
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 {% if cafe.status != 'rejected' %}hover:shadow-sm{% endif %} transition-shadow cafe-registered-item" style="display: none;">
                   <div class="flex gap-3 sm:gap-4">
                     <!-- 카페 이미지 - 모바일에서 3:4 비율 -->
-                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 {% if cafe.status == 'rejected' %}opacity-50{% endif %}">
                       {% if cafe.get_main_image %}
                         <img src="{{ cafe.get_main_image }}" 
                             alt="{{ cafe.cafe_name }}"
@@ -640,10 +640,22 @@
                     <!-- 카페 정보 -->
                     <div class="flex-1 min-w-0">
                       <div class="flex items-start justify-between gap-2 mb-1">
-                        <a href="{% url 'ddoksang:detail' cafe.id %}" 
-                          class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block flex-1">
-                          {{ cafe.cafe_name|truncatechars:9 }}
-                        </a>
+                        {% if cafe.status == 'approved' %}
+                          <a href="{% url 'ddoksang:detail' cafe.id %}" 
+                            class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block flex-1">
+                            {{ cafe.cafe_name|truncatechars:9 }}
+                          </a>
+                        {% elif cafe.status == 'pending' %}
+                          <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+                            class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block flex-1">
+                            {{ cafe.cafe_name|truncatechars:9 }}
+                          </a>
+                        {% else %}
+                          <!-- 거절된 경우 클릭 불가 -->
+                          <span class="text-gray-400 font-medium text-sm sm:text-base line-clamp-2 block flex-1 cursor-not-allowed">
+                            {{ cafe.cafe_name|truncatechars:9 }}
+                          </span>
+                        {% endif %}
                         
                         <!-- 상태 뱃지 -->
                         <div class="flex-shrink-0">
@@ -663,10 +675,10 @@
                         </div>
                       </div>
                       
-                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                      <p class="text-xs sm:text-sm {% if cafe.status == 'rejected' %}text-gray-400{% else %}text-gray-600{% endif %} line-clamp-1 mb-1">
                         {{ cafe.place_name|truncatechars:15 }}
                       </p>
-                      <p class="text-xs sm:text-sm text-gray-500">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</p>
+                      <p class="text-xs sm:text-sm {% if cafe.status == 'rejected' %}text-gray-400{% else %}text-gray-500{% endif %}">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</p>
                     </div>
                   </div>
                 </div>
