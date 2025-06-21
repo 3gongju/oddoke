@@ -1,54 +1,76 @@
 <!-- 승인 대기 / 관리자 승인 배너 -->
-
 {% if is_preview %}
-  <div class="bg-yellow-50 border-b border-yellow-200">
-    <div class="max-w-4xl mx-auto px-4 py-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          {% if preview_type == 'user' %}
-            <div class="flex items-center space-x-2">
-              <span class="text-yellow-600">⏳</span>
-              <span class="text-yellow-800 font-medium">승인 대기 중인 글입니다</span>
-              <span class="text-sm text-yellow-600">관리자 승인 후 공개됩니다</span>
-            </div>
-          {% elif preview_type == 'admin' %}
-            <div class="flex items-center space-x-2">
-              <span class="text-orange-600">👤</span>
-              <span class="text-orange-800 font-medium">관리자 검토 중</span>
-              <span class="text-sm text-orange-600">승인/거절을 결정해주세요</span>
-            </div>
-          {% endif %}
-        </div>
-        <div class="flex items-center space-x-2">
-          {% if preview_type == 'user' %}
-            <a href="{% url 'ddoksang:my_cafes' %}" 
-               class="text-sm bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full hover:bg-yellow-200">
-              내 등록 목록으로
-            </a>
-          {% elif preview_type == 'admin' %}
-            <div class="space-x-2">
-              <form method="post" action="{% url 'ddoksang:admin_approve_cafe' cafe.id %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" onclick="return confirm('승인하시겠습니까?')"
-                        class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full hover:bg-green-200">
-                  ✅ 승인
-                </button>
-              </form>
-              <form method="post" action="{% url 'ddoksang:admin_reject_cafe' cafe.id %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" onclick="return confirm('거절하시겠습니까?')"
-                        class="text-sm bg-red-100 text-red-800 px-3 py-1 rounded-full hover:bg-red-200">
-                  ❌ 거절
-                </button>
-              </form>
-              <a href="{% url 'ddoksang:admin_dashboard' %}" 
-                 class="text-sm bg-gray-100 text-gray-800 px-3 py-1 rounded-full hover:bg-gray-200">
-                대시보드로
-              </a>
-            </div>
-          {% endif %}
-        </div>
+<div class="bg-black border-b border-gray-700">
+  <div class="max-w-4xl mx-auto px-4 py-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+      <!-- ✅ 메시지 영역 -->
+      <div class="flex items-start sm:items-center space-x-3">
+        {% if preview_type == 'user' %}
+          <!-- Heroicon: Clock -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white mt-1 sm:mt-0 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="flex flex-col leading-tight">
+            <span class="text-base font-bold text-yellow-400 whitespace-nowrap">
+              승인 대기 중인 글입니다
+            </span>
+            <span class="text-sm text-white/80">
+              관리자 승인 후 공개됩니다
+            </span>
+          </div>
+        {% elif preview_type == 'admin' %}
+          <!-- Heroicon: User -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white mt-1 sm:mt-0 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A8 8 0 1116.95 6.05m-3.899 3.9A3.5 3.5 0 0012 21v0" />
+          </svg>
+          <div class="flex flex-col leading-tight">
+            <span class="text-base font-bold text-yellow-400 whitespace-nowrap">
+              관리자 검토 중
+            </span>
+            <span class="text-sm text-white/80">
+              승인/거절을 결정해주세요
+            </span>
+          </div>
+        {% endif %}
       </div>
+
+      <!-- ✅ 버튼 영역 -->
+      {% if preview_type == 'user' %}
+      <div class="flex justify-end w-full">
+        <a href="{% url 'ddoksang:my_cafes' %}" 
+           class="text-sm bg-white text-black px-3 py-2 rounded-full hover:bg-yellow-400 hover:text-black transition 
+                  flex items-center justify-center leading-tight min-h-[2.25rem]">
+          내가 등록한 글 보기
+        </a>
+      </div>
+      {% elif preview_type == 'admin' %}
+      <div class="flex flex-wrap gap-2 sm:justify-end w-full">
+        <form method="post" action="{% url 'ddoksang:admin_approve_cafe' cafe.id %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" onclick="return confirm('승인하시겠습니까?')"
+                  class="text-sm bg-green-500 text-white px-3 py-2 rounded-full hover:bg-green-400 transition 
+                         flex items-center justify-center leading-tight min-h-[2.25rem]">
+            승인
+          </button>
+        </form>
+        <form method="post" action="{% url 'ddoksang:admin_reject_cafe' cafe.id %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" onclick="return confirm('거절하시겠습니까?')"
+                  class="text-sm bg-red-500 text-white px-3 py-2 rounded-full hover:bg-red-400 transition 
+                         flex items-center justify-center leading-tight min-h-[2.25rem]">
+            거절
+          </button>
+        </form>
+        <a href="{% url 'ddoksang:admin_dashboard' %}" 
+           class="text-sm bg-white text-black px-3 py-2 rounded-full hover:bg-gray-200 transition 
+                  flex items-center justify-center leading-tight min-h-[2.25rem]">
+          대시보드로
+        </a>
+      </div>
+      {% endif %}
+
     </div>
   </div>
+</div>
 {% endif %}
