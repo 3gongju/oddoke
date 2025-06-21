@@ -367,29 +367,6 @@ def mypage(request):
         comment.target_post = target_post
         comment.category = getattr(target_post, 'category_type', None)
 
-    # 🔥 덕생(생일카페) 관련 데이터 추가
-    from ddoksang.models import BdayCafe, CafeFavorite  # ddoksang 앱의 모델 import
-    
-    # 내가 등록한 생일카페
-    my_cafes = BdayCafe.objects.filter(submitted_by=user_profile).order_by('-created_at')
-    
-    # 찜한 생일카페 (CafeFavorite 모델을 통해)
-    favorite_cafes = BdayCafe.objects.filter(
-        id__in=CafeFavorite.objects.filter(user=user_profile).values_list('cafe_id', flat=True)
-    ).order_by('-created_at')
-    
-    # 최근 본 생일카페 - ddoksang에는 조회 기록 모델이 없으므로 빈 쿼리셋으로 처리
-    # 추후 CafeView 모델을 만들거나, 세션/쿠키로 관리할 수 있음
-    recent_cafes = BdayCafe.objects.none()
-    
-    # 덕생 통계 (status 필드 사용)
-    cafe_stats = {
-        'total': my_cafes.count(),
-        'pending': my_cafes.filter(status='pending').count(),
-        'approved': my_cafes.filter(status='approved').count(), 
-        'rejected': my_cafes.filter(status='rejected').count(),
-    }
-
     # ✅ 멤버-아티스트 매핑
     for member in favorite_members:
         matched = next(
@@ -418,11 +395,6 @@ def mypage(request):
         'liked_dam_posts': liked_dam_posts,    # 내가 찜한 글
         'dam_comments': dam_comments,          # 내가 쓴 댓글
         'my_reviews': my_reviews,              # 내가 쓴 리뷰
-        # 🔥 덕생 관련 데이터 추가
-        'my_cafes': my_cafes,                  # 내가 등록한 카페
-        'favorite_cafes': favorite_cafes,      # 찜한 카페
-        'recent_cafes': recent_cafes,          # 최근 본 카페
-        'cafe_stats': cafe_stats,              # 덕생 통계
     }
     return render(request, 'mypage.html', context)
 
