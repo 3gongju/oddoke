@@ -28,8 +28,15 @@ def birthday_calendar(request):
 def birthday_events_api(request):
     """생일 이벤트 API - 날짜별로 그룹화하여 반환"""
     try:
-        # 캐시 키 생성 (일별로 캐시)
-        cache_key = f"birthday_events_grouped_{date.today().strftime('%Y%m%d')}"
+        # 한국 시간대로 캐시 키 생성
+        from django.utils import timezone
+        import pytz
+        
+        korea_tz = pytz.timezone('Asia/Seoul')
+        today = timezone.now().astimezone(korea_tz).date()
+        
+        # 캐시 키 생성 (한국 시간 기준)
+        cache_key = f"birthday_events_grouped_{today.strftime('%Y%m%d')}"
         cached_events = cache.get(cache_key)
         
         if cached_events is not None:
