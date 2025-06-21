@@ -337,31 +337,26 @@
               {% endfor %}
             </div>
 
-            <!-- ✅ 좌우 화살표 버튼 추가 -->
-            <button id="birthdayPrevBtn" class="absolute left-2 top-1/2 -translate-y-1/2 z-10
-                                              bg-white/90 border border-gray-300 rounded-full p-2 sm:p-3
-                                              hover:bg-white hover:shadow-lg transition-all duration-200 
-                                              disabled:opacity-50 disabled:cursor-not-allowed
-                                              backdrop-blur-sm">
-              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-              </svg>
-            </button>
-            
-            <button id="birthdayNextBtn" class="absolute right-2 top-1/2 -translate-y-1/2 z-10
-                                              bg-white/90 border border-gray-300 rounded-full p-2 sm:p-3
-                                              hover:bg-white hover:shadow-lg transition-all duration-200
-                                              disabled:opacity-50 disabled:cursor-not-allowed
-                                              backdrop-blur-sm">
-              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            <!-- 좌우 화살표 버튼 추가 -->
+            <button id="birthdayPrevBtn" class="absolute left-6 z-20
+                                              hover:opacity-80 transition-all duration-200 
+                                              disabled:opacity-30 disabled:cursor-not-allowed"
+                                              style="top: calc(50% + 12px); transform: translateY(-50%);">
+              <svg class="w-6 h-6 text-gray-700 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
               </svg>
             </button>
 
-          
-          </div>
+            <button id="birthdayNextBtn" class="absolute right-6 z-20
+                                              hover:opacity-80 transition-all duration-200
+                                              disabled:opacity-30 disabled:cursor-not-allowed"
+                                              style="top: calc(50% + 12px); transform: translateY(-50%);">
+              <svg class="w-6 h-6 text-gray-700 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
 
-          
+
         {% else %}
           <!-- 빈 상태 -->
           <div class="text-center py-12 sm:py-16">
@@ -562,7 +557,7 @@
       
       autoSlideInterval = setInterval(() => {
         nextSlide();
-      }, 4000); // 4초마다 자동 이동
+      }, 8000); // 4초마다 자동 이동
     }
     
     // 자동 슬라이드 중지
