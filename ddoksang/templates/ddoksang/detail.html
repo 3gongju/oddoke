@@ -82,10 +82,19 @@
         <!-- 오른쪽 사이드바 영역 (2칸) -->
         <div class="sidebar-container space-y-4 lg:col-span-2">
           {% include "ddoksang/components/detail/_address_duration_info.html" %}
+
+          <!-- 출처 섹션 -->
+          {% if cafe.x_source %}
+          <div class="sidebar-card">
+            {% include "ddoksang/components/detail/_source_section.html" %}
+          </div>
+          {% endif %}
          
           <div class="sidebar-card map-card">
            {% include "ddoksang/components/detail/_quick_view_section.html" %}
           </div>
+
+
 
           <!-- 공유 섹션 -->
           <div class="sidebar-card">

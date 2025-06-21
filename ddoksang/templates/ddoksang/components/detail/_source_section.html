@@ -1,23 +1,38 @@
 <!-- 출처 정보 -->
+{% load static %}
+
 {% if cafe.x_source %}
-<div class="bg-white rounded-2xl shadow-sm border p-6 mb-6">
-  <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
-    <span class="mr-2">🔗</span> 출처
+<div class="bg-white rounded-xl shadow-sm border p-4">
+    <h2 class="text-lg font-bold text-gray-900 mb-3 flex items-center">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-10 h-10 mr-2">
+    X 계정
   </h2>
+
+    <!-- 안내 메시지 박스 -->
+  <div class="bg-gray-50 rounded-lg p-3 mb-4">
+    <p class="text-sm text-gray-600 text-center">클릭시 X (트위터 계정)으로 이동됩니다.</p>
+  </div>
+  
   <div class="space-y-3">
-    <a href="https://x.com/{{ cafe.x_source|cut:'@' }}" target="_blank" rel="noopener noreferrer"
-      class="flex items-center gap-3 p-3 bg-black rounded-lg hover:bg-gray-100 transition-colors">
+    <a href="{{ cafe.x_source }}" target="_blank" rel="noopener noreferrer"
+      class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border">
       
-      <!--  Heroicon 스타일 아이콘 (링크 아이콘) -->
-      <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10 13L21 2m0 0v6m0-6h-6M14 10l-4 4m0 0l-3 3a3 3 0 01-4.243 0 3 3 0 010-4.243l3-3m4 4l3-3" />
-        </svg>
+      <!-- 오리 로고 -->
+      <div class="w-10 h-10 flex items-center justify-center flex-shrink-0 cursor-pointer">
+        <img src="{% static 'image/ddok_circle_red.png' %}" alt="어덕해 로고" class="w-full h-full object-contain">
       </div>
 
-      <div>
-        <p class="font-medium text-white">X (클릭 시 해당 계정 이동)</p>
-        <p class="text-sm text-white">{{ cafe.x_source }}</p>
+      <div class="flex-1">
+        <p class="font-medium text-gray-900">
+          @{{ cafe.x_source|cut:'https://x.com/'|cut:'https://twitter.com/'|cut:'@' }}
+        </p>
+      </div>
+      
+      <!-- 화살표 아이콘 -->
+      <div class="flex-shrink-0">
+        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
       </div>
     </a>
   </div>
