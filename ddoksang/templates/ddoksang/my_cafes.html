@@ -6,152 +6,166 @@
 
 {% block body %}
 {% csrf_token %}
-<section class="max-w-7xl mx-auto px-4 py-10">
-  <h2 class="text-2xl font-bold mb-6"> 내가 등록한 생일카페</h2>
+<div class="min-h-screen bg-white">
+  <div class="max-w-7xl mx-auto px-4 py-10">
 
-  <script src="{% static 'js/autocomplete.js' %}"></script>
-
-  <!--  검색 헤더 컴포넌트 -->
-  {% include 'ddoksang/components/_search_header.html' %}
-
-  <!--  검색 범위 선택 -->
-  {% if query %}
-  <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-    <div class="flex items-center justify-between">
-      <div class="text-sm text-blue-800">
-        '<span class="font-semibold">{{ query }}</span>' 검색 결과 
-        <span class="bg-blue-100 px-2 py-1 rounded-full ml-2">{{ cafes.paginator.count }}개</span>
-      </div>
-      <div class="flex items-center space-x-3 text-sm">
-        <span class="text-blue-700">검색 범위:</span>
-        <a href="?q={{ query }}&scope=my{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-           class="px-3 py-1 rounded-full transition {% if search_scope == 'my' %}bg-blue-600 text-white{% else %}bg-white text-blue-600 hover:bg-blue-100{% endif %}">
-          내 카페만
-        </a>
-        <a href="{% url 'ddoksang:search' %}?q={{ query }}" 
-           class="px-3 py-1 rounded-full bg-green-600 text-white hover:bg-green-700 transition">
-          전체 카페 검색
-        </a>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  <!--  통계 및 필터 영역 -->
-  <div class="py-6">
+    <!-- 페이지 헤더 -->
     <div class="mb-6">
-      <p class="text-gray-600">등록한 생일카페를 관리하고 현황을 확인하세요</p>
-      <p class="text-sm text-gray-500 mt-1">💡 위 검색창에서 검색하면 전체 생카에서 검색됩니다</p>
+      <div class="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+              내가 등록한 생일카페
+            </h1>
+            <p class="text-sm text-gray-600">등록한 생일카페를 관리하고 현황을 확인하세요</p>
+          </div>
+          <a href="{% url 'ddoksang:create' %}" 
+             class="flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+            + 생일카페 등록하기
+          </a>
+        </div>
+      </div>
     </div>
 
-
-    <!-- 승인 상태 필터 -->
-    {% if status_filters %}
-      <div class="mb-6 border-b border-gray-200">
-        <nav class="flex space-x-8">
-          {% for filter in status_filters %}
-            <a href="{{ filter.url }}"
-               class="py-2 px-1 border-b-2 font-medium text-sm transition-colors {{ filter.active|yesno:'border-blue-500 text-blue-600,border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-              {{ filter.text }}
-            </a>
-          {% endfor %}
-        </nav>
-      </div>
-    {% endif %}
-
-    <!-- 일정 상태 필터 -->
+    <!-- 진행 상태 필터 섹션 -->
     {% if runtime_filters %}
-      <div class="mb-6 border-b border-gray-100">
-        <nav class="flex space-x-4">
-          {% for filter in runtime_filters %}
-            <a href="{{ filter.url }}"
-               class="py-1.5 px-3 rounded-full text-sm border transition
-               {% if filter.active %}
-                 bg-black text-white border-black
-               {% else %}
-                 bg-white text-gray-600 border-gray-300 hover:bg-gray-100
-               {% endif %}">
-              {{ filter.text }}
+    <div class="mb-6">
+      <h2 class="text-lg font-bold text-gray-900 mb-4">
+        진행 상태
+      </h2>
+      <div class="flex bg-gray-100 rounded-xl p-1">
+        {% for filter in runtime_filters %}
+          <a href="{{ filter.url }}"
+             class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 text-center
+             {% if filter.active %}
+               bg-white text-gray-900 shadow-sm
+             {% else %}
+               text-gray-600 hover:text-gray-900
+             {% endif %}">
+            {{ filter.text }}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 통계 및 필터 섹션 -->
+    <div class="mb-6">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+        <h2 class="text-lg font-bold text-gray-900 mb-3">
+          등록 현황
+        </h2>
+
+        <!-- 통계 토글 버튼 -->
+        <div class="mb-3">
+          <button 
+            onclick="toggleStats()" 
+            class="flex items-center justify-between w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
+            <span class="text-sm font-medium text-gray-700">상세 통계 보기</span>
+            <svg id="stats-arrow" class="w-4 h-4 text-gray-500 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 접을 수 있는 통계 카드 -->
+        <div id="stats-content" class="hidden mb-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <a href="?{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
+               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{{ stats.total }}</div>
+              <div class="text-xs sm:text-sm text-gray-500 mt-1">총 등록</div>
             </a>
-          {% endfor %}
-        </nav>
-      </div>
-    {% endif %}
-  </div>
-
-  <!--  카페 목록 -->
-  <div class="pb-10">
-    {% if cafes %}
-      <!-- 정렬 옵션 -->
-      <div class="flex justify-between items-center mb-6">
-        <div class="text-sm text-gray-600">
-          {% if query %}
-            "{{ query }}" 검색 결과 {{ cafes.paginator.count }}개
-          {% else %}
-            총 {{ cafes.paginator.count }}개의 생일카페
-          {% endif %}
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="text-sm text-gray-600">정렬:</span>
-          <select class="text-sm border rounded px-2 py-1" onchange="location.href=this.value">
-            <option value="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=latest" {% if request.GET.sort == 'latest' or not request.GET.sort %}selected{% endif %}>최신순</option>
-            <option value="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>오래된순</option>
-            <option value="?{% if query %}q={{ query }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=start_date" {% if request.GET.sort == 'start_date' %}selected{% endif %}>시작일순</option>
-          </select>
+            <a href="?status=pending{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600">{{ stats.pending }}</div>
+              <div class="text-xs sm:text-sm text-gray-500 mt-1">승인 대기</div>
+            </a>
+            <a href="?status=approved{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">{{ stats.approved }}</div>
+              <div class="text-xs sm:text-sm text-gray-500 mt-1">승인됨</div>
+            </a>
+            <a href="?status=rejected{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">{{ stats.rejected }}</div>
+              <div class="text-xs sm:text-sm text-gray-500 mt-1">거절됨</div>
+            </a>
+          </div>
         </div>
       </div>
+    </div>
 
-      <!--  카페 그리드 컴포넌트 -->
-      {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes empty_message="검색 결과가 없습니다." show_admin_status=True show_status_badge=True show_preview=True show_favorite_btn=True user_favorites=user_favorites %}
-      
-      <!--  페이지네이션 컴포넌트 -->
-      {% include 'ddoksang/components/_pagination.html' with paginated_object=cafes query=query extra_params=extra_params %}
+    <!-- 카페 목록 섹션 -->
+    <div class="mb-6">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
+        {% if cafes %}
+          <!-- 목록 헤더 -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold text-gray-900">
+                생일카페 목록
+              </h2>
+              <p class="text-sm text-gray-600 mt-1">
+                총 {{ cafes.paginator.count }}개의 생일카페
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600">정렬:</span>
+              <select class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white" onchange="location.href=this.value">
+                <option value="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=latest" {% if request.GET.sort == 'latest' or not request.GET.sort %}selected{% endif %}>최신순</option>
+                <option value="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>오래된순</option>
+                <option value="?{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}sort=start_date" {% if request.GET.sort == 'start_date' %}selected{% endif %}>시작일순</option>
+              </select>
+            </div>
+          </div>
 
-    {% else %}
-      <!-- 빈 상태 -->
-      <div class="text-center py-12">
-    
-        <h3 class="text-lg font-medium text-gray-900 mb-2">
-          {% if query %}검색 결과가 없습니다{% else %}아직 등록한 생일카페가 없어요{% endif %}
-        </h3>
-        <p class="text-gray-600 mb-6">
-          {% if query %}
-            다른 검색어로 다시 시도해보세요.
-          {% else %}
-            첫 생일카페를 등록해보세요!
-          {% endif %}
-        </p>
-        <a href="{% url 'ddoksang:create' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-          + 생일카페 등록하기
-        </a>
+          <!-- 카페 그리드 컴포넌트 -->
+          {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes empty_message="카페가 없습니다." show_admin_status=True show_status_badge=True show_preview=True show_favorite_btn=True user_favorites=user_favorites %}
+          
+          <!-- 페이지네이션 컴포넌트 -->
+          <div class="mt-8">
+            {% include 'ddoksang/components/_pagination.html' with paginated_object=cafes extra_params=extra_params %}
+          </div>
+
+        {% else %}
+          <!-- 빈 상태 -->
+          <div class="text-center py-12 lg:py-16">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="빈 상태" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 opacity-50 mx-auto mb-4 sm:mb-6" />
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+              검색 결과가 없덕요
+            </h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-6">
+              덕덕 (생카를 등록해 주세요)
+            </p>
+            <a href="{% url 'ddoksang:create' %}" 
+               class="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              + 생카 등록하기
+            </a>
+          </div>
+        {% endif %}
       </div>
-    {% endif %}
-  </div>
-</section>
+    </div>
 
-<!-- 찜하기 기능 스크립트 -->
+  </div>
+</div>
+
+<!-- JavaScript -->
 <script src="{% static 'js/favorite.js' %}"></script>
 
 <script>
-//  검색 시 기본적으로 scope=my 설정
-document.addEventListener('DOMContentLoaded', function() {
-  const searchForm = document.querySelector('#my-cafes-search').closest('form');
+// 통계 토글 기능
+function toggleStats() {
+  const content = document.getElementById('stats-content');
+  const arrow = document.getElementById('stats-arrow');
   
-  searchForm.addEventListener('submit', function(e) {
-    const queryInput = document.querySelector('#my-cafes-search');
-    const query = queryInput.value.trim();
-    
-    if (query) {
-      // scope 파라미터가 없으면 기본값으로 'my' 설정
-      if (!document.querySelector('input[name="scope"]')) {
-        const scopeInput = document.createElement('input');
-        scopeInput.type = 'hidden';
-        scopeInput.name = 'scope';
-        scopeInput.value = 'my';
-        searchForm.appendChild(scopeInput);
-      }
-    }
-  });
-});
+  if (content.classList.contains('hidden')) {
+    content.classList.remove('hidden');
+    arrow.style.transform = 'rotate(180deg)';
+  } else {
+    content.classList.add('hidden');
+    arrow.style.transform = 'rotate(0deg)';
+  }
+}
 </script>
 {% endblock %}

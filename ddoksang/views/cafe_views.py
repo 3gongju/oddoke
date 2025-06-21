@@ -270,7 +270,7 @@ def my_cafes(request):
     else:
         cafes = cafes.order_by("-created_at")  # 기본 최신순
 
-    paginator = Paginator(cafes, 10)
+    paginator = Paginator(cafes, 12)
     cafes_page = paginator.get_page(page)
 
     # 통계 계산
