@@ -505,11 +505,6 @@
 
         <!-- 덕생 탭 네비게이션 -->
         <div class="flex bg-gray-100 rounded-xl p-1 mb-4 sm:mb-6">
-          <button class="tab-btn cafe-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" 
-                  onclick="showCafeTab('registered')">
-            <span class="hidden sm:inline">내가 등록한 카페</span>
-            <span class="sm:hidden">내 카페</span>
-          </button>
           <button class="tab-btn cafe-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 text-gray-600" 
                   onclick="showCafeTab('favorited')">
             <span class="hidden sm:inline">찜한 카페</span>
@@ -520,78 +515,13 @@
             <span class="hidden sm:inline">최근 본 카페</span>
             <span class="sm:hidden">최근</span>
           </button>
+          <button class="tab-btn cafe-tab-btn flex-1 py-2 px-1 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 bg-white text-gray-900 shadow-sm" 
+                  onclick="showCafeTab('registered')">
+            <span class="hidden sm:inline">내가 등록한 카페</span>
+            <span class="sm:hidden">내 카페</span>
+          </button>
         </div>
 
-        <!-- 덕생 탭 콘텐츠 -->
-        <div id="cafe-tab-registered" class="tab-content">
-          {% if my_cafes %}
-            <div class="space-y-3 sm:space-y-4" id="cafe-registered-items">
-              {% for cafe in my_cafes %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow cafe-registered-item" style="display: none;">
-                  <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <!-- 카페 이미지 -->
-                    <div class="w-full sm:w-20 h-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                      {% if cafe.get_main_image %}
-                        <img src="{{ cafe.get_main_image }}" 
-                             alt="{{ cafe.cafe_name }}"
-                             class="w-full h-full object-cover">
-                      {% else %}
-                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z"></path>
-                          </svg>
-                        </div>
-                      {% endif %}
-                    </div>
-                    
-                    <!-- 카페 정보 -->
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-start justify-between gap-2">
-                        <div class="flex-1 min-w-0">
-                          <a href="{% url 'ddoksang:detail' cafe.id %}" 
-                             class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block">
-                            {{ cafe.cafe_name }}
-                          </a>
-                          <p class="text-xs sm:text-sm text-gray-600 mt-1">
-                            {{ cafe.place_name|truncatechars:30 }} ({{ cafe.address|truncatechars:30 }})
-                          </p>
-                        </div>
-                        
-                        <!-- 상태 뱃지 -->
-                        <div class="flex-shrink-0">
-                          {% if cafe.status == 'pending' %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
-                              승인 대기
-                            </span>
-                          {% elif cafe.status == 'approved' %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                              승인됨
-                            </span>
-                          {% elif cafe.status == 'rejected' %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                              거절됨
-                            </span>
-                          {% endif %}
-                        </div>
-                      </div>
-                      
-                      <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</p>
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-            <div id="cafe-registered-pagination" class="mt-6 flex justify-center"></div>
-          {% else %}
-            <div class="text-center py-8 sm:py-12">
-              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">아직 등록한 생일카페가 없습니다.</p>
-              <a href="{% url 'ddoksang:create' %}" 
-                 class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                + 생일카페 등록하기
-              </a>
-            </div>
-          {% endif %}
-        </div>
 
         <div id="cafe-tab-favorited" class="tab-content hidden">
           {% if favorite_cafes %}
@@ -682,6 +612,78 @@
         </div>
       </div>
     </div>
+
+            <!-- 덕생 탭 콘텐츠 -->
+        <div id="cafe-tab-registered" class="tab-content">
+          {% if my_cafes %}
+            <div class="space-y-3 sm:space-y-4" id="cafe-registered-items">
+              {% for cafe in my_cafes %}
+                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow cafe-registered-item" style="display: none;">
+                  <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <!-- 카페 이미지 -->
+                    <div class="w-full sm:w-20 h-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if cafe.get_main_image %}
+                        <img src="{{ cafe.get_main_image }}" 
+                            alt="{{ cafe.cafe_name }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 카페 정보 -->
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                          <a href="{% url 'ddoksang:detail' cafe.id %}" 
+                            class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block">
+                            {{ cafe.cafe_name }}
+                          </a>
+                          <p class="text-xs sm:text-sm text-gray-600 mt-1">
+                            {{ cafe.place_name|truncatechars:30 }} ({{ cafe.address|truncatechars:30 }})
+                          </p>
+                        </div>
+                        
+                        <!-- 상태 뱃지 -->
+                        <div class="flex-shrink-0">
+                          {% if cafe.status == 'pending' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                              승인 대기
+                            </span>
+                          {% elif cafe.status == 'approved' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                              승인됨
+                            </span>
+                          {% elif cafe.status == 'rejected' %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                              거절됨
+                            </span>
+                          {% endif %}
+                        </div>
+                      </div>
+                      
+                      <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</p>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            <div id="cafe-registered-pagination" class="mt-6 flex justify-center"></div>
+          {% else %}
+            <div class="text-center py-8 sm:py-12">
+              <p class="text-gray-500 text-sm sm:text-base lg:text-lg">아직 등록한 생일카페가 없습니다.</p>
+              <a href="{% url 'ddoksang:create' %}" 
+                class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                + 생일카페 등록하기
+              </a>
+            </div>
+          {% endif %}
+        </div>
+
 
     <!-- 모달 -->
     <div id="memberModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center z-50">
@@ -790,18 +792,19 @@
       // 페이지네이션 관리 객체
       const paginationManager = {
         itemsPerPage: 3,
+        maxVisiblePages: 5, // 한 번에 보여줄 최대 페이지 수
         
         // 페이지네이션 생성
         createPagination: function(type, category) {
           const items = document.querySelectorAll(`.${type}-${category}-item`);
           const totalItems = items.length;
           
-          // 🔧 수정: 모든 아이템을 먼저 숨김
+          // 모든 아이템을 먼저 숨김
           items.forEach(item => item.style.display = 'none');
           
           if (totalItems <= this.itemsPerPage) {
             this.showItems(items, 0, totalItems);
-            // 🔧 수정: 페이지네이션 컨테이너 비우기
+            // 페이지네이션 컨테이너 비우기
             const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
             if (paginationContainer) {
               paginationContainer.innerHTML = '';
@@ -812,24 +815,53 @@
           const totalPages = Math.ceil(totalItems / this.itemsPerPage);
           const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
           
-          // 🔧 수정: 안전성 검사 추가
           if (!paginationContainer) return;
+          
+          // 첫 페이지의 페이지네이션 생성
+          this.renderPagination(type, category, 1, totalPages);
+          
+          // 첫 페이지 아이템들 표시
+          this.showItems(items, 0, this.itemsPerPage);
+        },
+        
+        // 페이지네이션 HTML 렌더링
+        renderPagination: function(type, category, currentPage, totalPages) {
+          const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
+          if (!paginationContainer) return;
+          
+          // 현재 페이지 그룹 계산
+          const currentGroup = Math.ceil(currentPage / this.maxVisiblePages);
+          const startPage = (currentGroup - 1) * this.maxVisiblePages + 1;
+          const endPage = Math.min(startPage + this.maxVisiblePages - 1, totalPages);
           
           let paginationHTML = '<div class="flex items-center justify-center">';
           
+          // 이전 그룹 버튼 (맨 처음이 아닌 경우)
+          if (startPage > 1) {
+            paginationHTML += `
+              <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${startPage - 1})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                </svg>
+              </button>
+            `;
+          }
+          
           // 이전 버튼
           paginationHTML += `
-            <button class="pagination-btn disabled" onclick="paginationManager.goToPage('${type}', '${category}', 1)" disabled>
+            <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                    onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage - 1})"
+                    ${currentPage === 1 ? 'disabled' : ''}>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
             </button>
           `;
           
-          // 페이지 번호들
-          for (let i = 1; i <= totalPages; i++) {
+          // 페이지 번호들 (현재 그룹의 페이지들만)
+          for (let i = startPage; i <= endPage; i++) {
             paginationHTML += `
-              <button class="pagination-btn ${i === 1 ? 'active' : ''}" 
+              <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
                       onclick="paginationManager.goToPage('${type}', '${category}', ${i})">
                 ${i}
               </button>
@@ -838,20 +870,28 @@
           
           // 다음 버튼
           paginationHTML += `
-            <button class="pagination-btn ${totalPages === 1 ? 'disabled' : ''}" 
-                    onclick="paginationManager.goToPage('${type}', '${category}', 2)"
-                    ${totalPages === 1 ? 'disabled' : ''}>
+            <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
+                    onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage + 1})"
+                    ${currentPage === totalPages ? 'disabled' : ''}>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
             </button>
           `;
           
+          // 다음 그룹 버튼 (마지막이 아닌 경우)
+          if (endPage < totalPages) {
+            paginationHTML += `
+              <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${endPage + 1})">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            `;
+          }
+          
           paginationHTML += '</div>';
           paginationContainer.innerHTML = paginationHTML;
-          
-          // 첫 페이지 아이템들 표시
-          this.showItems(items, 0, this.itemsPerPage);
         },
         
         // 특정 페이지로 이동
@@ -871,8 +911,8 @@
           // 현재 페이지 아이템들만 표시
           this.showItems(items, startIndex, endIndex);
           
-          // 페이지네이션 버튼 상태 업데이트
-          this.updatePaginationButtons(type, category, page, totalPages);
+          // 페이지네이션 다시 렌더링 (현재 페이지에 맞게)
+          this.renderPagination(type, category, page, totalPages);
         },
         
         // 아이템들 표시
@@ -882,55 +922,10 @@
               items[i].style.display = 'block';
             }
           }
-        },
-        
-        // 페이지네이션 버튼 상태 업데이트
-        updatePaginationButtons: function(type, category, currentPage, totalPages) {
-          const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
-          // 🔧 수정: 안전성 검사 추가
-          if (!paginationContainer) return;
-          
-          const buttons = paginationContainer.querySelectorAll('.pagination-btn');
-          
-          buttons.forEach((btn, index) => {
-            btn.classList.remove('active', 'disabled');
-            btn.disabled = false;
-            
-            if (index === 0) { // 이전 버튼
-              if (currentPage === 1) {
-                btn.classList.add('disabled');
-                btn.disabled = true;
-              } else {
-                btn.onclick = () => this.goToPage(type, category, currentPage - 1);
-              }
-            } else if (index === buttons.length - 1) { // 다음 버튼
-              if (currentPage === totalPages) {
-                btn.classList.add('disabled');
-                btn.disabled = true;
-              } else {
-                btn.onclick = () => this.goToPage(type, category, currentPage + 1);
-              }
-            } else { // 페이지 번호 버튼
-              const pageNum = index;
-              if (pageNum === currentPage) {
-                btn.classList.add('active');
-              }
-            }
-          });
         }
       };
 
-      function scrollSlider(id, direction) {
-        const slider = document.getElementById(id);
-        const scrollAmount = window.innerWidth < 640 ? 200 : 300;
-        slider.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
-      }
-
-      function closeModal() {
-        document.getElementById('memberModal').classList.add('hidden');
-        setTimeout(() => location.reload(), 100);
-      }
-
+      // 탭 전환 함수들 (수정사항 없음)
       function showFarmTab(tabId) {
         document.querySelectorAll('.farm-tab-btn').forEach(btn => {
           btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
@@ -941,7 +936,6 @@
         document.querySelectorAll('[id^="farm-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`farm-tab-${tabId}`).classList.remove('hidden');
         
-        // 🔧 수정: 약간의 지연을 주어 DOM 업데이트 후 실행
         setTimeout(() => {
           paginationManager.createPagination('farm', tabId);
         }, 50);
@@ -957,7 +951,6 @@
         document.querySelectorAll('[id^="dam-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`dam-tab-${tabId}`).classList.remove('hidden');
         
-        // 🔧 수정: 약간의 지연을 주어 DOM 업데이트 후 실행
         setTimeout(() => {
           paginationManager.createPagination('dam', tabId);
         }, 50);
@@ -973,7 +966,6 @@
         document.querySelectorAll('[id^="cafe-tab-"]').forEach(tab => tab.classList.add('hidden'));
         document.getElementById(`cafe-tab-${tabId}`).classList.remove('hidden');
         
-        // 🔧 수정: 약간의 지연을 주어 DOM 업데이트 후 실행
         setTimeout(() => {
           paginationManager.createPagination('cafe', tabId);
         }, 50);
