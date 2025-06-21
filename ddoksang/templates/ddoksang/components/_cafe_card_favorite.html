@@ -70,8 +70,8 @@
         </p>
         
         <!-- 카페명 -->
-        <p class="text-base font-semibold text-gray-900 line-clamp-2 leading-tight">
-          {{ cafe.cafe_name }}
+        <p class="text-base font-semibold text-gray-900 truncate leading-tight">
+          {{ cafe.cafe_name|truncatechars:9 }}
         </p>
       </div>
       
