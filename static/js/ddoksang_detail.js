@@ -358,8 +358,22 @@
             const infowindow = new kakao.maps.InfoWindow({
                 content: `
                     <div style="padding:10px; font-size:12px; width:200px;">
-                        <strong>${cafeData.name}</strong><br>
-                        ${cafeData.address}
+                        <strong style="
+                            display: block;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            max-width: 180px;
+                            margin-bottom: 5px;
+                        ">${cafeData.name}</strong>
+                        <div style="
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            max-width: 180px;
+                            color: #666;
+                            line-height: 1.3;
+                        ">${cafeData.address}</div>
                     </div>
                 `
             });
