@@ -1,10 +1,15 @@
 from datetime import timedelta
 from django.utils import timezone
+import pytz
 from artist.models import Member
 
 def get_weekly_bday_artists():
-    today = timezone.now().date()
+    # 한국 시간대로 오늘 날짜 가져오기
+    korea_tz = pytz.timezone('Asia/Seoul')
+    today = timezone.now().astimezone(korea_tz).date()
     today_str = today.strftime('%m-%d')
+    
+    # 이번 주 날짜들 생성 (한국 시간 기준)
     upcoming_dates = [(today + timedelta(days=i)).strftime('%m-%d') for i in range(7)]
 
     members = Member.objects.filter(member_bday__in=upcoming_dates).prefetch_related('artist_name')
@@ -15,6 +20,8 @@ def get_weekly_bday_artists():
         if not artists:
             continue
         artist = artists[0]
+        
+        # 오늘 생일인지 한국 시간 기준으로 확인
         is_today_birthday = member.member_bday == today_str
 
         try:

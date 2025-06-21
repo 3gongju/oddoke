@@ -1,12 +1,5 @@
 /* calendar.css - 캘린더 전용 스타일 */
 
-@font-face {
-  font-family: 'EF_YOONY';
-  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-01@1.0/EF_YOONY.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
 
 @font-face {
   font-family: 'NanumSquareRound';
@@ -22,7 +15,7 @@ body,
 #calendar-mobile,
 .fc,
 .fc * {
-  font-family: 'EF_YOONY', 'NanumSquareRound', sans-serif !important;
+  font-family: 'NanumSquareRound', sans-serif !important;
   color: #111827;
   -webkit-user-select: none;
   -ms-user-select: none;
