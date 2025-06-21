@@ -336,8 +336,30 @@
                 </div>
               {% endfor %}
             </div>
-          </div>
+
+            <!-- ✅ 좌우 화살표 버튼 추가 -->
+            <button id="birthdayPrevBtn" class="absolute left-2 top-1/2 -translate-y-1/2 z-10
+                                              bg-white/90 border border-gray-300 rounded-full p-2 sm:p-3
+                                              hover:bg-white hover:shadow-lg transition-all duration-200 
+                                              disabled:opacity-50 disabled:cursor-not-allowed
+                                              backdrop-blur-sm">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            
+            <button id="birthdayNextBtn" class="absolute right-2 top-1/2 -translate-y-1/2 z-10
+                                              bg-white/90 border border-gray-300 rounded-full p-2 sm:p-3
+                                              hover:bg-white hover:shadow-lg transition-all duration-200
+                                              disabled:opacity-50 disabled:cursor-not-allowed
+                                              backdrop-blur-sm">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+
           
+          </div>
 
           
         {% else %}
@@ -439,11 +461,292 @@
     }
     
     setInterval(showNextSlide, 8000);
+
+    // ✅ 생일 아티스트 슬라이더 초기화 추가
+    initBirthdaySlider();
   });
+
+  // 생일 아티스트 슬라이더 함수
+  function initBirthdaySlider() {
+    const slider = document.getElementById('sliderTrack');
+    const container = document.getElementById('weeklyBirthdaySlider');
+    const prevBtn = document.getElementById('birthdayPrevBtn');
+    const nextBtn = document.getElementById('birthdayNextBtn');
+    const indicatorsContainer = document.getElementById('birthdayIndicators');
+    
+    if (!slider || !container) {
+      console.log('생일 슬라이더 요소를 찾을 수 없습니다.');
+      return;
+    }
+    
+    const slides = slider.children;
+    if (slides.length === 0) return;
+    
+    let currentIndex = 0;
+    let itemsPerView = getItemsPerView();
+    let totalPages = Math.ceil(slides.length / itemsPerView);
+    let autoSlideInterval;
+    
+    // 화면 크기별 표시 아이템 수 계산
+    function getItemsPerView() {
+      const width = window.innerWidth;
+      if (width >= 1280) return 5;      // xl: 5개
+      if (width >= 1024) return 4;      // lg: 4개  
+      if (width >= 768) return 3;       // md: 3개
+      if (width >= 640) return 2;       // sm: 2개
+      return 1;                         // 모바일: 1개
+    }
+
+    // 인디케이터 생성
+    function createIndicators() {
+      if (!indicatorsContainer || totalPages <= 1) return;
+      
+      indicatorsContainer.innerHTML = '';
+      for (let i = 0; i < totalPages; i++) {
+        const dot = document.createElement('button');
+        dot.className = `w-2 h-2 rounded-full transition-colors mx-1 ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`;
+        dot.onclick = () => goToPage(i);
+        indicatorsContainer.appendChild(dot);
+      }
+    }
+
+    // 인디케이터 업데이트
+    function updateIndicators() {
+      if (!indicatorsContainer) return;
+      
+      const dots = indicatorsContainer.children;
+      for (let i = 0; i < dots.length; i++) {
+        dots[i].className = `w-2 h-2 rounded-full transition-colors mx-1 ${i === currentIndex ? 'bg-gray-800' : 'bg-gray-300'}`;
+      }
+    }
+
+    // 버튼 상태 업데이트
+    function updateButtons() {
+      if (prevBtn) {
+        prevBtn.disabled = currentIndex === 0;
+      }
+      if (nextBtn) {
+        nextBtn.disabled = currentIndex >= totalPages - 1;
+      }
+    }
+    
+    // 슬라이드 이동
+    function goToPage(pageIndex) {
+      if (pageIndex < 0 || pageIndex >= totalPages) return;
+      
+      currentIndex = pageIndex;
+      const translateX = -(currentIndex * 100);
+      slider.style.transform = `translateX(${translateX}%)`;
+      
+      updateButtons();
+      updateIndicators();
+      
+      console.log(`슬라이드 이동: 페이지 ${currentIndex + 1}/${totalPages}`);
+    }
+    
+    // 다음 슬라이드
+    function nextSlide() {
+      const nextIndex = (currentIndex + 1) % totalPages;
+      goToPage(nextIndex);
+    }
+    
+    // 이전 슬라이드  
+    function prevSlide() {
+      const prevIndex = (currentIndex - 1 + totalPages) % totalPages;
+      goToPage(prevIndex);
+    }
+    
+    // 자동 슬라이드 시작
+    function startAutoSlide() {
+      if (totalPages <= 1) return;
+      
+      autoSlideInterval = setInterval(() => {
+        nextSlide();
+      }, 4000); // 4초마다 자동 이동
+    }
+    
+    // 자동 슬라이드 중지
+    function stopAutoSlide() {
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval);
+      }
+    }
+    
+    // 화면 크기 변경 시 재계산
+    function handleResize() {
+      const newItemsPerView = getItemsPerView();
+      if (newItemsPerView !== itemsPerView) {
+        itemsPerView = newItemsPerView;
+        totalPages = Math.ceil(slides.length / itemsPerView);
+        
+        // 현재 페이지가 범위를 벗어나면 조정
+        if (currentIndex >= totalPages) {
+          currentIndex = totalPages - 1;
+        }
+        
+        createIndicators();
+        goToPage(currentIndex);
+        console.log(`화면 크기 변경: ${itemsPerView}개씩 표시, 총 ${totalPages}페이지`);
+      }
+    }
+    
+    // 터치/마우스 이벤트 처리
+    let startX = 0;
+    let isDragging = false;
+    
+    function handleStart(e) {
+      isDragging = true;
+      startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+      stopAutoSlide(); // 사용자 상호작용 시 자동 슬라이드 중지
+    }
+    
+    function handleEnd(e) {
+      if (!isDragging) return;
+      
+      const endX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
+      const diffX = startX - endX;
+      const threshold = 50; // 최소 스와이프 거리
+      
+      if (Math.abs(diffX) > threshold) {
+        if (diffX > 0) {
+          nextSlide(); // 왼쪽으로 스와이프 -> 다음
+        } else {
+          prevSlide(); // 오른쪽으로 스와이프 -> 이전
+        }
+      }
+      
+      isDragging = false;
+      startAutoSlide(); // 자동 슬라이드 재시작
+    }
+
+    // 버튼 이벤트 리스너
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        stopAutoSlide();
+        if (currentIndex > 0) {
+          goToPage(currentIndex - 1);
+        }
+        startAutoSlide();
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        stopAutoSlide();
+        if (currentIndex < totalPages - 1) {
+          goToPage(currentIndex + 1);
+        }
+        startAutoSlide();
+      });
+    }
+    
+    // 이벤트 리스너 등록
+    window.addEventListener('resize', handleResize);
+    
+    // 터치 이벤트
+    container.addEventListener('touchstart', handleStart, { passive: true });
+    container.addEventListener('touchend', handleEnd, { passive: true });
+    
+    // 마우스 이벤트 (데스크톱)
+    container.addEventListener('mousedown', handleStart);
+    container.addEventListener('mouseup', handleEnd);
+    
+    // 마우스가 컨테이너를 벗어날 때
+    container.addEventListener('mouseleave', () => {
+      isDragging = false;
+    });
+    
+    // 호버 시 자동 슬라이드 중지/재시작
+    container.addEventListener('mouseenter', stopAutoSlide);
+    container.addEventListener('mouseleave', startAutoSlide);
+    
+    // 초기화
+    createIndicators();
+    goToPage(0);
+    startAutoSlide();
+    
+    console.log(`✅ 생일 슬라이더 초기화 완료: ${slides.length}개 아이템, ${totalPages}페이지`);
+  }
 </script>
 
-<!-- 반응형 스타일 (스크롤바 숨김용) -->
+<!-- 생일 아티스트 슬라이더 CSS -->
 <style>
+/* 생일 아티스트 슬라이더 스타일 */
+#weeklyBirthdaySlider {
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+}
+
+#weeklyBirthdaySlider:active {
+    cursor: grabbing;
+}
+
+#sliderTrack {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+}
+
+/* 슬라이드 아이템 크기 설정 */
+#sliderTrack > div {
+    flex: 0 0 100%;     /* 모바일: 100% */
+    max-width: 100%;
+}
+
+@media (min-width: 640px) {
+    #sliderTrack > div {
+        flex: 0 0 50%;   /* sm: 50% */
+        max-width: 50%;
+    }
+}
+
+@media (min-width: 768px) {
+    #sliderTrack > div {
+        flex: 0 0 33.333333%;  /* md: 33.33% */
+        max-width: 33.333333%;
+    }
+}
+
+@media (min-width: 1024px) {
+    #sliderTrack > div {
+        flex: 0 0 25%;    /* lg: 25% */
+        max-width: 25%;
+    }
+}
+
+@media (min-width: 1280px) {
+    #sliderTrack > div {
+        flex: 0 0 20%;    /* xl: 20% */
+        max-width: 20%;
+    }
+}
+
+/* 생일 카드 호버 효과 */
+#sliderTrack .bg-white:hover,
+#sliderTrack .bg-red-50:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* 스크롤바 숨김 */
+#weeklyBirthdaySlider {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+#weeklyBirthdaySlider::-webkit-scrollbar {
+    display: none;
+}
+
+/* 터치 스크롤 개선 */
+@media (max-width: 768px) {
+    #weeklyBirthdaySlider {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 /* 기본 스크롤바 숨김 */
 .custom-scrollbar {
   scrollbar-width: thin;
