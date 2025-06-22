@@ -104,12 +104,23 @@
 <section class="py-8 sm:py-10 lg:py-12 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-2 sm:mb-3">
-      <div class="relative inline-block group">
-        <img src="{% static 'image/ddok_header_1.png' %}" alt="어덕해 헤더" class="mx-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg h-auto cursor-pointer transition-transform duration-200 group-hover:scale-105" />
+      <div class="relative inline-block">
+        <!-- 클릭 가능한 헤더 이미지 -->
+        <img id="ddokHeader" 
+             src="{% static 'image/ddok_header_1.png' %}" 
+             alt="어덕해 헤더" 
+             class="mx-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg h-auto cursor-pointer transition-transform duration-200 hover:scale-105" />
         
-        <!-- 호버 툴팁 -->
-        <div class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-6 py-3 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+        <!-- 클릭으로 표시되는 툴팁 -->
+        <div id="ddokTooltip" 
+             class="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-6 py-3 pr-10 bg-gray-900 text-white text-sm rounded-lg opacity-0 invisible transition-all duration-200 pointer-events-none whitespace-nowrap z-10 min-w-max">
           찜한 아티스트의 덕팜, 덕담, 덕생을 덕 즐겨요!
+          <!-- X 닫기 버튼 -->
+          <button id="closeTooltip" 
+                  class="absolute top-2 right-3 text-white hover:text-gray-300 text-sm font-normal leading-none pointer-events-auto">
+            ×
+          </button>
+          <!-- 화살표 -->
           <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
         </div>
       </div>
@@ -482,6 +493,34 @@
       }
     }
 
+    // 헤더 이미지 클릭 툴팁 기능
+    const ddokHeader = document.getElementById('ddokHeader');
+    const ddokTooltip = document.getElementById('ddokTooltip');
+    const closeTooltip = document.getElementById('closeTooltip');
+    
+    if (ddokHeader && ddokTooltip && closeTooltip) {
+      // 헤더 이미지 클릭 시 툴팁 표시
+      ddokHeader.addEventListener('click', () => {
+        ddokTooltip.classList.remove('opacity-0', 'invisible', 'pointer-events-none');
+        ddokTooltip.classList.add('opacity-100', 'visible', 'pointer-events-auto');
+      });
+      
+      // X 버튼 클릭 시 툴팁 숨김
+      closeTooltip.addEventListener('click', (e) => {
+        e.stopPropagation(); // 이벤트 버블링 방지
+        ddokTooltip.classList.remove('opacity-100', 'visible', 'pointer-events-auto');
+        ddokTooltip.classList.add('opacity-0', 'invisible', 'pointer-events-none');
+      });
+      
+      // 툴팁 외부 클릭 시 숨김 (선택사항)
+      document.addEventListener('click', (e) => {
+        if (!ddokHeader.contains(e.target) && !ddokTooltip.contains(e.target)) {
+          ddokTooltip.classList.remove('opacity-100', 'visible', 'pointer-events-auto');
+          ddokTooltip.classList.add('opacity-0', 'invisible', 'pointer-events-none');
+        }
+      });
+    }
+
     // 맨 위로 스크롤 버튼 기능
     const scrollToTopBtn = document.getElementById('scrollToTop');
     
@@ -788,6 +827,39 @@
 
 <!-- 생일 아티스트 슬라이더 CSS + 배너 클릭 영역 CSS -->
 <style>
+/* 클릭 툴팁 스타일 */
+#ddokTooltip {
+  max-width: 300px;
+  word-wrap: break-word;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+#closeTooltip {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  font-weight: 300;
+}
+
+#closeTooltip:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 모바일에서 툴팁 크기 조정 */
+@media (max-width: 640px) {
+  #ddokTooltip {
+    max-width: 250px;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
 /* 배너 고정 높이 컨테이너 */
 .banner-fixed-container {
   height: 300px; /* 모바일 기본 높이 */
