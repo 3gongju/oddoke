@@ -44,14 +44,14 @@
 <!-- 찜한 아티스트 섹션 - 배너 위로 이동 -->
 <section class="py-12 sm:py-16 lg:py-20 bg-cream-bg">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- 검색창 -->
+    
+    <!-- 아티스트 검색창 추가 -->
     <div class="relative z-30 mb-8 sm:mb-12">
       <form method="get" action="{% url 'artist:index' %}" class="max-w-md mx-auto relative">
         <div class="relative">
-          <input id="artist-search" 
+          <input id="artist-search-home" 
                  type="text" 
                  name="q" 
-                 value="{{ query }}"
                  placeholder="아티스트, 멤버 검색"
                  class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-gray-500 bg-white transition-all duration-200"
                  autocomplete="off" />
@@ -61,14 +61,15 @@
             </svg>
           </button>
         </div>
-
-        <!-- 드롭다운 -->
-        <ul id="autocomplete-list"
+        
+        <!-- 자동완성 드롭다운 -->
+        <ul id="autocomplete-list-home"
           class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg z-30 hidden max-h-48 overflow-y-auto text-left mt-1">
         </ul>
       </form>
     </div>
 
+    <!-- 제목 섹션 -->
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
       <div class="mb-4 sm:mb-0">
         <h3 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
@@ -495,19 +496,59 @@
   </div>
 </section>
 
+<!-- 맨 위로 스크롤 버튼 -->
+<button id="scrollToTop" class="fixed bottom-6 right-6 z-50 w-12 h-12 bg-black text-cream-soft rounded-full shadow-lg hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:scale-110 opacity-0 invisible">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mx-auto">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+  </svg>
+</button>
+
 <!-- 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // 자동완성 초기화
+    // 홈페이지 아티스트 검색 자동완성 초기화
     if (typeof initAutocomplete === 'function') {
-      initAutocomplete('artist-search', 'autocomplete-list', {
-        artistOnly: true,        // 아티스트만 검색
-        showBirthday: false,
-        showArtistTag: false,    // 아티스트만 나오니까 태그 불필요
-        submitOnSelect: true
+      try {
+        initAutocomplete('artist-search-home', 'autocomplete-list-home', {
+          artistOnly: true,        // 아티스트만 검색
+          showBirthday: false,
+          showArtistTag: false,    // 아티스트만 나오니까 태그 불필요
+          submitOnSelect: true
+        });
+      } catch (error) {
+        console.log('자동완성 초기화 실패:', error);
+      }
+    }
+
+    // 맨 위로 스크롤 버튼 기능
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    
+    // 스크롤 위치에 따라 버튼 표시/숨김
+    function toggleScrollButton() {
+      if (window.pageYOffset > 300) {
+        scrollToTopBtn.classList.remove('opacity-0', 'invisible');
+        scrollToTopBtn.classList.add('opacity-100', 'visible');
+      } else {
+        scrollToTopBtn.classList.remove('opacity-100', 'visible');
+        scrollToTopBtn.classList.add('opacity-0', 'invisible');
+      }
+    }
+    
+    // 맨 위로 스크롤 기능
+    function scrollToTop() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
       });
     }
+    
+    // 이벤트 리스너 등록
+    window.addEventListener('scroll', toggleScrollButton);
+    scrollToTopBtn.addEventListener('click', scrollToTop);
+    
+    // 초기 버튼 상태 설정
+    toggleScrollButton();
     
     // 배너 슬라이드 - 좌우 클릭 영역 포함
     const slides = document.querySelectorAll(".banner-slide");
@@ -970,27 +1011,25 @@
   background: #6b7280;
 }
 
-/* 전체 페이지 스크롤바 스타일 */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: #9ca3af #f9fafb;
+/* 전체 페이지 스크롤바 숨김 */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0px;
+  background: transparent; /* Chrome/Safari/Webkit */
+}
+
+/* 또는 완전히 숨기려면 */
 html::-webkit-scrollbar {
-  width: 12px;
+  display: none;
 }
 
-html::-webkit-scrollbar-track {
-  background: #f9fafb;
-}
-
-html::-webkit-scrollbar-thumb {
-  background: #9ca3af;
-  border-radius: 6px;
-}
-
-html::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+body::-webkit-scrollbar {
+  display: none;
 }
 
 /* 페이지 최하단 여백 제거 */
