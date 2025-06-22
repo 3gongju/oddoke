@@ -58,28 +58,7 @@ function changeToMinimalTheme() {
     console.log('⚪ 미니멀 테마로 변경됨');
 }
 
-// ✅ 4. 다크 모드 스타일
-function changeToDarkTheme() {
-    window.DuplicateCardTemplate.updateStyles({
-        card: {
-            container: "bg-gray-800 border-2 border-red-600 rounded-xl p-4 hover:border-red-500 transition-colors shadow-lg hover:shadow-xl"
-        },
-        badges: {
-            artist: "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200",
-            member: "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900 text-green-200"
-        },
-        text: {
-            title: "font-bold text-lg text-white",
-            subtitle: "text-sm text-gray-300",
-            info: "text-sm text-gray-400"
-        },
-        icons: {
-            warning: "w-6 h-6 text-red-400"
-        }
-    });
-    
-    console.log('🌙 다크 테마로 변경됨');
-}
+
 
 // ✅ 5. 실시간 스타일 변경 함수
 function applyCustomTheme(themeName) {
@@ -116,7 +95,6 @@ function createThemeSelector() {
                 <button onclick="applyCustomTheme('orange')" class="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded">주황색</button>
                 <button onclick="applyCustomTheme('pastel')" class="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded">파스텔</button>
                 <button onclick="applyCustomTheme('minimal')" class="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded">미니멀</button>
-                <button onclick="applyCustomTheme('dark')" class="block w-full text-left px-2 py-1 text-xs hover:bg-gray-100 rounded">다크</button>
             </div>
             <button onclick="document.getElementById('theme-selector').style.display='none'" class="mt-2 text-xs text-gray-500">닫기</button>
         </div>
