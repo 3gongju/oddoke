@@ -41,7 +41,7 @@
   </div>
 </section>
 
-<!-- 배너 캐러셀 섹션 - HOT 게시글 위에 추가 -->
+<!-- 배너 캐러셀 섹션 - 고정 높이 적용 -->
 <section class="py-8 sm:py-12 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-6 sm:mb-8">
@@ -51,7 +51,7 @@
       <div class="w-16 sm:w-20 h-0.5 bg-cream-accent mx-auto mt-3"></div>
     </div>
     
-    <!-- 배너 캐러셀 -->
+    <!-- 배너 캐러셀 - 고정 높이 컨테이너 -->
     <div class="relative max-w-4xl mx-auto">
       <!-- 좌우 클릭 영역 추가 -->
       <div id="bannerLeftArea" class="absolute left-0 top-0 w-1/3 h-full z-10 cursor-pointer"></div>
@@ -72,8 +72,8 @@
         </svg>
       </button>
       
-      <div id="bannerCarousel" class="relative overflow-hidden rounded-2xl shadow-lg">
-        <!-- 고정된 높이 컨테이너 -->
+      <!-- 고정 높이 배너 컨테이너 -->
+      <div id="bannerCarousel" class="relative overflow-hidden rounded-2xl banner-fixed-container">
         <div class="banner-container">
           {% for path in banner_images %}
             <div class="banner-slide {% if forloop.first %}active{% endif %}">
@@ -763,14 +763,47 @@
 
 <!-- 생일 아티스트 슬라이더 CSS + 배너 클릭 영역 CSS -->
 <style>
+/* 배너 고정 높이 컨테이너 */
+.banner-fixed-container {
+  height: 300px; /* 모바일 기본 높이 */
+}
+
+@media (min-width: 640px) {
+  .banner-fixed-container {
+    height: 350px; /* sm 이상 */
+  }
+}
+
+@media (min-width: 768px) {
+  .banner-fixed-container {
+    height: 400px; /* md 이상 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .banner-fixed-container {
+    height: 450px; /* lg 이상 */
+  }
+}
+
+@media (min-width: 1280px) {
+  .banner-fixed-container {
+    height: 500px; /* xl 이상 */
+  }
+}
+
 /* 배너 캐러셀 CSS */
 .banner-slide {
   display: none;
   transition: opacity 0.5s ease-in-out;
+  height: 100%;
+  position: relative;
 }
 
 .banner-slide.active {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .carousel-indicator {
@@ -782,52 +815,22 @@
   transform: scale(1.2);
 }
 
-/* 이미지가 원본 비율을 유지하도록 */
-.banner-slide img {
-  max-height: 400px; /* 최대 높이 제한 */
-  width: auto;
-  margin: 0 auto;
-  display: block;
-}
-
 /* 배너 캐러셀 - 원본 비율 유지 */
 .banner-container {
   width: 100%;
+  height: 100%;
   position: relative;
-  background: #f8f9fa;
+  background: transparent; /* 투명 배경 */
 }
 
-.banner-slide {
-  display: none;
-  position: relative;
-  width: 100%;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.banner-slide.active {
-  display: block;
-}
-
-/* 원본 이미지 비율 그대로 표시 */
+/* 이미지를 컨테이너에 맞게 조정 */
 .banner-image {
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
   height: auto;
   display: block;
-  object-fit: contain;
-  max-height: 500px; /* 최대 높이만 제한 */
-}
-
-/* 반응형 최대 높이 조정 */
-@media (max-width: 768px) {
-  .banner-image {
-    max-height: 300px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .banner-image {
-    max-height: 600px;
-  }
+  object-fit: contain; /* 비율 유지하면서 컨테이너에 맞춤 */
 }
 
 /* 배너 클릭 영역 호버 효과 */
@@ -1078,5 +1081,4 @@ section:last-child {
   display: none;
 }
 </style>
-
 {% endblock %}
