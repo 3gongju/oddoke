@@ -24,13 +24,28 @@
       <span class="italic font-medium text-cream-light">굿즈 거래부터 덕질 기록까지</span>
     </p>
     
-    <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center px-4">
-      <a href="/ddokfarm/" class="inline-block px-6 sm:px-8 lg:px-10 py-3 sm:py-4 bg-cream-soft text-black font-bold rounded-full hover:bg-cream-light hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-sm sm:text-base font-body">
-        덕팜 둘러보기
-      </a>
-      <a href="/ddokdam/" class="inline-block px-6 sm:px-8 lg:px-10 py-3 sm:py-4 border-2 border-cream-soft text-cream-soft font-semibold rounded-full hover:bg-cream-soft hover:text-black transition-all duration-300 text-sm sm:text-base font-body">
-        덕담 참여하기
-      </a>
+    <!-- 히어로 섹션에 아티스트 검색창 배치 -->
+    <div class="relative z-30 mb-8 sm:mb-12">
+      <form method="get" action="{% url 'artist:index' %}" class="max-w-none mx-auto relative px-8 sm:px-16 lg:px-24">
+        <div class="relative">
+          <input id="artist-search-hero" 
+                 type="text" 
+                 name="q" 
+                 placeholder="아티스트, 멤버 검색"
+                 class="w-full px-6 py-4 pr-14 border border-gray-600 rounded-full text-base focus:outline-none focus:border-cream-soft bg-gray-800/50 backdrop-blur-sm text-white placeholder-gray-300 transition-all duration-200"
+                 autocomplete="off" />
+          <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 text-gray-300 hover:text-cream-soft transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+              <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        
+        <!-- 자동완성 드롭다운 -->
+        <ul id="autocomplete-list-hero"
+          class="absolute top-full left-8 right-8 sm:left-16 sm:right-16 lg:left-24 lg:right-24 bg-white border border-gray-300 rounded-b-md shadow-lg z-30 hidden max-h-48 overflow-y-auto text-left mt-1 text-black">
+        </ul>
+      </form>
     </div>
   </div>
 
@@ -42,66 +57,41 @@
 </section>
 
 <!-- 찜한 아티스트 섹션 - 배너 위로 이동 -->
-<section class="py-12 sm:py-16 lg:py-20 bg-cream-bg">
+<section class="py-6 sm:py-8 lg:py-10 bg-cream-bg">
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    
-    <!-- 아티스트 검색창 추가 -->
-    <div class="relative z-30 mb-8 sm:mb-12">
-      <form method="get" action="{% url 'artist:index' %}" class="max-w-md mx-auto relative">
-        <div class="relative">
-          <input id="artist-search-home" 
-                 type="text" 
-                 name="q" 
-                 placeholder="아티스트, 멤버 검색"
-                 class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-gray-500 bg-white transition-all duration-200"
-                 autocomplete="off" />
-          <button type="submit" class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-              <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-        
-        <!-- 자동완성 드롭다운 -->
-        <ul id="autocomplete-list-home"
-          class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-b-md shadow-lg z-30 hidden max-h-48 overflow-y-auto text-left mt-1">
-        </ul>
-      </form>
-    </div>
-
-    <!-- 제목 섹션 -->
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
-      <div class="mb-4 sm:mb-0">
-        <h3 class="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
-          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[66px] h-[66px] align-middle mr-3">
-          <span class="italic text-cream-dark"></span> 찜한 아티스트 모음 zip
-        </h3>
-        <p class="text-gray-700 text-sm sm:text-base font-light font-body">나만의 특별한 아티스트들</p>
-      </div>
-    </div>
-
     <div class="relative">
       {% if raw_favs %}
-        <div id="favArtistSlider" class="flex overflow-x-auto space-x-3 sm:space-x-4 lg:space-x-6 pb-2 custom-scrollbar">
+        <!-- 다른 섹션과 동일한 헤더 스타일 -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 sm:mb-12">
+          <div class="mb-4 sm:mb-0">
+            <!-- 빈 공간 또는 필요시 제목 추가 가능 -->
+          </div>
+          <a href="{% url 'artist:index' %}" class="text-gray-700 hover:text-black font-semibold transition-colors border-b-2 border-cream-accent hover:border-cream-dark text-sm sm:text-base font-body">
+            찜덕하러 가기 →
+          </a>
+        </div>
+        
+        <!-- 가운데 정렬된 아티스트 로고들 -->
+        <div class="flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-10">
           {% for artist in raw_favs %}
-            <div class="min-w-[80px] sm:min-w-[100px] lg:min-w-[120px] text-center flex-shrink-0">
+            <div class="text-center">
               <a href="{% url 'artist:index' %}" class="block group">
                 <img src="{% static artist.logo %}" 
                      alt="{{ artist.display_name }}"
-                     class="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full shadow-sm hover:shadow-lg transition-all duration-300 group-hover:scale-105">
-                <p class="mt-2 sm:mt-3 text-xs sm:text-sm font-body font-semibold text-black truncate">{{ artist.display_name }}</p>
+                     class="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full shadow-md border-2 border-gray-200 hover:shadow-lg hover:border-gray-300 transition-all duration-300 group-hover:scale-105">
+                <p class="mt-2 sm:mt-3 text-xs sm:text-sm font-body font-semibold text-black truncate max-w-[80px] sm:max-w-[100px] lg:max-w-[120px] hidden sm:block">{{ artist.display_name }}</p>
               </a>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <div class="flex flex-col items-center py-12 sm:py-16 lg:py-20 w-full">
-          <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
+        <div class="flex flex-col items-center py-8 sm:py-10 w-full">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 opacity-50">
             <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
           </div>
-          <h4 class="font-heading text-lg sm:text-xl font-light text-black mb-3">아직 찜한 덕이 없어요!</h4>
-          <p class="text-gray-600 text-center text-sm sm:text-base mb-6 font-body">마음에 드는 아티스트를 찜해보세요</p>
-          <a href="{% url 'artist:index' %}" class="inline-block px-6 sm:px-8 py-3 bg-black text-cream-soft rounded-full hover:bg-gray-800 transition-colors duration-300 shadow-lg font-bold text-sm sm:text-base font-body">
+          <h4 class="font-heading text-base sm:text-lg font-light text-black mb-2">아직 찜한 덕이 없어요!</h4>
+          <p class="text-gray-600 text-center text-sm mb-4 font-body">마음에 드는 아티스트를 찜해보세요</p>
+          <a href="{% url 'artist:index' %}" class="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-black text-cream-soft rounded-full hover:bg-gray-800 transition-colors duration-300 shadow-lg font-bold text-sm font-body">
             찜덕하러 가기
           </a>
         </div>
@@ -113,11 +103,11 @@
 <!-- 배너 캐러셀 섹션 - 고정 높이 적용 -->
 <section class="py-12 sm:py-16 lg:py-20 bg-white">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-8 sm:mb-12">
+    <div class="text-center mb-4 sm:mb-6">
       <h2 class="font-heading text-2xl sm:text-3xl font-light text-black mb-2 tracking-wide">
         <span class="italic text-cream-dark">Featured</span> 배너
       </h2>
-      <div class="w-16 sm:w-20 h-0.5 bg-cream-accent mx-auto mt-3"></div>
+      <div class="w-16 sm:w-20 h-0.5 bg-cream-accent mx-auto mt-2"></div>
     </div>
     
     <!-- 배너 캐러셀 - 고정 높이 컨테이너 -->
@@ -398,7 +388,7 @@
     </div>
       
     <!-- 생일 멤버 반응형 슬라이더 영역 -->
-    <div class="bg-cream-bg rounded-2xl p-4 sm:p-6 lg:p-8 border border-cream-light relative mx-6 sm:mx-0">
+    <div class="relative mx-6 sm:mx-0">
       <div class="relative overflow-hidden">
         {% if birthday_artists %}
           <!-- 슬라이더 컨테이너 -->
@@ -507,17 +497,17 @@
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // 홈페이지 아티스트 검색 자동완성 초기화
+    // 홈페이지 아티스트 검색 자동완성 초기화 (히어로 섹션)
     if (typeof initAutocomplete === 'function') {
       try {
-        initAutocomplete('artist-search-home', 'autocomplete-list-home', {
-          artistOnly: true,        // 아티스트만 검색
+        initAutocomplete('artist-search-hero', 'autocomplete-list-hero', {
+          artistOnly: true,
           showBirthday: false,
-          showArtistTag: false,    // 아티스트만 나오니까 태그 불필요
+          showArtistTag: false,
           submitOnSelect: true
         });
       } catch (error) {
-        console.log('자동완성 초기화 실패:', error);
+        console.log('히어로 검색 자동완성 초기화 실패:', error);
       }
     }
 
