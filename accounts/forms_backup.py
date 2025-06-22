@@ -4,52 +4,6 @@ from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from .models import User, MannerReview, BankProfile, AddressProfile, PostReport
-from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
-
-class CustomPasswordResetForm(PasswordResetForm):
-    email = forms.EmailField(
-        label="이메일",
-        max_length=254,
-        widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'placeholder': '가입 시 사용한 이메일을 입력하세요',
-            'autocomplete': 'email'
-        })
-    )
-    
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if email:
-            # 이메일 형식 검증
-            if not User.objects.filter(email=email, is_active=True).exists():
-                # 보안상 실제 에러는 표시하지 않고 폼은 유효하게 처리
-                pass
-        return email
-
-class CustomSetPasswordForm(SetPasswordForm):
-    new_password1 = forms.CharField(
-        label="새 비밀번호",
-        strip=False,
-        widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'placeholder': '새로운 비밀번호를 입력하세요',
-            'autocomplete': 'new-password'
-        }),
-        help_text="8자 이상의 안전한 비밀번호를 사용하세요."
-    )
-    new_password2 = forms.CharField(
-        label="새 비밀번호 확인",
-        strip=False,
-        widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            'placeholder': '새로운 비밀번호를 다시 입력하세요',
-            'autocomplete': 'new-password'
-        })
-    )
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(

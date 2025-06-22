@@ -1,6 +1,5 @@
 from django.urls import path, include
 from . import views
-from django.contrib.auth import views as auth_views
 
 app_name = 'accounts'
 
@@ -23,12 +22,6 @@ urlpatterns = [
 
     # 소셜 로그인 추가 정보 입력
     path('social/complete/', views.social_signup_complete, name='social_signup_complete'),
-    
-    # 비밀번호 변경
-    path('password-reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
-    path('password-reset/sent/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('password-reset/confirm/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('password-reset/complete/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
     # mypage
     path('my/', views.mypage, name='mypage'),

@@ -29,9 +29,69 @@ from .services import KakaoAuthService, NaverAuthService
 
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.auth.views import (
+    PasswordResetView, PasswordResetDoneView, 
+    PasswordResetConfirmView, PasswordResetCompleteView
+)
+from django.urls import reverse_lazy
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from .forms import CustomPasswordResetForm, CustomSetPasswordForm
+
+User = get_user_model()
 
 load_dotenv()
 
+# 비번 찾기
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'accounts/password_reset.html'
+    form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('accounts:password_reset_done')
+    email_template_name = 'emails/password_reset_email.html'
+    subject_template_name = 'emails/password_reset_subject.txt'
+    
+    def form_valid(self, form):
+        email = form.cleaned_data['email']
+        
+        # 해당 이메일로 사용자가 존재하는지 확인
+        try:
+            user = User.objects.get(email=email, is_active=True)
+            response = super().form_valid(form)
+            messages.success(
+                self.request, 
+                '비밀번호 재설정 이메일이 전송되었습니다. 이메일을 확인해주세요.'
+            )
+            return response
+        except User.DoesNotExist:
+            # 보안상 이유로 사용자가 존재하지 않아도 성공 메시지 표시
+            messages.success(
+                self.request, 
+                '해당 이메일로 계정이 존재한다면 비밀번호 재설정 이메일이 전송되었습니다.'
+            )
+            return super().form_valid(form)
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'accounts/password_reset_sent.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'accounts/password_reset_confirm.html'
+    form_class = CustomSetPasswordForm
+    success_url = reverse_lazy('accounts:password_reset_complete')
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request, 
+            '비밀번호가 성공적으로 변경되었습니다. 새로운 비밀번호로 로그인해주세요.'
+        )
+        return response
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'accounts/password_reset_complete.html'
 
 # Create your views here.
 def signup(request):
