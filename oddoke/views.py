@@ -21,7 +21,6 @@ def main(request):
 
     # 3) 배너 이미지 리스트
     banner_images = [
-        'image/banner/banner_basic2.png',
         'image/banner/banner1.jpg',
         'image/banner/banner2.jpg',
         'image/banner/banner3.jpg',
