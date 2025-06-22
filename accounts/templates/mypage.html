@@ -909,6 +909,7 @@
       }
 
       /* 페이지네이션 스타일 */
+      /* 개선된 페이지네이션 스타일 */
       .pagination-btn {
         display: flex;
         align-items: center;
@@ -967,6 +968,11 @@
         height: 12px;
       }
 
+
+      #memberListArea .follow-btn {
+        visibility: hidden;
+      }
+
       @media (min-width: 640px) {
         .pagination-btn svg {
           width: 14px;
@@ -983,306 +989,338 @@
     </style>
 
 <!-- JavaScript -->
-    <script>
-      // 🔧 수정: Django 변수를 안전하게 처리
-      const followedArtistIds = JSON.parse('{{ followed_artist_ids|escapejs }}') || [];
+<script>
+  // Django 변수를 안전하게 처리
+  const followedArtistIds = JSON.parse('{{ followed_artist_ids|escapejs }}') || [];
+  
+  // 페이지네이션 관리 객체
+  const paginationManager = {
+    itemsPerPage: 3,
+    maxVisiblePages: 4,
+    
+    createPagination: function(type, category) {
+      const items = document.querySelectorAll(`.${type}-${category}-item`);
+      const totalItems = items.length;
       
-      // 페이지네이션 관리 객체
-      const paginationManager = {
-        itemsPerPage: 3,
-        maxVisiblePages: 4, // 5에서 4로 변경
-        
-        // 페이지네이션 생성
-        createPagination: function(type, category) {
-          const items = document.querySelectorAll(`.${type}-${category}-item`);
-          const totalItems = items.length;
-          
-          // 모든 아이템을 먼저 숨김
-          items.forEach(item => item.style.display = 'none');
-          
-          if (totalItems <= this.itemsPerPage) {
-            this.showItems(items, 0, totalItems);
-            // 페이지네이션 컨테이너 비우기
-            const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
-            if (paginationContainer) {
-              paginationContainer.innerHTML = '';
-            }
-            return;
-          }
-          
-          const totalPages = Math.ceil(totalItems / this.itemsPerPage);
-          const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
-          
-          if (!paginationContainer) return;
-          
-          // 첫 페이지의 페이지네이션 생성
-          this.renderPagination(type, category, 1, totalPages);
-          
-          // 첫 페이지 아이템들 표시
-          this.showItems(items, 0, this.itemsPerPage);
-        },
-        
-        // 페이지네이션 HTML 렌더링
-        renderPagination: function(type, category, currentPage, totalPages) {
-          const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
-          if (!paginationContainer) return;
-          
-          // 현재 페이지 그룹 계산
-          const currentGroup = Math.ceil(currentPage / this.maxVisiblePages);
-          const startPage = (currentGroup - 1) * this.maxVisiblePages + 1;
-          const endPage = Math.min(startPage + this.maxVisiblePages - 1, totalPages);
-          
-          let paginationHTML = '<div class="flex items-center justify-center">';
-          
-          // 이전 그룹 버튼 (맨 처음이 아닌 경우)
-          if (startPage > 1) {
-            paginationHTML += `
-              <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${startPage - 1})">
-                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
-                </svg>
-              </button>
-            `;
-          }
-          
-          // 이전 버튼
-          paginationHTML += `
-            <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
-                    onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage - 1})"
-                    ${currentPage === 1 ? 'disabled' : ''}>
-              <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-            </button>
-          `;
-          
-          // 페이지 번호들 (현재 그룹의 페이지들만)
-          for (let i = startPage; i <= endPage; i++) {
-            paginationHTML += `
-              <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
-                      onclick="paginationManager.goToPage('${type}', '${category}', ${i})">
-                ${i}
-              </button>
-            `;
-          }
-          
-          // 다음 버튼
-          paginationHTML += `
-            <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
-                    onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage + 1})"
-                    ${currentPage === totalPages ? 'disabled' : ''}>
-              <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </button>
-          `;
-          
-          // 다음 그룹 버튼 (마지막이 아닌 경우)
-          if (endPage < totalPages) {
-            paginationHTML += `
-              <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${endPage + 1})">
-                <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                </svg>
-              </button>
-            `;
-          }
-          
-          paginationHTML += '</div>';
-          paginationContainer.innerHTML = paginationHTML;
-        },
-        
-        // 특정 페이지로 이동
-        goToPage: function(type, category, page) {
-          const items = document.querySelectorAll(`.${type}-${category}-item`);
-          const totalItems = items.length;
-          const totalPages = Math.ceil(totalItems / this.itemsPerPage);
-          
-          if (page < 1 || page > totalPages) return;
-          
-          const startIndex = (page - 1) * this.itemsPerPage;
-          const endIndex = Math.min(startIndex + this.itemsPerPage, totalItems);
-          
-          // 모든 아이템 숨기기
-          items.forEach(item => item.style.display = 'none');
-          
-          // 현재 페이지 아이템들만 표시
-          this.showItems(items, startIndex, endIndex);
-          
-          // 페이지네이션 다시 렌더링 (현재 페이지에 맞게)
-          this.renderPagination(type, category, page, totalPages);
-        },
-        
-        // 아이템들 표시
-        showItems: function(items, startIndex, endIndex) {
-          for (let i = startIndex; i < endIndex; i++) {
-            if (items[i]) {
-              items[i].style.display = 'block';
-            }
-          }
+      items.forEach(item => item.style.display = 'none');
+      
+      if (totalItems <= this.itemsPerPage) {
+        this.showItems(items, 0, totalItems);
+        const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
+        if (paginationContainer) {
+          paginationContainer.innerHTML = '';
         }
-      };
-
-      // 탭 전환 함수들 (수정사항 없음)
-      function showFarmTab(tabId) {
-        document.querySelectorAll('.farm-tab-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
-          btn.classList.add('text-gray-600');
-        });
-        event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
-        event.target.classList.remove('text-gray-600');
-        document.querySelectorAll('[id^="farm-tab-"]').forEach(tab => tab.classList.add('hidden'));
-        document.getElementById(`farm-tab-${tabId}`).classList.remove('hidden');
-        
-        setTimeout(() => {
-          paginationManager.createPagination('farm', tabId);
-        }, 50);
+        return;
       }
-
-      function showDamTab(tabId) {
-        document.querySelectorAll('.dam-tab-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
-          btn.classList.add('text-gray-600');
-        });
-        event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
-        event.target.classList.remove('text-gray-600');
-        document.querySelectorAll('[id^="dam-tab-"]').forEach(tab => tab.classList.add('hidden'));
-        document.getElementById(`dam-tab-${tabId}`).classList.remove('hidden');
-        
-        setTimeout(() => {
-          paginationManager.createPagination('dam', tabId);
-        }, 50);
-      }
-
-      function showCafeTab(tabId) {
-        document.querySelectorAll('.cafe-tab-btn').forEach(btn => {
-          btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
-          btn.classList.add('text-gray-600');
-        });
-        event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
-        event.target.classList.remove('text-gray-600');
-        document.querySelectorAll('[id^="cafe-tab-"]').forEach(tab => tab.classList.add('hidden'));
-        document.getElementById(`cafe-tab-${tabId}`).classList.remove('hidden');
-        
-        setTimeout(() => {
-          paginationManager.createPagination('cafe', tabId);
-        }, 50);
-      }
-
-      function bindFollowButtons(container) {
-        container.querySelectorAll('.follow-btn').forEach(btn => {
-          // 초기 상태 설정 - 항상 SVG로 표시
-          const isFollowed = btn.dataset.followed === 'true';
-          updateFollowButtonDisplay(btn, isFollowed);
-          
-          btn.addEventListener('click', function () {
-            const memberId = this.dataset.memberId;
-            fetch(`/artist/member/${memberId}/follow-toggle/`, {
-              method: 'GET',
-              headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-              // 데이터 속성 업데이트
-              this.dataset.followed = data.followed;
-              // SVG로 하트 아이콘 변경
-              updateFollowButtonDisplay(this, data.followed);
-            })
-            .catch(err => {
-              console.error('팔로우 오류:', err);
-              alert('팔로우 요청 실패');
-            });
-          });
-        });
-      }
-
-      function updateFollowButtonDisplay(btn, isFollowed) {
-        if (isFollowed) {
-          btn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-1">
-              <path d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z" />
+      
+      const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+      const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
+      
+      if (!paginationContainer) return;
+      
+      this.renderPagination(type, category, 1, totalPages);
+      this.showItems(items, 0, this.itemsPerPage);
+    },
+    
+    renderPagination: function(type, category, currentPage, totalPages) {
+      const paginationContainer = document.getElementById(`${type}-${category}-pagination`);
+      if (!paginationContainer) return;
+      
+      const currentGroup = Math.ceil(currentPage / this.maxVisiblePages);
+      const startPage = (currentGroup - 1) * this.maxVisiblePages + 1;
+      const endPage = Math.min(startPage + this.maxVisiblePages - 1, totalPages);
+      
+      let paginationHTML = '<div class="flex items-center justify-center">';
+      
+      if (startPage > 1) {
+        paginationHTML += `
+          <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${startPage - 1})">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
             </svg>
-            팔로잉
-          `;
-          btn.className = 'follow-btn inline-flex items-center px-3 py-1 bg-red-50 text-red-600 text-xs font-medium rounded-full border border-red-200 hover:bg-red-100 transition-colors';
-        } else {
-          btn.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+          </button>
+        `;
+      }
+      
+      paginationHTML += `
+        <button class="pagination-btn ${currentPage === 1 ? 'disabled' : ''}" 
+                onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage - 1})"
+                ${currentPage === 1 ? 'disabled' : ''}>
+          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+      `;
+      
+      for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+          <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
+                  onclick="paginationManager.goToPage('${type}', '${category}', ${i})">
+            ${i}
+          </button>
+        `;
+      }
+      
+      paginationHTML += `
+        <button class="pagination-btn ${currentPage === totalPages ? 'disabled' : ''}" 
+                onclick="paginationManager.goToPage('${type}', '${category}', ${currentPage + 1})"
+                ${currentPage === totalPages ? 'disabled' : ''}>
+          <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      `;
+      
+      if (endPage < totalPages) {
+        paginationHTML += `
+          <button class="pagination-btn" onclick="paginationManager.goToPage('${type}', '${category}', ${endPage + 1})">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
             </svg>
-            팔로우
-          `;
-          btn.className = 'follow-btn inline-flex items-center px-3 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-100 transition-colors';
+          </button>
+        `;
+      }
+      
+      paginationHTML += '</div>';
+      paginationContainer.innerHTML = paginationHTML;
+    },
+    
+    goToPage: function(type, category, page) {
+      const items = document.querySelectorAll(`.${type}-${category}-item`);
+      const totalItems = items.length;
+      const totalPages = Math.ceil(totalItems / this.itemsPerPage);
+      
+      if (page < 1 || page > totalPages) return;
+      
+      const startIndex = (page - 1) * this.itemsPerPage;
+      const endIndex = Math.min(startIndex + this.itemsPerPage, totalItems);
+      
+      items.forEach(item => item.style.display = 'none');
+      this.showItems(items, startIndex, endIndex);
+      this.renderPagination(type, category, page, totalPages);
+    },
+    
+    showItems: function(items, startIndex, endIndex) {
+      for (let i = startIndex; i < endIndex; i++) {
+        if (items[i]) {
+          items[i].style.display = 'block';
         }
       }
+    }
+  };
 
-      document.querySelectorAll('.artist-logo').forEach(img => {
-        img.addEventListener('click', function () {
-          const artistId = this.dataset.artistId;
-          fetch(`/artist/${artistId}/members/`)
-            .then(response => response.json())
-            .then(data => {
-              const modal = document.getElementById('memberModal');
-              const listArea = document.getElementById('memberListArea');
-              listArea.innerHTML = data.html;
-              modal.classList.remove('hidden');
-              bindFollowButtons(listArea);
-            });
+  // 탭 전환 함수들
+  function showFarmTab(tabId) {
+    document.querySelectorAll('.farm-tab-btn').forEach(btn => {
+      btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+      btn.classList.add('text-gray-600');
+    });
+    event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+    event.target.classList.remove('text-gray-600');
+    document.querySelectorAll('[id^="farm-tab-"]').forEach(tab => tab.classList.add('hidden'));
+    document.getElementById(`farm-tab-${tabId}`).classList.remove('hidden');
+    
+    setTimeout(() => {
+      paginationManager.createPagination('farm', tabId);
+    }, 50);
+  }
+
+  function showDamTab(tabId) {
+    document.querySelectorAll('.dam-tab-btn').forEach(btn => {
+      btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+      btn.classList.add('text-gray-600');
+    });
+    event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+    event.target.classList.remove('text-gray-600');
+    document.querySelectorAll('[id^="dam-tab-"]').forEach(tab => tab.classList.add('hidden'));
+    document.getElementById(`dam-tab-${tabId}`).classList.remove('hidden');
+    
+    setTimeout(() => {
+      paginationManager.createPagination('dam', tabId);
+    }, 50);
+  }
+
+  function showCafeTab(tabId) {
+    document.querySelectorAll('.cafe-tab-btn').forEach(btn => {
+      btn.classList.remove('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+      btn.classList.add('text-gray-600');
+    });
+    event.target.classList.add('active', 'bg-white', 'text-gray-900', 'shadow-sm');
+    event.target.classList.remove('text-gray-600');
+    document.querySelectorAll('[id^="cafe-tab-"]').forEach(tab => tab.classList.add('hidden'));
+    document.getElementById(`cafe-tab-${tabId}`).classList.remove('hidden');
+    
+    setTimeout(() => {
+      paginationManager.createPagination('cafe', tabId);
+    }, 50);
+  }
+
+  // 팔로우 버튼 바인딩 함수
+  function bindFollowButtons(container) {
+    console.log('🔍 bindFollowButtons 호출됨');
+    
+    const followBtns = container.querySelectorAll('.follow-btn');
+    console.log('🔍 찾은 팔로우 버튼 수:', followBtns.length);
+    
+    followBtns.forEach((btn, index) => {
+      const memberId = btn.dataset.memberId;
+      const buttonText = btn.textContent.trim();
+      
+      // 버튼 텍스트로 팔로우 상태 판단
+      const isFollowed = buttonText.includes('❤️') || buttonText.includes('팔로잉');
+      
+      console.log(`🔍 버튼 ${index + 1} 상태:`);
+      console.log('  - 멤버 ID:', memberId);
+      console.log('  - 버튼 텍스트:', buttonText);
+      console.log('  - 판단된 팔로우 상태:', isFollowed);
+      
+      // 초기 상태 설정
+      updateFollowButtonDisplay(btn, isFollowed);
+      
+      btn.addEventListener('click', function () {
+        console.log(`🔍 멤버 ${memberId} 팔로우 버튼 클릭됨`);
+        
+        fetch(`/artist/member/${memberId}/follow-toggle/`, {
+          method: 'GET',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(data => {
+          console.log(`🔍 멤버 ${memberId} 팔로우 토글 결과:`, data.followed);
+          
+          // 새로운 상태로 버튼 업데이트
+          updateFollowButtonDisplay(this, data.followed);
+          
+          // 1초 후 페이지 새로고침으로 최애 섹션 업데이트
+          setTimeout(() => {
+            console.log('📄 최애 섹션 업데이트를 위해 페이지 새로고침');
+            window.location.reload();
+          }, 1000);
+        })
+        .catch(err => {
+          console.error('❌ 팔로우 오류:', err);
+          alert('팔로우 요청 실패');
         });
       });
+    });
+  }
 
-      function openArtistModalFromMember(element) {
-        const artistId = element.dataset.artistId;
-        if (followedArtistIds.includes(parseInt(artistId))) {
-          fetch(`/artist/${artistId}/members/`)
-            .then(res => res.json())
-            .then(data => {
-              const modal = document.getElementById('memberModal');
-              const listArea = document.getElementById('memberListArea');
-              listArea.innerHTML = data.html;
-              modal.classList.remove('hidden');
-              bindFollowButtons(listArea);
-            });
-        } else {
-          alert('찜한 아티스트에 포함되지 않은 멤버입니다.');
-        }
-      }
+  function updateFollowButtonDisplay(btn, isFollowed) {
+    if (isFollowed) {
+      btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 mr-1">
+          <path d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z" />
+        </svg>
+        팔로잉
+      `;
+      btn.className = 'follow-btn inline-flex items-center px-3 py-1 bg-red-50 text-red-600 text-xs font-medium rounded-full border border-red-200 hover:bg-red-100 transition-colors';
+    } else {
+      btn.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+        </svg>
+        팔로우
+      `;
+      btn.className = 'follow-btn inline-flex items-center px-3 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-200 hover:bg-gray-100 transition-colors';
+    }
+  }
 
-      // 모달 닫기 함수 추가
-      function closeModal() {
-        const modal = document.getElementById('memberModal');
-        modal.classList.add('hidden');
-      }
-
-      // 모달 바깥 영역 클릭 시에도 닫히도록 하려면 다음 코드도 추가
-      document.getElementById('memberModal').addEventListener('click', function(e) {
-        // 모달 배경 클릭 시 닫기 (모달 내용 영역이 아닌 경우)
-        if (e.target === this) {
-          closeModal();
-        }
-      });
-
-      // ESC 키로도 모달 닫기
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+  // 아티스트 로고 클릭 이벤트
+  document.querySelectorAll('.artist-logo').forEach(img => {
+    img.addEventListener('click', function () {
+      const artistId = this.dataset.artistId;
+      console.log(`🔍 아티스트 ${artistId} 로고 클릭됨`);
+      
+      fetch(`/artist/${artistId}/members/`)
+        .then(response => response.json())
+        .then(data => {
           const modal = document.getElementById('memberModal');
-          if (!modal.classList.contains('hidden')) {
-            closeModal();
-          }
-        }
-      });
+          const listArea = document.getElementById('memberListArea');
+          
+          // 🔧 HTML 삽입 후 바로 버튼 상태 업데이트, 그 다음에 모달 표시
+          listArea.innerHTML = data.html;
+          
+          // 버튼 상태를 먼저 업데이트
+          bindFollowButtons(listArea);
+          
+          // 🔧 버튼들을 표시하고 모달 열기
+          listArea.querySelectorAll('.follow-btn').forEach(btn => {
+            btn.style.visibility = 'visible';
+          });
+          
+          // 업데이트 완료 후 모달 표시
+          setTimeout(() => {
+            modal.classList.remove('hidden');
+          }, 50);
+        })
+        .catch(error => {
+          console.error('❌ 멤버 목록 로딩 실패:', error);
+        });
+    });
+  });
 
-      // 🔧 수정: 페이지 로드 시 초기화 개선
-      document.addEventListener('DOMContentLoaded', function() {
-        // 🔧 수정: HTML에서 이미 활성화된 탭은 건드리지 않음
-        // 대신 초기 페이지네이션만 생성 (약간의 지연 추가)
-        setTimeout(() => {
-          paginationManager.createPagination('farm', 'written');
-          paginationManager.createPagination('dam', 'written');
-          paginationManager.createPagination('cafe', 'registered');
-        }, 100);
-      });
-    </script>
+  function openArtistModalFromMember(element) {
+    const artistId = element.dataset.artistId;
+    if (followedArtistIds.includes(parseInt(artistId))) {
+      fetch(`/artist/${artistId}/members/`)
+        .then(res => res.json())
+        .then(data => {
+          const modal = document.getElementById('memberModal');
+          const listArea = document.getElementById('memberListArea');
+          
+          // 🔧 HTML 삽입 후 바로 버튼 상태 업데이트, 그 다음에 모달 표시
+          listArea.innerHTML = data.html;
+          
+          // 버튼 상태를 먼저 업데이트
+          bindFollowButtons(listArea);
+          
+          // 🔧 버튼들을 표시하고 모달 열기
+          listArea.querySelectorAll('.follow-btn').forEach(btn => {
+            btn.style.visibility = 'visible';
+          });
+          
+          // 업데이트 완료 후 모달 표시
+          setTimeout(() => {
+            modal.classList.remove('hidden');
+          }, 50);
+        });
+    } else {
+      alert('찜한 아티스트에 포함되지 않은 멤버입니다.');
+    }
+  }
+
+  // 모달 닫기 함수
+  function closeModal() {
+    const modal = document.getElementById('memberModal');
+    modal.classList.add('hidden');
+  }
+
+  // 모달 바깥 영역 클릭 시 닫기
+  document.getElementById('memberModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeModal();
+    }
+  });
+
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('memberModal');
+      if (!modal.classList.contains('hidden')) {
+        closeModal();
+      }
+    }
+  });
+
+  // 페이지 로드 시 초기화
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+      paginationManager.createPagination('farm', 'written');
+      paginationManager.createPagination('dam', 'written');
+      paginationManager.createPagination('cafe', 'registered');
+    }, 100);
+  });
+</script>
   </div>
 </div>
 
