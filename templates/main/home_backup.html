@@ -5,8 +5,20 @@
 
 {% block body %}
 
-<!-- 히어로 섹션 - 배너 제거, 텍스트만 -->
+<!-- 히어로 섹션 - 웹/모바일 최적화 -->
 <section class="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
+  <div class="absolute inset-0 z-0">
+    <div id="bannerCarousel" class="w-full h-full relative">
+      {% for path in banner_images %}
+        <div class="absolute inset-0 transition-opacity duration-3000 ease-in-out
+                    {% if forloop.first %}opacity-100{% else %}opacity-0{% endif %}">
+          <img src="{% static path %}" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-br from-black/60 via-gray-900/40 to-black/70"></div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
   <div class="relative z-10 text-center text-white max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- 메인 타이틀 - 반응형 최적화 -->
     <div class="mb-6 sm:mb-8">
@@ -40,52 +52,6 @@
     </svg>
   </div>
 </section>
-
-<!-- 배너 캐러셀 섹션 - HOT 게시글 위에 추가 -->
-<section class="py-8 sm:py-12 bg-white">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-6 sm:mb-8">
-      <h2 class="font-heading text-2xl sm:text-3xl font-light text-black mb-2 tracking-wide">
-        <span class="italic text-cream-dark">Featured</span> 배너
-      </h2>
-      <div class="w-16 sm:w-20 h-0.5 bg-cream-accent mx-auto mt-3"></div>
-    </div>
-    
-    <!-- 배너 캐러셀 -->
-    <div class="relative max-w-4xl mx-auto">
-      <!-- 좌우 화살표 버튼 - 컨테이너 기준으로 고정 -->
-      <button id="bannerPrevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-20
-                                         bg-white/80 hover:bg-white rounded-full p-3 shadow-lg
-                                         transition-all duration-200 hover:scale-110">
-        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </button>
-      
-      <button id="bannerNextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 z-20
-                                         bg-white/80 hover:bg-white rounded-full p-3 shadow-lg
-                                         transition-all duration-200 hover:scale-110">
-        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </button>
-      
-      <div id="bannerCarousel" class="relative overflow-hidden rounded-2xl shadow-lg">
-        <!-- 고정된 높이 컨테이너 -->
-        <div class="banner-container">
-          {% for path in banner_images %}
-            <div class="banner-slide {% if forloop.first %}active{% endif %}">
-              <img src="{% static path %}" 
-                   class="banner-image" 
-                   alt="배너 이미지 {{ forloop.counter }}" />
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
 
 <!-- 실시간 인기 만두 - 반응형 최적화 -->
 <section class="py-12 sm:py-16 lg:py-20 bg-cream-bg">
@@ -126,7 +92,6 @@
     </div>
   </div>
 </section>
-
 
 <!-- 오늘의 새 소식 - 반응형 최적화 -->
 <section class="py-12 sm:py-16 lg:py-20 bg-gray-900">
@@ -192,7 +157,6 @@
     </div>
   </div>
 </section>
-
 
 <!-- 카테고리 하이라이트 - 반응형 최적화 -->
 <section class="py-12 sm:py-16 lg:py-20 bg-white">
@@ -480,40 +444,18 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     // 배너 슬라이드 - 더 부드러운 전환
-    const slides = document.querySelectorAll(".banner-slide");
-    const prevBtn = document.getElementById('bannerPrevBtn');
-    const nextBtn = document.getElementById('bannerNextBtn');
-    let currentSlide = 0;
+    const slides = document.querySelectorAll("#bannerCarousel > div");
+    let idx = 0;
     
-    function showSlide(index) {
-      // 모든 슬라이드 숨기기
-      slides.forEach(slide => slide.classList.remove('active'));
-      
-      // 현재 슬라이드 보이기
-      slides[index].classList.add('active');
+    function showNextSlide() {
+      slides[idx].classList.remove("opacity-100");
+      slides[idx].classList.add("opacity-0");
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.remove("opacity-0");
+      slides[idx].classList.add("opacity-100");
     }
     
-    function nextSlide() {
-      currentSlide = (currentSlide + 1) % slides.length;
-      showSlide(currentSlide);
-    }
-    
-    function prevSlide() {
-      currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-      showSlide(currentSlide);
-    }
-    
-    // 화살표 버튼 이벤트
-    if (prevBtn) {
-      prevBtn.addEventListener('click', prevSlide);
-    }
-    
-    if (nextBtn) {
-      nextBtn.addEventListener('click', nextSlide);
-    }
-    
-    // 자동 슬라이드 (8초마다)
-    setInterval(nextSlide, 8000);
+    setInterval(showNextSlide, 8000);
 
     // ✅ 생일 아티스트 슬라이더 초기화 추가
     initBirthdaySlider();
@@ -724,122 +666,6 @@
 
 <!-- 생일 아티스트 슬라이더 CSS -->
 <style>
-/* 배너 캐러셀 CSS */
-.banner-slide {
-  display: none;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.banner-slide.active {
-  display: block;
-}
-
-.carousel-indicator {
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.carousel-indicator:hover {
-  transform: scale(1.2);
-}
-
-/* 이미지가 원본 비율을 유지하도록 */
-.banner-slide img {
-  max-height: 400px; /* 최대 높이 제한 */
-  width: auto;
-  margin: 0 auto;
-  display: block;
-}
-
-/* 배너 캐러셀 - 원본 비율 유지 */
-.banner-container {
-  width: 100%;
-  position: relative;
-  background: #f8f9fa;
-}
-
-.banner-slide {
-  display: none;
-  position: relative;
-  width: 100%;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.banner-slide.active {
-  display: block;
-}
-
-/* 원본 이미지 비율 그대로 표시 */
-.banner-image {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  max-height: 500px; /* 최대 높이만 제한 */
-}
-
-/* 반응형 최대 높이 조정 */
-@media (max-width: 768px) {
-  .banner-image {
-    max-height: 300px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .banner-image {
-    max-height: 600px;
-  }
-}
-
-/* 화살표 - 섹션 기준 고정 위치 */
-.banner-arrow-fixed {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 30;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  padding: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.banner-arrow-left {
-  left: 2rem; /* 섹션 왼쪽에서 32px */
-}
-
-.banner-arrow-right {
-  right: 2rem; /* 섹션 오른쪽에서 32px */
-}
-
-.banner-arrow-fixed:hover {
-  transform: translateY(-50%) scale(1.1);
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* 모바일에서 화살표 위치 조정 */
-@media (max-width: 768px) {
-  .banner-arrow-left {
-    left: 1rem; /* 16px */
-  }
-  
-  .banner-arrow-right {
-    right: 1rem; /* 16px */
-  }
-  
-  .banner-arrow-fixed {
-    padding: 10px;
-  }
-  
-  .banner-arrow-fixed svg {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-}
-
 /* 생일 아티스트 슬라이더 스타일 */
 #weeklyBirthdaySlider {
     position: relative;
