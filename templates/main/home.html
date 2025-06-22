@@ -53,19 +53,21 @@
     
     <!-- 배너 캐러셀 -->
     <div class="relative max-w-4xl mx-auto">
-      <!-- 좌우 화살표 버튼 - 컨테이너 기준으로 고정 -->
+      <!-- 좌우 클릭 영역 추가 -->
+      <div id="bannerLeftArea" class="absolute left-0 top-0 w-1/3 h-full z-10 cursor-pointer"></div>
+      <div id="bannerRightArea" class="absolute right-0 top-0 w-1/3 h-full z-10 cursor-pointer"></div>
+      
+      <!-- 좌우 화살표 버튼 - 시각적 표시용 -->
       <button id="bannerPrevBtn" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-20
-                                         bg-white/80 hover:bg-white rounded-full p-3 shadow-lg
-                                         transition-all duration-200 hover:scale-110">
-        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         p-3 transition-all duration-200 hover:scale-110 pointer-events-none">
+        <svg class="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
       </button>
       
       <button id="bannerNextBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 z-20
-                                         bg-white/80 hover:bg-white rounded-full p-3 shadow-lg
-                                         transition-all duration-200 hover:scale-110">
-        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                         p-3 transition-all duration-200 hover:scale-110 pointer-events-none">
+        <svg class="w-6 h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </button>
@@ -475,14 +477,15 @@
     </div>
   </div>
 </section>
-
 <!-- 스크립트 -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    // 배너 슬라이드 - 더 부드러운 전환
+    // 배너 슬라이드 - 좌우 클릭 영역 포함
     const slides = document.querySelectorAll(".banner-slide");
     const prevBtn = document.getElementById('bannerPrevBtn');
     const nextBtn = document.getElementById('bannerNextBtn');
+    const leftArea = document.getElementById('bannerLeftArea');
+    const rightArea = document.getElementById('bannerRightArea');
     let currentSlide = 0;
     
     function showSlide(index) {
@@ -491,6 +494,17 @@
       
       // 현재 슬라이드 보이기
       slides[index].classList.add('active');
+      
+      // 화살표 버튼 애니메이션
+      if (prevBtn && nextBtn) {
+        prevBtn.style.transform = 'translateY(-50%) scale(1.1)';
+        nextBtn.style.transform = 'translateY(-50%) scale(1.1)';
+        
+        setTimeout(() => {
+          prevBtn.style.transform = 'translateY(-50%) scale(1)';
+          nextBtn.style.transform = 'translateY(-50%) scale(1)';
+        }, 150);
+      }
     }
     
     function nextSlide() {
@@ -503,13 +517,38 @@
       showSlide(currentSlide);
     }
     
-    // 화살표 버튼 이벤트
-    if (prevBtn) {
-      prevBtn.addEventListener('click', prevSlide);
+    // 좌우 영역 클릭 이벤트
+    if (leftArea) {
+      leftArea.addEventListener('click', prevSlide);
     }
     
-    if (nextBtn) {
-      nextBtn.addEventListener('click', nextSlide);
+    if (rightArea) {
+      rightArea.addEventListener('click', nextSlide);
+    }
+    
+    // 호버 효과 - 화살표 표시
+    if (leftArea && prevBtn) {
+      leftArea.addEventListener('mouseenter', () => {
+        prevBtn.style.opacity = '1';
+        prevBtn.style.transform = 'translateY(-50%) scale(1.1)';
+      });
+      
+      leftArea.addEventListener('mouseleave', () => {
+        prevBtn.style.opacity = '0.7';
+        prevBtn.style.transform = 'translateY(-50%) scale(1)';
+      });
+    }
+    
+    if (rightArea && nextBtn) {
+      rightArea.addEventListener('mouseenter', () => {
+        nextBtn.style.opacity = '1';
+        nextBtn.style.transform = 'translateY(-50%) scale(1.1)';
+      });
+      
+      rightArea.addEventListener('mouseleave', () => {
+        nextBtn.style.opacity = '0.7';
+        nextBtn.style.transform = 'translateY(-50%) scale(1)';
+      });
     }
     
     // 자동 슬라이드 (8초마다)
@@ -615,7 +654,7 @@
       
       autoSlideInterval = setInterval(() => {
         nextSlide();
-      }, 8000); // 4초마다 자동 이동
+      }, 8000); // 8초마다 자동 이동
     }
     
     // 자동 슬라이드 중지
@@ -722,7 +761,7 @@
   }
 </script>
 
-<!-- 생일 아티스트 슬라이더 CSS -->
+<!-- 생일 아티스트 슬라이더 CSS + 배너 클릭 영역 CSS -->
 <style>
 /* 배너 캐러셀 CSS */
 .banner-slide {
@@ -790,6 +829,32 @@
     max-height: 600px;
   }
 }
+
+/* 배너 클릭 영역 호버 효과 */
+#bannerLeftArea:hover ~ #bannerPrevBtn,
+#bannerRightArea:hover ~ #bannerNextBtn {
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+/* 배너 화살표 기본 투명도 */
+#bannerPrevBtn,
+#bannerNextBtn {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  pointer-events: none; /* 직접 클릭 방지 */
+}
+
+/* 클릭 영역 디버그용 (개발 시에만 사용, 나중에 제거) */
+/*
+#bannerLeftArea {
+  background: rgba(255, 0, 0, 0.1);
+}
+
+#bannerRightArea {
+  background: rgba(0, 0, 255, 0.1);
+}
+*/
 
 /* 화살표 - 섹션 기준 고정 위치 */
 .banner-arrow-fixed {
