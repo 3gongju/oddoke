@@ -1248,6 +1248,30 @@
         }
       }
 
+      // 모달 닫기 함수 추가
+      function closeModal() {
+        const modal = document.getElementById('memberModal');
+        modal.classList.add('hidden');
+      }
+
+      // 모달 바깥 영역 클릭 시에도 닫히도록 하려면 다음 코드도 추가
+      document.getElementById('memberModal').addEventListener('click', function(e) {
+        // 모달 배경 클릭 시 닫기 (모달 내용 영역이 아닌 경우)
+        if (e.target === this) {
+          closeModal();
+        }
+      });
+
+      // ESC 키로도 모달 닫기
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('memberModal');
+          if (!modal.classList.contains('hidden')) {
+            closeModal();
+          }
+        }
+      });
+
       // 🔧 수정: 페이지 로드 시 초기화 개선
       document.addEventListener('DOMContentLoaded', function() {
         // 🔧 수정: HTML에서 이미 활성화된 탭은 건드리지 않음
