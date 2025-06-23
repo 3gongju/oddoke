@@ -1,7 +1,7 @@
 from django import forms
 from .models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment, DamPostReport
 
-COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-yellow-400'
+COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400'
 
 common_widgets = {
     'title': forms.TextInput(attrs={
@@ -18,7 +18,7 @@ common_widgets = {
     }),
     'artist': forms.Select(attrs={
         'id': 'id_artist',
-        'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-yellow-400'
+        'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-400'
     }),
     'members': forms.CheckboxSelectMultiple(attrs={
         'class': 'space-y-2'

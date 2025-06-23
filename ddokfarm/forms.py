@@ -2,7 +2,7 @@ from django import forms
 from django.forms import modelformset_factory, HiddenInput
 from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice, ItemPrice, SHIPPING_METHOD_CHOICES
 
-COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400'
+COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400'
 COMMON_RADIO_CLASS = 'space-y-2'
 COMMON_DATE_CLASS = COMMON_INPUT_CLASS + ' date-input'
 
@@ -37,7 +37,7 @@ common_widgets = {
     }),
     'artist': forms.Select(attrs={
         'id': 'id_artist',
-        'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400'
+        'class': 'w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-400'
     }),
     # 배송비 위젯 추가
     'shipping_fee': forms.NumberInput(attrs={
