@@ -1,34 +1,36 @@
- <!-- 빠른 정보 섹션 -->
-        <div class="sidebar-card quick-info-card bg-white rounded-xl shadow-sm border p-4">
-          <h3 class="font-bold text-gray-900 mb-3 text-lg">빠른 정보</h3>
-          <div class="space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">상태</span>
-              {% if cafe.is_active %}
-                <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">진행중</span>
-              {% elif cafe.days_until_start > 0 %}
-                <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">예정</span>
-              {% else %}
-                <span class="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">종료</span>
-              {% endif %}
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">이벤트 타입</span>
-              <span class="text-gray-900 font-medium">{{ cafe.get_cafe_type_display }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-600">조회수</span>
-              <span class="text-gray-900 font-medium">{{ cafe.view_count|default:0 }}</span>
-            </div>
-            {% if cafe.hashtags_list %}
-            <div>
-              <span class="text-gray-600 block mb-2">태그</span>
-              <div class="flex flex-wrap gap-1">
-                {% for tag in cafe.hashtags_list %}
-                  <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">#{{ tag }}</span>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-          </div>
-        </div>
+<!-- 빠른 정보 섹션 -->
+<div class="sidebar-card quick-info-card bg-white rounded-xl shadow-sm border p-4">
+  <h3 class="font-bold text-gray-900 mb-3 text-lg">빠른 정보</h3>
+  <div class="space-y-2">
+    <div class="flex justify-between items-center">
+      <span class="text-gray-600">상태</span>
+      {% if cafe.is_active %}
+        <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">진행중</span>
+      {% elif cafe.days_until_start > 0 %}
+        <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">예정</span>
+      {% else %}
+        <span class="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">종료</span>
+      {% endif %}
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="text-gray-600">이벤트 타입</span>
+      <span class="text-gray-900 font-medium">
+        {% if cafe.cafe_type == 'bday' %}
+          생일 카페
+        {% elif cafe.cafe_type == 'debut' %}
+          데뷔 카페
+        {% elif cafe.cafe_type == 'comeback' %}
+          컴백 카페
+        {% elif cafe.cafe_type == 'concert' %}
+          콘서트 카페
+        {% else %}
+          이벤트 카페
+        {% endif %}
+      </span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="text-gray-600">조회수</span>
+      <span class="text-gray-900 font-medium">{{ cafe.view_count|default:0 }}</span>
+    </div>
+  </div>
+</div>

@@ -160,17 +160,6 @@ _cafe_card_default.html - 향상된 버전
       </div>
     {% endif %}
 
-    {% if cafe.hashtags and show_hashtags %}
-      <div class="mb-3">
-        <div class="flex flex-wrap gap-1">
-          {% for tag in cafe.hashtags|split:"#"|slice:":3" %}
-            {% if tag|strip %}
-              <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">#{{ tag|strip }}</span>
-            {% endif %}
-          {% endfor %}
-        </div>
-      </div>
-    {% endif %}
 
     <div class="space-y-2">
       <div class="flex space-x-2">

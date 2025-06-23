@@ -25,20 +25,20 @@ class BdayCafeAdmin(admin.ModelAdmin):
         }),
         ('카페 정보', {
             'fields': ('cafe_name', 'place_name', 'address', 'road_address', 
-                      'detailed_address', 'latitude', 'longitude')
+                       'latitude', 'longitude')
         }),
         ('운영 정보', {
-            'fields': ('start_date', 'end_date', 'start_time', 'end_time')
+            'fields': ('start_date', 'end_date')
         }),
         ('상세 정보', {
-            'fields': ('special_benefits', 'event_description', 'hashtags', 'x_source')
+            'fields': ('special_benefits', 'event_description', 'x_source')
         }),
         ('이미지 갤러리', {
             'fields': ('image_gallery', 'image_gallery_display', 'image_preview'),
             'classes': ('wide',)
         }),
         ('시스템 정보', {
-            'fields': ('view_count', 'is_featured', 'created_at', 'updated_at', 
+            'fields': ('view_count', 'created_at', 'updated_at', 
                       'verified_at', 'verified_by'),
             'classes': ('collapse',)
         })
@@ -73,7 +73,6 @@ class BdayCafeAdmin(admin.ModelAdmin):
                 <strong>타입:</strong> {img_data.get('type', 'N/A')}<br>
                 <strong>대표:</strong> {'예' if img_data.get('is_main', False) else '아니오'}<br>
                 <strong>순서:</strong> {img_data.get('order', 'N/A')}<br>
-                <strong>설명:</strong> {img_data.get('caption', 'N/A')}<br>
                 <strong>크기:</strong> {img_data.get('width', 'N/A')} x {img_data.get('height', 'N/A')}<br>
                 <strong>파일 크기:</strong> {self._format_file_size(img_data.get('file_size', 0))}<br>
                 <strong>URL:</strong> <a href="{img_data.get('url', '#')}" target="_blank">링크</a>
@@ -94,7 +93,6 @@ class BdayCafeAdmin(admin.ModelAdmin):
         
         for i, img_data in enumerate(obj.image_gallery):
             url = img_data.get('url', '')
-            caption = img_data.get('caption', f'이미지 {i + 1}')
             is_main = img_data.get('is_main', False)
             img_type = img_data.get('type', 'other')
             
@@ -105,9 +103,7 @@ class BdayCafeAdmin(admin.ModelAdmin):
                 html += f'''
                 <div style="position: relative; display: inline-block;">
                     <img src="{url}" 
-                         alt="{caption}" 
-                         style="width: 120px; height: 160px; object-fit: cover; border: 2px solid #ddd; border-radius: 5px;"
-                         title="{caption}">
+                         style="width: 120px; height: 160px; object-fit: cover; border: 2px solid #ddd; border-radius: 5px;">
                     <div style="position: absolute; top: 5px; left: 5px; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; {badge_style}">
                         {badge_text}
                     </div>
@@ -171,5 +167,5 @@ class CafeFavoriteAdmin(admin.ModelAdmin):
 
 # Admin 사이트 커스터마이징
 admin.site.site_header = "최고 경영자 및 관리자"
-admin.site.site_title = "덕생 Admin"
-admin.site.index_title = "생일카페 관리 시스템"
+admin.site.site_title = "덕생 관리자"
+admin.site.index_title = "생카 관리 시스템"

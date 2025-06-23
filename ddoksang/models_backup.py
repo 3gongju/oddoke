@@ -1,11 +1,14 @@
+# ddoksang/models.py (완전히 단순화된 버전)
+
 from django.db import models
 from django.conf import settings
 from artist.models import Artist, Member
 from PIL import Image
 import os
+import json
 
 class BdayCafe(models.Model):
-    """생일카페 등록 모델"""
+    """생일카페 등록 모델 - 이미지 갤러리 포함"""
     CAFE_TYPE_CHOICES = [
         ('bday', '생일'),
         ('debut', '데뷔일'),
@@ -48,9 +51,23 @@ class BdayCafe(models.Model):
     event_description = models.TextField(blank=True, verbose_name='이벤트 설명')
     hashtags = models.CharField(max_length=500, blank=True, verbose_name='해시태그')
 
-    # 기존 이미지 (하위 호환성을 위해 유지)
-    main_image = models.ImageField(upload_to='bday_cafes/main/', null=True, blank=True, verbose_name='메인 이미지 (구버전)')
-    poster_image = models.ImageField(upload_to='bday_cafes/poster/', null=True, blank=True, verbose_name='포스터 이미지 (구버전)')
+    # ✅ 이미지 갤러리 (JSON 형태로 저장)
+    image_gallery = models.JSONField(default=list, blank=True, verbose_name='이미지 갤러리')
+    # 예시 구조:
+    # [
+    #   {
+    #     "id": "img_1",
+    #     "url": "/media/bday_cafes/images/2025/01/image1.jpg",
+    #     "type": "main",
+    #     "caption": "메인 이미지",
+    #     "is_main": true,
+    #     "order": 0,
+    #     "width": 1200,
+    #     "height": 800,
+    #     "file_size": 245760
+    #   },
+    #   ...
+    # ]
 
     # 출처
     x_source = models.URLField(blank=True, verbose_name='X 출처')
@@ -105,63 +122,139 @@ class BdayCafe(models.Model):
             return (self.start_date - today).days
         return 0
 
+    # ✅ 이미지 관련 메서드들 (JSON 기반)
     def get_main_image(self):
-        """대표 이미지 반환 (새로운 다중 이미지 시스템 우선)"""
-        # 새로운 다중 이미지 시스템에서 대표 이미지 찾기
-        main_img = self.images.filter(is_main=True).first()
-        if main_img and main_img.image:
-            return main_img.image.url
-        
-        # 대표 이미지가 없으면 첫 번째 이미지 사용
-        first_img = self.images.first()
-        if first_img and first_img.image:
-            return first_img.image.url
+        """대표 이미지 URL 반환"""
+        if not self.image_gallery:
+            return None
             
-        # 새로운 이미지가 없으면 기존 main_image 사용 (하위 호환성)
-        if self.main_image:
-            return self.main_image.url
+        # is_main=True인 이미지 찾기
+        for img in self.image_gallery:
+            if img.get('is_main', False) and img.get('url'):
+                return img['url']
+        
+        # 대표 이미지가 없으면 첫 번째 이미지
+        if self.image_gallery and self.image_gallery[0].get('url'):
+            return self.image_gallery[0]['url']
             
         return None
 
     def get_all_images(self):
         """모든 이미지 정보 반환"""
-        images_data = []
+        if not self.image_gallery:
+            return []
         
-        # 새로운 다중 이미지들
-        for img in self.images.all().order_by('order', 'created_at'):
-            images_data.append(img.get_image_data())
+        # order로 정렬해서 반환
+        return sorted(self.image_gallery, key=lambda x: x.get('order', 0))
+
+    def add_image(self, image_file, image_type='other', caption='', is_main=False, order=None):
+        """이미지 추가 메서드"""
+        import uuid
+        from django.core.files.storage import default_storage
         
-        # 기존 이미지들도 포함 (하위 호환성) - 새로운 이미지가 없을 때만
-        if not images_data:
-            if self.main_image:
-                images_data.append({
-                    'id': f'legacy_main_{self.id}',
-                    'url': self.main_image.url,
-                    'type': 'main',
-                    'type_display': '메인 이미지',
-                    'caption': '',
-                    'order': -1,
-                    'is_main': True,
-                    'width': None,
-                    'height': None,
-                    'file_size': None,
-                })
-            
-            if self.poster_image:
-                images_data.append({
-                    'id': f'legacy_poster_{self.id}',
-                    'url': self.poster_image.url,
-                    'type': 'poster',
-                    'type_display': '포스터',
-                    'caption': '',
-                    'order': 0,
-                    'is_main': False,
-                    'width': None,
-                    'height': None,
-                    'file_size': None,
-                })
+        if not self.image_gallery:
+            self.image_gallery = []
         
-        return images_data
+        # 순서 설정
+        if order is None:
+            order = len(self.image_gallery)
+        
+        # 대표 이미지 설정시 기존 대표 이미지 해제
+        if is_main:
+            for img in self.image_gallery:
+                img['is_main'] = False
+        
+        # 이미지 저장 및 메타데이터 추출
+        file_path = default_storage.save(
+            f'bday_cafes/images/{self.id}/{image_file.name}',
+            image_file
+        )
+        
+        # 이미지 메타데이터
+        width, height, file_size = None, None, None
+        try:
+            full_path = default_storage.path(file_path)
+            with Image.open(full_path) as img:
+                width, height = img.size
+                file_size = os.path.getsize(full_path)
+        except Exception as e:
+            print(f"이미지 메타데이터 추출 실패: {e}")
+        
+        # 이미지 정보 추가
+        image_data = {
+            'id': str(uuid.uuid4()),
+            'url': default_storage.url(file_path),
+            'type': image_type,
+            'caption': caption,
+            'is_main': is_main,
+            'order': order,
+            'width': width,
+            'height': height,
+            'file_size': file_size,
+            'created_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+        
+        self.image_gallery.append(image_data)
+        self.save(update_fields=['image_gallery'])
+        
+        return image_data
+
+    def remove_image(self, image_id):
+        """이미지 제거 메서드"""
+        if not self.image_gallery:
+            return False
+        
+        # 해당 이미지 찾기 및 제거
+        for i, img in enumerate(self.image_gallery):
+            if img.get('id') == image_id:
+                # 파일 삭제
+                try:
+                    from django.core.files.storage import default_storage
+                    file_path = img['url'].replace(default_storage.base_url, '')
+                    if default_storage.exists(file_path):
+                        default_storage.delete(file_path)
+                except Exception as e:
+                    print(f"파일 삭제 실패: {e}")
+                
+                # 목록에서 제거
+                self.image_gallery.pop(i)
+                self.save(update_fields=['image_gallery'])
+                return True
+        
+        return False
+
+    def set_main_image(self, image_id):
+        """대표 이미지 설정"""
+        if not self.image_gallery:
+            return False
+        
+        changed = False
+        for img in self.image_gallery:
+            if img.get('id') == image_id:
+                img['is_main'] = True
+                changed = True
+            else:
+                img['is_main'] = False
+        
+        if changed:
+            self.save(update_fields=['image_gallery'])
+        
+        return changed
+
+    def reorder_images(self, image_orders):
+        """이미지 순서 변경"""
+        # image_orders: [{'id': 'img_1', 'order': 0}, {'id': 'img_2', 'order': 1}, ...]
+        if not self.image_gallery:
+            return False
+        
+        order_map = {item['id']: item['order'] for item in image_orders}
+        
+        for img in self.image_gallery:
+            if img.get('id') in order_map:
+                img['order'] = order_map[img['id']]
+        
+        self.save(update_fields=['image_gallery'])
+        return True
 
     @property
     def special_benefits_list(self):
@@ -175,7 +268,6 @@ class BdayCafe(models.Model):
         """해시태그를 리스트로 반환"""
         if not self.hashtags:
             return []
-        # 공백과 #으로 분할하여 정리
         tags = []
         for tag in self.hashtags.replace('#', ' ').split():
             tag = tag.strip()
@@ -183,89 +275,11 @@ class BdayCafe(models.Model):
                 tags.append(tag)
         return tags
 
+    @property
+    def image_count(self):
+        """이미지 개수 반환"""
+        return len(self.image_gallery) if self.image_gallery else 0
 
-class BdayCafeImage(models.Model):
-    """생일카페 다중 이미지"""
-    IMAGE_TYPE_CHOICES = [
-        ('main', '메인 이미지'),
-        ('poster', '포스터'),
-
-    ]
-    
-    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='bday_cafes/images/%Y/%m/', verbose_name='이미지')
-    image_type = models.CharField(max_length=20, choices=IMAGE_TYPE_CHOICES, default='other', verbose_name='이미지 유형')
-    caption = models.CharField(max_length=200, blank=True, verbose_name='이미지 설명')
-    order = models.PositiveIntegerField(default=0, verbose_name='순서')
-    is_main = models.BooleanField(default=False, verbose_name='대표 이미지')
-    
-    # 이미지 메타데이터
-    width = models.PositiveIntegerField(null=True, blank=True)
-    height = models.PositiveIntegerField(null=True, blank=True)
-    file_size = models.PositiveIntegerField(null=True, blank=True, verbose_name='파일 크기(bytes)')
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        ordering = ['order', 'created_at']
-        verbose_name = '생카 이미지'
-        verbose_name_plural = '생카 이미지들'
-        indexes = [
-            models.Index(fields=['cafe', 'is_main']),
-            models.Index(fields=['cafe', 'order']),
-        ]
-    
-    def save(self, *args, **kwargs):
-        # 대표 이미지가 설정되면 같은 카페의 다른 이미지들의 is_main을 False로 변경
-        if self.is_main:
-            BdayCafeImage.objects.filter(cafe=self.cafe, is_main=True).exclude(pk=self.pk).update(is_main=False)
-        
-        super().save(*args, **kwargs)
-        
-        # 이미지 최적화 및 메타데이터 저장
-        if self.image and hasattr(self.image, 'path') and os.path.exists(self.image.path):
-            try:
-                with Image.open(self.image.path) as img:
-                    self.width, self.height = img.size
-                    self.file_size = os.path.getsize(self.image.path)
-                    
-                    # 이미지 최적화 (너무 클 경우)
-                    max_size = (1920, 1920)
-                    if img.width > max_size[0] or img.height > max_size[1]:
-                        img.thumbnail(max_size, Image.Resampling.LANCZOS)
-                        img.save(self.image.path, optimize=True, quality=85)
-                        
-                        self.width, self.height = img.size
-                        self.file_size = os.path.getsize(self.image.path)
-                
-                # 메타데이터 업데이트 (무한 루프 방지)
-                if self.pk:
-                    BdayCafeImage.objects.filter(pk=self.pk).update(
-                        width=self.width,
-                        height=self.height,
-                        file_size=self.file_size
-                    )
-            except Exception as e:
-                print(f"이미지 처리 중 오류: {e}")
-    
-    def __str__(self):
-        return f"{self.cafe.cafe_name} - {self.get_image_type_display()}"
-    
-    def get_image_data(self):
-        """프론트엔드용 이미지 데이터"""
-        return {
-            'id': self.id,
-            'url': self.image.url if self.image else None,
-            'type': self.image_type,
-            'type_display': self.get_image_type_display(),
-            'caption': self.caption,
-            'order': self.order,
-            'is_main': self.is_main,
-            'width': self.width,
-            'height': self.height,
-            'file_size': self.file_size,
-        }
 
 
 class CafeFavorite(models.Model):
@@ -278,7 +292,6 @@ class CafeFavorite(models.Model):
         unique_together = ('user', 'cafe')
         verbose_name = '카페 즐겨찾기'
 
-# 최신 본 글
 class CafeViewHistory(models.Model):
     """카페 조회 기록"""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='사용자')
@@ -289,7 +302,7 @@ class CafeViewHistory(models.Model):
     class Meta:
         verbose_name = '카페 조회 기록'
         verbose_name_plural = '카페 조회 기록들'
-        unique_together = ('user', 'cafe')  # 사용자당 카페마다 하나의 기록만
+        unique_together = ('user', 'cafe')
         ordering = ['-viewed_at']
         indexes = [
             models.Index(fields=['user', '-viewed_at']),
@@ -298,5 +311,4 @@ class CafeViewHistory(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.cafe.cafe_name} ({self.viewed_at})"
-
 

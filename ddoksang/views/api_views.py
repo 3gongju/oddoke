@@ -34,7 +34,7 @@ DEFAULT_PAGE_SIZE = getattr(settings, 'DEFAULT_PAGE_SIZE', 10)
 MAX_NEARBY_CAFES = getattr(settings, 'MAX_NEARBY_CAFES', 20)
 
 
-# ✅ 추가: 한글 유사도 계산 클래스
+#  한글 유사도 계산 클래스
 class KoreanStringSimilarity:
     """한글 문자열 유사도 계산"""
     
@@ -135,7 +135,7 @@ class KoreanStringSimilarity:
         return min(1.0, max(0.0, final_similarity))
 
 
-# ✅ 추가: 날짜 겹침 확인 함수
+#  날짜 겹침 확인 함수
 def check_date_overlap(start1, end1, start2, end2, tolerance_days=7):
     """두 날짜 범위가 겹치는지 확인 (여유일 포함)"""
     try:
@@ -211,7 +211,6 @@ def cafe_quick_view(request, cafe_id):
         if data:
             data.update({
                 'road_address': cafe.road_address,
-                'hashtags': cafe.hashtags,
                 'event_description': cafe.event_description,
                 'cafe_type_display': cafe.get_cafe_type_display(),
                 'days_remaining': cafe.days_remaining,
@@ -236,7 +235,7 @@ def nearby_cafes_api(request):
         if not is_valid_coordinates(lat, lng):
             return JsonResponse({'success': False, 'error': '유효하지 않은 좌표입니다.'}, status=400)
         
-        # 🔧 수정: get_all_nearby_cafes 함수 사용 (모든 아티스트)
+        #  get_all_nearby_cafes 함수 사용 (모든 아티스트)
         from ddoksang.utils.cafe_utils import get_all_nearby_cafes
         
         nearby_cafes = get_all_nearby_cafes(
@@ -392,24 +391,15 @@ def cafe_detail_api(request, cafe_id):
         # 상세 정보 추가
         data.update({
             'road_address': cafe.road_address,
-            'phone': getattr(cafe, 'phone', ''),
-            'website': getattr(cafe, 'website', ''),
-            'hashtags': cafe.hashtags,
-            'hashtags_list': cafe.hashtags.split('#') if cafe.hashtags else [],
             'cafe_type_display': cafe.get_cafe_type_display(),
             'days_remaining': cafe.days_remaining,
             'days_until_start': cafe.days_until_start,
             'special_benefits_list': cafe.special_benefits.split(',') if cafe.special_benefits else [],
-            
             # 이미지 목록
-            'images': [
-                {
-                    'url': img.image.url,
-                    'type': img.image_type,
-                    'is_main': img.is_main,
-                    'caption': getattr(img, 'caption', ''),
-                } for img in cafe.images.all()
-            ] if hasattr(cafe, 'images') else [],
+
+             'images': cafe.get_all_images(),
+            
+
         })
         
         # 찜 상태 (로그인된 사용자만)
@@ -523,7 +513,9 @@ def check_duplicate_cafe(request):
             })
         
         # 기본 필터: 같은 아티스트 + 정확한 날짜 일치
-# ✅ 수정된 검색 로직 - 더 유연한 조건
+#        filters = Q(artist_id=artist_id) & Q(start_date__lte=end_date_obj) & Q(end_date__gte=start_date_obj)
+        
+        # 검색 로직 - 더 유연한 조건
         try:
             from django.db.models import Q
             from datetime import timedelta
@@ -538,7 +530,7 @@ def check_duplicate_cafe(request):
             # 삭제되지 않은 카페만
             filters = filters & ~Q(status='rejected')
             
-            # ✅ 날짜 범위를 확장해서 겹치는 카페들도 찾기
+            # 날짜 범위를 확장해서 겹치는 카페들도 찾기
             # 여유 기간 설정 (전후 30일)
             tolerance_days = 30
             tolerance = timedelta(days=tolerance_days)
@@ -577,7 +569,7 @@ def check_duplicate_cafe(request):
                 'error': '데이터베이스 조회 중 오류가 발생했습니다.'
             }, status=500)
         
-        # ✅ 카페명 유사성 검사 개선
+        # 카페명 유사성 검사 개선
         def normalize_name(name):
             """카페명 정규화 - 더 정확한 비교를 위해 개선"""
             import re
@@ -693,7 +685,7 @@ def check_duplicate_cafe(request):
         """)
         
         if exists:
-            logger.info("🚨 발견된 유사 카페들:")
+            logger.info("발견된 유사 카페들:")
             for i, cafe in enumerate(similar_cafes, 1):
                 logger.info(f"  {i}. {cafe.cafe_name} (ID: {cafe.id})")
         
@@ -719,7 +711,7 @@ def check_duplicate_cafe(request):
             } if settings.DEBUG else None
         }
         
-        # ✅ 중복 카페 정보 추가 (similar_cafes 필드명 사용)
+        # 중복 카페 정보 추가 (similar_cafes 필드명 사용)
         if exists:
             try:
                 # 사용자 찜 목록 확인 (로그인된 경우)
