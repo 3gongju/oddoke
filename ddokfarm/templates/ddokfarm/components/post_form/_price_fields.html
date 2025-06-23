@@ -1,0 +1,416 @@
+<!-- ddokfarm/components/post_form/_price_fields.html -->
+
+<div class="mb-6">
+  <label class="block text-lg font-bold text-gray-900 mb-3">가격</label>
+  
+  <!-- 단일 가격 모드 (기본) -->
+  <div id="single-price-mode">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="flex-1 relative">
+        <input type="number" 
+               id="single-price-input"
+               class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400" 
+               placeholder="가격을 입력하세요"
+               min="0">
+        <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+      </div>
+    </div>
+    
+    <button type="button" 
+            id="add-items-btn"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>
+      <span>덕템 추가하기</span>
+    </button>
+  </div>
+
+  <!-- 개별 아이템 모드 (숨김) -->
+  <div id="multiple-items-mode" class="hidden">
+    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-md font-semibold text-gray-800">덕템별 가격 설정</h4>
+        <span class="text-xs text-gray-500" id="item-counter-display">0/20</span>
+      </div>
+      
+      <!-- 개별 아이템 목록 -->
+      <div id="items-list" class="space-y-3 mb-4">
+        <!-- JavaScript로 동적 생성 -->
+      </div>
+      
+      <!-- 덕템 추가 버튼 -->
+      <button type="button" id="add-another-item-btn" 
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        <span>덕템 추가하기</span>
+      </button>
+      
+      <!-- 단일 모드로 돌아가기 -->
+      <button type="button" id="back-to-single-btn"
+              class="ml-2 inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        <span>단일 가격으로 돌아가기</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 개별 아이템 템플릿 (JavaScript에서 복사해서 사용) -->
+<template id="item-template">
+  <div class="item-row p-3 bg-white border border-gray-200 rounded-md">
+    <!-- 데스크탑: 가로 레이아웃 -->
+    <div class="desktop-layout items-center gap-3">
+      <!-- 덕템 번호 -->
+      <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+        <span class="item-number">덕1</span>
+      </div>
+      
+      <!-- 물건명 입력 -->
+      <div class="flex-1">
+        <input type="text" 
+               class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+               placeholder="물건명 (선택사항)" 
+               maxlength="20">
+      </div>
+      
+      <!-- 가격 입력 -->
+      <div class="flex-shrink-0 w-32">
+        <div class="relative">
+          <input type="number" 
+                 class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                 placeholder="가격" 
+                 min="0" 
+                 required>
+          <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+        </div>
+      </div>
+      
+      <!-- 삭제 버튼 -->
+      <button type="button" 
+              class="remove-item-btn flex-shrink-0 w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 모바일: 세로 레이아웃 -->
+    <div class="mobile-layout space-y-3">
+      <!-- 덕템 번호 + 삭제 버튼 -->
+      <div class="flex items-center justify-between">
+        <div class="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+          <span class="item-number-mobile">덕1</span>
+        </div>
+        <button type="button" 
+                class="remove-item-btn w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- 물건명 입력 (전체 너비) -->
+      <div>
+        <input type="text" 
+               class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+               placeholder="물건명 (선택사항)" 
+               maxlength="20">
+      </div>
+      
+      <!-- 가격 입력 -->
+      <div class="flex items-center gap-2">
+        <div class="flex-1 relative">
+          <input type="number" 
+                 class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                 placeholder="가격" 
+                 min="0" 
+                 required>
+          <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- CSS로 반응형 제어 -->
+<style>
+  /* 기본적으로 데스크탑 레이아웃만 표시 */
+  .desktop-layout {
+    display: flex;
+  }
+  .mobile-layout {
+    display: none;
+  }
+  
+  /* 모바일에서는 반대로 */
+  @media screen and (max-width: 767px) {
+    .desktop-layout {
+      display: none !important;
+    }
+    .mobile-layout {
+      display: block !important;
+    }
+  }
+  
+  /* 데스크탑에서 확실히 */
+  @media screen and (min-width: 768px) {
+    .desktop-layout {
+      display: flex !important;
+    }
+    .mobile-layout {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const singlePriceMode = document.getElementById('single-price-mode');
+  const multipleItemsMode = document.getElementById('multiple-items-mode');
+  const singlePriceInput = document.getElementById('single-price-input');
+  const addItemsBtn = document.getElementById('add-items-btn');
+  const addAnotherItemBtn = document.getElementById('add-another-item-btn');
+  const backToSingleBtn = document.getElementById('back-to-single-btn');
+  const itemsList = document.getElementById('items-list');
+  const itemTemplate = document.getElementById('item-template');
+  const itemCounterDisplay = document.getElementById('item-counter-display');
+  
+  let itemCounter = 0;
+  let isMultipleMode = false;
+
+  // 덕템 추가하기 버튼 (단일 → 복수 모드 전환)
+  addItemsBtn.addEventListener('click', function() {
+    switchToMultipleMode();
+    
+    // 단일 가격이 입력되어 있으면 첫 번째 아이템으로 이동
+    const singlePrice = singlePriceInput.value;
+    if (singlePrice && singlePrice > 0) {
+      addItem(singlePrice);
+    } else {
+      addItem(); // 빈 아이템 추가
+    }
+    addItem(); // 두 번째 아이템도 기본으로 추가
+  });
+
+  // 덕템 추가하기 버튼 (복수 모드에서)
+  addAnotherItemBtn.addEventListener('click', function() {
+    addItem();
+  });
+
+  // 단일 모드로 돌아가기
+  backToSingleBtn.addEventListener('click', function() {
+    switchToSingleMode();
+  });
+
+  // 단일 모드로 전환
+  function switchToSingleMode() {
+    singlePriceMode.classList.remove('hidden');
+    multipleItemsMode.classList.add('hidden');
+    isMultipleMode = false;
+    
+    // 아이템들 초기화
+    itemsList.innerHTML = '';
+    itemCounter = 0;
+    updateUI();
+    
+    // 첫 번째 아이템의 가격을 단일 가격으로 이동 (옵션)
+    // 필요에 따라 구현
+  }
+
+  // 복수 모드로 전환
+  function switchToMultipleMode() {
+    singlePriceMode.classList.add('hidden');
+    multipleItemsMode.classList.remove('hidden');
+    isMultipleMode = true;
+  }
+
+  // 아이템 추가
+  function addItem(defaultPrice = '') {
+    if (itemCounter >= 20) {
+      alert('덕템은 최대 20개까지만 추가할 수 있습니다.');
+      return;
+    }
+    
+    itemCounter++;
+    const clone = itemTemplate.content.cloneNode(true);
+    
+    // 덕템 번호 설정
+    const itemNumber = clone.querySelector('.item-number');
+    const itemNumberMobile = clone.querySelector('.item-number-mobile');
+    
+    if (itemNumber) itemNumber.textContent = `덕${itemCounter}`;
+    if (itemNumberMobile) itemNumberMobile.textContent = `덕${itemCounter}`;
+    
+    // name 속성 설정 (폼 제출용)
+    const nameInput = clone.querySelector('.item-name-input');
+    const nameInputMobile = clone.querySelector('.item-name-input-mobile');
+    const priceInput = clone.querySelector('.item-price-input');
+    const priceInputMobile = clone.querySelector('.item-price-input-mobile');
+    
+    if (nameInput) nameInput.name = `item_prices-${itemCounter-1}-item_name`;
+    if (nameInputMobile) nameInputMobile.name = `item_prices-${itemCounter-1}-item_name`;
+    if (priceInput) {
+      priceInput.name = `item_prices-${itemCounter-1}-price`;
+      if (defaultPrice) priceInput.value = defaultPrice;
+    }
+    if (priceInputMobile) {
+      priceInputMobile.name = `item_prices-${itemCounter-1}-price`;
+      if (defaultPrice) priceInputMobile.value = defaultPrice;
+    }
+    
+    // 동기화: 한쪽에 입력하면 다른 쪽도 업데이트
+    if (nameInput && nameInputMobile) {
+      nameInput.addEventListener('input', function() {
+        nameInputMobile.value = this.value;
+      });
+      nameInputMobile.addEventListener('input', function() {
+        nameInput.value = this.value;
+      });
+    }
+    
+    if (priceInput && priceInputMobile) {
+      priceInput.addEventListener('input', function() {
+        priceInputMobile.value = this.value;
+      });
+      priceInputMobile.addEventListener('input', function() {
+        priceInput.value = this.value;
+      });
+    }
+    
+    // 삭제 버튼 이벤트
+    clone.querySelectorAll('.remove-item-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        removeItem(this.closest('.item-row'));
+      });
+    });
+    
+    itemsList.appendChild(clone);
+    updateUI();
+    
+    // 새로 추가된 입력 필드에 포커스
+    const isMobile = window.innerWidth < 768;
+    const focusTarget = isMobile 
+      ? itemsList.lastElementChild.querySelector('.item-name-input-mobile')
+      : itemsList.lastElementChild.querySelector('.item-name-input');
+    
+    if (focusTarget) {
+      focusTarget.focus();
+    }
+  }
+
+  // 아이템 제거
+  function removeItem(itemRow) {
+    // 최소 1개는 유지
+    if (itemCounter <= 1) {
+      alert('최소 1개의 덕템은 있어야 합니다.');
+      return;
+    }
+    
+    itemRow.remove();
+    renumberItems();
+    updateUI();
+  }
+
+  // 아이템 번호 재정렬
+  function renumberItems() {
+    const items = itemsList.querySelectorAll('.item-row');
+    itemCounter = items.length;
+    
+    items.forEach((item, index) => {
+      const number = index + 1;
+      
+      // 덕템 번호 업데이트
+      const itemNumber = item.querySelector('.item-number');
+      const itemNumberMobile = item.querySelector('.item-number-mobile');
+      if (itemNumber) itemNumber.textContent = `덕${number}`;
+      if (itemNumberMobile) itemNumberMobile.textContent = `덕${number}`;
+      
+      // name 속성도 업데이트
+      const nameInput = item.querySelector('.item-name-input');
+      const nameInputMobile = item.querySelector('.item-name-input-mobile');
+      const priceInput = item.querySelector('.item-price-input');
+      const priceInputMobile = item.querySelector('.item-price-input-mobile');
+      
+      if (nameInput) nameInput.name = `item_prices-${index}-item_name`;
+      if (nameInputMobile) nameInputMobile.name = `item_prices-${index}-item_name`;
+      if (priceInput) priceInput.name = `item_prices-${index}-price`;
+      if (priceInputMobile) priceInputMobile.name = `item_prices-${index}-price`;
+    });
+  }
+
+  // UI 상태 업데이트
+  function updateUI() {
+    // 카운터 표시
+    itemCounterDisplay.textContent = `${itemCounter}/20`;
+    
+    // 최대 개수 도달 시 추가 버튼 비활성화
+    if (itemCounter >= 20) {
+      addAnotherItemBtn.disabled = true;
+      addAnotherItemBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      addAnotherItemBtn.querySelector('span').textContent = '덕템 추가하기 (최대 20개)';
+    } else {
+      addAnotherItemBtn.disabled = false;
+      addAnotherItemBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      addAnotherItemBtn.querySelector('span').textContent = '덕템 추가하기';
+    }
+  }
+
+  // 폼 제출 시 Django formset management form 데이터 추가
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      if (isMultipleMode) {
+        // 기존 management form 필드 제거
+        const existingManagement = form.querySelectorAll('input[name^="item_prices-"][name$="FORMS"]');
+        existingManagement.forEach(input => input.remove());
+        
+        // 새로운 management form 데이터 추가
+        const managementFields = [
+          { name: 'item_prices-TOTAL_FORMS', value: itemCounter },
+          { name: 'item_prices-INITIAL_FORMS', value: 0 },
+          { name: 'item_prices-MIN_NUM_FORMS', value: 0 },
+          { name: 'item_prices-MAX_NUM_FORMS', value: 20 }
+        ];
+        
+        managementFields.forEach(field => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = field.name;
+          input.value = field.value;
+          form.appendChild(input);
+        });
+      } else {
+        // 단일 모드일 때는 단일 가격을 ItemPrice 하나로 처리
+        const singlePrice = singlePriceInput.value;
+        if (singlePrice && singlePrice > 0) {
+          // 숨겨진 input으로 단일 아이템 데이터 추가
+          const managementFields = [
+            { name: 'item_prices-TOTAL_FORMS', value: 1 },
+            { name: 'item_prices-INITIAL_FORMS', value: 0 },
+            { name: 'item_prices-MIN_NUM_FORMS', value: 0 },
+            { name: 'item_prices-MAX_NUM_FORMS', value: 20 },
+            { name: 'item_prices-0-item_name', value: '' },
+            { name: 'item_prices-0-price', value: singlePrice }
+          ];
+          
+          managementFields.forEach(field => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = field.name;
+            input.value = field.value;
+            form.appendChild(input);
+          });
+        }
+      }
+    });
+  }
+
+  // 초기 UI 설정
+  updateUI();
+});
+</script>

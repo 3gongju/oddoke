@@ -5,7 +5,7 @@ from django.http import Http404, HttpResponseForbidden, HttpResponseNotAllowed
 from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
-from django.db.models import Q, F
+from django.db.models import Q, F, Min
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.forms import modelformset_factory
@@ -35,10 +35,10 @@ from .utils import (
     get_ddokfarm_category_urls,
 )
 from ddokchat.models import ChatRoom
+
 # ✅ 홈 화면 (루트 URL)
 def main(request):
     return render(request, 'main/home.html')
-
 
 # 전체 게시글 보기
 def index(request):
@@ -75,19 +75,21 @@ def index(request):
             md_q |= Q(md=md)
         sell_md_conditions = md_q
     
-    # 가격 필터링
+    # ✅ 가격 필터링 - ItemPrice를 통해 처리
     price_conditions = Q()
     if min_price:
         try:
             min_price_val = float(min_price)
-            price_conditions &= Q(price__gte=min_price_val)
+            # ItemPrice의 최소 가격으로 필터링
+            price_conditions &= Q(id__in=get_posts_with_min_price(min_price_val))
         except ValueError:
             min_price = ''
     
     if max_price:
         try:
             max_price_val = float(max_price)
-            price_conditions &= Q(price__lte=max_price_val)
+            # ItemPrice의 최대 가격으로 필터링 
+            price_conditions &= Q(id__in=get_posts_with_max_price(max_price_val))
         except ValueError:
             max_price = ''
 
@@ -108,12 +110,12 @@ def index(request):
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
         common_filter = text_filter | artist_filter | member_filter
 
-        # ✅ 판매 게시글 - MD 필터 포함
+        # ✅ 판매 게시글 - MD 필터 포함, 가격 필터 수정
         sell_results = FarmSellPost.objects.filter(
             common_filter & filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
         ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
-        # ✅ 대여 게시글 - MD 필터 제외
+        # ✅ 대여 게시글 - MD 필터 제외, 가격 필터 수정
         rental_results = FarmRentalPost.objects.filter(
             common_filter & filter_conditions & price_conditions & wantto_conditions
         ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
@@ -140,12 +142,12 @@ def index(request):
     else:
         # 카테고리별 필터링
         if category == 'sell':
-            # ✅ 판매 - MD 필터 포함
+            # ✅ 판매 - MD 필터 포함, 가격 필터 수정
             posts = FarmSellPost.objects.filter(
                 filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'rental':
-            # ✅ 대여 - MD 필터 제외
+            # ✅ 대여 - MD 필터 제외, 가격 필터 수정
             posts = FarmRentalPost.objects.filter(
                 filter_conditions & price_conditions & wantto_conditions
             ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
@@ -199,13 +201,13 @@ def index(request):
     if show_available_only:
         posts = [post for post in posts if not post.is_sold]
 
-    # 정렬 로직 (기존과 동일)
+    # ✅ 정렬 로직 - effective_price 프로퍼티 사용
     if sort_by == 'latest':
         posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
     elif sort_by == 'price_low':
-        posts = sorted(posts, key=lambda x: getattr(x, 'price', float('inf')))
+        posts = sorted(posts, key=lambda x: getattr(x, 'effective_price', float('inf')))
     elif sort_by == 'price_high':
-        posts = sorted(posts, key=lambda x: getattr(x, 'price', 0), reverse=True)
+        posts = sorted(posts, key=lambda x: getattr(x, 'effective_price', 0), reverse=True)
     elif sort_by == 'likes':
         posts = sorted(posts, key=lambda x: x.like.count(), reverse=True)
     else:
@@ -219,14 +221,14 @@ def index(request):
     # 필터 표시용 데이터 생성 (기존과 동일)
     shipping_choices = dict(FarmSellPost.SHIPPING_CHOICES)
     condition_choices = dict(FarmSellPost.CONDITION_CHOICES)
-    md_choices = dict(FarmSellPost.MD_CHOICES)  # ✅ 새로 추가
+    md_choices = dict(FarmSellPost.MD_CHOICES)
     
     # 상품 상태 표시 매핑 생성
     condition_display_map = {}
     for condition in selected_conditions:
         condition_display_map[condition] = condition_choices.get(condition, condition)
     
-    # ✅ 새로 추가: MD 종류 표시 매핑 생성
+    # MD 종류 표시 매핑 생성
     md_display_map = {}
     for md in selected_md:
         md_display_map[md] = md_choices.get(md, md)
@@ -234,7 +236,7 @@ def index(request):
     context = {
         'posts': posts,
         'category': category,
-        'wantto': wantto,  # 템플릿에서는 wantto로 사용
+        'wantto': wantto,
         'query': query,
         'sort_by': sort_by,
         'show_available_only': show_available_only,
@@ -243,18 +245,58 @@ def index(request):
         'category_urls': get_ddokfarm_category_urls(),
         'default_category': 'sell',
         
-        # 필터링 관련 컨텍스트 (기존과 동일)
+        # 필터링 관련 컨텍스트
         'selected_shipping': selected_shipping,
         'selected_conditions': selected_conditions,
-        'selected_md': selected_md,  # ✅ 새로 추가
+        'selected_md': selected_md,
         'min_price': min_price,
         'max_price': max_price,
         'selected_shipping_display': shipping_choices.get(selected_shipping, ''),
         'condition_display_map': condition_display_map,
-        'md_display_map': md_display_map,  # ✅ 새로 추가
+        'md_display_map': md_display_map,
     }
 
     return render(request, 'ddokfarm/index.html', context)
+
+# ✅ 가격 필터링을 위한 헬퍼 함수들
+def get_posts_with_min_price(min_price):
+    """최소 가격 이상인 게시글 ID 목록 반환"""
+    # 판매/대여 게시글 중에서 ItemPrice의 최소값이 min_price 이상인 것들
+    sell_ids = []
+    rental_ids = []
+    
+    # 판매 게시글
+    for post in FarmSellPost.objects.all():
+        min_post_price, _ = post.get_price_range()
+        if min_post_price >= min_price:
+            sell_ids.append(post.id)
+    
+    # 대여 게시글
+    for post in FarmRentalPost.objects.all():
+        min_post_price, _ = post.get_price_range()
+        if min_post_price >= min_price:
+            rental_ids.append(post.id)
+    
+    return sell_ids + rental_ids
+
+def get_posts_with_max_price(max_price):
+    """최대 가격 이하인 게시글 ID 목록 반환"""
+    sell_ids = []
+    rental_ids = []
+    
+    # 판매 게시글
+    for post in FarmSellPost.objects.all():
+        _, max_post_price = post.get_price_range()
+        if max_post_price <= max_price and max_post_price > 0:
+            sell_ids.append(post.id)
+    
+    # 대여 게시글
+    for post in FarmRentalPost.objects.all():
+        _, max_post_price = post.get_price_range()
+        if max_post_price <= max_price and max_post_price > 0:
+            rental_ids.append(post.id)
+    
+    return sell_ids + rental_ids
 
 # 판매 게시글 보기
 def sell_index(request):
@@ -303,12 +345,13 @@ def post_detail(request, category, post_id):
         'is_owner': is_owner,
     }
 
-    # 개별 가격 정보 추가
+    # ✅ 개별 가격 정보 추가 (판매/대여)
     if category in ['sell', 'rental']:
         item_prices = post.get_item_prices().order_by('id')
         context['item_prices'] = item_prices
-        context['has_individual_prices'] = item_prices.exists()
+        context['has_individual_prices'] = item_prices.count() > 1  # 2개 이상일 때만 개별 가격으로 간주
 
+    # 분철 처리 (기존과 동일)
     if category == 'split':
         # 승인된 신청에서 멤버들을 가져와서 checked_out_members에 추가
         approved_applications = SplitApplication.objects.filter(
@@ -355,6 +398,38 @@ def post_detail(request, category, post_id):
         context['members'] = post.members.all()
 
     return render(request, 'ddokfarm/detail.html', context)
+
+# ✅ 개별 가격 저장 헬퍼 함수 (개선)
+def save_item_prices(request, post):
+    """ItemPrice 저장 - 단일/복수 모드 통합 처리"""
+    content_type = ContentType.objects.get_for_model(post.__class__)
+    
+    # 기존 ItemPrice 모두 삭제 (수정 시)
+    ItemPrice.objects.filter(content_type=content_type, object_id=post.id).delete()
+    
+    # POST 데이터에서 개별 가격 정보 추출
+    total_forms = int(request.POST.get('item_prices-TOTAL_FORMS', 0))
+    
+    if total_forms == 0:
+        # 폴백: 단일 가격 처리 (혹시 모를 경우)
+        return
+    
+    for i in range(total_forms):
+        item_name = request.POST.get(f'item_prices-{i}-item_name', '').strip()
+        price_str = request.POST.get(f'item_prices-{i}-price', '')
+        
+        if price_str:  # 가격이 입력된 경우만 저장
+            try:
+                price = int(price_str)
+                if price > 0:  # 양수인 경우만 저장
+                    ItemPrice.objects.create(
+                        content_type=content_type,
+                        object_id=post.id,
+                        item_name=item_name,
+                        price=price
+                    )
+            except (ValueError, TypeError):
+                continue  # 잘못된 가격 형식은 무시
 
 # 게시글 작성하기
 @login_required
@@ -403,17 +478,11 @@ def post_create(request):
                 if selected_artist_id:
                     post.artist_id = selected_artist_id
 
-                # 개별 가격 설정 처리
-                use_individual_prices = request.POST.get('use_individual_prices')
-                if use_individual_prices and category in ['sell', 'rental']:
-                    # 개별 가격 설정이 체크된 경우 기본 가격을 0으로 설정
-                    post.price = 0
-
                 post.save()
 
-                # 개별 가격 저장 (판매/대여만)
-                if use_individual_prices and category in ['sell', 'rental']:
-                    save_individual_prices(request, post)
+                # ✅ ItemPrice 저장 (판매/대여)
+                if category in ['sell', 'rental']:
+                    save_item_prices(request, post)
 
                 if category == 'split' and formset:
                     for idx, sp_form in enumerate(formset.forms):
@@ -476,13 +545,14 @@ def post_create(request):
         'post': None,
         'submit_label': '작성 완료',
         'cancel_url': reverse('ddokfarm:index'),
-        **get_ajax_base_context(request),
         'mode': 'create',
         'categories': get_ddokfarm_categories(),
+        # ✅ ajax_base_url 직접 추가
+        'ajax_base_url': '/ddokfarm/ajax',
     }
     return render(request, 'ddokfarm/create.html', context)
 
-# 분철 폼셋
+# 분철 폼셋 (기존과 동일)
 @login_required
 def load_split_members_and_prices(request):
     artist_id = request.GET.get('artist_id')
@@ -507,7 +577,7 @@ def load_split_members_and_prices(request):
         {
             'formset': formset,
             'formset_with_names': formset_with_names,
-            'selected_member_ids': [],  # ✅ 빈 리스트 (아무도 체크되지 않은 상태)
+            'selected_member_ids': [],
         },
         request=request
     )
@@ -517,7 +587,7 @@ def load_split_members_and_prices(request):
         'formset_html': formset_html,
     })
 
-# 아티스트 검색
+# 아티스트 검색 (기존과 동일)
 @login_required
 def search_artists(request):
     query = request.GET.get('q', '')
@@ -540,7 +610,7 @@ def search_artists(request):
 
     return JsonResponse(data)
 
-# 게시글 수정
+# ✅ 게시글 수정 (ItemPrice 처리 로직 수정)
 @login_required
 def post_edit(request, category, post_id):
     model = get_post_model(category)
@@ -602,23 +672,11 @@ def post_edit(request, category, post_id):
 
         if form.is_valid() and formset_valid:
             post = form.save(commit=False)
-
-            # 개별 가격 설정 처리
-            use_individual_prices = post_data.get('use_individual_prices')
-            if category in ['sell', 'rental']:
-                if use_individual_prices:
-                    # 개별 가격 설정이 체크된 경우
-                    # 기존 개별 가격들 삭제
-                    post.get_item_prices().delete()
-                    # 새로운 개별 가격들 저장
-                    save_individual_prices(request, post)
-                    # 기본 가격을 0으로 설정
-                    post.price = 0
-                else:
-                    # 개별 가격 설정이 해제된 경우 기존 개별 가격들 삭제
-                    post.get_item_prices().delete()
-
             post.save()
+
+            # ✅ ItemPrice 저장 (판매/대여) - 수정 시에도 동일한 로직
+            if category in ['sell', 'rental']:
+                save_item_prices(request, post)
 
             if category == 'split' and formset_with_names:
                 post.member_prices.all().delete()
@@ -699,38 +757,14 @@ def post_edit(request, category, post_id):
         'cancel_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         'mode': 'edit',
         'categories': get_ddokfarm_categories(),
-        **get_ajax_base_context(request),
         'existing_images': existing_images,
+        # ✅ ajax_base_url 직접 추가
+        'ajax_base_url': '/ddokfarm/ajax',
     }
 
     return render(request, 'ddokfarm/edit.html', context)
 
-# 개별 가격 저장 헬퍼 함수
-def save_individual_prices(request, post):
-    """개별 가격 정보를 저장하는 헬퍼 함수"""
-    content_type = ContentType.objects.get_for_model(post.__class__)
-    
-    # POST 데이터에서 개별 가격 정보 추출
-    total_forms = int(request.POST.get('item_prices-TOTAL_FORMS', 0))
-    
-    for i in range(total_forms):
-        item_name = request.POST.get(f'item_prices-{i}-item_name', '').strip()
-        price_str = request.POST.get(f'item_prices-{i}-price', '')
-        
-        if price_str:  # 가격이 입력된 경우만 저장
-            try:
-                price = int(price_str)
-                if price > 0:  # 양수인 경우만 저장
-                    ItemPrice.objects.create(
-                        content_type=content_type,
-                        object_id=post.id,
-                        item_name=item_name,
-                        price=price
-                    )
-            except (ValueError, TypeError):
-                continue  # 잘못된 가격 형식은 무시
-
-# 게시글 삭제
+# 게시글 삭제 (기존과 동일)
 @login_required
 def post_delete(request, category, post_id):
     model = get_post_model(category)
@@ -761,7 +795,7 @@ def post_delete(request, category, post_id):
 
     return render(request, 'ddokfarm/error_message.html', context)
 
-# 댓글 작성
+# 댓글 작성 (기존과 동일)
 @login_required
 @require_POST
 def comment_create(request, category, post_id):
@@ -804,7 +838,7 @@ def comment_create(request, category, post_id):
     # 일반 요청일 경우 fallback (폼 오류 등)
     return redirect("ddokfarm:post_detail", category=category, post_id=post_id)
 
-# 댓글 삭제
+# 댓글 삭제 (기존과 동일)
 @login_required
 @require_POST
 def comment_delete(request, category, post_id, comment_id):
@@ -829,7 +863,7 @@ def comment_delete(request, category, post_id, comment_id):
     # ✅ 일반 요청일 경우 페이지 리다이렉트
     return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
 
-# 좋아요(찜하기)
+# 좋아요(찜하기) (기존과 동일)
 @login_required
 @require_POST
 def like_post(request, category, post_id):
@@ -848,7 +882,7 @@ def like_post(request, category, post_id):
 
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
-# 판매 완료 표시
+# 판매 완료 표시 (기존과 동일)
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
@@ -889,7 +923,7 @@ def mark_as_sold(request, category, post_id):
     # 🔹 6. 리디렉션
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
-# 아티스트 선택시 멤버 목록 출력
+# 아티스트 선택시 멤버 목록 출력 (기존과 동일)
 def get_members_by_artist(request, artist_id):
     members = Member.objects.filter(artist_name__id=artist_id).distinct()
     member_data = [
@@ -899,7 +933,7 @@ def get_members_by_artist(request, artist_id):
     
     return JsonResponse({"members": member_data})
 
-# 분철 참여 신청
+# 분철 참여 신청 (기존과 동일)
 @login_required
 @require_POST
 def split_application(request, category, post_id):
@@ -951,9 +985,7 @@ def split_application(request, category, post_id):
         'message': f'{len(selected_member_ids)}명의 멤버 신청이 완료되었습니다. 총대의 승인을 기다려주세요.'
     })
 
-# ddokfarm/views.py - manage_split_applications 함수 개선
-# ddokfarm/views.py - manage_split_applications 함수 개선 (채팅 섹션만)
-
+# 분철 참여자 관리 (기존과 동일)
 @login_required
 def manage_split_applications(request, category, post_id):
     if category != 'split':
@@ -1016,6 +1048,7 @@ def manage_split_applications(request, category, post_id):
     
     return render(request, 'ddokfarm/manage_applications.html', context)
 
+# 신청 상태 업데이트 (기존과 동일)
 @login_required
 @require_POST
 def update_application_status(request, category, post_id):

@@ -2,13 +2,12 @@
 {% load static %}
 
 {% block body %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <!-- 헤더 -->
   {% include 'ddokfarm/components/_header.html' %}
 
   <!-- 카테고리 선택 -->
   {% include 'components/post_form/_category_buttons.html' %}
-
 
   <!-- 작성 폼 -->
   <div class="flex justify-center">
@@ -21,6 +20,7 @@
 </div>
 
 <script>
+  // ✅ 원래대로 복구 - 뷰에서 전달받는 방식
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
 </script>

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block body %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   <!-- ✅ 검색바를 헤더 바로 아래로 이동 (웹에서 상단으로) -->
   {% include 'ddokfarm/components/_header.html' %}
   {% include 'components/index/_search_bar.html' with search_action=search_action query=query %}

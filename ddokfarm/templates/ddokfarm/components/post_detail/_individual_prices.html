@@ -2,64 +2,57 @@
 
 {% load humanize %}
 
-<!-- 개별 가격 정보 표시 -->
-{% if has_individual_prices %}
+<!-- 가격 정보 표시 -->
 <div class="mt-4 border-t border-gray-200 pt-4">
-  <!-- 요약 정보 (개별 가격 표시할 때처럼 깔끔하게) -->
+  <!-- 요약 정보 -->
   <div class="flex items-center justify-between mb-2">
     <h3 class="text-lg font-semibold text-gray-900">가격</h3>
     <span class="text-2xl font-bold text-gray-900">{{ post.get_display_price }}</span>
   </div>
-  <div class="text-right">
-    <button id="toggle-individual-prices-btn" 
-            class="text-xs text-blue-600 hover:text-blue-800 underline">
-      자세히 보기
-    </button>
-  </div>
+  
+  {% if has_individual_prices %}
+    <!-- 여러 덕템이 있는 경우 자세히 보기 버튼 -->
+    <div class="text-right">
+      <button id="toggle-individual-prices-btn" 
+              class="text-xs text-blue-600 hover:text-blue-800 underline">
+        자세히 보기
+      </button>
+    </div>
 
-  <!-- 개별 가격 상세 (펼쳐지는 영역) -->
-  <div id="individual-prices-detail" class="hidden mt-4">
-    <div class="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-      {% for item_price in item_prices %}
-        <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-          <!-- 왼쪽: 덕템 번호 + 물건명 -->
-          <div class="flex items-center gap-3">
-            <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
-              덕{{ forloop.counter }}
+    <!-- 개별 가격 상세 (펼쳐지는 영역) -->
+    <div id="individual-prices-detail" class="hidden mt-4">
+      <div class="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        {% for item_price in item_prices %}
+          <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+            <!-- 왼쪽: 덕템 번호 + 물건명 -->
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                덕{{ forloop.counter }}
+              </div>
+              
+              <!-- 물건명이 있을 때만 표시 -->
+              {% if item_price.item_name %}
+                <span class="text-sm font-medium text-gray-900">{{ item_price.item_name }}</span>
+              {% endif %}
             </div>
             
-            <!-- 물건명이 있을 때만 표시 -->
-            {% if item_price.item_name %}
-              <span class="text-sm font-medium text-gray-900">{{ item_price.item_name }}</span>
-            {% endif %}
+            <!-- 오른쪽: 가격 -->
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-gray-900">{{ item_price.price|intcomma }}원</span>
+              
+              <!-- 판매 완료 표시 (나중을 위한 준비) -->
+              {% if item_price.is_sold %}
+                <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                  완료
+                </span>
+              {% endif %}
+            </div>
           </div>
-          
-          <!-- 오른쪽: 가격 -->
-          <div class="flex items-center gap-2">
-            <span class="text-lg font-bold text-gray-900">{{ item_price.price|intcomma }}원</span>
-            
-            <!-- 판매 완료 표시 (나중을 위한 준비) -->
-            {% if item_price.is_sold %}
-              <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                완료
-              </span>
-            {% endif %}
-          </div>
-        </div>
-      {% endfor %}
-      
-  </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
 </div>
-
-<!-- 일반 가격 정보 (개별 가격이 없는 경우) -->
-{% else %}
-<div class="mt-4 border-t border-gray-200 pt-4">
-  <div class="flex items-center justify-between">
-    <h3 class="text-lg font-semibold text-gray-900">가격</h3>
-    <span class="text-2xl font-bold text-gray-900">{{ post.price|intcomma }}원</span>
-  </div>
-</div>
-{% endif %}
 
 <!-- JavaScript -->
 <script>

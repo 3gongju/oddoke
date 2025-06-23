@@ -1,16 +1,149 @@
-<!-- ddokfarm/components/post_form/_fields_sell_rental.html 업데이트 -->
+<!-- ddokfarm/components/post_form/_fields_sell_rental.html -->
 
-<!-- 가격 -->
+<!-- 가격 설정 (기존 개별 가격 필드 대신 새로운 통합 필드 사용) -->
 <div class="mb-6">
-  <label for="{{ form.price.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">가격</label>
-  {{ form.price }}
-  {% if form.price.errors %}<p class="text-red-500 text-sm mt-1">{{ form.price.errors.0 }}</p>{% endif %}
+  <label class="block text-lg font-bold text-gray-900 mb-3">가격</label>
+  
+  <!-- 단일 가격 모드 (기본) -->
+  <div id="single-price-mode" {% if mode == 'edit' and post.has_multiple_items %}class="hidden"{% endif %}>
+    <div class="flex items-center gap-3 mb-3">
+      <div class="flex-1 relative">
+        <input type="number" 
+               id="single-price-input"
+               class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400" 
+               placeholder="가격을 입력하세요"
+               min="0"
+               {% if mode == 'edit' and not post.has_multiple_items and post.get_item_prices.first %}
+                 value="{{ post.get_item_prices.first.price }}"
+               {% endif %}>
+        <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+      </div>
+    </div>
+    
+    <button type="button" 
+            id="add-items-btn"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      </svg>
+      <span>덕템 추가하기</span>
+    </button>
+  </div>
+
+  <!-- 개별 아이템 모드 -->
+  <div id="multiple-items-mode" {% if mode != 'edit' or not post.has_multiple_items %}class="hidden"{% endif %}>
+    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-md font-semibold text-gray-800">덕템별 가격 설정</h4>
+        <span class="text-xs text-gray-500" id="item-counter-display">0/20</span>
+      </div>
+      
+      <!-- 개별 아이템 목록 -->
+      <div id="items-list" class="space-y-3 mb-4">
+        <!-- 수정 모드에서 기존 아이템들 표시 -->
+        {% if mode == 'edit' and post.has_multiple_items %}
+          {% for item_price in post.get_item_prices %}
+            <div class="item-row p-3 bg-white border border-gray-200 rounded-md">
+              <!-- 데스크탑 레이아웃 -->
+              <div class="desktop-layout items-center gap-3">
+                <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                  <span class="item-number">덕{{ forloop.counter }}</span>
+                </div>
+                
+                <div class="flex-1">
+                  <input type="text" 
+                         name="item_prices-{{ forloop.counter0 }}-item_name"
+                         value="{{ item_price.item_name }}"
+                         class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                         placeholder="물건명 (선택사항)" 
+                         maxlength="20">
+                </div>
+                
+                <div class="flex-shrink-0 w-32">
+                  <div class="relative">
+                    <input type="number" 
+                           name="item_prices-{{ forloop.counter0 }}-price"
+                           value="{{ item_price.price }}"
+                           class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                           placeholder="가격" 
+                           min="0" 
+                           required>
+                    <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+                  </div>
+                </div>
+                
+                <button type="button" 
+                        class="remove-item-btn flex-shrink-0 w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 모바일 레이아웃 -->
+              <div class="mobile-layout space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+                    <span class="item-number-mobile">덕{{ forloop.counter }}</span>
+                  </div>
+                  <button type="button" 
+                          class="remove-item-btn w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </button>
+                </div>
+                
+                <div>
+                  <input type="text" 
+                         name="item_prices-{{ forloop.counter0 }}-item_name"
+                         value="{{ item_price.item_name }}"
+                         class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                         placeholder="물건명 (선택사항)" 
+                         maxlength="20">
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 relative">
+                    <input type="number" 
+                           name="item_prices-{{ forloop.counter0 }}-price"
+                           value="{{ item_price.price }}"
+                           class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                           placeholder="가격" 
+                           min="0" 
+                           required>
+                    <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      
+      <!-- 덕템 추가 버튼 -->
+      <button type="button" id="add-another-item-btn" 
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        <span>덕템 추가하기</span>
+      </button>
+      
+      <!-- 단일 모드로 돌아가기 -->
+      <button type="button" id="back-to-single-btn"
+              class="ml-2 inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        <span>단일 가격으로 돌아가기</span>
+      </button>
+    </div>
+  </div>
 </div>
 
-<!-- 개별 가격 설정 추가 -->
-{% include "ddokfarm/components/post_form/_individual_prices.html" %}
-
-<!-- 종류 (체크박스로 변경) -->
+<!-- 종류 (판매 게시글에만 표시) -->
+{% if category == 'sell' %}
 <div class="mb-6">
   <label for="{{ form.md.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">종류</label>
   <div class="flex flex-wrap gap-3 sm:gap-4">
@@ -25,6 +158,7 @@
   </div>
   {% if form.md.errors %}<p class="text-red-500 text-sm mt-1">{{ form.md.errors.0 }}</p>{% endif %}
 </div>
+{% endif %}
 
 <!-- 거래 방식 -->
 <div class="mb-6">
@@ -100,18 +234,124 @@
   </div>
 {% endif %}
 
+<!-- 개별 아이템 템플릿 (JavaScript에서 복사해서 사용) -->
+<template id="item-template">
+  <div class="item-row p-3 bg-white border border-gray-200 rounded-md">
+    <!-- 데스크탑: 가로 레이아웃 -->
+    <div class="desktop-layout items-center gap-3">
+      <!-- 덕템 번호 -->
+      <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+        <span class="item-number">덕1</span>
+      </div>
+      
+      <!-- 물건명 입력 -->
+      <div class="flex-1">
+        <input type="text" 
+               class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+               placeholder="물건명 (선택사항)" 
+               maxlength="20">
+      </div>
+      
+      <!-- 가격 입력 -->
+      <div class="flex-shrink-0 w-32">
+        <div class="relative">
+          <input type="number" 
+                 class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                 placeholder="가격" 
+                 min="0" 
+                 required>
+          <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+        </div>
+      </div>
+      
+      <!-- 삭제 버튼 -->
+      <button type="button" 
+              class="remove-item-btn flex-shrink-0 w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 모바일: 세로 레이아웃 -->
+    <div class="mobile-layout space-y-3">
+      <!-- 덕템 번호 + 삭제 버튼 -->
+      <div class="flex items-center justify-between">
+        <div class="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
+          <span class="item-number-mobile">덕1</span>
+        </div>
+        <button type="button" 
+                class="remove-item-btn w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- 물건명 입력 (전체 너비) -->
+      <div>
+        <input type="text" 
+               class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+               placeholder="물건명 (선택사항)" 
+               maxlength="20">
+      </div>
+      
+      <!-- 가격 입력 -->
+      <div class="flex items-center gap-2">
+        <div class="flex-1 relative">
+          <input type="number" 
+                 class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                 placeholder="가격" 
+                 min="0" 
+                 required>
+          <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- CSS로 반응형 제어 -->
+<style>
+  /* 기본적으로 데스크탑 레이아웃만 표시 */
+  .desktop-layout {
+    display: flex;
+  }
+  .mobile-layout {
+    display: none;
+  }
+  
+  /* 모바일에서는 반대로 */
+  @media screen and (max-width: 767px) {
+    .desktop-layout {
+      display: none !important;
+    }
+    .mobile-layout {
+      display: block !important;
+    }
+  }
+  
+  /* 데스크탑에서 확실히 */
+  @media screen and (min-width: 768px) {
+    .desktop-layout {
+      display: flex !important;
+    }
+    .mobile-layout {
+      display: none !important;
+    }
+  }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // 1. DOM 요소 선택
+  // 배송 방법 조건부 표시 로직
   const shippingElements = document.querySelectorAll('input[name="shipping"]');
   const locationField = document.getElementById('location-field');
   
-  // 2. 필드 표시/숨김 제어 함수
   function toggleLocationField() {
     const selectedShipping = document.querySelector('input[name="shipping"]:checked');
     if (selectedShipping) {
       const value = selectedShipping.value;
-      // 직거래 또는 직거래+택배인 경우에만 표시
       if (value === 'direct' || value === 'both') {
         locationField.style.display = 'block';
       } else {
@@ -120,12 +360,188 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // 3. 초기 상태 설정 (수정 모드에서 기존 값이 있을 경우)
   toggleLocationField();
-  
-  // 4. 배송 방법 변경 감지
   shippingElements.forEach(function(element) {
     element.addEventListener('change', toggleLocationField);
   });
+
+  // 가격 관련 JavaScript
+  const singlePriceMode = document.getElementById('single-price-mode');
+  const multipleItemsMode = document.getElementById('multiple-items-mode');
+  const singlePriceInput = document.getElementById('single-price-input');
+  const addItemsBtn = document.getElementById('add-items-btn');
+  const addAnotherItemBtn = document.getElementById('add-another-item-btn');
+  const backToSingleBtn = document.getElementById('back-to-single-btn');
+  const itemsList = document.getElementById('items-list');
+  const itemTemplate = document.getElementById('item-template');
+  const itemCounterDisplay = document.getElementById('item-counter-display');
+  
+  // ✅ 수정 모드에서 기존 아이템 개수 확인
+  let itemCounter = itemsList.querySelectorAll('.item-row').length;
+  let isMultipleMode = !multipleItemsMode.classList.contains('hidden');
+
+  // 나머지 JavaScript 로직은 동일...
+  // (길어서 생략, 기존 로직과 동일)
+  
+  function addItem(defaultPrice = '') {
+    if (itemCounter >= 20) {
+      alert('덕템은 최대 20개까지만 추가할 수 있습니다.');
+      return;
+    }
+    
+    itemCounter++;
+    const clone = itemTemplate.content.cloneNode(true);
+    
+    const itemNumber = clone.querySelector('.item-number');
+    const itemNumberMobile = clone.querySelector('.item-number-mobile');
+    
+    if (itemNumber) itemNumber.textContent = `덕${itemCounter}`;
+    if (itemNumberMobile) itemNumberMobile.textContent = `덕${itemCounter}`;
+    
+    const nameInput = clone.querySelector('.item-name-input');
+    const nameInputMobile = clone.querySelector('.item-name-input-mobile');
+    const priceInput = clone.querySelector('.item-price-input');
+    const priceInputMobile = clone.querySelector('.item-price-input-mobile');
+    
+    if (nameInput) nameInput.name = `item_prices-${itemCounter-1}-item_name`;
+    if (nameInputMobile) nameInputMobile.name = `item_prices-${itemCounter-1}-item_name`;
+    if (priceInput) {
+      priceInput.name = `item_prices-${itemCounter-1}-price`;
+      if (defaultPrice) priceInput.value = defaultPrice;
+    }
+    if (priceInputMobile) {
+      priceInputMobile.name = `item_prices-${itemCounter-1}-price`;
+      if (defaultPrice) priceInputMobile.value = defaultPrice;
+    }
+    
+    // 동기화 로직
+    if (nameInput && nameInputMobile) {
+      nameInput.addEventListener('input', function() {
+        nameInputMobile.value = this.value;
+      });
+      nameInputMobile.addEventListener('input', function() {
+        nameInput.value = this.value;
+      });
+    }
+    
+    if (priceInput && priceInputMobile) {
+      priceInput.addEventListener('input', function() {
+        priceInputMobile.value = this.value;
+      });
+      priceInputMobile.addEventListener('input', function() {
+        priceInput.value = this.value;
+      });
+    }
+    
+    clone.querySelectorAll('.remove-item-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        if (itemCounter <= 1) {
+          alert('최소 1개의 덕템은 있어야 합니다.');
+          return;
+        }
+        this.closest('.item-row').remove();
+        itemCounter--;
+        updateUI();
+      });
+    });
+    
+    itemsList.appendChild(clone);
+    updateUI();
+  }
+
+  function updateUI() {
+    if (itemCounterDisplay) {
+      itemCounterDisplay.textContent = `${itemCounter}/20`;
+    }
+    
+    if (addAnotherItemBtn) {
+      if (itemCounter >= 20) {
+        addAnotherItemBtn.disabled = true;
+        addAnotherItemBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        addAnotherItemBtn.disabled = false;
+        addAnotherItemBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+  }
+
+  // 이벤트 리스너
+  addItemsBtn?.addEventListener('click', function() {
+    singlePriceMode.classList.add('hidden');
+    multipleItemsMode.classList.remove('hidden');
+    isMultipleMode = true;
+    
+    const singlePrice = singlePriceInput.value;
+    if (singlePrice && singlePrice > 0) {
+      addItem(singlePrice);
+    } else {
+      addItem();
+    }
+    addItem();
+  });
+
+  addAnotherItemBtn?.addEventListener('click', function() {
+    addItem();
+  });
+
+  backToSingleBtn?.addEventListener('click', function() {
+    singlePriceMode.classList.remove('hidden');
+    multipleItemsMode.classList.add('hidden');
+    isMultipleMode = false;
+    
+    const firstPriceInput = itemsList.querySelector('.item-price-input');
+    if (firstPriceInput && firstPriceInput.value) {
+      singlePriceInput.value = firstPriceInput.value;
+    }
+    
+    itemsList.innerHTML = '';
+    itemCounter = 0;
+    updateUI();
+  });
+
+  // 폼 제출 시 데이터 처리
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function() {
+      if (isMultipleMode) {
+        const managementFields = [
+          { name: 'item_prices-TOTAL_FORMS', value: itemCounter },
+          { name: 'item_prices-INITIAL_FORMS', value: 0 },
+          { name: 'item_prices-MIN_NUM_FORMS', value: 0 },
+          { name: 'item_prices-MAX_NUM_FORMS', value: 20 }
+        ];
+        
+        managementFields.forEach(field => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = field.name;
+          input.value = field.value;
+          form.appendChild(input);
+        });
+      } else {
+        const singlePrice = singlePriceInput.value;
+        if (singlePrice && singlePrice > 0) {
+          const managementFields = [
+            { name: 'item_prices-TOTAL_FORMS', value: 1 },
+            { name: 'item_prices-INITIAL_FORMS', value: 0 },
+            { name: 'item_prices-MIN_NUM_FORMS', value: 0 },
+            { name: 'item_prices-MAX_NUM_FORMS', value: 20 },
+            { name: 'item_prices-0-item_name', value: '' },
+            { name: 'item_prices-0-price', value: singlePrice }
+          ];
+          
+          managementFields.forEach(field => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = field.name;
+            input.value = field.value;
+            form.appendChild(input);
+          });
+        }
+      }
+    });
+  }
+
+  updateUI();
 });
 </script>
