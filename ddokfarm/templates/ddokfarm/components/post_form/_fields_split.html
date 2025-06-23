@@ -5,18 +5,29 @@
   {% endif %}
 </div>
 
-<!-- 앨범 포함 여부 -->
-<div class="mb-6">
-  <label for="{{ form.album.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">앨범 포함 여부</label>
-  {{ form.album }}
-  {% if form.album.errors %}<p class="text-red-500 text-sm mt-1">{{ form.album.errors.0 }}</p>{% endif %}
+<!-- ddokfarm/templates/ddokfarm/components/post_form/_fields_split.html -->
+
+<!-- 멤버별 가격 입력 formset (AJAX로 로드됨) -->
+<div id="splitprice-formset-wrapper" class="{% if category != 'split' %}hidden{% endif %}">
+  {% if formset %}
+    {% include "ddokfarm/components/post_form/_splitprice_formset.html" with formset=formset member_names=member_names %}
+  {% endif %}
 </div>
 
-<!-- 재배송비 -->
+<!-- 앨범 포함 여부 -->
 <div class="mb-6">
-  <label for="{{ form.shipping_fee.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">재배송비</label>
-  {{ form.shipping_fee }}
-  {% if form.shipping_fee.errors %}<p class="text-red-500 text-sm mt-1">{{ form.shipping_fee.errors.0 }}</p>{% endif %}
+  <label for="{{ form.album.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">앨범 포함 여부</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.album.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.album.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+               {% if choice.0 == form.album.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
+  {% if form.album.errors %}<p class="text-red-500 text-sm mt-1">{{ form.album.errors.0 }}</p>{% endif %}
 </div>
 
 <!-- 구매처 -->
@@ -35,14 +46,35 @@
 
 <!-- 무산 여부 -->
 <div class="mb-6">
-  <label for="{{ form.failure.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">무산 여부</label>
-  {{ form.failure }}
+  <label for="{{ form.failure.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">무산 여부</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.failure.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.failure.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+               {% if choice.0 == form.failure.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
   {% if form.failure.errors %}<p class="text-red-500 text-sm mt-1">{{ form.failure.errors.0 }}</p>{% endif %}
 </div>
 
 <!-- 밀어내기 -->
 <div class="mb-6">
-  <label for="{{ form.push.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">밀어내기</label>
-  {{ form.push }}
+  <label for="{{ form.push.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">밀어내기</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.push.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.push.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+               {% if choice.0 == form.push.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
   {% if form.push.errors %}<p class="text-red-500 text-sm mt-1">{{ form.push.errors.0 }}</p>{% endif %}
 </div>
+
+<!-- 배송 -->
+{% include "ddokfarm/components/post_form/_shipping_fields.html" %}

@@ -4,6 +4,15 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from artist.models import Artist, Member
 
+# 배송 방법 선택지
+SHIPPING_METHOD_CHOICES = [
+    ('post_parcel', '우체국 택배'),       # 우체국 소포
+    ('post_semi_reg', '준등기'),          # 우체국 준등기  
+    ('gs_delivery', '반택'),              # GS25 편의점택배
+    ('cu_delivery', '끼택'),              # CU 편의점택배
+    ('etc', '기타'),                      # 기타 방법
+]
+
 class FarmBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
@@ -14,9 +23,41 @@ class FarmBasePost(models.Model):
     is_sold = models.BooleanField(default=False) # 판매 완료 여부
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
     view_count = models.PositiveIntegerField(default=0)
+    
+    # 배송 관련 필드 추가
+    shipping_methods = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="선택된 배송 방법들 (콤마로 구분)"
+    )
+    shipping_fee = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text="배송비 (원)"
+    )
 
     class Meta:
         abstract = True
+    
+    def get_shipping_methods_list(self):
+        """선택된 배송 방법들을 리스트로 반환"""
+        if not self.shipping_methods:
+            return []
+        return [method.strip() for method in self.shipping_methods.split(',') if method.strip()]
+    
+    def get_shipping_methods_display(self):
+        """선택된 배송 방법들을 문자열로 반환"""
+        if not self.shipping_methods:
+            return "배송 방법 미정"
+        
+        methods = self.get_shipping_methods_list()
+        method_dict = dict(SHIPPING_METHOD_CHOICES)
+        display_names = [method_dict.get(method, method) for method in methods]
+        return ', '.join(display_names)
+    
+    def has_shipping_method(self, method):
+        """특정 배송 방법이 선택되었는지 확인"""
+        return method in self.get_shipping_methods_list()
 
 class ItemPrice(models.Model):
     """개별 물건 가격 정보 (양도/대여 공통)"""
@@ -179,7 +220,7 @@ class FarmSplitPost(FarmBasePost):
     ]
 
     album = models.CharField(max_length=20, choices=ALBUM_CHOICES)
-    shipping_fee = models.PositiveIntegerField()
+    # shipping_fee = models.PositiveIntegerField()
     where = models.CharField(max_length=100)
     when = models.DateField()
     failure = models.CharField(max_length=20, choices=FAILURE_CHOICES)
@@ -257,7 +298,7 @@ class SplitApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
         
-# 대댓글 기능 수정 
+# 대댓글 기능
 class FarmComment(models.Model):
     content = models.CharField(max_length=200)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

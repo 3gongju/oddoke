@@ -24,9 +24,21 @@
               <td class="text-right py-2 text-gray-800">{{ post.get_condition_display }}</td>
             </tr>
             <tr>
-              <th class="text-left py-2 text-gray-700">배송 방법</th>
+              <th class="text-left py-2 text-gray-700">배송 유형</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_shipping_display }}</td>
             </tr>
+            {% if post.shipping_methods %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">배송 방법</th>
+                <td class="text-right py-2 text-gray-800">{{ post.get_shipping_methods_display }}</td>
+              </tr>
+            {% endif %}
+            {% if post.shipping_fee %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">배송비</th>
+                <td class="text-right py-2 text-gray-800">{{ post.shipping_fee|intcomma }}원</td>
+              </tr>
+            {% endif %}
             {% if post.location %}
               <tr>
                 <th class="text-left py-2 text-gray-700">직거래 희망 장소</th>
@@ -50,10 +62,6 @@
               <td class="text-right py-2 text-gray-800">{{ post.get_album_display }}</td>
             </tr>
             <tr>
-              <th class="text-left py-2 text-gray-700">배송비</th>
-              <td class="text-right py-2 text-gray-800">{{ post.shipping_fee|intcomma }}원</td>
-            </tr>
-            <tr>
               <th class="text-left py-2 text-gray-700">구매처</th>
               <td class="text-right py-2 text-gray-800">{{ post.where }}</td>
             </tr>
@@ -69,6 +77,18 @@
               <th class="text-left py-2 text-gray-700">밀어내기</th>
               <td class="text-right py-2 text-gray-800">{{ post.get_push_display }}</td>
             </tr>
+            {% if post.shipping_methods %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">배송 방법</th>
+                <td class="text-right py-2 text-gray-800">{{ post.get_shipping_methods_display }}</td>
+              </tr>
+            {% endif %}
+            {% if post.shipping_fee %}
+              <tr>
+                <th class="text-left py-2 text-gray-700">배송비</th>
+                <td class="text-right py-2 text-gray-800">{{ post.shipping_fee|intcomma }}원</td>
+              </tr>
+            {% endif %}
           {% endif %}
         </tbody>
       </table>

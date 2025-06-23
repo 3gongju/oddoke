@@ -192,9 +192,9 @@
   {% if form.condition.errors %}<p class="text-red-500 text-sm mt-1">{{ form.condition.errors.0 }}</p>{% endif %}
 </div>
 
-<!-- 배송 방법 -->
+<!-- 배송 유형 -->
 <div class="mb-6">
-  <label for="{{ form.shipping.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">배송 방법</label>
+  <label for="{{ form.shipping.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">배송 유형</label>
   <div class="flex flex-wrap gap-3 sm:gap-4">
     {% for choice in form.shipping.field.choices %}
       <label class="inline-flex items-center cursor-pointer">
@@ -206,6 +206,11 @@
     {% endfor %}
   </div>
   {% if form.shipping.errors %}<p class="text-red-500 text-sm mt-1">{{ form.shipping.errors.0 }}</p>{% endif %}
+</div>
+
+<!-- 배송 필드 - 조건부 표시 -->
+<div class="mb-6" id="shipping-fields" style="display: none;">
+  {% include "ddokfarm/components/post_form/_shipping_fields.html" %}
 </div>
 
 <!-- 직거래 장소 - 조건부 표시 -->
@@ -347,22 +352,35 @@ document.addEventListener('DOMContentLoaded', function() {
   // 배송 방법 조건부 표시 로직
   const shippingElements = document.querySelectorAll('input[name="shipping"]');
   const locationField = document.getElementById('location-field');
+  const shippingFields = document.getElementById('shipping-fields'); // 새로 추가된 배송 필드
   
-  function toggleLocationField() {
+  function toggleFields() {
     const selectedShipping = document.querySelector('input[name="shipping"]:checked');
     if (selectedShipping) {
       const value = selectedShipping.value;
+      
+      // 직거래 희망 장소는 직거래나 both 선택 시 표시
       if (value === 'direct' || value === 'both') {
         locationField.style.display = 'block';
       } else {
         locationField.style.display = 'none';
       }
+      
+      // 배송 필드는 배송이나 both 선택 시 표시
+      if (value === 'delivery' || value === 'both') {
+        shippingFields.style.display = 'block';
+      } else {
+        shippingFields.style.display = 'none';
+      }
     }
   }
   
-  toggleLocationField();
+  // 초기 로드 시 실행
+  toggleFields();
+  
+  // 배송 방법 변경 시 실행
   shippingElements.forEach(function(element) {
-    element.addEventListener('change', toggleLocationField);
+    element.addEventListener('change', toggleFields);
   });
 
   // 가격 관련 JavaScript
