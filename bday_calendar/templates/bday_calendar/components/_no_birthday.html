@@ -1,0 +1,44 @@
+{% load static %}
+<style>
+/* no_birthday 컴포넌트 전용 스타일 */
+#no-birthday-view {
+  text-align: center;
+}
+
+#no-birthday-view h2 {
+  color: #000000 !important;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+#no-birthday-view p {
+  color: #6b7280 !important;
+}
+
+#no-birthday-view img {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+/* 생일 멤버가 없을 때 부모 컨테이너 배경 제거 */
+#no-birthday-view:not(.hidden) ~ * {
+  display: none;
+}
+
+/* no-birthday-view가 표시될 때 부모의 게임 컨테이너 배경 제거 */
+.game-container:has(#no-birthday-view:not(.hidden)) {
+  background: transparent !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+</style>
+
+<div id="no-birthday-view" class="text-center hidden">
+  <img src="{% static 'image/ddok_closed_eyes.png' %}" 
+       alt="생일인 멤버 없음" 
+       class="mx-auto h-16 w-16 mb-4">
+  <h2 class="text-2xl font-bold text-black mb-2">오늘은 생일인 멤버가 없어요</h2>
+  <p class="text-gray-300">내일 다시 확인해주세요!</p>
+</div>
