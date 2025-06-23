@@ -426,7 +426,7 @@ function setupImageUploader() {
 
     // ✅ 파일 선택 처리 (JSON 기반 + 압축)
     async function handleFileSelection(newFiles) {
-        console.log('📁 JSON 기반 파일 선택 처리:', newFiles.length, '개');
+        console.log('JSON 기반 파일 선택 처리:', newFiles.length, '개');
 
         const remainingSlots = maxFiles - imageGallery.length;
         
@@ -464,14 +464,15 @@ function setupImageUploader() {
                 const isCompressed = compressedFile !== file;
                 
                 // ✅ JSON 형태의 이미지 데이터 생성
+                const currentOrder = imageGallery.length;
                 const imageData = {
                     id: `img_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
                     file: compressedFile,
                     originalFile: file,
                     url: null,  // 미리보기에서 생성
-                    type: imageGallery.length === 0 ? "main" : "other",
-                    is_main: imageGallery.length === 0,  // 첫 번째가 대표
-                    order: imageGallery.length,
+                    type: currentOrder === 0 ? "main" : "other",  //  첫 번째만 main
+                    is_main: currentOrder === 0,  // 첫 번째만 대표
+                    order: currentOrder,
                     width: null,  // 나중에 설정
                     height: null,  // 나중에 설정
                     file_size: compressedFile.size,
@@ -495,13 +496,14 @@ function setupImageUploader() {
                 console.error('❌ JSON 기반 파일 처리 오류:', error);
                 
                 // 실패시 원본 파일로 추가
+                const currentOrder = imageGallery.length;
                 const imageData = {
                     id: `img_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
                     file: file,
                     url: null,
-                    type: imageGallery.length === 0 ? "main" : "other",
-                    is_main: imageGallery.length === 0,
-                    order: imageGallery.length,
+                    type: currentOrder === 0 ? "main" : "other",
+                    is_main: currentOrder === 0,
+                    order: currentOrder,
                     file_size: file.size,
                     isCompressed: false
                 };
@@ -518,6 +520,7 @@ function setupImageUploader() {
             showToast(`${compressedCount}개 이미지가 압축되었습니다.`, 'success');
         }
     }
+
 
     // Sortable 초기화 (기존과 유사하지만 imageId 기반)
     function initSortable() {
@@ -549,10 +552,16 @@ function setupImageUploader() {
                         const movedItem = imageGallery.splice(oldIndex, 1)[0];
                         imageGallery.splice(newIndex, 0, movedItem);
                         
-                        // order 값 재조정
+                        // ✅ order 값 재조정 및 대표 이미지 플래그 업데이트
                         imageGallery.forEach((img, index) => {
                             img.order = index;
+                            // 첫 번째 위치(index=0)에 있는 이미지만 대표로 설정
+                            img.is_main = (index === 0);
+                            img.type = (index === 0) ? "main" : "other";
                         });
+                        
+                        console.log('대표 이미지 플래그 업데이트 완료:', 
+                                imageGallery.find(img => img.is_main)?.id || 'none');
                         
                         updatePreview();
                     }
@@ -565,9 +574,10 @@ function setupImageUploader() {
 
     // ✅ 이미지 제거 (JSON 기반)
     function removeImage(imageId) {
-        console.log('🗑️ JSON 기반 이미지 제거:', imageId);
         
         const initialLength = imageGallery.length;
+        const removedImage = imageGallery.find(img => img.id === imageId);
+        const wasMainImage = removedImage && removedImage.is_main;
         
         imageGallery = imageGallery.filter(imageData => {
             const shouldKeep = imageData.id !== imageId;
@@ -576,20 +586,21 @@ function setupImageUploader() {
                 if (imageData.url && imageData.url.startsWith('blob:')) {
                     URL.revokeObjectURL(imageData.url);
                 }
-                
-                // ✅ 대표 이미지 재설정 (첫 번째가 대표가 되도록)
-                if (imageData.is_main && imageGallery.length > 0) {
-                    imageGallery[0].is_main = true;
-                    imageGallery[0].type = "main";
-                }
             }
             return shouldKeep;
         });
         
-        // order 재조정
-        imageGallery.forEach((img, index) => {
-            img.order = index;
-        });
+        // ✅ order 재조정 및 대표 이미지 재설정
+        if (imageGallery.length > 0) {
+            imageGallery.forEach((img, index) => {
+                img.order = index;
+                // 첫 번째 이미지가 항상 대표
+                img.is_main = (index === 0);
+                img.type = (index === 0) ? "main" : "other";
+            });
+            
+            console.log('✅ 대표 이미지 재설정:', imageGallery[0].id);
+        }
         
         if (imageGallery.length !== initialLength) {
             console.log('✅ JSON 기반 이미지 제거 완료');
@@ -732,14 +743,30 @@ function setupImageUploader() {
         // 조작 메서드들
         removeFileById: (imageId) => removeImage(imageId),
         setMainImage: (imageId) => {
-            imageGallery.forEach(img => {
-                img.is_main = (img.id === imageId);
-                if (img.is_main) {
-                    img.type = "main";
-                }
+            console.log('대표 이미지 설정:', imageId);
+            
+            // 해당 이미지를 찾아서 맨 앞으로 이동
+            const targetIndex = imageGallery.findIndex(img => img.id === imageId);
+            if (targetIndex === -1) {
+                console.warn('❌ 해당 이미지를 찾을 수 없음:', imageId);
+                return;
+            }
+            
+            // 맨 앞으로 이동
+            const targetImage = imageGallery.splice(targetIndex, 1)[0];
+            imageGallery.unshift(targetImage);
+            
+            // 모든 이미지의 order와 is_main 재설정
+            imageGallery.forEach((img, index) => {
+                img.order = index;
+                img.is_main = (index === 0);
+                img.type = (index === 0) ? "main" : "other";
             });
+            
+            console.log('대표 이미지 설정 완료:', imageGallery[0].id);
             updatePreview();
         },
+        
         
         // 유틸리티
         clear: () => {
