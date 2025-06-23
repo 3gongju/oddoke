@@ -19,39 +19,24 @@
                         </div>
                         <p class="text-base text-gray-900 font-semibold truncate">{{ group.post.title }}</p>
                         
-                        <!-- ✅ 수정된 분철 가격 표시 -->
-                        {% if group.post %}
-                            {% get_post_price_info group.post as price_info %}
-                            {% if price_info and price_info.category_type == 'split' %}
-                                <div class="flex items-center space-x-2">
-                                    <p class="text-lg text-orange-600 font-bold">
-                                        {{ price_info.display_price }}
-                                    </p>
-                                    {% if price_info.has_range %}
-                                        <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">
-                                            멤버별
-                                        </span>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- 멤버 수 정보 -->
-                                {% if price_info.item_count > 0 %}
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        총 {{ price_info.item_count }}명 멤버 가격
-                                    </p>
-                                {% endif %}
-                            {% else %}
-                                <!-- 가격 정보 조회 실패 시 폴백 -->
+                        <!-- ✅ 최적화된 분철 가격 표시 (총대 기준) -->
+                        {% get_post_price_info group.post current_user as price_info %}
+                        {% if price_info and price_info.category_type == 'split' %}
+                            <div class="flex items-center space-x-2">
                                 <p class="text-lg text-orange-600 font-bold">
-                                    {% if group.total_price %}
-                                        {{ group.total_price|floatformat:0|add:"0"|intcomma }}원
-                                    {% else %}
-                                        가격 협의
-                                    {% endif %}
+                                    {{ price_info.display_price }}
+                                </p>
+                                <!-- ✅ 뱃지 제거됨 - 요구사항대로 -->
+                            </div>
+                            
+                            <!-- 멤버 수 정보 -->
+                            {% if price_info.item_count > 0 %}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    총 {{ price_info.item_count }}개 멤버 가격
                                 </p>
                             {% endif %}
                         {% else %}
-                            <!-- group.post가 없는 경우 폴백 -->
+                            <!-- 가격 정보 조회 실패 시 폴백 -->
                             <p class="text-lg text-orange-600 font-bold">
                                 {% if group.total_price %}
                                     {{ group.total_price|floatformat:0|add:"0"|intcomma }}원
@@ -175,17 +160,19 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-2">
                                         <h4 class="font-semibold text-gray-900">{{ room.partner.username }}</h4>
-                                        <!-- ✅ 멤버 배지 추가 -->
+                                        <!-- ✅ 수정된 멤버 배지 - 여러 멤버 표시 -->
                                         {% if room.partner == group.post.user %}
                                             <!-- 총대(게시글 작성자)인 경우 -->
                                             <span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-medium">덕장</span>
                                         {% else %}
-                                            <!-- 일반 참여자인 경우 - 멤버 이름 찾기 -->
-                                            {% for user, member_name in group.partner_member_map.items %}
-                                                {% if user == room.partner %}
-                                                    <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">{{ member_name }}</span>
-                                                {% endif %}
-                                            {% endfor %}
+                                            <!-- ✅ 일반 참여자인 경우 - 여러 멤버명 표시 -->
+                                            {% if group.partner_member_map %}
+                                                {% for user, member_names in group.partner_member_map.items %}
+                                                    {% if user == room.partner %}
+                                                        <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">{{ member_names }}</span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                     <div class="flex items-center space-x-2">

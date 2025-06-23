@@ -13,46 +13,37 @@
                 <div class="flex-1 min-w-0">
                     <p class="text-base text-gray-900 font-semibold truncate">{{ room.post.title }}</p>
                     
-                    <!-- ✅ 수정된 가격 표시 - 안전한 접근 -->
-                    {% get_post_price_info room.post as price_info %}
+                    <!-- ✅ 최적화된 가격 표시 -->
+                    {% get_post_price_info room.post current_user room as price_info %}
                     {% if price_info %}
                         <div class="flex items-center space-x-2">
                             <p class="text-lg text-orange-600 font-bold">
                                 {{ price_info.display_price }}
                             </p>
-                            {% if price_info.has_range %}
-                                <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
-                                    {% if price_info.category_type == 'split' %}멤버별{% else %}범위{% endif %}
-                                </span>
-                            {% endif %}
+                            <!-- ✅ 뱃지 제거됨 - 요구사항대로 -->
                         </div>
                         
-                        <!-- 개수 정보 표시 -->
-                        {% if price_info.item_count > 0 %}
+                        <!-- 개수 정보 표시 (선택적) -->
+                        {% if price_info.item_count > 1 %}
                             <p class="text-xs text-gray-500 mt-1">
                                 {% if price_info.category_type == 'sell' %}
                                     총 {{ price_info.item_count }}개 물건
                                 {% elif price_info.category_type == 'rental' %}
                                     총 {{ price_info.item_count }}개 물건 (대여)
                                 {% elif price_info.category_type == 'split' %}
-                                    {{ price_info.item_count }}명 멤버 가격
+                                    {% if current_user == room.post.user %}
+                                        {{ price_info.item_count }}개 멤버 가격
+                                    {% else %}
+                                        {% get_split_participant_members room.post current_user as member_names %}
+                                        참여 멤버: {{ member_names }}
+                                    {% endif %}
                                 {% endif %}
                             </p>
                         {% endif %}
                     {% else %}
                         <!-- 가격 정보 조회 실패 시 폴백 -->
                         <div class="flex items-center space-x-2">
-                            <p class="text-lg text-orange-600 font-bold">
-                                {% if room.post.category_type == 'sell' or room.post.category_type == 'rental' %}
-                                    {% if room.post.price %}
-                                        {{ room.post.price|floatformat:0|add:"0"|intcomma }}원
-                                    {% else %}
-                                        가격 협의
-                                    {% endif %}
-                                {% else %}
-                                    가격 협의
-                                {% endif %}
-                            </p>
+                            <p class="text-lg text-orange-600 font-bold">가격 협의</p>
                         </div>
                     {% endif %}
                 </div>
