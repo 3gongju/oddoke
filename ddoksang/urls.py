@@ -14,7 +14,7 @@ urlpatterns = [
     path('map/', views.map_view, name='map'),
     path('search/', views.search_view, name='search'),
     # path('list/', views.cafe_list_view, name='cafe_list'),
-   path('tour_map/', cafe_views.tour_map_view, name='tour_map'),
+    path('tour_map/', cafe_views.tour_map_view, name='tour_map'),
     
     # === 카페 상세/등록 ===
     path('create/', views.cafe_create_view, name='create'),
@@ -40,6 +40,8 @@ urlpatterns = [
     path('api/map-data/', views.cafe_map_data_api, name='map_data_api'),
     path('api/search-suggestions/', views.search_suggestions_api, name='search_suggestions_api'),
     path('cafe/check-duplicate/', api_views.check_duplicate_cafe, name='check_duplicate_cafe'),
+    
+    
 
 
 

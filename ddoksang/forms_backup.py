@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import BdayCafe, CafeFavorite
+from .models import BdayCafe, BdayCafeImage, CafeFavorite
 
 class BdayCafeForm(forms.ModelForm):
-    """생일카페 등록/수정 폼 (이미지 갤러리 포함)"""
+    """생일카페 등록/수정 폼"""
 
     class Meta:
         model = BdayCafe
@@ -15,7 +15,6 @@ class BdayCafeForm(forms.ModelForm):
             'start_date', 'end_date', 'start_time', 'end_time',
             'special_benefits', 'event_description', 'hashtags',
             'x_source'
-            # ✅ image_gallery는 JavaScript로 직접 처리 (JSONField)
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
@@ -39,7 +38,16 @@ class BdayCafeForm(forms.ModelForm):
             return f"https://x.com/{username}"
         return x_source
 
- 
+class BdayCafeImageForm(forms.ModelForm):
+    """생일카페 이미지 업로드 폼"""
+    
+    class Meta:
+        model = BdayCafeImage
+        fields = ['image', 'image_type', 'caption', 'order', 'is_main']
+        widgets = {
+            'caption': forms.TextInput(attrs={'placeholder': '이미지 설명'}),
+            'order': forms.NumberInput(attrs={'min': 0}),
+        }
 
 class CafeFavoriteForm(forms.ModelForm):
     """카페 즐겨찾기 폼"""
@@ -50,3 +58,12 @@ class CafeFavoriteForm(forms.ModelForm):
 
 
 
+
+# 다중 이미지 업로드를 위한 FormSet
+BdayCafeImageFormSet = forms.modelformset_factory(
+    BdayCafeImage,
+    form=BdayCafeImageForm,
+    extra=3,  # 기본 3개 이미지 업로드 필드
+    can_delete=True,
+    max_num=10  # 최대 10개 이미지
+)

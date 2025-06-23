@@ -11,36 +11,47 @@
 
   <!-- 실제 게임 화면 -->
   <div id="game-view" class="hidden">
-    <div class="text-center">
-      <div class="relative inline-block mb-4">
-        <img id="game-idol-image" src="" alt="아이돌 사진" class="game-idol-image">
-        <span class="birthday-badge">HBD!</span>
-      </div>
+    <div class="game-layout">
+      <!-- 왼쪽: 메인 게임 콘텐츠 -->
+      <div class="game-main-content">
+        <div class="text-center">
+          <div class="relative inline-block mb-4">
+            <img id="game-idol-image" src="" alt="아이돌 사진" class="game-idol-image">
+            <span class="birthday-badge">HBD!</span>
+          </div>
 
-      <h1 id="idol-name" class="text-2xl font-black text-black mb-1">아이돌 이름</h1>
-      <p id="idol-group" class="text-base text-gray-300 mb-4">그룹명</p>
+          <h1 id="idol-name" class="text-2xl font-black text-black mb-1">아이돌 이름</h1>
+          <p id="idol-group" class="text-base text-gray-300 mb-4">그룹명</p>
 
-      <div class="target-time-box">
-        <p>목표 생일시</p>
-        <p id="target-time">--:--:--</p>
-      </div>
+          <div class="target-time-box">
+            <p>목표 생일시</p>
+            <p id="target-time">--:--:--</p>
+          </div>
 
-      <div class="bg-transparent rounded-lg p-2 mb-6">
-        <div id="current-time" class="game-time-display">
-          <span id="time-main">--:--:--</span>
-          <span id="time-ms" class="game-time-ms">.---</span>
+          <div class="bg-transparent rounded-lg p-2 mb-6">
+            <div id="current-time" class="game-time-display">
+              <span id="time-main">--:--:--</span>
+              <span id="time-ms" class="game-time-ms">.---</span>
+            </div>
+          </div>
+
+          <button id="ddok-button" class="ddok-button">덕 쌓기</button>
+
+          <div id="result-container" class="mt-6 h-12 flex items-center justify-center"></div>
         </div>
       </div>
 
-      <button id="ddok-button" class="ddok-button">덕 쌓기</button>
+      <!-- 오른쪽: 점수 및 네비게이션 -->
+      <div class="game-sidebar">
+        <div class="sidebar-content">
+          <div class="total-ddok-display">
+            <p class="text-lg text-gray-300">총 쌓은 덕</p>
+            <p class="font-bold text-3xl text-black"><span id="total-score">0</span></p>
+          </div>
 
-      <div id="result-container" class="mt-6 h-12 flex items-center justify-center"></div>
-
-      <div class="total-ddok-display">
-        <p class="text-lg text-gray-300">총 쌓은 덕: <span id="total-score" class="font-bold text-2xl text-black">0</span></p>
+          <button id="back-to-selection" class="back-button">‹ 다른 덕 쌓기</button>
+        </div>
       </div>
-
-      <button id="back-to-selection" class="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-600 transition-colors">‹ 다른 덕 쌓기</button>
     </div>
   </div>
 
