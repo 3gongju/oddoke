@@ -1,4 +1,4 @@
-from itertools import zip_longest, chain
+from itertools import zip_longest
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from django.db.models import Count, Q
@@ -27,47 +27,36 @@ def main(request):
         'image/banner/banner4.jpg',
     ]
 
-    # 4) 덕팜 최신 게시물들 - 각 카테고리별로 가져온 후 통합
-    sell_posts = list(FarmSellPost.objects.order_by('-created_at')[:10])
-    for post in sell_posts:
+    # ✅ 4) 덕팜 최신 게시물 - 개선된 템플릿에 맞게 개수 증가
+    # 실시간 인기 만두용 (3개) + 하이라이트용 (3개) = 총 6개 필요
+    latest_sell_posts = list(FarmSellPost.objects.order_by('-created_at')[:6])
+    for post in latest_sell_posts:
         post.category = 'sell'
 
-    rental_posts = list(FarmRentalPost.objects.order_by('-created_at')[:10])
-    for post in rental_posts:
+    # 대여글, 분철글은 기존대로 3개씩
+    latest_rental_posts = list(FarmRentalPost.objects.order_by('-created_at')[:3])
+    for post in latest_rental_posts:
         post.category = 'rental'
 
-    split_posts = list(FarmSplitPost.objects.order_by('-created_at')[:10])
-    for post in split_posts:
+    latest_split_posts = list(FarmSplitPost.objects.order_by('-created_at')[:3])
+    for post in latest_split_posts:
         post.category = 'split'
 
-    # 템플릿용 통합 덕팜 데이터 (모든 카테고리 합쳐서 최신순 정렬)
-    latest_sell_posts = sorted(
-        chain(sell_posts, rental_posts, split_posts),
-        key=lambda x: x.created_at,
-        reverse=True
-    )
-
-    # 5) 덕담 최신 게시물들 - 각 카테고리별로 가져온 후 통합
-    community_posts = list(DamCommunityPost.objects.order_by('-created_at')[:10])
-    for post in community_posts:
+    # ✅ 5) 덕담 최신 게시물 - 개선된 템플릿에 맞게 개수 증가
+    # 오늘의 새 소식용 (2개) + 하이라이트용 (3개) = 총 5개 필요
+    latest_community_posts = list(DamCommunityPost.objects.order_by('-created_at')[:5])
+    for post in latest_community_posts:
         post.category = 'community'
 
-    manner_posts = list(DamMannerPost.objects.order_by('-created_at')[:10])
-    for post in manner_posts:
+    latest_manner_posts = list(DamMannerPost.objects.order_by('-created_at')[:3])
+    for post in latest_manner_posts:
         post.category = 'manner'
 
-    bdaycafe_posts = list(DamBdaycafePost.objects.order_by('-created_at')[:10])
-    for post in bdaycafe_posts:
+    latest_bdaycafe_posts = list(DamBdaycafePost.objects.order_by('-created_at')[:3])
+    for post in latest_bdaycafe_posts:
         post.category = 'bdaycafe'
 
-    # 템플릿용 통합 덕담 데이터 (모든 카테고리 합쳐서 최신순 정렬)
-    latest_community_posts = sorted(
-        chain(community_posts, manner_posts, bdaycafe_posts),
-        key=lambda x: x.created_at,
-        reverse=True
-    )
-
-    # 6) 새로 추가: 이주의 베스트 (좋아요 수 기준)
+    # ✅ 6) 새로 추가: 이주의 베스트 (좋아요 수 기준)
     # 일주일 전 날짜 계산
     one_week_ago = datetime.now() - timedelta(days=7)
     
@@ -76,42 +65,42 @@ def main(request):
     
     # 덕팜 게시물들 (좋아요 수가 있다면)
     if hasattr(FarmSellPost, 'like'):  # 좋아요 기능이 있는 경우
-        best_sell_posts = list(FarmSellPost.objects
+        sell_posts = list(FarmSellPost.objects
                          .filter(created_at__gte=one_week_ago)
                          .annotate(like_count=Count('like'))
                          .order_by('-like_count')[:3])
-        for post in best_sell_posts:
+        for post in sell_posts:
             post.category = 'sell'
-        weekly_best_posts.extend(best_sell_posts)
+        weekly_best_posts.extend(sell_posts)
     
     # 덕담 게시물들
     if hasattr(DamCommunityPost, 'like'):  # 좋아요 기능이 있는 경우
-        best_community_posts = list(DamCommunityPost.objects
+        community_posts = list(DamCommunityPost.objects
                               .filter(created_at__gte=one_week_ago)
                               .annotate(like_count=Count('like'))
                               .order_by('-like_count')[:3])
-        for post in best_community_posts:
+        for post in community_posts:
             post.category = 'community'
-        weekly_best_posts.extend(best_community_posts)
+        weekly_best_posts.extend(community_posts)
     
     # 좋아요 기능이 없다면 조회수나 최신순으로 대체
     if not weekly_best_posts:
         # 조회수 기준 (view_count 필드가 있다면)
         if hasattr(FarmSellPost, 'view_count'):
-            best_sell_posts = list(FarmSellPost.objects
+            sell_posts = list(FarmSellPost.objects
                              .filter(created_at__gte=one_week_ago)
                              .order_by('-view_count')[:4])
-            for post in best_sell_posts:
+            for post in sell_posts:
                 post.category = 'sell'
-            weekly_best_posts.extend(best_sell_posts)
+            weekly_best_posts.extend(sell_posts)
         
         if hasattr(DamCommunityPost, 'view_count'):
-            best_community_posts = list(DamCommunityPost.objects
+            community_posts = list(DamCommunityPost.objects
                                   .filter(created_at__gte=one_week_ago)
                                   .order_by('-view_count')[:4])
-            for post in best_community_posts:
+            for post in community_posts:
                 post.category = 'community'
-            weekly_best_posts.extend(best_community_posts)
+            weekly_best_posts.extend(community_posts)
     
     # 그래도 없다면 최신순으로 대체
     if not weekly_best_posts:
@@ -131,17 +120,15 @@ def main(request):
         'grouped_artists': grouped_artists,
         'banner_images': banner_images,
 
-        # 템플릿에서 사용할 통합된 데이터 (중요!)
-        'latest_sell_posts': latest_sell_posts,           # 덕팜 전체 통합
-        'latest_community_posts': latest_community_posts, # 덕담 전체 통합
+        # 기존 변수들
+        'latest_sell_posts': latest_sell_posts,
+        'latest_rental_posts': latest_rental_posts,
+        'latest_split_posts': latest_split_posts,
+        'latest_community_posts': latest_community_posts,
+        'latest_manner_posts': latest_manner_posts,
+        'latest_bdaycafe_posts': latest_bdaycafe_posts,
         
-        # 개별 카테고리 데이터 (기존 코드 호환성 유지)
-        'latest_rental_posts': rental_posts,
-        'latest_split_posts': split_posts,
-        'latest_manner_posts': manner_posts,
-        'latest_bdaycafe_posts': bdaycafe_posts,
-        
-        # 새로 추가된 변수
+        # ✅ 새로 추가된 변수
         'weekly_best_posts': weekly_best_posts,
         
         'birthday_artists': birthday_artists,
