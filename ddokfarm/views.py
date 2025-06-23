@@ -408,7 +408,7 @@ def post_detail(request, category, post_id):
 
 # ✅ 개별 가격 저장 헬퍼 함수 (개선)
 def save_item_prices(request, post):
-    """ItemPrice 저장 - 단일/복수 모드 통합 처리"""
+    """ItemPrice 저장 - 간소화된 체크박스 방식"""
     content_type = ContentType.objects.get_for_model(post.__class__)
     
     # 기존 ItemPrice 모두 삭제 (수정 시)
@@ -418,25 +418,68 @@ def save_item_prices(request, post):
     total_forms = int(request.POST.get('item_prices-TOTAL_FORMS', 0))
     
     if total_forms == 0:
-        # 폴백: 단일 가격 처리 (혹시 모를 경우)
+        # 단일 가격 모드 처리
+        is_undetermined = request.POST.get('single_price_undetermined') == 'true'
+        
+        if is_undetermined:
+            # 가격 미정
+            ItemPrice.objects.create(
+                content_type=content_type,
+                object_id=post.id,
+                item_name='',
+                price=0,
+                is_price_undetermined=True
+            )
+        else:
+            # 가격 설정
+            price_str = request.POST.get('single_price_input', '') or request.POST.get('item_prices-0-price', '')
+            if price_str:
+                try:
+                    price = int(price_str)
+                    if price > 0:
+                        ItemPrice.objects.create(
+                            content_type=content_type,
+                            object_id=post.id,
+                            item_name='',
+                            price=price,
+                            is_price_undetermined=False
+                        )
+                except (ValueError, TypeError):
+                    pass
         return
     
+    # 복수 아이템 모드 처리
     for i in range(total_forms):
         item_name = request.POST.get(f'item_prices-{i}-item_name', '').strip()
         price_str = request.POST.get(f'item_prices-{i}-price', '')
+        is_undetermined = request.POST.get(f'item_price_undetermined_{i}') == 'true'
         
-        if price_str:  # 가격이 입력된 경우만 저장
+        if is_undetermined:
+            # 가격 미정 아이템
+            ItemPrice.objects.create(
+                content_type=content_type,
+                object_id=post.id,
+                item_name=item_name,
+                price=0,
+                is_price_undetermined=True
+            )
+        elif price_str:
+            # 가격 설정 아이템
             try:
                 price = int(price_str)
-                if price > 0:  # 양수인 경우만 저장
+                if price > 0:
                     ItemPrice.objects.create(
                         content_type=content_type,
                         object_id=post.id,
                         item_name=item_name,
-                        price=price
+                        price=price,
+                        is_price_undetermined=False
                     )
             except (ValueError, TypeError):
-                continue  # 잘못된 가격 형식은 무시
+                continue
+        else:
+            # 가격이 입력되지 않은 경우는 스킵 (필수 검증은 프론트엔드에서)
+            continue
 
 # 교환 정보 저장 헬퍼 함수
 def save_exchange_info(request, post):
