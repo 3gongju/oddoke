@@ -39,6 +39,7 @@ ALLOWED_HOSTS = [
     '.compute.amazonaws.com',
     'oddoke.com',
     'www.oddoke.com',
+    '13.125.119.122',
     ]
 
 # HTTPS 관련 설정
