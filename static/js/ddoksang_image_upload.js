@@ -200,7 +200,6 @@ function setupImageUploader() {
     //   file: File객체,
     //   url: "blob:xxx" (미리보기용),
     //   type: "main|poster|other",
-    //   caption: "설명",
     //   is_main: true/false,
     //   order: 0,
     //   width: 1200,
@@ -291,11 +290,9 @@ function setupImageUploader() {
 
         const img = document.createElement("img");
         img.className = "rounded border object-cover w-full h-full pointer-events-none";
-        img.alt = imageData.caption || `이미지 ${index + 1}`;
 
         // 이미지 로딩 에러 처리
         img.onerror = () => {
-            console.warn(`이미지 로딩 실패: ${imageData.caption}`);
             img.src = createErrorPlaceholder();
         };
 
@@ -342,7 +339,6 @@ function setupImageUploader() {
         reader.onload = (e) => {
             imageData.url = e.target.result;
             img.src = e.target.result;
-            console.log('✅ 이미지 미리보기 생성됨:', imageData.caption);
         };
         reader.onerror = (e) => {
             console.error('FileReader 오류:', e);
@@ -474,7 +470,6 @@ function setupImageUploader() {
                     originalFile: file,
                     url: null,  // 미리보기에서 생성
                     type: imageGallery.length === 0 ? "main" : "other",
-                    caption: `이미지 ${imageGallery.length + 1}`,
                     is_main: imageGallery.length === 0,  // 첫 번째가 대표
                     order: imageGallery.length,
                     width: null,  // 나중에 설정
@@ -505,7 +500,6 @@ function setupImageUploader() {
                     file: file,
                     url: null,
                     type: imageGallery.length === 0 ? "main" : "other",
-                    caption: `이미지 ${imageGallery.length + 1}`,
                     is_main: imageGallery.length === 0,
                     order: imageGallery.length,
                     file_size: file.size,
@@ -582,7 +576,6 @@ function setupImageUploader() {
                 if (imageData.url && imageData.url.startsWith('blob:')) {
                     URL.revokeObjectURL(imageData.url);
                 }
-                console.log('🗑️ 이미지 제거됨:', imageData.caption);
                 
                 // ✅ 대표 이미지 재설정 (첫 번째가 대표가 되도록)
                 if (imageData.is_main && imageGallery.length > 0) {

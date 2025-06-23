@@ -1,5 +1,4 @@
-# ddoksang/models.py (완전히 단순화된 버전)
-
+# ddoksang/models.py 
 from django.db import models
 from django.conf import settings
 from artist.models import Artist, Member
@@ -36,6 +35,7 @@ class BdayCafe(models.Model):
     address = models.TextField(verbose_name='주소')
     road_address = models.TextField(blank=True, verbose_name='도로명주소')
     detailed_address = models.CharField(max_length=200, blank=True, verbose_name='상세주소')
+
     kakao_place_id = models.CharField(max_length=50, blank=True, verbose_name='카카오 장소 ID')
     latitude = models.FloatField(verbose_name='위도')
     longitude = models.FloatField(verbose_name='경도')
@@ -43,13 +43,11 @@ class BdayCafe(models.Model):
     # 날짜 및 시간
     start_date = models.DateField(verbose_name='시작일')
     end_date = models.DateField(verbose_name='종료일')
-    start_time = models.TimeField(null=True, blank=True, verbose_name='시작시간')
-    end_time = models.TimeField(null=True, blank=True, verbose_name='종료시간')
+
 
     # 상세 정보
     special_benefits = models.TextField(blank=True, verbose_name='특전 정보')
     event_description = models.TextField(blank=True, verbose_name='이벤트 설명')
-    hashtags = models.CharField(max_length=500, blank=True, verbose_name='해시태그')
 
     # ✅ 이미지 갤러리 (JSON 형태로 저장)
     image_gallery = models.JSONField(default=list, blank=True, verbose_name='이미지 갤러리')
@@ -59,7 +57,6 @@ class BdayCafe(models.Model):
     #     "id": "img_1",
     #     "url": "/media/bday_cafes/images/2025/01/image1.jpg",
     #     "type": "main",
-    #     "caption": "메인 이미지",
     #     "is_main": true,
     #     "order": 0,
     #     "width": 1200,
@@ -74,7 +71,6 @@ class BdayCafe(models.Model):
 
     # 상태 정보
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='상태')
-    is_featured = models.BooleanField(default=False, verbose_name='추천 여부')
     view_count = models.PositiveIntegerField(default=0, verbose_name='조회수')
 
     # 타임스탬프
@@ -122,7 +118,7 @@ class BdayCafe(models.Model):
             return (self.start_date - today).days
         return 0
 
-    # ✅ 이미지 관련 메서드들 (JSON 기반)
+    # 이미지 관련 메서드들 (JSON 기반)
     def get_main_image(self):
         """대표 이미지 URL 반환"""
         if not self.image_gallery:
@@ -147,7 +143,7 @@ class BdayCafe(models.Model):
         # order로 정렬해서 반환
         return sorted(self.image_gallery, key=lambda x: x.get('order', 0))
 
-    def add_image(self, image_file, image_type='other', caption='', is_main=False, order=None):
+    def add_image(self, image_file, image_type='other', is_main=False, order=None):
         """이미지 추가 메서드"""
         import uuid
         from django.core.files.storage import default_storage
@@ -185,7 +181,6 @@ class BdayCafe(models.Model):
             'id': str(uuid.uuid4()),
             'url': default_storage.url(file_path),
             'type': image_type,
-            'caption': caption,
             'is_main': is_main,
             'order': order,
             'width': width,
@@ -263,17 +258,6 @@ class BdayCafe(models.Model):
             return []
         return [benefit.strip() for benefit in self.special_benefits.split(',') if benefit.strip()]
 
-    @property
-    def hashtags_list(self):
-        """해시태그를 리스트로 반환"""
-        if not self.hashtags:
-            return []
-        tags = []
-        for tag in self.hashtags.replace('#', ' ').split():
-            tag = tag.strip()
-            if tag:
-                tags.append(tag)
-        return tags
 
     @property
     def image_count(self):
@@ -311,4 +295,3 @@ class CafeViewHistory(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.cafe.cafe_name} ({self.viewed_at})"
-

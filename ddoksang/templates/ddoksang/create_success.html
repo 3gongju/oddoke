@@ -243,8 +243,8 @@
         <!-- 단일 이미지 -->
         <div class="flex justify-center">
             {% for image in cafe.get_all_images %}
-            <div class="max-w-sm w-full aspect-[3/4] overflow-hidden rounded-2xl border-2 border-gray-200 shadow-lg bg-white relative group cursor-pointer" onclick="openImageModal('{{ image.url }}', '{{ image.caption|default:"대표 이미지" }}')">
-              <img src="{{ image.url }}" alt="{{ image.caption|default:"대표 이미지" }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="max-w-sm w-full aspect-[3/4] overflow-hidden rounded-2xl border-2 border-gray-200 shadow-lg bg-white relative group cursor-pointer" onclick="openImageModal('{{ image.url }}', '대표 이미지')">
+              <img src="{{ image.url }}" alt="대표 이미지" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               <span class="absolute top-3 left-3 bg-gray-900 text-white text-xs px-3 py-1 rounded-full font-medium">대표</span>
             </div>
             {% endfor %}
@@ -253,15 +253,12 @@
           <!-- 다중 이미지 그리드 -->
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {% for image in cafe.get_all_images %}
-            <div class="aspect-[3/4] rounded-xl overflow-hidden border-2 border-gray-200 shadow-md bg-white relative group cursor-pointer" onclick="openImageModal('{{ image.url }}', '{{ image.caption|default:"카페 이미지" }}')">
-              <img src="{{ image.url }}" alt="{{ image.caption|default:"카페 이미지" }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+            <div class="aspect-[3/4] rounded-xl overflow-hidden border-2 border-gray-200 shadow-md bg-white relative group cursor-pointer" onclick="openImageModal('{{ image.url }}', '카페 이미지')">
+              <img src="{{ image.url }}" alt="카페 이미지" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
               {% if image.is_main %}
               <span class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">대표</span>
               {% else %}
               <span class="absolute top-2 left-2 bg-gray-900 text-white text-xs px-2 py-1 rounded-full font-medium">{{ forloop.counter }}</span>
-              {% endif %}
-              {% if image.type and image.type != 'other' %}
-              <span class="absolute top-2 right-2 bg-gray-900 text-white text-xs px-2 py-1 rounded-full font-medium">{{ image.type_display }}</span>
               {% endif %}
             </div>
             {% endfor %}
@@ -282,10 +279,7 @@
             <div class="space-y-2">
               {% for image in cafe.get_all_images %}
               <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-500">
-                  {{ image.type_display|default:"이미지" }}
-                  {% if image.caption %} - {{ image.caption }}{% endif %}
-                </span>
+                <span class="text-gray-500">이미지 {{ forloop.counter }}</span>
                 {% if image.file_size %}
                 <span class="text-gray-400">{{ image.file_size|filesizeformat }}</span>
                 {% endif %}

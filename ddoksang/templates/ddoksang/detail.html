@@ -41,7 +41,6 @@
 
         <div id="modalImageInfo" class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
           <p id="modalImageTitle" class="font-medium"></p>
-          <p id="modalImageCaption" class="text-sm opacity-90 mt-1"></p>
         </div>
 
         {% if cafe.get_all_images|length > 1 %}
@@ -109,7 +108,7 @@
 <!-- JavaScript 및 데이터 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
 
-<!-- ✅ 카카오톡 공유용 SDK 추가 -->
+<!--  카카오톡 공유용 SDK 추가 -->
 <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
 
 <script id="cafe-data" type="application/json">
@@ -130,9 +129,8 @@
   {% for image in cafe.get_all_images %}
   {
     "url": "{{ image.url|escapejs }}",
-    "type": "{{ image.type_display|escapejs }}",
-    "caption": "{{ image.caption|escapejs }}",
-    "alt": "{{ image.caption|default:cafe.cafe_name|escapejs }}"
+    "type": "이미지"
+    "alt": "{{ cafe.cafe_name|escapejs }} 이미지"
   }{% if not forloop.last %},{% endif %}
   {% endfor %}
 ]
@@ -143,7 +141,7 @@
 {
   "title": "{{ cafe.cafe_name|escapejs }}",
   "description": "{{ cafe.artist.display_name|escapejs }}{% if cafe.member %} - {{ cafe.member.member_name|escapejs }}{% endif %}의 생일카페",
-  "imageUrl": "{% with first_image=cafe.images.first %}{% if first_image %}{{ request.scheme }}://{{ request.get_host }}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=🎂+생일카페{% endif %}{% endwith %}",
+  "imageUrl": "{% with first_image=cafe.get_main_image %}{% if first_image %}{{ request.scheme }}://{{ request.get_host }}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=🎂+생일카페{% endif %}{% endwith %}",
   "linkUrl": "{{ request.scheme }}://{{ request.get_host }}{{ request.get_full_path }}",
   "address": "{{ cafe.address|escapejs }}",
   "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",

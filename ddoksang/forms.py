@@ -10,23 +10,20 @@ class BdayCafeForm(forms.ModelForm):
         model = BdayCafe
         fields = [
             'artist', 'member', 'cafe_type',
-            'cafe_name', 'place_name', 'address', 'road_address', 'detailed_address',
+            'cafe_name', 'place_name', 'address', 'road_address',
             'latitude', 'longitude',
-            'start_date', 'end_date', 'start_time', 'end_time',
-            'special_benefits', 'event_description', 'hashtags',
+            'start_date', 'end_date',
+            'special_benefits', 'event_description',
             'x_source'
             # ✅ image_gallery는 JavaScript로 직접 처리 (JSONField)
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time'}),
             'address': forms.Textarea(attrs={'rows': 3}),
             'road_address': forms.Textarea(attrs={'rows': 3}),
             'special_benefits': forms.Textarea(attrs={'rows': 4}),
             'event_description': forms.Textarea(attrs={'rows': 4}),
-            'hashtags': forms.TextInput(attrs={'placeholder': '#생일카페 #아이돌이름'}),
             'latitude': forms.HiddenInput(),
             'longitude': forms.HiddenInput(),
         }

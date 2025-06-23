@@ -74,16 +74,12 @@ def cafe_create_view(request):
                 'place_name': request.POST.get('place_name', ''),
                 'address': request.POST.get('address'),
                 'road_address': request.POST.get('road_address', ''),
-                'detailed_address': request.POST.get('detailed_address', ''),
                 'kakao_place_id': request.POST.get('kakao_place_id', ''),
                 'latitude': float(request.POST.get('latitude')),
                 'longitude': float(request.POST.get('longitude')),
                 'start_date': request.POST.get('start_date'),
                 'end_date': request.POST.get('end_date'),
-                'start_time': request.POST.get('start_time') or None,
-                'end_time': request.POST.get('end_time') or None,
                 'event_description': request.POST.get('event_description', ''),
-                'hashtags': request.POST.get('hashtags', ''),
                 'x_source': x_source,
                 'status': 'pending',
                 'image_gallery': []  # ✅ 빈 이미지 갤러리로 초기화
@@ -112,7 +108,6 @@ def cafe_create_view(request):
                     cafe.add_image(
                         image_file=image_file,
                         image_type='main' if index == 0 else 'other',
-                        caption=f"이미지 {index + 1}",
                         is_main=(index == 0),  # 첫 번째 이미지가 대표
                         order=index
                     )
@@ -149,7 +144,7 @@ def cafe_create_success(request, cafe_id):
             submitted_by=request.user
         )
         
-        print(f"🎉 등록 성공 페이지: 카페 ID {cafe.id}")
+        print(f" 등록 성공 페이지: 카페 ID {cafe.id}")
         print(f"   카페명: {cafe.cafe_name}")
         print(f"   아티스트: {cafe.artist.display_name if cafe.artist else 'N/A'}")
         print(f"   멤버: {cafe.member.member_name if cafe.member else 'N/A'}")
@@ -386,12 +381,12 @@ def toggle_favorite(request, cafe_id):
             is_favorited = True
             message = "찜 목록에 추가했어요!"
             
-            # ✅ 찜 추가 시에만 HTML 조각 렌더링
+            # 찜 추가 시에만 HTML 조각 렌더링
             card_html = render_to_string(
                 'ddoksang/components/_cafe_card_base.html',
                 {
                     'cafe': cafe,
-                    'card_variant': 'favorite',  # 📌 찜한 카페용 오버레이 스타일
+                    'card_variant': 'favorite',  #  찜한 카페용 오버레이 스타일
                     'user': request.user,
                     'user_favorites': get_user_favorites(request.user),
                     'show_favorite_btn': True,
@@ -468,7 +463,6 @@ def cafe_image_upload_view(request):
         cafe_id = request.POST.get('cafe_id')
         image_file = request.FILES.get('image')
         image_type = request.POST.get('image_type', 'other')
-        caption = request.POST.get('caption', '')
         is_main = request.POST.get('is_main', 'false').lower() == 'true'
         
         if not cafe_id or not image_file:
@@ -481,7 +475,6 @@ def cafe_image_upload_view(request):
         image_data = cafe.add_image(
             image_file=image_file,
             image_type=image_type,
-            caption=caption,
             is_main=is_main
         )
         
