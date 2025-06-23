@@ -65,7 +65,7 @@ class FarmMarketPost(FarmBasePost):
         ('both', '직거래, 택배'),
     ]
 
-    price = models.PositiveIntegerField() # 가격
+    # price 필드 제거됨 - 모든 가격은 ItemPrice로 관리
     condition = models.CharField(max_length=20, choices=CONDITION_CHOICES) # 상태
     shipping = models.CharField(max_length=20, choices=SHIPPING_CHOICES)  # 배송방법
     location = models.CharField(max_length=20, blank=True, null=True)  # 희망 장소 (직거래 가능 시)
@@ -81,30 +81,34 @@ class FarmMarketPost(FarmBasePost):
     
     def has_multiple_items(self):
         """여러 물건이 있는지 확인"""
-        return self.get_item_prices().exists()
+        return self.get_item_prices().count() > 1
     
     def get_price_range(self):
-        """가격 범위 반환 (개별 가격이 있으면 그걸로, 없으면 기본 가격)"""
-        if self.has_multiple_items():
-            prices = list(self.get_item_prices().values_list('price', flat=True))
-            return min(prices), max(prices)
-        return self.price, self.price
+        """가격 범위 반환"""
+        prices = list(self.get_item_prices().values_list('price', flat=True))
+        if not prices:
+            return (0, 0)
+        return (min(prices), max(prices))
     
     def get_display_price(self):
         """표시용 가격 문자열"""
-        if self.has_multiple_items():
-            min_price, max_price = self.get_price_range()
-            if min_price == max_price:
-                return f"{min_price:,}원"
-            return f"{min_price:,}원 ~ {max_price:,}원"
-        return f"{self.price:,}원"
+        min_price, max_price = self.get_price_range()
+        if min_price == 0 and max_price == 0:
+            return "가격 미정"
+        if min_price == max_price:
+            return f"{min_price:,}원"
+        return f"{min_price:,}원 ~ {max_price:,}원"
     
     @property
     def effective_price(self):
-        """정렬용 가격 (개별 가격이 있으면 최소값, 없으면 기본 가격)"""
-        if self.has_multiple_items():
-            return self.get_price_range()[0]
-        return self.price
+        """정렬용 가격 (최소값)"""
+        min_price, _ = self.get_price_range()
+        return min_price
+
+    @property 
+    def price(self):
+        """하위 호환성을 위한 price 프로퍼티 (정렬 등에서 사용)"""
+        return self.effective_price
 
 class FarmSellPost(FarmMarketPost):
     WANTTO_CHOICES = [
