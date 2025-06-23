@@ -1,13 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-<head>{% load static %}
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Oddoke</title>
   <link rel="icon" type="image/png" href="{% static 'image/favicon.png' %}">
   <meta name="description" content="팬들을 위한 특별한 공간에서 굿즈 거래부터 덕질 기록까지">
+  
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   
   <!-- 스위트(SUITE) 폰트 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,9 +105,6 @@
 
   <!--  커스텀 스크롤 제거용 CSS 연결 -->
   <link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
-
-  <!-- Swiper CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
   {% block head %}{% endblock %}
 </head>
@@ -248,6 +248,58 @@
   </div>
 </nav>
 
+<!-- ✅ 메인 배너 슬라이드 섹션 (홈페이지에서만 표시) -->
+{% if request.resolver_match.url_name == 'home' or request.path == '/' %}
+<section class="relative overflow-hidden">
+  <div class="swiper mainBannerSwiper">
+    <div class="swiper-wrapper">
+      <!-- 슬라이드 1: 랜딩페이지1 -->
+      <div class="swiper-slide">
+        <div class="w-full h-auto">
+          <img src="{% static 'image/랜딩페이지1.jpg' %}" 
+               alt="어덕해 메인 소개" 
+               class="w-full h-auto object-cover">
+        </div>
+      </div>
+      
+      <!-- 슬라이드 2: 랜딩페이지2 -->
+      <div class="swiper-slide">
+        <div class="w-full h-auto">
+          <img src="{% static 'image/랜딩페이지2.jpg' %}" 
+               alt="아이돌 굿즈 중고거래 덕담" 
+               class="w-full h-auto object-cover">
+        </div>
+      </div>
+      
+      <!-- 슬라이드 3: 랜딩페이지3 -->
+      <div class="swiper-slide">
+        <div class="w-full h-auto">
+          <img src="{% static 'image/랜딩페이지3.jpg' %}" 
+               alt="아이돌 덕질 커뮤니티 덕담" 
+               class="w-full h-auto object-cover">
+        </div>
+      </div>
+      
+      <!-- 슬라이드 4: 랜딩페이지4 -->
+      <div class="swiper-slide">
+        <div class="w-full h-auto">
+          <img src="{% static 'image/랜딩페이지4.jpg' %}" 
+               alt="아이돌 생일카페 정보 덕생" 
+               class="w-full h-auto object-cover">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 페이지네이션 -->
+    <div class="swiper-pagination"></div>
+    
+    <!-- 네비게이션 버튼 -->
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+  </div>
+</section>
+{% endif %}
+
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}
 
@@ -329,7 +381,59 @@
   <div class="h-16 sm:h-24"></div>
 </div>
 
+<!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<!-- ✅ Swiper 초기화 스크립트 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 메인 배너 스와이퍼 초기화
+  const mainBannerSwiper = new Swiper('.mainBannerSwiper', {
+    loop: true,
+    autoplay: {
+      delay: 5000,
+      disableOnInteraction: false,
+    },
+    speed: 800,
+    effect: 'slide',
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+      bulletClass: 'swiper-pagination-bullet',
+      bulletActiveClass: 'swiper-pagination-bullet-active',
+    },
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+    // 반응형 설정
+    breakpoints: {
+      640: {
+        autoplay: {
+          delay: 6000,
+        },
+      },
+      1024: {
+        autoplay: {
+          delay: 7000,
+        },
+      },
+    },
+  });
+  
+  // 호버 시 자동재생 일시정지
+  const swiperContainer = document.querySelector('.mainBannerSwiper');
+  if (swiperContainer) {
+    swiperContainer.addEventListener('mouseenter', () => {
+      mainBannerSwiper.autoplay.stop();
+    });
+    
+    swiperContainer.addEventListener('mouseleave', () => {
+      mainBannerSwiper.autoplay.start();
+    });
+  }
+});
+</script>
 
 <!-- ✅ 좋아요 하트 비동기 처리 -->
 <script>
@@ -564,27 +668,27 @@
   
   /* 스크롤바 스타일링 */
   ::-webkit-scrollbar {
-  width: 4px;
-}
-
-@media (min-width: 640px) {
-  ::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
-}
 
-::-webkit-scrollbar-track {
-  background: #f9fafb;
-}
+  @media (min-width: 640px) {
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+  }
 
-::-webkit-scrollbar-thumb {
-  background: #9ca3af;
-  border-radius: 3px;
-}
+  ::-webkit-scrollbar-track {
+    background: #f9fafb;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
+  ::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
   
   /* 선택 하이라이트 색상 */
   ::selection {
@@ -609,6 +713,51 @@
   button:focus, a:focus {
     outline: 2px solid #e8d5a3;
     outline-offset: 2px;
+  }
+
+  /* Swiper 커스텀 스타일 */
+  .swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 1;
+  }
+  
+  .swiper-pagination-bullet-active {
+    background: white;
+  }
+  
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: white;
+    background: rgba(0, 0, 0, 0.3);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    margin-top: -22px;
+  }
+  
+  .swiper-button-next:after,
+  .swiper-button-prev:after {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .swiper-button-next:hover,
+  .swiper-button-prev:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  @media (max-width: 640px) {
+    .swiper-button-next,
+    .swiper-button-prev {
+      width: 36px;
+      height: 36px;
+      margin-top: -18px;
+    }
+    
+    .swiper-button-next:after,
+    .swiper-button-prev:after {
+      font-size: 14px;
+    }
   }
 </style>
 
