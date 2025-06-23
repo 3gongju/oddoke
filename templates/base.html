@@ -201,57 +201,7 @@
   </div>
 </nav>
 
-<!-- 🔄 수정된 메인 배너 슬라이드 섹션 (홈페이지에서만 표시) -->
-{% if request.resolver_match.url_name == 'home' or request.path == '/' %}
-<section class="relative overflow-hidden bg-white">
-  <div class="swiper mainBannerSwiper">
-    <div class="swiper-wrapper">
-      <!-- 슬라이드 1: 랜딩페이지1 -->
-      <div class="swiper-slide">
-        <div class="w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh] xl:h-[75vh] bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지1.jpg' %}" 
-               alt="어덕해 메인 소개" 
-               class="w-full h-full object-contain sm:object-cover">
-        </div>
-      </div>
-      
-      <!-- 슬라이드 2: 랜딩페이지2 -->
-      <div class="swiper-slide">
-        <div class="w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh] xl:h-[75vh] bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지222.jpg' %}" 
-               alt="아이돌 굿즈 중고거래 덕담" 
-               class="w-full h-full object-contain sm:object-cover">
-        </div>
-      </div>
-      
-      <!-- 슬라이드 3: 랜딩페이지3 -->
-      <div class="swiper-slide">
-        <div class="w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh] xl:h-[75vh] bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지33.jpg' %}" 
-               alt="아이돌 덕질 커뮤니티 덕담" 
-               class="w-full h-full object-contain sm:object-cover">
-        </div>
-      </div>
-      
-      <!-- 슬라이드 4: 랜딩페이지4 -->
-      <div class="swiper-slide">
-        <div class="w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[65vh] xl:h-[75vh] bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지444.jpg' %}" 
-               alt="아이돌 생일카페 정보 덕생" 
-               class="w-full h-full object-contain sm:object-cover">
-        </div>
-      </div>
-    </div>
-    
-    <!-- 페이지네이션 -->
-    <div class="swiper-pagination !bottom-4"></div>
-    
-    <!-- 네비게이션 버튼 -->
-    <div class="swiper-button-next !text-white"></div>
-    <div class="swiper-button-prev !text-white"></div>
-  </div>
-</section>
-{% endif %}
+
 
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}

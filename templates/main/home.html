@@ -3,7 +3,432 @@
 {% load static %}
 {% load member_images %}
 
+{% block head %}
+<!-- 홈페이지 전용 스타일 -->
+<style>
+/* 메인 배너 스와이퍼 스타일 */
+.mainBannerSwiper {
+  width: 100%;
+  height: 35vh;
+}
+
+@media (min-width: 640px) {
+  .mainBannerSwiper {
+    height: 45vh;
+  }
+}
+
+@media (min-width: 768px) {
+  .mainBannerSwiper {
+    height: 55vh;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mainBannerSwiper {
+    height: 65vh;
+  }
+}
+
+@media (min-width: 1280px) {
+  .mainBannerSwiper {
+    height: 75vh;
+  }
+}
+
+.mainBannerSwiper .swiper-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+@media (min-width: 640px) {
+  .mainBannerSwiper .swiper-slide img {
+    object-fit: cover;
+  }
+}
+
+/* 히어로 섹션 모바일 최적화 높이 */
+.hero-mobile-container {
+  height: 250px; /* 모바일 기본 높이 축소 */
+}
+
+@media (min-width: 640px) {
+  .hero-mobile-container {
+    height: 350px; /* sm 이상 */
+  }
+}
+
+@media (min-width: 768px) {
+  .hero-mobile-container {
+    height: 400px; /* md 이상 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-mobile-container {
+    height: 450px; /* lg 이상 */
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-mobile-container {
+    height: 500px; /* xl 이상 */
+  }
+}
+
+/* 배너 모바일 최적화 높이 */
+.banner-mobile-container {
+  height: 200px; /* 모바일 기본 높이 축소 */
+}
+
+@media (min-width: 640px) {
+  .banner-mobile-container {
+    height: 350px; /* sm 이상 */
+  }
+}
+
+@media (min-width: 768px) {
+  .banner-mobile-container {
+    height: 400px; /* md 이상 */
+  }
+}
+
+@media (min-width: 1024px) {
+  .banner-mobile-container {
+    height: 450px; /* lg 이상 */
+  }
+}
+
+@media (min-width: 1280px) {
+  .banner-mobile-container {
+    height: 500px; /* xl 이상 */
+  }
+}
+
+/* 클릭 툴팁 모바일 최적화 */
+#ddokTooltip {
+  max-width: 280px;
+  word-wrap: break-word;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+#closeTooltip {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  font-weight: 300;
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  #closeTooltip {
+    width: 18px;
+    height: 18px;
+    font-size: 16px;
+  }
+}
+
+#closeTooltip:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 모바일에서 툴팁 크기 조정 */
+@media (max-width: 640px) {
+  #ddokTooltip {
+    max-width: 220px;
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* 배너 캐러셀 CSS */
+.banner-slide {
+  display: none;
+  transition: opacity 0.5s ease-in-out;
+  height: 100%;
+  position: relative;
+}
+
+.banner-slide.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-indicator {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-indicator:hover {
+  transform: scale(1.2);
+}
+
+/* 배너 캐러셀 - 원본 비율 유지 */
+.banner-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: transparent; /* 투명 배경 */
+}
+
+/* 이미지를 컨테이너에 맞게 조정 */
+.banner-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  object-fit: contain; /* 비율 유지하면서 컨테이너에 맞춤 */
+}
+
+/* 배너 클릭 영역 호버 효과 */
+#bannerLeftArea:hover ~ #bannerPrevBtn,
+#bannerRightArea:hover ~ #bannerNextBtn {
+  opacity: 1 !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+/* 배너 화살표 기본 투명도 */
+#bannerPrevBtn,
+#bannerNextBtn {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  pointer-events: none; /* 직접 클릭 방지 */
+}
+
+/* Today's Updates 커스텀 색상 */
+.ddokfarm-hover-effect:hover {
+  background-color: #f8bbd9 !important;
+  border-color: #f8bbd9 !important;
+}
+
+.ddokfarm-tag {
+  background-color: #f8bbd9;
+  color: #000000;
+}
+
+.ddokdam-hover-effect:hover {
+  background-color: #a8958b !important;
+  border-color: #a8958b !important;
+}
+
+.ddokdam-tag {
+  background-color: #a8958b;
+  color: white;
+}
+
+/* 생일 아티스트 슬라이더 스타일 */
+#weeklyBirthdaySlider {
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+}
+
+#weeklyBirthdaySlider:active {
+    cursor: grabbing;
+}
+
+#sliderTrack {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+}
+
+/* 슬라이드 아이템 크기 설정 */
+#sliderTrack > div {
+    flex: 0 0 100%;     /* 모바일: 100% */
+    max-width: 100%;
+}
+
+@media (min-width: 640px) {
+    #sliderTrack > div {
+        flex: 0 0 50%;   /* sm: 50% */
+        max-width: 50%;
+    }
+}
+
+@media (min-width: 768px) {
+    #sliderTrack > div {
+        flex: 0 0 33.333333%;  /* md: 33.33% */
+        max-width: 33.333333%;
+    }
+}
+
+@media (min-width: 1024px) {
+    #sliderTrack > div {
+        flex: 0 0 25%;    /* lg: 25% */
+        max-width: 25%;
+    }
+}
+
+@media (min-width: 1280px) {
+    #sliderTrack > div {
+        flex: 0 0 20%;    /* xl: 20% */
+        max-width: 20%;
+    }
+}
+
+/* 생일 카드 호버 효과 */
+#sliderTrack .bg-white:hover,
+#sliderTrack .bg-red-50:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease;
+}
+
+/* 스크롤바 숨김 */
+#weeklyBirthdaySlider {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+#weeklyBirthdaySlider::-webkit-scrollbar {
+    display: none;
+}
+
+/* 모바일 터치 최적화 */
+@media (max-width: 639px) {
+  #sliderTrack .min-w-full {
+    min-width: 100%;
+  }
+  
+  /* 모바일에서 터치 영역 확대 */
+  button, a[href] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 모바일에서 텍스트 크기 조정 */
+  .text-xs {
+    font-size: 0.75rem;
+  }
+  
+  /* 모바일에서 패딩 조정 */
+  .px-3 {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .py-3 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+}
+
+@media (min-width: 640px) {
+  #sliderTrack .sm\:min-w-1\/2 {
+    min-width: 50%;
+  }
+}
+
+@media (min-width: 768px) {
+  #sliderTrack .md\:min-w-1\/3 {
+    min-width: 33.333333%;
+  }
+}
+
+@media (min-width: 1024px) {
+  #sliderTrack .lg\:min-w-1\/4 {
+    min-width: 25%;
+  }
+}
+
+@media (min-width: 1280px) {
+  #sliderTrack .xl\:min-w-1\/5 {
+    min-width: 20%;
+  }
+}
+
+/* 모바일 전용 스타일 개선 */
+@media (max-width: 640px) {
+  /* 히어로 섹션 모바일 최적화 */
+  .hero-mobile-container h2 {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.2;
+  }
+  
+  /* 검색창 모바일 최적화 */
+  #artist-search-hero {
+    font-size: 0.875rem; /* 14px */
+    padding: 0.5rem 0.75rem;
+  }
+  
+  /* 버튼 크기 모바일 최적화 */
+  .rounded-full {
+    border-radius: 9999px;
+  }
+  
+  /* 카드 간격 모바일 최적화 */
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  /* 그리드 모바일 최적화 */
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+</style>
+{% endblock %}
+
 {% block body %}
+<!-- 🔄 메인 배너 슬라이드 섹션 -->
+<section class="relative overflow-hidden bg-white">
+  <div class="swiper mainBannerSwiper">
+    <div class="swiper-wrapper">
+      <!-- 슬라이드 1: 랜딩페이지1 -->
+      <div class="swiper-slide">
+        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="{% static 'image/랜딩페이지1.jpg' %}" 
+               alt="어덕해 메인 소개" 
+               class="w-full h-full">
+        </div>
+      </div>
+      
+      <!-- 슬라이드 2: 랜딩페이지2 -->
+      <div class="swiper-slide">
+        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="{% static 'image/랜딩페이지222.jpg' %}" 
+               alt="아이돌 굿즈 중고거래 덕담" 
+               class="w-full h-full">
+        </div>
+      </div>
+      
+      <!-- 슬라이드 3: 랜딩페이지3 -->
+      <div class="swiper-slide">
+        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="{% static 'image/랜딩페이지33.jpg' %}" 
+               alt="아이돌 덕질 커뮤니티 덕담" 
+               class="w-full h-full">
+        </div>
+      </div>
+      
+      <!-- 슬라이드 4: 랜딩페이지4 -->
+      <div class="swiper-slide">
+        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="{% static 'image/랜딩페이지444.jpg' %}" 
+               alt="아이돌 생일카페 정보 덕생" 
+               class="w-full h-full">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 페이지네이션 -->
+    <div class="swiper-pagination !bottom-4"></div>
+    
+    <!-- 네비게이션 버튼 -->
+    <div class="swiper-button-next !text-white"></div>
+    <div class="swiper-button-prev !text-white"></div>
+  </div>
+</section>
 
 <!-- 히어로 섹션 - 모바일 최적화 -->
 <section class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
@@ -443,10 +868,81 @@
   </svg>
 </button>
 
-<!-- 스크립트 -->
+<!-- JavaScript 통합 섹션 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // 🔄 메인 배너 스와이퍼 초기화
+    const mainBannerSwiper = new Swiper('.mainBannerSwiper', {
+      loop: true,
+      autoplay: {
+        delay: 4000,
+        disableOnInteraction: false,
+      },
+      speed: 1000,
+      effect: 'slide',
+      grabCursor: true,
+      
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+        dynamicBullets: true,
+      },
+      
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      
+      // 반응형 설정
+      breakpoints: {
+        320: {
+          slidesPerView: 1,
+          spaceBetween: 0,
+          autoplay: {
+            delay: 3500,
+          },
+        },
+        640: {
+          slidesPerView: 1,
+          spaceBetween: 0,
+          autoplay: {
+            delay: 4500,
+          },
+        },
+        1024: {
+          slidesPerView: 1,
+          spaceBetween: 0,
+          autoplay: {
+            delay: 5000,
+          },
+        },
+      },
+      
+      // 키보드 컨트롤
+      keyboard: {
+        enabled: true,
+        onlyInViewport: true,
+      },
+      
+      // 마우스휠 스크롤
+      mousewheel: {
+        invert: false,
+      },
+    });
+    
+    // 호버 시 자동재생 일시정지
+    const swiperContainer = document.querySelector('.mainBannerSwiper');
+    if (swiperContainer) {
+      swiperContainer.addEventListener('mouseenter', () => {
+        mainBannerSwiper.autoplay.stop();
+      });
+      
+      swiperContainer.addEventListener('mouseleave', () => {
+        mainBannerSwiper.autoplay.start();
+      });
+    }
+
     // 홈페이지 아티스트 검색 자동완성 초기화 (히어로 섹션)
     if (typeof initAutocomplete === 'function') {
       try {
@@ -590,7 +1086,9 @@
     }
     
     // 자동 슬라이드 (8초마다)
-    setInterval(nextSlide, 8000);
+    if (slides.length > 0) {
+      setInterval(nextSlide, 8000);
+    }
 
     // ✅ 생일 아티스트 슬라이더 초기화 추가
     initBirthdaySlider();
@@ -792,369 +1290,5 @@
     startAutoSlide();
   }
 </script>
-
-<!-- 모바일 최적화 CSS -->
-<style>
-/* 히어로 섹션 모바일 최적화 높이 */
-.hero-mobile-container {
-  height: 250px; /* 모바일 기본 높이 축소 */
-}
-
-@media (min-width: 640px) {
-  .hero-mobile-container {
-    height: 350px; /* sm 이상 */
-  }
-}
-
-@media (min-width: 768px) {
-  .hero-mobile-container {
-    height: 400px; /* md 이상 */
-  }
-}
-
-@media (min-width: 1024px) {
-  .hero-mobile-container {
-    height: 450px; /* lg 이상 */
-  }
-}
-
-@media (min-width: 1280px) {
-  .hero-mobile-container {
-    height: 500px; /* xl 이상 */
-  }
-}
-
-/* 배너 모바일 최적화 높이 */
-.banner-mobile-container {
-  height: 200px; /* 모바일 기본 높이 축소 */
-}
-
-@media (min-width: 640px) {
-  .banner-mobile-container {
-    height: 350px; /* sm 이상 */
-  }
-}
-
-@media (min-width: 768px) {
-  .banner-mobile-container {
-    height: 400px; /* md 이상 */
-  }
-}
-
-@media (min-width: 1024px) {
-  .banner-mobile-container {
-    height: 450px; /* lg 이상 */
-  }
-}
-
-@media (min-width: 1280px) {
-  .banner-mobile-container {
-    height: 500px; /* xl 이상 */
-  }
-}
-
-/* 클릭 툴팁 모바일 최적화 */
-#ddokTooltip {
-  max-width: 280px;
-  word-wrap: break-word;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-#closeTooltip {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-  font-weight: 300;
-  font-size: 14px;
-}
-
-@media (min-width: 640px) {
-  #closeTooltip {
-    width: 18px;
-    height: 18px;
-    font-size: 16px;
-  }
-}
-
-#closeTooltip:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* 모바일에서 툴팁 크기 조정 */
-@media (max-width: 640px) {
-  #ddokTooltip {
-    max-width: 220px;
-    font-size: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
-/* 배너 캐러셀 CSS */
-.banner-slide {
-  display: none;
-  transition: opacity 0.5s ease-in-out;
-  height: 100%;
-  position: relative;
-}
-
-.banner-slide.active {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-indicator {
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.carousel-indicator:hover {
-  transform: scale(1.2);
-}
-
-/* 배너 캐러셀 - 원본 비율 유지 */
-.banner-container {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  background: transparent; /* 투명 배경 */
-}
-
-/* 이미지를 컨테이너에 맞게 조정 */
-.banner-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  display: block;
-  object-fit: contain; /* 비율 유지하면서 컨테이너에 맞춤 */
-}
-
-/* 배너 클릭 영역 호버 효과 */
-#bannerLeftArea:hover ~ #bannerPrevBtn,
-#bannerRightArea:hover ~ #bannerNextBtn {
-  opacity: 1 !important;
-  transform: translateY(-50%) scale(1.1) !important;
-}
-
-/* 배너 화살표 기본 투명도 */
-#bannerPrevBtn,
-#bannerNextBtn {
-  opacity: 0.7;
-  transition: all 0.2s ease;
-  pointer-events: none; /* 직접 클릭 방지 */
-}
-
-/* Today's Updates 커스텀 색상 */
-.ddokfarm-hover-effect:hover {
-  background-color: #f8bbd9 !important;
-  border-color: #f8bbd9 !important;
-}
-
-.ddokfarm-tag {
-  background-color: #f8bbd9;
-  color: #000000;
-}
-
-.ddokdam-hover-effect:hover {
-  background-color: #a8958b !important;
-  border-color: #a8958b !important;
-}
-
-.ddokdam-tag {
-  background-color: #a8958b;
-  color: white;
-}
-
-/* 생일 아티스트 슬라이더 스타일 */
-#weeklyBirthdaySlider {
-    position: relative;
-    overflow: hidden;
-    cursor: grab;
-}
-
-#weeklyBirthdaySlider:active {
-    cursor: grabbing;
-}
-
-#sliderTrack {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    width: 100%;
-}
-
-/* 슬라이드 아이템 크기 설정 */
-#sliderTrack > div {
-    flex: 0 0 100%;     /* 모바일: 100% */
-    max-width: 100%;
-}
-
-@media (min-width: 640px) {
-    #sliderTrack > div {
-        flex: 0 0 50%;   /* sm: 50% */
-        max-width: 50%;
-    }
-}
-
-@media (min-width: 768px) {
-    #sliderTrack > div {
-        flex: 0 0 33.333333%;  /* md: 33.33% */
-        max-width: 33.333333%;
-    }
-}
-
-@media (min-width: 1024px) {
-    #sliderTrack > div {
-        flex: 0 0 25%;    /* lg: 25% */
-        max-width: 25%;
-    }
-}
-
-@media (min-width: 1280px) {
-    #sliderTrack > div {
-        flex: 0 0 20%;    /* xl: 20% */
-        max-width: 20%;
-    }
-}
-
-/* 생일 카드 호버 효과 */
-#sliderTrack .bg-white:hover,
-#sliderTrack .bg-red-50:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    transition: all 0.3s ease;
-}
-
-/* 스크롤바 숨김 */
-#weeklyBirthdaySlider {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-#weeklyBirthdaySlider::-webkit-scrollbar {
-    display: none;
-}
-
-/* 전체 페이지 스크롤바 숨김 */
-html, body {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 0px;
-  background: transparent; /* Chrome/Safari/Webkit */
-}
-
-/* 또는 완전히 숨기려면 */
-html::-webkit-scrollbar {
-  display: none;
-}
-
-body::-webkit-scrollbar {
-  display: none;
-}
-
-/* 페이지 최하단 여백 제거 */
-body {
-  margin: 0;
-  padding: 0;
-}
-
-section:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-/* 모바일 터치 최적화 */
-@media (max-width: 639px) {
-  #sliderTrack .min-w-full {
-    min-width: 100%;
-  }
-  
-  /* 모바일에서 터치 영역 확대 */
-  button, a[href] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  /* 모바일에서 텍스트 크기 조정 */
-  .text-xs {
-    font-size: 0.75rem;
-  }
-  
-  /* 모바일에서 패딩 조정 */
-  .px-3 {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-  
-  .py-3 {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-  }
-}
-
-@media (min-width: 640px) {
-  #sliderTrack .sm\:min-w-1\/2 {
-    min-width: 50%;
-  }
-}
-
-@media (min-width: 768px) {
-  #sliderTrack .md\:min-w-1\/3 {
-    min-width: 33.333333%;
-  }
-}
-
-@media (min-width: 1024px) {
-  #sliderTrack .lg\:min-w-1\/4 {
-    min-width: 25%;
-  }
-}
-
-@media (min-width: 1280px) {
-  #sliderTrack .xl\:min-w-1\/5 {
-    min-width: 20%;
-  }
-}
-
-/* 모바일 전용 스타일 개선 */
-@media (max-width: 640px) {
-  /* 히어로 섹션 모바일 최적화 */
-  .hero-mobile-container h2 {
-    font-size: 1.5rem; /* 24px */
-    line-height: 1.2;
-  }
-  
-  /* 검색창 모바일 최적화 */
-  #artist-search-hero {
-    font-size: 0.875rem; /* 14px */
-    padding: 0.5rem 0.75rem;
-  }
-  
-  /* 버튼 크기 모바일 최적화 */
-  .rounded-full {
-    border-radius: 9999px;
-  }
-  
-  /* 카드 간격 모바일 최적화 */
-  .space-y-2 > * + * {
-    margin-top: 0.5rem;
-  }
-  
-  /* 그리드 모바일 최적화 */
-  .grid-cols-1 {
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-  }
-}
-</style>
 
 {% endblock %}
