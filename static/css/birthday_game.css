@@ -10,9 +10,58 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.5s ease;
-  max-width: 500px;
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* 게임 가로 레이아웃 */
+.game-container .game-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: stretch;
+  min-height: 400px;
+}
+
+.game-container .game-main-content {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.game-container .game-sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding-left: 2rem;
+  min-width: 200px;
+}
+
+.game-container .sidebar-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  gap: 2rem;
+}
+
+.game-container .back-button {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.game-container .back-button:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
 }
 
 .game-container .member-selector-grid {
@@ -234,12 +283,25 @@
 
 .game-container .total-ddok-display {
   text-align: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #000000;
-  margin-top: 0.8rem;
-  padding-top: 0.8rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.game-container .total-ddok-display p:first-child {
+  color: #6b7280 !important;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.game-container .total-ddok-display p:last-child {
+  color: #000000 !important;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .game-container .target-time-box p {
@@ -278,6 +340,33 @@
   .game-container {
     margin: 0.4rem 0.4rem 1.6rem 0.4rem;
     padding: 0.8rem;
+    max-width: none;
+  }
+
+  /* 모바일에서는 세로 레이아웃으로 변경 */
+  .game-container .game-layout {
+    flex-direction: column;
+    gap: 1.5rem;
+    min-height: auto;
+  }
+
+  .game-container .game-sidebar {
+    border-left: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-left: 0;
+    padding-top: 1.5rem;
+  }
+
+  .game-container .sidebar-content {
+    gap: 1rem;
+  }
+
+  .game-container .total-ddok-display {
+    padding: 1rem;
+  }
+
+  .game-container .total-ddok-display p:last-child {
+    font-size: 1.5rem;
   }
 
   /* 모바일에서는 세로 리스트 형태로 변경 - 카드 제거 */
