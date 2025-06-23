@@ -25,6 +25,13 @@ class DamCommunityPost(DamBasePost):
     def category_type(self):
         return 'community'
 
+    def get_main_image(self):
+        """대표 이미지 URL 반환"""
+        main_img = self.images.filter(is_representative=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
+
 class DamMannerPost(DamBasePost):
     location = models.CharField(max_length=255, blank=True, null=True)
     item = models.CharField(max_length=255, blank=True, null=True)
@@ -33,6 +40,13 @@ class DamMannerPost(DamBasePost):
     @property
     def category_type(self):
         return 'manner'
+
+    def get_main_image(self):
+        """대표 이미지 URL 반환"""
+        main_img = self.images.filter(is_representative=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
 
 class DamBdaycafePost(DamBasePost):
     cafe_name = models.CharField(max_length=255, blank=True, null=True)
@@ -50,6 +64,13 @@ class DamBdaycafePost(DamBasePost):
     @property
     def category_type(self):
         return 'bdaycafe'
+    
+    def get_main_image(self):
+        """대표 이미지 URL 반환"""
+        main_img = self.images.filter(is_representative=True).first()
+        if main_img:
+            return main_img.image.url
+        return None
     
     def get_linked_cafe_info(self):
         """연결된 덕생 카페 정보 반환 (외부 참조 방식)"""

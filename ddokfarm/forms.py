@@ -33,10 +33,7 @@ common_widgets = {
 }
 
 market_widgets = {
-    'price': forms.NumberInput(attrs={
-        'class': COMMON_INPUT_CLASS,
-        'placeholder': '가격을 입력하세요',
-    }),
+    # price 위젯 제거됨
     'location': forms.TextInput(attrs={
         'class': COMMON_INPUT_CLASS,
         'placeholder': '직거래 희망 장소를 입력하세요',
@@ -69,85 +66,35 @@ class ItemPriceForm(forms.ModelForm):
         # item_name은 선택사항
         self.fields['item_name'].required = False
         self.fields['price'].required = True
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # item_name은 선택사항
-        self.fields['item_name'].required = False
-        self.fields['price'].required = True
-
 
 class FarmSellPostForm(forms.ModelForm):
     md = custom_choice_field(FarmSellPost.MD_CHOICES, label='종류')
     condition = custom_choice_field(FarmSellPost.CONDITION_CHOICES, label='상품 상태')
     shipping = custom_choice_field(FarmSellPost.SHIPPING_CHOICES, label='배송 방법')
     want_to = custom_choice_field(FarmSellPost.WANTTO_CHOICES, label='거래 방식')
-    # 개별 가격 설정 여부
-    use_individual_prices = forms.BooleanField(
-        required=False,
-        label='개별 가격 설정',
-        help_text='여러 물건을 각각 다른 가격으로 설정할 수 있습니다.',
-        widget=forms.CheckboxInput(attrs={
-            'class': 'mr-2',
-            'id': 'use-individual-prices',
-        })
-    )
 
     class Meta:
         model = FarmSellPost
         fields = [
-            'title', 'content', 'price', 'md', 'condition', 'shipping', 
-            'location', 'is_sold', 'want_to', 'artist', 'members', 'use_individual_prices'
+            'title', 'content', 'md', 'condition', 'shipping', 
+            'location', 'is_sold', 'want_to', 'artist', 'members'
         ]
         widgets = {
             **common_widgets,
             **market_widgets,
         }
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # 수정 모드에서 개별 가격이 있으면 체크박스 체크
-        if self.instance.pk and self.instance.has_multiple_items():
-            self.fields['use_individual_prices'].initial = True
-            # 개별 가격이 있으면 기본 가격 필드 비활성화
-            self.fields['price'].widget.attrs['disabled'] = True
-            self.fields['price'].required = False
-        
-        # POST 데이터에서 개별 가격 설정이 체크되어 있으면 기본 가격 비활성화
-        if self.data and self.data.get('use_individual_prices'):
-            self.fields['price'].widget.attrs['disabled'] = True
-            self.fields['price'].required = False
-            # 개별 가격이 있으면 기본 가격 필드 비활성화
-            self.fields['price'].widget.attrs['disabled'] = True
-            self.fields['price'].required = False
-        
-        # POST 데이터에서 개별 가격 설정이 체크되어 있으면 기본 가격 비활성화
-        if self.data and self.data.get('use_individual_prices'):
-            self.fields['price'].widget.attrs['disabled'] = True
-            self.fields['price'].required = False
-        
+
 class FarmRentalPostForm(forms.ModelForm):
     condition = custom_choice_field(FarmRentalPost.CONDITION_CHOICES, label='상품 상태')
     shipping = custom_choice_field(FarmRentalPost.SHIPPING_CHOICES, label='배송 방법')
     want_to = custom_choice_field(FarmRentalPost.WANTTO_CHOICES, label='거래 방식')
-    # 개별 가격 설정 여부
-    use_individual_prices = forms.BooleanField(
-        required=False,
-        label='개별 가격 설정',
-        help_text='여러 물건을 각각 다른 가격으로 설정할 수 있습니다.',
-        widget=forms.CheckboxInput(attrs={
-            'class': 'mr-2',
-            'id': 'use-individual-prices',
-        })
-    )
 
     class Meta:
         model = FarmRentalPost
         fields = [
-            'title', 'content', 'price', 'condition', 'shipping', 
+            'title', 'content', 'condition', 'shipping', 
             'location', 'is_sold', 'want_to', 'start_date', 'end_date', 
-            'artist', 'members', 'use_individual_prices'
+            'artist', 'members'
         ]
         widgets = {
             **common_widgets,
@@ -161,19 +108,12 @@ class FarmRentalPostForm(forms.ModelForm):
                 'class': COMMON_DATE_CLASS
             }),
         }
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # 수정 모드에서 개별 가격이 있으면 체크박스 체크
-        if self.instance.pk and self.instance.has_multiple_items():
-            self.fields['use_individual_prices'].initial = True
 
 # ItemPrice용 Formset 생성
 ItemPriceFormSet = modelformset_factory(
     ItemPrice,
     form=ItemPriceForm,
-    extra=0,  # 기본적으로는 추가 폼 없음
+    extra=1,  # 기본 1개 폼
     can_delete=True,  # 삭제 가능
     can_order=False,  # 순서는 ID로 자동 관리
 )

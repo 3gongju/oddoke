@@ -12,19 +12,9 @@
   <!-- 이미지 영역 -->
   <div class="relative aspect-square bg-gray-100">
     <a href="{{ detail_url }}" class="block w-full h-full">
-      {% if post.get_main_image %}
-        <img src="{{ post.get_main_image }}" 
-             alt="{{ post.title }}" 
-             class="w-full h-full object-cover {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
-      {% elif post.images.all %}
-        <img src="{{ post.images.first.image.url }}" 
-             alt="{{ post.title }}" 
-             class="w-full h-full object-cover {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
-      {% else %}
-        <div class="w-full h-full flex items-center justify-center text-gray-400 text-4xl {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
-          📷
-        </div>
-      {% endif %}
+      <img src="{{ post.get_main_image }}" 
+           alt="{{ post.title }}" 
+           class="w-full h-full object-cover {% if post.is_sold and app_name == 'ddokfarm' %}opacity-70{% endif %}">
     </a>
     
     <!-- ✅ 찜하기 버튼 (이미지 위 우상단) - 초기 상태 설정 개선 -->
@@ -52,30 +42,12 @@
       </a>
     </h3>
 
-    <!-- 가격 정보 (덕팜만) -->
+    <!-- ✅ 가격 정보 (덕팜만) - get_display_price 사용 -->
     {% if app_name == 'ddokfarm' %}
       <div class="mb-3">
-        {% if post.category_type == 'split' %}
-          {% if post.get_price_range %}
-            {% with min_price=post.get_price_range.0 max_price=post.get_price_range.1 %}
-              <div class="text-lg font-bold text-gray-900">
-                {% if min_price == max_price %}
-                  {{ min_price|intcomma }}원
-                {% else %}
-                  {{ min_price|intcomma }}원 ~ {{ max_price|intcomma }}원
-                {% endif %}
-              </div>
-            {% endwith %}
-          {% else %}
-            <div class="text-lg font-bold text-gray-900">
-              {{ post.shipping_fee|default:"0"|intcomma }}원
-            </div>
-          {% endif %}
-        {% else %}
-          <div class="text-lg font-bold text-gray-900">
-            {{ post.price|intcomma }}원
-          </div>
-        {% endif %}
+        <div class="text-lg font-bold text-gray-900">
+          {{ post.get_display_price }}
+        </div>
       </div>
     {% endif %}
 
@@ -119,16 +91,14 @@
           <span data-like-count-{{ post.id }}>{{ post.like.count }}</span>
         </div>
         
-        <!-- 조회수 (있는 경우만) -->
-        {% if post.view_count %}
-          <div class="flex items-center space-x-1">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
-              <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
-              <path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.566 7.003 7.003 0 0 1 13.238.006.87.87 0 0 1 0 .566A7.003 7.003 0 0 1 1.379 8.28ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
-            </svg>
-            <span>{{ post.view_count }}</span>
-          </div>
-        {% endif %}
+        <!-- ✅ 조회수 (항상 표시) -->
+        <div class="flex items-center space-x-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
+            <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+            <path fill-rule="evenodd" d="M1.38 8.28a.87.87 0 0 1 0-.566 7.003 7.003 0 0 1 13.238.006.87.87 0 0 1 0 .566A7.003 7.003 0 0 1 1.379 8.28ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clip-rule="evenodd" />
+          </svg>
+          <span>{{ post.view_count|default:0 }}</span>
+        </div>
       </div>
     </div>
 
