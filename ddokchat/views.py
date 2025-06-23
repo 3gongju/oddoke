@@ -4,8 +4,8 @@ from accounts.models import MannerReview, User
 from accounts.forms import MannerReviewForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, ItemPrice
-from django.db.models import Q, Max, Count, Prefetch, Case, When, OuterRef, Subquery
+from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, ItemPrice, SplitPrice, SplitApplication
+from django.db.models import Q, Max, Count, Prefetch, Case, When, OuterRef, Subquery, Sum
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -52,6 +52,9 @@ def chat_room(request, room_id):
         # 기본값 설정 (혹시 모를 다른 타입)
         room.category = 'sell'
 
+    # ✅ 게시글 가격 정보 캐싱
+    _cache_post_price_data(room.post, room.category, current_user)
+
     # 리뷰 여부 확인 최적화
     has_already_reviewed = False
     if current_user == room.buyer and room.is_fully_completed:
@@ -82,7 +85,6 @@ def chat_room(request, room_id):
     # 분철 관련 정보 추가 (기존 코드 유지)
     split_info = None
     if room.category == 'split':  # 🔧 수정된 카테고리 사용
-        from ddokfarm.models import SplitApplication
         # N+1 최적화: prefetch_related 사용
         application = SplitApplication.objects.filter(
             post=room.post,
@@ -94,12 +96,8 @@ def chat_room(request, room_id):
         ).first()
         
         if application:
-            # 신청한 멤버들의 가격 합계 계산
-            total_price = sum(
-                room.post.member_prices.filter(
-                    member__in=application.members.all()
-                ).values_list('price', flat=True)
-            )
+            # ✅ 캐싱된 데이터 사용하여 가격 계산
+            total_price = _calculate_split_participant_total_price(room.post, application)
             
             split_info = {
                 'applied_members': application.members.all(),
@@ -150,7 +148,7 @@ def get_or_create_chatroom(request, category, post_id):
 
     return redirect('ddokchat:chat_room', room_id=room.id)
 
-# 내 채팅 목록
+# ✅ 새로운 최적화된 내 채팅 목록
 @login_required
 def my_chatrooms(request):
     current_user = request.user
@@ -160,12 +158,13 @@ def my_chatrooms(request):
     rental_ct = ContentType.objects.get_for_model(FarmRentalPost)
     split_ct = ContentType.objects.get_for_model(FarmSplitPost)
     
-    # 기본 쿼리 (GenericForeignKey와 member_prices 제외)
+    # ✅ 메인 쿼리 - 최적화된 prefetch 사용
     rooms = ChatRoom.objects.filter(
         Q(buyer=current_user) | Q(seller=current_user)
     ).select_related(
         'buyer', 'seller', 'content_type'
     ).prefetch_related(
+        # 최신 메시지 1개만 가져오기
         Prefetch(
             'messages',
             queryset=Message.objects.select_related('sender', 'receiver')
@@ -192,7 +191,7 @@ def my_chatrooms(request):
         )
     ).order_by('-last_message_time')
     
-    # ✅ 게시글 타입별로 ID 수집 - ContentType으로 더 정확하게
+    # ✅ 게시글 ID별로 분류하여 bulk 조회
     sell_post_ids = []
     rental_post_ids = []
     split_post_ids = []
@@ -210,53 +209,62 @@ def my_chatrooms(request):
             continue
     
     # ✅ 모든 관련 데이터 한 번에 가져오기
-    item_prices_dict = {}
-    member_prices_dict = {}
+    price_cache = {}
     
     # ItemPrice 가져오기 (양도/대여용)
-    try:
-        if sell_post_ids:
-            sell_prices = ItemPrice.objects.filter(
-                content_type=sell_ct, 
-                object_id__in=sell_post_ids
-            ).select_related()
-            
-            for price in sell_prices:
-                key = f"sell_{price.object_id}"
-                if key not in item_prices_dict:
-                    item_prices_dict[key] = []
-                item_prices_dict[key].append(price)
+    if sell_post_ids:
+        sell_prices = ItemPrice.objects.filter(
+            content_type=sell_ct, 
+            object_id__in=sell_post_ids
+        ).select_related()
         
-        if rental_post_ids:
-            rental_prices = ItemPrice.objects.filter(
-                content_type=rental_ct, 
-                object_id__in=rental_post_ids
-            ).select_related()
-            
-            for price in rental_prices:
-                key = f"rental_{price.object_id}"
-                if key not in item_prices_dict:
-                    item_prices_dict[key] = []
-                item_prices_dict[key].append(price)
-                
-    except Exception as e:
-        print(f"ItemPrice 조회 오류: {e}")
+        for price in sell_prices:
+            key = f"sell_{price.object_id}"
+            if key not in price_cache:
+                price_cache[key] = []
+            price_cache[key].append(price)
     
-    # MemberPrice 가져오기 (분철용)
-    try:
-        if split_post_ids:
-            split_posts = FarmSplitPost.objects.filter(
-                id__in=split_post_ids
-            ).prefetch_related('member_prices')
-            
-            for post in split_posts:
-                key = f"split_{post.id}"
-                member_prices_dict[key] = list(post.member_prices.all())
-                
-    except Exception as e:
-        print(f"분철 MemberPrice 조회 오류: {e}")
+    if rental_post_ids:
+        rental_prices = ItemPrice.objects.filter(
+            content_type=rental_ct, 
+            object_id__in=rental_post_ids
+        ).select_related()
+        
+        for price in rental_prices:
+            key = f"rental_{price.object_id}"
+            if key not in price_cache:
+                price_cache[key] = []
+            price_cache[key].append(price)
     
-    # ✅ 캐시된 데이터를 각 room의 post에 설정 - 속성명 통일
+    # SplitPrice와 SplitApplication 가져오기 (분철용)
+    split_price_cache = {}
+    split_application_cache = {}
+    
+    if split_post_ids:
+        # SplitPrice 가져오기
+        split_prices = SplitPrice.objects.filter(
+            post_id__in=split_post_ids
+        ).select_related('member')
+        
+        for price in split_prices:
+            key = f"split_{price.post_id}"
+            if key not in split_price_cache:
+                split_price_cache[key] = []
+            split_price_cache[key].append(price)
+        
+        # SplitApplication 가져오기 (참여자 가격 계산용)
+        split_applications = SplitApplication.objects.filter(
+            post_id__in=split_post_ids,
+            status='approved'
+        ).prefetch_related('members').select_related('user')
+        
+        for app in split_applications:
+            key = f"split_{app.post_id}"
+            if key not in split_application_cache:
+                split_application_cache[key] = []
+            split_application_cache[key].append(app)
+    
+    # ✅ 각 room의 post에 캐싱된 데이터 설정
     for room in rooms:
         try:
             # ContentType으로 카테고리 판단
@@ -272,38 +280,29 @@ def my_chatrooms(request):
             post_id = room.object_id
             
             if category in ['sell', 'rental']:
-                # ItemPrice 설정 - 속성명 통일
+                # ItemPrice 설정
                 key = f"{category}_{post_id}"
-                cached_prices = item_prices_dict.get(key, [])
-                
-                # ✅ 속성명 통일: _cached_item_prices로 설정
+                cached_prices = price_cache.get(key, [])
                 room.post._cached_item_prices = cached_prices
-                # 템플릿 접근용도 유지
-                room.post.cached_item_prices = cached_prices
                     
             elif category == 'split':
-                # MemberPrice 설정 - 속성명 통일
+                # SplitPrice 설정
                 key = f"split_{post_id}"
-                cached_prices = member_prices_dict.get(key, [])
-                
-                # ✅ 속성명 통일: _cached_member_prices로 설정
+                cached_prices = split_price_cache.get(key, [])
                 room.post._cached_member_prices = cached_prices
-                # 템플릿 접근용도 유지
-                room.post.cached_member_prices = cached_prices
-            else:
-                # 알 수 없는 타입의 경우 빈 리스트로 설정
-                room.post._cached_item_prices = []
-                room.post._cached_member_prices = []
-                room.post.cached_item_prices = []
-                room.post.cached_member_prices = []
+                
+                # SplitApplication 설정 (참여자 가격 계산용)
+                cached_applications = split_application_cache.get(key, [])
+                room.post._cached_applications = cached_applications
+            
+            # 가격 정보 캐싱
+            _cache_post_price_data(room.post, category, current_user, room)
                 
         except Exception as e:
             print(f"캐시 설정 오류 (room {room.id}): {e}")
             # 오류 시 안전하게 빈 리스트 설정
             room.post._cached_item_prices = []
             room.post._cached_member_prices = []
-            room.post.cached_item_prices = []
-            room.post.cached_member_prices = []
     
     # 기본 후처리
     for room in rooms:
@@ -348,30 +347,34 @@ def my_chatrooms(request):
                 # 그룹 내에서 최신 메시지 시간순으로 정렬
                 group_rooms_list.sort(key=lambda x: x.last_message_time or timezone.make_aware(datetime.min), reverse=True)
                 
-                # ✅ 새로 추가: 최근 활동한 대화 상대방들 분석
+                # ✅ 최근 활동한 대화 상대방들 분석
                 recent_partners = []
                 latest_message = None
                 latest_message_time = None
                 
-                # ✅ 새로 추가: 각 참여자의 멤버 정보 매핑
+                # ✅ 각 참여자의 멤버 정보 매핑
                 partner_member_map = {}
                 split_post = group_rooms_list[0].post  # FarmSplitPost 객체
                 
-                # 분철 신청 정보들을 가져와서 각 참여자가 어떤 멤버인지 매핑
-                from ddokfarm.models import SplitApplication
-                applications = SplitApplication.objects.filter(
-                    post=split_post,
-                    status='approved'
-                ).prefetch_related('members')
+                # ✅ 캐싱된 applications 사용
+                if hasattr(split_post, '_cached_applications'):
+                    applications = split_post._cached_applications
+                else:
+                    # 캐시 없으면 DB 조회
+                    applications = SplitApplication.objects.filter(
+                        post=split_post,
+                        status='approved'
+                    ).prefetch_related('members')
                 
                 for application in applications:
                     user = application.user
                     applied_members = application.members.all()
                     if applied_members:
-                        # 첫 번째 멤버를 대표로 사용 (보통 하나만 선택하므로)
-                        partner_member_map[user] = applied_members[0].member_name
+                        # ✅ 여러 멤버 참여 시 모든 멤버명 표시
+                        member_names = [member.member_name for member in applied_members]
+                        partner_member_map[user] = ', '.join(member_names)
                 
-                # 최근 활동 기준: 읽지 않은 메시지가 있거나, 최근 메시지가 있는 상대방
+                # 최근 활동 분석
                 for room in group_rooms_list:
                     # 전체 중 가장 최근 메시지 찾기
                     if room.last_message:
@@ -379,10 +382,8 @@ def my_chatrooms(request):
                             latest_message = room.last_message
                             latest_message_time = room.last_message.timestamp
                     
-                    # 최근 활동 기준: 읽지 않은 메시지가 있거나, 최근 메시지가 있는 상대방
-                    partner = room.get_other_user(current_user)  # 상대방 가져오기
-                    
-                    # 읽지 않은 메시지가 있는 상대방이거나, 가장 최근 메시지를 주고받은 상대방
+                    # 최근 활동한 상대방 추가
+                    partner = room.get_other_user(current_user)
                     has_unread = room.unread_count > 0
                     has_recent_activity = room.last_message and room.last_message.timestamp
                     
@@ -415,8 +416,8 @@ def my_chatrooms(request):
                     'latest_message': latest_message,
                     'primary_partner': recent_partners[0] if recent_partners else None,  # 대표 상대방
                     
-                    # ✅ 새로 추가: 멤버 정보 매핑
-                    'partner_member_map': partner_member_map,  # {user: member_name} 매핑
+                    # ✅ 수정된 멤버 정보 매핑
+                    'partner_member_map': partner_member_map,  # {user: "카리나, 닝닝"} 매핑
                 }
                 split_groups.append(group_info)
     
@@ -462,7 +463,71 @@ def my_chatrooms(request):
         'current_user': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
-    
+
+# ✅ 새로운 헬퍼 함수들
+
+def _cache_post_price_data(post, category, current_user, room=None):
+    """게시글 가격 정보를 캐싱하는 헬퍼 함수"""
+    try:
+        if category in ['sell', 'rental']:
+            # ItemPrice가 이미 캐싱되어 있는지 확인
+            if not hasattr(post, '_cached_item_prices'):
+                # 캐시가 없으면 DB에서 가져오기
+                content_type = ContentType.objects.get_for_model(post.__class__)
+                item_prices = ItemPrice.objects.filter(
+                    content_type=content_type,
+                    object_id=post.id
+                ).select_related()
+                post._cached_item_prices = list(item_prices)
+            
+        elif category == 'split':
+            # SplitPrice가 이미 캐싱되어 있는지 확인
+            if not hasattr(post, '_cached_member_prices'):
+                member_prices = SplitPrice.objects.filter(
+                    post=post
+                ).select_related('member')
+                post._cached_member_prices = list(member_prices)
+            
+            # SplitApplication 캐싱 (참여자 가격 계산용)
+            if not hasattr(post, '_cached_applications'):
+                applications = SplitApplication.objects.filter(
+                    post=post,
+                    status='approved'
+                ).prefetch_related('members').select_related('user')
+                post._cached_applications = list(applications)
+                
+    except Exception as e:
+        print(f"가격 데이터 캐싱 오류: {e}")
+        # 에러 시 빈 리스트로 설정
+        post._cached_item_prices = []
+        post._cached_member_prices = []
+        post._cached_applications = []
+
+def _calculate_split_participant_total_price(post, application):
+    """분철 참여자의 총 가격 계산"""
+    try:
+        # 캐싱된 member_prices 사용
+        if hasattr(post, '_cached_member_prices'):
+            member_prices = post._cached_member_prices
+        else:
+            member_prices = post.member_prices.all()
+        
+        # 신청한 멤버들의 ID 목록
+        applied_member_ids = [member.id for member in application.members.all()]
+        
+        # 해당 멤버들의 가격 합계 계산
+        total_price = sum(
+            price.price for price in member_prices 
+            if price.member_id in applied_member_ids
+        )
+        
+        return total_price
+        
+    except Exception as e:
+        print(f"분철 참여자 가격 계산 오류: {e}")
+        return 0
+
+# 기존 함수들 유지...
 @login_required
 @require_POST
 def upload_image(request):
@@ -892,7 +957,6 @@ def get_or_create_split_chatroom(request, post_id, user_id):
         return redirect('ddokfarm:post_detail', category='split', post_id=post_id)
     
     # 3. 해당 사용자가 실제로 승인된 참여자인지 확인
-    from ddokfarm.models import SplitApplication
     approved_application = SplitApplication.objects.filter(
         post=post,
         user=participant,
