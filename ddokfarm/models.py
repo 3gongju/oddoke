@@ -67,19 +67,26 @@ class ItemPrice(models.Model):
     
     item_name = models.CharField(max_length=20, blank=True, help_text="물건명 (비어있으면 '덕N'으로 자동 표시)")
     price = models.PositiveIntegerField(help_text="개별 물건 가격")
+    is_price_undetermined = models.BooleanField(
+        default=False, 
+        help_text="가격 미정 여부"
+    )  # 새로 추가되는 필드
     is_sold = models.BooleanField(default=False, help_text="개별 판매 완료 여부 (향후 기능)")
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ['id']  # 생성 순서대로 정렬
+        ordering = ['id']
         
     def __str__(self):
-        display_name = self.item_name or f"덕{self.get_display_number()}"
-        return f"{self.post.title} - {display_name} ({self.price:,}원)"
+        if self.is_price_undetermined:
+            display_name = self.item_name or f"덕{self.get_display_number()}"
+            return f"{self.post.title} - {display_name} (가격 미정)"
+        else:
+            display_name = self.item_name or f"덕{self.get_display_number()}"
+            return f"{self.post.title} - {display_name} ({self.price:,}원)"
     
     def get_display_number(self):
         """덕1, 덕2... 표시용 번호 반환"""
-        # 같은 게시글의 ItemPrice들 중에서 현재 아이템의 순서
         same_post_items = ItemPrice.objects.filter(
             content_type=self.content_type, 
             object_id=self.object_id
@@ -89,6 +96,12 @@ class ItemPrice(models.Model):
     def get_display_name(self):
         """표시용 이름 반환 (물건명이 있으면 물건명, 없으면 '덕N')"""
         return self.item_name or f"덕{self.get_display_number()}"
+    
+    def get_display_price(self):
+        """표시용 가격 문자열"""
+        if self.is_price_undetermined:
+            return "가격 미정"
+        return f"{self.price:,}원"
 
 class FarmMarketPost(FarmBasePost):
     # 상품 상태 선택지
@@ -150,6 +163,34 @@ class FarmMarketPost(FarmBasePost):
     def price(self):
         """하위 호환성을 위한 price 프로퍼티 (정렬 등에서 사용)"""
         return self.effective_price
+
+class ExchangeItem(models.Model):
+    """교환 정보 (양도 게시글용)"""
+    post = models.OneToOneField(
+        'FarmSellPost', 
+        on_delete=models.CASCADE, 
+        related_name='exchange_info'
+    )
+    give_description = models.CharField(
+        max_length=50,
+        help_text="내가 주는 것",
+        verbose_name="주는 것"
+    )
+    want_description = models.CharField(
+        max_length=50,
+        help_text="내가 받고 싶은 것", 
+        verbose_name="받고 싶은 것"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['id']
+        verbose_name = "교환 정보"
+        verbose_name_plural = "교환 정보"
+        
+    def __str__(self):
+        return f"{self.post.title} - 교환 정보"
 
 class FarmSellPost(FarmMarketPost):
     WANTTO_CHOICES = [
