@@ -24,8 +24,8 @@ from ..utils.cafe_utils import get_cafe_detail_context
 
 from ddoksang.utils.favorite_utils import get_user_favorites
 
-from ..models import BdayCafe, CafeFavorite
-from ..forms import BdayCafeForm
+from ..models import BdayCafe, BdayCafeImage, CafeFavorite
+from ..forms import BdayCafeForm, BdayCafeIm
 from ..utils.map_utils import get_map_context, get_nearby_cafes  # 유틸리티 사용
 from artist.models import Artist, Member
 
@@ -33,38 +33,60 @@ from artist.models import Artist, Member
 logger = logging.getLogger(__name__)
 
 
-
 def cafe_create_view(request):
     if request.method == 'POST':
         try:
             uploaded_files = request.FILES.getlist('images')
 
-            # 파일 검증
             valid_files = []
             for file in uploaded_files:
                 if (
-                    file.name.strip() and 
-                    file.size > 0 and 
-                    file.content_type.startswith('image/') and
-                    file.size <= 10 * 1024 * 1024  # 10MB 제한
+                    not file.name.strip()
+                    or file.size == 0
+                    or not file.content_type.startswith('image/')
+                    or file.size > 10 * 1024 * 1024
                 ):
+                    continue
+                try:
+                    file.seek(0)
+                    if not file.read(100):
+                        continue
+                    file.seek(0)
                     valid_files.append(file)
+                except Exception:
+                    continue
+
+            if uploaded_files and not valid_files:
+                messages.error(request, '유효한 이미지 파일이 없습니다.')
+                return redirect('ddoksang:create')
 
             # x_source 처리 
             raw_x_source = request.POST.get('x_source', '').strip()
             x_source = ''
 
             if raw_x_source:
+                print(f"📝 원본 X 소스 입력: '{raw_x_source}'")
+                
                 if raw_x_source.startswith('@'):
+                    # @ENHYPEN → https://x.com/ENHYPEN
                     username = raw_x_source[1:].strip()
-                    if username:
+                    if username:  # 사용자명이 있는 경우만
                         x_source = f"https://x.com/{username}"
                 elif raw_x_source.startswith('https://x.com/') or raw_x_source.startswith('https://twitter.com/'):
+                    # 이미 완전한 URL
                     x_source = raw_x_source
                 elif raw_x_source and '/' not in raw_x_source:
+                    # ✅ 단순 사용자명: ENHYPEN → https://x.com/ENHYPEN
                     x_source = f"https://x.com/{raw_x_source}"
+                else:
+                    # 잘못된 형식인 경우 빈 값
+                    print(f"⚠️ 잘못된 X 소스 형식: '{raw_x_source}'")
+                    x_source = ''
+                
+                print(f"✅ 최종 X 소스: '{x_source}'")
+            else:
+                print("📝 X 소스 입력 없음")
 
-            # 카페 데이터
             cafe_data = {
                 'submitted_by': request.user,
                 'artist_id': request.POST.get('artist_id'),
@@ -85,11 +107,9 @@ def cafe_create_view(request):
                 'event_description': request.POST.get('event_description', ''),
                 'hashtags': request.POST.get('hashtags', ''),
                 'x_source': x_source,
-                'status': 'pending',
-                'image_gallery': []  # ✅ 빈 이미지 갤러리로 초기화
+                'status': 'pending'
             }
 
-            # 특전 정보 처리
             perks = []
             for cat, label in [
                 ('perks', '일반'),
@@ -102,19 +122,18 @@ def cafe_create_view(request):
 
             cafe_data['special_benefits'] = ', '.join(perks)
 
-            # ✅ 카페 생성 후 이미지 추가
             with transaction.atomic():
-                # 카페 생성
                 cafe = BdayCafe.objects.create(**cafe_data)
 
-                # ✅ JSON 기반 이미지 갤러리에 이미지 추가
                 for index, image_file in enumerate(valid_files):
-                    cafe.add_image(
-                        image_file=image_file,
+                    image_file.seek(0)
+                    BdayCafeImage.objects.create(
+                        cafe=cafe,
+                        image=image_file,
                         image_type='main' if index == 0 else 'other',
-                        caption=f"이미지 {index + 1}",
-                        is_main=(index == 0),  # 첫 번째 이미지가 대표
-                        order=index
+                        is_main=(index == 0),
+                        order=index,
+                        caption=f"이미지 {index + 1}"
                     )
 
             messages.success(request, '생일카페가 성공적으로 등록되었습니다.')
@@ -124,7 +143,6 @@ def cafe_create_view(request):
             messages.error(request, f'등록 중 오류가 발생했습니다: {e}')
             return redirect('ddoksang:create')
 
-    # GET 요청 처리
     from ddoksang.messages import ALL_MESSAGES
     kakao_api_key = (
         getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
@@ -143,8 +161,10 @@ def cafe_create_view(request):
 def cafe_create_success(request, cafe_id):
     """카페 등록 완료 페이지"""
     try:
+        # 해당 카페를 가져오기 (작성자만 접근 가능)
         cafe = get_object_or_404(
-            BdayCafe.objects.select_related('artist', 'member'),  # ✅ prefetch_related 제거
+            BdayCafe.objects.select_related('artist', 'member')
+                            .prefetch_related('images'),
             id=cafe_id,
             submitted_by=request.user
         )
@@ -153,16 +173,20 @@ def cafe_create_success(request, cafe_id):
         print(f"   카페명: {cafe.cafe_name}")
         print(f"   아티스트: {cafe.artist.display_name if cafe.artist else 'N/A'}")
         print(f"   멤버: {cafe.member.member_name if cafe.member else 'N/A'}")
-        print(f"   이미지 갤러리: {len(cafe.image_gallery)}장")  # ✅ JSON 기반 이미지 확인
+        print(f"   트위터 출처: '{cafe.x_source}'")  # 🔍 이 부분을 확인하세요
+        print(f"   트위터 출처 타입: {type(cafe.x_source)}")
+        print(f"   트위터 출처 길이: {len(cafe.x_source) if cafe.x_source else 0}")
         
-        # ✅ 이미지 정보 출력 (JSON 기반)
-        if cafe.image_gallery:
-            print(f"📸 이미지 갤러리 ({len(cafe.image_gallery)}장):")
-            for i, img in enumerate(cafe.image_gallery):
-                print(f"  - 이미지 {i+1}: {img.get('url', 'N/A')}")
-                print(f"    타입: {img.get('type', 'N/A')}, 메인: {img.get('is_main', False)}")
+        # 이미지 정보 출력
+        images = cafe.images.all()
+        print(f"📸 연결된 이미지 개수: {images.count()}")
+        if images.exists():
+            for img in images:
+                print(f"  - 이미지 {img.id}: {img.image.name}")
+                print(f"    URL: {img.image.url}")
+                print(f"    타입: {img.image_type}, 메인: {img.is_main}, 순서: {img.order}")
         else:
-            print("  ❌ 이미지 갤러리가 비어있음")
+            print("  ❌ 연결된 이미지가 없음")
         
         # 특전 정보 파싱 (디스플레이용)
         parsed_benefits = []
@@ -194,8 +218,11 @@ def cafe_create_success(request, cafe_id):
         return redirect('ddoksang:home')
     except Exception as e:
         print(f"❌ create_success 뷰 오류: {e}")
+        import traceback
+        traceback.print_exc()
         messages.error(request, '페이지 로드 중 오류가 발생했습니다.')
         return redirect('ddoksang:home')
+    
 
 @login_required
 def my_cafes(request):
@@ -458,42 +485,12 @@ def user_preview_cafe(request, cafe_id):
     )
     return render(request, 'ddoksang/detail.html', context)
 
-@login_required
-def cafe_image_upload_view(request):
-    """카페 이미지 업로드 API"""
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'POST 요청만 허용됩니다.'})
-    
-    try:
-        cafe_id = request.POST.get('cafe_id')
-        image_file = request.FILES.get('image')
-        image_type = request.POST.get('image_type', 'other')
-        caption = request.POST.get('caption', '')
-        is_main = request.POST.get('is_main', 'false').lower() == 'true'
-        
-        if not cafe_id or not image_file:
-            return JsonResponse({'success': False, 'error': '필수 파라미터가 누락되었습니다.'})
-        
-        # 카페 조회 (권한 확인)
-        cafe = get_object_or_404(BdayCafe, id=cafe_id, submitted_by=request.user)
-        
-        # ✅ JSON 기반 이미지 추가
-        image_data = cafe.add_image(
-            image_file=image_file,
-            image_type=image_type,
-            caption=caption,
-            is_main=is_main
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'image': image_data,
-            'message': '이미지가 업로드되었습니다.'
-        })
-        
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
 
+# 추가로 필요한 함수들
+def cafe_image_upload_view(request):
+    """카페 이미지 업로드"""
+    from django.http import JsonResponse
+    return JsonResponse({"status": "이미지 업로드 기능 - 개발 중"})
 
 def cafe_image_delete_view(request, image_id):
     """카페 이미지 삭제"""
@@ -521,7 +518,7 @@ def tour_map_view(request):
         status='approved',
         start_date__lte=today,
         end_date__gte=today
-    ).select_related('artist', 'member')
+    ).select_related('artist', 'member').prefetch_related('images')
     
     logger.info(f"운영중인 카페 수: {cafes.count()}")
     

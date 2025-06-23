@@ -34,7 +34,7 @@ def home_view(request):
     birthday_artists = get_weekly_bday_artists()
 
     # === 2. 현재 운영중인 생일카페들 (지도용 + 사이드바용) ===
-    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
+    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
     
     # ✅ 수정: 실제 운영중인 카페만 필터링 (사이드바용)
     active_cafes = approved_cafes.filter(
@@ -165,11 +165,10 @@ def search_view(request):
 def cafe_detail_view(request, cafe_id):
     """생일카페 상세 뷰"""
     cafe = get_object_or_404(
-        BdayCafe.objects.select_related('artist', 'member').prefetch_related('images'),
+        BdayCafe.objects.select_related('artist', 'member'),
         id=cafe_id,
         status='approved'
     )
-    
     # 조회수 증가
     try:
         BdayCafe.objects.filter(id=cafe_id).update(view_count=F('view_count') + 1)
@@ -234,7 +233,8 @@ def cafe_detail_view(request, cafe_id):
 def map_view(request):
     """지도 페이지 (별도 지도 전용 페이지)"""
     #  map_utils 사용으로 간소화
-    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
+    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
+
     active_cafes = filter_operating_cafes(approved_cafes)
     
     # 지도 관련 컨텍스트 생성 (map_utils 사용)
@@ -257,11 +257,11 @@ def map_view(request):
 def cafe_detail_view(request, cafe_id):
     """생일카페 상세 뷰"""
     cafe = get_object_or_404(
-        BdayCafe.objects.select_related('artist', 'member').prefetch_related('images'),
+        BdayCafe.objects.select_related('artist', 'member'),
         id=cafe_id,
         status='approved'
     )
-    
+        
     # 조회수 증가
     try:
         BdayCafe.objects.filter(id=cafe_id).update(view_count=F('view_count') + 1)
@@ -353,7 +353,7 @@ def tour_map_view(request):
     today = date.today()
     
     #  map_utils 사용
-    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member').prefetch_related('images')
+    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
     operating_cafes = filter_operating_cafes(approved_cafes, reference_date=today)
     
     logger.info(f"투어맵: 운영중인 카페 수 {operating_cafes.count()}개")
