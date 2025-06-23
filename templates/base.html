@@ -248,54 +248,54 @@
   </div>
 </nav>
 
-<!-- ✅ 메인 배너 슬라이드 섹션 (홈페이지에서만 표시) -->
+<!-- 🔄 수정된 메인 배너 슬라이드 섹션 (홈페이지에서만 표시) -->
 {% if request.resolver_match.url_name == 'home' or request.path == '/' %}
-<section class="relative overflow-hidden">
+<section class="relative overflow-hidden bg-white">
   <div class="swiper mainBannerSwiper">
     <div class="swiper-wrapper">
       <!-- 슬라이드 1: 랜딩페이지1 -->
       <div class="swiper-slide">
-        <div class="w-full h-auto">
+        <div class="w-full h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[80vh] bg-white flex items-center justify-center overflow-hidden">
           <img src="{% static 'image/랜딩페이지1.jpg' %}" 
                alt="어덕해 메인 소개" 
-               class="w-full h-auto object-cover">
+               class="w-full h-full object-cover">
         </div>
       </div>
       
       <!-- 슬라이드 2: 랜딩페이지2 -->
       <div class="swiper-slide">
-        <div class="w-full h-auto">
+        <div class="w-full h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[80vh] bg-white flex items-center justify-center overflow-hidden">
           <img src="{% static 'image/랜딩페이지2.jpg' %}" 
                alt="아이돌 굿즈 중고거래 덕담" 
-               class="w-full h-auto object-cover">
+               class="w-full h-full object-cover">
         </div>
       </div>
       
       <!-- 슬라이드 3: 랜딩페이지3 -->
       <div class="swiper-slide">
-        <div class="w-full h-auto">
+        <div class="w-full h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[80vh] bg-white flex items-center justify-center overflow-hidden">
           <img src="{% static 'image/랜딩페이지3.jpg' %}" 
                alt="아이돌 덕질 커뮤니티 덕담" 
-               class="w-full h-auto object-cover">
+               class="w-full h-full object-cover">
         </div>
       </div>
       
       <!-- 슬라이드 4: 랜딩페이지4 -->
       <div class="swiper-slide">
-        <div class="w-full h-auto">
-          <img src="{% static 'image/랜딩페이지4.jpg' %}" 
+        <div class="w-full h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] xl:h-[80vh] bg-white flex items-center justify-center overflow-hidden">
+          <img src="{% static 'image/랜딩페이지44.jpg' %}" 
                alt="아이돌 생일카페 정보 덕생" 
-               class="w-full h-auto object-cover">
+               class="w-full h-full object-cover">
         </div>
       </div>
     </div>
     
     <!-- 페이지네이션 -->
-    <div class="swiper-pagination"></div>
+    <div class="swiper-pagination !bottom-4"></div>
     
     <!-- 네비게이션 버튼 -->
-    <div class="swiper-button-next"></div>
-    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next !text-white"></div>
+    <div class="swiper-button-prev !text-white"></div>
   </div>
 </section>
 {% endif %}
@@ -384,40 +384,65 @@
 <!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-<!-- ✅ Swiper 초기화 스크립트 -->
+<!-- 🔄 수정된 Swiper 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // 메인 배너 스와이퍼 초기화
   const mainBannerSwiper = new Swiper('.mainBannerSwiper', {
     loop: true,
     autoplay: {
-      delay: 5000,
+      delay: 4000,
       disableOnInteraction: false,
     },
-    speed: 800,
+    speed: 1000,
     effect: 'slide',
+    grabCursor: true,
+    
     pagination: {
       el: '.swiper-pagination',
       clickable: true,
-      bulletClass: 'swiper-pagination-bullet',
-      bulletActiveClass: 'swiper-pagination-bullet-active',
+      dynamicBullets: true,
     },
+    
     navigation: {
       nextEl: '.swiper-button-next',
       prevEl: '.swiper-button-prev',
     },
+    
     // 반응형 설정
     breakpoints: {
-      640: {
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 0,
         autoplay: {
-          delay: 6000,
+          delay: 3500,
+        },
+      },
+      640: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+        autoplay: {
+          delay: 4500,
         },
       },
       1024: {
+        slidesPerView: 1,
+        spaceBetween: 0,
         autoplay: {
-          delay: 7000,
+          delay: 5000,
         },
       },
+    },
+    
+    // 키보드 컨트롤
+    keyboard: {
+      enabled: true,
+      onlyInViewport: true,
+    },
+    
+    // 마우스휠 스크롤
+    mousewheel: {
+      invert: false,
     },
   });
   
@@ -626,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 </script>
 
-<!-- ✅ 추가 스타일 - 반응형 및 폰트 최적화 -->
+<!-- 🔄 수정된 추가 스타일 - 반응형 및 폰트 최적화 -->
 <style>
   /* 스위트 폰트 최적화 */
   .font-heading {
@@ -715,49 +740,99 @@ document.addEventListener('DOMContentLoaded', function() {
     outline-offset: 2px;
   }
 
-  /* Swiper 커스텀 스타일 */
+  /* 🔄 개선된 Swiper 커스텀 스타일 */
+  .swiper-pagination {
+    position: absolute !important;
+    bottom: 20px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  
   .swiper-pagination-bullet {
-    background: rgba(255, 255, 255, 0.5);
-    opacity: 1;
+    background: rgba(255, 255, 255, 0.6) !important;
+    opacity: 1 !important;
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50% !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
   }
   
   .swiper-pagination-bullet-active {
-    background: white;
+    background: white !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
   }
   
   .swiper-button-next,
   .swiper-button-prev {
-    color: white;
-    background: rgba(0, 0, 0, 0.3);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    margin-top: -22px;
+    color: white !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 50% !important;
+    margin-top: -25px !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(4px) !important;
   }
   
   .swiper-button-next:after,
   .swiper-button-prev:after {
-    font-size: 18px;
-    font-weight: bold;
+    font-size: 20px !important;
+    font-weight: bold !important;
   }
   
   .swiper-button-next:hover,
   .swiper-button-prev:hover {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6) !important;
+    transform: scale(1.1) !important;
   }
   
+  /* 모바일에서 네비게이션 버튼 크기 조정 */
   @media (max-width: 640px) {
     .swiper-button-next,
     .swiper-button-prev {
-      width: 36px;
-      height: 36px;
-      margin-top: -18px;
+      width: 40px !important;
+      height: 40px !important;
+      margin-top: -20px !important;
     }
     
     .swiper-button-next:after,
     .swiper-button-prev:after {
-      font-size: 14px;
+      font-size: 16px !important;
     }
+    
+    .swiper-pagination {
+      bottom: 15px !important;
+    }
+    
+    .swiper-pagination-bullet {
+      width: 10px !important;
+      height: 10px !important;
+    }
+  }
+  
+  /* 이미지 로딩 최적화 */
+  .swiper-slide img {
+    transition: transform 0.3s ease;
+  }
+  
+  .swiper-slide:hover img {
+    transform: scale(1.02);
+  }
+  
+  /* 슬라이드 전환 효과 개선 */
+  .swiper-slide {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+  }
+  
+  .swiper-slide-active {
+    opacity: 1;
   }
 </style>
 
