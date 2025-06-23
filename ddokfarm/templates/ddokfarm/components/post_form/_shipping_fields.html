@@ -1,0 +1,36 @@
+<!-- ddokfarm/templates/ddokfarm/components/post_form/_shipping_fields.html -->
+
+<!-- 배송 방법 선택 -->
+<div class="mb-6">
+  <label class="block text-lg font-bold text-gray-900 mb-3">배송 방법 (복수 선택 가능)</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.shipping_methods.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="checkbox" name="shipping_methods" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+               {% if choice.0 in form.shipping_methods.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
+  {% if form.shipping_methods.errors %}
+    <p class="text-red-500 text-sm mt-1">{{ form.shipping_methods.errors.0 }}</p>
+  {% endif %}
+  <p class="text-xs text-gray-500 mt-2">구매자가 선택할 수 있는 배송 방법을 체크해주세요</p>
+</div>
+
+<!-- 배송비 -->
+<div class="mb-6">
+  <label for="{{ form.shipping_fee.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-1">배송비</label>
+  <div class="relative">
+    {{ form.shipping_fee }}
+    <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
+  </div>
+  {% if form.shipping_fee.errors %}
+    <p class="text-red-500 text-sm mt-1">{{ form.shipping_fee.errors.0 }}</p>
+  {% endif %}
+  <p class="text-xs text-gray-500 mt-1">
+    여러 배송 방법 선택 시 공통 배송비 또는 대표 배송비를 입력하세요<br>
+    배송비가 다를 경우 내용란에 상세 정보를 적어주세요
+  </p>
+</div>

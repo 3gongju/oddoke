@@ -1,4 +1,4 @@
-/* birthday_game.css - 비율 축소 버전 */
+/* birthday_game.css - 순수 게임 전용 스타일 */
 
 /* === 생일시 맞추기 게임 스타일 === */
 .game-container {
@@ -272,19 +272,6 @@
 .game-container .text-gray-300 { color: #151515 !important; }
 .game-container .text-gray-400 { color: #ffffff !important; }
 .game-container .text-gray-500 { color: #6b7280 !important; }
-
-/* 템플릿 색상 오버라이드 - 게임 영역에만 적용 */
-.game-container #no-birthday-view h2 {
-  color: #ffffff !important;
-}
-
-.game-container #no-birthday-view p {
-  color: #d1d5db !important;
-}
-
-.game-container #no-birthday-view svg {
-  color: #9ca3af !important;
-}
 
 /* 모바일 게임 스타일 */
 @media (max-width: 768px) {
