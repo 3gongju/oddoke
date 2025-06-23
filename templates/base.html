@@ -1,13 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko">
-<head>{% load static %}
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>Oddoke</title>
   <link rel="icon" type="image/png" href="{% static 'image/favicon.png' %}">
   <meta name="description" content="팬들을 위한 특별한 공간에서 굿즈 거래부터 덕질 기록까지">
+  
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   
   <!-- 스위트(SUITE) 폰트 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -55,9 +58,6 @@
 
   <!--  커스텀 스크롤 제거용 CSS 연결 -->
   <link rel="stylesheet" href="{% static 'css/scrollbar-hide.css' %}">
-
-  <!-- Swiper CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
   {% block head %}{% endblock %}
 </head>
@@ -201,6 +201,8 @@
   </div>
 </nav>
 
+
+
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}
 
@@ -282,7 +284,84 @@
   <div class="h-16 sm:h-24"></div>
 </div>
 
+<!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<!-- 🔄 수정된 Swiper 초기화 스크립트 -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 메인 배너 스와이퍼 초기화
+  const mainBannerSwiper = new Swiper('.mainBannerSwiper', {
+    loop: true,
+    autoplay: {
+      delay: 4000,
+      disableOnInteraction: false,
+    },
+    speed: 1000,
+    effect: 'slide',
+    grabCursor: true,
+    
+    pagination: {
+      el: '.swiper-pagination',
+      clickable: true,
+      dynamicBullets: true,
+    },
+    
+    navigation: {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    },
+    
+    // 반응형 설정
+    breakpoints: {
+      320: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+        autoplay: {
+          delay: 3500,
+        },
+      },
+      640: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+        autoplay: {
+          delay: 4500,
+        },
+      },
+      1024: {
+        slidesPerView: 1,
+        spaceBetween: 0,
+        autoplay: {
+          delay: 5000,
+        },
+      },
+    },
+    
+    // 키보드 컨트롤
+    keyboard: {
+      enabled: true,
+      onlyInViewport: true,
+    },
+    
+    // 마우스휠 스크롤
+    mousewheel: {
+      invert: false,
+    },
+  });
+  
+  // 호버 시 자동재생 일시정지
+  const swiperContainer = document.querySelector('.mainBannerSwiper');
+  if (swiperContainer) {
+    swiperContainer.addEventListener('mouseenter', () => {
+      mainBannerSwiper.autoplay.stop();
+    });
+    
+    swiperContainer.addEventListener('mouseleave', () => {
+      mainBannerSwiper.autoplay.start();
+    });
+  }
+});
+</script>
 
 <!-- ✅ 좋아요 하트 비동기 처리 -->
 <script>
@@ -475,7 +554,7 @@
   });
 </script>
 
-<!-- ✅ 추가 스타일 - 반응형 및 폰트 최적화 -->
+<!-- 🔄 수정된 추가 스타일 - 반응형 및 폰트 최적화 -->
 <style>
   /* 스위트 폰트 최적화 */
   .font-heading {
@@ -517,27 +596,27 @@
   
   /* 스크롤바 스타일링 */
   ::-webkit-scrollbar {
-  width: 4px;
-}
-
-@media (min-width: 640px) {
-  ::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
-}
 
-::-webkit-scrollbar-track {
-  background: #f9fafb;
-}
+  @media (min-width: 640px) {
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+  }
 
-::-webkit-scrollbar-thumb {
-  background: #9ca3af;
-  border-radius: 3px;
-}
+  ::-webkit-scrollbar-track {
+    background: #f9fafb;
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
-}
+  ::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
   
   /* 터치 대상 크기 최적화 */
   @media (max-width: 767px) {
