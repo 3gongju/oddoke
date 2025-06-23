@@ -260,41 +260,48 @@ def index(request):
 
 # ✅ 가격 필터링을 위한 헬퍼 함수들
 def get_posts_with_min_price(min_price):
-    """최소 가격 이상인 게시글 ID 목록 반환"""
-    # 판매/대여 게시글 중에서 ItemPrice의 최소값이 min_price 이상인 것들
+    """최소 가격 이상인 게시글 ID 목록 반환 (가격 미정 제외)"""
     sell_ids = []
     rental_ids = []
     
     # 판매 게시글
     for post in FarmSellPost.objects.all():
-        min_post_price, _ = post.get_price_range()
-        if min_post_price >= min_price:
-            sell_ids.append(post.id)
+        item_prices = post.get_item_prices().filter(is_price_undetermined=False)
+        if item_prices.exists():
+            min_post_price = min(item_prices.values_list('price', flat=True))
+            if min_post_price >= min_price:
+                sell_ids.append(post.id)
     
     # 대여 게시글
     for post in FarmRentalPost.objects.all():
-        min_post_price, _ = post.get_price_range()
-        if min_post_price >= min_price:
-            rental_ids.append(post.id)
+        item_prices = post.get_item_prices().filter(is_price_undetermined=False)
+        if item_prices.exists():
+            min_post_price = min(item_prices.values_list('price', flat=True))
+            if min_post_price >= min_price:
+                rental_ids.append(post.id)
     
     return sell_ids + rental_ids
 
 def get_posts_with_max_price(max_price):
-    """최대 가격 이하인 게시글 ID 목록 반환"""
+    """최대 가격 이하인 게시글 ID 목록 반환 (가격 미정 제외)"""
     sell_ids = []
     rental_ids = []
     
     # 판매 게시글
     for post in FarmSellPost.objects.all():
-        _, max_post_price = post.get_price_range()
-        if max_post_price <= max_price and max_post_price > 0:
-            sell_ids.append(post.id)
+        item_prices = post.get_item_prices().filter(is_price_undetermined=False)
+        if item_prices.exists():
+            max_post_price = max(item_prices.values_list('price', flat=True))
+            if max_post_price <= max_price:
+                sell_ids.append(post.id)
     
     # 대여 게시글
     for post in FarmRentalPost.objects.all():
-        _, max_post_price = post.get_price_range()
-        if max_post_price <= max_price and max_post_price > 0:
-            rental_ids.append(post.id)
+        item_prices = post.get_item_prices().filter(is_price_undetermined=False)
+        if item_prices.exists():
+            max_post_price = max(item_prices.values_list('price', flat=True))
+            if max_post_price <= max_price:
+                rental_ids.append(post.id)
     
     return sell_ids + rental_ids
 
@@ -431,6 +438,108 @@ def save_item_prices(request, post):
             except (ValueError, TypeError):
                 continue  # 잘못된 가격 형식은 무시
 
+# 교환 정보 저장 헬퍼 함수
+def save_exchange_info(request, post):
+    """교환 정보 저장 - want_to가 'exchange'일 때만"""
+    if request.POST.get('want_to') == 'exchange':
+        give_description = request.POST.get('give_description', '').strip()
+        want_description = request.POST.get('want_description', '').strip()
+        
+        if give_description and want_description:
+            # 기존 교환 정보가 있으면 업데이트, 없으면 생성
+            exchange_info, created = ExchangeItem.objects.get_or_create(
+                post=post,
+                defaults={
+                    'give_description': give_description,
+                    'want_description': want_description,
+                }
+            )
+            
+            if not created:
+                # 기존 정보 업데이트
+                exchange_info.give_description = give_description
+                exchange_info.want_description = want_description
+                exchange_info.save()
+                
+            return exchange_info
+    else:
+        # want_to가 'exchange'가 아니면 기존 교환 정보 삭제
+        if hasattr(post, 'exchange_info'):
+            post.exchange_info.delete()
+        return None
+
+# 개별 가격 저장 헬퍼 함수 (가격 미정 옵션 포함으로 수정)
+def save_item_prices(request, post):
+    """ItemPrice 저장 - 단일/복수 모드 통합 처리 (가격 미정 포함)"""
+    content_type = ContentType.objects.get_for_model(post.__class__)
+    
+    # 기존 ItemPrice 모두 삭제 (수정 시)
+    ItemPrice.objects.filter(content_type=content_type, object_id=post.id).delete()
+    
+    # POST 데이터에서 개별 가격 정보 추출
+    total_forms = int(request.POST.get('item_prices-TOTAL_FORMS', 0))
+    
+    if total_forms == 0:
+        # 단일 가격 모드 처리
+        single_price_type = request.POST.get('single_price_type', 'set')
+        
+        if single_price_type == 'undetermined':
+            # 가격 미정
+            ItemPrice.objects.create(
+                content_type=content_type,
+                object_id=post.id,
+                item_name='',
+                price=0,
+                is_price_undetermined=True
+            )
+        else:
+            # 가격 설정
+            price_str = request.POST.get('single_price_input', '')
+            if price_str:
+                try:
+                    price = int(price_str)
+                    if price > 0:
+                        ItemPrice.objects.create(
+                            content_type=content_type,
+                            object_id=post.id,
+                            item_name='',
+                            price=price,
+                            is_price_undetermined=False
+                        )
+                except (ValueError, TypeError):
+                    pass
+        return
+    
+    # 복수 아이템 모드 처리
+    for i in range(total_forms):
+        item_name = request.POST.get(f'item_prices-{i}-item_name', '').strip()
+        price_str = request.POST.get(f'item_prices-{i}-price', '')
+        price_type = request.POST.get(f'item_price_type_{i}', 'set')
+        
+        if price_type == 'undetermined':
+            # 가격 미정 아이템
+            ItemPrice.objects.create(
+                content_type=content_type,
+                object_id=post.id,
+                item_name=item_name,
+                price=0,
+                is_price_undetermined=True
+            )
+        elif price_str:
+            # 가격 설정 아이템
+            try:
+                price = int(price_str)
+                if price > 0:
+                    ItemPrice.objects.create(
+                        content_type=content_type,
+                        object_id=post.id,
+                        item_name=item_name,
+                        price=price,
+                        is_price_undetermined=False
+                    )
+            except (ValueError, TypeError):
+                continue
+
 # 게시글 작성하기
 @login_required
 def post_create(request):
@@ -480,9 +589,13 @@ def post_create(request):
 
                 post.save()
 
-                # ✅ ItemPrice 저장 (판매/대여)
+                # ItemPrice 저장 (판매/대여)
                 if category in ['sell', 'rental']:
                     save_item_prices(request, post)
+
+                # 교환 정보 저장 (판매에서 교환해요 선택 시)
+                if category == 'sell':
+                    save_exchange_info(request, post)
 
                 if category == 'split' and formset:
                     for idx, sp_form in enumerate(formset.forms):
@@ -674,9 +787,13 @@ def post_edit(request, category, post_id):
             post = form.save(commit=False)
             post.save()
 
-            # ✅ ItemPrice 저장 (판매/대여) - 수정 시에도 동일한 로직
+            # ItemPrice 저장 (판매/대여) - 수정 시에도 동일한 로직
             if category in ['sell', 'rental']:
                 save_item_prices(request, post)
+
+            # 교환 정보 저장/삭제 (판매에서만)
+            if category == 'sell':
+                save_exchange_info(request, post)
 
             if category == 'split' and formset_with_names:
                 post.member_prices.all().delete()

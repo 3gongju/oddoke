@@ -1,4 +1,19 @@
 <!-- ddokfarm/components/post_form/_fields_sell_rental.html -->
+<!-- 거래 방식 -->
+<div class="mb-6">
+  <label for="{{ form.want_to.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">거래 방식</label>
+  <div class="flex flex-wrap gap-3 sm:gap-4">
+    {% for choice in form.want_to.field.choices %}
+      <label class="inline-flex items-center cursor-pointer">
+        <input type="radio" name="{{ form.want_to.name }}" value="{{ choice.0 }}" 
+               class="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
+               {% if choice.0 == form.want_to.value %}checked{% endif %}>
+        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
+      </label>
+    {% endfor %}
+  </div>
+  {% if form.want_to.errors %}<p class="text-red-500 text-sm mt-1">{{ form.want_to.errors.0 }}</p>{% endif %}
+</div>
 
 <!-- 가격 설정 (기존 개별 가격 필드 대신 새로운 통합 필드 사용) -->
 <div class="mb-6">
@@ -142,6 +157,9 @@
   </div>
 </div>
 
+<!-- 교환하기 선택 시 -->
+{% include "ddokfarm/components/post_form/_exchange_fields.html" %}
+
 <!-- 종류 (판매 게시글에만 표시) -->
 {% if category == 'sell' %}
 <div class="mb-6">
@@ -160,21 +178,6 @@
 </div>
 {% endif %}
 
-<!-- 거래 방식 -->
-<div class="mb-6">
-  <label for="{{ form.want_to.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">거래 방식</label>
-  <div class="flex flex-wrap gap-3 sm:gap-4">
-    {% for choice in form.want_to.field.choices %}
-      <label class="inline-flex items-center cursor-pointer">
-        <input type="radio" name="{{ form.want_to.name }}" value="{{ choice.0 }}" 
-               class="w-4 h-4 text-pink-600 border-gray-300 focus:ring-pink-500"
-               {% if choice.0 == form.want_to.value %}checked{% endif %}>
-        <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
-      </label>
-    {% endfor %}
-  </div>
-  {% if form.want_to.errors %}<p class="text-red-500 text-sm mt-1">{{ form.want_to.errors.0 }}</p>{% endif %}
-</div>
 
 <!-- 상품 상태 -->
 <div class="mb-6">
