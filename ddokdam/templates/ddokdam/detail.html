@@ -27,31 +27,9 @@
     </div>
     {% include 'components/post_detail/_like_comment_info.html' %}
 
-    <!-- 신고 버튼 추가 (작성자가 아닌 경우에만 표시) -->
-    {% if user.is_authenticated and user != post.user %}
-    <div class="flex justify-end mt-4">
-      <div class="relative">
-        <!-- 신고 버튼 -->
-        <button id="report-btn" type="button" class="flex items-center space-x-2 px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
-          </svg>
-          <span class="text-sm">신고</span>
-        </button>
-        <!-- 드롭다운 메뉴 -->
-        <div id="report-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-          <button type="button" id="report-inappropriate-btn" class="w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
-            <div class="flex items-center space-x-2">
-              <!-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71L21 15.5v-4M3 15v-6" />
-              </svg> -->
-              <span class="text-sm font-medium">부적절한 게시물 신고하기</span>
-            </div>
-          </button>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    <!-- 신고 버튼 및 모달 -->
+    {% include 'components//_report_modal.html' with target_user=post.user report_type="게시물" %}
+
     
     <div id="comments" class="comment-section mt-8">
       <div class="comment-list space-y-4">
@@ -65,113 +43,6 @@
   </div>
 </div>
 
-<!-- 신고 모달 -->
-<div id="report-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="report-modal-content">
-      <!-- 모달 헤더 -->
-      <div class="flex items-center justify-between p-6 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-900">게시물 신고</h3>
-        <button type="button" id="close-report-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <!-- 모달 바디 -->
-      <div class="p-6">
-        <div class="mb-4">
-          <p class="text-sm text-gray-600 mb-4">부적절한 내용의 게시물을 신고해주세요. 신고 내용은 관리자가 검토 후 조치를 취합니다.</p>
-        </div>
-        
-        <form id="report-form" method="post" action="">
-          {% csrf_token %}
-          
-          <!-- 신고 사유 선택 -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-3">신고 사유</label>
-            <div class="space-y-3">
-              <label class="flex items-start space-x-3 cursor-pointer">
-                <input type="radio" name="reason" value="profanity" class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
-                <div>
-                  <div class="text-sm font-medium text-gray-900">욕설, 불쾌한 표현 사용 / 게시글과 무관한 내용 작성</div>
-                  <div class="text-xs text-gray-500">모욕적이거나 불쾌감을 주는 언어 사용</div>
-                </div>
-              </label>
-              
-              <label class="flex items-start space-x-3 cursor-pointer">
-                <input type="radio" name="reason" value="hate_spam" class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
-                <div>
-                  <div class="text-sm font-medium text-gray-900">혐오 발언, 반복적 광고, 선정적 내용</div>
-                  <div class="text-xs text-gray-500">차별적 발언, 스팸, 부적절한 성적 내용</div>
-                </div>
-              </label>
-              
-              <label class="flex items-start space-x-3 cursor-pointer">
-                <input type="radio" name="reason" value="illegal" class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
-                <div>
-                  <div class="text-sm font-medium text-gray-900">불법 콘텐츠, 범죄, 개인정보 노출</div>
-                  <div class="text-xs text-gray-500">법적 문제가 있는 내용이나 개인정보 침해</div>
-                </div>
-              </label>
-
-              <!-- 🔥 새로운 신고 사유 추가 -->
-              <label class="flex items-start space-x-3 cursor-pointer">
-                <input type="radio" name="reason" value="irrelevant" class="mt-1 h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300">
-                <div>
-                  <div class="text-sm font-medium text-gray-900">관련성이 낮은 게시글</div>
-                  <div class="text-xs text-gray-500">카테고리와 맞지 않거나 관련성이 낮은 내용</div>
-                </div>
-              </label>
-            </div>
-          </div>
-          
-          <!-- 추가 설명 -->
-          <div class="mb-6">
-            <label for="additional_info" class="block text-sm font-medium text-gray-700 mb-2">추가 설명 (선택사항)</label>
-            <textarea id="additional_info" name="additional_info" rows="3"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                      placeholder="추가로 설명할 내용이 있다면 작성해주세요"></textarea>
-          </div>
-          
-          <!-- 버튼 그룹 -->
-          <div class="flex space-x-3">
-            <button type="button" id="cancel-report-btn"
-                    class="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">
-              취소
-            </button>
-            <button type="submit" id="submit-report-btn"
-                    class="flex-1 px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              신고하기
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 신고 완료 모달 -->
-<div id="report-success-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
-  <div class="min-h-screen flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm transform transition-all duration-300">
-      <div class="p-6 text-center">
-        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">신고가 접수되었습니다</h3>
-        <p class="text-sm text-gray-600 mb-4">관리자가 검토 후 적절한 조치를 취하겠습니다.</p>
-        <button type="button" id="close-success-modal"
-                class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
-          확인
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 <style>
   #comments {
   scroll-margin-top: 80px; /* 64px + 여유 16px */
@@ -248,166 +119,11 @@
       });
     }
 
-    // 신고 기능 관련 요소들
-    const reportBtn = document.getElementById('report-btn');
-    const reportDropdown = document.getElementById('report-dropdown');
-    const reportInappropriateBtn = document.getElementById('report-inappropriate-btn');
-    const reportModal = document.getElementById('report-modal');
-    const reportModalContent = document.getElementById('report-modal-content');
-    const closeReportModal = document.getElementById('close-report-modal');
-    const cancelReportBtn = document.getElementById('cancel-report-btn');
-    const reportForm = document.getElementById('report-form');
-    const submitReportBtn = document.getElementById('submit-report-btn');
-    const reportSuccessModal = document.getElementById('report-success-modal');
-    const closeSuccessModal = document.getElementById('close-success-modal');
-
-    // 신고 버튼 클릭 시 드롭다운 토글
-    if (reportBtn && reportDropdown) {
-      reportBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        reportDropdown.classList.toggle('hidden');
-      });
-
-      // 문서 클릭 시 드롭다운 닫기
-      document.addEventListener('click', function(e) {
-        if (!reportBtn.contains(e.target) && !reportDropdown.contains(e.target)) {
-          reportDropdown.classList.add('hidden');
-        }
-      });
-    }
-
-    // "부적절한 게시물 신고하기" 클릭 시 모달 열기
-    if (reportInappropriateBtn) {
-      reportInappropriateBtn.addEventListener('click', function() {
-        reportDropdown.classList.add('hidden');
-        openReportModal();
-      });
-    }
-
-    // 모달 열기 함수
-    function openReportModal() {
-      if (reportModal && reportModalContent) {
-        reportModal.classList.remove('hidden');
-        setTimeout(() => {
-          reportModalContent.classList.remove('scale-95', 'opacity-0');
-          reportModalContent.classList.add('scale-100', 'opacity-100');
-        }, 10);
-        
-        // 폼 액션 URL 설정
-        if (reportForm) {
-          reportForm.action = `{% url 'accounts:report_post' app_name='ddokdam' category=category post_id=post.id %}`;
-        }
-      }
-    }
-
-    // 모달 닫기 함수
-    function closeReportModalFunction() {
-      if (reportModal && reportModalContent) {
-        reportModalContent.classList.remove('scale-100', 'opacity-100');
-        reportModalContent.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => {
-          reportModal.classList.add('hidden');
-          // 폼 리셋
-          if (reportForm) {
-            reportForm.reset();
-          }
-          // 제출 버튼 활성화
-          if (submitReportBtn) {
-            submitReportBtn.disabled = false;
-            submitReportBtn.textContent = '신고하기';
-          }
-        }, 300);
-      }
-    }
-
-    // 모달 닫기 이벤트들
-    if (closeReportModal) {
-      closeReportModal.addEventListener('click', closeReportModalFunction);
-    }
-    
-    if (cancelReportBtn) {
-      cancelReportBtn.addEventListener('click', closeReportModalFunction);
-    }
-
-    // 모달 배경 클릭 시 닫기
-    if (reportModal) {
-      reportModal.addEventListener('click', function(e) {
-        if (e.target === reportModal) {
-          closeReportModalFunction();
-        }
-      });
-    }
-
-    // 신고 폼 제출
-    if (reportForm) {
-      reportForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(reportForm);
-        const reason = formData.get('reason');
-        
-        if (!reason) {
-          alert('신고 사유를 선택해주세요.');
-          return;
-        }
-
-        // 제출 버튼 비활성화
-        submitReportBtn.disabled = true;
-        submitReportBtn.textContent = '신고 중...';
-
-        // AJAX로 신고 제출
-        fetch(reportForm.action, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-CSRFToken': window.csrfToken,
-            'X-Requested-With': 'XMLHttpRequest'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            closeReportModalFunction();
-            showSuccessModal();
-          } else {
-            alert(data.message || '신고 처리 중 오류가 발생했습니다.');
-            submitReportBtn.disabled = false;
-            submitReportBtn.textContent = '신고하기';
-          }
-        })
-        .catch(error => {
-          console.error('신고 오류:', error);
-          alert('신고 처리 중 오류가 발생했습니다.');
-          submitReportBtn.disabled = false;
-          submitReportBtn.textContent = '신고하기';
-        });
-      });
-    }
-
-    // 성공 모달 표시
-    function showSuccessModal() {
-      if (reportSuccessModal) {
-        reportSuccessModal.classList.remove('hidden');
-      }
-    }
-
-    // 성공 모달 닫기
-    if (closeSuccessModal) {
-      closeSuccessModal.addEventListener('click', function() {
-        reportSuccessModal.classList.add('hidden');
-      });
-    }
-
-    // ESC 키로 모달 닫기
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        if (!reportModal.classList.contains('hidden')) {
-          closeReportModalFunction();
-        }
-        if (!reportSuccessModal.classList.contains('hidden')) {
-          reportSuccessModal.classList.add('hidden');
-        }
+    // 신고 모달 초기화
+    ReportModal.init({
+      reportActionUrl: `{% url 'accounts:report_post' app_name='ddokfarm' category=category post_id=post.id %}`,
+      onSuccess: function(data) {
+        console.log('덕팜 게시물 신고 완료:', data);
       }
     });
   });
@@ -442,4 +158,5 @@
 
 <!-- 댓글 비동기 처리 스크립트 -->
 <script src="{% static 'js/comment.js' %}"></script>
+<script src="{% static 'js/report_modal.js' %}"></script>
 {% endblock %}
