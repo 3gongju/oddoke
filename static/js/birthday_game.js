@@ -330,3 +330,52 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
   showBirthdayGameSection(todayBirthdaysApiUrl);
 }
 
+// === 덕 포인트 저장 함수 ===
+async function saveBirthdayDdokPoints(ddok_points, memberId, timeDifference) {
+  console.log('🎯 saveBirthdayDdokPoints 함수 호출됨');
+  console.log('파라미터:', { ddok_points, memberId, timeDifference });
+  
+  try {
+    const response = await fetch('/calendar/api/save-birthday-ddok-points/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({
+        points: ddok_points,
+        member_id: memberId,
+        time_difference: timeDifference
+      }),
+    });
+    
+    console.log('🎯 응답 상태:', response.status);
+    console.log('🎯 응답 URL:', response.url);
+    
+    if (!response.ok) {
+      console.error('❌ HTTP 에러:', response.status, response.statusText);
+      return;
+    }
+    
+    const data = await response.json();
+    console.log('🎯 응답 데이터:', data);
+    
+    if (data.success) {
+      console.log('✅ 덕 포인트 저장 성공:', data.message);
+      console.log(`획득한 덕: ${data.ddok_points_earned}덕`);
+      console.log(`총 덕: ${data.total_ddok_points}덕`);
+      
+      // 게임 화면에 총 덕 포인트 업데이트 표시
+      if (gameDOM.totalScore) {
+        gameDOM.totalScore.textContent = data.total_ddok_points.toLocaleString();
+      }
+    } else {
+      console.error('❌ 덕 포인트 저장 실패:', data.error);
+    }
+  } catch (error) {
+    console.error('❌ 덕 포인트 저장 네트워크 오류:', error);
+  }
+}
+
+// 전역 스코프에서 함수가 정의되었는지 확인
+console.log('🎯 saveBirthdayDdokPoints 함수 정의됨:', typeof saveBirthdayDdokPoints);
