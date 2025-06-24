@@ -157,20 +157,30 @@ def main(request):
 def get_active_user_banners():
     """활성화된 사용자 배너들을 가져오기"""
     try:
+        from django.utils import timezone
+        
+        today = timezone.now().date()
+        
+        # 🔥 수정된 필터링 조건
         active_banners = BannerRequest.objects.filter(
             status='approved',
-            expires_at__gt=timezone.now()
+            is_active=True,
+            start_date__lte=today,
+            end_date__gte=today
         ).order_by('-approved_at')
         
-        # 이미지 URL들을 반환 (static 경로 형태가 아닌 media 경로)
+        print(f"🔥 DEBUG: 활성 배너 조회 결과 - {active_banners.count()}개")
+        
+        # 이미지 URL들을 반환
         user_banner_urls = []
         for banner in active_banners:
             if banner.banner_image:
-                # media 파일이므로 전체 URL을 반환
+                print(f"🔥 DEBUG: 배너 추가 - {banner.artist_name}, {banner.banner_image.url}")
                 user_banner_urls.append(banner.banner_image.url)
         
+        print(f"🔥 DEBUG: 최종 배너 URL 개수 - {len(user_banner_urls)}개")
         return user_banner_urls
         
     except Exception as e:
-        print(f"사용자 배너 로드 오류: {e}")
+        print(f"🔥 DEBUG: 사용자 배너 로드 오류: {e}")
         return []

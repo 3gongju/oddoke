@@ -163,12 +163,12 @@ function selectMember(member) {
   }
   
   // === 테스트용 코드 (필요시 주석 해제) ===
-  /*
+  
   // 테스트용: 현재 시간에서 5초 후로 설정
   gameData.targetTime = new Date();
   gameData.targetTime.setSeconds(gameData.targetTime.getSeconds() + 5);
   console.log('🎯 테스트 모드: 5초 후 시간으로 설정');
-  */
+  
   
   showGameView();
 }

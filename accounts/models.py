@@ -520,7 +520,7 @@ class DdokPoint(models.Model):
         auto_now_add=True,
         verbose_name='생성 일시'
     )
-    
+
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name='최근 변동 일시'
@@ -619,7 +619,25 @@ class BannerRequest(models.Model):
         verbose_name='상태'
     )
     
-    # 승인 관련
+    # 🔥 새로 추가할 필드들
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='배너 시작일'
+    )
+    
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='배너 종료일'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='활성화 상태'
+    )
+    
+    # 승인 관련 (기존 필드들...)
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -659,15 +677,19 @@ class BannerRequest(models.Model):
         return f"{self.user.username} - {self.artist_name} ({self.get_status_display()})"
     
     @property
-    def is_active(self):
-        """현재 활성화된 배너인지 확인"""
-        if self.status != 'approved' or not self.expires_at:
+    def is_currently_active(self):
+        """현재 활성화된 배너인지 확인 (날짜 기반)"""
+        if self.status != 'approved' or not self.is_active:
             return False
         
+        if not self.start_date or not self.end_date:
+            return False
+            
         from django.utils import timezone
-        return timezone.now() < self.expires_at
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
     
-    def approve(self, admin_user):
+    def approve(self, admin_user, start_date=None, end_date=None):
         """배너 승인 처리"""
         from django.utils import timezone
         from datetime import timedelta
@@ -675,7 +697,20 @@ class BannerRequest(models.Model):
         self.status = 'approved'
         self.approved_by = admin_user
         self.approved_at = timezone.now()
-        self.expires_at = timezone.now() + timedelta(days=3)  # 3일 후 만료
+        self.expires_at = timezone.now() + timedelta(days=3)  # 기존 로직 유지
+        
+        # 🔥 새로운 날짜 필드 설정
+        if start_date:
+            self.start_date = start_date
+        else:
+            self.start_date = timezone.now().date()
+            
+        if end_date:
+            self.end_date = end_date
+        else:
+            self.end_date = timezone.now().date() + timedelta(days=3)
+            
+        self.is_active = True
         self.save()
     
     def reject(self, admin_user, reason=""):
@@ -686,6 +721,7 @@ class BannerRequest(models.Model):
         self.approved_by = admin_user
         self.approved_at = timezone.now()
         self.rejection_reason = reason
+        self.is_active = False
         self.save()
         
         # 덕 포인트 환불

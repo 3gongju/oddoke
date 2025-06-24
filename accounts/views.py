@@ -1437,48 +1437,6 @@ def submit_banner_request(request):
         })
 
 @login_required
-def get_banner_request_form(request):
-    """배너 신청 폼 HTML 반환"""
-    try:
-        # 덕 포인트 확인
-        user_ddok_point = request.user.get_or_create_ddok_point()
-        required_points = 1000
-        
-        # 진행 중인 신청이 있는지 확인
-        pending_request = BannerRequest.objects.filter(
-            user=request.user,
-            status='pending'
-        ).first()
-        
-        if pending_request:
-            return JsonResponse({
-                'success': False,
-                'error': '이미 승인 대기 중인 배너 신청이 있습니다.'
-            })
-        
-        form = BannerRequestForm()
-        
-        # 폼 HTML 렌더링
-        form_html = render_to_string('accounts/banner_request_form.html', {
-            'form': form,
-            'required_points': required_points,
-            'user_points': user_ddok_point.total_points,
-            'can_afford': user_ddok_point.total_points >= required_points
-        }, request=request)
-        
-        return JsonResponse({
-            'success': True,
-            'form_html': form_html
-        })
-        
-    except Exception as e:
-        logger.error(f"배너 신청 폼 로드 오류: {e}")
-        return JsonResponse({
-            'success': False,
-            'error': '폼을 불러오는 중 오류가 발생했습니다.'
-        })
-
-@login_required
 def banner_request_form(request):
     """배너 신청 폼을 JSON으로 반환"""
     try:
