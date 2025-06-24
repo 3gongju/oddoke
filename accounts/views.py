@@ -385,15 +385,6 @@ def mypage(request):
     favorite_members = Member.objects.filter(followers=user_profile)
     followed_artist_ids = list(favorite_artists.values_list('id', flat=True))
 
-    # 🎯 덕 포인트 정보 추가
-    # try:
-    #     user_ddok_point = request.user.ddok_point
-    #     total_ddok_points = user_ddok_point.total_points
-    #     recent_ddok_history = user_ddok_point.logs.select_related('related_member').order_by('-created_at')[:5]
-    # except:
-    #     total_ddok_points = 0
-    #     recent_ddok_history = []
-
     #🎯 덕 포인트 정보 추가
     try:
         user_ddok_point = request.user.ddok_point
