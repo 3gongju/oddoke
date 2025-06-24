@@ -16,6 +16,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
+from django.shortcuts import get_object_or_404
+from accounts.point_utils import add_ddok_points
+
 logger = logging.getLogger(__name__)
 
 def birthday_calendar(request):
@@ -306,3 +309,94 @@ def save_ddok_point(request):
     except Exception as e:
         logger.error(f"포인트 저장 중 오류 발생: {e}", exc_info=True)
         return JsonResponse({'status': 'error', 'message': '서버 오류로 포인트 저장에 실패했습니다.'}, status=500)
+
+
+@login_required
+@require_POST
+@csrf_exempt
+def save_birthday_ddok_points(request):
+    """생일시 맞추기 게임에서 획득한 덕 포인트 저장"""
+    try:
+        # JSON 데이터 파싱
+        data = json.loads(request.body)
+        ddok_points = int(data.get('points', 0))
+        member_id = data.get('member_id')
+        time_difference = data.get('time_difference')  # 밀리초
+        
+        # 포인트가 0 이하면 저장하지 않음
+        if ddok_points <= 0:
+            return JsonResponse({
+                'success': True,
+                'message': '포인트가 없어서 저장하지 않았습니다.',
+                'total_ddok_points': 0
+            })
+        
+        # 멤버 확인
+        member = None
+        if member_id:
+            try:
+                member = Member.objects.get(id=member_id)
+            except Member.DoesNotExist:
+                logger.warning(f"유효하지 않은 member_id: {member_id}")
+        
+        # 정확도 등급 계산
+        accuracy_grade = ""
+        if time_difference is not None:
+            if time_difference < 50:
+                accuracy_grade = "PERFECT"
+            elif time_difference < 200:
+                accuracy_grade = "성공"
+            elif time_difference < 500:
+                accuracy_grade = "준수"
+            elif time_difference < 1000:
+                accuracy_grade = "아쉬움"
+            else:
+                accuracy_grade = "실패"
+        
+        # 덕 포인트 저장
+        with transaction.atomic():
+            # User 모델의 편의 메서드를 사용하여 DdokPoint 인스턴스 가져오기
+            user_ddok_point = request.user.get_or_create_ddok_point()
+            
+            # 덕 포인트 총합 업데이트
+            user_ddok_point.total_points += ddok_points
+            user_ddok_point.save()
+            
+            # 덕 포인트 변동 로그 생성
+            DdokPointLog.objects.create(
+                point_owner=user_ddok_point,
+                points_change=ddok_points,
+                reason='BIRTHDAY_GAME',
+                related_member=member
+            )
+        
+        logger.info(f"덕 포인트 저장 성공: {request.user.username} +{ddok_points}덕 (총: {user_ddok_point.total_points}덕)")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{ddok_points}덕을 획득했습니다!',
+            'ddok_points_earned': ddok_points,
+            'total_ddok_points': user_ddok_point.total_points,
+            'accuracy_grade': accuracy_grade
+        })
+        
+    except json.JSONDecodeError:
+        logger.error("JSON 파싱 오류")
+        return JsonResponse({
+            'success': False,
+            'error': 'JSON 형식이 올바르지 않습니다.'
+        }, status=400)
+        
+    except ValueError as e:
+        logger.error(f"값 변환 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '덕 포인트 값이 올바르지 않습니다.'
+        }, status=400)
+        
+    except Exception as e:
+        logger.error(f"덕 포인트 저장 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '덕 포인트 저장 중 오류가 발생했습니다.'
+        }, status=500)
