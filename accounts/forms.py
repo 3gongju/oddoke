@@ -576,3 +576,46 @@ class PostReportForm(forms.ModelForm):
         self.fields['reason'].label = '신고 사유'
         self.fields['additional_info'].label = '추가 설명'
         self.fields['additional_info'].required = False
+
+class BannerRequestForm(forms.ModelForm):
+    """배너 신청 폼"""
+    class Meta:
+        model = BannerRequest
+        fields = ['artist_name', 'banner_image']
+        widgets = {
+            'artist_name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500',
+                'placeholder': '아티스트명을 입력하세요',
+                'maxlength': 100
+            }),
+            'banner_image': forms.FileInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500',
+                'accept': 'image/*'
+            })
+        }
+    
+    def clean_artist_name(self):
+        artist_name = self.cleaned_data.get('artist_name')
+        if not artist_name:
+            raise forms.ValidationError("아티스트명을 입력해주세요.")
+        
+        artist_name = artist_name.strip()
+        if len(artist_name) < 2:
+            raise forms.ValidationError("아티스트명은 최소 2자 이상이어야 합니다.")
+        
+        return artist_name
+    
+    def clean_banner_image(self):
+        banner_image = self.cleaned_data.get('banner_image')
+        if not banner_image:
+            raise forms.ValidationError("배너 이미지를 업로드해주세요.")
+        
+        # 파일 크기 검증 (5MB 제한)
+        if banner_image.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("이미지 크기는 5MB 이하여야 합니다.")
+        
+        # 이미지 형식 검증
+        if not banner_image.content_type.startswith('image/'):
+            raise forms.ValidationError("이미지 파일만 업로드 가능합니다.")
+        
+        return banner_image
