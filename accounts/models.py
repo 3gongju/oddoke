@@ -536,7 +536,8 @@ class DdokPointLog(models.Model):
         ('BIRTHDAY_GAME', '생일시 맞추기'),
         ('EVENT_PARTICIPATION', '이벤트 참여'),
         ('POST_REWARD', '게시글 작성 보상'),
-        # ... 추후 다양한 포인트 획득/사용처 추가 가능
+        ('BANNER_REQUEST', '배너 신청'),  # 새로 추가
+        ('BANNER_REFUND', '배너 신청 환불'),  # 새로 추가
     ]
 
     point_owner = models.ForeignKey(
