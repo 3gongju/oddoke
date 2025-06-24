@@ -100,26 +100,34 @@ class TradeReportAdmin(admin.ModelAdmin):
     trade_category_display.short_description = '거래 유형'
     
     def damage_amount_display(self, obj):
-        """피해 금액 표시"""
+        """피해 금액 표시 - 수정된 버전"""
         if obj.damage_amount:
             return format_html(
-                '<span style="color: red; font-weight: bold;">{:,}원</span>',
-                obj.damage_amount
+                '<span style="color: red; font-weight: bold;">{} 원</span>',
+                f"{obj.damage_amount:,}"  # 🔥 수정: 포맷팅을 먼저 처리
             )
         return '-'
     damage_amount_display.short_description = '피해 금액'
     
     def trade_info_preview(self, obj):
-        """거래 정보 미리보기"""
+        """거래 정보 미리보기 - 수정된 버전"""
         try:
             if obj.chatroom and obj.chatroom.post:
                 post = obj.chatroom.post
+                
+                # 🔥 수정: 안전한 금액 포맷팅
+                try:
+                    trade_amount = obj.get_trade_amount()
+                    amount_text = f"{trade_amount:,}" if trade_amount else "0"
+                except:
+                    amount_text = "알 수 없음"
+                
                 info = f"""
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
                     <h4>거래 상품 정보</h4>
                     <p><strong>제목:</strong> {getattr(post, 'title', 'N/A')}</p>
                     <p><strong>카테고리:</strong> {obj.get_trade_category()}</p>
-                    <p><strong>거래 금액:</strong> {obj.get_trade_amount():,}원</p>
+                    <p><strong>거래 금액:</strong> {amount_text}원</p>
                     <p><strong>채팅방 ID:</strong> {obj.chatroom.id}</p>
                     <p><strong>게시글 작성자:</strong> {getattr(post, 'user', 'N/A')}</p>
                 </div>
