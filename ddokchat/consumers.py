@@ -441,9 +441,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def mark_all_as_read(self):
-        """읽음 처리 - 최적화된 bulk update"""
+        """읽음 처리 - 최적화된 bulk update + 알림 연동"""
         try:
-            # bulk_update 사용으로 성능 개선
+            # 1️⃣ 채팅 메시지 읽음 처리
             updated_count = Message.objects.filter(
                 room_id=self.room_id,
                 receiver=self.user,
@@ -451,7 +451,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ).update(is_read=True)
             
             if updated_count > 0:
-                logger.debug(f"읽음 처리 완료: user={self.user.username}, count={updated_count}")
+                logger.debug(f"채팅 메시지 읽음 처리: user={self.user.username}, count={updated_count}")
+            
+            # 2️⃣ 관련 채팅 알림도 읽음 처리
+            room = ChatRoom.objects.select_related('content_type').get(id=self.room_id)
+            
+            # 알림 모델 import (순환 import 방지를 위해 함수 내부에서)
+            from notifications.models import Notification
+            
+            # 해당 채팅방의 알림을 읽음 처리
+            notification_updated = Notification.mark_chat_notifications_read(
+                user=self.user,
+                room_post=room.post
+            )
+            
+            if notification_updated > 0:
+                logger.debug(f"채팅 알림 읽음 처리: user={self.user.username}, count={notification_updated}")
             
         except Exception as e:
             logger.error(f"읽음 처리 오류: {e}")

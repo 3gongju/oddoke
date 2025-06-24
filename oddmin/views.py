@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.views.decorators.http import require_POST
+from django.contrib.contenttypes.models import ContentType
 from datetime import timedelta
 import logging
 
@@ -197,14 +198,20 @@ def approve_cafe(request, cafe_id):
         cafe.verified_by = request.user
         cafe.save()
         
-        # 🔥 알림 생성 (pending -> approved만)
+        # ✅ 직접 알림 생성 (pending -> approved만)
         if previous_status == 'pending':
-            Notification.create_notification(
-                recipient=cafe.submitted_by,
-                actor=request.user,
-                notification_type='cafe_approved',
-                content_object=cafe
-            )
+            try:
+                notification = Notification.objects.create(
+                    recipient=cafe.submitted_by,
+                    actor=request.user,
+                    notification_type='cafe_approved',
+                    content_type=ContentType.objects.get_for_model(cafe),
+                    object_id=cafe.id,
+                    message=f'등록하신 생일카페 "{cafe.cafe_name}"가 승인되었습니다'
+                )
+                logger.info(f"생일카페 승인 알림 생성: notification_id={notification.id}")
+            except Exception as e:
+                logger.error(f"생일카페 승인 알림 생성 오류: {e}")
         
         # 관련 캐시 무효화
         cache.delete_many([
@@ -220,7 +227,6 @@ def approve_cafe(request, cafe_id):
         logger.error(f"카페 승인 오류: {e}")
         messages.error(request, "승인 처리 중 오류가 발생했습니다.")
     
-    # 🔥 수정: POST 데이터에서 next 파라미터 확인
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'cafe_list':
         return redirect('oddmin:cafe_list')
@@ -240,14 +246,20 @@ def reject_cafe(request, cafe_id):
         cafe.verified_by = request.user
         cafe.save()
         
-        # 🔥 알림 생성 (pending -> rejected만)
+        # ✅ 직접 알림 생성 (pending -> rejected만)
         if previous_status == 'pending':
-            Notification.create_notification(
-                recipient=cafe.submitted_by,
-                actor=request.user,
-                notification_type='cafe_rejected',
-                content_object=cafe
-            )
+            try:
+                notification = Notification.objects.create(
+                    recipient=cafe.submitted_by,
+                    actor=request.user,
+                    notification_type='cafe_rejected',
+                    content_type=ContentType.objects.get_for_model(cafe),
+                    object_id=cafe.id,
+                    message=f'등록하신 생일카페 "{cafe.cafe_name}"가 거절되었습니다'
+                )
+                logger.info(f"생일카페 거절 알림 생성: notification_id={notification.id}")
+            except Exception as e:
+                logger.error(f"생일카페 거절 알림 생성 오류: {e}")
         
         # 관련 캐시 무효화
         cache.delete('oddmin_dashboard_stats')
@@ -259,7 +271,6 @@ def reject_cafe(request, cafe_id):
         logger.error(f"카페 거절 오류: {e}")
         messages.error(request, "거절 처리 중 오류가 발생했습니다.")
     
-    # 🔥 수정: POST 데이터에서 next 파라미터 확인
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'cafe_list':
         return redirect('oddmin:cafe_list')
@@ -377,7 +388,10 @@ def approve_fandom(request, profile_id):
         # 이전 상태 확인 (pending인 경우만 처리)
         if not profile.is_pending_verification:
             messages.warning(request, '승인 대기 중이 아닌 인증입니다.')
-            return redirect('oddmin:fandom_list')
+            next_url = request.POST.get('next', 'dashboard')
+            if next_url == 'fandom_list':
+                return redirect('oddmin:fandom_list')
+            return redirect('oddmin:dashboard')
         
         # 상태 변경
         profile.is_verified_fandom = True
@@ -386,13 +400,20 @@ def approve_fandom(request, profile_id):
         profile.verified_at = timezone.now()
         profile.save()
         
-        # 🔥 알림 생성
-        Notification.create_notification(
-            recipient=profile.user,
-            actor=request.user,
-            notification_type='fandom_verified',
-            content_object=profile
-        )
+        # ✅ 직접 알림 생성
+        try:
+            artist_name = getattr(profile.fandom_artist, 'display_name', '아티스트') if profile.fandom_artist else '아티스트'
+            notification = Notification.objects.create(
+                recipient=profile.user,
+                actor=request.user,
+                notification_type='fandom_verified',
+                content_type=ContentType.objects.get_for_model(profile),
+                object_id=profile.id,
+                message=f'{artist_name} 공식 팬덤 인증이 승인되었습니다'
+            )
+            logger.info(f"팬덤 인증 승인 알림 생성: notification_id={notification.id}")
+        except Exception as e:
+            logger.error(f"팬덤 인증 승인 알림 생성 오류: {e}")
         
         # 캐시 무효화
         cache.delete('oddmin_dashboard_stats')
@@ -404,7 +425,7 @@ def approve_fandom(request, profile_id):
         logger.error(f"팬덤 인증 승인 오류: {e}")
         messages.error(request, "승인 처리 중 오류가 발생했습니다.")
     
-    # 🔥 수정: POST 데이터에서 next 파라미터 확인
+    # POST 데이터에서 next 파라미터 확인
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'fandom_list':
         return redirect('oddmin:fandom_list')
@@ -421,7 +442,10 @@ def reject_fandom(request, profile_id):
         # 이전 상태 확인 (pending인 경우만 처리)
         if not profile.is_pending_verification:
             messages.warning(request, '승인 대기 중이 아닌 인증입니다.')
-            return redirect('oddmin:fandom_list')
+            next_url = request.POST.get('next', 'dashboard')
+            if next_url == 'fandom_list':
+                return redirect('oddmin:fandom_list')
+            return redirect('oddmin:dashboard')
         
         # 상태 변경
         profile.is_verified_fandom = False
@@ -429,13 +453,20 @@ def reject_fandom(request, profile_id):
         profile.verification_failed = True
         profile.save()
         
-        # 🔥 알림 생성
-        Notification.create_notification(
-            recipient=profile.user,
-            actor=request.user,
-            notification_type='fandom_rejected',
-            content_object=profile
-        )
+        # ✅ 직접 알림 생성
+        try:
+            artist_name = getattr(profile.fandom_artist, 'display_name', '아티스트') if profile.fandom_artist else '아티스트'
+            notification = Notification.objects.create(
+                recipient=profile.user,
+                actor=request.user,
+                notification_type='fandom_rejected',
+                content_type=ContentType.objects.get_for_model(profile),
+                object_id=profile.id,
+                message=f'{artist_name} 공식 팬덤 인증이 거절되었습니다'
+            )
+            logger.info(f"팬덤 인증 거절 알림 생성: notification_id={notification.id}")
+        except Exception as e:
+            logger.error(f"팬덤 인증 거절 알림 생성 오류: {e}")
         
         # 캐시 무효화
         cache.delete('oddmin_dashboard_stats')
@@ -447,7 +478,7 @@ def reject_fandom(request, profile_id):
         logger.error(f"팬덤 인증 거절 오류: {e}")
         messages.error(request, "거절 처리 중 오류가 발생했습니다.")
     
-    # 🔥 수정: POST 데이터에서 next 파라미터 확인
+    # POST 데이터에서 next 파라미터 확인
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'fandom_list':
         return redirect('oddmin:fandom_list')

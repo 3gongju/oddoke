@@ -53,6 +53,10 @@ class Notification(models.Model):
     # 알림 메시지
     message = models.TextField(verbose_name='알림 메시지')
     
+    # ✅ 새로 추가: 채팅 알림 그룹핑을 위한 필드들
+    message_count = models.PositiveIntegerField(default=1, verbose_name='메시지 개수')
+    last_sender_name = models.CharField(max_length=100, blank=True, verbose_name='마지막 발신자')
+    
     # 읽음 여부
     is_read = models.BooleanField(default=False, verbose_name='읽음 여부')
     
@@ -68,6 +72,8 @@ class Notification(models.Model):
         indexes = [
             models.Index(fields=['recipient', 'is_read']),
             models.Index(fields=['recipient', 'notification_type', 'content_type', 'object_id']),
+            # ✅ 새로 추가: 채팅 알림 조회 최적화
+            models.Index(fields=['recipient', '-created_at']),
         ]
     
     def __str__(self):
@@ -84,6 +90,14 @@ class Notification(models.Model):
             
         content_type = ContentType.objects.get_for_model(content_object)
         
+        # ✅ 채팅 알림은 별도 로직으로 처리
+        if notification_type == 'chat':
+            return cls.create_or_update_chat_notification(recipient, actor, content_object)
+        
+        # ✅ 댓글 알림도 그룹핑 처리 추가
+        if notification_type in ['comment', 'reply', 'post_reply']:
+            return cls.create_or_update_comment_notification(recipient, actor, notification_type, content_object)
+
         # 중복 알림 방지 (좋아요, 팔로우의 경우)
         if notification_type in ['like', 'follow']:
             existing = cls.objects.filter(
@@ -118,27 +132,288 @@ class Notification(models.Model):
         return notification
 
     @classmethod
+    def create_or_update_comment_notification(cls, recipient, actor, notification_type, comment_object):
+        """
+        ✅ 새로 추가: 댓글 알림 생성 또는 업데이트
+        연속성 기반 그룹핑 로직
+        """
+        if recipient == actor:
+            return None
+            
+        # 댓글 객체에서 게시글 가져오기
+        post = comment_object.post
+        
+        # 1️⃣ 바로 직전 알림 확인 (읽지 않은 것만)
+        last_notification = cls.objects.filter(
+            recipient=recipient,
+            is_read=False
+        ).order_by('-created_at').first()
+        
+        post_content_type = ContentType.objects.get_for_model(post)
+        
+        # 2️⃣ 그룹핑 조건 체크
+        should_group = (
+            last_notification and
+            last_notification.notification_type == notification_type and  # 같은 댓글 타입 (comment, reply 등)
+            last_notification.content_type == post_content_type and  # 같은 게시글 타입
+            last_notification.object_id == post.id and  # 같은 게시글
+            last_notification.actor == actor and  # 같은 사용자
+            timezone.now() - last_notification.created_at < timedelta(hours=2)  # 2시간 이내
+        )
+        
+        if should_group:
+            # 3️⃣ 기존 알림 업데이트
+            return cls._update_comment_notification(last_notification, actor, post)
+        else:
+            # 4️⃣ 새 알림 생성
+            return cls._create_new_comment_notification(recipient, actor, notification_type, post)
+    
+    @classmethod
+    def _update_comment_notification(cls, notification, actor, post):
+        """기존 댓글 알림 업데이트"""
+        notification.message_count += 1
+        notification.last_sender_name = actor.first_name or actor.username
+        notification.created_at = timezone.now()  # 시간 업데이트로 최상단 유지
+        notification.is_read = False  # 읽음 상태 초기화
+        
+        # 게시글 제목 처리 (20자 제한)
+        title = post.title[:20] + "..." if len(post.title) > 20 else post.title
+        
+        # 메시지 업데이트
+        comment_type_map = {
+            'comment': '댓글',
+            'reply': '답글', 
+            'post_reply': '답글'
+        }
+        comment_type_text = comment_type_map.get(notification.notification_type, '댓글')
+        
+        if notification.message_count == 1:
+            notification.message = f'{notification.last_sender_name}님이 \'{title}\'에 {comment_type_text}을 남겼습니다'
+        else:
+            notification.message = f'{notification.last_sender_name}님이 \'{title}\'에 {comment_type_text} {notification.message_count}개를 남겼습니다'
+        
+        notification.save()
+        return notification
+    
+    @classmethod  
+    def _create_new_comment_notification(cls, recipient, actor, notification_type, post):
+        """새 댓글 알림 생성"""
+        post_content_type = ContentType.objects.get_for_model(post)
+        sender_name = actor.first_name or actor.username
+        
+        # 게시글 제목 처리 (20자 제한)
+        title = post.title[:20] + "..." if len(post.title) > 20 else post.title
+        
+        # 댓글 타입별 메시지
+        comment_type_map = {
+            'comment': '댓글',
+            'reply': '답글',
+            'post_reply': '답글'
+        }
+        comment_type_text = comment_type_map.get(notification_type, '댓글')
+        
+        message = f'{sender_name}님이 \'{title}\'에 {comment_type_text}을 남겼습니다'
+        
+        notification = cls.objects.create(
+            recipient=recipient,
+            actor=actor,
+            notification_type=notification_type,
+            content_type=post_content_type,
+            object_id=post.id,  # 게시글 ID 저장 (댓글 ID가 아님)
+            message=message,
+            message_count=1,
+            last_sender_name=sender_name
+        )
+        
+        return notification
+        
+    @classmethod
+    def create_or_update_chat_notification(cls, recipient, actor, room_post):
+        """
+        ✅ 새로 추가: 채팅 알림 생성 또는 업데이트
+        연속성 기반 그룹핑 로직
+        """
+        if recipient == actor:
+            return None
+            
+        # 1️⃣ 바로 직전 알림 확인 (읽지 않은 것만)
+        last_notification = cls.objects.filter(
+            recipient=recipient,
+            is_read=False
+        ).order_by('-created_at').first()
+        
+        content_type = ContentType.objects.get_for_model(room_post)
+        
+        # 2️⃣ 그룹핑 조건 체크
+        should_group = (
+            last_notification and
+            last_notification.notification_type == 'chat' and
+            last_notification.content_type == content_type and
+            last_notification.object_id == room_post.id and
+            timezone.now() - last_notification.created_at < timedelta(hours=24)  # 24시간 이내
+        )
+        
+        if should_group:
+            # 3️⃣ 기존 알림 업데이트
+            return cls._update_chat_notification(last_notification, actor)
+        else:
+            # 4️⃣ 새 알림 생성
+            return cls._create_new_chat_notification(recipient, actor, room_post)
+    
+    @classmethod
+    def _update_chat_notification(cls, notification, new_sender):
+        """기존 채팅 알림 업데이트"""
+        notification.message_count += 1
+        notification.last_sender_name = new_sender.first_name or new_sender.username
+        notification.actor = new_sender  # 마지막 발신자로 업데이트
+        notification.created_at = timezone.now()  # 시간 업데이트로 최상단 유지
+        notification.is_read = False  # 읽음 상태 초기화
+        
+        # 메시지 업데이트
+        if notification.message_count == 1:
+            notification.message = f'{notification.last_sender_name}님이 메시지를 보냈습니다'
+        else:
+            notification.message = f'{notification.last_sender_name}님이 메시지 {notification.message_count}개를 보냈습니다'
+        
+        notification.save()
+        return notification
+    
+    @classmethod  
+    def _create_new_chat_notification(cls, recipient, actor, room_post):
+        """새 채팅 알림 생성"""
+        content_type = ContentType.objects.get_for_model(room_post)
+        sender_name = actor.first_name or actor.username
+        
+        notification = cls.objects.create(
+            recipient=recipient,
+            actor=actor,
+            notification_type='chat',
+            content_type=content_type,
+            object_id=room_post.id,
+            message=f'{sender_name}님이 메시지를 보냈습니다',
+            message_count=1,
+            last_sender_name=sender_name
+        )
+        
+        return notification
+
+    @classmethod
     def _generate_message(cls, notification_type, actor, content_object, extra_context=None):
-        """알림 메시지 생성"""
+        """알림 메시지 생성 (모든 타입에 게시글 제목 추가)"""
         actor_name = actor.first_name or actor.username
         
+        # 댓글 관련 알림은 별도 로직에서 처리하므로 여기서는 기본 메시지만
+        if notification_type in ['comment', 'reply', 'post_reply']:
+            if hasattr(content_object, 'post'):
+                post = content_object.post
+            else:
+                post = content_object
+            
+            title = post.title[:20] + "..." if len(post.title) > 20 else post.title
+            
+            comment_type_map = {
+                'comment': '댓글',
+                'reply': '답글',
+                'post_reply': '답글'
+            }
+            comment_type_text = comment_type_map.get(notification_type, '댓글')
+            
+            return f'{actor_name}님이 \'{title}\'에 {comment_type_text}을 남겼습니다'
+        
+        # ✅ 좋아요 알림에 게시글 제목 추가
+        if notification_type == 'like':
+            title = content_object.title[:20] + "..." if len(content_object.title) > 20 else content_object.title
+            return f'{actor_name}님이 \'{title}\'를 좋아합니다'
+        
+        # ✅ 분철 관련 알림에 게시글 제목 추가
+        if notification_type in ['split_application', 'split_approved', 'split_rejected']:
+            title = content_object.title[:20] + "..." if len(content_object.title) > 20 else content_object.title
+            
+            split_messages = {
+                'split_application': f'{actor_name}님이 \'{title}\' 분철에 참여 신청했습니다',
+                'split_approved': f'\'{title}\' 분철 참여 신청이 승인되었습니다',
+                'split_rejected': f'\'{title}\' 분철 참여 신청이 반려되었습니다',
+            }
+            return split_messages.get(notification_type, f'{actor_name}님의 분철 알림')
+        
+        # 기타 알림들 (제목 정보 없는 것들)
         messages = {
-            'comment': f'{actor_name}님이 회원님의 게시글에 댓글을 남겼습니다',
-            'reply': f'{actor_name}님이 회원님의 댓글에 답글을 남겼습니다', 
-            'post_reply': f'{actor_name}님이 회원님의 게시글에 답글을 남겼습니다',
-            'chat': f'{actor_name}님이 메시지를 보냈습니다',
-            'split_application': f'{actor_name}님이 분철에 참여 신청했습니다',
-            'split_approved': '분철 참여 신청이 승인되었습니다',
-            'split_rejected': '분철 참여 신청이 반려되었습니다',
-            'like': f'{actor_name}님이 회원님의 게시글을 좋아합니다',
+            'chat': f'{actor_name}님이 메시지를 보냈습니다',  # 이제 사용되지 않음 (별도 로직)
             'follow': f'{actor_name}님이 회원님을 팔로우합니다',
             'cafe_approved': f'등록하신 생일카페 "{getattr(content_object, "cafe_name", "")}"가 승인되었습니다',
             'cafe_rejected': f'등록하신 생일카페 "{getattr(content_object, "cafe_name", "")}"가 반려되었습니다',
             'fandom_verified': f'{getattr(getattr(content_object, "fandom_artist", None), "display_name", "아티스트")} 공식 팬덤 인증이 승인되었습니다',
-            'fandom_rejected': f'{getattr(getattr(content_object, "fandom_artist", None), "display_name", "아티스트")} 공식 팬덤 인증이 반려되었습니다',
+            'fandom_rejected': f'{getattr(getattr(content_object, "fandom_artist", None), "display_name", "아티스트")} 공식 팬덤 인증이 거절되었습니다',
         }
         
         return messages.get(notification_type, f'{actor_name}님의 알림')
+    
+    @classmethod
+    def mark_post_notifications_read(cls, user, post):
+        """
+        ✅ 새로 추가: 특정 게시글 관련 모든 알림을 읽음 처리
+        통합 읽음 처리용
+        """
+        try:
+            content_type = ContentType.objects.get_for_model(post)
+            
+            # 해당 게시글과 관련된 모든 읽지 않은 알림을 읽음 처리
+            updated_count = cls.objects.filter(
+                recipient=user,
+                content_type=content_type,
+                object_id=post.id,
+                is_read=False
+            ).update(is_read=True)
+            
+            return updated_count
+            
+        except Exception as e:
+            print(f"게시글 알림 통합 읽음 처리 오류: {e}")
+            return 0
+    
+    def mark_as_read_with_related(self):
+        """
+        ✅ 새로 추가: 알림을 읽음 처리하면서 관련 알림들도 함께 처리
+        """
+        # 자신을 읽음 처리
+        self.is_read = True
+        self.save()
+        
+        # 같은 게시글 관련 알림들도 읽음 처리
+        try:
+            # content_object가 게시글인 경우에만 통합 처리
+            if hasattr(self.content_object, 'title'):  # 게시글 객체인지 확인
+                related_count = self.mark_post_notifications_read(
+                    user=self.recipient,
+                    post=self.content_object
+                )
+                return related_count
+        except Exception as e:
+            print(f"관련 알림 읽음 처리 오류: {e}")
+        
+        return 1  # 자신만 처리된 경우
+
+    @classmethod
+    def mark_chat_notifications_read(cls, user, room_post):
+        """
+        ✅ 새로 추가: 특정 채팅방의 알림을 읽음 처리
+        """
+        try:
+            content_type = ContentType.objects.get_for_model(room_post)
+            
+            updated_count = cls.objects.filter(
+                recipient=user,
+                notification_type='chat',
+                content_type=content_type,
+                object_id=room_post.id,
+                is_read=False
+            ).update(is_read=True)
+            
+            return updated_count
+            
+        except Exception as e:
+            print(f"채팅 알림 읽음 처리 오류: {e}")
+            return 0
     
     @classmethod
     def cleanup_old_notifications(cls, days=30):

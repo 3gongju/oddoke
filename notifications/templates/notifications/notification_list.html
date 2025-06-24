@@ -94,8 +94,9 @@
                                     <!-- 알림 내용 (클릭 가능) -->
                                     <div class="flex-1">
                                         <a href="{% url 'notifications:goto_content' notification.id %}" 
-                                           class="block hover:bg-gray-50 p-2 rounded transition-colors">
+                                        class="block hover:bg-gray-50 p-2 rounded transition-colors">
                                             <p class="text-gray-900 {% if not notification.is_read %}font-semibold{% endif %}">
+                                                <!-- ✅ 그룹핑된 알림들의 개수 표시 -->
                                                 {{ notification.message }}
                                             </p>
                                             <p class="text-sm text-gray-500 mt-1">
