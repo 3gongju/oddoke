@@ -126,18 +126,49 @@ function showNoBirthdayMessage() {
 function selectMember(member) {
   gameData.selectedMember = member;
   
-  // === 테스트용 코드 (기존 코드 주석처리).. ===
+  // === 실제 생일시 계산 로직 ===
+  const birthMonth = member.birth_month; // 생월 (1-12)
+  const birthDay = member.birth_day;     // 생일 (1-31)
   
-  const targetHour = member.birth_month + 12;
-  const targetMinute = member.birth_day;
-  /*
-  gameData.targetTime = new Date();
-  gameData.targetTime.setHours(targetHour, targetMinute, 0, 0);
-  */
+  // 현재 시간 기준으로 가능한 두 시간대 계산
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
   
-  // 테스트용: 현재 시간에서 10초 후로 설정
-  gameData.targetTime = new Date();
-  gameData.targetTime.setSeconds(gameData.targetTime.getSeconds() + 10);
+  // 오전 시간대: 생월을 시간으로, 생일을 분으로
+  const morningHour = Math.max(0, Math.min(23, birthMonth)); // 1-12월 → 1-12시
+  const targetMinute = Math.max(0, Math.min(59, birthDay));  // 1-31일 → 1-31분 (59분 넘으면 59분으로)
+  
+  // 오후 시간대: 생월 + 12시간
+  const eveningHour = Math.max(0, Math.min(23, birthMonth + 12)); // 13-24시 (24시는 0시로 처리)
+  
+  // 현재 시간과 가까운 시간대 선택
+  const morningTime = new Date();
+  morningTime.setHours(morningHour, targetMinute, 0, 0);
+  
+  const eveningTime = new Date();
+  eveningTime.setHours(eveningHour, targetMinute, 0, 0);
+  
+  // 현재 시간과의 차이를 계산하여 더 가까운 시간 선택
+  const morningDiff = Math.abs(now.getTime() - morningTime.getTime());
+  const eveningDiff = Math.abs(now.getTime() - eveningTime.getTime());
+  
+  // 더 가까운 시간을 목표 시간으로 설정
+  if (morningDiff <= eveningDiff) {
+    gameData.targetTime = morningTime;
+    console.log(`🎯 오전 시간대 선택: ${morningHour}:${targetMinute} (생월: ${birthMonth}, 생일: ${birthDay})`);
+  } else {
+    gameData.targetTime = eveningTime;
+    console.log(`🎯 오후 시간대 선택: ${eveningHour}:${targetMinute} (생월: ${birthMonth}, 생일: ${birthDay})`);
+  }
+  
+  // === 테스트용 코드 (필요시 주석 해제) ===
+  
+  // 테스트용: 현재 시간에서 5초 후로 설정
+  // gameData.targetTime = new Date();
+  // gameData.targetTime.setSeconds(gameData.targetTime.getSeconds() + 5);
+  // console.log('🎯 테스트 모드: 5초 후 시간으로 설정');
+
   
   showGameView();
 }
@@ -304,12 +335,6 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
       
       showResult(timeDiff, ddok);
       
-      // === 포인트 저장 부분 임시 비활성화 ===
-      // if (ddok > 0) {
-        // console.log(`포인트 저장 시뮬레이션: ${ddok}점 (멤버ID: ${gameData.selectedMember.id})`);
-        // savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl); // 주석처리
-      // }
-
       if (ddok > 0) {
         // 새로운 API 엔드포인트 사용
         saveBirthdayDdokPoints(ddok, gameData.selectedMember.id, timeDiff);
@@ -330,7 +355,7 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
   showBirthdayGameSection(todayBirthdaysApiUrl);
 }
 
-// === 덕 포인트 저장 함수 (파일 맨 끝에 추가) ===
+// === 덕 포인트 저장 함수 ===
 async function saveBirthdayDdokPoints(ddok_points, memberId, timeDifference) {
   console.log('🎯 saveBirthdayDdokPoints 함수 호출됨');
   console.log('파라미터:', { ddok_points, memberId, timeDifference });
