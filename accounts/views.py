@@ -6,6 +6,8 @@ from collections import Counter
 from PIL import Image, ExifTags
 from dotenv import load_dotenv
 
+from ddoksang.views.base_views import get_recent_cafes_objects
+
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -441,28 +443,17 @@ def mypage(request):
         comment.category = getattr(target_post, 'category_type', None)
 
     # 덕생(생일카페) 관련 데이터
-    from ddoksang.models import BdayCafe, CafeFavorite, CafeViewHistory
+    from ddoksang.models import BdayCafe
     
     # 내가 등록한 생일카페
     my_cafes = BdayCafe.objects.filter(submitted_by=user_profile).order_by('-created_at')
     
     # 찜한 생일카페
-    favorite_cafes = BdayCafe.objects.filter(
-        id__in=CafeFavorite.objects.filter(user=user_profile).values_list('cafe_id', flat=True)
-    ).order_by('-created_at')
+    favorite_cafes = user_profile.favorite_cafes.order_by('-created_at')
     
-    # 최근 본 생일카페 (최대 20개, 최근 순)
-    recent_view_histories = CafeViewHistory.objects.filter(
-        user=user_profile,
-        cafe__status='approved'  # 승인된 카페만
-    ).select_related('cafe__artist', 'cafe__member').order_by('-viewed_at')[:10]
-    
-    # 카페 객체만 추출하되 조회 시간 정보도 함께 전달
-    recent_cafes = []
-    for history in recent_view_histories:
-        cafe = history.cafe
-        cafe.viewed_at = history.viewed_at  # 조회 시간 정보 추가
-        recent_cafes.append(cafe)
+    # 최근 본 생일카페 (최대 20개, 최근 순)    
+    recent_cafes = get_recent_cafes_objects(request)
+
     
     # 덕생 통계
     cafe_stats = {

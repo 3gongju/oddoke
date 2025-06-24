@@ -107,16 +107,12 @@ def get_cafe_detail_context(cafe, user, is_preview=False, can_edit=False, previe
     logger.info(f"카페: {cafe.cafe_name} (ID: {cafe.id})")
     logger.info(f"멤버: {cafe.member.member_name if cafe.member else 'None'}")
     
-    # 사용자 찜 상태 확인
+    # 사용자 찜 상태 확인 (ManyToManyField 사용)
     is_favorited = False
     if user.is_authenticated:
-        from ..models import CafeFavorite
-        is_favorited = CafeFavorite.objects.filter(
-            user=user, 
-            cafe=cafe
-        ).exists()
-    
-    # ✅ 근처 카페: 같은 멤버의 카페만 최대 10개
+        is_favorited = cafe.favorited_by.filter(id=user.id).exists()
+        
+    #  근처 카페: 같은 멤버의 카페만 최대 10개
     nearby_cafes = get_member_nearby_cafes(
         cafe, 
         exclude_cafe_id=cafe.id,

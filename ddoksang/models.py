@@ -43,6 +43,14 @@ class BdayCafe(models.Model):
     # 날짜 및 시간
     start_date = models.DateField(verbose_name='시작일')
     end_date = models.DateField(verbose_name='종료일')
+    
+    # 카페 즐겨찾기
+    favorited_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='favorite_cafes',
+        blank=True,
+        verbose_name='찜한 사용자들'
+    )
 
 
     # 상세 정보
@@ -264,34 +272,3 @@ class BdayCafe(models.Model):
         """이미지 개수 반환"""
         return len(self.image_gallery) if self.image_gallery else 0
 
-
-
-class CafeFavorite(models.Model):
-    """카페 즐겨찾기"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, related_name='favoritecafes')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'cafe')
-        verbose_name = '카페 즐겨찾기'
-
-class CafeViewHistory(models.Model):
-    """카페 조회 기록"""
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name='사용자')
-    cafe = models.ForeignKey(BdayCafe, on_delete=models.CASCADE, verbose_name='카페')
-    viewed_at = models.DateTimeField(auto_now=True, verbose_name='조회 시간')
-    ip_address = models.GenericIPAddressField(null=True, blank=True, verbose_name='IP 주소')
-    
-    class Meta:
-        verbose_name = '카페 조회 기록'
-        verbose_name_plural = '카페 조회 기록들'
-        unique_together = ('user', 'cafe')
-        ordering = ['-viewed_at']
-        indexes = [
-            models.Index(fields=['user', '-viewed_at']),
-            models.Index(fields=['cafe', '-viewed_at']),
-        ]
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.cafe.cafe_name} ({self.viewed_at})"
