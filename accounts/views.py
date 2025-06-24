@@ -1277,6 +1277,75 @@ def report_post(request, app_name, category, post_id):
         })
 
 @login_required
+@require_POST
+def report_user(request, user_id):
+    """사용자 신고 처리 (채팅방 등에서 사용)"""
+    try:
+        reported_user = get_object_or_404(User, id=user_id)
+        
+        # 자신을 신고하는 것 방지
+        if request.user == reported_user:
+            return JsonResponse({
+                'success': False,
+                'error': '자신을 신고할 수 없습니다.'
+            })
+        
+        # 신고 데이터 처리
+        reason = request.POST.get('reason')
+        additional_info = request.POST.get('additional_info', '')
+        
+        if not reason:
+            return JsonResponse({
+                'success': False,
+                'error': '신고 사유를 선택해주세요.'
+            })
+        
+        # PostReport 모델을 사용해서 사용자 신고 저장
+        user_content_type = ContentType.objects.get_for_model(User)
+        
+        # 중복 신고 확인
+        existing_report = PostReport.objects.filter(
+            reporter=request.user,
+            content_type=user_content_type,
+            object_id=reported_user.id
+        ).first()
+        
+        if existing_report:
+            return JsonResponse({
+                'success': False,
+                'error': '이미 신고한 사용자입니다.'
+            })
+        
+        # 신고 생성
+        report = PostReport.objects.create(
+            reporter=request.user,
+            reported_user=reported_user,
+            content_type=user_content_type,
+            object_id=reported_user.id,
+            reason=reason,
+            additional_info=additional_info
+        )
+        
+        print(f"✅ 사용자 신고 접수: {request.user.username} → {reported_user.username}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': '신고가 접수되었습니다. 검토 후 조치하겠습니다.'
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': '존재하지 않는 사용자입니다.'
+        })
+    except Exception as e:
+        print(f"사용자 신고 처리 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '신고 처리 중 오류가 발생했습니다.'
+        })
+
+@login_required
 @require_GET  
 def get_report_form(request, app_name, category, post_id):
     """신고 폼 HTML 반환 (덕담, 덕팜 공통)"""
@@ -1328,3 +1397,4 @@ def get_report_form(request, app_name, category, post_id):
         'success': True,
         'form_html': form_html
     })
+
