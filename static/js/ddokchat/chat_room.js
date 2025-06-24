@@ -21,6 +21,7 @@ import { setupAutoDetect } from './auto_detect.js';
 import { setupImageLightbox } from './image_handler.js';
 import { setupPlusMenu, setupTradeCompleteModal, setupHeaderMenu, setupReviewModal } from './ui_setup.js';
 import { sendTextMessage } from './message_sender.js';
+import { setupTradeReport } from './trade_report.js'; // ✅ 신고 모듈 import 추가
 
 document.addEventListener("DOMContentLoaded", () => {
   // 전역 변수에서 데이터 가져오기
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMessageHandlers(currentUser, currentUserId);
   setupFraudCheck();
   setupAutoDetect();
+  setupTradeReport(); // ✅ 신고 모듈 초기화 추가
   
   // WebSocket 메시지 핸들러 등록
   registerMessageHandler('showToast', showToast);
@@ -94,7 +96,7 @@ function setupUIComponents() {
   // 거래 완료 모달 설정
   setupTradeCompleteModal();
   
-  // 헤더 메뉴 설정
+  // 헤더 메뉴 설정 (신고 기능 포함)
   setupHeaderMenu();
   
   // 이미지 라이트박스 설정
