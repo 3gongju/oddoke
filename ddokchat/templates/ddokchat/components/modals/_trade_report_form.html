@@ -1,0 +1,111 @@
+<!-- ddokchat/templates/ddokchat/components/modals/_trade_report_form.html -->
+
+<div class="space-y-6">
+    <!-- 신고 안내 -->
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-start space-x-3">
+            <svg class="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-red-800 mb-1">신고 안내</h4>
+                <p class="text-sm text-red-700">
+                    허위 신고 시 본인에게 불이익이 있을 수 있습니다.<br>
+                    구체적이고 정확한 내용으로 신고해주세요.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 신고 대상 정보 -->
+    <div class="bg-gray-50 rounded-lg p-4">
+        <h4 class="text-sm font-semibold text-gray-800 mb-3">신고 대상</h4>
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-medium text-sm">
+                {% if reported_user.profile_image %}
+                    <img src="{{ reported_user.profile_image.url }}" alt="{{ reported_user.username }}" class="w-full h-full object-cover rounded-full">
+                {% else %}
+                    {{ reported_user.username|first|upper }}
+                {% endif %}
+            </div>
+            <div>
+                <p class="font-semibold text-gray-900">{{ reported_user.username }}</p>
+                <p class="text-sm text-gray-600">{{ room.get_trade_category }} · {{ room.post.title|truncatechars:30 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 신고 폼 -->
+    <form id="tradeReportForm">
+        <div class="space-y-5">
+            <!-- 신고 사유 -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                    {{ form.reason.label }} <span class="text-red-500">*</span>
+                </label>
+                <div class="space-y-2">
+                    {% for choice in form.reason %}
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            {{ choice.tag }}
+                            <span class="ml-3 text-sm text-gray-800">{{ choice.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- 신고 내용 -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                    {{ form.description.label }} <span class="text-red-500">*</span>
+                </label>
+                {{ form.description }}
+                <p class="text-xs text-gray-500 mt-1">최소 10자 이상 구체적으로 작성해주세요</p>
+            </div>
+
+            <!-- 추가 증거/설명 -->
+            <div>
+                <label for="{{ form.evidence_text.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                    {{ form.evidence_text.label }}
+                </label>
+                {{ form.evidence_text }}
+            </div>
+
+            <!-- 피해 금액 -->
+            <div>
+                <label for="{{ form.damage_amount.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                    {{ form.damage_amount.label }}
+                </label>
+                {{ form.damage_amount }}
+                <p class="text-xs text-gray-500 mt-1">{{ form.damage_amount.help_text }}</p>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+/* 라디오 버튼 커스텀 스타일 */
+#tradeReportForm input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #dc2626;
+}
+
+#tradeReportForm input[type="radio"]:checked + span {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+#tradeReportForm label:has(input[type="radio"]:checked) {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+}
+
+/* 텍스트 영역 포커스 스타일 */
+#tradeReportForm textarea:focus,
+#tradeReportForm input[type="number"]:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #dc2626;
+    border-color: #dc2626;
+}
+</style>
