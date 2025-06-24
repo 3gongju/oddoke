@@ -30,11 +30,13 @@ class User(AbstractUser):
     social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
     is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
    
-    # 🔥 소셜 로그인 ID 저장 필드 추가
+    #  소셜 로그인 ID 저장 필드 추가
     kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
     naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
+    google_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="구글 ID")
 
-    # 🔥 제재 관련 필드 추가
+
+    #  제재 관련 필드 추가
     suspension_start = models.DateTimeField(blank=True, null=True, verbose_name="제재 시작일")
     suspension_end = models.DateTimeField(blank=True, null=True, verbose_name="제재 종료일")
     suspension_reason = models.TextField(blank=True, null=True, verbose_name="제재 사유")
@@ -87,6 +89,8 @@ class User(AbstractUser):
                 return "카카오 사용자"
             elif self.username.startswith('temp_naver_'):
                 return "네이버 사용자"
+            elif self.username.startswith('temp_google_'):
+                return "구글 사용자"
             else:
                 return "새로운 사용자"
         
@@ -95,7 +99,7 @@ class User(AbstractUser):
    
     @property
     def is_social_user(self):
-        return self.username.startswith(('temp_kakao_', 'temp_naver_'))
+        return self.username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_'))
 
     @property
     def is_suspended(self):

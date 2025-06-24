@@ -6,6 +6,8 @@ from collections import Counter
 from PIL import Image, ExifTags
 from dotenv import load_dotenv
 
+from ddoksang.views.base_views import get_recent_cafes_objects
+
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -23,9 +25,10 @@ from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmCom
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
+
 from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPointLog
 from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm, PostReportForm, BannerRequestForm
-from .services import KakaoAuthService, NaverAuthService
+from .services import KakaoAuthService, NaverAuthService, GoogleAuthService
 
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.contenttypes.models import ContentType
@@ -110,16 +113,14 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'accounts/password_reset_complete.html'
 
-# Create your views here.
 def signup(request):
     preview_image_url = None
 
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False  # 이메일 인증 전까지 비활성화
-            user = form.save()
+            # 한 번만 저장하도록
+            user = form.save()  # 이미 form의 save 메서드에서 is_active=False 처리됨
             
             if user.profile_image:
                 preview_image_url = user.profile_image.url
@@ -178,16 +179,16 @@ def activate(request, uidb64, token):
     if user and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-        # 모달용 태그 추가
-        messages.add_message(
+        
+        # 이메일 인증 완료 = 회원가입 완료이므로 바로 로그인 처리 후 아티스트 페이지로
+        auth_login(request, user)
+        
+        messages.success(
             request,
-            messages.SUCCESS,
-            '이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.',
-            extra_tags='modal_required'  # 특별 태그 추가
+            f'환영합니다, {user.username}님! 이메일 인증이 완료되었습니다.'
         )
-        return redirect('accounts:login')
+        return redirect('artist:index')
     else:
-        # 일반 에러 메시지 (모달 없음) - 기존 방식 유지
         messages.error(request, '인증 링크가 유효하지 않거나 만료되었습니다.')
         return redirect('accounts:login')
 
@@ -197,36 +198,19 @@ def login(request):
         if form.is_valid():
             user = form.get_user()
 
-            # 이메일 인증 여부 체크
             if not user.is_active:
                 messages.warning(request, "이메일 인증이 필요합니다.\n이메일을 확인해주세요!")
-                # 로그인 실패 처리 (폼에 오류 추가 가능)
                 return render(request, 'login.html', {'form': form})
 
             auth_login(request, user)
-
-            # 첫 로그인 감지: last_login이 None이거나 방금 전 설정된 경우
-            from django.utils import timezone
-            now = timezone.now()
-            is_first_login = (
-                user.last_login is None or 
-                (user.last_login and (now - user.last_login).total_seconds() < 10)
-            )
-
-            if is_first_login:
-                # 첫 로그인이면 아티스트 페이지로
-                return redirect('artist:index')
-            else:
-                # 기존 사용자는 next 파라미터 우선 적용
-                next_url = request.GET.get('next') or '/'
-                return redirect(next_url)
+            
+            # 첫 로그인인지 따지지않음으로 수정완료
+            next_url = request.GET.get('next') or '/'
+            return redirect(next_url)
     else:
         form = EmailAuthenticationForm()
 
-    context = {
-        'form': form,
-    }
-    return render(request, 'login.html', context)
+    return render(request, 'login.html', {'form': form})
 
 
 @login_required
@@ -461,28 +445,17 @@ def mypage(request):
         comment.category = getattr(target_post, 'category_type', None)
 
     # 덕생(생일카페) 관련 데이터
-    from ddoksang.models import BdayCafe, CafeFavorite, CafeViewHistory
+    from ddoksang.models import BdayCafe
     
     # 내가 등록한 생일카페
     my_cafes = BdayCafe.objects.filter(submitted_by=user_profile).order_by('-created_at')
     
     # 찜한 생일카페
-    favorite_cafes = BdayCafe.objects.filter(
-        id__in=CafeFavorite.objects.filter(user=user_profile).values_list('cafe_id', flat=True)
-    ).order_by('-created_at')
+    favorite_cafes = user_profile.favorite_cafes.order_by('-created_at')
     
-    # 최근 본 생일카페 (최대 20개, 최근 순)
-    recent_view_histories = CafeViewHistory.objects.filter(
-        user=user_profile,
-        cafe__status='approved'  # 승인된 카페만
-    ).select_related('cafe__artist', 'cafe__member').order_by('-viewed_at')[:10]
-    
-    # 카페 객체만 추출하되 조회 시간 정보도 함께 전달
-    recent_cafes = []
-    for history in recent_view_histories:
-        cafe = history.cafe
-        cafe.viewed_at = history.viewed_at  # 조회 시간 정보 추가
-        recent_cafes.append(cafe)
+    # 최근 본 생일카페 (최대 20개, 최근 순)    
+    recent_cafes = get_recent_cafes_objects(request)
+
     
     # 덕생 통계
     cafe_stats = {
@@ -945,20 +918,16 @@ def social_signup_complete(request):
             print("폼 유효성 검사 통과")
             try:
                 user = form.save()
-                print(f"저장 완료: {user.username}")
                 messages.success(request, f'환영합니다, {user.username}님!')
                 
-                # 임시로 메인 페이지로 리다이렉트 (테스트용)
-                print("메인 페이지로 리다이렉트")
-                return redirect('/')
+                 # 소셜 가입 완료 후 아티스트 페이지로 
+                return redirect('artist:index')  # 메인이 아닌 아티스트 페이지로
                 
             except Exception as e:
-                print(f"저장 오류: {e}")
                 import traceback
                 traceback.print_exc()
                 messages.error(request, f'저장 중 오류: {str(e)}')
         else:
-            print(f"폼 에러: {form.errors}")
             messages.error(request, '입력 정보를 확인해주세요.')
     else:
         form = SocialSignupCompleteForm(instance=request.user)
@@ -1135,6 +1104,97 @@ def naver_logout(request):
     request.session.flush()
     return redirect('/')
 
+# 구글 로그인
+def google_login(request):
+    """구글 로그인 페이지로 리다이렉트"""
+    service = GoogleAuthService()
+    auth_url = service.get_auth_url()
+    return redirect(auth_url)
+
+def google_callback(request):
+    """구글 로그인 콜백 처리"""
+    print("=== 구글 콜백 디버깅 ===")
+    
+    code = request.GET.get('code')
+    error = request.GET.get('error')
+    
+    # 에러 확인
+    if error:
+        print(f"구글 로그인 에러: {error}")
+        messages.error(request, '구글 로그인이 취소되었습니다.')
+        return redirect('accounts:login')
+    
+    if not code:
+        print("구글 코드 없음")
+        messages.error(request, '구글 로그인에 실패했습니다.')
+        return redirect('accounts:login')
+    
+    print(f"구글 코드 받음: {code[:10]}...")
+    
+    service = GoogleAuthService()
+    
+    try:
+        print("구글 콜백 처리 시작...")
+        user = service.handle_callback(code)
+        print(f"반환된 사용자: {user.username}")
+        print(f"사용자 이메일: {user.email}")
+        print(f"임시 사용자명 여부: {user.is_temp_username}")
+        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
+        
+        # 이메일 기반 인증 (패스워드 없이)
+        from django.contrib.auth import authenticate
+        print("이메일 기반 인증 시도...")
+        authenticated_user = authenticate(
+            request, 
+            email=user.email, 
+            password=None
+        )
+        print(f"인증 결과: {authenticated_user}")
+        
+        if authenticated_user:
+            print("인증 성공, 로그인 처리...")
+            auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
+            print(f"로그인 성공: {request.user.is_authenticated}")
+            
+            # 프로필 완성 여부에 따라 분기 처리
+            if not authenticated_user.social_signup_completed:
+                print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
+                return redirect('accounts:social_signup_complete')
+            else:
+                print(f"기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
+                messages.success(request, f'환영합니다, {authenticated_user.display_name}님!')
+                
+            next_url = request.GET.get('next') or '/'
+            print(f"리다이렉트 URL: {next_url}")
+            return redirect(next_url)
+        else:
+            print("인증 실패!")
+            messages.error(request, '구글 로그인 인증에 실패했습니다.')
+            return redirect('accounts:login')
+        
+    except Exception as e:
+        print(f"전체 에러: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # 이메일 중복 에러 처리
+        if '이미' in str(e) and '가입된 계정' in str(e):
+            messages.error(request, str(e))
+        else:
+            messages.error(request, f'구글 로그인 처리 중 오류가 발생했습니다: {str(e)}')
+        return redirect('accounts:login')
+
+def google_logout(request):
+    """구글 로그아웃 + 일반 로그아웃"""
+    service = GoogleAuthService()
+    
+    # 일반 로그아웃 먼저 처리
+    auth_logout(request)
+    
+    # 구글 로그아웃 URL로 리디렉션
+    logout_url = service.get_logout_url()
+    return redirect(logout_url)
+
 # 스마트 로그아웃 (기존 함수 개선)
 def smart_logout(request):
     """사용자 타입에 따라 적절한 로그아웃 방식 선택"""
@@ -1147,6 +1207,8 @@ def smart_logout(request):
         return kakao_logout(request)
     elif username.startswith('naver_'):
         return naver_logout(request)
+    elif username.startswith('temp_google_'):
+        return google_logout(request)
     else:
         return logout(request)  # 기존 logout 함수 호출
 
@@ -1299,6 +1361,75 @@ def report_post(request, app_name, category, post_id):
         })
 
 @login_required
+@require_POST
+def report_user(request, user_id):
+    """사용자 신고 처리 (채팅방 등에서 사용)"""
+    try:
+        reported_user = get_object_or_404(User, id=user_id)
+        
+        # 자신을 신고하는 것 방지
+        if request.user == reported_user:
+            return JsonResponse({
+                'success': False,
+                'error': '자신을 신고할 수 없습니다.'
+            })
+        
+        # 신고 데이터 처리
+        reason = request.POST.get('reason')
+        additional_info = request.POST.get('additional_info', '')
+        
+        if not reason:
+            return JsonResponse({
+                'success': False,
+                'error': '신고 사유를 선택해주세요.'
+            })
+        
+        # PostReport 모델을 사용해서 사용자 신고 저장
+        user_content_type = ContentType.objects.get_for_model(User)
+        
+        # 중복 신고 확인
+        existing_report = PostReport.objects.filter(
+            reporter=request.user,
+            content_type=user_content_type,
+            object_id=reported_user.id
+        ).first()
+        
+        if existing_report:
+            return JsonResponse({
+                'success': False,
+                'error': '이미 신고한 사용자입니다.'
+            })
+        
+        # 신고 생성
+        report = PostReport.objects.create(
+            reporter=request.user,
+            reported_user=reported_user,
+            content_type=user_content_type,
+            object_id=reported_user.id,
+            reason=reason,
+            additional_info=additional_info
+        )
+        
+        print(f"✅ 사용자 신고 접수: {request.user.username} → {reported_user.username}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': '신고가 접수되었습니다. 검토 후 조치하겠습니다.'
+        })
+        
+    except User.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': '존재하지 않는 사용자입니다.'
+        })
+    except Exception as e:
+        print(f"사용자 신고 처리 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '신고 처리 중 오류가 발생했습니다.'
+        })
+
+@login_required
 @require_GET  
 def get_report_form(request, app_name, category, post_id):
     """신고 폼 HTML 반환 (덕담, 덕팜 공통)"""
@@ -1350,6 +1481,7 @@ def get_report_form(request, app_name, category, post_id):
         'success': True,
         'form_html': form_html
     })
+
 
 @login_required
 @require_POST
@@ -1465,3 +1597,4 @@ def banner_request_form(request):
             'success': False,
             'error': '배너 신청 폼을 불러올 수 없습니다.'
         })
+

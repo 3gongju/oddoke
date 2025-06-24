@@ -765,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nextBtn.disabled = true;
             nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
             nextBtn.classList.remove('hover:bg-gray-800');
-            nextBtn.textContent = '이미지를 업로드해주세요';
+            nextBtn.textContent = '덕';
         }
         
         console.log('🔘 다음 버튼 상태 업데이트:', { hasImages, disabled: nextBtn.disabled });

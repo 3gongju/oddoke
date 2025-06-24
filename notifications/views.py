@@ -54,24 +54,42 @@ def notification_list(request):
 @login_required
 @require_http_methods(["POST"])
 def mark_notification_read(request, notification_id):
-    """특정 알림을 읽음으로 표시"""
+    """
+    ✅ 특정 알림을 읽음으로 표시 (분리된 통합/개별 읽음 처리 적용)
+    """
     notification = get_object_or_404(
         Notification, 
         id=notification_id, 
         recipient=request.user
     )
     
-    notification.is_read = True
-    notification.save()
+    # ✅ 타입에 따른 분리된 읽음 처리 적용
+    related_count = notification.mark_as_read_with_related()
+    
+    # 읽음 처리 결과에 따른 메시지 생성
+    if notification.notification_type in Notification.CONTENT_RELATED_NOTIFICATIONS:
+        if related_count > 1:
+            message_text = f'해당 게시글 관련 {related_count}개의 알림이 읽음으로 표시되었습니다.'
+        else:
+            message_text = '알림이 읽음으로 표시되었습니다.'
+    elif notification.notification_type == 'chat':
+        if related_count > 1:
+            message_text = f'해당 채팅 관련 {related_count}개의 알림이 읽음으로 표시되었습니다.'
+        else:
+            message_text = '채팅 알림이 읽음으로 표시되었습니다.'
+    else:
+        message_text = '알림이 읽음으로 표시되었습니다.'
     
     if request.headers.get('Accept') == 'application/json':
         return JsonResponse({
             'success': True,
-            'message': '알림이 읽음으로 표시되었습니다.',
-            'notification_id': notification_id
+            'message': message_text,
+            'notification_id': notification_id,
+            'related_count': related_count,
+            'notification_type': notification.notification_type
         })
     
-    messages.success(request, '알림이 읽음으로 표시되었습니다.')
+    messages.success(request, message_text)
     return redirect('notifications:notification_list')
 
 
@@ -155,16 +173,24 @@ def get_time_since(created_at):
 
 @login_required
 def goto_content(request, notification_id):
-    """알림 내용으로 이동 (알림을 읽음으로 표시하고 해당 페이지로 리다이렉트)"""
+    """
+    ✅ 알림 내용으로 이동 (분리된 통합/개별 읽음 처리 적용)
+    """
     notification = get_object_or_404(
         Notification,
         id=notification_id,
         recipient=request.user
     )
     
-    # 알림을 읽음으로 표시
-    notification.is_read = True
-    notification.save()
+    # ✅ 타입에 따른 분리된 읽음 처리 적용
+    related_count = notification.mark_as_read_with_related()
+    
+    # 읽음 처리 결과 로깅
+    if related_count > 1:
+        notification_type_name = dict(Notification.NOTIFICATION_TYPES).get(
+            notification.notification_type, notification.notification_type
+        )
+        print(f"{notification_type_name} 관련 읽음 처리: {related_count}개 알림 처리됨")
     
     try:
         content_object = notification.content_object
@@ -175,50 +201,47 @@ def goto_content(request, notification_id):
         notification_type = notification.notification_type
         model_name = notification.content_type.model.lower()
         
-        # 1. 분철 참여 신청 알림 → 분철 관리 페이지로
+        # 1. 분철 참여 신청 알림 → 분철 관리 페이지로 (개별 처리)
         if notification_type == 'split_application':
             return redirect('ddokfarm:manage_split_applications', 
                           category='split', post_id=content_object.id)
         
-        # 2. 채팅 알림 → 내 채팅 목록으로
+        # 2. 채팅 알림 → 내 채팅 목록으로 (개별 처리)
         elif notification_type == 'chat':
             return redirect('ddokchat:my_chatrooms')
         
-        # 3. 팔로우 알림 → 상대방 공개 프로필로
+        # 3. 팔로우 알림 → 상대방 공개 프로필로 (개별 처리)
         elif notification_type == 'follow' and model_name == 'user':
             return redirect('accounts:profile', username=content_object.username)
         
-        # 4. 생일카페 승인/반려 알림 → 내 카페 목록으로
+        # 4. 생일카페 승인/반려 알림 → 내 카페 목록으로 (개별 처리)
         elif notification_type in ['cafe_approved', 'cafe_rejected']:
             if model_name == 'bdaycafe':
                 return redirect('ddoksang:my_cafes')
             else:
                 return redirect('ddoksang:home')
         
-        # 5. 팬덤 인증 승인/반려 알림 → 설정 페이지로
+        # 5. 팬덤 인증 승인/반려 알림 → 설정 페이지로 (개별 처리)
         elif notification_type in ['fandom_verified', 'fandom_rejected']:
             if model_name == 'fandomprofile':
                 return redirect('accounts:settings_main', username=request.user.username)
             else:
                 return redirect('accounts:mypage')
         
-        # 6. 댓글/대댓글/게시글답글 알림 → 해당 게시글의 댓글 위치로
-        elif notification_type in ['comment', 'reply', 'post_reply']:
-            if hasattr(content_object, 'post'):
-                post = content_object.post
-                post_url = get_post_url(post)
-                return redirect(f"{post_url}?scroll_to_comment={content_object.id}")
-            else:
-                post_url = get_post_url(content_object)
-                return redirect(post_url)
-        
-        # 7. 좋아요 알림 → 해당 게시글로
-        elif notification_type == 'like':
+        # 6. 분철 승인/반려 알림 → 해당 분철 게시글로 (개별 처리)
+        elif notification_type in ['split_approved', 'split_rejected']:
             post_url = get_post_url(content_object)
             return redirect(post_url)
         
-        # 8. 분철 승인/반려 알림 → 해당 분철 게시글로
-        elif notification_type in ['split_approved', 'split_rejected']:
+         # 7. 댓글/대댓글/게시글답글 알림 → 해당 게시글의 댓글 섹션으로 (통합 처리)
+        elif notification_type in ['comment', 'reply', 'post_reply']:
+            # content_object는 이제 게시글 객체 (댓글 그룹핑 변경으로)
+            post_url = get_post_url(content_object)
+            # 댓글 섹션으로 바로 이동
+            return redirect(f"{post_url}#comments")
+        
+        # 8. 좋아요 알림 → 해당 게시글로 (통합 처리)
+        elif notification_type == 'like':
             post_url = get_post_url(content_object)
             return redirect(post_url)
         

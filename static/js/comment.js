@@ -1,23 +1,11 @@
-// ✅ 댓글 스크롤 함수 (알림에서 올 때)
-function scrollToCommentFromNotification() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const commentId = urlParams.get('scroll_to_comment');
-  
-  if (commentId) {
-    const commentElement = document.querySelector(`#comment-${commentId}`);
-    
-    if (commentElement) {
-      setTimeout(() => {
-        commentElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-      }, 500);
-      
-      // URL에서 파라미터 제거
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
+// ✅ 댓글 섹션으로 즉시 이동 함수 (알림에서 올 때)
+function scrollToCommentsSection() {
+  const commentsSection = document.querySelector('#comments');
+  if (commentsSection) {
+    commentsSection.scrollIntoView({ 
+      behavior: 'auto', // smooth 대신 auto (즉시 이동)
+      block: 'start' 
+    });
   }
 }
 
@@ -87,7 +75,6 @@ async function refreshCommentSection() {
         }
         
         bindAllEvents();
-        scrollToCommentFromNotification();
       }
     }
   } catch (error) {
@@ -180,7 +167,15 @@ function bindAllEvents() {
   bindDeleteButtons();
 }
 
+// ✅ 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', () => {
   bindAllEvents();
-  scrollToCommentFromNotification();
+});
+
+// ✅ 페이지 완전 로딩 후 즉시 이동
+window.addEventListener('load', () => {
+  // 알림에서 온 경우 댓글 섹션으로 즉시 이동
+  if (window.location.hash === '#comments') {
+    setTimeout(scrollToCommentsSection, 50); // 최소 지연으로 즉시 이동
+  }
 });

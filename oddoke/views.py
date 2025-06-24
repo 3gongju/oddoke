@@ -12,6 +12,14 @@ from accounts.models import BannerRequest
 def group_artists(artists, group_size=5):
     return [list(filter(None, group)) for group in zip_longest(*[iter(artists)] * group_size)]
 
+def intro_view(request):
+    """어덕해 소개 페이지"""
+    context = {
+        'page_title': '어덕해 소개',
+        'total_slides': 10,  # 슬라이드 개수
+    }
+    return render(request, 'main/intro.html', context)
+
 
 def main(request):
     # 1) 찜한 아티스트 원본 목록

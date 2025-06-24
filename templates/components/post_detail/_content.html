@@ -57,12 +57,7 @@
   </div>
 
   <!-- 정보 테이블 + 버튼 묶음 -->
-  <div class="mt-auto space-y-4">
-
-    {% if category == 'split' %}
-      {% include 'ddokfarm/components/post_detail/_splitprice_info.html' %}
-    {% endif %}
-    
+  <div class="mt-auto space-y-4">    
     {% if extra_partial %}
       {% include extra_partial %}
     {% endif %}

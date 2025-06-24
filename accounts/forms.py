@@ -82,9 +82,9 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
     
-    # 🔥 프로필 이미지를 선택사항으로 변경
+    # 프로필 이미지 필드
     profile_image = forms.ImageField(
-        required=False,  # 🔥 필수가 아님
+        required=False,
         widget=forms.FileInput(attrs={
             'accept': 'image/*',
             'style': 'position: absolute; left: -9999px; opacity: 0;'
@@ -130,7 +130,7 @@ class CustomUserCreationForm(UserCreationForm):
         if not re.match(r'^[가-힣a-zA-Z0-9\s]+$', username):
             raise forms.ValidationError("닉네임은 한글, 영문, 숫자, 공백만 사용 가능합니다.")
         
-        # 🔥 임시 username 패턴 금지
+        # 임시 username 패턴 금지
         if username.startswith(('temp_kakao_', 'temp_naver_')):
             raise forms.ValidationError("사용할 수 없는 닉네임 형식입니다.")
         
@@ -151,8 +151,14 @@ class CustomUserCreationForm(UserCreationForm):
         return cleaned_data
 
     def save(self, commit=True):
+        """ 프로필 이미지 처리 추가된 save 메서드"""
         user = super().save(commit=False)
         user.is_active = False  # 이메일 인증 전까지 비활성화
+        
+        # 프로필 이미지 처리
+        if self.cleaned_data.get('profile_image'):
+            user.profile_image = self.cleaned_data['profile_image']
+            
         if commit:
             user.save()
         return user
@@ -244,7 +250,7 @@ class SocialSignupCompleteForm(forms.ModelForm):
             raise forms.ValidationError("닉네임은 한글, 영문, 숫자, 공백만 사용 가능합니다.")
         
         # 🔥 임시 username 패턴 금지
-        if username.startswith(('temp_kakao_', 'temp_naver_')):
+        if username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_')):
             raise forms.ValidationError("사용할 수 없는 닉네임 형식입니다.")
         
         # 🔥 기존 username 중복 검사 (현재 사용자 제외)

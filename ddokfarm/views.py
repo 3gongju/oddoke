@@ -23,6 +23,7 @@ from .models import (
     SplitPrice,
     SplitApplication,
     ItemPrice,
+    ExchangeItem,
 )
 from .forms import FarmCommentForm, SplitPriceForm
 from .utils import (

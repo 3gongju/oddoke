@@ -26,6 +26,9 @@
 {% include 'ddokchat/components/modals/_fraud_check.html' %}
 {% include 'ddokchat/components/modals/_common_modals.html' %}
 
+<!-- 🔥 신고 모달 추가 -->
+{% include 'components/_report_modal.html' with target_user=other_user report_type="사용자" %}
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
 
 <!-- CSS 파일들 로드 -->
@@ -132,6 +135,39 @@ body {
   window.isFullyCompleted = {{ room.is_fully_completed|yesno:"true,false" }};
   window.roomBuyer = "{{ room.buyer.username }}";
   window.csrfToken = "{{ csrf_token }}";
+  
+  // 🔥 신고 모달 연결
+  document.addEventListener('DOMContentLoaded', function() {
+    // 신고 모달 초기화
+    ReportModal.init({
+      reportActionUrl: `{% url 'accounts:report_user' user_id=other_user.id %}`
+    });
+    
+    // 헤더의 신고 버튼과 연결
+    const reportUserBtn = document.getElementById('reportUserBtn');
+    if (reportUserBtn) {
+      reportUserBtn.addEventListener('click', function() {
+        // 드롭다운 닫기
+        const dropdown = document.getElementById('headerDropdownMenu');
+        if (dropdown) dropdown.classList.add('hidden');
+        
+        // 신고 모달 열기
+        const modal = document.getElementById('report-modal');
+        const content = document.getElementById('report-modal-content');
+        
+        if (modal && content) {
+          modal.classList.remove('hidden');
+          setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+          }, 10);
+        }
+      });
+    }
+  });
 </script>
+
+<!-- 🔥 신고 모달 스크립트 로드 -->
+<script src="{% static 'js/report_modal.js' %}"></script>
 <script type="module" src="{% static 'js/ddokchat/chat_room.js' %}"></script>
 {% endblock %}

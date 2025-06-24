@@ -1,6 +1,12 @@
 {# ddokfarm/templates/ddokfarm/components/post_detail/_extra_info.html 업데이트 #}
 {% load humanize %}
 
+{% if category == 'split' %}
+  {% include 'ddokfarm/components/post_detail/_splitprice_info.html' %}
+{% endif %}
+
+{% include 'ddokfarm/components/post_detail/_exchange_info.html' %}
+
 {% if category == 'sell' or category == 'rental' or category == 'split' %}
   <div class="mt-auto text-sm bg-gray-50 border border-gray-300 rounded-lg p-2">
     <div class="overflow-x-auto">
