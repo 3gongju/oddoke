@@ -82,9 +82,9 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
     
-    # 🔥 프로필 이미지를 선택사항으로 변경
+    # 프로필 이미지 필드
     profile_image = forms.ImageField(
-        required=False,  # 🔥 필수가 아님
+        required=False,
         widget=forms.FileInput(attrs={
             'accept': 'image/*',
             'style': 'position: absolute; left: -9999px; opacity: 0;'
@@ -151,8 +151,14 @@ class CustomUserCreationForm(UserCreationForm):
         return cleaned_data
 
     def save(self, commit=True):
+        """ 프로필 이미지 처리 추가된 save 메서드"""
         user = super().save(commit=False)
         user.is_active = False  # 이메일 인증 전까지 비활성화
+        
+        # 프로필 이미지 처리
+        if self.cleaned_data.get('profile_image'):
+            user.profile_image = self.cleaned_data['profile_image']
+            
         if commit:
             user.save()
         return user

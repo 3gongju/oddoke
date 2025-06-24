@@ -33,7 +33,7 @@ from artist.models import Artist, Member
 logger = logging.getLogger(__name__)
 
 
-
+@login_required(login_url='/accounts/login/')
 def cafe_create_view(request):
     if request.method == 'POST':
         try:
