@@ -33,10 +33,6 @@ urlpatterns = [
 
     # 아티스트 검색
     path('ajax/search_artists/', views.search_artists, name='search_artists'),
-
-    # 게시글 신고
-    path('<str:category>/<int:post_id>/report/', views.report_post, name='report_post'),
-    path('<str:category>/<int:post_id>/report/form/', views.get_report_form, name='get_report_form'),
   
     # 덕생 카페 자동완성용
     path('ajax/search_ddoksang_cafes/', views.search_ddoksang_cafes, name='search_ddoksang_cafes'),
