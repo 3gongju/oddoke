@@ -1,5 +1,6 @@
 <!-- ddokchat/templates/ddokchat/components/chat/_header.html 수정 -->
 {% load humanize %}
+{% load price_filters %}
 
 <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 shadow-sm">
   <div class="flex items-center justify-between">
@@ -132,16 +133,11 @@
               <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">거래</span>
             {% endif %}
             
-            <!-- 카테고리명 -->
-            {% if room.post.category_type == 'split' %}
-              {% if split_info %}
-                {% if split_info.applied_members %}
-                  <span class="text-xs text-gray-500">
-                    {% for member in split_info.applied_members %}
-                      {{ member.member_name }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                  </span>
-                {% endif %}
+            <!-- ✅ 분철 참여자 정보 표시 (분철인 경우에만) -->
+            {% if room.post.category_type == 'split' and current_user != room.post.user %}
+              {% get_split_participant_members room.post current_user as member_names %}
+              {% if member_names != "멤버 정보 없음" %}
+                <span class="text-xs text-gray-500">{{ member_names }}</span>
               {% endif %}
             {% endif %}
           </div>
@@ -149,65 +145,10 @@
           <!-- 상품 제목 -->
           <h3 class="font-medium text-gray-900 truncate text-sm">{{ room.post.title }}</h3>
           
-          <!-- ✅ 개선된 가격 정보 -->
+          <!-- ✅ 최적화된 가격 정보 -->
+          {% get_post_price_info room.post current_user room as price_info %}
           <div class="flex items-center space-x-2">
-            {% if room.post.category_type == 'sell' %}
-              {% if room.post.has_multiple_items %}
-                {% with min_price=room.post.get_price_range.0 max_price=room.post.get_price_range.1 %}
-                  {% if min_price == max_price %}
-                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원</p>
-                  {% else %}
-                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원 ~ {{ max_price|floatformat:0|add:"0"|intcomma }}원</p>
-                    <span class="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-medium">
-                      {{ room.post.get_item_prices.count }}개
-                    </span>
-                  {% endif %}
-                {% endwith %}
-              {% else %}
-                <p class="text-sm font-bold text-orange-600">{{ room.post.price|floatformat:0|add:"0"|intcomma }}원</p>
-              {% endif %}
-              
-            {% elif room.post.category_type == 'rental' %}
-              {% if room.post.has_multiple_items %}
-                {% with min_price=room.post.get_price_range.0 max_price=room.post.get_price_range.1 %}
-                  {% if min_price == max_price %}
-                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원</p>
-                  {% else %}
-                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원 ~ {{ max_price|floatformat:0|add:"0"|intcomma }}원</p>
-                    <span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-medium">
-                      {{ room.post.get_item_prices.count }}개
-                    </span>
-                  {% endif %}
-                {% endwith %}
-              {% else %}
-                <p class="text-sm font-bold text-orange-600">{{ room.post.rental_price|floatformat:0|add:"0"|intcomma }}원</p>
-              {% endif %}
-              
-            {% elif room.post.category_type == 'split' %}
-              <!-- 분철의 경우 멤버별 가격 범위 표시 -->
-              {% if room.post.member_prices.exists %}
-                {% with min_price=room.post.get_price_range.0 max_price=room.post.get_price_range.1 %}
-                  {% if min_price == max_price %}
-                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원</p>
-                  {% else %}
-                    <p class="text-sm font-bold text-orange-600">{{ min_price|floatformat:0|add:"0"|intcomma }}원 ~ {{ max_price|floatformat:0|add:"0"|intcomma }}원</p>
-                    <span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-medium">
-                      멤버별
-                    </span>
-                  {% endif %}
-                {% endwith %}
-              {% else %}
-                <!-- 분철 신청 정보가 있으면 총 가격 표시 -->
-                {% if split_info %}
-                  <p class="text-sm font-bold text-orange-600">{{ split_info.total_price|floatformat:0|add:"0"|intcomma }}원</p>
-                {% else %}
-                  <p class="text-sm font-bold text-orange-600">가격 협의</p>
-                {% endif %}
-              {% endif %}
-              
-            {% else %}
-              <p class="text-sm font-bold text-orange-600">가격 협의</p>
-            {% endif %}
+            <p class="text-sm font-bold text-orange-600">{{ price_info.display_price }}</p>
           </div>
         </div>
         

@@ -1,10 +1,10 @@
-// ddoksang_image_upload.js - JSON 기반 이미지 갤러리용
+// ddoksang_image_upload.js - 이미지 압축 기능 포함 버전
 
-console.log('🚀 JSON 기반 이미지 업로드 모듈 로드 시작');
+console.log('🚀 이미지 업로드 모듈 로드 시작');
 
 // 메인 초기화 함수
 window.initDdoksangImageUpload = function() {
-    console.log('🖼️ JSON 기반 이미지 업로드 초기화 시작');
+    console.log('🖼️ 이미지 업로드 초기화 시작');
     
     if (window.ddoksangImageUploader && window.ddoksangImageUploader.isInitialized) {
         console.log('✅ 이미지 업로더 이미 초기화됨');
@@ -15,7 +15,7 @@ window.initDdoksangImageUpload = function() {
     
     if (uploader && uploader.isInitialized) {
         window.ddoksangImageUploader = uploader;
-        console.log('✅ JSON 기반 이미지 업로더 초기화 완료');
+        console.log('✅ 이미지 업로더 초기화 완료');
         return uploader;
     } else {
         console.error('❌ 이미지 업로더 초기화 실패');
@@ -23,16 +23,18 @@ window.initDdoksangImageUpload = function() {
     }
 };
 
-// 이미지 압축 유틸리티 (기존과 동일)
+// 이미지 압축 유틸리티
 const ImageCompressor = {
+    // 이미지 압축 설정
     config: {
         maxWidth: 1200,
         maxHeight: 1200,
         quality: 0.85,
-        maxSizeKB: 800,
+        maxSizeKB: 800, // 800KB
         format: 'image/jpeg'
     },
 
+    // 이미지 압축 함수
     async compressImage(file, options = {}) {
         const config = { ...this.config, ...options };
         
@@ -49,6 +51,7 @@ const ImageCompressor = {
 
             img.onload = () => {
                 try {
+                    // 압축 처리
                     const result = this.processImage(img, canvas, ctx, config, file);
                     console.log('✅ 이미지 압축 완료:', {
                         압축파일: result.name,
@@ -58,22 +61,24 @@ const ImageCompressor = {
                     resolve(result);
                 } catch (error) {
                     console.error('❌ 이미지 압축 실패:', error);
-                    resolve(file);
+                    resolve(file); // 실패시 원본 반환
                 }
             };
 
             img.onerror = () => {
                 console.error('❌ 이미지 로딩 실패');
-                resolve(file);
+                resolve(file); // 실패시 원본 반환
             };
 
             img.src = URL.createObjectURL(file);
         });
     },
 
+    // 이미지 처리 로직
     processImage(img, canvas, ctx, config, originalFile) {
         const { maxWidth, maxHeight, quality, maxSizeKB, format } = config;
 
+        // 원본 크기가 작으면 압축하지 않음
         if (originalFile.size <= maxSizeKB * 1024 && 
             img.width <= maxWidth && 
             img.height <= maxHeight) {
@@ -81,19 +86,26 @@ const ImageCompressor = {
             return originalFile;
         }
 
+        // 리사이즈 계산
         const dimensions = this.calculateDimensions(img.width, img.height, maxWidth, maxHeight);
         
+        // 캔버스 설정
         canvas.width = dimensions.width;
         canvas.height = dimensions.height;
 
+        // 고품질 렌더링 설정
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
+
+        // 이미지 그리기
         ctx.drawImage(img, 0, 0, dimensions.width, dimensions.height);
 
+        // Blob 변환 시도
         let attempt = 0;
         let currentQuality = quality;
         let result = null;
 
+        // 최대 3번 시도하며 품질 조정
         while (attempt < 3) {
             try {
                 const dataURL = canvas.toDataURL(format, currentQuality);
@@ -104,6 +116,7 @@ const ImageCompressor = {
                     크기: `${(blob.size / 1024).toFixed(1)}KB`
                 });
 
+                // 목표 크기 달성시 성공
                 if (blob.size <= maxSizeKB * 1024 || attempt === 2) {
                     result = new File([blob], this.generateFileName(originalFile, format), {
                         type: format,
@@ -112,6 +125,7 @@ const ImageCompressor = {
                     break;
                 }
 
+                // 품질 낮춰서 재시도
                 currentQuality *= 0.8;
                 attempt++;
             } catch (error) {
@@ -120,13 +134,15 @@ const ImageCompressor = {
             }
         }
 
-        return result || originalFile;
+        return result || originalFile; // 실패시 원본 반환
     },
 
+    // 크기 계산
     calculateDimensions(width, height, maxWidth, maxHeight) {
         let newWidth = width;
         let newHeight = height;
 
+        // 비율 유지하며 리사이즈
         if (width > maxWidth) {
             newHeight = (height * maxWidth) / width;
             newWidth = maxWidth;
@@ -143,6 +159,7 @@ const ImageCompressor = {
         };
     },
 
+    // DataURL을 Blob으로 변환
     dataURLToBlob(dataURL) {
         const arr = dataURL.split(',');
         const mime = arr[0].match(/:(.*?);/)[1];
@@ -157,6 +174,7 @@ const ImageCompressor = {
         return new Blob([u8arr], { type: mime });
     },
 
+    // 파일명 생성
     generateFileName(originalFile, format) {
         const nameWithoutExt = originalFile.name.replace(/\.[^/.]+$/, '');
         const ext = format === 'image/jpeg' ? '.jpg' : 
@@ -165,15 +183,16 @@ const ImageCompressor = {
     }
 };
 
-// ✅ JSON 기반 이미지 업로더 설정 함수
+// 이미지 업로더 설정 함수
 function setupImageUploader() {
-    console.log('⚙️ JSON 기반 이미지 업로더 설정 시작');
+    console.log('⚙️ 이미지 업로더 설정 시작');
     
     // DOM 요소 확인
     const fileInput = document.getElementById('image-upload');
     const fileCount = document.getElementById('file-count');
     const previewContainer = document.getElementById('image-preview-container');
     const previewList = document.getElementById('image-preview-list');
+    const form = document.getElementById('multiStepForm');
 
     if (!fileInput || !fileCount || !previewContainer || !previewList) {
         console.error('❌ 필수 DOM 요소를 찾을 수 없습니다:', {
@@ -187,26 +206,12 @@ function setupImageUploader() {
 
     console.log('✅ 모든 필수 DOM 요소 확인됨');
 
-    // ✅ JSON 기반 상태 변수
-    let imageGallery = [];  // JSON 형태로 이미지 정보 저장
+    // 상태 변수
+    let selectedFiles = [];
     let fileIdCounter = Date.now();
     let sortableInstance = null;
     const maxFiles = 10;
     const maxSizeMB = 5;
-
-    // ✅ 이미지 갤러리 JSON 구조
-    // {
-    //   id: "img_xxx",
-    //   file: File객체,
-    //   url: "blob:xxx" (미리보기용),
-    //   type: "main|poster|other",
-    //   is_main: true/false,
-    //   order: 0,
-    //   width: 1200,
-    //   height: 800,
-    //   file_size: 245760,
-    //   isCompressed: true/false
-    // }
 
     // 파일 검증 함수
     function validateFiles(files) {
@@ -233,9 +238,9 @@ function setupImageUploader() {
         return { valid: errors.length === 0, errors };
     }
 
-    // ✅ 미리보기 업데이트 함수 (JSON 기반)
+    // 미리보기 업데이트 함수
     function updatePreview() {
-        console.log('🔄 JSON 기반 미리보기 업데이트:', imageGallery.length, '개 이미지');
+        console.log('🔄 미리보기 업데이트:', selectedFiles.length, '개 파일');
 
         // 기존 Sortable 정리
         if (sortableInstance) {
@@ -250,16 +255,14 @@ function setupImageUploader() {
         // 미리보기 목록 초기화
         previewList.innerHTML = "";
 
-        // ✅ 이미지 갤러리 렌더링 (order 순으로 정렬)
-        const sortedImages = [...imageGallery].sort((a, b) => a.order - b.order);
-        
-        sortedImages.forEach((imageData, index) => {
-            const wrapper = createImageWrapper(imageData, index);
+        // 선택된 파일들 렌더링
+        selectedFiles.forEach((item, index) => {
+            const wrapper = createImageWrapper(item, index);
             previewList.appendChild(wrapper);
         });
 
         // 추가 버튼
-        if (imageGallery.length < maxFiles) {
+        if (selectedFiles.length < maxFiles) {
             const addWrapper = createAddButton();
             previewList.appendChild(addWrapper);
         }
@@ -270,7 +273,7 @@ function setupImageUploader() {
         updateFormFileInput();
         
         // 미리보기 컨테이너 표시
-        if (imageGallery.length > 0) {
+        if (selectedFiles.length > 0) {
             previewContainer.classList.remove("hidden");
             previewContainer.style.display = "block";
         }
@@ -278,42 +281,44 @@ function setupImageUploader() {
         // 메인 앱에 알림
         notifyMainApp();
         
-        console.log('✅ JSON 기반 미리보기 업데이트 완료');
+        console.log('✅ 미리보기 업데이트 완료');
     }
 
-    // ✅ 이미지 래퍼 생성 (JSON 기반)
-    function createImageWrapper(imageData, index) {
+    // 이미지 래퍼 생성
+    function createImageWrapper(item, index) {
         const wrapper = document.createElement("div");
         wrapper.className = "relative w-full aspect-[3/4] cursor-move bg-gray-100 rounded border";
-        wrapper.dataset.imageId = imageData.id;
+        wrapper.dataset.fileId = item.id;
         wrapper.dataset.index = index;
 
         const img = document.createElement("img");
         img.className = "rounded border object-cover w-full h-full pointer-events-none";
+        img.alt = item.name || `이미지 ${index + 1}`;
 
         // 이미지 로딩 에러 처리
         img.onerror = () => {
+            console.warn(`이미지 로딩 실패: ${item.name}`);
             img.src = createErrorPlaceholder();
         };
 
-        // ✅ 미리보기 URL 설정
-        if (imageData.url) {
-            img.src = imageData.url;
+        // 이미지 소스 설정
+        if (item.previewUrl) {
+            img.src = item.previewUrl;
         } else {
-            createImagePreview(imageData, img);
+            createImagePreview(item, img);
         }
 
         // 배지들 추가
-        addBadges(wrapper, imageData, index);
+        addBadges(wrapper, item, index);
 
         // 삭제 버튼
-        const closeBtn = createDeleteButton(imageData.id);
+        const closeBtn = createDeleteButton(item.id);
         
         // 드래그 핸들
         const dragHandle = createDragHandle();
 
-        // ✅ 압축 상태 표시
-        if (imageData.isCompressed) {
+        // ✅ 압축 상태 표시 추가
+        if (item.isCompressed) {
             const compressedBadge = document.createElement("div");
             compressedBadge.className = "absolute bottom-1 left-1 bg-green-600 bg-opacity-90 text-white text-xs px-1 py-0.5 rounded z-10";
             compressedBadge.textContent = "압축됨";
@@ -327,18 +332,19 @@ function setupImageUploader() {
         return wrapper;
     }
 
-    // ✅ 이미지 미리보기 생성 (JSON 기반)
-    function createImagePreview(imageData, img) {
-        if (!imageData.file) {
-            console.warn('파일 객체가 없습니다:', imageData);
+    // 이미지 미리보기 생성
+    function createImagePreview(item, img) {
+        if (!item.file) {
+            console.warn('파일 객체가 없습니다:', item);
             img.src = createErrorPlaceholder();
             return;
         }
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            imageData.url = e.target.result;
+            item.previewUrl = e.target.result;
             img.src = e.target.result;
+            console.log('✅ 이미지 미리보기 생성됨:', item.name);
         };
         reader.onerror = (e) => {
             console.error('FileReader 오류:', e);
@@ -346,21 +352,21 @@ function setupImageUploader() {
         };
         
         try {
-            reader.readAsDataURL(imageData.file);
+            reader.readAsDataURL(item.file);
         } catch (error) {
             console.error('파일 읽기 오류:', error);
             img.src = createErrorPlaceholder();
         }
     }
 
-    // 오류 플레이스홀더 생성 (기존과 동일)
+    // 오류 플레이스홀더 생성
     function createErrorPlaceholder() {
         return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuydtOuvuOyngCDroZzrk5nlsaDsiJgg7LqY7J6EPC90ZXh0Pjwvc3ZnPg==';
     }
 
-    // ✅ 배지 추가 (JSON 기반)
-    function addBadges(wrapper, imageData, index) {
-        if (imageData.is_main) {
+    // 배지 추가
+    function addBadges(wrapper, item, index) {
+        if (index === 0) {
             const badge = document.createElement("div");
             badge.className = "absolute top-1 left-1 bg-blue-600 text-white text-xs px-1 py-0.5 rounded z-10";
             badge.textContent = "대표";
@@ -373,8 +379,8 @@ function setupImageUploader() {
         wrapper.appendChild(orderBadge);
     }
 
-    // 삭제 버튼 생성 (기존과 동일)
-    function createDeleteButton(imageId) {
+    // 삭제 버튼 생성
+    function createDeleteButton(fileId) {
         const closeBtn = document.createElement("button");
         closeBtn.type = "button";
         closeBtn.innerHTML = "&times;";
@@ -386,12 +392,12 @@ function setupImageUploader() {
         `;
         closeBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            removeImage(imageId);
+            removeImage(fileId);
         });
         return closeBtn;
     }
 
-    // 드래그 핸들 생성 (기존과 동일)
+    // 드래그 핸들 생성
     function createDragHandle() {
         const dragHandle = document.createElement("div");
         dragHandle.className = "absolute bottom-1 right-1 bg-gray-800 bg-opacity-80 text-white text-xs px-1 py-0.5 rounded z-10 cursor-grab active:cursor-grabbing";
@@ -400,7 +406,7 @@ function setupImageUploader() {
         return dragHandle;
     }
 
-    // 추가 버튼 생성 (기존과 동일)
+    // 추가 버튼 생성
     function createAddButton() {
         const addWrapper = document.createElement("div");
         addWrapper.className = "relative w-full aspect-[3/4] border-2 border-dashed border-gray-300 rounded hover:border-gray-400 transition-colors cursor-pointer bg-gray-50 hover:bg-gray-100";
@@ -413,7 +419,7 @@ function setupImageUploader() {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
             <span class="text-xs">이미지 추가</span>
-            <span class="text-xs text-gray-400 mt-1">${imageGallery.length}/${maxFiles}</span>
+            <span class="text-xs text-gray-400 mt-1">${selectedFiles.length}/${maxFiles}</span>
         `;
         
         addButton.addEventListener("click", () => {
@@ -424,18 +430,18 @@ function setupImageUploader() {
         return addWrapper;
     }
 
-    // ✅ 파일 선택 처리 (JSON 기반 + 압축)
+    // ✅ 파일 선택 처리 - 압축 기능 추가
     async function handleFileSelection(newFiles) {
-        console.log('JSON 기반 파일 선택 처리:', newFiles.length, '개');
+        console.log('📁 파일 선택 처리:', newFiles.length, '개');
 
-        const remainingSlots = maxFiles - imageGallery.length;
+        const remainingSlots = maxFiles - selectedFiles.length;
         
         if (newFiles.length > remainingSlots) {
             if (remainingSlots === 0) {
                 showToast(`이미 최대 ${maxFiles}장이 선택되었습니다.`, 'warning');
                 return;
             } else {
-                showToast(`최대 ${maxFiles}개까지만 업로드 가능. ${remainingSlots}개만 추가됩니다.`, 'warning');
+                showToast(`최대 ${maxFiles}개까지만 업로드 가능해 ${remainingSlots}개만 추가됩니다.`, 'warning');
             }
         }
         
@@ -454,32 +460,28 @@ function setupImageUploader() {
             showToast('이미지 압축 중...', 'info', 5000);
         }
 
-        // ✅ JSON 기반 이미지 객체 생성
+        // ✅ 파일 압축 및 객체 생성
         for (const file of filesToAdd) {
             try {
-                console.log('🔄 JSON 기반 파일 처리:', file.name);
+                console.log('🔄 파일 압축 시작:', file.name);
                 
                 // 이미지 압축
                 const compressedFile = await ImageCompressor.compressImage(file);
                 const isCompressed = compressedFile !== file;
                 
-                // ✅ JSON 형태의 이미지 데이터 생성
-                const currentOrder = imageGallery.length;
-                const imageData = {
-                    id: `img_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
+                const fileObj = {
+                    id: `new_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
+                    type: "new",
                     file: compressedFile,
                     originalFile: file,
-                    url: null,  // 미리보기에서 생성
-                    type: currentOrder === 0 ? "main" : "other",  //  첫 번째만 main
-                    is_main: currentOrder === 0,  // 첫 번째만 대표
-                    order: currentOrder,
-                    width: null,  // 나중에 설정
-                    height: null,  // 나중에 설정
-                    file_size: compressedFile.size,
-                    isCompressed: isCompressed
+                    name: compressedFile.name,
+                    size: compressedFile.size,
+                    originalSize: file.size,
+                    isCompressed: isCompressed,
+                    previewUrl: null
                 };
                 
-                imageGallery.push(imageData);
+                selectedFiles.push(fileObj);
                 
                 if (isCompressed) {
                     console.log('✅ 압축 완료:', {
@@ -493,38 +495,35 @@ function setupImageUploader() {
                 }
                 
             } catch (error) {
-                console.error('❌ JSON 기반 파일 처리 오류:', error);
+                console.error('❌ 파일 처리 오류:', error);
                 
                 // 실패시 원본 파일로 추가
-                const currentOrder = imageGallery.length;
-                const imageData = {
-                    id: `img_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
+                const fileObj = {
+                    id: `new_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
+                    type: "new",
                     file: file,
-                    url: null,
-                    type: currentOrder === 0 ? "main" : "other",
-                    is_main: currentOrder === 0,
-                    order: currentOrder,
-                    file_size: file.size,
-                    isCompressed: false
+                    name: file.name,
+                    size: file.size,
+                    isCompressed: false,
+                    previewUrl: null
                 };
                 
-                imageGallery.push(imageData);
+                selectedFiles.push(fileObj);
             }
         }
         
         updatePreview();
         
         // ✅ 압축 완료 알림
-        const compressedCount = imageGallery.filter(img => img.isCompressed).length;
+        const compressedCount = selectedFiles.filter(f => f.isCompressed).length;
         if (compressedCount > 0) {
             showToast(`${compressedCount}개 이미지가 압축되었습니다.`, 'success');
         }
     }
 
-
-    // Sortable 초기화 (기존과 유사하지만 imageId 기반)
+    // Sortable 초기화
     function initSortable() {
-        if (imageGallery.length <= 1 || typeof Sortable === 'undefined') return;
+        if (selectedFiles.length <= 1 || typeof Sortable === 'undefined') return;
 
         try {
             sortableInstance = new Sortable(previewList, {
@@ -543,25 +542,13 @@ function setupImageUploader() {
                     if (evt.item.dataset.addButton === "true") return;
                     
                     if (oldIndex !== newIndex && 
-                        oldIndex < imageGallery.length && 
-                        newIndex < imageGallery.length) {
+                        oldIndex < selectedFiles.length && 
+                        newIndex < selectedFiles.length) {
                         
-                        console.log('🔄 JSON 기반 순서 변경:', { oldIndex, newIndex });
+                        console.log('🔄 파일 순서 변경:', { oldIndex, newIndex });
                         
-                        // ✅ JSON 배열에서 순서 변경
-                        const movedItem = imageGallery.splice(oldIndex, 1)[0];
-                        imageGallery.splice(newIndex, 0, movedItem);
-                        
-                        // ✅ order 값 재조정 및 대표 이미지 플래그 업데이트
-                        imageGallery.forEach((img, index) => {
-                            img.order = index;
-                            // 첫 번째 위치(index=0)에 있는 이미지만 대표로 설정
-                            img.is_main = (index === 0);
-                            img.type = (index === 0) ? "main" : "other";
-                        });
-                        
-                        console.log('대표 이미지 플래그 업데이트 완료:', 
-                                imageGallery.find(img => img.is_main)?.id || 'none');
+                        const movedItem = selectedFiles.splice(oldIndex, 1)[0];
+                        selectedFiles.splice(newIndex, 0, movedItem);
                         
                         updatePreview();
                     }
@@ -572,71 +559,56 @@ function setupImageUploader() {
         }
     }
 
-    // ✅ 이미지 제거 (JSON 기반)
-    function removeImage(imageId) {
+    // 이미지 제거
+    function removeImage(fileId) {
+        console.log('🗑️ 이미지 제거 시작:', fileId);
         
-        const initialLength = imageGallery.length;
-        const removedImage = imageGallery.find(img => img.id === imageId);
-        const wasMainImage = removedImage && removedImage.is_main;
+        const initialLength = selectedFiles.length;
         
-        imageGallery = imageGallery.filter(imageData => {
-            const shouldKeep = imageData.id !== imageId;
+        selectedFiles = selectedFiles.filter(item => {
+            const shouldKeep = item.id !== fileId;
             if (!shouldKeep) {
-                // blob URL 정리
-                if (imageData.url && imageData.url.startsWith('blob:')) {
-                    URL.revokeObjectURL(imageData.url);
+                if (item.previewUrl && item.previewUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(item.previewUrl);
                 }
+                console.log('🗑️ 파일 제거됨:', item.name);
             }
             return shouldKeep;
         });
         
-        // ✅ order 재조정 및 대표 이미지 재설정
-        if (imageGallery.length > 0) {
-            imageGallery.forEach((img, index) => {
-                img.order = index;
-                // 첫 번째 이미지가 항상 대표
-                img.is_main = (index === 0);
-                img.type = (index === 0) ? "main" : "other";
-            });
-            
-            console.log('✅ 대표 이미지 재설정:', imageGallery[0].id);
-        }
-        
-        if (imageGallery.length !== initialLength) {
-            console.log('✅ JSON 기반 이미지 제거 완료');
+        if (selectedFiles.length !== initialLength) {
+            console.log('✅ 파일 제거 완료');
             updatePreview();
         }
     }
 
-    // ✅ 파일 개수 업데이트 (JSON 기반)
+    // 파일 개수 업데이트
     function updateFileCount() {
-        if (imageGallery.length === 0) {
+        if (selectedFiles.length === 0) {
             fileCount.textContent = "선택된 파일 없음";
             fileCount.className = "text-sm text-gray-500";
         } else {
-            const compressedCount = imageGallery.filter(img => img.isCompressed).length;
+            const compressedCount = selectedFiles.filter(f => f.isCompressed).length;
             const compressedText = compressedCount > 0 ? ` (${compressedCount}개 압축됨)` : '';
-            fileCount.textContent = `${imageGallery.length}개 파일 선택됨${compressedText} (최대 ${maxFiles}장)`;
+            fileCount.textContent = `${selectedFiles.length}개 파일 선택됨${compressedText} (최대 ${maxFiles}장)`;
             fileCount.className = "text-sm text-gray-700 font-medium";
         }
     }
 
-    // ✅ 폼 파일 입력 업데이트 (JSON 기반)
+    // 폼 파일 입력 업데이트
     function updateFormFileInput() {
-        console.log('🔄 JSON 기반 폼 파일 입력 업데이트 시작');
+        console.log('🔄 폼 파일 입력 업데이트 시작');
         
         try {
             const dt = new DataTransfer();
             
-            // ✅ JSON 갤러리에서 실제 파일들 추출
-            const files = imageGallery
-                .sort((a, b) => a.order - b.order)  // order 순으로 정렬
-                .map(imageData => imageData.file)
-                .filter(file => file instanceof File);
+            const newFiles = selectedFiles
+                .filter(f => f.type === "new" && f.file)
+                .map(f => f.file);
             
-            console.log('📎 JSON에서 추출한 파일들:', files.length, '개');
+            console.log('📎 추가할 파일들:', newFiles.length, '개');
             
-            files.forEach((file, index) => {
+            newFiles.forEach((file, index) => {
                 try {
                     dt.items.add(file);
                     console.log(`✅ 파일 ${index + 1} 추가됨: ${file.name}`);
@@ -651,20 +623,19 @@ function setupImageUploader() {
             console.log('🎯 최종 폼 파일 상태:', resultFiles.length, '개');
             
         } catch (error) {
-            console.error('❌ JSON 기반 폼 파일 입력 업데이트 실패:', error);
+            console.error('❌ 폼 파일 입력 업데이트 실패:', error);
             showToast('파일 업데이트 중 오류가 발생했습니다.', 'error');
         }
     }
 
-    // ✅ 메인 앱에 알림 (JSON 기반)
+    // 메인 앱에 알림
     function notifyMainApp() {
         const event = new CustomEvent('filesUpdated', {
             detail: {
-                selectedCount: imageGallery.length,
+                selectedCount: selectedFiles.length,
                 formFileCount: fileInput.files.length,
-                compressedCount: imageGallery.filter(img => img.isCompressed).length,
-                isReady: imageGallery.length > 0,
-                imageGallery: imageGallery  // ✅ JSON 갤러리 정보 포함
+                compressedCount: selectedFiles.filter(f => f.isCompressed).length,
+                isReady: selectedFiles.length > 0
             }
         });
         document.dispatchEvent(event);
@@ -676,7 +647,7 @@ function setupImageUploader() {
         }
     }
 
-    // 토스트 메시지 (기존과 동일)
+    // 토스트 메시지
     function showToast(message, type = 'info', duration = 3000) {
         if (window.showToast) {
             window.showToast(message, type, duration);
@@ -685,9 +656,9 @@ function setupImageUploader() {
         }
     }
 
-    // 파일 입력 이벤트 핸들러 (기존과 동일)
+    // 파일 입력 이벤트 핸들러
     function handleFileInput(event) {
-        console.log('📂 JSON 기반 파일 입력 이벤트:', event.target.files.length);
+        console.log('📂 파일 입력 이벤트:', event.target.files.length);
         
         const newFiles = Array.from(event.target.files);
         
@@ -704,29 +675,19 @@ function setupImageUploader() {
     // 초기 상태 설정
     updatePreview();
 
-    // ✅ JSON 기반 API 객체 생성
+    // API 객체 생성
     const apiObject = {
         isInitialized: true,
-        
-        // 기본 정보
-        getFileCount: () => imageGallery.length,
+        getFiles: () => selectedFiles.map(f => f.type === "new" ? f.file : f),
+        getNewFiles: () => selectedFiles.filter(f => f.type === "new").map(f => f.file),
+        getFileCount: () => selectedFiles.length,
+        getSelectedFiles: () => [...selectedFiles],
         getFormFileCount: () => fileInput.files.length,
-        
-        // ✅ JSON 기반 메서드들
-        getImageGallery: () => [...imageGallery],  // 복사본 반환
-        getImageGalleryJSON: () => JSON.stringify(imageGallery),
-        
-        // 파일 관련
-        getFiles: () => imageGallery.map(img => img.file),
-        getNewFiles: () => imageGallery.map(img => img.file),
-        getSelectedFiles: () => [...imageGallery],  // 호환성
-        
-        // 압축 통계
         getCompressionStats: () => {
-            const total = imageGallery.length;
-            const compressed = imageGallery.filter(img => img.isCompressed).length;
-            const totalOriginalSize = imageGallery.reduce((sum, img) => sum + (img.originalFile?.size || img.file_size), 0);
-            const totalCompressedSize = imageGallery.reduce((sum, img) => sum + img.file_size, 0);
+            const total = selectedFiles.length;
+            const compressed = selectedFiles.filter(f => f.isCompressed).length;
+            const totalOriginalSize = selectedFiles.reduce((sum, f) => sum + (f.originalSize || f.size), 0);
+            const totalCompressedSize = selectedFiles.reduce((sum, f) => sum + f.size, 0);
             
             return {
                 total,
@@ -739,43 +700,14 @@ function setupImageUploader() {
                     (((totalOriginalSize - totalCompressedSize) / totalOriginalSize) * 100).toFixed(1) + '%' : '0%'
             };
         },
-        
-        // 조작 메서드들
-        removeFileById: (imageId) => removeImage(imageId),
-        setMainImage: (imageId) => {
-            console.log('대표 이미지 설정:', imageId);
-            
-            // 해당 이미지를 찾아서 맨 앞으로 이동
-            const targetIndex = imageGallery.findIndex(img => img.id === imageId);
-            if (targetIndex === -1) {
-                console.warn('❌ 해당 이미지를 찾을 수 없음:', imageId);
-                return;
-            }
-            
-            // 맨 앞으로 이동
-            const targetImage = imageGallery.splice(targetIndex, 1)[0];
-            imageGallery.unshift(targetImage);
-            
-            // 모든 이미지의 order와 is_main 재설정
-            imageGallery.forEach((img, index) => {
-                img.order = index;
-                img.is_main = (index === 0);
-                img.type = (index === 0) ? "main" : "other";
-            });
-            
-            console.log('대표 이미지 설정 완료:', imageGallery[0].id);
-            updatePreview();
-        },
-        
-        
-        // 유틸리티
+        removeFileById: (fileId) => removeImage(fileId),
         clear: () => {
-            imageGallery.forEach(imageData => {
-                if (imageData.url && imageData.url.startsWith('blob:')) {
-                    URL.revokeObjectURL(imageData.url);
+            selectedFiles.forEach(item => {
+                if (item.previewUrl && item.previewUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(item.previewUrl);
                 }
             });
-            imageGallery = [];
+            selectedFiles = [];
             if (sortableInstance) {
                 try {
                     sortableInstance.destroy();
@@ -786,19 +718,16 @@ function setupImageUploader() {
             }
             updatePreview();
         },
-        
         refresh: () => {
             updatePreview();
         },
-        
         syncFormFiles: () => {
-            console.log('🔄 JSON 기반 수동 파일 동기화 실행');
+            console.log('🔄 수동 파일 동기화 실행');
             updateFormFileInput();
             notifyMainApp();
         },
-        
         validateState: () => {
-            const selectedCount = imageGallery.length;
+            const selectedCount = selectedFiles.length;
             const formCount = fileInput.files.length;
             const isValid = selectedCount === 0 || formCount > 0;
             
@@ -811,11 +740,11 @@ function setupImageUploader() {
         }
     };
 
-    console.log('✅ JSON 기반 이미지 업로드 모듈 설정 완료');
+    console.log('✅ 이미지 업로드 모듈 설정 완료');
     return apiObject;
 }
 
-// 스타일 주입 (기존과 동일)
+// 스타일 주입
 const imageUploadCSS = `
   .sortable-ghost {
     opacity: 0.5;
@@ -834,11 +763,11 @@ const imageUploadCSS = `
   }
 `;
 
-if (!document.getElementById('ddoksang-json-image-upload-styles')) {
+if (!document.getElementById('ddoksang-image-upload-styles')) {
     const styleElement = document.createElement('style');
-    styleElement.id = 'ddoksang-json-image-upload-styles';
+    styleElement.id = 'ddoksang-image-upload-styles';
     styleElement.textContent = imageUploadCSS;
     document.head.appendChild(styleElement);
 }
 
-console.log('✅ JSON 기반 이미지 업로드 모듈 로드 완료');
+console.log('✅ 이미지 업로드 모듈 로드 완료');

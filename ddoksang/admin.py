@@ -2,53 +2,21 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import BdayCafe, BdayCafeImage, CafeFavorite, TourPlan, TourStop
+from .models import BdayCafe, CafeFavorite
 
-class BdayCafeImageInline(admin.TabularInline):
-    """생일카페 이미지 인라인"""
-    model = BdayCafeImage
-    extra = 1
-    fields = ['image_preview', 'image', 'image_type', 'caption', 'order', 'is_main']
-    readonly_fields = ['image_preview']
-    ordering = ['order']
-    
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;" />',
-                obj.image.url
-            )
-        return "이미지 없음"
-    image_preview.short_description = "미리보기"
 
-@admin.register(BdayCafeImage)
-class BdayCafeImageAdmin(admin.ModelAdmin):
-    list_display = ['cafe', 'image_type', 'is_main', 'order', 'image_preview', 'created_at']
-    list_filter = ['image_type', 'is_main', 'created_at']
-    search_fields = ['cafe__cafe_name', 'caption']
-    list_editable = ['order', 'is_main']
-    ordering = ['cafe', 'order']
-    
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;" />',
-                obj.image.url
-            )
-        return "없음"
-    image_preview.short_description = "미리보기"
 
 @admin.register(BdayCafe)
 class BdayCafeAdmin(admin.ModelAdmin):
     list_display = [
-        'cafe_name', 'artist', 'member', 'start_date', 'end_date', 
-        'status', 'is_featured', 'view_count', 'image_count', 'created_at'
+        'cafe_name', 'artist', 'member', 'status', 'image_count_display', 
+        'start_date', 'end_date', 'created_at'
     ]
-    list_filter = ['status', 'cafe_type', 'is_featured', 'start_date', 'created_at', 'artist']
-    search_fields = ['cafe_name', 'address', 'artist__display_name', 'member__member_name']
+    list_filter = ['status', 'cafe_type', 'artist', 'created_at']
+    search_fields = ['cafe_name', 'artist__display_name', 'member__member_name']
     readonly_fields = [
-        'created_at', 'updated_at', 'verified_at', 'verified_by', 
-        'view_count', 'get_main_image_preview', 'get_images_gallery'
+        'created_at', 'updated_at', 'view_count', 
+        'image_gallery_display', 'image_preview'
     ]
     
     fieldsets = (
@@ -56,80 +24,116 @@ class BdayCafeAdmin(admin.ModelAdmin):
             'fields': ('submitted_by', 'artist', 'member', 'cafe_type', 'status')
         }),
         ('카페 정보', {
-            'fields': ('cafe_name', 'place_name', 'address', 'road_address', 'detailed_address')
+            'fields': ('cafe_name', 'place_name', 'address', 'road_address', 
+                       'latitude', 'longitude')
         }),
-        ('위치 정보', {
-            'fields': ('latitude', 'longitude', 'kakao_place_id'),
-            'classes': ('collapse',)
-        }),
-        ('일정 정보', {
-            'fields': ('start_date', 'end_date', 'start_time', 'end_time')
+        ('운영 정보', {
+            'fields': ('start_date', 'end_date')
         }),
         ('상세 정보', {
-            'fields': ('event_description', 'special_benefits', 'hashtags')
+            'fields': ('special_benefits', 'event_description', 'x_source')
         }),
-        ('기존 이미지 (하위 호환)', {
-            'fields': ('main_image', 'poster_image', 'get_main_image_preview'),
+        ('이미지 갤러리', {
+            'fields': ('image_gallery', 'image_gallery_display', 'image_preview'),
+            'classes': ('wide',)
+        }),
+        ('시스템 정보', {
+            'fields': ('view_count', 'created_at', 'updated_at', 
+                      'verified_at', 'verified_by'),
             'classes': ('collapse',)
-        }),
-        ('다중 이미지', {
-            'fields': ('get_images_gallery',),
-            'description': '새로운 다중 이미지 시스템을 사용합니다. 아래 인라인에서 이미지를 관리하세요.'
-        }),
-        ('출처', {
-            'fields': ('x_source',)  # ← 튜플로 수정 (콤마 추가)
-        }),
-        ('관리 정보', {
-            'fields': ('is_featured', 'view_count', 'verified_by', 'verified_at', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
+        })
     )
     
-    inlines = [BdayCafeImageInline]
-    actions = ['approve_cafes', 'reject_cafes', 'mark_as_featured', 'unmark_as_featured']
     
-    def get_main_image_preview(self, obj):
-        main_image_url = obj.get_main_image()
-        if main_image_url:
+    def image_count_display(self, obj):
+        """이미지 개수 표시"""
+        count = obj.image_count
+        if count > 0:
             return format_html(
-                '<img src="{}" style="width: 200px; height: 200px; object-fit: cover; border-radius: 8px;" />',
-                main_image_url
+                '<span style="color: green; font-weight: bold;">{}장</span>',
+                count
             )
-        return "이미지 없음"
-    get_main_image_preview.short_description = "대표 이미지 미리보기"
+        else:
+            return format_html('<span style="color: red;">없음</span>')
     
-    def get_images_gallery(self, obj):
-        images = obj.images.all()
-        if not images:
-            return "업로드된 이미지가 없습니다."
+    image_count_display.short_description = '이미지'
+    
+    def image_gallery_display(self, obj):
+        """이미지 갤러리 JSON 정보 표시"""
+        if not obj.image_gallery:
+            return mark_safe('<em>이미지 없음</em>')
         
-        html = '<div style="display: flex; flex-wrap: wrap; gap: 10px;">'
-        for img in images:
+        html = '<div style="max-width: 600px;">'
+        html += f'<strong>총 {len(obj.image_gallery)}장의 이미지</strong><br><br>'
+        
+        for i, img_data in enumerate(obj.image_gallery):
             html += f'''
-                <div style="text-align: center;">
-                    <img src="{img.image.url}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px;" />
-                    <br>
-                    <small>{img.get_image_type_display()}</small>
-                    {' <strong>(메인)</strong>' if img.is_main else ''}
-                </div>
+            <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                <strong>이미지 {i + 1}:</strong><br>
+                <strong>타입:</strong> {img_data.get('type', 'N/A')}<br>
+                <strong>대표:</strong> {'예' if img_data.get('is_main', False) else '아니오'}<br>
+                <strong>순서:</strong> {img_data.get('order', 'N/A')}<br>
+                <strong>크기:</strong> {img_data.get('width', 'N/A')} x {img_data.get('height', 'N/A')}<br>
+                <strong>파일 크기:</strong> {self._format_file_size(img_data.get('file_size', 0))}<br>
+                <strong>URL:</strong> <a href="{img_data.get('url', '#')}" target="_blank">링크</a>
+            </div>
             '''
+        
         html += '</div>'
         return mark_safe(html)
-    get_images_gallery.short_description = "이미지 갤러리"
     
-    def image_count(self, obj):
-        count = obj.images.count()
-        legacy_count = 0
-        if obj.main_image:
-            legacy_count += 1
-        if obj.poster_image:
-            legacy_count += 1
+    image_gallery_display.short_description = '이미지 갤러리 정보'
+    
+    def image_preview(self, obj):
+        """이미지 미리보기"""
+        if not obj.image_gallery:
+            return mark_safe('<em>이미지 없음</em>')
         
-        if legacy_count > 0:
-            return f"{count}개 (+구버전 {legacy_count}개)"
-        return f"{count}개"
-    image_count.short_description = "이미지 수"
+        html = '<div style="display: flex; flex-wrap: wrap; gap: 10px; max-width: 800px;">'
+        
+        for i, img_data in enumerate(obj.image_gallery):
+            url = img_data.get('url', '')
+            is_main = img_data.get('is_main', False)
+            img_type = img_data.get('type', 'other')
+            
+            if url:
+                badge_style = 'background: red; color: white;' if is_main else 'background: blue; color: white;'
+                badge_text = '대표' if is_main else img_type
+                
+                html += f'''
+                <div style="position: relative; display: inline-block;">
+                    <img src="{url}" 
+                         style="width: 120px; height: 160px; object-fit: cover; border: 2px solid #ddd; border-radius: 5px;">
+                    <div style="position: absolute; top: 5px; left: 5px; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; {badge_style}">
+                        {badge_text}
+                    </div>
+                    <div style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 4px; border-radius: 3px; font-size: 10px;">
+                        {i + 1}
+                    </div>
+                </div>
+                '''
+        
+        html += '</div>'
+        return mark_safe(html)
     
+    image_preview.short_description = '이미지 미리보기'
+    
+    def _format_file_size(self, size_bytes):
+        """파일 크기 포맷팅"""
+        if not size_bytes:
+            return 'N/A'
+        
+        if size_bytes < 1024:
+            return f'{size_bytes} B'
+        elif size_bytes < 1024 * 1024:
+            return f'{size_bytes / 1024:.1f} KB'
+        else:
+            return f'{size_bytes / (1024 * 1024):.1f} MB'
+    
+    def get_queryset(self, request):
+        """쿼리셋 최적화"""
+        return super().get_queryset(request).select_related('artist', 'member', 'submitted_by')
+
     @admin.action(description="선택한 생일카페를 승인합니다")
     def approve_cafes(self, request, queryset):
         from django.utils import timezone
@@ -150,52 +154,18 @@ class BdayCafeAdmin(admin.ModelAdmin):
         )
         self.message_user(request, f'{updated}개의 생일카페가 거절되었습니다.')
     
-    @admin.action(description="추천 생카로 설정")
-    def mark_as_featured(self, request, queryset):
-        updated = queryset.update(is_featured=True)
-        self.message_user(request, f'{updated}개의 생일카페가 추천으로 설정되었습니다.')
-    
-    @admin.action(description="추천 생카 해제")
-    def unmark_as_featured(self, request, queryset):
-        updated = queryset.update(is_featured=False)
-        self.message_user(request, f'{updated}개의 생일카페 추천이 해제되었습니다.')
 
 @admin.register(CafeFavorite)
 class CafeFavoriteAdmin(admin.ModelAdmin):
     list_display = ['user', 'cafe', 'created_at']
-    list_filter = ['created_at']
+    list_filter = ['created_at', 'cafe__artist']
     search_fields = ['user__username', 'cafe__cafe_name']
-    raw_id_fields = ['user', 'cafe']
+    readonly_fields = ['created_at']
 
-@admin.register(TourPlan)
-class TourPlanAdmin(admin.ModelAdmin):
-    # 실제 모델 필드와 일치하도록 수정
-    list_display = ['user', 'title', 'is_public', 'created_at', 'cafe_count']
-    list_filter = ['is_public', 'created_at']
-    search_fields = ['user__username', 'title']
-    raw_id_fields = ['user']
-    
-    def cafe_count(self, obj):
-        return obj.stops.count()
-    cafe_count.short_description = "카페 수"
-
-class TourStopInline(admin.TabularInline):
-    model = TourStop
-    extra = 0
-    fields = ['cafe', 'order', 'stay_duration', 'notes']
-    raw_id_fields = ['cafe']
-
-@admin.register(TourStop)
-class TourStopAdmin(admin.ModelAdmin):
-    # 실제 모델 필드와 일치하도록 수정
-    list_display = ['plan', 'cafe', 'order', 'stay_duration']
-    list_filter = ['plan__created_at']
-    search_fields = ['plan__title', 'cafe__cafe_name']
-    raw_id_fields = ['plan', 'cafe']
 
 
 
 # Admin 사이트 커스터마이징
 admin.site.site_header = "최고 경영자 및 관리자"
-admin.site.site_title = "덕생 Admin"
-admin.site.index_title = "생일카페 관리 시스템"
+admin.site.site_title = "덕생 관리자"
+admin.site.index_title = "생카 관리 시스템"

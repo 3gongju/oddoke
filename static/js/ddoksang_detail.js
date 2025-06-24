@@ -111,10 +111,6 @@
             modalTitle.textContent = image.type;
         }
         
-        if (modalCaption) {
-            modalCaption.textContent = image.caption || '';
-            modalCaption.style.display = image.caption ? 'block' : 'none';
-        }
         
         if (modalCounter) {
             modalCounter.textContent = currentModalIndex + 1;

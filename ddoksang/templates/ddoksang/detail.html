@@ -142,7 +142,6 @@
 <script id="share-data" type="application/json">
 {
   "title": "{{ cafe.cafe_name|escapejs }}",
-  "description": "{{ cafe.artist.display_name|escapejs }}{% if cafe.member %} - {{ cafe.member.member_name|escapejs }}{% endif %}의 생일카페",
   "imageUrl": "{% with first_image=cafe.images.first %}{% if first_image %}{{ request.scheme }}://{{ request.get_host }}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=🎂+생일카페{% endif %}{% endwith %}",
   "linkUrl": "{{ request.scheme }}://{{ request.get_host }}{{ request.get_full_path }}",
   "address": "{{ cafe.address|escapejs }}",

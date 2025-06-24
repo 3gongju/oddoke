@@ -1,4 +1,5 @@
 <!-- 디테일 페이지 이미지 헤더 컴포넌트 -->
+{% load static %}
 
 <style>
 .text-info-bar {
@@ -48,7 +49,8 @@
             <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}"
                  onclick="window.openImageModal({{ forloop.counter0 }})">
               <div class="flex items-center justify-center w-full h-full bg-white rounded-lg">
-                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}"
+                <img src="{{ image.url }}" 
+                     alt="{{ cafe.cafe_name }} 이미지"
                      class="object-contain max-h-[330px] w-auto h-auto cursor-zoom-in rounded-lg shadow-lg">
               </div>
             </div>
@@ -57,13 +59,13 @@
           {% if all_images|length > 1 %}
             <!-- 좌우 화살표 -->
             <button type="button" onclick="window.prevGalleryImage()"
-                    class="gallery-nav-btn absolute left-2 top-1/2 transform -translate-y-1/2 bg-opacity-70 p-1.5 rounded-full hover:bg-black/50 transition-colors z-20">
+                    class="gallery-nav-btn absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-70 text-white p-1.5 rounded-full hover:bg-opacity-50 transition-colors z-20">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
             </button>
             <button type="button" onclick="window.nextGalleryImage()"
-                    class="gallery-nav-btn absolute right-2 top-1/2 transform -translate-y-1/2 bg-opacity-70 text-gray-800 p-1.5 rounded-full hover:bg-black/50 transition-colors z-20">
+                    class="gallery-nav-btn absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-70 text-white p-1.5 rounded-full hover:bg-opacity-50 transition-colors z-20">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
@@ -71,8 +73,10 @@
           {% endif %}
         </div>
       {% else %}
-        <div class="w-full h-[350px] bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center rounded-lg">
-          <span class="text-white text-4xl">🏪</span>
+        <div class="w-full h-[350px] bg-white flex items-center justify-center rounded-lg border border-gray-200">
+          <img src="{% static 'image/ddoks_closed_eyes.png' %}" 
+               alt="이미지 없음" 
+               class="max-h-[200px] w-auto opacity-60">
         </div>
       {% endif %}
     {% endwith %}
@@ -82,7 +86,7 @@
   <div class="text-info-bar -mt-4 py-6 px-8">
     <div class="max-w-4xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <!-- 왼쪽: 상태 및 타입 배지 -->
+        <!-- 왼쪽: 상태 배지만 -->
         <div class="flex items-center gap-3">
           <span class="px-4 py-2 rounded-full text-sm font-bold text-white shadow-md
                      {% if cafe.is_active %}bg-emerald-500{% elif cafe.days_until_start > 0 %}bg-blue-500{% else %}bg-gray-500{% endif %}">
@@ -93,9 +97,6 @@
             {% else %}
               종료
             {% endif %}
-          </span>
-          <span class="px-4 py-2 bg-black rounded-full text-sm font-bold text-white shadow-md">
-            {{ cafe.get_cafe_type_display }}
           </span>
         </div>
         

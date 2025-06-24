@@ -12,7 +12,7 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import now
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -35,7 +35,6 @@ from django.contrib.auth.views import (
 )
 from django.urls import reverse_lazy
 from django.contrib import messages
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
@@ -46,28 +45,31 @@ User = get_user_model()
 
 load_dotenv()
 
-# 비번 찾기
+# 비밀번호 재설정 뷰들
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'accounts/password_reset.html'
     form_class = CustomPasswordResetForm
     success_url = reverse_lazy('accounts:password_reset_done')
-    email_template_name = 'emails/password_reset_email.html'
+    email_template_name = 'emails/password_reset_email.html'  # 다시 HTML로
     subject_template_name = 'emails/password_reset_subject.txt'
     
     def form_valid(self, form):
         email = form.cleaned_data['email']
+        print(f"비밀번호 재설정 요청 이메일: {email}")
         
         # 해당 이메일로 사용자가 존재하는지 확인
         try:
             user = User.objects.get(email=email, is_active=True)
+            print(f"사용자 찾음: {user.username}")
             response = super().form_valid(form)
+            print("이메일 전송 완료")
             messages.success(
                 self.request, 
                 '비밀번호 재설정 이메일이 전송되었습니다. 이메일을 확인해주세요.'
             )
             return response
         except User.DoesNotExist:
-            # 보안상 이유로 사용자가 존재하지 않아도 성공 메시지 표시
+            print("사용자 없음, 하지만 성공 메시지 표시")
             messages.success(
                 self.request, 
                 '해당 이메일로 계정이 존재한다면 비밀번호 재설정 이메일이 전송되었습니다.'
@@ -81,6 +83,17 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
     template_name = 'accounts/password_reset_confirm.html'
     form_class = CustomSetPasswordForm
     success_url = reverse_lazy('accounts:password_reset_complete')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 사용자 정보를 컨텍스트에 추가
+        try:
+            uid = urlsafe_base64_decode(self.kwargs['uidb64']).decode()
+            user = User.objects.get(pk=uid)
+            context['user'] = user
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            context['user'] = None
+        return context
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -107,14 +120,14 @@ def signup(request):
             if user.profile_image:
                 preview_image_url = user.profile_image.url
 
-            # ✅ 이메일 인증 토큰 생성
+            # 이메일 인증 토큰 생성
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             activation_link = request.build_absolute_uri(
                 f'/accounts/activate/{uid}/{token}/'
             )
 
-            # ✅ HTML 이메일 내용 렌더링
+            # HTML 이메일 내용 렌더링
             subject = '어덕해 회원가입 이메일 인증'
             from_email = os.getenv('EMAIL_HOST_USER')
             to = user.email
@@ -133,12 +146,12 @@ def signup(request):
             msg.attach_alternative(html_content, "text/html")
             msg.send()
 
-            # 🔥 특별한 태그를 가진 메시지로 변경
+            # 특별한 태그를 가진 메시지로 변경
             messages.add_message(
                 request, 
                 messages.SUCCESS, 
                 '인증 이메일이 전송되었습니다!\n이메일을 확인해주세요.',
-                extra_tags='modal_required'  # 🔥 특별 태그 추가
+                extra_tags='modal_required'  # 특별 태그 추가
             )
             return redirect('accounts:login')
     else:
@@ -161,17 +174,17 @@ def activate(request, uidb64, token):
     if user and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-        # 🔥 모달용 태그 추가
+        # 모달용 태그 추가
         messages.add_message(
             request,
             messages.SUCCESS,
-            '🎉 이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.',
-            extra_tags='modal_required'  # 🔥 특별 태그 추가
+            '이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.',
+            extra_tags='modal_required'  # 특별 태그 추가
         )
         return redirect('accounts:login')
     else:
-        # 🔥 일반 에러 메시지 (모달 없음) - 기존 방식 유지
-        messages.error(request, '⚠️ 인증 링크가 유효하지 않거나 만료되었습니다.')
+        # 일반 에러 메시지 (모달 없음) - 기존 방식 유지
+        messages.error(request, '인증 링크가 유효하지 않거나 만료되었습니다.')
         return redirect('accounts:login')
 
 def login(request):
@@ -180,7 +193,7 @@ def login(request):
         if form.is_valid():
             user = form.get_user()
 
-            # ✅ 이메일 인증 여부 체크
+            # 이메일 인증 여부 체크
             if not user.is_active:
                 messages.warning(request, "이메일 인증이 필요합니다.\n이메일을 확인해주세요!")
                 # 로그인 실패 처리 (폼에 오류 추가 가능)
@@ -188,7 +201,7 @@ def login(request):
 
             auth_login(request, user)
 
-            # 🔥 첫 로그인 감지: last_login이 None이거나 방금 전 설정된 경우
+            # 첫 로그인 감지: last_login이 None이거나 방금 전 설정된 경우
             from django.utils import timezone
             now = timezone.now()
             is_first_login = (
@@ -223,7 +236,7 @@ def profile(request, username):
     user_profile = User.objects.get(username=username)
     fandom_profile = user_profile.get_fandom_profile() # 팬덤 프로필 추가
 
-    # ✅ 덕담 게시글 모두 가져오기
+    # 덕담 게시글 모두 가져오기
     community_posts = DamCommunityPost.objects.filter(user=user_profile)
     manner_posts = DamMannerPost.objects.filter(user=user_profile)
     bdaycafe_posts = DamBdaycafePost.objects.filter(user=user_profile)
@@ -232,7 +245,7 @@ def profile(request, username):
         key=lambda post: post.created_at,
         reverse=True
     )
-    # ✅ 덕팜 게시글 모두 가져오기 
+    # 덕팜 게시글 모두 가져오기 
     sell_posts = FarmSellPost.objects.filter(user=user_profile)
     rental_posts = FarmRentalPost.objects.filter(user=user_profile)
     split_posts = FarmSplitPost.objects.filter(user=user_profile)
@@ -241,10 +254,10 @@ def profile(request, username):
         key=lambda post: post.created_at,
         reverse=True
     )
-    # ✅ 찜한 아티스트 가져오기
+    # 찜한 아티스트 가져오기
     favorite_artists = Artist.objects.filter(followers=user_profile)
 
-    # ✅ 팔로우 여부 판단
+    # 팔로우 여부 판단
     is_following = False
     if request.user.is_authenticated and request.user != user_profile:
         is_following = user_profile.followers.filter(id=request.user.id).exists()
@@ -321,7 +334,7 @@ def review_home(request, username):
 
     reviews = MannerReview.objects.filter(target_user=user_profile).order_by('-created_at')
 
-    # ✅ 상세 항목별 카운터 수집
+    # 상세 항목별 카운터 수집
     rating_counter = Counter()
     description_counter = Counter()
     response_counter = Counter()
@@ -335,7 +348,7 @@ def review_home(request, username):
         politeness_counter[r.politeness] += 1            
         deal_again_counter[r.deal_again] += 1 
 
-    # ✅ 최대값 계산 (막대 너비 비율용)
+    # 최대값 계산 (막대 너비 비율용)
     max_counts = {
         'rating': max(rating_counter.values(), default=1),
         'description': max(description_counter.values(), default=1),
@@ -344,7 +357,7 @@ def review_home(request, username):
         'deal_again': max(deal_again_counter.values(), default=1),
     }
 
-    # ✅ JavaScript에서 사용할 수 있도록 JSON 변환
+    # JavaScript에서 사용할 수 있도록 JSON 변환
     context = {
         'user_profile': user_profile,
         'form': form,
@@ -363,7 +376,7 @@ def review_home(request, username):
 def mypage(request): 
     user_profile = request.user
     
-    # 🔥 새로운 방식: 각 프로필 가져오기
+    # 새로운 방식: 각 프로필 가져오기
     fandom_profile = user_profile.get_fandom_profile()
     bank_profile = user_profile.get_bank_profile()
     address_profile = user_profile.get_address_profile()
@@ -372,7 +385,7 @@ def mypage(request):
     favorite_members = Member.objects.filter(followers=user_profile)
     followed_artist_ids = list(favorite_artists.values_list('id', flat=True))
 
-    # ✅ 내가 쓴 글 (Farm)
+    # 내가 쓴 글 (Farm)
     farm_posts = sorted(
         chain(
             FarmSellPost.objects.filter(user=user_profile),
@@ -383,7 +396,7 @@ def mypage(request):
         reverse=True
     )
 
-    # ✅ 내가 쓴 글 (Dam)
+    # 내가 쓴 글 (Dam)
     dam_posts = sorted(
         chain(
             DamCommunityPost.objects.filter(user=user_profile),
@@ -394,7 +407,7 @@ def mypage(request):
         reverse=True
     )
 
-    # ✅ 내가 찜한 글 (Farm)
+    # 내가 찜한 글 (Farm)
     liked_farm_posts = sorted(
         chain(
             FarmSellPost.objects.filter(like=user_profile),
@@ -405,7 +418,7 @@ def mypage(request):
         reverse=True
     )
 
-    # ✅ 내가 찜한 글 (Dam)
+    # 내가 찜한 글 (Dam)
     liked_dam_posts = sorted(
         chain(
             DamCommunityPost.objects.filter(like=user_profile),
@@ -416,7 +429,7 @@ def mypage(request):
         reverse=True
     )
 
-    # ✅ 내가 쓴 댓글 (Farm, 상위 댓글만)
+    # 내가 쓴 댓글 (Farm, 상위 댓글만)
     farm_comments = FarmComment.objects.filter(user=user_profile, parent__isnull=True)
     dam_comments = DamComment.objects.filter(user=user_profile, parent__isnull=True)
 
@@ -459,7 +472,7 @@ def mypage(request):
         'rejected': my_cafes.filter(status='rejected').count(),
     }
     
-    # ✅ 멤버-아티스트 매핑
+    # 멤버-아티스트 매핑
     for member in favorite_members:
         matched = next(
             (artist for artist in member.artist_name.all() if artist.id in followed_artist_ids),
@@ -527,7 +540,7 @@ def edit_profile_info(request, username):
         new_bio = request.POST.get("bio")
         new_first_name = request.POST.get("first_name")  # 닉네임 추가
 
-        # 🔥 닉네임 수정 (first_name 필드에 저장)
+        # 닉네임 수정 (first_name 필드에 저장)
         if new_first_name and new_first_name != request.user.first_name:
             # 기본 유효성 검사
             new_first_name = new_first_name.strip()
@@ -540,13 +553,13 @@ def edit_profile_info(request, username):
                 messages.error(request, "닉네임은 최대 20자까지 입력 가능합니다.")
                 return redirect('accounts:edit_profile_info', username=request.user.username)
             
-            # 🔥 소셜 로그인 사용자는 first_name을 닉네임으로 사용
+            # 소셜 로그인 사용자는 first_name을 닉네임으로 사용
             request.user.first_name = new_first_name
             request.user.save()
             messages.success(request, "닉네임이 수정되었습니다.")
             return redirect('accounts:edit_profile_info', username=request.user.username)
 
-        # 🔥 일반 사용자용 username 변경 (소셜 로그인 사용자에게는 권장하지 않음)
+        # 일반 사용자용 username 변경 (소셜 로그인 사용자에게는 권장하지 않음)
         if new_username and new_username != request.user.username:
             # 소셜 로그인 사용자는 username 변경 제한
             if request.user.social_signup_completed or request.user.is_temp_username:
@@ -573,7 +586,7 @@ def edit_profile_info(request, username):
     context = {
         'user_profile': user_profile,
         'fandom_profile': fandom_profile,
-        'artist_list': Artist.objects.all(),  # 🔹 아티스트 목록 전달
+        'artist_list': Artist.objects.all(),  # 아티스트 목록 전달
     }
     return render(request, 'accounts/edit_profile_info.html', context)
 
@@ -604,7 +617,7 @@ def upload_fandom_card(request, username):
     if request.method == 'POST':
         image = request.FILES.get('fandom_card')
         artist_id = request.POST.get('artist_id')
-        # 🔥 인증 기간 필드 추가
+        # 인증 기간 필드 추가
         verification_start_date = request.POST.get('verification_start_date')
         verification_end_date = request.POST.get('verification_end_date')
 
@@ -633,34 +646,20 @@ def upload_fandom_card(request, username):
             except (AttributeError, KeyError, TypeError):
                 pass
             
-            # 🔥 이미지 비율 계산 (누락된 부분 추가)
+            # 이미지 비율 계산 (누락된 부분 추가)
             width, height = img.size
             uploaded_ratio = width / height if height > 0 else 0
-            
-            # ✅ 비율 체크
-            # expected_ratio = 1278 / 590  # 약 2.17
-            # tolerance = 0.2
-            # lower_bound = expected_ratio * (1 - tolerance)
-            # upper_bound = expected_ratio * (1 + tolerance)
-
-            # if not (lower_bound <= uploaded_ratio <= upper_bound):
-            #     messages.error(
-            #         request,
-            #         f'⚠️ 이미지 비율이 예시와 다릅니다. 세로 기준 약 2.17:1 (±20%) 이내로 맞춰주세요. '
-            #         f'→ 현재: {uploaded_ratio:.3f}:1'
-            #     )
-            #     return redirect('accounts:edit_profile', username=username)
 
         except Exception as e:
             messages.error(request, f'이미지를 처리할 수 없습니다: {str(e)}')
             return redirect('accounts:settings_main', username=username)
 
-        # 🔥 FandomProfile에 저장 (인증 기간 포함)
+        # FandomProfile에 저장 (인증 기간 포함)
         fandom_profile = user.get_or_create_fandom_profile()
         fandom_profile.fandom_card = image
         fandom_profile.fandom_artist = get_object_or_404(Artist, id=artist_id)
         
-        # 🔥 인증 기간 설정
+        # 인증 기간 설정
         from datetime import datetime
         if verification_start_date:
             fandom_profile.verification_start_date = datetime.strptime(verification_start_date, '%Y-%m-%d').date()
@@ -673,7 +672,7 @@ def upload_fandom_card(request, username):
         fandom_profile.applied_at = now()
         fandom_profile.save()
 
-        messages.success(request, '🎫 공식 팬덤 인증 확인 중입니다. (3일 소요)')
+        messages.success(request, '공식 팬덤 인증 확인 중입니다. (3일 소요)')
         return redirect('accounts:settings_main', username=username)
 
 # 기존 계좌 인증 함수들을 간소화된 버전으로 교체
@@ -694,23 +693,23 @@ def account_registration(request, username):
         return redirect('accounts:account_settings', username=username)  
     
     if request.method == 'POST':
-        print("🔍 POST 요청 받음")
+        print("POST 요청 받음")
         form = BankAccountForm(request.POST)
-        print(f"🔍 폼 데이터: {request.POST}")
+        print(f"폼 데이터: {request.POST}")
         
         if form.is_valid():
-            print("🔍 폼 유효성 검사 통과")
-            print(f"🔍 cleaned_data: {form.cleaned_data}")
+            print("폼 유효성 검사 통과")
+            print(f"cleaned_data: {form.cleaned_data}")
             try:
                 bank_profile = form.save(user_profile)
-                print(f"🔍 저장 성공: {bank_profile}")
-                messages.success(request, '✅ 계좌 정보가 등록되었습니다!')
+                print(f"저장 성공: {bank_profile}")
+                messages.success(request, '계좌 정보가 등록되었습니다!')
                 return redirect('accounts:account_settings', username=username)  
             except Exception as e:
-                print(f"🔍 저장 실패: {str(e)}")
+                print(f"저장 실패: {str(e)}")
                 messages.error(request, f'계좌 등록 중 오류가 발생했습니다: {str(e)}')
         else:
-            print(f"🔍 폼 에러: {form.errors}")
+            print(f"폼 에러: {form.errors}")
     else:
         form = BankAccountForm()
     
@@ -746,7 +745,7 @@ def account_modify(request, username):
                 bank_profile.account_holder = form.cleaned_data['account_holder']
                 bank_profile.save()
                 
-                messages.success(request, '✅ 계좌정보가 수정되었습니다!')
+                messages.success(request, '계좌정보가 수정되었습니다!')
                 return redirect('accounts:account_settings', username=username)  
             except Exception as e:
                 messages.error(request, f'계좌 수정 중 오류가 발생했습니다: {str(e)}')
@@ -784,7 +783,7 @@ def account_delete(request, username):
     
     if request.method == 'POST':
         bank_profile.delete()
-        messages.success(request, '💳 계좌정보가 삭제되었습니다.')
+        messages.success(request, '계좌정보가 삭제되었습니다.')
         return redirect('accounts:account_settings', username=username)  
     
     context = {
@@ -815,7 +814,7 @@ def address_registration(request, username):
         if form.is_valid():
             try:
                 address_profile = form.save(user_profile)
-                messages.success(request, '✅ 배송정보가 등록되었습니다!')
+                messages.success(request, '배송정보가 등록되었습니다!')
                 return redirect('accounts:address_settings', username=username) 
             except Exception as e:
                 messages.error(request, f'배송정보 등록 중 오류가 발생했습니다: {str(e)}')
@@ -856,7 +855,7 @@ def address_modify(request, username):
                 address_profile.sigungu = form.cleaned_data['sigungu']
                 address_profile.save()
                 
-                messages.success(request, '✅ 배송정보가 수정되었습니다!')
+                messages.success(request, '배송정보가 수정되었습니다!')
                 return redirect('accounts:address_settings', username=username)  
             except Exception as e:
                 messages.error(request, f'배송정보 수정 중 오류가 발생했습니다: {str(e)}')
@@ -866,7 +865,7 @@ def address_modify(request, username):
             'postal_code': address_profile.postal_code,
             'road_address': address_profile.road_address,
             'detail_address': address_profile.detail_address,
-            'phone_number': address_profile.phone_number,  # 🔥 핸드폰 번호 추가
+            'phone_number': address_profile.phone_number,  # 핸드폰 번호 추가
             'sido': address_profile.sido,
             'sigungu': address_profile.sigungu,
         }
@@ -897,7 +896,7 @@ def address_delete(request, username):
     
     if request.method == 'POST':
         address_profile.delete()
-        messages.success(request, '🏠 배송정보가 삭제되었습니다.')  # 🔥 메시지 변경
+        messages.success(request, '배송정보가 삭제되었습니다.')
         return redirect('accounts:address_settings', username=username) 
     
     context = {
@@ -910,77 +909,41 @@ def address_delete(request, username):
 def social_signup_complete(request):
     """소셜 로그인 후 추가 정보 입력 페이지 (필수)"""
     
-    print(f"🔍 social_signup_complete 진입: {request.user.username}")
+    print(f"social_signup_complete 진입: {request.user.username}")
     
     # 이미 프로필을 완성한 사용자는 메인 페이지로 리다이렉트
     if request.user.social_signup_completed:
-        print("✅ 이미 프로필 완성됨 → 메인으로")
+        print("이미 프로필 완성됨 → 메인으로")
         return redirect('/')
     
     if request.method == 'POST':
-        print("📝 POST 처리 시작")
+        print("POST 처리 시작")
         form = SocialSignupCompleteForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
-            print("✅ 폼 유효성 검사 통과")
+            print("폼 유효성 검사 통과")
             try:
                 user = form.save()
-                print(f"✅ 저장 완료: {user.username}")
-                messages.success(request, f'🎉 환영합니다, {user.username}님!')
+                print(f"저장 완료: {user.username}")
+                messages.success(request, f'환영합니다, {user.username}님!')
                 
-                # 🔥 임시로 메인 페이지로 리다이렉트 (테스트용)
-                print("🔍 메인 페이지로 리다이렉트")
+                # 임시로 메인 페이지로 리다이렉트 (테스트용)
+                print("메인 페이지로 리다이렉트")
                 return redirect('/')
                 
             except Exception as e:
-                print(f"❌ 저장 오류: {e}")
+                print(f"저장 오류: {e}")
                 import traceback
                 traceback.print_exc()
                 messages.error(request, f'저장 중 오류: {str(e)}')
         else:
-            print(f"❌ 폼 에러: {form.errors}")
+            print(f"폼 에러: {form.errors}")
             messages.error(request, '입력 정보를 확인해주세요.')
     else:
         form = SocialSignupCompleteForm(instance=request.user)
     
     return render(request, 'accounts/social_signup_complete.html', {'form': form})
 
-# @login_required
-# def social_complete_skip(request):
-#     """소셜 가입 프로필 설정 건너뛰기"""
-#     if request.method == 'POST':
-#         user = request.user
-        
-#         # 🔥 기본 username 설정 (임시에서 실제로 변경)
-#         if user.is_temp_username:
-#             # 고유한 기본 username 생성
-#             base_username = None
-#             if user.username.startswith('temp_kakao_'):
-#                 base_username = '카카오사용자'
-#             elif user.username.startswith('temp_naver_'):
-#                 base_username = '네이버사용자'
-#             else:
-#                 base_username = '새로운사용자'
-            
-#             # 중복되지 않는 username 생성
-#             final_username = base_username
-#             counter = 1
-#             while User.objects.filter(username=final_username).exclude(id=user.id).exists():
-#                 final_username = f'{base_username}{counter}'
-#                 counter += 1
-            
-#             user.username = final_username
-#             user.is_temp_username = False
-        
-#         user.social_signup_completed = True
-#         user.save()
-        
-#         return JsonResponse({'success': True})
-    
-#     return JsonResponse({'success': False})
-
-# ======================
 # 카카오 로그인
-# ======================
 def kakao_login(request):
     """카카오 로그인 페이지로 리다이렉트"""
     service = KakaoAuthService()
@@ -993,63 +956,63 @@ def kakao_callback(request):
     
     code = request.GET.get('code')
     if not code:
-        print("❌ 카카오 코드 없음")
+        print("카카오 코드 없음")
         messages.error(request, '카카오 로그인에 실패했습니다.')
         return redirect('accounts:login')
     
-    print(f"✅ 카카오 코드 받음: {code[:10]}...")
+    print(f"카카오 코드 받음: {code[:10]}...")
     
     service = KakaoAuthService()
     
     try:
-        print("🔍 카카오 콜백 처리 시작...")
+        print("카카오 콜백 처리 시작...")
         user = service.handle_callback(code)
-        print(f"🔍 반환된 사용자: {user.username}")
-        print(f"🔍 사용자 이메일: {user.email}")
-        print(f"🔍 임시 사용자명 여부: {user.is_temp_username}")
-        print(f"🔍 소셜 가입 완료 여부: {user.social_signup_completed}")
+        print(f"반환된 사용자: {user.username}")
+        print(f"사용자 이메일: {user.email}")
+        print(f"임시 사용자명 여부: {user.is_temp_username}")
+        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
         
         # 이메일 기반 인증 (패스워드 없이)
         from django.contrib.auth import authenticate
-        print("🔍 이메일 기반 인증 시도...")
+        print("이메일 기반 인증 시도...")
         authenticated_user = authenticate(
             request, 
             email=user.email, 
             password=None
         )
-        print(f"🔍 인증 결과: {authenticated_user}")
+        print(f"인증 결과: {authenticated_user}")
         
         if authenticated_user:
-            print("✅ 인증 성공, 로그인 처리...")
+            print("인증 성공, 로그인 처리...")
             auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
-            print(f"🔍 로그인 성공: {request.user.is_authenticated}")
+            print(f"로그인 성공: {request.user.is_authenticated}")
             
-            # 🔥 프로필 완성 여부에 따라 분기 처리
+            # 프로필 완성 여부에 따라 분기 처리
             if not authenticated_user.social_signup_completed:
-                print("🔍 신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
+                print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
                 return redirect('accounts:social_signup_complete')
             else:
-                print(f"🔍 기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
-                messages.success(request, f'환영합니다, {authenticated_user.display_name}님! 🎉')
+                print(f"기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
+                messages.success(request, f'환영합니다, {authenticated_user.display_name}님!')
                 
             next_url = request.GET.get('next') or '/'
-            print(f"🔍 리다이렉트 URL: {next_url}")
+            print(f"리다이렉트 URL: {next_url}")
             return redirect(next_url)
         else:
-            print("❌ 인증 실패!")
+            print("인증 실패!")
             messages.error(request, '카카오 로그인 인증에 실패했습니다.')
             return redirect('accounts:login')
         
     except Exception as e:
-        print(f"❌ 전체 에러: {str(e)}")
+        print(f"전체 에러: {str(e)}")
         import traceback
         traceback.print_exc()
         
-        # 🔥 이메일 중복 에러 처리
+        # 이메일 중복 에러 처리
         if '이미' in str(e) and '가입된 계정' in str(e):
             messages.error(request, str(e))
         else:
-            messages.error(request, f'카카오 로그인 처리 중 오류가 발생했습니다: {str(e)}')  # 🔥 구체적인 에러 메시지 표시
+            messages.error(request, f'카카오 로그인 처리 중 오류가 발생했습니다: {str(e)}')
         return redirect('accounts:login')
 
 def kakao_logout(request):
@@ -1063,9 +1026,7 @@ def kakao_logout(request):
     logout_url = service.get_logout_url()
     return redirect(logout_url)
 
-# ======================
 # 네이버 로그인
-# ======================
 def naver_login(request):
     """네이버 로그인 페이지로 리다이렉트"""
     service = NaverAuthService()
@@ -1101,10 +1062,10 @@ def naver_callback(request):
     
     try:
         user = service.handle_callback(code, state)
-        print(f"🔍 반환된 사용자: {user.username}")
-        print(f"🔍 사용자 이메일: {user.email}")
-        print(f"🔍 임시 사용자명 여부: {user.is_temp_username}")
-        print(f"🔍 소셜 가입 완료 여부: {user.social_signup_completed}")
+        print(f"반환된 사용자: {user.username}")
+        print(f"사용자 이메일: {user.email}")
+        print(f"임시 사용자명 여부: {user.is_temp_username}")
+        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
         
         # 이메일 기반 인증 (패스워드 없이)
         from django.contrib.auth import authenticate
@@ -1121,13 +1082,13 @@ def naver_callback(request):
             if 'naver_state' in request.session:
                 del request.session['naver_state']
             
-            # 🔥 프로필 완성 여부에 따라 분기 처리
+            # 프로필 완성 여부에 따라 분기 처리
             if not authenticated_user.social_signup_completed:
-                print("🔍 신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
+                print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
                 return redirect('accounts:social_signup_complete')
             else:
-                print(f"🔍 기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
-                messages.success(request, f'환영합니다, {authenticated_user.display_name}님! 🎉')
+                print(f"기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
+                messages.success(request, f'환영합니다, {authenticated_user.display_name}님!')
             
             # 기존 사용자면 next 파라미터 확인 후 리다이렉트
             next_url = request.GET.get('next') or '/'
@@ -1137,9 +1098,9 @@ def naver_callback(request):
             return redirect('accounts:login')
         
     except Exception as e:
-        print(f"❌ 전체 에러: {str(e)}")
+        print(f"전체 에러: {str(e)}")
         
-        # 🔥 이메일 중복 에러 처리
+        # 이메일 중복 에러 처리
         if '이미' in str(e) and '가입된 계정' in str(e):
             messages.error(request, str(e))
         else:
@@ -1152,9 +1113,7 @@ def naver_logout(request):
     request.session.flush()
     return redirect('/')
 
-# ======================
 # 스마트 로그아웃 (기존 함수 개선)
-# ======================
 def smart_logout(request):
     """사용자 타입에 따라 적절한 로그아웃 방식 선택"""
     if not request.user.is_authenticated:

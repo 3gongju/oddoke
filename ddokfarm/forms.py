@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import modelformset_factory, HiddenInput
-from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice, ItemPrice, SHIPPING_METHOD_CHOICES
+from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice, ItemPrice, ExchangeItem, SHIPPING_METHOD_CHOICES
 
 COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400'
 COMMON_RADIO_CLASS = 'space-y-2'
@@ -58,11 +58,23 @@ market_widgets = {
     }),
 }
 
-# 개별 아이템 가격 폼
+# 개별 아이템 가격 폼 수정 (가격 미정 옵션 추가)
 class ItemPriceForm(forms.ModelForm):
+    PRICE_TYPE_CHOICES = [
+        ('set', '가격 설정'),
+        ('undetermined', '가격 미정'),
+    ]
+    
+    price_type = forms.ChoiceField(
+        choices=PRICE_TYPE_CHOICES,
+        widget=forms.RadioSelect(attrs={'class': 'mr-2'}),
+        initial='set',
+        label='가격 유형'
+    )
+    
     class Meta:
         model = ItemPrice
-        fields = ['item_name', 'price']
+        fields = ['item_name', 'price', 'is_price_undetermined']
         widgets = {
             'item_name': forms.TextInput(attrs={
                 'class': COMMON_INPUT_CLASS,
@@ -74,13 +86,37 @@ class ItemPriceForm(forms.ModelForm):
                 'placeholder': '가격을 입력하세요',
                 'min': 0,
             }),
+            'is_price_undetermined': forms.HiddenInput(),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # item_name은 선택사항
         self.fields['item_name'].required = False
-        self.fields['price'].required = True
+        self.fields['price'].required = False  # JavaScript에서 조건부로 변경
+        
+        # 기존 데이터가 있을 때 price_type 초기값 설정
+        if self.instance and self.instance.pk:
+            if self.instance.is_price_undetermined:
+                self.fields['price_type'].initial = 'undetermined'
+            else:
+                self.fields['price_type'].initial = 'set'
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        price_type = cleaned_data.get('price_type')
+        price = cleaned_data.get('price')
+        
+        if price_type == 'set' and not price:
+            raise forms.ValidationError("가격을 설정하는 경우 가격을 입력해야 합니다.")
+        
+        # price_type에 따라 is_price_undetermined 설정
+        cleaned_data['is_price_undetermined'] = (price_type == 'undetermined')
+        
+        # 가격 미정인 경우 price를 0으로 설정 (NULL 방지)
+        if price_type == 'undetermined':
+            cleaned_data['price'] = 0
+            
+        return cleaned_data
 
 class FarmSellPostForm(forms.ModelForm):
     md = custom_choice_field(FarmSellPost.MD_CHOICES, label='종류')
@@ -90,6 +126,25 @@ class FarmSellPostForm(forms.ModelForm):
     
     # 배송 방법 선택 필드 추가
     shipping_methods = shipping_methods_field()
+
+    # ✅ 교환 정보 필드 추가
+    give_description = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': COMMON_INPUT_CLASS,
+            'placeholder': '내가 주는 것을 입력하세요',
+        }),
+        required=False,
+        label='내가 주는 것',
+    )
+    
+    want_description = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': COMMON_INPUT_CLASS,
+            'placeholder': '내가 받고 싶은 것을 입력하세요',
+        }),
+        required=False,
+        label='내가 받고 싶은 것',
+    )
 
     class Meta:
         model = FarmSellPost
@@ -108,6 +163,11 @@ class FarmSellPostForm(forms.ModelForm):
         # 기존 데이터가 있을 때 shipping_methods 초기화
         if self.instance and self.instance.pk:
             self.fields['shipping_methods'].initial = self.instance.get_shipping_methods_list()
+
+            # ✅ 교환 정보 초기화 (수정 모드)
+            if hasattr(self.instance, 'exchange_info') and self.instance.exchange_info:
+                self.fields['give_description'].initial = self.instance.exchange_info.give_description
+                self.fields['want_description'].initial = self.instance.exchange_info.want_description
     
     def save(self, commit=True):
         instance = super().save(commit=False)
