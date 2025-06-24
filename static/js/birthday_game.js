@@ -126,13 +126,18 @@ function showNoBirthdayMessage() {
 function selectMember(member) {
   gameData.selectedMember = member;
   
-  // 생일시 계산 (월:일:00:000 형식) 
-  // 6월 20일 생일 → 18:20:00 (오후 6시 20분)
-  const targetHour = member.birth_month + 12; // 오후 시간으로 변경 (12시간 추가)
+  // === 테스트용 코드 (기존 코드 주석처리) ===
+  /*
+  const targetHour = member.birth_month + 12;
   const targetMinute = member.birth_day;
   
   gameData.targetTime = new Date();
   gameData.targetTime.setHours(targetHour, targetMinute, 0, 0);
+  */
+  
+  // 테스트용: 현재 시간에서 10초 후로 설정
+  gameData.targetTime = new Date();
+  gameData.targetTime.setSeconds(gameData.targetTime.getSeconds() + 10);
   
   showGameView();
 }
@@ -299,8 +304,10 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
       
       showResult(timeDiff, ddok);
       
+      // === 포인트 저장 부분 임시 비활성화 ===
       if (ddok > 0) {
-        savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl);
+        console.log(`포인트 저장 시뮬레이션: ${ddok}점 (멤버ID: ${gameData.selectedMember.id})`);
+        // savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl); // 주석처리
       }
       
       // 버튼 클릭 효과
@@ -317,3 +324,4 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
   // 게임 섹션 초기 표시
   showBirthdayGameSection(todayBirthdaysApiUrl);
 }
+
