@@ -160,14 +160,14 @@
 </section>
 
 <!-- 찜한 카페 섹션 -->
-<section class="py-4 sm:py-8 px-4">
+<section class="px-4">
   <div class="max-w-7xl mx-auto">
     {% include 'ddoksang/components/_favorites_section.html' %}
   </div>
 </section>
 
 <!-- 덕생 my-cafes로 가는 링크 버튼 -->
-{% if user.is_authenticated %}
+<!-- {% if user.is_authenticated %}
   <section class="py-4 px-4">
     <div class="max-w-7xl mx-auto">
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
@@ -184,10 +184,10 @@
       </div>
     </div>
   </section>
-{% endif %}
+{% endif %} -->
 
 <!-- 최신 등록된 생일카페 섹션 -->
-<section class="mt-16 sm:mt-20 py-8 sm:py-12 px-4">  
+<section class="pt-4 sm:pt-6 pb-8 sm:pb-12 px-4">   
   <div class="max-w-7xl mx-auto">
     
     {% include 'ddoksang/components/_latest_cafe_section.html' %}
