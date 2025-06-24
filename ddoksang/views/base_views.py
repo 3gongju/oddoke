@@ -117,6 +117,7 @@ def search_view(request):
         # 카페 검색 - 아티스트/멤버 정확히 일치
         cafes = BdayCafe.objects.filter(
             Q(artist__display_name__iexact=query) |
+            Q(artist__alias__iexact=query) |  
             Q(member__member_name__iexact=query),
             status='approved'
         ).select_related('artist', 'member').distinct()
