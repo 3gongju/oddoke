@@ -519,6 +519,12 @@ class DdokPoint(models.Model):
         default=0,
         verbose_name='쌓인 덕'
     )
+
+    created_at = models.DateTimeField(     
+        auto_now_add=True,
+        verbose_name='생성 일시'
+    )
+
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name='최근 변동 일시'
@@ -540,7 +546,8 @@ class DdokPointLog(models.Model):
         ('BIRTHDAY_GAME', '생일시 맞추기'),
         ('EVENT_PARTICIPATION', '이벤트 참여'),
         ('POST_REWARD', '게시글 작성 보상'),
-        # ... 추후 다양한 포인트 획득/사용처 추가 가능
+        ('BANNER_REQUEST', '배너 신청'),  # 새로 추가
+        ('BANNER_REFUND', '배너 신청 환불'),  # 새로 추가
     ]
 
     point_owner = models.ForeignKey(
@@ -576,3 +583,161 @@ class DdokPointLog(models.Model):
         verbose_name = '덕 포인트 로그'
         verbose_name_plural = '덕덕 포인트 로그 목록'
         ordering = ['-created_at']
+
+
+class BannerRequest(models.Model):
+    """사용자 배너 신청 모델"""
+    STATUS_CHOICES = [
+        ('pending', '승인 대기'),
+        ('approved', '승인됨'),
+        ('rejected', '거절됨'),
+        ('expired', '만료됨'),
+    ]
+    
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='banner_requests',
+        verbose_name='신청자'
+    )
+    
+    artist_name = models.CharField(
+        max_length=100,
+        verbose_name='아티스트명'
+    )
+    
+    banner_image = models.ImageField(
+        upload_to='user_banners/',
+        verbose_name='배너 이미지'
+    )
+    
+    ddok_points_used = models.PositiveIntegerField(
+        default=1000,
+        verbose_name='사용된 덕 포인트'
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='상태'
+    )
+    
+    # 🔥 새로 추가할 필드들
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='배너 시작일'
+    )
+    
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='배너 종료일'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='활성화 상태'
+    )
+    
+    # 승인 관련 (기존 필드들...)
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_banners',
+        verbose_name='승인자'
+    )
+    
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='승인 일시'
+    )
+    
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='만료 일시'
+    )
+    
+    # 거절 사유
+    rejection_reason = models.TextField(
+        blank=True,
+        verbose_name='거절 사유'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='신청 일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정 일시')
+    
+    class Meta:
+        verbose_name = '배너 신청'
+        verbose_name_plural = '배너 신청 목록'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.artist_name} ({self.get_status_display()})"
+    
+    @property
+    def is_currently_active(self):
+        """현재 활성화된 배너인지 확인 (날짜 기반)"""
+        if self.status != 'approved' or not self.is_active:
+            return False
+        
+        if not self.start_date or not self.end_date:
+            return False
+            
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+    
+    def approve(self, admin_user, start_date=None, end_date=None):
+        """배너 승인 처리"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        self.status = 'approved'
+        self.approved_by = admin_user
+        self.approved_at = timezone.now()
+        self.expires_at = timezone.now() + timedelta(days=3)  # 기존 로직 유지
+        
+        # 🔥 새로운 날짜 필드 설정
+        if start_date:
+            self.start_date = start_date
+        else:
+            self.start_date = timezone.now().date()
+            
+        if end_date:
+            self.end_date = end_date
+        else:
+            self.end_date = timezone.now().date() + timedelta(days=3)
+            
+        self.is_active = True
+        self.save()
+    
+    def reject(self, admin_user, reason=""):
+        """배너 거절 처리"""
+        from django.utils import timezone
+        
+        self.status = 'rejected'
+        self.approved_by = admin_user
+        self.approved_at = timezone.now()
+        self.rejection_reason = reason
+        self.is_active = False
+        self.save()
+        
+        # 덕 포인트 환불
+        self.refund_points()
+    
+    def refund_points(self):
+        """덕 포인트 환불"""
+        from accounts.point_utils import add_ddok_points
+        
+        add_ddok_points(
+            user=self.user,
+            points=self.ddok_points_used,
+            reason='BANNER_REFUND',
+            related_member=None
+        )

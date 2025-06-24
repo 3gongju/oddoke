@@ -74,5 +74,12 @@ urlpatterns = [
     # 공통 신고 기능 URL 추가
     path('report/<str:app_name>/<str:category>/<int:post_id>/', views.report_post, name='report_post'),
     path('report/<str:app_name>/<str:category>/<int:post_id>/form/', views.get_report_form, name='get_report_form'),
+
+
+    # 배너 신청 관련
+    path('banner-request/', views.submit_banner_request, name='submit_banner_request'),
+    path('banner-request/form/', views.banner_request_form, name='banner_request_form'), 
+
     path('report/user/<int:user_id>/', views.report_user, name='report_user'),
+
 ]
