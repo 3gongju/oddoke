@@ -126,11 +126,11 @@ function showNoBirthdayMessage() {
 function selectMember(member) {
   gameData.selectedMember = member;
   
-  // === 테스트용 코드 (기존 코드 주석처리) ===
-  /*
+  // === 테스트용 코드 (기존 코드 주석처리).. ===
+  
   const targetHour = member.birth_month + 12;
   const targetMinute = member.birth_day;
-  
+  /*
   gameData.targetTime = new Date();
   gameData.targetTime.setHours(targetHour, targetMinute, 0, 0);
   */
@@ -330,7 +330,7 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
   showBirthdayGameSection(todayBirthdaysApiUrl);
 }
 
-// === 덕 포인트 저장 함수 ===
+// === 덕 포인트 저장 함수 (파일 맨 끝에 추가) ===
 async function saveBirthdayDdokPoints(ddok_points, memberId, timeDifference) {
   console.log('🎯 saveBirthdayDdokPoints 함수 호출됨');
   console.log('파라미터:', { ddok_points, memberId, timeDifference });
