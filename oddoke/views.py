@@ -6,6 +6,7 @@ from artist.models import Artist, Member
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost
 from ddoksang.utils.bday_utils import get_weekly_bday_artists
+from accounts.models import BannerRequest
 
 
 def group_artists(artists, group_size=5):
@@ -19,13 +20,19 @@ def main(request):
     # 2) 그룹별 페이징 캐러셀을 위한 5개씩 묶기
     grouped_artists = group_artists(raw_favs) if raw_favs else []
 
-    # 3) 배너 이미지 리스트
-    banner_images = [
+    # 3) 배너 이미지 리스트 (사용자 배너 + 기본 배너)
+    user_banners = get_active_user_banners()
+    
+    # 기본 배너 이미지들
+    default_banner_images = [
         'image/banner/banner1.jpg',
         'image/banner/banner2.jpg',
         'image/banner/banner3.jpg',
         'image/banner/banner4.jpg',
     ]
+    
+    # 사용자 배너와 기본 배너 합치기
+    banner_images = user_banners + default_banner_images
 
     # 4) 덕팜 최신 게시물들 - 각 카테고리별로 가져온 후 통합
     sell_posts = list(FarmSellPost.objects.order_by('-created_at')[:10])
@@ -146,3 +153,24 @@ def main(request):
         
         'birthday_artists': birthday_artists,
     })
+
+def get_active_user_banners():
+    """활성화된 사용자 배너들을 가져오기"""
+    try:
+        active_banners = BannerRequest.objects.filter(
+            status='approved',
+            expires_at__gt=timezone.now()
+        ).order_by('-approved_at')
+        
+        # 이미지 URL들을 반환 (static 경로 형태가 아닌 media 경로)
+        user_banner_urls = []
+        for banner in active_banners:
+            if banner.banner_image:
+                # media 파일이므로 전체 URL을 반환
+                user_banner_urls.append(banner.banner_image.url)
+        
+        return user_banner_urls
+        
+    except Exception as e:
+        print(f"사용자 배너 로드 오류: {e}")
+        return []
