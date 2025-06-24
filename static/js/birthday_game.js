@@ -305,9 +305,14 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
       showResult(timeDiff, ddok);
       
       // === 포인트 저장 부분 임시 비활성화 ===
-      if (ddok > 0) {
-        console.log(`포인트 저장 시뮬레이션: ${ddok}점 (멤버ID: ${gameData.selectedMember.id})`);
+      // if (ddok > 0) {
+        // console.log(`포인트 저장 시뮬레이션: ${ddok}점 (멤버ID: ${gameData.selectedMember.id})`);
         // savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl); // 주석처리
+      // }
+
+      if (ddok > 0) {
+        // 새로운 API 엔드포인트 사용
+        saveBirthdayDdokPoints(ddok, gameData.selectedMember.id, timeDiff);
       }
       
       // 버튼 클릭 효과
