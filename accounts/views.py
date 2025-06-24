@@ -27,7 +27,7 @@ from ddokchat.models import ChatRoom
 from artist.models import Artist, Member
 from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport
 from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm, PostReportForm
-from .services import KakaoAuthService, NaverAuthService
+from .services import KakaoAuthService, NaverAuthService, GoogleAuthService
 
 from django.views.decorators.http import require_POST, require_GET
 from django.contrib.contenttypes.models import ContentType
@@ -1104,6 +1104,97 @@ def naver_logout(request):
     request.session.flush()
     return redirect('/')
 
+# 구글 로그인
+def google_login(request):
+    """구글 로그인 페이지로 리다이렉트"""
+    service = GoogleAuthService()
+    auth_url = service.get_auth_url()
+    return redirect(auth_url)
+
+def google_callback(request):
+    """구글 로그인 콜백 처리"""
+    print("=== 구글 콜백 디버깅 ===")
+    
+    code = request.GET.get('code')
+    error = request.GET.get('error')
+    
+    # 에러 확인
+    if error:
+        print(f"구글 로그인 에러: {error}")
+        messages.error(request, '구글 로그인이 취소되었습니다.')
+        return redirect('accounts:login')
+    
+    if not code:
+        print("구글 코드 없음")
+        messages.error(request, '구글 로그인에 실패했습니다.')
+        return redirect('accounts:login')
+    
+    print(f"구글 코드 받음: {code[:10]}...")
+    
+    service = GoogleAuthService()
+    
+    try:
+        print("구글 콜백 처리 시작...")
+        user = service.handle_callback(code)
+        print(f"반환된 사용자: {user.username}")
+        print(f"사용자 이메일: {user.email}")
+        print(f"임시 사용자명 여부: {user.is_temp_username}")
+        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
+        
+        # 이메일 기반 인증 (패스워드 없이)
+        from django.contrib.auth import authenticate
+        print("이메일 기반 인증 시도...")
+        authenticated_user = authenticate(
+            request, 
+            email=user.email, 
+            password=None
+        )
+        print(f"인증 결과: {authenticated_user}")
+        
+        if authenticated_user:
+            print("인증 성공, 로그인 처리...")
+            auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
+            print(f"로그인 성공: {request.user.is_authenticated}")
+            
+            # 프로필 완성 여부에 따라 분기 처리
+            if not authenticated_user.social_signup_completed:
+                print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
+                return redirect('accounts:social_signup_complete')
+            else:
+                print(f"기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
+                messages.success(request, f'환영합니다, {authenticated_user.display_name}님!')
+                
+            next_url = request.GET.get('next') or '/'
+            print(f"리다이렉트 URL: {next_url}")
+            return redirect(next_url)
+        else:
+            print("인증 실패!")
+            messages.error(request, '구글 로그인 인증에 실패했습니다.')
+            return redirect('accounts:login')
+        
+    except Exception as e:
+        print(f"전체 에러: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # 이메일 중복 에러 처리
+        if '이미' in str(e) and '가입된 계정' in str(e):
+            messages.error(request, str(e))
+        else:
+            messages.error(request, f'구글 로그인 처리 중 오류가 발생했습니다: {str(e)}')
+        return redirect('accounts:login')
+
+def google_logout(request):
+    """구글 로그아웃 + 일반 로그아웃"""
+    service = GoogleAuthService()
+    
+    # 일반 로그아웃 먼저 처리
+    auth_logout(request)
+    
+    # 구글 로그아웃 URL로 리디렉션
+    logout_url = service.get_logout_url()
+    return redirect(logout_url)
+
 # 스마트 로그아웃 (기존 함수 개선)
 def smart_logout(request):
     """사용자 타입에 따라 적절한 로그아웃 방식 선택"""
@@ -1116,6 +1207,8 @@ def smart_logout(request):
         return kakao_logout(request)
     elif username.startswith('naver_'):
         return naver_logout(request)
+    elif username.startswith('temp_google_'):
+        return google_logout(request)
     else:
         return logout(request)  # 기존 logout 함수 호출
 
