@@ -3,11 +3,20 @@
 
 <section class="mb-12" id="favoritesSection">
   <div class="flex items-center justify-between mb-4 px-4">
-    <h2 class="text-xl font-semibold text-gray-800 flex items-center">
-      <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-10 h-10 mr-2">
-      찜한 생카
-    </h2>
-    <a href="{% url 'ddoksang:favorites' %}" class="text-sm text-pink-600 hover:underline">(덕) 보기 &rarr;</a>
+    <div class="flex items-center">
+      <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-6 h-6 sm:w-8 sm:h-8 mr-2">
+      <h2 class="text-lg sm:text-xl font-semibold text-gray-800">찜한 생카</h2>
+    </div>
+    
+    <!-- 정렬 수정된 (덕)보기 링크 -->
+    <div class="flex items-center">
+      <a href="{% url 'ddoksang:favorites' %}" class="inline-flex items-center text-blue-600 hover:text-pink-600 text-sm font-medium transition-colors duration-200">
+        <span>(덕)보기</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 ml-1">
+          <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
   </div>
 
   {% if my_favorite_cafes %}
