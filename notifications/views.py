@@ -54,26 +54,27 @@ def notification_list(request):
 @login_required
 @require_http_methods(["POST"])
 def mark_notification_read(request, notification_id):
-    """특정 알림을 읽음으로 표시"""
+    """특정 알림을 읽음으로 표시 (통합 읽음 처리 적용)"""
     notification = get_object_or_404(
         Notification, 
         id=notification_id, 
         recipient=request.user
     )
     
-    notification.is_read = True
-    notification.save()
+    # ✅ 통합 읽음 처리 적용
+    related_count = notification.mark_as_read_with_related()
     
     if request.headers.get('Accept') == 'application/json':
         return JsonResponse({
             'success': True,
-            'message': '알림이 읽음으로 표시되었습니다.',
-            'notification_id': notification_id
+            'message': f'{related_count}개의 알림이 읽음으로 표시되었습니다.' if related_count > 1 else '알림이 읽음으로 표시되었습니다.',
+            'notification_id': notification_id,
+            'related_count': related_count
         })
     
-    messages.success(request, '알림이 읽음으로 표시되었습니다.')
+    message_text = f'{related_count}개의 알림이 읽음으로 표시되었습니다.' if related_count > 1 else '알림이 읽음으로 표시되었습니다.'
+    messages.success(request, message_text)
     return redirect('notifications:notification_list')
-
 
 @login_required
 @require_http_methods(["POST"])
@@ -155,16 +156,19 @@ def get_time_since(created_at):
 
 @login_required
 def goto_content(request, notification_id):
-    """알림 내용으로 이동 (알림을 읽음으로 표시하고 해당 페이지로 리다이렉트)"""
+    """알림 내용으로 이동 (통합 읽음 처리 적용)"""
     notification = get_object_or_404(
         Notification,
         id=notification_id,
         recipient=request.user
     )
     
-    # 알림을 읽음으로 표시
-    notification.is_read = True
-    notification.save()
+    # ✅ 통합 읽음 처리 적용
+    related_count = notification.mark_as_read_with_related()
+    
+    # 읽음 처리 결과 로깅
+    if related_count > 1:
+        print(f"통합 읽음 처리: {related_count}개 알림 처리됨")
     
     try:
         content_object = notification.content_object
@@ -204,13 +208,9 @@ def goto_content(request, notification_id):
         
         # 6. 댓글/대댓글/게시글답글 알림 → 해당 게시글의 댓글 위치로
         elif notification_type in ['comment', 'reply', 'post_reply']:
-            if hasattr(content_object, 'post'):
-                post = content_object.post
-                post_url = get_post_url(post)
-                return redirect(f"{post_url}?scroll_to_comment={content_object.id}")
-            else:
-                post_url = get_post_url(content_object)
-                return redirect(post_url)
+            # content_object는 이제 게시글 객체 (댓글 그룹핑 변경으로)
+            post_url = get_post_url(content_object)
+            return redirect(post_url)
         
         # 7. 좋아요 알림 → 해당 게시글로
         elif notification_type == 'like':
