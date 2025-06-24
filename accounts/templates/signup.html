@@ -173,7 +173,7 @@
             </form>
         </div>
 
-        <!-- 🔥 소셜 로그인 옵션 (수정된 구조) -->
+        <!-- 소셜 로그인 옵션 -->
         <div class="mt-8 text-center">
             <div class="relative mb-6">
                 <div class="absolute inset-0 flex items-center">
@@ -187,16 +187,30 @@
             <!-- 3개 소셜 로그인 버튼들 -->
             <div class="space-y-3">
                 <!-- 카카오 로그인 -->
-                <a href="{% url 'accounts:kakao_login' %}" 
-                   class="w-full flex items-center justify-center px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-xl transition-colors duration-200 shadow-sm">
-                    카카오로 시작하기
-                </a>
+                <div class="kakao-signup-wrapper">
+                    <a href="{% url 'accounts:kakao_login' %}" class="kakao-material-button">
+                        <div class="kakao-material-button-content-wrapper">
+                            <div class="kakao-material-button-icon">
+                                <img src="{% static 'image/kakao_logo.png' %}" alt="카카오 로고" class="kakao-logo">
+                            </div>
+                            <span class="kakao-material-button-contents">카카오로 시작하기</span>
+                            <span class="kakao-material-button-state"></span>
+                        </div>
+                    </a>
+                </div>
 
                 <!-- 네이버 로그인 -->
-                <a href="{% url 'accounts:naver_login' %}" 
-                   class="w-full flex items-center justify-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-colors duration-200 shadow-sm">
-                    네이버로 시작하기
-                </a>
+                <div class="naver-signup-wrapper">
+                    <a href="{% url 'accounts:naver_login' %}" class="naver-material-button">
+                        <div class="naver-material-button-content-wrapper">
+                            <div class="naver-material-button-icon">
+                                <img src="{% static 'image/naver_logo.png' %}" alt="네이버 로고" class="naver-logo">
+                            </div>
+                            <span class="naver-material-button-contents">네이버로 시작하기</span>
+                            <span class="naver-material-button-state"></span>
+                        </div>
+                    </a>
+                </div>
 
                 <!-- 구글 로그인 -->
                 <div class="google-signup-wrapper">
@@ -245,19 +259,7 @@
         color: #111827;
     }
 
-    /* 구글 공식 CSS (회원가입 페이지용) */
-    .gsi-material-button.signup-style {
-        height: 48px; /* 다른 버튼들과 높이 맞춤 */
-        border-radius: 12px; /* 다른 버튼들과 스타일 맞춤 */
-    }
-
-    .google-signup-wrapper {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-    }
-
-    /* 구글 공식 CSS 기본 스타일들 */
+    /* 구글 공식 CSS */
     .gsi-material-button {
         -moz-user-select: none;
         -webkit-user-select: none;
@@ -290,6 +292,11 @@
         min-width: min-content;
         text-decoration: none;
         display: block;
+    }
+
+    .gsi-material-button.signup-style {
+        height: 48px;
+        border-radius: 4px;
     }
 
     .gsi-material-button .gsi-material-button-icon {
@@ -337,11 +344,226 @@
     .gsi-material-button:not(:disabled):hover {
         -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
         box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        transform: translateY(-2px);
     }
 
     .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
         background-color: #303030;
         opacity: 8%;
+    }
+
+    /* 카카오 커스텀 버튼 */
+    .kakao-material-button {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        -webkit-appearance: none;
+        background-color: #FEE500;
+        background-image: none;
+        border: none;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #1f1f1f;
+        cursor: pointer;
+        font-family: 'Roboto', arial, sans-serif;
+        font-size: 14px;
+        height: 48px;
+        letter-spacing: 0.25px;
+        outline: none;
+        overflow: hidden;
+        padding: 0 12px;
+        position: relative;
+        text-align: center;
+        -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+        transition: background-color .218s, border-color .218s, box-shadow .218s;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: 100%;
+        max-width: 400px;
+        min-width: min-content;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .kakao-material-button .kakao-material-button-icon {
+        height: 48px;
+        margin-right: 12px;
+        min-width: 48px;
+        width: 48px;
+    }
+
+    .kakao-material-button .kakao-logo {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+
+    .kakao-material-button .kakao-material-button-content-wrapper {
+        -webkit-align-items: center;
+        align-items: center;
+        display: flex;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+        -webkit-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        height: 100%;
+        justify-content: center;
+        position: relative;
+        width: 100%;
+    }
+
+    .kakao-material-button .kakao-material-button-contents {
+        -webkit-flex-grow: 1;
+        flex-grow: 1;
+        font-family: 'Roboto', arial, sans-serif;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: top;
+    }
+
+    .kakao-material-button .kakao-material-button-state {
+        -webkit-transition: opacity .218s;
+        transition: opacity .218s;
+        bottom: 0;
+        left: 0;
+        opacity: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .kakao-material-button:not(:disabled):hover {
+        -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        transform: translateY(-2px);
+    }
+
+    .kakao-material-button:not(:disabled):hover .kakao-material-button-state {
+        background-color: #303030;
+        opacity: 8%;
+    }
+
+    /* 네이버 커스텀 버튼 */
+    .naver-material-button {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        -webkit-appearance: none;
+        background-color: #03C75A;
+        background-image: none;
+        border: none;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #ffffff;
+        cursor: pointer;
+        font-family: 'Roboto', arial, sans-serif;
+        font-size: 14px;
+        height: 48px;
+        letter-spacing: 0.25px;
+        outline: none;
+        overflow: hidden;
+        padding: 0 12px;
+        position: relative;
+        text-align: center;
+        -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+        transition: background-color .218s, border-color .218s, box-shadow .218s;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: 100%;
+        max-width: 400px;
+        min-width: min-content;
+        text-decoration: none;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .naver-material-button .naver-material-button-icon {
+        height: 48px;
+        margin-right: 12px;
+        min-width: 48px;
+        width: 48px;
+    }
+
+    .naver-material-button .naver-logo {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+    }
+
+    .naver-material-button .naver-material-button-content-wrapper {
+        -webkit-align-items: center;
+        align-items: center;
+        display: flex;
+        -webkit-flex-direction: row;
+        flex-direction: row;
+        -webkit-flex-wrap: nowrap;
+        flex-wrap: nowrap;
+        height: 100%;
+        justify-content: space-between;
+        position: relative;
+        width: 100%;
+    }
+
+    .naver-material-button .naver-material-button-contents {
+        -webkit-flex-grow: 1;
+        flex-grow: 1;
+        font-family: 'Roboto', arial, sans-serif;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: top;
+    }
+
+    .naver-material-button .naver-material-button-state {
+        -webkit-transition: opacity .218s;
+        transition: opacity .218s;
+        bottom: 0;
+        left: 0;
+        opacity: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .naver-material-button:not(:disabled):hover {
+        -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+        transform: translateY(-2px);
+    }
+
+    .naver-material-button:not(:disabled):hover .naver-material-button-state {
+        background-color: #303030;
+        opacity: 8%;
+    }
+
+    .kakao-signup-wrapper, .naver-signup-wrapper, .google-signup-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 480px) {
+        .gsi-material-button.signup-style {
+            height: 44px;
+            font-size: 13px;
+        }
+
+        .kakao-material-button {
+            height: 44px;
+            font-size: 13px;
+        }
+
+        .naver-material-button {
+            height: 44px;
+            font-size: 13px;
+        }
     }
 </style>
 
@@ -353,10 +575,6 @@
 
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                imagePreview.className = 'w-full h-full object-cover rounded-full';
-            };
             reader.readAsDataURL(file);
         }
     }
@@ -422,4 +640,8 @@
     });
 </script>
 
-{% endblock %}
+{% endblock %}onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.className = 'w-full h-full object-cover rounded-full';
+            };
+            reader.
