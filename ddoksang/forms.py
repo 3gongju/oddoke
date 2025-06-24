@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import BdayCafe, CafeFavorite
+from .models import BdayCafe
 
 class BdayCafeForm(forms.ModelForm):
     """생일카페 등록/수정 폼 (이미지 갤러리 포함)"""
@@ -15,7 +15,7 @@ class BdayCafeForm(forms.ModelForm):
             'start_date', 'end_date',
             'special_benefits', 'event_description',
             'x_source'
-            # ✅ image_gallery는 JavaScript로 직접 처리 (JSONField)
+            #  image_gallery는 JavaScript로 직접 처리 (JSONField)
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
@@ -35,15 +35,5 @@ class BdayCafeForm(forms.ModelForm):
             username = x_source.lstrip('@')
             return f"https://x.com/{username}"
         return x_source
-
- 
-
-class CafeFavoriteForm(forms.ModelForm):
-    """카페 즐겨찾기 폼"""
-    
-    class Meta:
-        model = CafeFavorite
-        fields = ['cafe']
-
 
 
