@@ -14,7 +14,7 @@
     {% for choice in form.album.field.choices %}
       <label class="inline-flex items-center cursor-pointer">
         <input type="radio" name="{{ form.album.name }}" value="{{ choice.0 }}" 
-               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-pink-500"
                {% if choice.0 == form.album.value %}checked{% endif %}>
         <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
       </label>
@@ -44,7 +44,7 @@
     {% for choice in form.failure.field.choices %}
       <label class="inline-flex items-center cursor-pointer">
         <input type="radio" name="{{ form.failure.name }}" value="{{ choice.0 }}" 
-               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-pink-500"
                {% if choice.0 == form.failure.value %}checked{% endif %}>
         <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
       </label>
@@ -60,7 +60,7 @@
     {% for choice in form.push.field.choices %}
       <label class="inline-flex items-center cursor-pointer">
         <input type="radio" name="{{ form.push.name }}" value="{{ choice.0 }}" 
-               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-green-500"
+               class="w-4 h-4 text-green-600 border-gray-300 focus:ring-pink-500"
                {% if choice.0 == form.push.value %}checked{% endif %}>
         <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
       </label>

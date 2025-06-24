@@ -11,7 +11,7 @@
       <div class="relative">
         <input type="number" 
                id="single-price-input"
-               class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400" 
+               class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                placeholder="가격을 입력하세요"
                min="0"
                {% if mode == 'edit' and not post.has_multiple_items and post.get_item_prices.first and not post.get_item_prices.first.is_price_undetermined %}
@@ -34,7 +34,7 @@
     
     <button type="button" 
             id="add-items-btn"
-            class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+            class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-200">
       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
       </svg>
@@ -159,7 +159,7 @@
       
       <!-- 덕템 추가 버튼 -->
       <button type="button" id="add-another-item-btn" 
-              class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-all duration-200">
         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
         </svg>
@@ -239,7 +239,7 @@
       
       <div>
         <input type="text" 
-               class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+               class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                placeholder="물건명 (선택사항)" 
                maxlength="20">
       </div>
@@ -247,7 +247,7 @@
       <div>
         <div class="relative">
           <input type="number" 
-                 class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                 class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                  placeholder="가격" 
                  min="0">
           <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>

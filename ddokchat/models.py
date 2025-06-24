@@ -309,3 +309,158 @@ class AddressMessage(models.Model):
             return "배송정보: [주소 삭제됨]"
         else:
             return f"배송정보: {self.address_profile.sido} {self.address_profile.sigungu}"
+
+
+class ChatRoomReport(models.Model):
+    """채팅방 신고 모델"""
+    REPORT_REASONS = [
+        ('fraud', '사기 및 허위 거래'),
+        ('inappropriate_content', '부적절한 채팅 내용'),
+        ('harassment', '욕설, 협박, 괴롭힘'),
+        ('no_response', '연락두절, 무응답'),
+        ('item_condition', '상품 상태 허위 설명'),
+        ('payment_issue', '결제 관련 문제'),
+        ('other', '기타'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', '검토 중'),
+        ('investigating', '조사 중'),
+        ('resolved', '처리 완료'),
+        ('rejected', '신고 반려'),
+    ]
+    
+    # 신고 기본 정보
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='chatroom_reports_made',
+        verbose_name='신고자'
+    )
+    
+    reported_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='chatroom_reports_received',
+        verbose_name='신고 대상 유저'
+    )
+    
+    chatroom = models.ForeignKey(
+        ChatRoom,
+        on_delete=models.CASCADE,
+        related_name='reports',
+        verbose_name='채팅방'
+    )
+    
+    reason = models.CharField(
+        max_length=30,
+        choices=REPORT_REASONS,
+        verbose_name='신고 사유'
+    )
+    
+    description = models.TextField(
+        verbose_name='신고 내용 상세',
+        help_text='구체적인 신고 사유를 작성해주세요'
+    )
+    
+    # 증거 자료 (선택사항)
+    evidence_images = models.ManyToManyField(
+        'ChatReportEvidence',
+        blank=True,
+        verbose_name='증거 이미지'
+    )
+    
+    # 관리자 처리 정보
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='처리 상태'
+    )
+    
+    admin_notes = models.TextField(
+        blank=True,
+        verbose_name='관리자 메모'
+    )
+    
+    processed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='chatroom_reports_processed',
+        verbose_name='처리한 관리자'
+    )
+    
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='처리 일시'
+    )
+    
+    # 제재 정보
+    restriction_applied = models.BooleanField(
+        default=False,
+        verbose_name='제재 적용 여부'
+    )
+    
+    restriction_start = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='제재 시작일'
+    )
+    
+    restriction_end = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='제재 종료일'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='신고 일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정 일시')
+    
+    class Meta:
+        verbose_name = '채팅방 신고'
+        verbose_name_plural = '채팅방 신고 목록'
+        ordering = ['-created_at']
+        unique_together = ['reporter', 'chatroom']  # 같은 채팅방에 대해 중복 신고 방지
+    
+    def __str__(self):
+        return f"{self.reporter.username} → {self.reported_user.username} ({self.get_reason_display()})"
+    
+    def get_chatroom_title(self):
+        """채팅방 관련 게시글 제목 반환"""
+        if self.chatroom.post:
+            return getattr(self.chatroom.post, 'title', 'N/A')
+        return 'N/A'
+    
+    def get_chatroom_category(self):
+        """채팅방 카테고리 반환"""
+        if self.chatroom.content_type:
+            model_name = self.chatroom.content_type.model
+            if 'sell' in model_name:
+                return '양도'
+            elif 'rental' in model_name:
+                return '대여'
+            elif 'split' in model_name:
+                return '분철'
+        return '기타'
+
+
+class ChatReportEvidence(models.Model):
+    """채팅방 신고 증거 이미지"""
+    image = models.ImageField(
+        upload_to='chat_report_evidence/',
+        verbose_name='증거 이미지'
+    )
+    
+    description = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='이미지 설명'
+    )
+    
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"증거 이미지 - {self.uploaded_at.strftime('%Y-%m-%d %H:%M')}"
