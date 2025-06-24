@@ -237,12 +237,35 @@
           {% if farm_posts %}
             <div class="space-y-3 sm:space-y-4" id="farm-written-items">
               {% for post in farm_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-written-item" style="display: none;">
-                  <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
-                    [덕팜] {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="farm-written-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕팜 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕팜 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
+                        class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        [덕팜] {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.get_want_to_display }} · {{ post.get_display_price }}
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -258,13 +281,33 @@
           {% if farm_comments %}
             <div class="space-y-3 sm:space-y-4" id="farm-commented-items">
               {% for comment in farm_comments %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-commented-item" style="display: none;">
-                  <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ comment.post.title }}
-                  </a>
-                  <p class="text-green-600 font-medium text-sm sm:text-base mt-1 sm:mt-2 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="farm-commented-item p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕팜 댓글 대상 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if comment.target_post.get_main_image %}
+                        <img src="{{ comment.target_post.get_main_image }}" 
+                            alt="{{ comment.target_post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕팜 댓글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ comment.target_post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-green-600 font-medium text-sm sm:text-base mb-1 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ comment.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -280,12 +323,35 @@
           {% if liked_farm_posts %}
             <div class="space-y-3 sm:space-y-4" id="farm-liked-items">
               {% for post in liked_farm_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-liked-item" style="display: none;">
-                  <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="farm-liked-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 찜한 덕팜 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 찜한 덕팜 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.get_want_to_display }} · {{ post.get_display_price }}
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -376,12 +442,35 @@
           {% if dam_posts %}
             <div class="space-y-3 sm:space-y-4" id="dam-written-items">
               {% for post in dam_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-written-item" style="display: none;">
-                  <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
-                    [덕담] {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="dam-written-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕담 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕담 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
+                        class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        [덕담] {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.category_type|capfirst }} 게시글
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -397,13 +486,33 @@
           {% if dam_comments %}
             <div class="space-y-3 sm:space-y-4" id="dam-commented-items">
               {% for comment in dam_comments %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-commented-item" style="display: none;">
-                  <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ comment.post.title }}
-                  </a>
-                  <p class="text-green-600 font-medium text-sm sm:text-base mt-1 sm:mt-2 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="dam-commented-item p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕담 댓글 대상 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if comment.target_post.get_main_image %}
+                        <img src="{{ comment.target_post.get_main_image }}" 
+                            alt="{{ comment.target_post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕담 댓글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ comment.target_post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-green-600 font-medium text-sm sm:text-base mb-1 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ comment.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -419,12 +528,35 @@
           {% if liked_dam_posts %}
             <div class="space-y-3 sm:space-y-4" id="dam-liked-items">
               {% for post in liked_dam_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-liked-item" style="display: none;">
-                  <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="dam-liked-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 찜한 덕담 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 찜한 덕담 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.category_type|capfirst }} 게시글
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
