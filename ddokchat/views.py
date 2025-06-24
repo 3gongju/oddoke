@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import ChatRoom, Message, TextMessage, ImageMessage, AccountInfoMessage, AddressMessage
+from .models import ChatRoom, Message, TextMessage, ImageMessage, AccountInfoMessage, AddressMessage, TradeReport
 from accounts.models import MannerReview, User
 from accounts.forms import MannerReviewForm
+from .forms import TradeReportForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, ItemPrice, SplitPrice, SplitApplication
@@ -22,7 +23,6 @@ from .services import get_dutcheat_service
 from django.contrib.contenttypes.models import ContentType
 
 import json
-
 # Create your views here.
 
 # 채팅방
@@ -977,3 +977,199 @@ def get_or_create_split_chatroom(request, post_id, user_id):
     )
     
     return redirect('ddokchat:chat_room', room_id=room.id)
+
+
+@login_required
+@require_POST
+def report_trade_user(request, room_id):
+    """덕팜 거래 사기 신고 처리"""
+    try:
+        room = get_object_or_404(ChatRoom, id=room_id)
+        reporter = request.user
+        
+        # 채팅방 참여자 확인
+        if not room.is_participant(reporter):
+            return JsonResponse({
+                'success': False,
+                'error': '채팅방 참여자만 신고할 수 있습니다.'
+            })
+        
+        # 신고 대상자 확인 (상대방)
+        reported_user = room.get_other_user(reporter)
+        
+        # 자신을 신고하는 것 방지
+        if reporter == reported_user:
+            return JsonResponse({
+                'success': False,
+                'error': '자신을 신고할 수 없습니다.'
+            })
+        
+        # 이미 신고한 경우 중복 신고 방지
+        existing_report = TradeReport.objects.filter(
+            reporter=reporter,
+            chatroom=room
+        ).first()
+        
+        if existing_report:
+            return JsonResponse({
+                'success': False,
+                'error': '이미 신고한 거래입니다.'
+            })
+        
+        # 폼 데이터 처리
+        form = TradeReportForm(request.POST)
+        
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.reporter = reporter
+            report.reported_user = reported_user
+            report.chatroom = room
+            report.save()
+            
+            # 신고 접수 완료 로그
+            print(f"✅ 거래 신고 접수: {reporter.username} → {reported_user.username} (채팅방 #{room.id})")
+            
+            return JsonResponse({
+                'success': True,
+                'message': '신고가 접수되었습니다. 검토 후 조치하겠습니다.'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': '신고 정보를 확인해주세요.',
+                'form_errors': form.errors
+            })
+            
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': '존재하지 않는 채팅방입니다.'
+        })
+    except Exception as e:
+        print(f"거래 신고 처리 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '신고 처리 중 오류가 발생했습니다.'
+        })
+
+
+@login_required
+def get_trade_report_form(request, room_id):
+    """거래 신고 폼 HTML 반환"""
+    try:
+        room = get_object_or_404(ChatRoom, id=room_id)
+        
+        # 채팅방 참여자 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '채팅방 참여자만 신고할 수 있습니다.'
+            })
+        
+        # 신고 대상자 확인
+        reported_user = room.get_other_user(request.user)
+        
+        # 이미 신고한 경우
+        existing_report = TradeReport.objects.filter(
+            reporter=request.user,
+            chatroom=room
+        ).first()
+        
+        if existing_report:
+            return JsonResponse({
+                'success': False,
+                'error': '이미 신고한 거래입니다.'
+            })
+        
+        form = TradeReportForm()
+        
+        # 폼 HTML 렌더링
+        from django.template.loader import render_to_string
+        
+        form_html = render_to_string('ddokchat/components/modals/_trade_report_form.html', {
+            'form': form,
+            'room': room,
+            'reported_user': reported_user,
+        }, request=request)
+        
+        return JsonResponse({
+            'success': True,
+            'form_html': form_html
+        })
+        
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': '존재하지 않는 채팅방입니다.'
+        })
+    except Exception as e:
+        print(f"신고 폼 조회 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '폼 조회 중 오류가 발생했습니다.'
+        })
+
+
+@login_required  
+def view_user_info(request, room_id):
+    """거래자 정보 보기"""
+    try:
+        room = get_object_or_404(ChatRoom, id=room_id)
+        
+        # 채팅방 참여자 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '채팅방 참여자만 확인할 수 있습니다.'
+            })
+        
+        # 상대방 정보 가져오기
+        other_user = room.get_other_user(request.user)
+        
+        # 상대방의 매너 리뷰 통계 가져오기
+        from django.db.models import Avg, Count
+        
+        review_stats = MannerReview.objects.filter(target_user=other_user).aggregate(
+            avg_rating=Avg('rating'),
+            total_reviews=Count('id')
+        )
+        
+        # 최근 리뷰 5개
+        recent_reviews = MannerReview.objects.filter(
+            target_user=other_user
+        ).select_related('user').order_by('-created_at')[:5]
+        
+        # 정보 정리
+        user_info = {
+            'username': other_user.username,
+            'profile_image_url': other_user.profile_image.url if other_user.profile_image else None,
+            'join_date': other_user.date_joined.strftime('%Y년 %m월'),
+            'avg_rating': round(review_stats['avg_rating'], 1) if review_stats['avg_rating'] else 0,
+            'total_reviews': review_stats['total_reviews'],
+            'recent_reviews': [
+                {
+                    'reviewer': review.user.username,
+                    'rating': review.rating,
+                    'created_at': review.created_at.strftime('%m/%d'),
+                    'deal_again': review.deal_again
+                }
+                for review in recent_reviews
+            ]
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'user_info': user_info
+        })
+        
+    except ChatRoom.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': '존재하지 않는 채팅방입니다.'
+        })
+    except Exception as e:
+        print(f"거래자 정보 조회 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '정보 조회 중 오류가 발생했습니다.'
+        })
