@@ -108,16 +108,14 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'accounts/password_reset_complete.html'
 
-# Create your views here.
 def signup(request):
     preview_image_url = None
 
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, request.FILES)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.is_active = False  # 이메일 인증 전까지 비활성화
-            user = form.save()
+            # 한 번만 저장하도록
+            user = form.save()  # 이미 form의 save 메서드에서 is_active=False 처리됨
             
             if user.profile_image:
                 preview_image_url = user.profile_image.url
@@ -176,16 +174,16 @@ def activate(request, uidb64, token):
     if user and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-        # 모달용 태그 추가
-        messages.add_message(
+        
+        # 이메일 인증 완료 = 회원가입 완료이므로 바로 로그인 처리 후 아티스트 페이지로
+        auth_login(request, user)
+        
+        messages.success(
             request,
-            messages.SUCCESS,
-            '이메일 인증이 완료되었습니다!\n이제 로그인할 수 있어요.',
-            extra_tags='modal_required'  # 특별 태그 추가
+            f'환영합니다, {user.username}님! 이메일 인증이 완료되었습니다.'
         )
-        return redirect('accounts:login')
+        return redirect('artist:index')
     else:
-        # 일반 에러 메시지 (모달 없음) - 기존 방식 유지
         messages.error(request, '인증 링크가 유효하지 않거나 만료되었습니다.')
         return redirect('accounts:login')
 
@@ -195,36 +193,19 @@ def login(request):
         if form.is_valid():
             user = form.get_user()
 
-            # 이메일 인증 여부 체크
             if not user.is_active:
                 messages.warning(request, "이메일 인증이 필요합니다.\n이메일을 확인해주세요!")
-                # 로그인 실패 처리 (폼에 오류 추가 가능)
                 return render(request, 'login.html', {'form': form})
 
             auth_login(request, user)
-
-            # 첫 로그인 감지: last_login이 None이거나 방금 전 설정된 경우
-            from django.utils import timezone
-            now = timezone.now()
-            is_first_login = (
-                user.last_login is None or 
-                (user.last_login and (now - user.last_login).total_seconds() < 10)
-            )
-
-            if is_first_login:
-                # 첫 로그인이면 아티스트 페이지로
-                return redirect('artist:index')
-            else:
-                # 기존 사용자는 next 파라미터 우선 적용
-                next_url = request.GET.get('next') or '/'
-                return redirect(next_url)
+            
+            # 첫 로그인인지 따지지않음으로 수정완료
+            next_url = request.GET.get('next') or '/'
+            return redirect(next_url)
     else:
         form = EmailAuthenticationForm()
 
-    context = {
-        'form': form,
-    }
-    return render(request, 'login.html', context)
+    return render(request, 'login.html', {'form': form})
 
 
 @login_required
@@ -914,20 +895,16 @@ def social_signup_complete(request):
             print("폼 유효성 검사 통과")
             try:
                 user = form.save()
-                print(f"저장 완료: {user.username}")
                 messages.success(request, f'환영합니다, {user.username}님!')
                 
-                # 임시로 메인 페이지로 리다이렉트 (테스트용)
-                print("메인 페이지로 리다이렉트")
-                return redirect('/')
+                 # 소셜 가입 완료 후 아티스트 페이지로 
+                return redirect('artist:index')  # 메인이 아닌 아티스트 페이지로
                 
             except Exception as e:
-                print(f"저장 오류: {e}")
                 import traceback
                 traceback.print_exc()
                 messages.error(request, f'저장 중 오류: {str(e)}')
         else:
-            print(f"폼 에러: {form.errors}")
             messages.error(request, '입력 정보를 확인해주세요.')
     else:
         form = SocialSignupCompleteForm(instance=request.user)

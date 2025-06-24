@@ -575,7 +575,21 @@
 
         if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // 업로드된 이미지로 교체
+                imagePreview.src = e.target.result;
+                imagePreview.className = 'w-full h-full object-cover rounded-full';
+            };
+            
+            reader.onerror = function() {
+                alert('이미지를 읽을 수 없습니다. 다른 이미지를 선택해주세요.');
+            };
+            
             reader.readAsDataURL(file);
+        } else {
+            alert('이미지 파일만 업로드 가능합니다.');
+            event.target.value = '';
         }
     }
 
