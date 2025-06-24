@@ -104,57 +104,109 @@
     </div>
 
     <!-- 덕 포인트 섹션 -->
-    <div class="mb-6 lg:mb-12">
-      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-gray-100">
-        <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
+    <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-6 mb-8 shadow-sm">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+          <span class="mr-2"></span>
           내 덕 포인트
-        </h2>
-        
-        <!-- 총 덕 포인트 표시 -->
-        <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-          <div class="text-center">
-            <div class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-              {{ total_ddok_points|floatformat:0 }}덕
-            </div>
-            <div class="text-sm sm:text-base text-gray-600">총 쌓인 덕</div>
+      </h2>
+      
+      <!-- 메인 덕 포인트 표시 -->
+      <div class="text-center mb-6">
+          <div class="text-4xl font-bold text-purple-600 mb-2">
+              {{ total_ddok_points|default:0 }}덕
           </div>
-        </div>
-        
-        <!-- 최근 획득 내역 -->
-        {% if recent_ddok_history %}
-          <div>
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-3">최근 획득 내역</h3>
-            <div class="space-y-2">
-              {% for log in recent_ddok_history %}
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <span class="text-sm font-medium text-gray-900">
-                      {{ log.get_reason_display }}
-                    </span>
-                    {% if log.related_member %}
-                      <span class="text-xs text-gray-500 ml-2">
-                        ({{ log.related_member.member_name }})
-                      </span>
-                    {% endif %}
-                    <div class="text-xs text-gray-500">
-                      {{ log.created_at|date:"m월 d일 H:i" }}
-                    </div>
-                  </div>
-                  <div class="text-sm font-bold text-green-600">
-                    +{{ log.points_change }}덕
-                  </div>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% else %}
-          <div class="text-center py-8">
-            <p class="text-gray-500 text-sm sm:text-base">아직 덕을 쌓지 않았어요!</p>
-            <p class="text-gray-400 text-xs sm:text-sm mt-1">생일시 맞추기 게임으로 덕을 쌓아보세요!</p>
-          </div>
-        {% endif %}
+          <p class="text-gray-600">총 쌓인 덕</p>
       </div>
-    </div>
+      
+      <!-- 최근 획득 내역 섹션 -->
+      {% if recent_ddok_history %}
+      <div class="mt-6 pt-4 border-t border-gray-200">
+          <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-semibold text-gray-700">최근 획득 내역</h3>
+              <button 
+                  id="toggle-history-btn" 
+                  class="text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
+                  onclick="toggleHistory()"
+              >
+                  (덕)보기
+              </button>
+          </div>
+          
+          <!-- 최근 1개 내역 (항상 표시) -->
+          <div id="recent-history-preview" class="space-y-2">
+              {% with recent_ddok_history|first as latest_log %}
+              <div class="flex justify-between items-center text-sm bg-white rounded-lg px-4 py-3 shadow-sm">
+                  <div class="flex items-center space-x-2">
+                      <div>
+                          <span class="text-gray-800 font-medium">
+                              {% if latest_log.reason == 'BIRTHDAY_GAME' %}
+                                  생일시 맞추기
+                              {% else %}
+                                  {{ latest_log.get_reason_display }}
+                              {% endif %}
+                          </span>
+                          {% if latest_log.related_member %}
+                              <span class="text-gray-500 text-xs block">
+                                  {{ latest_log.related_member.member_name }}
+                              </span>
+                          {% endif %}
+                      </div>
+                  </div>
+                  <div class="text-right">
+                      <span class="font-bold text-green-600">+{{ latest_log.points_change }}덕</span>
+                      <div class="text-xs text-gray-500">
+                          {{ latest_log.created_at|date:"m/d H:i" }}
+                      </div>
+                  </div>
+              </div>
+              {% endwith %}
+          </div>
+          
+          <!-- 나머지 내역들 (숨겨져 있다가 더보기 클릭시 표시) -->
+          <div id="full-history" class="space-y-2 mt-2 hidden">
+              {% for log in recent_ddok_history|slice:"1:" %}
+              <div class="flex justify-between items-center text-sm bg-white rounded-lg px-4 py-3 shadow-sm">
+                  <div class="flex items-center space-x-2">
+                      <div>
+                          <span class="text-gray-800 font-medium">
+                              {% if log.reason == 'BIRTHDAY_GAME' %}
+                                  생일시 맞추기
+                              {% else %}
+                                  {{ log.get_reason_display }}
+                              {% endif %}
+                          </span>
+                          {% if log.related_member %}
+                              <span class="text-gray-500 text-xs block">
+                                  {{ log.related_member.member_name }}
+                              </span>
+                          {% endif %}
+                      </div>
+                  </div>
+                  <div class="text-right">
+                      <span class="font-bold text-green-600">+{{ log.points_change }}덕</span>
+                      <div class="text-xs text-gray-500">
+                          {{ log.created_at|date:"m/d H:i" }}
+                      </div>
+                  </div>
+              </div>
+              {% endfor %}
+          </div>
+          
+          <!-- 내역이 더 있는지 표시 -->
+          {% if recent_ddok_history|length > 5 %}
+          <div id="more-indicator" class="text-center mt-3 text-sm text-gray-500 hidden">
+              <span>최근 5개 내역만 표시됩니다</span>
+          </div>
+          {% endif %}
+      </div>
+      {% else %}
+      <!-- 내역이 없을 때 -->
+      <div class="mt-6 pt-4 border-t border-gray-200 text-center">
+          <p class="text-gray-500 text-sm">아직 획득한 덕이 없습니다</p>
+          <p class="text-gray-400 text-xs mt-1">생일시 맞추기 게임에 참여해보세요! </p>
+      </div>
+      {% endif %}
+  </div>
 
     <!-- 찜한 아티스트 섹션 -->
     <div class="mb-6 lg:mb-12">
@@ -1063,6 +1115,29 @@
     </style>
 
     <!-- JavaScript -->
+    <script>
+      function toggleHistory() {
+          const fullHistory = document.getElementById('full-history');
+          const toggleBtn = document.getElementById('toggle-history-btn');
+          const moreIndicator = document.getElementById('more-indicator');
+          
+          if (fullHistory.classList.contains('hidden')) {
+              // 펼치기
+              fullHistory.classList.remove('hidden');
+              toggleBtn.textContent = '접기';
+              if (moreIndicator) {
+                  moreIndicator.classList.remove('hidden');
+              }
+          } else {
+              // 접기
+              fullHistory.classList.add('hidden');
+              toggleBtn.textContent = '더보기';
+              if (moreIndicator) {
+                  moreIndicator.classList.add('hidden');
+              }
+          }
+      }
+    </script>
     <script>
       // Django 변수를 안전하게 처리
       const followedArtistIds = JSON.parse('{{ followed_artist_ids|escapejs }}') || [];
