@@ -387,6 +387,31 @@ def mypage(request):
     favorite_members = Member.objects.filter(followers=user_profile)
     followed_artist_ids = list(favorite_artists.values_list('id', flat=True))
 
+    # 🎯 덕 포인트 정보 추가
+    # try:
+    #     user_ddok_point = request.user.ddok_point
+    #     total_ddok_points = user_ddok_point.total_points
+    #     recent_ddok_history = user_ddok_point.logs.select_related('related_member').order_by('-created_at')[:5]
+    # except:
+    #     total_ddok_points = 0
+    #     recent_ddok_history = []
+
+    #🎯 덕 포인트 정보 추가
+    try:
+        user_ddok_point = request.user.ddok_point
+        total_ddok_points = user_ddok_point.total_points
+        
+        # 최근 5개 내역만 가져오기 (더보기에서 표시할 최대 개수)
+        recent_ddok_history = user_ddok_point.logs.select_related('related_member').order_by('-created_at')[:5]
+        
+        print(f"🎯 마이페이지 덕 포인트: {total_ddok_points}")
+        print(f"🎯 최근 내역 개수: {recent_ddok_history.count()}")
+        
+    except Exception as e:
+        print(f"🎯 덕 포인트 조회 오류: {e}")
+        total_ddok_points = 0
+        recent_ddok_history = []
+
     # 내가 쓴 글 (Farm)
     farm_posts = sorted(
         chain(
@@ -496,6 +521,8 @@ def mypage(request):
         'favorite_cafes': favorite_cafes,      # 찜한 카페
         'recent_cafes': recent_cafes,          # 최근 본 카페
         'cafe_stats': cafe_stats,              # 덕생 통계
+        'total_ddok_points': total_ddok_points,     # 총 덕 포인트
+        'recent_ddok_history': recent_ddok_history, # 최근 내역
     }
     return render(request, 'mypage.html', context)
 

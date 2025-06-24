@@ -126,13 +126,18 @@ function showNoBirthdayMessage() {
 function selectMember(member) {
   gameData.selectedMember = member;
   
-  // 생일시 계산 (월:일:00:000 형식) 
-  // 6월 20일 생일 → 18:20:00 (오후 6시 20분)
-  const targetHour = member.birth_month + 12; // 오후 시간으로 변경 (12시간 추가)
+  // === 테스트용 코드 (기존 코드 주석처리) ===
+  /*
+  const targetHour = member.birth_month + 12;
   const targetMinute = member.birth_day;
   
   gameData.targetTime = new Date();
   gameData.targetTime.setHours(targetHour, targetMinute, 0, 0);
+  */
+  
+  // 테스트용: 현재 시간에서 10초 후로 설정
+  gameData.targetTime = new Date();
+  gameData.targetTime.setSeconds(gameData.targetTime.getSeconds() + 10);
   
   showGameView();
 }
@@ -299,8 +304,15 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
       
       showResult(timeDiff, ddok);
       
+      // === 포인트 저장 부분 임시 비활성화 ===
+      // if (ddok > 0) {
+        // console.log(`포인트 저장 시뮬레이션: ${ddok}점 (멤버ID: ${gameData.selectedMember.id})`);
+        // savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl); // 주석처리
+      // }
+
       if (ddok > 0) {
-        savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl);
+        // 새로운 API 엔드포인트 사용
+        saveBirthdayDdokPoints(ddok, gameData.selectedMember.id, timeDiff);
       }
       
       // 버튼 클릭 효과
@@ -317,3 +329,53 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
   // 게임 섹션 초기 표시
   showBirthdayGameSection(todayBirthdaysApiUrl);
 }
+
+// === 덕 포인트 저장 함수 ===
+async function saveBirthdayDdokPoints(ddok_points, memberId, timeDifference) {
+  console.log('🎯 saveBirthdayDdokPoints 함수 호출됨');
+  console.log('파라미터:', { ddok_points, memberId, timeDifference });
+  
+  try {
+    const response = await fetch('/calendar/api/save-birthday-ddok-points/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({
+        points: ddok_points,
+        member_id: memberId,
+        time_difference: timeDifference
+      }),
+    });
+    
+    console.log('🎯 응답 상태:', response.status);
+    console.log('🎯 응답 URL:', response.url);
+    
+    if (!response.ok) {
+      console.error('❌ HTTP 에러:', response.status, response.statusText);
+      return;
+    }
+    
+    const data = await response.json();
+    console.log('🎯 응답 데이터:', data);
+    
+    if (data.success) {
+      console.log('✅ 덕 포인트 저장 성공:', data.message);
+      console.log(`획득한 덕: ${data.ddok_points_earned}덕`);
+      console.log(`총 덕: ${data.total_ddok_points}덕`);
+      
+      // 게임 화면에 총 덕 포인트 업데이트 표시
+      if (gameDOM.totalScore) {
+        gameDOM.totalScore.textContent = data.total_ddok_points.toLocaleString();
+      }
+    } else {
+      console.error('❌ 덕 포인트 저장 실패:', data.error);
+    }
+  } catch (error) {
+    console.error('❌ 덕 포인트 저장 네트워크 오류:', error);
+  }
+}
+
+// 전역 스코프에서 함수가 정의되었는지 확인
+console.log('🎯 saveBirthdayDdokPoints 함수 정의됨:', typeof saveBirthdayDdokPoints);

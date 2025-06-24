@@ -68,7 +68,7 @@
                     <input type="text" 
                            name="item_prices-{{ forloop.counter0 }}-item_name"
                            value="{{ item_price.item_name }}"
-                           class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                           class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                            placeholder="물건명 (선택사항)" 
                            maxlength="20">
                   </div>
@@ -78,7 +78,7 @@
                       <input type="number" 
                              name="item_prices-{{ forloop.counter0 }}-price"
                              value="{% if not item_price.is_price_undetermined %}{{ item_price.price }}{% endif %}"
-                             class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                             class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                              placeholder="가격" 
                              min="0"
                              {% if item_price.is_price_undetermined %}disabled{% endif %}>
@@ -123,7 +123,7 @@
                   <input type="text" 
                          name="item_prices-{{ forloop.counter0 }}-item_name"
                          value="{{ item_price.item_name }}"
-                         class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                         class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                          placeholder="물건명 (선택사항)" 
                          maxlength="20">
                 </div>
@@ -133,7 +133,7 @@
                     <input type="number" 
                            name="item_prices-{{ forloop.counter0 }}-price"
                            value="{% if not item_price.is_price_undetermined %}{{ item_price.price }}{% endif %}"
-                           class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                           class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                            placeholder="가격" 
                            min="0"
                            {% if item_price.is_price_undetermined %}disabled{% endif %}>
@@ -191,7 +191,7 @@
         
         <div class="flex-grow min-w-0" style="flex: 2;">
           <input type="text" 
-                 class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                 class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                  placeholder="물건명 (선택사항)" 
                  maxlength="20">
         </div>
@@ -199,7 +199,7 @@
         <div class="flex-shrink-0 w-48">
           <div class="relative mb-2">
             <input type="number" 
-                   class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" 
+                   class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                    placeholder="가격" 
                    min="0">
             <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
