@@ -45,7 +45,7 @@
     </div>
     {% endif %}
 
-    <div class="comment-section mt-8">
+    <div id="comments" class="comment-section mt-8">
       <div class="comment-list space-y-4">
         {% for comment in comments %}
           {% include "components/post_detail/_comment_list.html" with comment=comment is_reply=False %}
@@ -165,6 +165,11 @@
   </div>
 </div>
 
+<style>
+  #comments {
+  scroll-margin-top: 80px; /* 64px + 여유 16px */
+  }
+</style>
 <script>
   // ✅ CSRF 토큰을 전역 변수로 설정
   window.csrfToken = "{{ csrf_token }}";

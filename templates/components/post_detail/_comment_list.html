@@ -2,7 +2,7 @@
 {% load humanize %}
 {% load ddokfarm_filters %}
 
-<div id="comment-{{ comment.id }}" class="comment-item {% if is_reply %}mt-2 ml-6{% endif %} py-2 border-t text-sm">
+<div class="comment-item {% if is_reply %}mt-2 ml-6{% endif %} py-2 border-t text-sm">
   <div class="flex justify-between items-center">
     <div class="flex items-center space-x-2">
       {% include 'components/post_detail/_user_profile.html' with user=comment.user %}
@@ -37,7 +37,7 @@
 
     {# ✅ 대댓글들을 표시 - 삭제된 댓글이어도 대댓글은 표시 #}
     {% for reply in comment.replies.all %}
-      <div id="comment-{{ reply.id }}" class="comment-item mt-2 ml-6 py-2 border-t text-sm">
+      <div class="comment-item mt-2 ml-6 py-2 border-t text-sm">
         <div class="flex justify-between items-center">
           <div class="flex items-center space-x-2">
             {% include 'components/post_detail/_user_profile.html' with user=reply.user %}
