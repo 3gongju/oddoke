@@ -117,12 +117,20 @@
             <!-- <p class="text-xs sm:text-sm text-gray-500">총 쌓인 덕</p> -->
           </div>
         </div>
+
+        <!-- 덕 포인트 사용하기 버튼 -->
+        <div class="mb-4 sm:mb-6">
+          <button onclick="openBannerRequestModal()" 
+                  class="w-full sm:w-auto px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
+            덕 쓸어가기 
+          </button>
+        </div>
         
         <!-- 최근 획득 내역 섹션 -->
         {% if recent_ddok_history %}
         <div class="pt-4 border-t border-gray-200">
           <div class="flex justify-between items-center mb-3">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-700">최근 획득 내역</h3>
+            <h3 class="text-base sm:text-lg font-semibold text-gray-700">최근 내역</h3>
             <button 
               id="toggle-history-btn" 
               class="text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
@@ -155,7 +163,9 @@
                         </span>
                       {% endif %}
                     </div>
-                    <span class="font-bold text-purple-600 text-sm sm:text-base">+{{ latest_log.points_change }}덕</span>
+                    <span class="font-bold {% if latest_log.points_change > 0 %}text-purple-600{% else %}text-red-600{% endif %} text-sm sm:text-base">
+                      {% if latest_log.points_change > 0 %}+{% endif %}{{ latest_log.points_change }}덕
+                    </span>
                   </div>
                   <p class="text-xs sm:text-sm text-gray-500">{{ latest_log.created_at|date:"m.d H:i" }}</p>
                 </div>
@@ -187,7 +197,9 @@
                         </span>
                       {% endif %}
                     </div>
-                    <span class="font-bold text-purple-600 text-sm sm:text-base">+{{ log.points_change }}덕</span>
+                    <span class="font-bold {% if log.points_change > 0 %}text-purple-600{% else %}text-red-600{% endif %} text-sm sm:text-base">
+                      {% if log.points_change > 0 %}+{% endif %}{{ log.points_change }}덕
+                    </span>
                   </div>
                   <p class="text-xs sm:text-sm text-gray-500">{{ log.created_at|date:"m.d H:i" }}</p>
                 </div>
@@ -1491,5 +1503,102 @@
     </script>
   </div>
 </div>
+
+<script>
+// 배너 신청 모달 관련 함수들
+function openBannerRequestModal() {
+  fetch('/accounts/banner-request/form/')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showBannerModal(data.form_html);
+      } else {
+        showToast(data.error, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('배너 신청 폼 로드 오류:', error);
+      showToast('폼을 불러오는 중 오류가 발생했습니다.', 'error');
+    });
+}
+
+function showBannerModal(formHtml) {
+  // 기존 모달 제거
+  const existingModal = document.getElementById('bannerRequestModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // 모달 HTML 생성
+  const modalHTML = `
+    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
+      <div class="transform scale-95 opacity-0 transition-all duration-300" id="bannerModalContent">
+        ${formHtml}
+      </div>
+    </div>
+  `;
+  
+  // body에 모달 추가
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // 애니메이션 효과
+  setTimeout(() => {
+    const modalContent = document.getElementById('bannerModalContent');
+    if (modalContent) {
+      modalContent.classList.remove('scale-95', 'opacity-0');
+      modalContent.classList.add('scale-100', 'opacity-100');
+    }
+  }, 10);
+  
+  // ESC 키로 모달 닫기
+  const handleEscape = function(e) {
+    if (e.key === 'Escape') {
+      closeBannerModal();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+  
+  // 모달 외부 클릭 시 닫기
+  document.getElementById('bannerRequestModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeBannerModal();
+    }
+  });
+}
+
+function closeBannerModal() {
+  const modal = document.getElementById('bannerRequestModal');
+  if (modal) {
+    const modalContent = document.getElementById('bannerModalContent');
+    if (modalContent) {
+      modalContent.classList.add('scale-95', 'opacity-0');
+      modalContent.classList.remove('scale-100', 'opacity-100');
+    }
+    
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  }
+}
+
+// 토스트 메시지 함수
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    padding: 12px 20px; border-radius: 8px; color: white;
+    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+    opacity: 0; transition: opacity 0.3s;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.style.opacity = '1', 10);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+</script>
 
 {% endblock %}
