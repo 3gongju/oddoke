@@ -20,6 +20,12 @@ urlpatterns = [
     path('naver/login/', views.naver_login, name='naver_login'),
     path('naver/callback/', views.naver_callback, name='naver_callback'),
     path('naver/logout/', views.naver_logout, name='naver_logout'),
+    
+    # 구글 로그인 추가
+    path('google/login/', views.google_login, name='google_login'),
+    path('google/callback/', views.google_callback, name='google_callback'),
+    path('google/logout/', views.google_logout, name='google_logout'),
+
 
     # 소셜 로그인 추가 정보 입력
     path('social/complete/', views.social_signup_complete, name='social_signup_complete'),
