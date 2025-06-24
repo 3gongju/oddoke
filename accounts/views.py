@@ -23,7 +23,7 @@ from ddokfarm.models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmCom
 from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, DamComment
 from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
-from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest
+from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPointLog
 from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm, PostReportForm, BannerRequestForm
 from .services import KakaoAuthService, NaverAuthService
 
@@ -41,6 +41,10 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from .forms import CustomPasswordResetForm, CustomSetPasswordForm
 
+from django.db import transaction
+import logging
+
+logger = logging.getLogger(__name__)
 User = get_user_model()
 
 load_dotenv()
@@ -1351,10 +1355,27 @@ def get_report_form(request, app_name, category, post_id):
 @require_POST
 def submit_banner_request(request):
     """배너 신청 처리"""
+    # 🔥 강화된 디버깅
+    print("=" * 50)
+    print("🔥 배너 신청 요청 받음!")
+    print(f"🔥 사용자: {request.user}")
+    print(f"🔥 인증됨: {request.user.is_authenticated}")
+    print(f"🔥 POST 데이터: {dict(request.POST)}")
+    print(f"🔥 FILES 데이터: {dict(request.FILES)}")
+    print(f"🔥 Content-Type: {request.content_type}")
+    print("=" * 50)
     try:
+        print("=== 배너 신청 처리 시작 ===")
+        print(f"사용자: {request.user.username}")
+        print(f"POST 데이터: {request.POST}")
+        print(f"FILES 데이터: {request.FILES}")
+        
         # 덕 포인트 확인
         user_ddok_point = request.user.get_or_create_ddok_point()
         required_points = 1000
+        
+        print(f"사용자 포인트: {user_ddok_point.total_points}")
+        print(f"필요 포인트: {required_points}")
         
         if user_ddok_point.total_points < required_points:
             return JsonResponse({
@@ -1363,8 +1384,11 @@ def submit_banner_request(request):
             })
         
         form = BannerRequestForm(request.POST, request.FILES)
+        print(f"폼 유효성: {form.is_valid()}")
         
         if form.is_valid():
+            print("폼 유효성 검사 통과")
+            
             with transaction.atomic():
                 # 배너 신청 생성
                 banner_request = form.save(commit=False)
@@ -1372,9 +1396,13 @@ def submit_banner_request(request):
                 banner_request.ddok_points_used = required_points
                 banner_request.save()
                 
+                print(f"배너 신청 저장됨: ID {banner_request.id}")
+                
                 # 덕 포인트 차감
                 user_ddok_point.total_points -= required_points
                 user_ddok_point.save()
+                
+                print(f"포인트 차감 완료: {user_ddok_point.total_points}")
                 
                 # 포인트 사용 로그 생성
                 DdokPointLog.objects.create(
@@ -1383,6 +1411,8 @@ def submit_banner_request(request):
                     reason='BANNER_REQUEST',
                     related_member=None
                 )
+                
+                print("포인트 로그 생성 완료")
             
             return JsonResponse({
                 'success': True,
@@ -1390,6 +1420,7 @@ def submit_banner_request(request):
                 'remaining_points': user_ddok_point.total_points
             })
         else:
+            print(f"폼 에러: {form.errors}")
             return JsonResponse({
                 'success': False,
                 'error': '입력 정보를 확인해주세요.',
@@ -1397,7 +1428,9 @@ def submit_banner_request(request):
             })
             
     except Exception as e:
-        logger.error(f"배너 신청 오류: {e}")
+        print(f"배너 신청 오류: {e}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({
             'success': False,
             'error': '배너 신청 중 오류가 발생했습니다.'
@@ -1443,4 +1476,34 @@ def get_banner_request_form(request):
         return JsonResponse({
             'success': False,
             'error': '폼을 불러오는 중 오류가 발생했습니다.'
+        })
+
+@login_required
+def banner_request_form(request):
+    """배너 신청 폼을 JSON으로 반환"""
+    try:
+        form = BannerRequestForm()
+        user_ddok_point = request.user.get_or_create_ddok_point()
+        required_points = 1000
+        
+        # 템플릿을 렌더링해서 HTML 문자열로 변환
+        from django.template.loader import render_to_string
+        
+        form_html = render_to_string('accounts/banner_request_form.html', {
+            'form': form,
+            'user_points': user_ddok_point.total_points,
+            'required_points': required_points,
+            'can_afford': user_ddok_point.total_points >= required_points,
+        }, request=request)
+        
+        return JsonResponse({
+            'success': True,
+            'form_html': form_html
+        })
+        
+    except Exception as e:
+        print(f"배너 폼 로드 오류: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': '배너 신청 폼을 불러올 수 없습니다.'
         })

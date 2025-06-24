@@ -1,164 +1,135 @@
-{% load static %}
+<!-- 배너 신청 모달 폼 -->
+<div class="bg-white rounded-lg max-w-md w-full mx-4 relative">
+  <!-- 헤더 -->
+  <div class="flex justify-between items-center p-6 border-b">
+    <h3 class="text-lg font-semibold text-gray-900">배너 신청</h3>
+    <button onclick="closeBannerModal()" class="text-gray-400 hover:text-gray-600">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
 
-<div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6">
-    <div class="text-center mb-6">
-        <div class="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-2">배너 신청</h3>
-        <p class="text-sm text-gray-600">메인 페이지에 3일간 표시될 배너를 신청하세요</p>
-    </div>
-
+  <!-- 폼 내용 -->
+  <form id="bannerRequestForm" enctype="multipart/form-data" class="p-6">
+    {% csrf_token %}
+    
     <!-- 포인트 정보 -->
-    <div class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-        <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium text-purple-700">필요한 덕</span>
-            <span class="text-lg font-bold text-purple-600">{{ required_points }}덕</span>
-        </div>
-        <div class="flex justify-between items-center">
-            <span class="text-sm font-medium text-gray-700">보유 덕</span>
-            <span class="text-lg font-bold {% if can_afford %}text-green-600{% else %}text-red-600{% endif %}">
-                {{ user_points }}덕
-            </span>
-        </div>
-        {% if not can_afford %}
-        <div class="mt-2 text-xs text-red-600">
-            덕 포인트가 부족합니다. 생일시 맞추기 게임에서 더 많은 덕을 쌓아보세요!
-        </div>
-        {% endif %}
+    <div class="mb-4 p-4 bg-purple-50 rounded-lg">
+      <div class="flex justify-between items-center">
+        <span class="text-sm font-medium text-purple-700">필요 포인트:</span>
+        <span class="text-lg font-bold text-purple-600">{{ required_points }}덕</span>
+      </div>
+      <div class="flex justify-between items-center mt-2">
+        <span class="text-sm text-gray-600">보유 포인트:</span>
+        <span class="text-lg font-semibold {% if can_afford %}text-green-600{% else %}text-red-600{% endif %}">
+          {{ user_points }}덕
+        </span>
+      </div>
     </div>
 
-    {% if can_afford %}
-    <form id="bannerRequestForm" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <!-- 아티스트명 -->
-        <div class="mb-4">
-            <label for="{{ form.artist_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                아티스트명 <span class="text-red-500">*</span>
-            </label>
-            {{ form.artist_name }}
-        </div>
-
-        <!-- 배너 이미지 -->
-        <div class="mb-6">
-            <label for="{{ form.banner_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                배너 이미지 <span class="text-red-500">*</span>
-            </label>
-            {{ form.banner_image }}
-            <p class="mt-1 text-xs text-gray-500">
-                • 권장 크기: 1200x400px 이상<br>
-                • 최대 파일 크기: 5MB<br>
-                • 지원 형식: JPG, PNG
-            </p>
-            
-            <!-- 이미지 미리보기 -->
-            <div id="imagePreview" class="mt-3 hidden">
-                <img id="previewImg" src="" alt="미리보기" class="w-full h-32 object-cover rounded-lg border border-gray-300">
-            </div>
-        </div>
-
-        <!-- 주의사항 -->
-        <div class="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div class="flex">
-                <svg class="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                <div class="text-xs text-yellow-800">
-                    <p class="font-medium mb-1">주의사항</p>
-                    <ul class="list-disc list-inside space-y-1">
-                        <li>부적절한 내용의 이미지는 거절될 수 있습니다</li>
-                        <li>승인 시 3일간 메인 페이지에 표시됩니다</li>
-                        <li>거절 시 덕 포인트가 환불됩니다</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <!-- 버튼들 -->
-        <div class="flex space-x-3">
-            <button type="button" 
-                    onclick="closeBannerModal()" 
-                    class="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-300 transition-colors">
-                취소
-            </button>
-            <button type="submit" 
-                    class="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors">
-                신청하기 ({{ required_points }}덕)
-            </button>
-        </div>
-    </form>
-    {% else %}
-    <div class="text-center">
-        <button type="button" 
-                onclick="closeBannerModal()" 
-                class="w-full px-4 py-3 bg-gray-200 text-gray-800 rounded-xl font-medium hover:bg-gray-300 transition-colors">
-            닫기
-        </button>
+    {% if not can_afford %}
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+      <p class="text-red-700 text-sm">덕 포인트가 부족합니다. 생일 맞추기 게임으로 포인트를 모아보세요!</p>
     </div>
     {% endif %}
+
+    <!-- 아티스트명 -->
+    <div class="mb-4">
+      <label for="{{ form.artist_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+        아티스트명 *
+      </label>
+      <input type="text" 
+             name="artist_name" 
+             id="{{ form.artist_name.id_for_label }}"
+             required
+             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+             placeholder="아티스트명을 입력하세요">
+    </div>
+
+    <!-- 배너 이미지 -->
+    <div class="mb-4">
+      <label for="{{ form.banner_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+        배너 이미지 *
+      </label>
+      <input type="file" 
+             name="banner_image" 
+             id="{{ form.banner_image.id_for_label }}"
+             accept="image/*"
+             required
+             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+      <p class="text-xs text-gray-500 mt-1">권장 크기: 1200x400px, 최대 5MB, JPG/PNG</p>
+    </div>
+
+    <!-- 안내사항 -->
+    <div class="mb-6 p-4 bg-yellow-50 rounded-lg">
+      <h4 class="text-sm font-medium text-yellow-800 mb-2">⚠️ 안내사항</h4>
+      <ul class="text-xs text-yellow-700 space-y-1">
+        <li>• 승인 시 3일간 메인 페이지에 표시됩니다</li>
+        <li>• 부적절한 내용은 거절될 수 있습니다</li>
+        <li>• 거절 시 포인트가 환불됩니다</li>
+      </ul>
+    </div>
+
+    <!-- 버튼들 -->
+    <div class="flex space-x-3">
+      <button type="button" onclick="closeBannerModal()" 
+              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+        취소
+      </button>
+      <button type="submit" {% if not can_afford %}disabled{% endif %}
+              class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        신청하기 ({{ required_points }}덕)
+      </button>
+    </div>
+  </form>
 </div>
 
 <script>
-// 이미지 미리보기 기능
-document.getElementById('id_banner_image').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const preview = document.getElementById('imagePreview');
-    const previewImg = document.getElementById('previewImg');
-    
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            preview.classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.classList.add('hidden');
-    }
-});
-
-// 폼 제출 처리
+// 폼 제출 이벤트 처리
 document.getElementById('bannerRequestForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+  e.preventDefault();
+  
+  console.log('🔥 배너 신청 폼 제출됨');
+  
+  const formData = new FormData(this);
+  
+  // 필수 필드 확인
+  const artistName = formData.get('artist_name');
+  const bannerImage = formData.get('banner_image');
+  
+  if (!artistName || !bannerImage || bannerImage.size === 0) {
+    showToast('아티스트명과 배너 이미지를 모두 입력해주세요.', 'error');
+    return;
+  }
+  
+  // 서버로 전송
+  fetch('/accounts/banner-request/', {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    }
+  })
+  .then(response => {
+    console.log('🔥 서버 응답 상태:', response.status);
+    return response.json();
+  })
+  .then(data => {
+    console.log('🔥 서버 응답 데이터:', data);
     
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    
-    submitBtn.disabled = true;
-    submitBtn.textContent = '신청 중...';
-    
-    fetch('/accounts/banner-request/', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message, 'success');
-            closeBannerModal();
-            
-            // 마이페이지 새로고침하여 포인트 업데이트
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            showToast(data.error, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('배너 신청 오류:', error);
-        showToast('신청 중 오류가 발생했습니다.', 'error');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    });
+    if (data.success) {
+      showToast(data.message, 'success');
+      closeBannerModal();
+      // 페이지 새로고침해서 업데이트된 포인트 표시
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showToast(data.error, 'error');
+    }
+  })
+  .catch(error => {
+    console.error('🔥 배너 신청 오류:', error);
+    showToast('배너 신청 중 오류가 발생했습니다.', 'error');
+  });
 });
 </script>

@@ -1,7 +1,7 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest
+from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPoint, DdokPointLog
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
@@ -716,3 +716,16 @@ class BannerRequestAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """관련 객체들을 미리 로드"""
         return super().get_queryset(request).select_related('user', 'approved_by')
+
+@admin.register(DdokPoint)
+class DdokPointAdmin(admin.ModelAdmin):
+    list_display = ('user', 'total_points', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('created_at', 'updated_at')
+
+@admin.register(DdokPointLog)
+class DdokPointLogAdmin(admin.ModelAdmin):
+    list_display = ('point_owner', 'points_change', 'reason', 'related_member', 'created_at')
+    list_filter = ('reason', 'created_at')
+    search_fields = ('point_owner__user__username',)
+    readonly_fields = ('created_at',)

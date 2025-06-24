@@ -515,6 +515,12 @@ class DdokPoint(models.Model):
         default=0,
         verbose_name='쌓인 덕'
     )
+
+    created_at = models.DateTimeField(     
+        auto_now_add=True,
+        verbose_name='생성 일시'
+    )
+    
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name='최근 변동 일시'

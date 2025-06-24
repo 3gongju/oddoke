@@ -71,5 +71,6 @@ urlpatterns = [
 
     # 배너 신청 관련
     path('banner-request/', views.submit_banner_request, name='submit_banner_request'),
-    path('banner-request/form/', views.get_banner_request_form, name='get_banner_request_form'),
+    # path('banner-request/form/', views.get_banner_request_form, name='get_banner_request_form'),
+    path('banner-request/form/', views.banner_request_form, name='banner_request_form'), 
 ]
