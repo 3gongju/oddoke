@@ -31,7 +31,7 @@
     .birthday-slide-item {
         flex: 0 0 50%;   /* sm: 50% */
         max-width: 50%;
-        padding: 0 12px;
+        padding: 0 8px;
     }
 }
 
@@ -56,24 +56,48 @@
     }
 }
 
-/* 생일 카드 스타일 */
+/* 생일 카드 스타일 - 높이 통일 */
 .birthday-card {
-    border-radius: 0.5rem;
+    border-radius: 0.75rem;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    padding: 0.75rem;
+    padding: 1rem;
     text-align: center;
     transition: all 0.3s ease;
     background: white;
+    /* 🔥 카드 높이 통일 */
+    min-height: 200px;
+    max-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
 }
 
 .birthday-card.today-birthday {
     background: #fef2f2; /* bg-red-50 */
+    border: 2px solid #fecaca; /* border-red-200 */
 }
 
 @media (min-width: 640px) {
     .birthday-card {
-        border-radius: 0.75rem;
-        padding: 1rem;
+        min-height: 220px;
+        max-height: 220px;
+        padding: 1.25rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .birthday-card {
+        min-height: 240px;
+        max-height: 240px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .birthday-card {
+        min-height: 260px;
+        max-height: 260px;
     }
 }
 
@@ -83,47 +107,80 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-/* 오늘 생일 라벨 */
-.today-birthday-label {
-    background-color: #ef4444; /* bg-red-500 */
+/* 🔥 오늘 생일 라벨 - 절대 위치로 배치하여 높이에 영향 안주도록 */
+.today-birthday-badge {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    padding: 0.25rem 0.75rem;
     border-radius: 9999px;
     font-weight: 700;
-    margin-bottom: 0.5rem;
-    display: inline-block;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    z-index: 10;
+    white-space: nowrap;
+    animation: pulse 2s infinite;
 }
 
 @media (min-width: 640px) {
-    .today-birthday-label {
-        margin-bottom: 0.75rem;
+    .today-birthday-badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 1rem;
+        top: 12px;
     }
 }
 
-/* 아티스트 이미지 */
+@keyframes pulse {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.05);
+    }
+}
+
+/* 🔥 카드 내용 컨테이너 - 균등하게 배치 */
+.birthday-card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    height: 100%;
+    padding-top: 24px; /* 오늘 생일 뱃지 공간 확보 */
+}
+
+/* 아티스트 이미지 - 크기 통일 */
 .birthday-artist-image {
-    width: 3rem;
-    height: 3rem;
-    margin: 0 auto 0.5rem;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     object-fit: cover;
     transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 @media (min-width: 640px) {
     .birthday-artist-image {
-        width: 5rem;
-        height: 5rem;
-        margin-bottom: 1rem;
+        width: 70px;
+        height: 70px;
     }
 }
 
 @media (min-width: 768px) {
     .birthday-artist-image {
-        width: 6rem;
-        height: 6rem;
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .birthday-artist-image {
+        width: 90px;
+        height: 90px;
     }
 }
 
@@ -132,14 +189,27 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* 아티스트 정보 컨테이너 */
+.birthday-artist-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
 /* 아티스트 이름 스타일 */
 .birthday-artist-name {
     font-weight: 700;
-    font-size: 0.75rem;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
+    font-size: 0.875rem;
     color: #000000;
+    text-align: center;
+    line-height: 1.2;
+    margin: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .birthday-artist-name.today-name {
@@ -156,12 +226,18 @@
 .birthday-group-name {
     font-size: 0.75rem;
     color: #6b7280; /* text-gray-600 */
-    margin-top: 0.25rem;
+    margin: 0;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 @media (min-width: 640px) {
     .birthday-group-name {
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
     }
 }
 
@@ -171,8 +247,8 @@
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
-    margin-top: 0.25rem;
     color: #6b7280; /* text-gray-600 */
+    flex-shrink: 0;
 }
 
 .birthday-date-display.today-date {
@@ -180,8 +256,9 @@
 }
 
 .birthday-date-icon {
-    width: 0.75rem;
-    height: 0.75rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
 }
 
 @media (min-width: 640px) {
@@ -194,11 +271,12 @@
 .birthday-date-text {
     font-size: 0.75rem;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 @media (min-width: 640px) {
     .birthday-date-text {
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
     }
 }
 
@@ -206,41 +284,50 @@
 .birthday-nav-btn {
     position: absolute;
     z-index: 20;
-    top: calc(50% + 6px);
+    top: 50%;
     transform: translateY(-50%);
-    opacity: 0.8;
+    opacity: 0.7;
     transition: all 0.2s ease;
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
     cursor: pointer;
     padding: 0.5rem;
+    backdrop-filter: blur(4px);
 }
 
 .birthday-nav-btn:hover {
     opacity: 1;
     transform: translateY(-50%) scale(1.1);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .birthday-nav-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
+    transform: translateY(-50%);
 }
 
 .birthday-nav-btn.prev {
-    left: 0.75rem;
+    left: 0.5rem;
 }
 
 .birthday-nav-btn.next {
-    right: 0.75rem;
+    right: 0.5rem;
 }
 
 @media (min-width: 640px) {
     .birthday-nav-btn.prev {
-        left: 1.5rem;
+        left: 1rem;
     }
     
     .birthday-nav-btn.next {
-        right: 1.5rem;
+        right: 1rem;
+    }
+    
+    .birthday-nav-btn {
+        padding: 0.75rem;
     }
 }
 
@@ -248,33 +335,32 @@
     width: 1rem;
     height: 1rem;
     color: #374151; /* text-gray-700 */
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 
 @media (min-width: 640px) {
     .birthday-nav-icon {
-        width: 1.5rem;
-        height: 1.5rem;
+        width: 1.25rem;
+        height: 1.25rem;
     }
 }
 
 /* 빈 상태 스타일 */
 .birthday-empty-state {
     text-align: center;
-    padding: 2rem 0;
+    padding: 3rem 1rem;
     animation: fadeInUp 0.8s ease-out;
 }
 
 @media (min-width: 640px) {
     .birthday-empty-state {
-        padding: 4rem 0;
+        padding: 4rem 2rem;
     }
 }
 
 .birthday-empty-icon {
-    width: 3rem;
-    height: 3rem;
-    margin: 0 auto 0.75rem;
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
     background-color: #f3f4f6; /* bg-gray-100 */
     border-radius: 50%;
     display: flex;
@@ -287,30 +373,65 @@
     .birthday-empty-icon {
         width: 5rem;
         height: 5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
 }
 
 .birthday-empty-title {
-    font-size: 1rem;
-    font-weight: 300;
-    color: #000000;
-    margin-bottom: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 400;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
 }
 
 @media (min-width: 640px) {
     .birthday-empty-title {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
     }
 }
 
 .birthday-empty-description {
-    color: #6b7280; /* text-gray-600 */
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
 }
 
 @media (min-width: 640px) {
     .birthday-empty-description {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+}
+
+/* 버튼 스타일 */
+.intro-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
+    border: none;
+    cursor: pointer;
+}
+
+.intro-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);  
+    background: linear-gradient(135deg, #db2777, #be185d);  
+}
+
+@media (min-width: 640px) {
+    .intro-btn {
+        padding: 1rem 2rem;
         font-size: 1rem;
     }
 }
@@ -320,14 +441,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2rem;
+    padding: 3rem;
 }
 
 .birthday-loading-spinner {
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid #f3f4f6;
-    border-top: 2px solid #3b82f6;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -364,7 +485,8 @@
 }
 
 /* 접근성 개선 */
-.birthday-card:focus {
+.birthday-card:focus,
+.birthday-card:focus-within {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
 }
@@ -378,6 +500,10 @@
     .birthday-card:hover {
         border-color: #3b82f6;
     }
+    
+    .birthday-nav-btn {
+        border: 2px solid #000000;
+    }
 }
 
 /* 모션 감소 설정 */
@@ -386,11 +512,14 @@
     .birthday-slider-track,
     .birthday-card,
     .birthday-artist-image,
-    .birthday-nav-btn {
+    .birthday-nav-btn,
+    .intro-btn {
         transition: none;
+        animation: none;
     }
     
-    .birthday-card:hover {
+    .birthday-card:hover,
+    .intro-btn:hover {
         transform: none;
     }
     
@@ -398,7 +527,8 @@
         animation: none;
     }
     
-    .birthday-loading-spinner {
+    .birthday-loading-spinner,
+    .today-birthday-badge {
         animation: none;
     }
 }
