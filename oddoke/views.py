@@ -13,12 +13,41 @@ def group_artists(artists, group_size=5):
     return [list(filter(None, group)) for group in zip_longest(*[iter(artists)] * group_size)]
 
 def intro_view(request):
-    """어덕해 소개 페이지 - 17개 슬라이드로 구성된 랜딩 페이지"""
+    """어덕해 소개 페이지 - 18개 슬라이드로 구성된 랜딩 페이지"""
 
     # 기본 이미지 경로 정의
     DEFAULT_SLIDE_IMAGE = 'image/slide/intro_slide_default.jpg'
     
-    # 각 슬라이드별 콘텐츠 정보 정의
+    # 🔥 실제 데이터 가져오기
+    try:
+        # 🔥 찜한 아티스트 데이터 추가
+        raw_favs = list(Artist.objects.filter(followers=request.user)) if request.user.is_authenticated else []
+        
+        # 생일 아티스트 데이터 (실제 함수 호출)
+        birthday_artists = get_weekly_bday_artists()
+        
+        # 최신 덕팜 게시물 (실제 데이터)
+        latest_ddokfarm_posts = []
+        sell_posts = list(FarmSellPost.objects.select_related('user').prefetch_related('images').order_by('-created_at')[:3])
+        for post in sell_posts:
+            post.category = 'sell'
+            latest_ddokfarm_posts.append(post)
+        
+        # 최신 덕담 게시물 (실제 데이터)
+        latest_ddokdam_posts = []
+        community_posts = list(DamCommunityPost.objects.select_related('user').prefetch_related('images').order_by('-created_at')[:3])
+        for post in community_posts:
+            post.category = 'community'
+            latest_ddokdam_posts.append(post)
+            
+    except Exception as e:
+        print(f"실제 데이터 로드 오류: {e}")
+        raw_favs = []
+        birthday_artists = []
+        latest_ddokfarm_posts = []
+        latest_ddokdam_posts = []
+    
+    # 각 슬라이드별 콘텐츠 정보 정의 (18개 슬라이드)
     slide_contents = [
         {
             'title': '어덕해에 오신 것을 환영합니다',
@@ -32,21 +61,24 @@ def intro_view(request):
             'subtitle': '안전하고 편리한 거래',
             'description': '판매, 대여, 공동구매까지 모든 거래를 한 곳에서',
             'type': 'ddokfarm',
-            'image': DEFAULT_SLIDE_IMAGE
+            'image': DEFAULT_SLIDE_IMAGE,
+            'real_data': latest_ddokfarm_posts  # 🔥 실제 데이터 추가
         },
         {
             'title': '덕담 - 팬들만의 소통 공간',
             'subtitle': '자유로운 소통과 정보 공유',
             'description': '커뮤니티, 매너샷, 생일카페 정보까지',
             'type': 'ddokdam',
-            'image': DEFAULT_SLIDE_IMAGE
+            'image': DEFAULT_SLIDE_IMAGE,
+            'real_data': latest_ddokdam_posts  # 🔥 실제 데이터 추가
         },
         {
             'title': '덕생 - 아티스트 생일 달력',
             'subtitle': '소중한 순간을 놓치지 마세요',
             'description': '생일 알림과 기념 이벤트 정보',
             'type': 'ddoksang',
-            'image': DEFAULT_SLIDE_IMAGE
+            'image': DEFAULT_SLIDE_IMAGE,
+            'real_data': birthday_artists  # 🔥 실제 생일 아티스트 데이터
         },
         {
             'title': '덕채팅 - 실시간 소통',
@@ -94,7 +126,8 @@ def intro_view(request):
             'title': '24/7 고객 지원',
             'subtitle': '언제든 도움을 받으세요',
             'description': '빠른 문의 응답과 친절한 고객 서비스',
-            'type': 'support'
+            'type': 'support',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '개인정보 보호',
@@ -132,6 +165,14 @@ def intro_view(request):
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
+            'title': '찜한 아티스트',
+            'subtitle': '내가 좋아하는 아티스트들',
+            'description': '찜한 아티스트들의 최신 소식을 놓치지 마세요',
+            'type': 'favorite_artists',
+            'image': DEFAULT_SLIDE_IMAGE,
+            'real_data': raw_favs  # 🔥 찜한 아티스트 실제 데이터
+        },
+        {
             'title': '지금 시작하세요',
             'subtitle': '새로운 덕질의 시작',
             'description': '어덕해와 함께 더 풍부한 팬 라이프를 경험하세요',
@@ -140,7 +181,7 @@ def intro_view(request):
         }
     ]
     
-    # 통계 정보 (선택적)
+    # 통계 정보 (실제 데이터로 계산)
     stats = {
         'total_users': 0,
         'total_posts': 0,
@@ -169,9 +210,14 @@ def intro_view(request):
     
     context = {
         'page_title': '어덕해 소개',
-        'total_slides': 17,  # 17개 슬라이드로 변경
+        'total_slides': 18,  # 🔥 17개 → 18개로 변경
         'slide_contents': slide_contents,
         'stats': stats,
+        # 🔥 실제 데이터를 별도로도 전달
+        'raw_favs': raw_favs,  # 🔥 찜한 아티스트 추가
+        'birthday_artists': birthday_artists,
+        'latest_ddokfarm_posts': latest_ddokfarm_posts,
+        'latest_ddokdam_posts': latest_ddokdam_posts,
     }
     return render(request, 'main/intro.html', context)
 
