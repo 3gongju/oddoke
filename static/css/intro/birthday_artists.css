@@ -1,0 +1,404 @@
+/* 덕생 - 아티스트 생일 달력 슬라이드 전용 CSS */
+/* static/css/intro/birthday_artists.css */
+
+/* 생일 아티스트 슬라이더 컨테이너 */
+.birthday-slider-container {
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    transition: all 0.3s ease;
+}
+
+.birthday-slider-container:active {
+    cursor: grabbing;
+}
+
+/* 슬라이더 트랙 */
+.birthday-slider-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+    width: 100%;
+}
+
+/* 슬라이드 아이템 크기 설정 - 반응형 */
+.birthday-slide-item {
+    flex: 0 0 100%;     /* 모바일: 100% */
+    max-width: 100%;
+    padding: 0 4px;
+}
+
+@media (min-width: 640px) {
+    .birthday-slide-item {
+        flex: 0 0 50%;   /* sm: 50% */
+        max-width: 50%;
+        padding: 0 12px;
+    }
+}
+
+@media (min-width: 768px) {
+    .birthday-slide-item {
+        flex: 0 0 33.333333%;  /* md: 33.33% */
+        max-width: 33.333333%;
+    }
+}
+
+@media (min-width: 1024px) {
+    .birthday-slide-item {
+        flex: 0 0 25%;    /* lg: 25% */
+        max-width: 25%;
+    }
+}
+
+@media (min-width: 1280px) {
+    .birthday-slide-item {
+        flex: 0 0 20%;    /* xl: 20% */
+        max-width: 20%;
+    }
+}
+
+/* 생일 카드 스타일 */
+.birthday-card {
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    padding: 0.75rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.birthday-card.today-birthday {
+    background: #fef2f2; /* bg-red-50 */
+}
+
+@media (min-width: 640px) {
+    .birthday-card {
+        border-radius: 0.75rem;
+        padding: 1rem;
+    }
+}
+
+/* 생일 카드 호버 효과 */
+.birthday-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* 오늘 생일 라벨 */
+.today-birthday-label {
+    background-color: #ef4444; /* bg-red-500 */
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+@media (min-width: 640px) {
+    .today-birthday-label {
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* 아티스트 이미지 */
+.birthday-artist-image {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.5rem;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+@media (min-width: 640px) {
+    .birthday-artist-image {
+        width: 5rem;
+        height: 5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .birthday-artist-image {
+        width: 6rem;
+        height: 6rem;
+    }
+}
+
+.birthday-artist-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 아티스트 이름 스타일 */
+.birthday-artist-name {
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    color: #000000;
+}
+
+.birthday-artist-name.today-name {
+    color: #dc2626; /* text-red-600 */
+}
+
+@media (min-width: 640px) {
+    .birthday-artist-name {
+        font-size: 1rem;
+    }
+}
+
+/* 그룹명 스타일 */
+.birthday-group-name {
+    font-size: 0.75rem;
+    color: #6b7280; /* text-gray-600 */
+    margin-top: 0.25rem;
+}
+
+@media (min-width: 640px) {
+    .birthday-group-name {
+        font-size: 0.875rem;
+    }
+}
+
+/* 생일 날짜 표시 */
+.birthday-date-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-top: 0.25rem;
+    color: #6b7280; /* text-gray-600 */
+}
+
+.birthday-date-display.today-date {
+    color: #dc2626; /* text-red-600 */
+}
+
+.birthday-date-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .birthday-date-icon {
+        width: 1rem;
+        height: 1rem;
+    }
+}
+
+.birthday-date-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+@media (min-width: 640px) {
+    .birthday-date-text {
+        font-size: 0.875rem;
+    }
+}
+
+/* 네비게이션 화살표 버튼 */
+.birthday-nav-btn {
+    position: absolute;
+    z-index: 20;
+    top: calc(50% + 6px);
+    transform: translateY(-50%);
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.birthday-nav-btn:hover {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.birthday-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.birthday-nav-btn.prev {
+    left: 0.75rem;
+}
+
+.birthday-nav-btn.next {
+    right: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .birthday-nav-btn.prev {
+        left: 1.5rem;
+    }
+    
+    .birthday-nav-btn.next {
+        right: 1.5rem;
+    }
+}
+
+.birthday-nav-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #374151; /* text-gray-700 */
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+@media (min-width: 640px) {
+    .birthday-nav-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+}
+
+/* 빈 상태 스타일 */
+.birthday-empty-state {
+    text-align: center;
+    padding: 2rem 0;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@media (min-width: 640px) {
+    .birthday-empty-state {
+        padding: 4rem 0;
+    }
+}
+
+.birthday-empty-icon {
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.75rem;
+    background-color: #f3f4f6; /* bg-gray-100 */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+}
+
+@media (min-width: 640px) {
+    .birthday-empty-icon {
+        width: 5rem;
+        height: 5rem;
+        margin-bottom: 1rem;
+    }
+}
+
+.birthday-empty-title {
+    font-size: 1rem;
+    font-weight: 300;
+    color: #000000;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .birthday-empty-title {
+        font-size: 1.25rem;
+    }
+}
+
+.birthday-empty-description {
+    color: #6b7280; /* text-gray-600 */
+    font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+    .birthday-empty-description {
+        font-size: 1rem;
+    }
+}
+
+/* 로딩 애니메이션 */
+.birthday-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+
+.birthday-loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid #f3f4f6;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 키프레임 애니메이션 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 스크롤바 숨김 */
+.birthday-slider-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.birthday-slider-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* 접근성 개선 */
+.birthday-card:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .birthday-card {
+        border: 2px solid #000000;
+    }
+    
+    .birthday-card:hover {
+        border-color: #3b82f6;
+    }
+}
+
+/* 모션 감소 설정 */
+@media (prefers-reduced-motion: reduce) {
+    .birthday-slider-container,
+    .birthday-slider-track,
+    .birthday-card,
+    .birthday-artist-image,
+    .birthday-nav-btn {
+        transition: none;
+    }
+    
+    .birthday-card:hover {
+        transform: none;
+    }
+    
+    .birthday-empty-state {
+        animation: none;
+    }
+    
+    .birthday-loading-spinner {
+        animation: none;
+    }
+}

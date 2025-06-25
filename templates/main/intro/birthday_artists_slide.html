@@ -1,0 +1,110 @@
+{# templates/main/intro/birthday_artists_slide.html #}
+{% load static %}
+{% load member_images %}
+
+<!-- 생일 아티스트 전용 CSS 로드 -->
+<link rel="stylesheet" href="{% static 'css/intro/birthday_artists.css' %}">
+
+<!-- 🎂 덕생 - 아티스트 생일 달력 슬라이드 -->
+{% if slide.real_data %}
+<div class="mt-8 max-w-6xl mx-auto">
+    <!-- 생일 아티스트 슬라이더 컨테이너 -->
+    <div class="relative mx-3 sm:mx-0">
+        <div class="relative overflow-hidden">
+            <!-- 슬라이더 컨테이너 -->
+            <div class="birthday-slider-container relative overflow-hidden">
+                <div class="birthday-slider-track flex transition-transform duration-500 ease-in-out">
+                    {% for artist in slide.real_data %}
+                    <div class="birthday-slide-item">
+                        <div class="birthday-card {% if artist.is_today_birthday %}today-birthday{% endif %}">
+                            
+                            <!-- 오늘 생일 라벨 -->
+                            {% if artist.is_today_birthday %}
+                            <div class="mb-2 sm:mb-3">
+                                <span class="today-birthday-label">
+                                    오늘 생일! 🎉
+                                </span>
+                            </div>
+                            {% else %}
+                            <div class="h-4 sm:h-6 mb-2 sm:mb-3"></div>
+                            {% endif %}
+                            
+                            <!-- 아티스트 이미지 -->
+                            <div class="mb-2 sm:mb-4">
+                                <img src="{% member_image artist.member_name artist.artist_display_name %}" 
+                                     alt="{{ artist.member_name }}"
+                                     class="birthday-artist-image"
+                                     loading="lazy">
+                            </div>
+                            
+                            <!-- 아티스트 정보 -->
+                            <div class="space-y-1">
+                                <h4 class="birthday-artist-name {% if artist.is_today_birthday %}today-name{% endif %}">
+                                    {{ artist.member_name }}
+                                </h4>
+                                {% if artist.artist_name %}
+                                <p class="birthday-group-name">{{ artist.artist_name }}</p>
+                                {% endif %}
+                                
+                                <!-- 생일 날짜 표시 -->
+                                <div class="birthday-date-display {% if artist.is_today_birthday %}today-date{% endif %}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="birthday-date-icon">
+                                        <path d="m4.75 1-.884.884a1.25 1.25 0 1 0 1.768 0L4.75 1ZM11.25 1l-.884.884a1.25 1.25 0 1 0 1.768 0L11.25 1ZM8.884 1.884 8 1l-.884.884a1.25 1.25 0 1 0 1.768 0ZM4 7a2 2 0 0 0-2 2v1.034c.347 0 .694-.056 1.028-.167l.47-.157a4.75 4.75 0 0 1 3.004 0l.47.157a3.25 3.25 0 0 0 2.056 0l.47-.157a4.75 4.75 0 0 1 3.004 0l.47.157c.334.111.681.167 1.028.167V9a2 2 0 0 0-2-2V5.75a.75.75 0 0 0-1.5 0V7H8.75V5.75a.75.75 0 0 0-1.5 0V7H5.5V5.75a.75.75 0 0 0-1.5 0V7ZM14 11.534a4.749 4.749 0 0 1-1.502-.244l-.47-.157a3.25 3.25 0 0 0-2.056 0l-.47.157a4.75 4.75 0 0 1-3.004 0l-.47-.157a3.25 3.25 0 0 0-2.056 0l-.47.157A4.748 4.748 0 0 1 2 11.534V13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1.466Z" />
+                                    </svg>
+                                    <span class="birthday-date-text">{{ artist.birthday_display }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- 좌우 화살표 버튼 -->
+                <button class="birthday-nav-btn prev" aria-label="이전 생일 아티스트 보기">
+                    <svg class="birthday-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+
+                <button class="birthday-nav-btn next" aria-label="다음 생일 아티스트 보기">
+                    <svg class="birthday-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 전체 생일 달력 링크 -->
+    <div class="text-center mt-6">
+        <a href="{% url 'bday_calendar:calendar' %}" 
+           class="intro-btn inline-flex items-center space-x-2 bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-full text-sm font-medium transition-all transform hover:scale-105">
+            <span>전체 생일 달력 보기</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+        </a>
+    </div>
+</div>
+{% else %}
+<!-- 생일 아티스트가 없을 때 -->
+<div class="birthday-empty-state mt-8 text-center max-w-md mx-auto">
+    <div class="birthday-empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-gray-400">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 012.25 2.25v7.5" />
+        </svg>
+    </div>
+    <h4 class="birthday-empty-title">이번 주 생일인 아티스트가 없어요</h4>
+    <p class="birthday-empty-description mb-6">다른 생일 아티스트들을 확인해보세요</p>
+    <a href="{% url 'bday_calendar:calendar' %}" 
+       class="intro-btn inline-flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full font-medium transition-all transform hover:scale-105">
+        <span>생일 달력 보기</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+    </a>
+</div>
+{% endif %}
+
+<!-- 생일 아티스트 전용 JavaScript 로드 -->
+<script src="{% static 'js/intro/birthday_artists.js' %}"></script>
