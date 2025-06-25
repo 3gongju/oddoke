@@ -82,8 +82,8 @@ export function closeTradeReportModal() {
 
 // 신고 폼 로드
 function loadTradeReportForm() {
-  const roomId = window.roomId;
-  if (!roomId) {
+  const roomCode = window.roomCode; // ✅ 수정: roomId → roomCode
+  if (!roomCode) {
     showTradeReportError('채팅방 정보를 찾을 수 없습니다.');
     return;
   }
@@ -100,7 +100,7 @@ function loadTradeReportForm() {
   footer?.classList.add('hidden');
   
   // AJAX로 폼 로드
-  fetch(`/ddokchat/report-form/${roomId}/`, {
+  fetch(`/ddokchat/report-form/${roomCode}/`, { // ✅ 수정: roomId → roomCode
     method: 'GET',
     headers: {
       'X-Requested-With': 'XMLHttpRequest',
@@ -166,11 +166,11 @@ function setupFormSubmission() {
 
 // 신고 제출
 function submitTradeReport() {
-  const roomId = window.roomId;
+  const roomCode = window.roomCode; // ✅ 수정: roomId → roomCode
   const form = document.getElementById('tradeReportForm');
   const submitBtn = document.getElementById('submitTradeReportBtn');
   
-  if (!roomId || !form) {
+  if (!roomCode || !form) {
     showToast('폼 정보를 찾을 수 없습니다.', 'error');
     return;
   }
@@ -206,7 +206,7 @@ function submitTradeReport() {
   }
   
   // 서버로 전송
-  fetch(`/ddokchat/report-trade/${roomId}/`, {
+  fetch(`/ddokchat/report-trade/${roomCode}/`, { // ✅ 수정: roomId → roomCode
     method: 'POST',
     headers: {
       'X-CSRFToken': csrfToken,
