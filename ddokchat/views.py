@@ -979,10 +979,10 @@ def get_or_create_split_chatroom(request, post_id, user_id):
 
 @login_required
 @require_POST
-def report_trade_user(request, room_id):
+def report_trade_user(request, room_code):
     """덕팜 거래 사기 신고 처리"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code) 
         reporter = request.user
         
         # 채팅방 참여자 확인
@@ -1025,7 +1025,7 @@ def report_trade_user(request, room_id):
             report.save()
             
             # 신고 접수 완료 로그
-            print(f"✅ 거래 신고 접수: {reporter.username} → {reported_user.username} (채팅방 #{room.id})")
+            print(f"거래 신고 접수: {reporter.username} → {reported_user.username} (채팅방 #{room.room_code})")
             
             return JsonResponse({
                 'success': True,
@@ -1052,10 +1052,10 @@ def report_trade_user(request, room_id):
 
 
 @login_required
-def get_trade_report_form(request, room_id):
+def get_trade_report_form(request, room_code): 
     """거래 신고 폼 HTML 반환"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code) 
         
         # 채팅방 참여자 확인
         if not room.is_participant(request.user):
@@ -1109,10 +1109,10 @@ def get_trade_report_form(request, room_id):
 
 
 @login_required  
-def view_user_info(request, room_id):
+def view_user_info(request, room_code): 
     """거래자 정보 보기"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code) 
         
         # 채팅방 참여자 확인
         if not room.is_participant(request.user):

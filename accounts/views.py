@@ -301,11 +301,11 @@ def review_home(request, username):
             review = form.save(commit=False)
             review.user = request.user
             review.target_user = user_profile
-            chatroom_id = request.POST.get('chatroom_id')
+            chatroom_code = request.POST.get('chatroom_code')
 
-            if chatroom_id:
+            if chatroom_code:
                 try:
-                    chatroom = ChatRoom.objects.get(id=chatroom_id)
+                    chatroom = ChatRoom.objects.get(room_code=chatroom_code)
                     already_reviewed = MannerReview.objects.filter(
                         user=request.user, target_user=user_profile, chatroom=chatroom
                     ).exists()

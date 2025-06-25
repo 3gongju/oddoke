@@ -1,7 +1,7 @@
-<!-- components/modals/_report_modal.html -->
+<!-- templates/components/_report_modal.html -->
 
-<!-- 신고 버튼 -->
-{% if user.is_authenticated and user != target_user %}
+<!-- 신고 버튼 - 조건부 표시 (hide_button이 True이면 숨김) -->
+{% if user.is_authenticated and user != target_user and not hide_button %}
 <div class="flex justify-end mt-4">
   <div class="relative">
     <!-- 신고 버튼 -->

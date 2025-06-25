@@ -4,13 +4,13 @@ let socket;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
 let reconnectInterval = null;
-let roomCode;;
+let roomCode; // ✅ 변수명 유지
 
 // 메시지 핸들러 콜백들
 let messageHandlers = {};
 
 export function setupWebSocket(chatRoomCode) {
-  roomId = chatRoomId;
+  roomCode = chatRoomCode; // ✅ 수정: 올바른 변수에 할당
   connectWebSocket();
 }
 
