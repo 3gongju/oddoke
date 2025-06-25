@@ -8,6 +8,7 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.db.models import Q, F
 from django.contrib.contenttypes.models import ContentType
+from django.contrib import messages
 from django.conf import settings
 from operator import attrgetter
 from itertools import chain
@@ -29,8 +30,32 @@ logger = logging.getLogger(__name__)
 def index(request):
     category = request.GET.get('category')
     query = request.GET.get('q', '').strip()
+    
+    # 찜한 아티스트 필터링
+    favorites_only = request.GET.get('favorites_only') == 'on'
+
+    # ✅ 찜한 아티스트 ID 목록 미리 가져오기
+    favorite_artist_ids = []
+    if favorites_only and request.user.is_authenticated:
+        favorite_artist_ids = list(request.user.favorite_artists.values_list('id', flat=True))
+        if not favorite_artist_ids:
+            # 찜한 아티스트가 없으면 빈 결과 반환
+            posts = []
+            context = {
+                'posts': posts,
+                'category': category,
+                'query': query,
+                'favorites_only': favorites_only,
+                'favorite_artists': [],
+                'search_action': reverse('ddokdam:index'),
+                'create_url': f"{reverse('ddokdam:post_create')}?category={category or 'community'}",
+                'category_urls': get_ddokdam_category_urls(),
+                'default_category': 'community',
+            }
+            return render(request, 'ddokdam/index.html', context)
 
     if query:
+        # 검색 시 찜한 아티스트 필터 적용
         artist_filter = (
             Q(artist__display_name__icontains=query) |
             Q(artist__korean_name__icontains=query) |
@@ -39,30 +64,124 @@ def index(request):
         )
         member_filter = Q(members__member_name__icontains=query)
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
-        common_filter = text_filter | artist_filter | member_filter
+        search_filter = text_filter | artist_filter | member_filter
+        
+        # ✅ 찜한 아티스트 필터 조건
+        favorite_filter = Q()
+        if favorites_only and favorite_artist_ids:
+            favorite_filter = Q(artist_id__in=favorite_artist_ids)
 
-        community_results = DamCommunityPost.objects.filter(common_filter).distinct()
-        manner_results = DamMannerPost.objects.filter(common_filter).distinct()
-        bdaycafe_results = DamBdaycafePost.objects.filter(common_filter).distinct()
+        # ✅ 각 모델별로 개별 쿼리 실행 (성능 최적화)
+        all_posts = []
+        
+        # 커뮤니티 게시글
+        community_posts = DamCommunityPost.objects.filter(
+            search_filter & favorite_filter
+        ).select_related('user', 'artist').prefetch_related('like', 'images').distinct()
+        for post in community_posts:
+            post.category = 'community'
+        all_posts.extend(community_posts)
+        
+        # 매너 게시글
+        manner_posts = DamMannerPost.objects.filter(
+            search_filter & favorite_filter
+        ).select_related('user', 'artist').prefetch_related('like', 'images').distinct()
+        for post in manner_posts:
+            post.category = 'manner'
+        all_posts.extend(manner_posts)
+        
+        # 생카 게시글
+        bdaycafe_posts = DamBdaycafePost.objects.filter(
+            search_filter & favorite_filter
+        ).select_related('user', 'artist').prefetch_related('like', 'images').distinct()
+        for post in bdaycafe_posts:
+            post.category = 'bdaycafe'
+        all_posts.extend(bdaycafe_posts)
 
-        posts = sorted(
-            chain(community_results, manner_results, bdaycafe_results),
-            key=attrgetter('created_at'),
-            reverse=True
-        )
+        # 시간순 정렬
+        posts = sorted(all_posts, key=attrgetter('created_at'), reverse=True)
+
     else:
-        posts = get_post_queryset(category)
-        posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
+        # ✅ 카테고리별 필터링 개선
+        if category == 'community':
+            queryset = DamCommunityPost.objects.all()
+            if favorites_only and favorite_artist_ids:
+                queryset = queryset.filter(artist_id__in=favorite_artist_ids)
+            posts = queryset.select_related('user', 'artist').prefetch_related('like', 'images').order_by('-created_at')
+            for post in posts:
+                post.category = 'community'
+                
+        elif category == 'manner':
+            queryset = DamMannerPost.objects.all()
+            if favorites_only and favorite_artist_ids:
+                queryset = queryset.filter(artist_id__in=favorite_artist_ids)
+            posts = queryset.select_related('user', 'artist').prefetch_related('like', 'images').order_by('-created_at')
+            for post in posts:
+                post.category = 'manner'
+                
+        elif category == 'bdaycafe':
+            queryset = DamBdaycafePost.objects.all()
+            if favorites_only and favorite_artist_ids:
+                queryset = queryset.filter(artist_id__in=favorite_artist_ids)
+            posts = queryset.select_related('user', 'artist').prefetch_related('like', 'images').order_by('-created_at')
+            for post in posts:
+                post.category = 'bdaycafe'
+                
+        else:
+            # ✅ 전체 카테고리 - 각각 개별 쿼리 후 합치기
+            all_posts = []
+            
+            # 커뮤니티
+            community_queryset = DamCommunityPost.objects.all()
+            if favorites_only and favorite_artist_ids:
+                community_queryset = community_queryset.filter(artist_id__in=favorite_artist_ids)
+            community_posts = community_queryset.select_related('user', 'artist').prefetch_related('like', 'images')
+            for post in community_posts:
+                post.category = 'community'
+            all_posts.extend(community_posts)
+            
+            # 매너
+            manner_queryset = DamMannerPost.objects.all()
+            if favorites_only and favorite_artist_ids:
+                manner_queryset = manner_queryset.filter(artist_id__in=favorite_artist_ids)
+            manner_posts = manner_queryset.select_related('user', 'artist').prefetch_related('like', 'images')
+            for post in manner_posts:
+                post.category = 'manner'
+            all_posts.extend(manner_posts)
+            
+            # 생카
+            bdaycafe_queryset = DamBdaycafePost.objects.all()
+            if favorites_only and favorite_artist_ids:
+                bdaycafe_queryset = bdaycafe_queryset.filter(artist_id__in=favorite_artist_ids)
+            bdaycafe_posts = bdaycafe_queryset.select_related('user', 'artist').prefetch_related('like', 'images')
+            for post in bdaycafe_posts:
+                post.category = 'bdaycafe'
+            all_posts.extend(bdaycafe_posts)
+            
+            # 시간순 정렬
+            posts = sorted(all_posts, key=attrgetter('created_at'), reverse=True)
 
+        # 리스트가 아닌 경우 변환
+        if not isinstance(posts, list):
+            posts = list(posts)
+
+    # detail_url 설정
     for post in posts:
         post.detail_url = reverse('ddokdam:post_detail', args=[post.category_type, post.id])
 
     clean_category = (category or 'community').split('?')[0]
 
+    # 찜한 아티스트 목록
+    favorite_artists = []
+    if request.user.is_authenticated:
+        favorite_artists = list(request.user.favorite_artists.all())
+
     context = {
         'posts': posts,
         'category': category,
         'query': query,
+        'favorites_only': favorites_only,
+        'favorite_artists': favorite_artists,
         'search_action': reverse('ddokdam:index'),
         'create_url': f"{reverse('ddokdam:post_create')}?category={clean_category}",
         'category_urls': get_ddokdam_category_urls(),
@@ -101,6 +220,14 @@ def post_detail(request, category, post_id):
     is_liked = request.user.is_authenticated and post.like.filter(id=request.user.id).exists()
     comment_create_url = reverse('ddokdam:comment_create', kwargs={'category': category, 'post_id': post_id})
     is_owner = request.user == post.user
+    
+    # 카카오맵 API 키 추가
+    kakao_api_key = (
+        getattr(settings, 'KAKAO_MAP_API_KEY', '') or 
+        getattr(settings, 'KAKAO_API_KEY', '') or
+        ''
+    )
+
 
     context = {
         'post': post,
@@ -115,6 +242,7 @@ def post_detail(request, category, post_id):
         'comment_create_url': comment_create_url,
         'comment_delete_url_name': 'ddokdam:comment_delete',
         'is_owner': is_owner,
+        'kakao_api_key': kakao_api_key,  # 카카오맵 API 키 추가
     }
 
     return render(request, 'ddokdam/detail.html', context)
@@ -510,3 +638,5 @@ def search_ddoksang_cafes(request):
             'success': False, 
             'error': str(e)
         }, status=500)
+
+

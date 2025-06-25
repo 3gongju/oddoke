@@ -1,14 +1,25 @@
+<!-- ddokdam/templates/ddokdam/index.html 전체 파일 -->
 {% extends 'base.html' %}
+{% load static %}
+
 {% block body %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <!-- 헤더 -->
   {% include 'ddokdam/components/_header.html' %}
 
+  <!-- 검색바 -->
   {% include 'components/index/_search_bar.html' with search_action=search_action query=query %}
 
+  <!-- 카테고리 필터 -->
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category app_name='ddokdam' %}
 
+  <!-- ✅ 찜한 아티스트 필터 추가 -->
+  {% include 'components/index/_favorite_filter.html' %}
+
+  <!-- 작성 버튼 -->
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
+  <!-- 게시물 목록 또는 빈 상태 -->
   {% if posts %}
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for post in posts %}
@@ -16,16 +27,107 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="text-gray-500">게시글이 없습니다.</p>
+    <div class="text-center py-12">
+      <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="게시글 없음" class="w-full h-full object-contain" />
+      </div>
+      <p class="text-gray-500 text-lg">
+        {% if favorites_only and user.is_authenticated %}
+          찜한 아티스트의 게시글이 없습니다.
+        {% elif query %}
+          "{{ query }}"에 대한 검색 결과가 없습니다.
+        {% else %}
+          게시글이 없습니다.
+        {% endif %}
+      </p>
+      {% if favorites_only %}
+        <p class="text-gray-400 text-sm mt-2">찜한 아티스트 필터를 해제하거나 다른 아티스트를 찜해보세요.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
+          <button onclick="clearFavoriteFilter()" 
+                  class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+            전체 게시글 보기
+          </button>
+          <a href="{% url 'artist:index' %}" 
+             class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            아티스트 찜하러 가기
+          </a>
+        </div>
+      {% elif query %}
+        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
+          <button onclick="clearSearch()" 
+                  class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            검색 초기화
+          </button>
+          <a href="{% url 'ddokdam:post_create' %}" 
+             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+            새 게시글 작성하기
+          </a>
+        </div>
+      {% else %}
+        <div class="flex justify-center mt-4">
+          <a href="{% url 'ddokdam:post_create' %}" 
+             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+            첫 번째 게시글 작성하기
+          </a>
+        </div>
+      {% endif %}
+    </div>
   {% endif %}
 </div>
 
-<!-- 덕담용 JavaScript 변수 설정 추가 -->
+<!-- 덕담용 JavaScript 변수 설정 -->
 <script>
 window.user = {
   is_authenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
   username: '{{ user.username|default:"" }}'
 };
 window.csrfToken = '{{ csrf_token }}';
+
+// 찜한 아티스트 필터 해제 함수
+function clearFavoriteFilter() {
+  const url = new URL(window.location);
+  const params = new URLSearchParams(url.search);
+  
+  params.delete('favorites_only');
+  
+  url.search = params.toString();
+  window.location.href = url.toString();
+}
+
+// 검색 초기화 함수
+function clearSearch() {
+  const url = new URL(window.location);
+  const params = new URLSearchParams(url.search);
+  
+  params.delete('q');
+  
+  url.search = params.toString();
+  window.location.href = url.toString();
+}
+
+// 모든 필터 초기화 함수
+function clearAllFilters() {
+  const url = new URL(window.location);
+  const params = new URLSearchParams(url.search);
+  
+  // 모든 필터 파라미터 제거
+  params.delete('q');
+  params.delete('favorites_only');
+  params.delete('category');
+  
+  url.search = params.toString();
+  window.location.href = url.toString();
+}
+
+// 페이지 로드 시 찜한 아티스트 필터 상태 확인
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const favoritesOnly = urlParams.get('favorites_only') === 'on';
+  
+  // 찜한 아티스트 필터가 활성화되어 있고 게시물이 없으면 도움말 표시
+  if (favoritesOnly && document.querySelector('.text-center.py-12')) {
+    console.log('찜한 아티스트 필터가 활성화되어 있지만 결과가 없습니다.');
+  }
+});
 </script>
 {% endblock %}
