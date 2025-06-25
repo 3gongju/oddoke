@@ -220,6 +220,8 @@ GOOGLE_OAUTH_SECRET_ID = os.getenv('GOOGLE_OAUTH_SECRET_ID')
 # 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
 ASGI_APPLICATION = 'oddoke.asgi.application'
 
+# Redis 설정
+REDIS_URL = os.getenv('REDIS_URL')
 
 # 채널 레이어 설정
 CHANNEL_LAYERS = {

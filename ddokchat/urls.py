@@ -33,4 +33,9 @@ urlpatterns = [
     path('report-trade/<str:room_code>/', views.report_trade_user, name='report_trade_user'),
     path('report-form/<str:room_code>/', views.get_trade_report_form, name='get_trade_report_form'),
     path('user-info/<str:room_code>/', views.view_user_info, name='view_user_info'),
+    
+    # Redis 기반 채팅방 위치 추적 API
+    path('api/update-current-chatroom/', views.update_current_chatroom, name='update_current_chatroom'),
+    path('api/clear-current-chatroom/', views.clear_current_chatroom, name='clear_current_chatroom'),
+    path('api/current-chatroom-status/', views.get_current_chatroom_status, name='current_chatroom_status'),
 ]

@@ -21,6 +21,7 @@ from itertools import groupby
 from operator import attrgetter
 from .services import get_dutcheat_service
 from django.contrib.contenttypes.models import ContentType
+from utils.redis_client import redis_client
 
 import json
 # Create your views here.
@@ -1170,4 +1171,123 @@ def view_user_info(request, room_code):
         return JsonResponse({
             'success': False,
             'error': '정보 조회 중 오류가 발생했습니다.'
+        })
+
+@login_required
+@require_POST
+@csrf_exempt
+def update_current_chatroom(request):
+    """현재 채팅방 위치 업데이트 (JavaScript focus 이벤트용)"""
+    try:
+        data = json.loads(request.body)
+        room_code = data.get('room_code')
+        
+        if not room_code:
+            return JsonResponse({
+                'success': False,
+                'error': '채팅방 코드가 필요합니다.'
+            })
+        
+        # 채팅방 접근 권한 확인
+        try:
+            room = ChatRoom.objects.get(room_code=room_code)
+            if not room.is_participant(request.user):
+                return JsonResponse({
+                    'success': False,
+                    'error': '채팅방 접근 권한이 없습니다.'
+                })
+        except ChatRoom.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': '존재하지 않는 채팅방입니다.'
+            })
+        
+        # Redis에 현재 위치 설정 (2분 TTL)
+        success = redis_client.set_user_current_chatroom(
+            user_id=request.user.id,
+            room_code=room_code,
+            ttl=120
+        )
+        
+        if success:
+            # 해당 채팅방의 안읽은 메시지들 읽음 처리
+            unread_count = Message.objects.filter(
+                room=room,
+                receiver=request.user,
+                is_read=False
+            ).update(is_read=True)
+            
+            # 채팅 알림도 읽음 처리
+            try:
+                from notifications.models import Notification
+                notification_count = Notification.mark_chat_notifications_read(
+                    user=request.user,
+                    room_post=room.post
+                )
+            except ImportError:
+                notification_count = 0
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'현재 위치 업데이트됨: {room_code}',
+                'unread_messages_marked': unread_count,
+                'notifications_marked': notification_count
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Redis 설정에 실패했습니다.'
+            })
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': '잘못된 JSON 형식입니다.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'서버 오류: {str(e)}'
+        })
+
+
+@login_required
+@require_POST
+@csrf_exempt
+def clear_current_chatroom(request):
+    """현재 채팅방 위치 해제 (JavaScript blur 이벤트용)"""
+    try:
+        # Redis에서 현재 위치 삭제
+        success = redis_client.clear_user_current_chatroom(request.user.id)
+        
+        return JsonResponse({
+            'success': True,
+            'message': '현재 위치가 해제되었습니다.',
+            'redis_cleared': success
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'서버 오류: {str(e)}'
+        })
+
+
+@login_required
+def get_current_chatroom_status(request):
+    """현재 채팅방 위치 조회 (디버깅/테스트용)"""
+    try:
+        current_room = redis_client.get_user_current_chatroom(request.user.id)
+        
+        return JsonResponse({
+            'success': True,
+            'current_room': current_room,
+            'user_id': request.user.id,
+            'username': request.user.username
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'서버 오류: {str(e)}'
         })

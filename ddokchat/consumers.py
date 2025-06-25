@@ -4,6 +4,7 @@ from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
 from .models import ChatRoom, Message, TextMessage
 from django.db import transaction
+from utils.redis_client import redis_client
 
 User = get_user_model()
 
@@ -25,6 +26,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.close()
                 return
             
+            # ✅ Redis에 현재 채팅방 위치 설정 (2분 TTL)
+            await self.set_user_current_chatroom(self.user.id, self.room_code)
+            
             # 채팅방에 참여
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -39,6 +43,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         """WebSocket 연결 해제 처리"""
         try:
+            # ✅ Redis에서 현재 채팅방 위치 삭제
+            if hasattr(self, 'user') and self.user.is_authenticated:
+                await self.clear_user_current_chatroom(self.user.id)
+            
             if hasattr(self, 'room_group_name'):
                 await self.channel_layer.group_discard(
                     self.room_group_name,
@@ -53,6 +61,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             data = json.loads(text_data)
             message_type = data.get('type', 'chat')
             
+            # ✅ 메시지 수신 시 Redis TTL 갱신 (활성 상태 유지)
+            await self.refresh_user_current_chatroom(self.user.id, self.room_code)
+            
             # 거래 완료 상태 확인
             if await self.is_trade_completed():
                 await self.send_error("거래가 완료되어 더 이상 메시지를 보낼 수 없습니다.")
@@ -66,6 +77,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception:
             await self.send_error("메시지 처리 중 오류가 발생했습니다.")
 
+    # ✅ Redis 관련 비동기 메서드들 추가
+    async def set_user_current_chatroom(self, user_id, room_code):
+        """Redis에 사용자 현재 채팅방 설정 (비동기)"""
+        try:
+            # CPU 집약적 작업을 별도 스레드에서 실행
+            from asgiref.sync import sync_to_async
+            sync_redis_set = sync_to_async(redis_client.set_user_current_chatroom, thread_sensitive=False)
+            return await sync_redis_set(user_id, room_code, ttl=120)  # 2분 TTL
+        except Exception as e:
+            print(f"Redis 설정 실패: {e}")
+            return False
+    
+    async def clear_user_current_chatroom(self, user_id):
+        """Redis에서 사용자 현재 채팅방 삭제 (비동기)"""
+        try:
+            from asgiref.sync import sync_to_async
+            sync_redis_clear = sync_to_async(redis_client.clear_user_current_chatroom, thread_sensitive=False)
+            return await sync_redis_clear(user_id)
+        except Exception as e:
+            print(f"Redis 삭제 실패: {e}")
+            return False
+    
+    async def refresh_user_current_chatroom(self, user_id, room_code):
+        """Redis TTL 갱신 (활성 상태 유지)"""
+        try:
+            from asgiref.sync import sync_to_async
+            sync_redis_set = sync_to_async(redis_client.set_user_current_chatroom, thread_sensitive=False)
+            return await sync_redis_set(user_id, room_code, ttl=120)  # 2분 TTL 갱신
+        except Exception as e:
+            print(f"Redis TTL 갱신 실패: {e}")
+            return False
+
+    # 기존 메서드들은 그대로 유지...
     async def handle_message_by_type(self, message_type, data):
         """메시지 타입별 처리 분기"""
         handlers = {
