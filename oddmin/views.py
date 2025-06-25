@@ -482,6 +482,8 @@ def approve_fandom(request, profile_id):
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'fandom_list':
         return redirect('oddmin:fandom_list')
+    elif next_url == 'fandom_detail':
+        return redirect('oddmin:fandom_detail', profile_id=profile.id)
     return redirect('oddmin:dashboard')
 
 
@@ -535,4 +537,6 @@ def reject_fandom(request, profile_id):
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'fandom_list':
         return redirect('oddmin:fandom_list')
+    elif next_url == 'fandom_detail':
+        return redirect('oddmin:fandom_detail', profile_id=profile.id)
     return redirect('oddmin:dashboard')
