@@ -23,8 +23,74 @@ def intro_view(request):
         # 🔥 찜한 아티스트 데이터 추가
         raw_favs = list(Artist.objects.filter(followers=request.user)) if request.user.is_authenticated else []
         
-        # 생일 아티스트 데이터 (실제 함수 호출)
+        # 🔥 덕생 - 생일 아티스트 데이터 (개선된 버전)
         birthday_artists = get_weekly_bday_artists()
+        
+        # 🔥 추가 생일 관련 데이터 수집
+        try:
+            from django.utils import timezone
+            import calendar
+            
+            current_date = timezone.now()
+            current_month = current_date.month
+            current_year = current_date.year
+            
+            # 🔥 이번 달 생일 멤버들 추가 조회
+            monthly_birthday_count = 0
+            upcoming_birthdays = []
+            
+            # Member 모델에서 이번 달 생일인 멤버들 조회
+            for artist in Artist.objects.prefetch_related('members'):
+                for member in artist.members.all():
+                    if hasattr(member, 'birthday') and member.birthday:
+                        if member.birthday.month == current_month:
+                            monthly_birthday_count += 1
+                            # 다가오는 생일 (오늘 이후) 추가
+                            if member.birthday.day >= current_date.day:
+                                upcoming_birthdays.append({
+                                    'member_name': member.name,
+                                    'artist_name': artist.display_name,
+                                    'artist_display_name': artist.display_name,
+                                    'birthday': member.birthday,
+                                    'days_until': (member.birthday.replace(year=current_year) - current_date.date()).days,
+                                    'is_today': member.birthday.day == current_date.day,
+                                })
+            
+            # 날짜순으로 정렬
+            upcoming_birthdays.sort(key=lambda x: x['days_until'])
+            
+            # birthday_artists에 추가 정보 포함
+            for artist in birthday_artists:
+                # 오늘이 생일인지 확인
+                if hasattr(artist, 'birthday') and artist.birthday:
+                    artist.is_today_birthday = artist.birthday.day == current_date.day and artist.birthday.month == current_month
+                else:
+                    artist.is_today_birthday = False
+                
+                # 생일 표시 형식 추가
+                if hasattr(artist, 'birthday') and artist.birthday:
+                    artist.birthday_display = f"{artist.birthday.month:02d}-{artist.birthday.day:02d}"
+                else:
+                    artist.birthday_display = "정보 없음"
+            
+            # 생일 통계 정보 추가
+            birthday_stats = {
+                'weekly_count': len(birthday_artists),
+                'monthly_count': monthly_birthday_count,
+                'upcoming_count': len([b for b in upcoming_birthdays if b['days_until'] > 0]),
+                'today_count': len([b for b in upcoming_birthdays if b['is_today']]),
+                'upcoming_birthdays': upcoming_birthdays[:5]  # 가장 가까운 5개만
+            }
+            
+        except Exception as e:
+            print(f"생일 데이터 추가 처리 오류: {e}")
+            birthday_stats = {
+                'weekly_count': len(birthday_artists),
+                'monthly_count': 0,
+                'upcoming_count': 0,
+                'today_count': 0,
+                'upcoming_birthdays': []
+            }
         
         # 최신 덕팜 게시물 (실제 데이터)
         latest_ddokfarm_posts = []
@@ -46,6 +112,13 @@ def intro_view(request):
         birthday_artists = []
         latest_ddokfarm_posts = []
         latest_ddokdam_posts = []
+        birthday_stats = {
+            'weekly_count': 0,
+            'monthly_count': 0,
+            'upcoming_count': 0,
+            'today_count': 0,
+            'upcoming_birthdays': []
+        }
     
     # 각 슬라이드별 콘텐츠 정보 정의 (18개 슬라이드)
     slide_contents = [
@@ -78,7 +151,8 @@ def intro_view(request):
             'description': '생일 알림과 기념 이벤트 정보',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': birthday_artists  # 🔥 실제 생일 아티스트 데이터
+            'real_data': birthday_artists,  # 🔥 실제 생일 아티스트 데이터
+            'stats_data': birthday_stats    # 🔥 생일 통계 데이터 추가
         },
         {
             'title': '덕채팅 - 실시간 소통',
@@ -216,6 +290,7 @@ def intro_view(request):
         # 🔥 실제 데이터를 별도로도 전달
         'raw_favs': raw_favs,  # 🔥 찜한 아티스트 추가
         'birthday_artists': birthday_artists,
+        'birthday_stats': birthday_stats,  # 🔥 생일 통계 추가
         'latest_ddokfarm_posts': latest_ddokfarm_posts,
         'latest_ddokdam_posts': latest_ddokdam_posts,
     }
