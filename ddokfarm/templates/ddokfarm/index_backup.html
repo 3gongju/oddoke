@@ -1,27 +1,20 @@
-<!-- ddokfarm/templates/ddokfarm/index.html 전체 파일 -->
 {% extends 'base.html' %}
 {% load static %}
 {% block body %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <!-- 헤더 -->
+  <!-- ✅ 검색바를 헤더 바로 아래로 이동 (웹에서 상단으로) -->
   {% include 'ddokfarm/components/_header.html' %}
-  
-  <!-- 검색바 -->
   {% include 'components/index/_search_bar.html' with search_action=search_action query=query %}
 
-  <!-- 카테고리 필터 -->
+
   {% include 'components/index/_category_filter.html' with category_urls=category_urls category=category app_name='ddokfarm' %}
 
-  <!-- 찜한 아티스트 필터 -->
-  {% include 'components/index/_favorite_filter.html' %}
-
-  <!-- 고급 필터 -->
+  <!-- ✅ 고급 필터를 카테고리 필터 바로 다음으로 이동 -->
   {% include 'ddokfarm/components/_advanced_filter.html' %}
 
-  <!-- 작성 버튼 -->
   {% include 'components/index/_create_button.html' with create_url=create_url category=category %}
 
-  <!-- 정렬 및 판매중 필터 -->
+  <!-- 순서 정렬 및 판매중 필터 (모바일 최적화) -->
   <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 mb-4">
     <!-- 정렬 (왼쪽) -->
     <div class="flex items-center gap-2 order-2 sm:order-1">
@@ -47,8 +40,8 @@
     </div>
   </div>
 
-  <!-- 게시물 목록 또는 빈 상태 -->
   {% if posts %}
+    <!-- 웹 100% 기준: 한 줄에 5개씩 표시 -->
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
       {% for post in posts %}
         {% include 'components/index/_post_card.html' with post=post detail_url=post.detail_url app_name='ddokfarm' %}
@@ -57,38 +50,23 @@
   {% else %}
     <div class="text-center py-12">
       <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
-          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="게시글 없음" class="w-full h-full object-contain" />
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
       </div>
       <p class="text-gray-500 text-lg">
-        {% if favorites_only and user.is_authenticated %}
-          찜한 아티스트의 게시글이 없습니다.
-        {% elif selected_shipping or selected_conditions or selected_md or min_price or max_price %}
+        {% if selected_shipping or selected_conditions or selected_md or min_price or max_price %}
           선택한 조건에 맞는 게시글이 없습니다.
         {% else %}
           게시글이 없습니다.
         {% endif %}
       </p>
-      {% if favorites_only %}
-        <p class="text-gray-400 text-sm mt-2">찜한 아티스트 필터를 해제하거나 다른 아티스트를 찜해보세요.</p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
-          <button onclick="clearFavoriteFilter()" 
-                  class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-            전체 게시글 보기
-          </button>
-          <a href="{% url 'artist:index' %}" 
-             class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-            아티스트 찜하러 가기
-          </a>
-        </div>
-      {% elif show_available_only %}
+      {% if show_available_only %}
         <p class="text-gray-400 text-sm mt-2">판매중 필터를 해제해보세요.</p>
-      {% elif selected_shipping or selected_conditions or selected_md or min_price or max_price %}
-        <div class="flex justify-center mt-4">
-          <button onclick="clearAllFilters()" 
-                  class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-            필터 초기화
-          </button>
-        </div>
+      {% endif %}
+      {% if selected_shipping or selected_conditions or selected_md or min_price or max_price %}
+        <!-- <button onclick="clearAllFilters()" 
+                class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          필터 초기화
+        </button> -->
       {% endif %}
     </div>
   {% endif %}
@@ -134,35 +112,5 @@ document.addEventListener('DOMContentLoaded', function() {
     availableOnlyCheckbox.addEventListener('change', updateURL);
   }
 });
-
-// 찜한 아티스트 필터 해제 함수
-function clearFavoriteFilter() {
-  const url = new URL(window.location);
-  const params = new URLSearchParams(url.search);
-  
-  params.delete('favorites_only');
-  
-  url.search = params.toString();
-  window.location.href = url.toString();
-}
-
-// 모든 필터 초기화 함수
-function clearAllFilters() {
-  const url = new URL(window.location);
-  const params = new URLSearchParams(url.search);
-  
-  // 모든 필터 파라미터 제거
-  params.delete('shipping');
-  params.delete('wantto');
-  params.delete('condition');
-  params.delete('md');
-  params.delete('min_price');
-  params.delete('max_price');
-  params.delete('favorites_only');
-  params.delete('available_only');
-  
-  url.search = params.toString();
-  window.location.href = url.toString();
-}
 </script>
 {% endblock %}
