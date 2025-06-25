@@ -53,6 +53,8 @@ class BaseSocialAuthService(ABC):
                 user = User.objects.get(kakao_id=social_id)
             elif self.provider_name == 'naver':
                 user = User.objects.get(naver_id=social_id)
+            elif self.provider_name == 'google':
+                user = User.objects.get(google_id=social_id)
             
             if user:
                 print(f"✅ 기존 소셜 사용자 찾음:")
@@ -79,6 +81,10 @@ class BaseSocialAuthService(ABC):
                 user.naver_id = social_id
                 user.save()
                 print(f"🔄 네이버 ID 필드 업데이트: {social_id}")
+            elif self.provider_name == 'google' and not user.google_id:
+                user.google_id = social_id
+                user.save()
+                print(f"🔄 구글 ID 필드 업데이트: {social_id}")
                 
             return user
             
@@ -92,7 +98,7 @@ class BaseSocialAuthService(ABC):
                 print(f"🔍 동일한 이메일의 기존 사용자 발견: {existing_user.username}")
                 
                 # 🔥 기존 일반 계정이 있다면 소셜 로그인과 연결하지 않음
-                if not existing_user.username.startswith(('temp_kakao_', 'temp_naver_')) and not existing_user.social_signup_completed:
+                if not existing_user.username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_')) and not existing_user.social_signup_completed:
                     print(f"❌ 기존 일반 계정과 동일한 이메일: {email}")
                     raise Exception(f'이미 {email}로 가입된 계정이 있습니다. 일반 로그인을 이용해주세요.')
                     
@@ -115,7 +121,8 @@ class BaseSocialAuthService(ABC):
         default_patterns = [
             f'{self.provider_name}_user_',
             'kakao_user_',
-            'naver_user_'
+            'naver_user_',
+            'google_user_',
         ]
         
         for pattern in default_patterns:
@@ -148,6 +155,8 @@ class BaseSocialAuthService(ABC):
                 user.kakao_id = social_id
             elif self.provider_name == 'naver':
                 user.naver_id = social_id
+            elif self.provider_name == 'google':
+                user.google_id = social_id
                 
             user.save()
             print(f"✅ 새 소셜 사용자 생성 완료:")
@@ -173,6 +182,8 @@ class BaseSocialAuthService(ABC):
                 user.kakao_id = social_id
             elif self.provider_name == 'naver':
                 user.naver_id = social_id
+            elif self.provider_name == 'google':
+                user.google_id = social_id
                 
             user.save()
             return user

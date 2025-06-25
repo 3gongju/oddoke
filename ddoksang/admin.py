@@ -2,8 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import BdayCafe, CafeFavorite
-
+from .models import BdayCafe
 
 
 @admin.register(BdayCafe)
@@ -154,14 +153,8 @@ class BdayCafeAdmin(admin.ModelAdmin):
         )
         self.message_user(request, f'{updated}개의 생일카페가 거절되었습니다.')
     
-
-@admin.register(CafeFavorite)
-class CafeFavoriteAdmin(admin.ModelAdmin):
-    list_display = ['user', 'cafe', 'created_at']
-    list_filter = ['created_at', 'cafe__artist']
-    search_fields = ['user__username', 'cafe__cafe_name']
-    readonly_fields = ['created_at']
-
+    # ✅ Admin 액션 등록
+    actions = ['approve_cafes', 'reject_cafes']
 
 
 

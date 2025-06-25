@@ -580,9 +580,17 @@
         <div class="banner-container">
           {% for path in banner_images %}
             <div class="banner-slide {% if forloop.first %}active{% endif %}">
-              <img src="{% static path %}" 
-                   class="banner-image" 
-                   alt="배너 이미지 {{ forloop.counter }}" />
+              {% if path|slice:":4" == "http" or path|slice:":1" == "/" %}
+                <!-- 사용자 업로드 배너 (절대 경로) -->
+                <img src="{{ path }}" 
+                     class="banner-image" 
+                     alt="사용자 배너 이미지 {{ forloop.counter }}" />
+              {% else %}
+                <!-- 기본 배너 (static 경로) -->
+                <img src="{% static path %}" 
+                     class="banner-image" 
+                     alt="배너 이미지 {{ forloop.counter }}" />
+              {% endif %}
             </div>
           {% endfor %}
         </div>

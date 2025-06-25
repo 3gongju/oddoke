@@ -13,8 +13,8 @@ from django.conf import settings
 from operator import attrgetter
 from itertools import chain
 from artist.models import Member, Artist
-from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage, DamPostReport
-from .forms import DamCommentForm, DamPostReportForm
+from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
+from .forms import DamCommentForm
 from .utils import (
     get_post_model,
     get_post_form,
@@ -522,97 +522,3 @@ def search_ddoksang_cafes(request):
         }, status=500)
 
 
-@login_required
-@require_POST
-def report_post(request, category, post_id):
-    """게시글 신고 처리"""
-    model = get_post_model(category)
-    if not model:
-        raise Http404("존재하지 않는 카테고리입니다.")
-    
-    post = get_object_or_404(model, id=post_id)
-    
-    # 자신의 게시글은 신고할 수 없음
-    if request.user == post.user:
-        return JsonResponse({
-            'success': False, 
-            'error': '자신의 게시글은 신고할 수 없습니다.'
-        })
-    
-    # 이미 신고한 경우 중복 신고 방지
-    existing_report = DamPostReport.objects.filter(
-        reporter=request.user,
-        content_type=ContentType.objects.get_for_model(post.__class__),
-        object_id=post.id
-    ).first()
-    
-    if existing_report:
-        return JsonResponse({
-            'success': False,
-            'error': '이미 신고한 게시글입니다.'
-        })
-    
-    form = DamPostReportForm(request.POST)
-    
-    if form.is_valid():
-        report = form.save(commit=False)
-        report.reporter = request.user
-        report.reported_user = post.user
-        report.content_type = ContentType.objects.get_for_model(post.__class__)
-        report.object_id = post.id
-        report.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': '신고가 접수되었습니다. 검토 후 조치하겠습니다.'
-        })
-    else:
-        return JsonResponse({
-            'success': False,
-            'error': '신고 정보를 확인해주세요.',
-            'form_errors': form.errors
-        })
-
-@login_required
-@require_GET  
-def get_report_form(request, category, post_id):
-    """신고 폼 HTML 반환"""
-    model = get_post_model(category)
-    if not model:
-        raise Http404("존재하지 않는 카테고리입니다.")
-    
-    post = get_object_or_404(model, id=post_id)
-    
-    # 자신의 게시글은 신고할 수 없음
-    if request.user == post.user:
-        return JsonResponse({
-            'success': False,
-            'error': '자신의 게시글은 신고할 수 없습니다.'
-        })
-    
-    # 이미 신고한 경우
-    existing_report = DamPostReport.objects.filter(
-        reporter=request.user,
-        content_type=ContentType.objects.get_for_model(post.__class__),
-        object_id=post.id
-    ).first()
-    
-    if existing_report:
-        return JsonResponse({
-            'success': False,
-            'error': '이미 신고한 게시글입니다.'
-        })
-    
-    form = DamPostReportForm()
-    
-    # 폼 HTML 렌더링
-    form_html = render_to_string('ddokdam/components/_report_form.html', {
-        'form': form,
-        'post': post,
-        'category': category,
-    }, request=request)
-    
-    return JsonResponse({
-        'success': True,
-        'form_html': form_html
-    })

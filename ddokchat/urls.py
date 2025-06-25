@@ -29,4 +29,9 @@ urlpatterns = [
 
     # 분철 참여자와의 채팅
     path('start-split/<int:post_id>/<int:user_id>/', views.get_or_create_split_chatroom, name='start_split_chat'),
+
+    # 거래 신고 관련
+    path('report-trade/<int:room_id>/', views.report_trade_user, name='report_trade_user'),
+    path('report-form/<int:room_id>/', views.get_trade_report_form, name='get_trade_report_form'),
+    path('user-info/<int:room_id>/', views.view_user_info, name='view_user_info'),
 ]

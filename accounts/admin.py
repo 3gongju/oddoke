@@ -1,7 +1,7 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport  
+from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPoint, DdokPointLog
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
@@ -590,3 +590,142 @@ class PostReportAdmin(admin.ModelAdmin):
         'action_warning', 'action_suspension', 
         'action_permanent_ban', 'action_dismiss'
     ]
+
+@admin.register(BannerRequest)
+class BannerRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'user_link', 'artist_name', 'status', 
+        'ddok_points_used', 'created_at', 'approved_at', 'expires_at',
+        'banner_preview'
+    )
+    
+    list_filter = (
+        'status', 'created_at', 'approved_at', 'expires_at'
+    )
+    
+    search_fields = (
+        'user__username', 'user__email', 'artist_name'
+    )
+    
+    readonly_fields = (
+        'user', 'ddok_points_used', 'created_at', 'updated_at',
+        'banner_preview', 'approved_by', 'approved_at'
+    )
+    
+    fieldsets = (
+        ('신청 정보', {
+            'fields': (
+                'user', 'artist_name', 'ddok_points_used', 'banner_preview'
+            )
+        }),
+        ('처리 정보', {
+            'fields': (
+                'status', 'approved_by', 'approved_at', 'expires_at', 'rejection_reason'
+            )
+        }),
+        ('기록', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def user_link(self, obj):
+        """신청자 링크"""
+        if obj.user:
+            return format_html(
+                '<a href="/admin/accounts/user/{}/change/">{}</a>',
+                obj.user.id, obj.user.username
+            )
+        return '-'
+    user_link.short_description = '신청자'
+    
+    def banner_preview(self, obj):
+        """배너 이미지 미리보기"""
+        if obj.banner_image:
+            return format_html(
+                '<img src="{}" width="300" style="max-height: 100px; object-fit: cover; border-radius: 4px;" />',
+                obj.banner_image.url
+            )
+        return '이미지 없음'
+    banner_preview.short_description = '배너 미리보기'
+    
+    @admin.action(description="✅ 배너 승인 (3일간 표시)")
+    def approve_banners(self, request, queryset):
+        """선택된 배너들을 승인"""
+        approved_count = 0
+        
+        for banner_request in queryset.filter(status='pending'):
+            try:
+                banner_request.approve(request.user)
+                approved_count += 1
+            except Exception as e:
+                self.message_user(
+                    request, 
+                    f"배너 {banner_request.id} 승인 실패: {str(e)}", 
+                    level='ERROR'
+                )
+        
+        if approved_count > 0:
+            self.message_user(
+                request, 
+                f"{approved_count}개의 배너가 승인되었습니다. 3일간 메인 페이지에 표시됩니다."
+            )
+    
+    @admin.action(description="❌ 배너 거절 (포인트 환불)")
+    def reject_banners(self, request, queryset):
+        """선택된 배너들을 거절"""
+        rejected_count = 0
+        
+        for banner_request in queryset.filter(status='pending'):
+            try:
+                banner_request.reject(request.user, "관리자에 의해 거절됨")
+                rejected_count += 1
+            except Exception as e:
+                self.message_user(
+                    request, 
+                    f"배너 {banner_request.id} 거절 실패: {str(e)}", 
+                    level='ERROR'
+                )
+        
+        if rejected_count > 0:
+            self.message_user(
+                request, 
+                f"{rejected_count}개의 배너가 거절되었습니다. 덕 포인트가 환불되었습니다."
+            )
+    
+    @admin.action(description="🗑️ 만료된 배너 정리")
+    def cleanup_expired_banners(self, request, queryset):
+        """만료된 배너들을 정리"""
+        from django.utils import timezone
+        
+        expired_banners = BannerRequest.objects.filter(
+            status='approved',
+            expires_at__lt=timezone.now()
+        )
+        
+        expired_count = expired_banners.count()
+        expired_banners.update(status='expired')
+        
+        self.message_user(
+            request, 
+            f"{expired_count}개의 만료된 배너를 정리했습니다."
+        )
+    
+    actions = ['approve_banners', 'reject_banners', 'cleanup_expired_banners']
+    
+    def get_queryset(self, request):
+        """관련 객체들을 미리 로드"""
+        return super().get_queryset(request).select_related('user', 'approved_by')
+
+@admin.register(DdokPoint)
+class DdokPointAdmin(admin.ModelAdmin):
+    list_display = ('user', 'total_points', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('created_at', 'updated_at')
+
+@admin.register(DdokPointLog)
+class DdokPointLogAdmin(admin.ModelAdmin):
+    list_display = ('point_owner', 'points_change', 'reason', 'related_member', 'created_at')
+    list_filter = ('reason', 'created_at')
+    search_fields = ('point_owner__user__username',)
+    readonly_fields = ('created_at',)

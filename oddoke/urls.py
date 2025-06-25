@@ -19,4 +19,8 @@ urlpatterns = [
     path('faq/', include('faq.urls')),                 # faq
     path('notifications/', include('notifications.urls')), # 알림
     
+    path('intro/', views.intro_view, name='intro'),  # 인트로 슬라이드 랜딩 페이즈
+    
+    
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -207,7 +207,12 @@ export function setupHeaderMenu() {
   if (reportUserBtn) {
     reportUserBtn.addEventListener('click', function() {
       headerDropdownMenu.classList.add('hidden');
-      showReportModal();
+      // ✅ 기존 alert 방식 대신 모달 호출
+      if (window.showTradeReportModal) {
+        window.showTradeReportModal();
+      } else {
+        showToast('신고 기능을 불러오는 중입니다. 잠시 후 다시 시도해주세요.', 'error');
+      }
     });
   }
 }
@@ -238,55 +243,55 @@ function getOtherUserUsername() {
 }
 
 // 신고 처리 함수
-function handleUserReport(username) {
-  const loadingToast = showLoadingToast('신고 접수 중...');
+// function handleUserReport(username) {
+//   const loadingToast = showLoadingToast('신고 접수 중...');
   
-  const csrfToken = getCSRFToken();
-  if (!csrfToken) {
-    hideLoadingToast(loadingToast);
-    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
-    return;
-  }
+//   const csrfToken = getCSRFToken();
+//   if (!csrfToken) {
+//     hideLoadingToast(loadingToast);
+//     showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+//     return;
+//   }
 
-  fetch('/accounts/report/', {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrfToken,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      reported_user: username,
-      report_type: 'chat_abuse',
-      room_id: window.roomId,
-      description: '채팅방에서 신고'
-    })
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    hideLoadingToast(loadingToast);
+  // fetch('/accounts/report/', {
+  //   method: 'POST',
+  //   headers: {
+  //     'X-CSRFToken': csrfToken,
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify({
+  //     reported_user: username,
+  //     report_type: 'chat_abuse',
+  //     room_id: window.roomId,
+  //     description: '채팅방에서 신고'
+  //   })
+  // })
+  // .then(response => {
+  //   if (!response.ok) {
+  //     throw new Error(`HTTP error! status: ${response.status}`);
+  //   }
+  //   return response.json();
+  // })
+  // .then(data => {
+  //   hideLoadingToast(loadingToast);
     
-    if (data.success) {
-      showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.', 'success');
-    } else {
-      showToast(data.error || '신고 접수에 실패했습니다.', 'error');
-    }
-  })
-  .catch(error => {
-    hideLoadingToast(loadingToast);
-    console.error('신고 처리 오류:', error);
+  //   if (data.success) {
+  //     showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.', 'success');
+  //   } else {
+  //     showToast(data.error || '신고 접수에 실패했습니다.', 'error');
+  //   }
+  // })
+//   .catch(error => {
+//     hideLoadingToast(loadingToast);
+//     console.error('신고 처리 오류:', error);
     
-    if (error.message.includes('404') || error.message.includes('405')) {
-      showToast('신고 기능이 준비 중입니다. 고객센터로 문의해주세요.', 'info');
-    } else {
-      showToast('신고 처리 중 오류가 발생했습니다.', 'error');
-    }
-  });
-}
+//     if (error.message.includes('404') || error.message.includes('405')) {
+//       showToast('신고 기능이 준비 중입니다. 고객센터로 문의해주세요.', 'info');
+//     } else {
+//       showToast('신고 처리 중 오류가 발생했습니다.', 'error');
+//     }
+//   });
+// }
 
 // 리뷰 모달 관련 처리
 export function setupReviewModal() {

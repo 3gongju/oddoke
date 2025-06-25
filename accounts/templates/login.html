@@ -60,14 +60,13 @@
 
       <!-- 로그인 버튼 -->
       <button type="submit"
-              class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition">
+              class="w-full bg-black text-white font-bold py-2 rounded hover:bg-blue-700 transition">
         로그인
       </button>
 
       <!-- 하단 링크 -->
       <div class="flex justify-between text-xs text-gray-400 mt-4">
         <a href="{% url 'accounts:signup' %}" class="hover:underline">회원가입</a>
-        <!-- 🔥 비밀번호 찾기 링크 수정 -->
         <a href="{% url 'accounts:password_reset' %}" class="hover:underline">비밀번호 찾기</a>
       </div>
     </form>
@@ -82,93 +81,437 @@
       </div>
     </div>
 
-    <!-- 소셜 로그인 버튼들 -->
-    <!-- 카카오 로그인 -->
-    <div class="social-login-button">
-      <a href="{% url 'accounts:kakao_login' %}" class="kakao-btn">
-        <span class="social-icon"></span>
-        카카오 로그인
-      </a>
-    </div>
+    <!--  소셜 로그인 버튼들 (PNG 이미지 사용) -->
+    <div class="space-y-3">
+      <!-- 카카오 로그인 -->
+      <div class="kakao-login-wrapper">
+        <a href="{% url 'accounts:kakao_login' %}" class="kakao-material-button">
+          <div class="kakao-material-button-content-wrapper">
+            <div class="kakao-material-button-icon">
+              <img src="{% static 'image/kakao_logo.png' %}" alt="카카오 로고" class="kakao-logo">
+            </div>
+            <span class="kakao-material-button-contents">카카오로 계속하기</span>
+            <span class="kakao-material-button-state"></span>
+          </div>
+        </a>
+      </div>
 
-    <!-- 네이버 로그인 -->
-    <div class="social-login-button">
-      <a href="{% url 'accounts:naver_login' %}" class="naver-btn">
-        <span class="social-icon"></span>
-        네이버 로그인
-      </a>
+      <!-- 네이버 로그인 -->
+      <div class="naver-login-wrapper">
+        <a href="{% url 'accounts:naver_login' %}" class="naver-material-button">
+          <div class="naver-material-button-content-wrapper">
+            <div class="naver-material-button-icon">
+              <img src="{% static 'image/naver_logo.png' %}" alt="네이버 로고" class="naver-logo">
+            </div>
+            <span class="naver-material-button-contents">네이버로 계속하기</span>
+            <span class="naver-material-button-state"></span>
+          </div>
+        </a>
+      </div>
+
+      <!-- 구글 로그인 (기존 공식 스타일 유지) -->
+      <div class="google-login-wrapper">
+        <a href="{% url 'accounts:google_login' %}" class="gsi-material-button">
+          <div class="gsi-material-button-content-wrapper">
+            <div class="gsi-material-button-icon">
+              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display: block;">
+                <path fill="#EA4335" d="m24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                <path fill="none" d="M0 0h48v48H0z"></path>
+              </svg>
+            </div>
+            <span class="gsi-material-button-contents">Google로 계속하기</span>
+            <span class="gsi-material-button-state"></span>
+          </div>
+        </a>
+      </div>
     </div>
 
   </div>
 </div>
 
 <style>
-/* 소셜 로그인 버튼 - 이미지 대신 CSS 버튼 */
-.social-login-button {
-  width: 100%;
+/* 구글 공식 CSS (기존 유지) */
+.gsi-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-appearance: none;
+  background-color: WHITE;
+  background-image: none;
+  border: 1px solid #747775; /* 구글 버튼은 테두리 유지 */
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #1f1f1f;
+  cursor: pointer;
+  font-family: 'Roboto', arial, sans-serif;
+  font-size: 14px;
   height: 50px;
-  border-radius: 8px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.25px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 20px;
+  position: relative;
+  text-align: center;
+  -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+  transition: background-color .218s, border-color .218s, box-shadow .218s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 400px;
+  min-width: min-content;
+  text-decoration: none;
+  display: block;
   margin-bottom: 8px;
 }
 
-.social-login-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.gsi-material-button .gsi-material-button-icon {
+  height: 20px;
+  margin-right: 12px;
+  min-width: 20px;
+  width: 20px;
 }
 
-.social-login-button a {
-  display: flex;
+.gsi-material-button .gsi-material-button-content-wrapper {
+  -webkit-align-items: center;
   align-items: center;
-  justify-content: center;
-  width: 100%;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
   height: 100%;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.gsi-material-button .gsi-material-button-contents {
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
+  font-family: 'Roboto', arial, sans-serif;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.gsi-material-button .gsi-material-button-state {
+  -webkit-transition: opacity .218s;
+  transition: opacity .218s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.gsi-material-button:disabled {
+  cursor: default;
+  background-color: #ffffff61;
+  border-color: #1f1f1f1f;
+}
+
+.gsi-material-button:disabled .gsi-material-button-contents {
+  opacity: 38%;
+}
+
+.gsi-material-button:disabled .gsi-material-button-icon {
+  opacity: 38%;
+}
+
+.gsi-material-button:not(:disabled):active .gsi-material-button-state, 
+.gsi-material-button:not(:disabled):focus .gsi-material-button-state {
+  background-color: #303030;
+  opacity: 12%;
+}
+
+.gsi-material-button:not(:disabled):hover {
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  transform: translateY(-2px);
+}
+
+.gsi-material-button:not(:disabled):hover .gsi-material-button-state {
+  background-color: #303030;
+  opacity: 8%;
+}
+
+/* 카카오 커스텀 버튼 - 구글 버튼 스타일 복사 */
+.kakao-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-appearance: none;
+  background-color: #FEE500; /* 카카오 노란색 배경 */
+  background-image: none;
+  border: none; /* 테두리 제거 */
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #1f1f1f; /* 구글 버튼과 동일한 텍스트 색상 */
+  cursor: pointer;
+  font-family: 'Roboto', arial, sans-serif;
+  font-size: 14px;
+  height: 50px;
+  letter-spacing: 0.25px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 12px;
+  position: relative;
+  text-align: center;
+  -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+  transition: background-color .218s, border-color .218s, box-shadow .218s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 400px;
+  min-width: min-content;
   text-decoration: none;
-  font-weight: 600;
-  font-size: 16px; /* 통일된 폰트 크기 */
-  border-radius: 8px;
-  transition: opacity 0.2s ease;
+  display: block;
+  margin-bottom: 8px;
 }
 
-.social-login-button:hover a {
-  opacity: 0.9;
+.kakao-material-button .kakao-material-button-icon {
+  height: 48px; /* 훨씬 더 크게 32px -> 48px */
+  margin-right: 12px;
+  min-width: 48px;
+  width: 48px;
 }
 
-/* 카카오 버튼 스타일 */
-.kakao-btn {
-  background-color: #FEE500;
-  color: #000000;
-  border: 1px solid #FDD800;
+.kakao-material-button .kakao-logo {
+  width: 48px; /* 훨씬 더 크게 32px -> 48px */
+  height: 48px;
+  object-fit: contain;
 }
 
-/* 네이버 버튼 스타일 */
-.naver-btn {
-  background-color: #03C75A;
-  color: #ffffff;
-  border: 1px solid #02B351;
+.kakao-material-button .kakao-material-button-content-wrapper {
+  -webkit-align-items: center;
+  align-items: center;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: center; /* space-between에서 center로 변경 */
+  position: relative;
+  width: 100%;
 }
 
-/* 아이콘 스타일 */
-.social-icon {
-  margin-right: 8px;
-  font-size: 18px;
+.kakao-material-button .kakao-material-button-contents {
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
+  font-family: 'Roboto', arial, sans-serif;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.kakao-material-button .kakao-material-button-state {
+  -webkit-transition: opacity .218s;
+  transition: opacity .218s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.kakao-material-button:disabled {
+  cursor: default;
+  background-color: #FEE50061;
+  border-color: #FDD8001f;
+}
+
+.kakao-material-button:disabled .kakao-material-button-contents {
+  opacity: 38%;
+}
+
+.kakao-material-button:disabled .kakao-material-button-icon {
+  opacity: 38%;
+}
+
+.kakao-material-button:not(:disabled):active .kakao-material-button-state, 
+.kakao-material-button:not(:disabled):focus .kakao-material-button-state {
+  background-color: #303030; /* 구글 버튼과 동일 */
+  opacity: 12%;
+}
+
+.kakao-material-button:not(:disabled):hover {
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  transform: translateY(-2px);
+}
+
+.kakao-material-button:not(:disabled):hover .kakao-material-button-state {
+  background-color: #303030; /* 구글 버튼과 동일 */
+  opacity: 8%;
+}
+
+/* 카카오 로그인 래퍼 */
+.kakao-login-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* 네이버 커스텀 버튼 - 구글 버튼 스타일 복사 */
+.naver-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-appearance: none;
+  background-color: #03C75A; /* 네이버 초록색 배경 */
+  background-image: none;
+  border: none; /* 테두리 제거 */
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #ffffff; /* 네이버는 흰색 텍스트 */
+  cursor: pointer;
+  font-family: 'Roboto', arial, sans-serif;
+  font-size: 14px;
+  height: 50px;
+  letter-spacing: 0.25px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 12px;
+  position: relative;
+  text-align: center;
+  -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+  transition: background-color .218s, border-color .218s, box-shadow .218s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 100%;
+  max-width: 400px;
+  min-width: min-content;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.naver-material-button .naver-material-button-icon {
+  height: 48px; /* 훨씬 더 크게 32px -> 48px */
+  margin-right: 12px;
+  min-width: 48px;
+  width: 48px;
+}
+
+.naver-material-button .naver-logo {
+  width: 48px; /* 훨씬 더 크게 32px -> 48px */
+  height: 48px;
+  object-fit: contain;
+}
+
+.naver-material-button .naver-material-button-content-wrapper {
+  -webkit-align-items: center;
+  align-items: center;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.naver-material-button .naver-material-button-contents {
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
+  font-family: 'Roboto', arial, sans-serif;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.naver-material-button .naver-material-button-state {
+  -webkit-transition: opacity .218s;
+  transition: opacity .218s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.naver-material-button:disabled {
+  cursor: default;
+  background-color: #03C75A61;
+  border-color: #02B3511f;
+}
+
+.naver-material-button:disabled .naver-material-button-contents {
+  opacity: 38%;
+}
+
+.naver-material-button:disabled .naver-material-button-icon {
+  opacity: 38%;
+}
+
+.naver-material-button:not(:disabled):active .naver-material-button-state, 
+.naver-material-button:not(:disabled):focus .naver-material-button-state {
+  background-color: #303030; /* 구글 버튼과 동일 */
+  opacity: 12%;
+}
+
+.naver-material-button:not(:disabled):hover {
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  transform: translateY(-2px);
+}
+
+.naver-material-button:not(:disabled):hover .naver-material-button-state {
+  background-color: #303030; /* 구글 버튼과 동일 */
+  opacity: 8%;
+}
+
+/* 네이버 로그인 래퍼 */
+.naver-login-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* 구글 로그인 래퍼 */
+.google-login-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 480px) {
-  .social-login-button {
+  .gsi-material-button {
     height: 45px;
+    font-size: 13px;
   }
-  
-  .social-login-button a {
-    font-size: 14px;
+
+  .kakao-material-button {
+    height: 45px;
+    font-size: 13px;
   }
-  
-  .social-icon {
-    font-size: 16px;
+
+  .naver-material-button {
+    height: 45px;
+    font-size: 13px;
   }
 }
 </style>
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("message-modal");

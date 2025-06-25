@@ -3,6 +3,7 @@
 {% load member_images %}
 
 {% block body %}
+{% csrf_token %}
 <div class="min-h-screen bg-white">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
 
@@ -21,7 +22,7 @@
                         alt="프로필 이미지"
                         class="w-full h-full object-cover" />
                   {% else %}
-                    <img src="{% static 'image/ddok_logo.png' %}"
+                    <img src="{% static 'image/ddok_glasses.png' %}"
                         alt="기본 이미지"
                         class="w-full h-full object-cover" />
                   {% endif %}
@@ -100,6 +101,128 @@
             {% endif %}
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 덕 포인트 섹션 -->
+    <div class="mb-6 lg:mb-12">
+      <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-8 border border-gray-100">
+        <div class="flex justify-between items-baseline mb-4 sm:mb-6">
+          <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+            내 덕
+          </h2>
+          <div class="text-right">
+            <div class="text-xl sm:text-2xl font-bold text-purple-600">
+              {{ total_ddok_points|default:0 }}덕
+            </div>
+            <!-- <p class="text-xs sm:text-sm text-gray-500">총 쌓인 덕</p> -->
+          </div>
+        </div>
+
+        <!-- 덕 포인트 사용하기 버튼 -->
+        <div class="mb-4 sm:mb-6">
+          <button onclick="openBannerRequestModal()" 
+                  class="w-full sm:w-auto px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
+            덕 쓸어가기 
+          </button>
+        </div>
+        
+        <!-- 최근 획득 내역 섹션 -->
+        {% if recent_ddok_history %}
+        <div class="pt-4 border-t border-gray-200">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-700">최근 내역</h3>
+            <button 
+              id="toggle-history-btn" 
+              class="text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
+              onclick="toggleHistory()"
+            >
+              더보기
+            </button>
+          </div>
+          
+          <!-- 최근 1개 내역 (항상 표시) -->
+          <div id="recent-history-preview" class="space-y-3">
+            {% with recent_ddok_history|first as latest_log %}
+            <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+              <div class="flex gap-3 sm:gap-4">
+                
+                <!-- 내용 영역 -->
+                <div class="flex-1 min-w-0 flex flex-col justify-center">
+                  <div class="flex justify-between items-start mb-1">
+                    <div>
+                      <span class="text-sm sm:text-base font-medium text-gray-800">
+                        {% if latest_log.reason == 'BIRTHDAY_GAME' %}
+                          생일시 맞추기
+                        {% else %}
+                          {{ latest_log.get_reason_display }}
+                        {% endif %}
+                      </span>
+                      {% if latest_log.related_member %}
+                        <span class="text-xs sm:text-sm text-gray-500 block">
+                          {{ latest_log.related_member.member_name }}
+                        </span>
+                      {% endif %}
+                    </div>
+                    <span class="font-bold {% if latest_log.points_change > 0 %}text-purple-600{% else %}text-red-600{% endif %} text-sm sm:text-base">
+                      {% if latest_log.points_change > 0 %}+{% endif %}{{ latest_log.points_change }}덕
+                    </span>
+                  </div>
+                  <p class="text-xs sm:text-sm text-gray-500">{{ latest_log.created_at|date:"m.d H:i" }}</p>
+                </div>
+              </div>
+            </div>
+            {% endwith %}
+          </div>
+          
+          <!-- 나머지 내역들 (숨겨져 있다가 더보기 클릭시 표시) -->
+          <div id="full-history" class="space-y-3 mt-3 hidden">
+            {% for log in recent_ddok_history|slice:"1:" %}
+            <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow">
+              <div class="flex gap-3 sm:gap-4">
+                
+                <!-- 내용 영역 -->
+                <div class="flex-1 min-w-0 flex flex-col justify-center">
+                  <div class="flex justify-between items-start mb-1">
+                    <div>
+                      <span class="text-sm sm:text-base font-medium text-gray-800">
+                        {% if log.reason == 'BIRTHDAY_GAME' %}
+                          생일시 맞추기
+                        {% else %}
+                          {{ log.get_reason_display }}
+                        {% endif %}
+                      </span>
+                      {% if log.related_member %}
+                        <span class="text-xs sm:text-sm text-gray-500 block">
+                          {{ log.related_member.member_name }}
+                        </span>
+                      {% endif %}
+                    </div>
+                    <span class="font-bold {% if log.points_change > 0 %}text-purple-600{% else %}text-red-600{% endif %} text-sm sm:text-base">
+                      {% if log.points_change > 0 %}+{% endif %}{{ log.points_change }}덕
+                    </span>
+                  </div>
+                  <p class="text-xs sm:text-sm text-gray-500">{{ log.created_at|date:"m.d H:i" }}</p>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <!-- 내역이 더 있는지 표시 -->
+          {% if recent_ddok_history|length > 5 %}
+          <div id="more-indicator" class="text-center mt-3 text-sm text-gray-500 hidden">
+            <span>최근 5개 내역만 표시됩니다</span>
+          </div>
+          {% endif %}
+        </div>
+        {% else %}
+        <!-- 내역이 없을 때 -->
+        <div class="pt-4 border-t border-gray-200 text-center py-8 sm:py-12">
+          <p class="text-gray-500 text-sm sm:text-base lg:text-lg">아직 획득한 덕이 없습니다</p>
+          <p class="text-gray-400 text-xs sm:text-sm mt-1">생일시 맞추기 게임에 참여해보세요!</p>
+        </div>
+        {% endif %}
       </div>
     </div>
 
@@ -237,12 +360,35 @@
           {% if farm_posts %}
             <div class="space-y-3 sm:space-y-4" id="farm-written-items">
               {% for post in farm_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-written-item" style="display: none;">
-                  <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
-                    [덕팜] {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="farm-written-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕팜 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕팜 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
+                        class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        [덕팜] {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.get_want_to_display }} · {{ post.get_display_price }}
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -258,13 +404,33 @@
           {% if farm_comments %}
             <div class="space-y-3 sm:space-y-4" id="farm-commented-items">
               {% for comment in farm_comments %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-commented-item" style="display: none;">
-                  <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ comment.post.title }}
-                  </a>
-                  <p class="text-green-600 font-medium text-sm sm:text-base mt-1 sm:mt-2 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="farm-commented-item p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕팜 댓글 대상 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if comment.target_post.get_main_image %}
+                        <img src="{{ comment.target_post.get_main_image }}" 
+                            alt="{{ comment.target_post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕팜 댓글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokfarm:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ comment.target_post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-green-600 font-medium text-sm sm:text-base mb-1 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ comment.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -280,12 +446,35 @@
           {% if liked_farm_posts %}
             <div class="space-y-3 sm:space-y-4" id="farm-liked-items">
               {% for post in liked_farm_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow farm-liked-item" style="display: none;">
-                  <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="farm-liked-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 찜한 덕팜 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 찜한 덕팜 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokfarm:post_detail' post.category_type post.id %}" 
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.get_want_to_display }} · {{ post.get_display_price }}
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -376,12 +565,35 @@
           {% if dam_posts %}
             <div class="space-y-3 sm:space-y-4" id="dam-written-items">
               {% for post in dam_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-written-item" style="display: none;">
-                  <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2">
-                    [덕담] {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="dam-written-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕담 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕담 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
+                        class="text-black hover:text-gray-700 font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        [덕담] {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.category_type|capfirst }} 게시글
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -397,13 +609,33 @@
           {% if dam_comments %}
             <div class="space-y-3 sm:space-y-4" id="dam-commented-items">
               {% for comment in dam_comments %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-commented-item" style="display: none;">
-                  <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ comment.post.title }}
-                  </a>
-                  <p class="text-green-600 font-medium text-sm sm:text-base mt-1 sm:mt-2 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ comment.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="dam-commented-item p-3 sm:p-4 lg:p-5 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 덕담 댓글 대상 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if comment.target_post.get_main_image %}
+                        <img src="{{ comment.target_post.get_main_image }}" 
+                            alt="{{ comment.target_post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 덕담 댓글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokdam:post_detail' comment.category comment.target_post.id %}#comment-{{ comment.id }}"
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ comment.target_post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-green-600 font-medium text-sm sm:text-base mb-1 line-clamp-2">{{ comment.content|truncatewords:15 }}</p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ comment.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -419,12 +651,35 @@
           {% if liked_dam_posts %}
             <div class="space-y-3 sm:space-y-4" id="dam-liked-items">
               {% for post in liked_dam_posts %}
-                <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow dam-liked-item" style="display: none;">
-                  <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
-                    class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2">
-                    {{ post.title }}
-                  </a>
-                  <p class="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">{{ post.created_at|date:"Y.m.d H:i" }}</p>
+                <div class="dam-liked-item p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 hover:shadow-sm transition-shadow" style="display: none;">
+                  <div class="flex gap-3 sm:gap-4">
+                    <!-- 찜한 덕담 게시글 이미지 -->
+                    <div class="w-20 h-[106px] sm:w-20 sm:h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {% if post.get_main_image %}
+                        <img src="{{ post.get_main_image }}" 
+                            alt="{{ post.title }}"
+                            class="w-full h-full object-cover">
+                      {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                          <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                    <!-- 찜한 덕담 게시글 정보 -->
+                    <div class="flex-1 min-w-0 flex flex-col justify-center">
+                      <a href="{% url 'ddokdam:post_detail' post.category_type post.id %}" 
+                        class="text-gray-800 hover:text-black font-medium text-sm sm:text-base line-clamp-2 block mb-1">
+                        {{ post.title|truncatechars:15 }}
+                      </a>
+                      <p class="text-xs sm:text-sm text-gray-600 line-clamp-1 mb-1">
+                        {{ post.category_type|capfirst }} 게시글
+                      </p>
+                      <p class="text-xs sm:text-sm text-gray-500">{{ post.created_at|date:"m.d" }}</p>
+                    </div>
+                  </div>
                 </div>
               {% endfor %}
             </div>
@@ -879,6 +1134,29 @@
 
     <!-- JavaScript -->
     <script>
+      function toggleHistory() {
+          const fullHistory = document.getElementById('full-history');
+          const toggleBtn = document.getElementById('toggle-history-btn');
+          const moreIndicator = document.getElementById('more-indicator');
+          
+          if (fullHistory.classList.contains('hidden')) {
+              // 펼치기
+              fullHistory.classList.remove('hidden');
+              toggleBtn.textContent = '접기';
+              if (moreIndicator) {
+                  moreIndicator.classList.remove('hidden');
+              }
+          } else {
+              // 접기
+              fullHistory.classList.add('hidden');
+              toggleBtn.textContent = '더보기';
+              if (moreIndicator) {
+                  moreIndicator.classList.add('hidden');
+              }
+          }
+      }
+    </script>
+    <script>
       // Django 변수를 안전하게 처리
       const followedArtistIds = JSON.parse('{{ followed_artist_ids|escapejs }}') || [];
       
@@ -1227,4 +1505,304 @@
   </div>
 </div>
 
+<script>
+// 배너 신청 모달 관련 함수들
+function openBannerRequestModal() {
+  fetch('/accounts/banner-request/form/')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        showBannerModal(data.form_html);
+      } else {
+        showToast(data.error, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('배너 신청 폼 로드 오류:', error);
+      showToast('폼을 불러오는 중 오류가 발생했습니다.', 'error');
+    });
+}
+
+function showBannerModal(formHtml) {
+  // 기존 모달 제거
+  const existingModal = document.getElementById('bannerRequestModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // 모달 HTML 생성
+  const modalHTML = `
+    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
+      <div class="transform scale-95 opacity-0 transition-all duration-300" id="bannerModalContent">
+        ${formHtml}
+      </div>
+    </div>
+  `;
+  
+  // body에 모달 추가
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // 애니메이션 효과
+  setTimeout(() => {
+    const modalContent = document.getElementById('bannerModalContent');
+    if (modalContent) {
+      modalContent.classList.remove('scale-95', 'opacity-0');
+      modalContent.classList.add('scale-100', 'opacity-100');
+    }
+  }, 10);
+  
+  // ESC 키로 모달 닫기
+  const handleEscape = function(e) {
+    if (e.key === 'Escape') {
+      closeBannerModal();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+  
+  // 모달 외부 클릭 시 닫기
+  document.getElementById('bannerRequestModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeBannerModal();
+    }
+  });
+}
+
+function closeBannerModal() {
+  const modal = document.getElementById('bannerRequestModal');
+  if (modal) {
+    const modalContent = document.getElementById('bannerModalContent');
+    if (modalContent) {
+      modalContent.classList.add('scale-95', 'opacity-0');
+      modalContent.classList.remove('scale-100', 'opacity-100');
+    }
+    
+    setTimeout(() => {
+      modal.remove();
+    }, 300);
+  }
+}
+
+// 토스트 메시지 함수
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    padding: 12px 20px; border-radius: 8px; color: white;
+    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+    opacity: 0; transition: opacity 0.3s;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.style.opacity = '1', 10);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, 3000);
+}
+</script>
+
+<script>
+console.log('🔥 수정된 mypage.html JavaScript 로드됨');
+
+// CSRF 토큰 가져오기 함수
+function getCSRFToken() {
+  return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// 배너 신청 모달 관련 함수들
+function openBannerRequestModal() {
+  console.log('🔥 openBannerRequestModal 함수 호출됨');
+  
+  fetch('/accounts/banner-request/form/', {
+    method: 'GET',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': getCSRFToken()
+    }
+  })
+    .then(response => {
+      console.log('🔥 서버 응답 상태:', response.status);
+      return response.json();
+    })
+    .then(data => {
+      console.log('🔥 받은 데이터:', data);
+      if (data.success) {
+        showBannerModal(data.form_html);
+      } else {
+        console.error('🔥 폼 로드 실패:', data.error);
+        showToast(data.error, 'error');
+      }
+    })
+    .catch(error => {
+      console.error('🔥 배너 신청 폼 로드 오류:', error);
+      showToast('폼을 불러오는 중 오류가 발생했습니다.', 'error');
+    });
+}
+
+function showBannerModal(formHtml) {
+  console.log('🔥 showBannerModal 호출됨');
+  
+  // 기존 모달 제거
+  const existingModal = document.getElementById('bannerRequestModal');
+  if (existingModal) {
+    console.log('🔥 기존 모달 제거됨');
+    existingModal.remove();
+  }
+  
+  // 모달 HTML 생성
+  const modalHTML = `
+    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
+      <div class="transform scale-95 opacity-0 transition-all duration-300" id="bannerModalContent">
+        ${formHtml}
+      </div>
+    </div>
+  `;
+  
+  console.log('🔥 모달 HTML 생성됨');
+  
+  // body에 모달 추가
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // 애니메이션 효과
+  setTimeout(() => {
+    const modalContent = document.getElementById('bannerModalContent');
+    if (modalContent) {
+      console.log('🔥 모달 애니메이션 적용됨');
+      modalContent.classList.remove('scale-95', 'opacity-0');
+      modalContent.classList.add('scale-100', 'opacity-100');
+    }
+  }, 10);
+  
+  // 🔥 폼 제출 이벤트 바인딩 - 중요!
+  setTimeout(() => {
+    const form = document.getElementById('bannerRequestForm');
+    if (form) {
+      console.log('🔥 폼 이벤트 바인딩 시작');
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('🔥 배너 신청 폼 제출됨');
+        
+        const formData = new FormData(this);
+        
+        // 필수 필드 확인
+        const artistName = formData.get('artist_name');
+        const bannerImage = formData.get('banner_image');
+        
+        if (!artistName || !bannerImage || bannerImage.size === 0) {
+          showToast('아티스트명과 배너 이미지를 모두 입력해주세요.', 'error');
+          return;
+        }
+        
+        console.log('🔥 폼 데이터 준비 완료');
+        console.log('🔥 아티스트명:', artistName);
+        console.log('🔥 이미지 크기:', bannerImage.size);
+        
+        // 🔥 CSRF 토큰 확인
+        const csrfToken = formData.get('csrfmiddlewaretoken');
+        console.log('🔥 CSRF 토큰:', csrfToken ? '존재함' : '없음');
+        
+        // 서버로 전송
+        fetch('/accounts/banner-request/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+            // 🔥 주의: FormData 사용 시 Content-Type 헤더를 설정하지 마세요!
+            // 🔥 CSRF 토큰은 FormData에 포함되어 있으므로 별도 헤더 불필요
+          }
+        })
+        .then(response => {
+          console.log('🔥 서버 응답 상태:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('🔥 서버 응답 데이터:', data);
+          
+          if (data.success) {
+            showToast(data.message, 'success');
+            closeBannerModal();
+            // 페이지 새로고침해서 업데이트된 포인트 표시
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            showToast(data.error, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('🔥 배너 신청 오류:', error);
+          showToast('배너 신청 중 오류가 발생했습니다.', 'error');
+        });
+      });
+      
+      console.log('🔥 폼 이벤트 바인딩 완료');
+    } else {
+      console.error('🔥 배너 폼을 찾을 수 없음');
+    }
+  }, 100);
+  
+  // ESC 키로 모달 닫기
+  const handleEscape = function(e) {
+    if (e.key === 'Escape') {
+      console.log('🔥 ESC 키로 모달 닫기');
+      closeBannerModal();
+      document.removeEventListener('keydown', handleEscape);
+    }
+  };
+  document.addEventListener('keydown', handleEscape);
+  
+  // 모달 외부 클릭 시 닫기
+  document.getElementById('bannerRequestModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      console.log('🔥 모달 외부 클릭으로 닫기');
+      closeBannerModal();
+    }
+  });
+}
+
+function closeBannerModal() {
+  console.log('🔥 closeBannerModal 호출됨');
+  const modal = document.getElementById('bannerRequestModal');
+  if (modal) {
+    const modalContent = document.getElementById('bannerModalContent');
+    if (modalContent) {
+      modalContent.classList.add('scale-95', 'opacity-0');
+      modalContent.classList.remove('scale-100', 'opacity-100');
+    }
+    
+    setTimeout(() => {
+      modal.remove();
+      console.log('🔥 모달 제거됨');
+    }, 300);
+  }
+}
+
+// 토스트 메시지 함수
+function showToast(message, type = 'info') {
+  console.log('🔥 토스트 메시지:', message, type);
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+    padding: 12px 20px; border-radius: 8px; color: white;
+    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
+    opacity: 0; transition: opacity 0.3s;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.style.opacity = '1', 10);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      if (document.body.contains(toast)) {
+        document.body.removeChild(toast);
+      }
+    }, 300);
+  }, 3000);
+}
+
+console.log('🔥 수정된 배너 관련 함수들 정의 완료');
+</script>
 {% endblock %}
