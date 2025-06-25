@@ -30,6 +30,7 @@ Django==5.2.1
 django-allauth==65.8.1
 django-browser-reload==1.18.0
 django-import-export @ git+https://github.com/django-import-export/django-import-export.git@78c2d73f3da554c03df8caeb1828349cdc753b7d
+django-redis==5.2.0
 django-resized==1.0.3
 django-widget-tweaks==1.5.0
 executing==2.2.0
@@ -96,6 +97,7 @@ pywin32==308
 pywinpty==2.0.15
 PyYAML==6.0.2
 pyzmq==26.2.1
+redis==4.5.4
 referencing==0.36.2
 requests==2.32.3
 rfc3339-validator==0.1.4
