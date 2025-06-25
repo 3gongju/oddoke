@@ -21,11 +21,7 @@ import { setupAutoDetect } from './auto_detect.js';
 import { setupImageLightbox } from './image_handler.js';
 import { setupPlusMenu, setupTradeCompleteModal, setupHeaderMenu, setupReviewModal } from './ui_setup.js';
 import { sendTextMessage } from './message_sender.js';
-<<<<<<< HEAD
 import { setupTradeReport } from './trade_report.js';
-=======
-import { setupTradeReport } from './trade_report.js'; // ✅ 신고 모듈 import 추가
->>>>>>> 9f6bca406bf9680bfbf1526d9133f5d6622c47c6
 
 document.addEventListener("DOMContentLoaded", () => {
   // 전역 변수에서 데이터 가져오기 - room_code 사용
@@ -39,11 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMessageHandlers(currentUser, currentUserId);
   setupFraudCheck();
   setupAutoDetect();
-<<<<<<< HEAD
   setupTradeReport();
-=======
-  setupTradeReport(); // ✅ 신고 모듈 초기화 추가
->>>>>>> 9f6bca406bf9680bfbf1526d9133f5d6622c47c6
   
   // WebSocket 메시지 핸들러 등록
   registerMessageHandler('showToast', showToast);
