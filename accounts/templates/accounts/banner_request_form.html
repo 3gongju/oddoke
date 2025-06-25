@@ -1,7 +1,7 @@
 <!-- 배너 신청 모달 폼 -->
-<div class="bg-white rounded-lg max-w-md w-full mx-4 relative">
+<div class="bg-white rounded-lg w-full max-w-md mx-auto relative">
   <!-- 헤더 -->
-  <div class="flex justify-between items-center p-6 border-b">
+  <div class="flex justify-between items-center p-4 sm:p-6 border-b">
     <h3 class="text-lg font-semibold text-gray-900">배너 신청</h3>
     <button onclick="closeBannerModal()" class="text-gray-400 hover:text-gray-600">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,11 +11,11 @@
   </div>
 
   <!-- 폼 내용 -->
-  <form id="bannerRequestForm" enctype="multipart/form-data" class="p-6">
+  <form id="bannerRequestForm" enctype="multipart/form-data" class="p-4 sm:p-6">
     {% csrf_token %}
     
     <!-- 포인트 정보 -->
-    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+    <div class="mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
       <div class="flex justify-between items-center">
         <span class="text-sm font-medium text-gray-700">필요 포인트:</span>
         <span class="text-lg font-bold text-pink-600">{{ required_points }}덕</span>
@@ -29,7 +29,7 @@
     </div>
 
     {% if not can_afford %}
-    <div class="mb-4 p-4 bg-pink-50 border border-pink-200 rounded-lg">
+    <div class="mb-4 p-3 sm:p-4 bg-pink-50 border border-pink-200 rounded-lg">
       <p class="text-pink-700 text-sm">덕 포인트가 부족합니다. 생일 맞추기 게임으로 포인트를 모아보세요!</p>
     </div>
     {% endif %}
@@ -62,7 +62,7 @@
     </div>
 
     <!-- 안내사항 -->
-    <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+    <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
       <h4 class="text-sm font-medium text-gray-800 mb-2">안내사항</h4>
       <ul class="text-xs text-gray-700 space-y-1">
         <li>• 승인 시 3일간 메인 페이지에 표시됩니다</li>
@@ -72,13 +72,13 @@
     </div>
 
     <!-- 버튼들 -->
-    <div class="flex space-x-3">
+    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
       <button type="button" onclick="closeBannerModal()" 
-              class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              class="w-full sm:flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
         취소
       </button>
       <button type="submit" {% if not can_afford %}disabled{% endif %}
-              class="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              class="w-full sm:flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
         신청하기 ({{ required_points }}덕)
       </button>
     </div>
