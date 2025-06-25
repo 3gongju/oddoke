@@ -1,0 +1,260 @@
+{% extends 'oddmin/dashboard.html' %}
+
+{% block title %}팬덤 인증 상세 - oddmin{% endblock %}
+
+{% block body %}
+<!-- 페이지 헤더 -->
+<div class="mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">팬덤 인증 상세</h2>
+            <p class="text-gray-600">{{ profile.user.username }}님의 {{ profile.fandom_artist.display_name }} 팬덤 인증</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'oddmin:fandom_list' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                ← 목록으로
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- 사용자 정보 카드 -->
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">사용자 정보</h3>
+    </div>
+    <div class="px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <!-- 사용자 프로필 (fandom_list.html에서 가져온 코드) -->
+                <div class="flex-shrink-0">
+                    {% if profile.user.profile_image %}
+                        <img class="h-16 w-16 rounded-full object-cover" src="{{ profile.user.profile_image.url }}" alt="{{ profile.user.username }}">
+                    {% else %}
+                        <div class="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span class="text-lg font-medium text-gray-700">{{ profile.user.username|first|upper }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h4 class="text-lg font-medium text-gray-900">{{ profile.user.username }}</h4>
+                    <p class="text-sm text-gray-500">{{ profile.user.email }}</p>
+                    <p class="text-sm text-gray-600 mt-1">{{ profile.fandom_artist.display_name }} 공식 팬덤</p>
+                </div>
+            </div>
+            
+            <!-- 상태 (fandom_list.html과 동일한 로직) -->
+            <div class="text-right">
+                {% if profile.is_pending_verification %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                        승인 대기
+                    </span>
+                {% elif profile.is_verified_fandom %}
+                    {% if profile.is_verification_expired %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            만료됨
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            승인됨
+                        </span>
+                    {% endif %}
+                {% elif profile.verification_failed %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                        거절됨
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                        미신청
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 인증 정보 카드 -->
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">인증 정보</h3>
+    </div>
+    <div class="px-6 py-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 신청일 (fandom_list.html에서 가져온 로직) -->
+            <div>
+                <label class="text-sm font-medium text-gray-500">신청일</label>
+                <p class="mt-1 text-sm text-gray-900">
+                    {% if profile.applied_at %}
+                        {{ profile.applied_at|date:"Y년 m월 d일 H:i" }}
+                    {% else %}
+                        <span class="text-gray-400">-</span>
+                    {% endif %}
+                </p>
+            </div>
+            
+            <!-- 인증 기간 (fandom_list.html에서 가져온 로직을 확장) -->
+            <div>
+                <label class="text-sm font-medium text-gray-500">인증 기간</label>
+                <p class="mt-1 text-sm text-gray-900">
+                    {% if profile.verification_start_date and profile.verification_end_date %}
+                        {{ profile.verification_start_date|date:"Y년 m월 d일" }} ~ {{ profile.verification_end_date|date:"Y년 m월 d일" }}
+                        {% if profile.days_until_expiration is not None %}
+                            <div class="text-xs mt-1">
+                                {% if profile.days_until_expiration <= 7 and profile.days_until_expiration > 0 %}
+                                    <span class="bg-orange-100 text-orange-800 px-2 py-1 rounded">{{ profile.days_until_expiration }}일 남음</span>
+                                {% elif profile.days_until_expiration <= 0 %}
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded">만료됨</span>
+                                {% else %}
+                                    <span class="text-gray-500">{{ profile.days_until_expiration }}일 남음</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-gray-400">-</span>
+                    {% endif %}
+                </p>
+            </div>
+            
+            {% if profile.verified_at %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">승인일</label>
+                <p class="mt-1 text-sm text-gray-900">{{ profile.verified_at|date:"Y년 m월 d일 H:i" }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 제출된 팬덤 카드 (핵심 기능!) -->
+{% if profile.fandom_card %}
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">제출된 팬덤 카드</h3>
+    </div>
+    <div class="px-6 py-6">
+        <div class="flex justify-center">
+            <div class="max-w-md">
+                <img src="{{ profile.fandom_card.url }}" 
+                     alt="팬덤 카드" 
+                     class="w-full h-auto rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                     onclick="openImageModal(this.src)">
+                <p class="text-xs text-gray-500 mt-2 text-center">📱 클릭하면 크게 볼 수 있습니다</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">제출된 팬덤 카드</h3>
+    </div>
+    <div class="px-6 py-6 text-center text-gray-500">
+        <div class="text-4xl mb-2">📷</div>
+        <p>제출된 팬덤 카드가 없습니다.</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- 관리자 액션 (fandom_list.html의 버튼들을 카드 형태로 변환) -->
+{% if profile.is_pending_verification %}
+<div class="bg-white shadow rounded-lg mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">관리자 액션</h3>
+    </div>
+    <div class="px-6 py-4">
+        <div class="flex space-x-4">
+            <!-- fandom_list.html과 동일한 승인/거절 폼, next 값만 변경 -->
+            <form method="post" action="{% url 'oddmin:approve_fandom' profile.id %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="fandom_detail">
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        onclick="return confirm('✅ {{ profile.user.username }}님의 {{ profile.fandom_artist.display_name }} 팬덤 인증을 승인하시겠습니까?')">
+                    ✅ 승인하기
+                </button>
+            </form>
+            
+            <form method="post" action="{% url 'oddmin:reject_fandom' profile.id %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="fandom_detail">
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        onclick="return confirm('❌ {{ profile.user.username }}님의 {{ profile.fandom_artist.display_name }} 팬덤 인증을 거절하시겠습니까?')">
+                    ❌ 거절하기
+                </button>
+            </form>
+        </div>
+        
+        <!-- 검토 가이드라인 -->
+        <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h4 class="text-sm font-medium text-yellow-800">검토 시 확인사항</h4>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>팬클럽 멤버십 카드가 정식 발급된 것인지 확인</li>
+                            <li>유효기간이 현재 날짜 범위 내에 있는지 확인</li>
+                            <li>개인정보가 적절히 가려져 있는지 확인</li>
+                            <li>이미지가 선명하고 판독 가능한지 확인</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 하단 액션 버튼들 (fandom_list.html과 유사) -->
+<div class="mt-6 flex justify-between items-center">
+    <div class="text-sm text-gray-500">
+        마지막 업데이트: {% now "Y-m-d H:i" %}
+    </div>
+    <div class="flex space-x-3">
+        <a href="{% url 'oddmin:dashboard' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            대시보드
+        </a>
+        <a href="{% url 'oddmin:fandom_list' %}" 
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+            팬덤 인증 목록
+        </a>
+    </div>
+</div>
+
+<!-- 이미지 확대 모달 -->
+<div id="image-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div class="max-w-4xl max-h-full">
+        <img id="modal-image" src="" alt="팬덤 카드 확대" class="max-w-full max-h-full object-contain rounded-lg">
+    </div>
+    <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300">
+        ✕
+    </button>
+</div>
+
+<script>
+function openImageModal(src) {
+    document.getElementById('modal-image').src = src;
+    document.getElementById('image-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    document.getElementById('image-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// ESC 키로 모달 닫기
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+</script>
+{% endblock %}

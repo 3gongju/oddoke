@@ -364,17 +364,70 @@ def fandom_list(request):
 
 @oddmin_required
 def fandom_detail(request, profile_id):
-    """팬덤 인증 상세 보기 (미리보기)"""
+    """팬덤 인증 상세 보기"""
     profile = get_object_or_404(
         FandomProfile.objects.select_related('user', 'fandom_artist'),
         id=profile_id
     )
     
+    # 🔥 추가: dashboard.html에서 필요한 stats와 urgent 정보
+    # 캐시에서 가져오거나 새로 생성
+    cache_key = 'oddmin_dashboard_stats'
+    stats = cache.get(cache_key)
+    
+    if not stats:
+        # 통계 정보 생성 (dashboard와 동일)
+        cafe_stats = {
+            'pending': BdayCafe.objects.filter(status='pending').count(),
+            'approved': BdayCafe.objects.filter(status='approved').count(),
+            'rejected': BdayCafe.objects.filter(status='rejected').count(),
+            'total': BdayCafe.objects.count(),
+        }
+        
+        fandom_stats = {
+            'pending': FandomProfile.objects.filter(is_pending_verification=True).count(),
+            'verified': FandomProfile.objects.filter(is_verified_fandom=True).count(),
+            'failed': FandomProfile.objects.filter(verification_failed=True).count(),
+            'total': FandomProfile.objects.count(),
+        }
+        
+        stats = {
+            'cafe': cafe_stats,
+            'fandom': fandom_stats,
+            'updated_at': timezone.now()
+        }
+        
+        cache.set(cache_key, stats, 300)
+    
+    # 긴급 처리 정보
+    urgent_cafes = BdayCafe.objects.filter(
+        status='pending',
+        created_at__lte=timezone.now() - timedelta(days=7)
+    ).count()
+    
+    urgent_fandom = FandomProfile.objects.filter(
+        is_pending_verification=True,
+        applied_at__lte=timezone.now() - timedelta(days=7)
+    ).count()
+    
+    # 최근 대기 항목들 (빈 리스트로 설정, fandom_detail에서는 필요없음)
+    recent_pending = {
+        'cafes': [],
+        'fandom': [],
+    }
+    
     context = {
         'profile': profile,
         'is_preview': True,
+        # dashboard.html에서 필요한 변수들 추가
+        'stats': stats,
+        'urgent': {
+            'cafes': urgent_cafes,
+            'fandom': urgent_fandom,
+            'total': urgent_cafes + urgent_fandom,
+        },
+        'recent_pending': recent_pending,
     }
-    # 🔥 수정: extends 방식으로 변경된 템플릿 경로 (향후 생성 예정)
     return render(request, 'oddmin/fandom_detail.html', context)
 
 
@@ -429,6 +482,8 @@ def approve_fandom(request, profile_id):
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'fandom_list':
         return redirect('oddmin:fandom_list')
+    elif next_url == 'fandom_detail':
+        return redirect('oddmin:fandom_detail', profile_id=profile.id)
     return redirect('oddmin:dashboard')
 
 
@@ -482,4 +537,6 @@ def reject_fandom(request, profile_id):
     next_url = request.POST.get('next', 'dashboard')
     if next_url == 'fandom_list':
         return redirect('oddmin:fandom_list')
+    elif next_url == 'fandom_detail':
+        return redirect('oddmin:fandom_detail', profile_id=profile.id)
     return redirect('oddmin:dashboard')
