@@ -13,15 +13,152 @@ def group_artists(artists, group_size=5):
     return [list(filter(None, group)) for group in zip_longest(*[iter(artists)] * group_size)]
 
 def intro_view(request):
-    """어덕해 소개 페이지"""
+    """어덕해 소개 페이지 - 17개 슬라이드로 구성된 랜딩 페이지"""
+    
+    # 각 슬라이드별 콘텐츠 정보 정의
+    slide_contents = [
+        {
+            'title': '어덕해에 오신 것을 환영합니다',
+            'subtitle': '팬들을 위한 특별한 공간',
+            'description': '덕질의 모든 것을 경험하세요',
+            'type': 'welcome'
+        },
+        {
+            'title': '덕팜 - 굿즈 거래의 새로운 방식',
+            'subtitle': '안전하고 편리한 거래',
+            'description': '판매, 대여, 공동구매까지 모든 거래를 한 곳에서',
+            'type': 'ddokfarm'
+        },
+        {
+            'title': '덕담 - 팬들만의 소통 공간',
+            'subtitle': '자유로운 소통과 정보 공유',
+            'description': '커뮤니티, 매너샷, 생일카페 정보까지',
+            'type': 'ddokdam'
+        },
+        {
+            'title': '덕생 - 아티스트 생일 달력',
+            'subtitle': '소중한 순간을 놓치지 마세요',
+            'description': '생일 알림과 기념 이벤트 정보',
+            'type': 'ddoksang'
+        },
+        {
+            'title': '덕채팅 - 실시간 소통',
+            'subtitle': '팬들과의 즉석 대화',
+            'description': '같은 관심사를 가진 사람들과 실시간으로 소통하세요',
+            'type': 'ddokchat'
+        },
+        {
+            'title': '안전한 거래 환경',
+            'subtitle': '신뢰할 수 있는 플랫폼',
+            'description': '검증된 사용자들과 안전하게 거래하세요',
+            'type': 'safety'
+        },
+        {
+            'title': '다양한 아티스트 지원',
+            'subtitle': 'K-POP부터 일본 아티스트까지',
+            'description': '모든 장르의 아티스트 팬들을 위한 공간',
+            'type': 'artists'
+        },
+        {
+            'title': '모바일 최적화',
+            'subtitle': '언제 어디서나 편리하게',
+            'description': '모바일에서도 완벽한 사용자 경험',
+            'type': 'mobile'
+        },
+        {
+            'title': '커뮤니티 기능',
+            'subtitle': '팬들과 함께 만드는 문화',
+            'description': '후기, 리뷰, 정보 공유로 더 풍부한 덕질',
+            'type': 'community'
+        },
+        {
+            'title': '이벤트 & 혜택',
+            'subtitle': '특별한 혜택과 이벤트',
+            'description': '정기적인 이벤트와 회원 전용 혜택',
+            'type': 'events'
+        },
+        {
+            'title': '24/7 고객 지원',
+            'subtitle': '언제든 도움을 받으세요',
+            'description': '빠른 문의 응답과 친절한 고객 서비스',
+            'type': 'support'
+        },
+        {
+            'title': '개인정보 보호',
+            'subtitle': '안전한 개인정보 관리',
+            'description': '철저한 보안으로 개인정보를 보호합니다',
+            'type': 'privacy'
+        },
+        {
+            'title': '글로벌 서비스',
+            'subtitle': '전 세계 팬들과 연결',
+            'description': '국경을 넘나드는 팬 문화 교류',
+            'type': 'global'
+        },
+        {
+            'title': 'AI 추천 시스템',
+            'subtitle': '맞춤형 콘텐츠 추천',
+            'description': '취향에 맞는 굿즈와 정보를 추천받으세요',
+            'type': 'ai'
+        },
+        {
+            'title': '실시간 알림',
+            'subtitle': '중요한 소식을 놓치지 마세요',
+            'description': '관심 아티스트의 새로운 소식을 실시간으로',
+            'type': 'notifications'
+        },
+        {
+            'title': '팬클럽 연동',
+            'subtitle': '공식 팬클럽과의 연계',
+            'description': '공식 정보와 이벤트를 한 번에',
+            'type': 'fanclub'
+        },
+        {
+            'title': '지금 시작하세요',
+            'subtitle': '새로운 덕질의 시작',
+            'description': '어덕해와 함께 더 풍부한 팬 라이프를 경험하세요',
+            'type': 'cta'
+        }
+    ]
+    
+    # 통계 정보 (선택적)
+    stats = {
+        'total_users': 0,
+        'total_posts': 0,
+        'total_artists': 0,
+        'total_trades': 0
+    }
+    
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        stats['total_users'] = User.objects.count()
+        stats['total_artists'] = Artist.objects.count()
+        
+        # 전체 게시물 수 계산
+        farm_posts = (FarmSellPost.objects.count() + 
+                     FarmRentalPost.objects.count() + 
+                     FarmSplitPost.objects.count())
+        dam_posts = (DamCommunityPost.objects.count() + 
+                    DamMannerPost.objects.count() + 
+                    DamBdaycafePost.objects.count())
+        stats['total_posts'] = farm_posts + dam_posts
+        stats['total_trades'] = farm_posts
+        
+    except Exception as e:
+        print(f"통계 정보 로드 오류: {e}")
+    
     context = {
         'page_title': '어덕해 소개',
-        'total_slides': 10,  # 슬라이드 개수
+        'total_slides': 17,  # 17개 슬라이드로 변경
+        'slide_contents': slide_contents,
+        'stats': stats,
     }
     return render(request, 'main/intro.html', context)
 
 
 def main(request):
+    # 기존 main 뷰 코드는 그대로 유지
     # 1) 찜한 아티스트 원본 목록
     raw_favs = list(Artist.objects.filter(followers=request.user)) if request.user.is_authenticated else []
 
