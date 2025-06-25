@@ -30,7 +30,7 @@ urlpatterns = [
     # 분철 참여자와의 채팅
     path('start-split/<int:post_id>/<int:user_id>/', views.get_or_create_split_chatroom, name='start_split_chat'),
 
-    # path('report-trade/<str:room_code>/', views.report_trade_user, name='report_trade_user'),
-    # path('report-form/<str:room_code>/', views.get_trade_report_form, name='get_trade_report_form'),
-    # path('user-info/<str:room_code>/', views.view_user_info, name='view_user_info'),
+    path('report-trade/<str:room_code>/', views.report_trade_user, name='report_trade_user'),
+    path('report-form/<str:room_code>/', views.get_trade_report_form, name='get_trade_report_form'),
+    path('user-info/<str:room_code>/', views.view_user_info, name='view_user_info'),
 ]

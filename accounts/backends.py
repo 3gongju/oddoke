@@ -44,12 +44,18 @@ class EmailBackend(ModelBackend):
                 print(f"🔍 임시 사용자명: {getattr(user, 'is_temp_username', False)}")
                 print(f"🔍 카카오 ID: {getattr(user, 'kakao_id', 'None')}")
                 print(f"🔍 네이버 ID: {getattr(user, 'naver_id', 'None')}")
+                print(f"🔍 구글 ID: {getattr(user, 'google_id', 'None')}")
+
+                
+                
                 
                 # 🔥 소셜 로그인 사용자 확인 조건
-                is_temp_social = user.username.startswith(('temp_kakao_', 'temp_naver_'))
+                is_temp_social = user.username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_'))
                 is_completed_social = getattr(user, 'social_signup_completed', False)
                 has_social_id = (getattr(user, 'kakao_id', None) is not None or 
-                                getattr(user, 'naver_id', None) is not None)
+                                getattr(user, 'naver_id', None) is not None or
+                                getattr(user, 'google_id', None) is not None)
+                
                 
                 if is_temp_social or is_completed_social or has_social_id:
                     print("✅ 소셜 로그인 사용자 인증 성공")

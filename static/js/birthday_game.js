@@ -126,13 +126,49 @@ function showNoBirthdayMessage() {
 function selectMember(member) {
   gameData.selectedMember = member;
   
-  // 생일시 계산 (월:일:00:000 형식) 
-  // 6월 20일 생일 → 18:20:00 (오후 6시 20분)
-  const targetHour = member.birth_month + 12; // 오후 시간으로 변경 (12시간 추가)
-  const targetMinute = member.birth_day;
+  // === 실제 생일시 계산 로직 ===
+  const birthMonth = member.birth_month; // 생월 (1-12)
+  const birthDay = member.birth_day;     // 생일 (1-31)
   
+  // 현재 시간 기준으로 가능한 두 시간대 계산
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // 오전 시간대: 생월을 시간으로, 생일을 분으로
+  const morningHour = Math.max(0, Math.min(23, birthMonth)); // 1-12월 → 1-12시
+  const targetMinute = Math.max(0, Math.min(59, birthDay));  // 1-31일 → 1-31분 (59분 넘으면 59분으로)
+  
+  // 오후 시간대: 생월 + 12시간
+  const eveningHour = Math.max(0, Math.min(23, birthMonth + 12)); // 13-24시 (24시는 0시로 처리)
+  
+  // 현재 시간과 가까운 시간대 선택
+  const morningTime = new Date();
+  morningTime.setHours(morningHour, targetMinute, 0, 0);
+  
+  const eveningTime = new Date();
+  eveningTime.setHours(eveningHour, targetMinute, 0, 0);
+  
+  // 현재 시간과의 차이를 계산하여 더 가까운 시간 선택
+  const morningDiff = Math.abs(now.getTime() - morningTime.getTime());
+  const eveningDiff = Math.abs(now.getTime() - eveningTime.getTime());
+  
+  // 더 가까운 시간을 목표 시간으로 설정
+  if (morningDiff <= eveningDiff) {
+    gameData.targetTime = morningTime;
+    console.log(`🎯 오전 시간대 선택: ${morningHour}:${targetMinute} (생월: ${birthMonth}, 생일: ${birthDay})`);
+  } else {
+    gameData.targetTime = eveningTime;
+    console.log(`🎯 오후 시간대 선택: ${eveningHour}:${targetMinute} (생월: ${birthMonth}, 생일: ${birthDay})`);
+  }
+  
+  // === 테스트용 코드 (필요시 주석 해제) ===
+  
+  // 테스트용: 현재 시간에서 5초 후로 설정
   gameData.targetTime = new Date();
-  gameData.targetTime.setHours(targetHour, targetMinute, 0, 0);
+  gameData.targetTime.setSeconds(gameData.targetTime.getSeconds() + 5);
+  console.log('🎯 테스트 모드: 5초 후 시간으로 설정');
+  
   
   showGameView();
 }
@@ -149,9 +185,8 @@ function showGameView() {
   gameDOM.idolName.textContent = gameData.selectedMember.member_name;
   gameDOM.idolGroup.textContent = gameData.selectedMember.artist_full_name;
   
-  // 목표 시간 표시
-  const targetTimeFormatted = formatTargetTime(gameData.targetTime);
-  gameDOM.targetTime.textContent = targetTimeFormatted;
+  // 목표 시간 표시 및 호버/클릭 기능 추가
+  setupTargetTimeDisplay();
   
   // 시간 루프 시작
   startTimeLoop();
@@ -162,6 +197,143 @@ function formatTargetTime(date) {
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
   return `${hours}:${minutes}:${seconds}`;
+}
+
+function setupTargetTimeDisplay() {
+  const birthMonth = gameData.selectedMember.birth_month;
+  const birthDay = gameData.selectedMember.birth_day;
+  
+  // 오전/오후 시간 계산
+  const morningTime = new Date();
+  morningTime.setHours(Math.max(0, Math.min(23, birthMonth)), Math.max(0, Math.min(59, birthDay)), 0, 0);
+  
+  const eveningTime = new Date();
+  eveningTime.setHours(Math.max(0, Math.min(23, birthMonth + 12)), Math.max(0, Math.min(59, birthDay)), 0, 0);
+  
+  // 현재 선택된 시간과 반대 시간 계산
+  const currentTargetFormatted = formatTargetTime(gameData.targetTime);
+  const currentHour = gameData.targetTime.getHours();
+  
+  let alternativeTime, alternativeMessage;
+  if (currentHour < 12) {
+    // 현재 오전이면 오후 시간을 대안으로
+    alternativeTime = eveningTime;
+    alternativeMessage = `오후 ${formatTargetTime(eveningTime)}에 재도전할 수 있어요!`;
+  } else {
+    // 현재 오후면 오전 시간을 대안으로
+    alternativeTime = morningTime;
+    alternativeMessage = `오전 ${formatTargetTime(morningTime)}에 재도전할 수 있어요!`;
+  }
+  
+  // 목표 시간 요소에 텍스트 설정
+  gameDOM.targetTime.textContent = currentTargetFormatted;
+  gameDOM.targetTime.style.cursor = 'pointer';
+  gameDOM.targetTime.style.position = 'relative';
+  
+  // 기존 이벤트 제거 후 새로 추가
+  const newTargetTimeElement = gameDOM.targetTime.cloneNode(true);
+  gameDOM.targetTime.parentNode.replaceChild(newTargetTimeElement, gameDOM.targetTime);
+  gameDOM.targetTime = newTargetTimeElement; // DOM 참조 업데이트
+  
+  // 팝업 툴팁 생성 함수
+  function createTooltip() {
+    // 기존 툴팁 제거
+    const existingTooltip = document.querySelector('.target-time-tooltip');
+    if (existingTooltip) {
+      existingTooltip.remove();
+    }
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'target-time-tooltip';
+    tooltip.textContent = alternativeMessage;
+    tooltip.style.cssText = `
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      white-space: nowrap;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      animation: tooltipFadeIn 0.2s ease-out;
+    `;
+    
+    // 말풍선 꼬리 추가
+    const arrow = document.createElement('div');
+    arrow.style.cssText = `
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid #1f2937;
+    `;
+    tooltip.appendChild(arrow);
+    
+    return tooltip;
+  }
+  
+  // 툴팁 애니메이션 CSS 추가
+  if (!document.querySelector('#tooltip-animation-style')) {
+    const style = document.createElement('style');
+    style.id = 'tooltip-animation-style';
+    style.textContent = `
+      @keyframes tooltipFadeIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+      }
+      .target-time-tooltip {
+        pointer-events: none;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // 웹 호버 이벤트
+  gameDOM.targetTime.addEventListener('mouseenter', function() {
+    const tooltip = createTooltip();
+    this.appendChild(tooltip);
+  });
+  
+  gameDOM.targetTime.addEventListener('mouseleave', function() {
+    const tooltip = this.querySelector('.target-time-tooltip');
+    if (tooltip) {
+      tooltip.remove();
+    }
+  });
+  
+  // 모바일 클릭 이벤트
+  gameDOM.targetTime.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const tooltip = createTooltip();
+    this.appendChild(tooltip);
+    
+    // 3초 후 자동으로 툴팁 제거
+    setTimeout(() => {
+      if (tooltip && tooltip.parentNode) {
+        tooltip.remove();
+      }
+    }, 3000);
+  });
+  
+  // 다른 곳 클릭 시 툴팁 제거
+  document.addEventListener('click', function(e) {
+    if (!gameDOM.targetTime.contains(e.target)) {
+      const tooltip = document.querySelector('.target-time-tooltip');
+      if (tooltip) {
+        tooltip.remove();
+      }
+    }
+  });
 }
 
 function startTimeLoop() {
@@ -300,7 +472,8 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
       showResult(timeDiff, ddok);
       
       if (ddok > 0) {
-        savePoints(ddok, gameData.selectedMember.id, savePointsApiUrl);
+        // 새로운 API 엔드포인트 사용
+        saveBirthdayDdokPoints(ddok, gameData.selectedMember.id, timeDiff);
       }
       
       // 버튼 클릭 효과
@@ -317,3 +490,53 @@ function initializeBirthdayGame(todayBirthdaysApiUrl, savePointsApiUrl) {
   // 게임 섹션 초기 표시
   showBirthdayGameSection(todayBirthdaysApiUrl);
 }
+
+// === 덕 포인트 저장 함수 ===
+async function saveBirthdayDdokPoints(ddok_points, memberId, timeDifference) {
+  console.log('🎯 saveBirthdayDdokPoints 함수 호출됨');
+  console.log('파라미터:', { ddok_points, memberId, timeDifference });
+  
+  try {
+    const response = await fetch('/calendar/api/save-birthday-ddok-points/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({
+        points: ddok_points,
+        member_id: memberId,
+        time_difference: timeDifference
+      }),
+    });
+    
+    console.log('🎯 응답 상태:', response.status);
+    console.log('🎯 응답 URL:', response.url);
+    
+    if (!response.ok) {
+      console.error('❌ HTTP 에러:', response.status, response.statusText);
+      return;
+    }
+    
+    const data = await response.json();
+    console.log('🎯 응답 데이터:', data);
+    
+    if (data.success) {
+      console.log('✅ 덕 포인트 저장 성공:', data.message);
+      console.log(`획득한 덕: ${data.ddok_points_earned}덕`);
+      console.log(`총 덕: ${data.total_ddok_points}덕`);
+      
+      // 게임 화면에 총 덕 포인트 업데이트 표시
+      if (gameDOM.totalScore) {
+        gameDOM.totalScore.textContent = data.total_ddok_points.toLocaleString();
+      }
+    } else {
+      console.error('❌ 덕 포인트 저장 실패:', data.error);
+    }
+  } catch (error) {
+    console.error('❌ 덕 포인트 저장 네트워크 오류:', error);
+  }
+}
+
+// 전역 스코프에서 함수가 정의되었는지 확인
+console.log('🎯 saveBirthdayDdokPoints 함수 정의됨:', typeof saveBirthdayDdokPoints);

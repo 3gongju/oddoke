@@ -143,15 +143,35 @@
 
 
 <!-- 이번 주 생일 아티스트 섹션 -->
-<div class="mt-16 text-center mb-6 sm:mb-8">
-  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
-    이번 주 생일덕  
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 ml-2 sm:ml-3">
-  </h2>
-  <p class="text-gray-600 text-sm sm:text-base">(덕덕) 축하해요 (덕덕) </p>
+<div class="mt-16 mb-6 sm:mb-8 px-4">
+  <!-- 제목과 버튼이 함께 있는 헤더 -->
+  <div class="flex items-center justify-between mb-4">
+    <!-- 왼쪽: 제목 (찜한 생카와 동일한 구조) -->
+    <div class="flex items-center">
+      <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-10 h-10 sm:w-8 sm:h-8 mr-2">
+      <h2 class="text-lg sm:text-xl font-semibold text-gray-800">이번 주 생일덕</h2>
+    </div>
+    
+    <!-- 오른쪽: 덕 쌓으러 가기 버튼 -->
+    <div class="flex items-center">
+      <a href="{% url 'bday_calendar:calendar' %}" 
+         class="inline-flex items-center justify-center bg-white hover:bg-red-600 text-red-500 hover:text-red-600 text-sm font-medium px-3 py-2 sm:px-6 sm:py-3 border-2 border-red-500 hover:border-red-600 transition-all duration-200 shadow-sm hover:shadow-md">
+        <!-- 모바일: 이미지만 중앙 정렬 -->
+        <img src="{% static 'image/ddok_glasses.png' %}" alt="덕안경" class="w-10 h-10 sm:w-12 sm:h-12 sm:mr-2">
+        <!-- 데스크톱: 텍스트와 화살표 -->
+        <span class="hidden sm:inline">덕 쌓으러 가기</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="hidden sm:block w-4 h-4 ml-2">
+          <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </div>
+  
+  <!-- 부제목 -->
+  <div class="text-center mb-4">
+    <p class="text-gray-600 text-xs sm:text-sm">(덕덕) 축하해요 (덕덕)</p>
+  </div>
 </div>
-
 
 <section class="px-4 mb-16"> 
   <div class="max-w-7xl mx-auto">
@@ -160,14 +180,14 @@
 </section>
 
 <!-- 찜한 카페 섹션 -->
-<section class="py-4 sm:py-8 px-4">
+<section class="px-4">
   <div class="max-w-7xl mx-auto">
     {% include 'ddoksang/components/_favorites_section.html' %}
   </div>
 </section>
 
 <!-- 덕생 my-cafes로 가는 링크 버튼 -->
-{% if user.is_authenticated %}
+<!-- {% if user.is_authenticated %}
   <section class="py-4 px-4">
     <div class="max-w-7xl mx-auto">
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
@@ -184,10 +204,10 @@
       </div>
     </div>
   </section>
-{% endif %}
+{% endif %} -->
 
 <!-- 최신 등록된 생일카페 섹션 -->
-<section class="mt-16 sm:mt-20 py-8 sm:py-12 px-4">  
+<section class="pt-4 sm:pt-6 pb-8 sm:pb-12 px-4">   
   <div class="max-w-7xl mx-auto">
     
     {% include 'ddoksang/components/_latest_cafe_section.html' %}
