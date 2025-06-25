@@ -75,17 +75,15 @@ def create_chat_notification(sender, instance, created, **kwargs):
         # ✅ Redis에서 받는 사람의 현재 위치 확인
         try:
             current_room_code = redis_client.get_user_current_chatroom(recipient.id)
+            print(f"🔍 Redis 조회 결과: current={current_room_code}, target={room.room_code}")
             
-            # 받는 사람이 현재 해당 채팅방에 있다면 알림 생성하지 않음
             if current_room_code == room.room_code:
-                print(f"🚫 알림 차단: 사용자 {recipient.username}이 현재 채팅방 {room.room_code}에 있음")
+                print(f"🚫 알림 차단됨!")
                 return
             else:
-                print(f"📨 알림 생성: 사용자 {recipient.username}이 다른 위치에 있음 (현재: {current_room_code}, 메시지: {room.room_code})")
-                
+                print(f"📨 알림 생성 진행...")
         except Exception as e:
-            print(f"❌ Redis 조회 실패, 기본 알림 생성: {e}")
-            # Redis 오류 시에는 기본적으로 알림 생성
+            print(f"❌ Redis 오류: {e}")
         
         # 🎯 그룹핑 로직 사용 (create_notification이 내부에서 처리)
         Notification.create_notification(

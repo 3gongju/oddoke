@@ -172,7 +172,7 @@ class Notification(models.Model):
     def _update_comment_notification(cls, notification, actor, post):
         """기존 댓글 알림 업데이트"""
         notification.message_count += 1
-        notification.last_sender_name = actor.first_name or actor.username
+        notification.last_sender_name = actor.username
         notification.created_at = timezone.now()  # 시간 업데이트로 최상단 유지
         notification.is_read = False  # 읽음 상태 초기화
         
@@ -199,7 +199,7 @@ class Notification(models.Model):
     def _create_new_comment_notification(cls, recipient, actor, notification_type, post):
         """새 댓글 알림 생성"""
         post_content_type = ContentType.objects.get_for_model(post)
-        sender_name = actor.first_name or actor.username
+        sender_name = actor.username
         
         # 게시글 제목 처리 (20자 제한)
         title = post.title[:20] + "..." if len(post.title) > 20 else post.title
@@ -263,7 +263,7 @@ class Notification(models.Model):
     def _update_chat_notification(cls, notification, new_sender):
         """기존 채팅 알림 업데이트"""
         notification.message_count += 1
-        notification.last_sender_name = new_sender.first_name or new_sender.username
+        notification.last_sender_name = new_sender.username
         notification.actor = new_sender  # 마지막 발신자로 업데이트
         notification.created_at = timezone.now()  # 시간 업데이트로 최상단 유지
         notification.is_read = False  # 읽음 상태 초기화
@@ -281,7 +281,7 @@ class Notification(models.Model):
     def _create_new_chat_notification(cls, recipient, actor, room_post):
         """새 채팅 알림 생성"""
         content_type = ContentType.objects.get_for_model(room_post)
-        sender_name = actor.first_name or actor.username
+        sender_name = actor.username
         
         notification = cls.objects.create(
             recipient=recipient,
@@ -299,7 +299,7 @@ class Notification(models.Model):
     @classmethod
     def _generate_message(cls, notification_type, actor, content_object, extra_context=None):
         """알림 메시지 생성"""
-        actor_name = actor.first_name or actor.username
+        actor_name = actor.username
         
         # 댓글 관련 알림은 별도 로직에서 처리하므로 여기서는 기본 메시지만
         if notification_type in ['comment', 'reply', 'post_reply']:

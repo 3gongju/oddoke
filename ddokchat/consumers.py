@@ -26,7 +26,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 await self.close()
                 return
             
-            # ✅ Redis에 현재 채팅방 위치 설정 (2분 TTL)
+            # ✅ 수정: 채팅방 그룹 참여 전에 Redis 위치 설정
             await self.set_user_current_chatroom(self.user.id, self.room_code)
             
             # 채팅방에 참여
