@@ -57,6 +57,44 @@
     grid-template-columns: repeat(3, 1fr);
     max-width: 900px;
   }
+  
+  /* 웹에서도 모바일과 동일한 가로 레이아웃 적용 */
+  .game-container .member-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    text-align: left !important;
+    padding: 1rem !important;
+  }
+  
+  .game-container .member-image {
+    width: 60px !important;
+    height: 60px !important;
+    margin: 0 1rem 0 0 !important;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    flex-shrink: 0; /* 이미지 크기 고정 */
+  }
+  
+  .game-container .member-info {
+    flex: 1 !important;
+    text-align: left !important;
+  }
+  
+  .game-container .member-name {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .game-container .artist-name {
+    font-size: 0.75rem !important;
+    color: #cccccc !important;
+    font-weight: 400 !important;
+  }
 }
 
 /* 모바일에서는 기존 스타일 유지 */
@@ -76,10 +114,10 @@
   background: #1a1a1a;
   border-radius: 16px;
   padding: 1.5rem;
-  text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  /* 기본 스타일은 웹용 미디어쿼리에서 덮어씀 */
 }
 
 .game-container .member-item:hover {
@@ -98,16 +136,17 @@
   color: #ffffff;
 }
 
+/* 기본 이미지 스타일 (모바일용 미디어쿼리에서 덮어씀) */
 .game-container .member-image {
   width: 70px;
   height: 70px;
   border-radius: 50%;
   object-fit: cover;
-  margin: 0 auto 1rem auto;
   border: 3px solid #ffffff;
   display: block;
 }
 
+/* 기본 텍스트 스타일 (미디어쿼리에서 덮어씀) */
 .game-container .member-name {
   font-size: 0.875rem;
   font-weight: 600;
