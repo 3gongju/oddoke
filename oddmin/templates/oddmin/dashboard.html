@@ -12,7 +12,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <a href="{% url 'oddmin:dashboard' %}" class="text-xl font-semibold text-gray-900">🛠️ oddmin</a>
+                    <a href="{% url 'oddmin:dashboard' %}" class="text-xl font-semibold text-gray-900">oddmin</a>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-600">{{ user.username }}님</span>
@@ -39,7 +39,7 @@
         <!-- 페이지 제목 -->
         {% block body %}
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">📊 통합 관리자 대시보드</h1>
+            <h1 class="text-3xl font-bold text-gray-900">통합 관리자 대시보드</h1>
             <p class="mt-2 text-gray-600">어덕해 서비스 전체 관리 현황</p>
         </div>
 
@@ -175,7 +175,7 @@
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 flex items-center justify-between">
-                        ☕ 생일카페 승인 대기
+                        생일카페 승인 대기
                         <a href="{% url 'oddmin:cafe_list' %}?status=pending" 
                            class="text-sm text-blue-600 hover:text-blue-800">전체 보기 →</a>
                     </h3>
@@ -221,7 +221,7 @@
             <div class="bg-white shadow rounded-lg">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 flex items-center justify-between">
-                        🎭 팬덤 인증 승인 대기
+                        팬덤 인증 승인 대기
                         <a href="{% url 'oddmin:fandom_list' %}?status=pending" 
                            class="text-sm text-blue-600 hover:text-blue-800">전체 보기 →</a>
                     </h3>
@@ -266,24 +266,24 @@
 
         <!-- 빠른 액션 버튼들 -->
         <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">🚀 빠른 액션</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">빠른 액션</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <a href="{% url 'oddmin:cafe_list' %}?status=pending" 
                    class="inline-flex items-center justify-center px-4 py-3 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 transition-colors">
-                    ⏳ 생카 승인 대기 ({{ stats.cafe.pending }})
+                    생카 승인 대기 ({{ stats.cafe.pending }})
                 </a>
                 <a href="{% url 'oddmin:fandom_list' %}?status=pending" 
                    class="inline-flex items-center justify-center px-4 py-3 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors">
-                    🎭 팬덤 승인 대기 ({{ stats.fandom.pending }})
+                    팬덤 승인 대기 ({{ stats.fandom.pending }})
                 </a>
                 <a href="{% url 'oddmin:cafe_list' %}" 
                    class="inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-                    📋 전체 생카 관리
+                    전체 생카 관리
                 </a>
                 <a href="{% url 'ddoksang:home' %}" 
                    class="inline-flex items-center justify-center px-4 py-3 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
                    target="_blank">
-                   🏠 사용자 페이지
+                   사용자 페이지
                 </a>
             </div>
         </div>
