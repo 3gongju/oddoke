@@ -6,33 +6,33 @@
 {% block head %}
 <!-- 홈페이지 전용 스타일 -->
 <style>
-/* 메인 배너 스와이퍼 스타일 */
+/* 메인 배너 스와이퍼 스타일 - 높이 축소 */
 .mainBannerSwiper {
   width: 100%;
-  height: 35vh;
+  height: 30vh; /* 35vh에서 30vh로 축소 */
 }
 
 @media (min-width: 640px) {
   .mainBannerSwiper {
-    height: 45vh;
+    height: 35vh; /* 45vh에서 35vh로 축소 */
   }
 }
 
 @media (min-width: 768px) {
   .mainBannerSwiper {
-    height: 55vh;
+    height: 40vh; /* 55vh에서 40vh로 축소 */
   }
 }
 
 @media (min-width: 1024px) {
   .mainBannerSwiper {
-    height: 65vh;
+    height: 45vh; /* 65vh에서 45vh로 축소 */
   }
 }
 
 @media (min-width: 1280px) {
   .mainBannerSwiper {
-    height: 75vh;
+    height: 50vh; /* 75vh에서 50vh로 축소 */
   }
 }
 
@@ -48,109 +48,32 @@
   }
 }
 
-/* 히어로 섹션 전체 화면 높이로 변경 */
-.hero-mobile-container {
-  height: 100vh; /* 전체 뷰포트 높이 */
-  min-height: 100vh; /* 최소 높이도 전체 화면으로 설정 */
-}
-
-/* 모든 반응형 브레이크포인트에서 전체 화면 유지 */
-@media (min-width: 640px) {
-  .hero-mobile-container {
-    height: 100vh;
-    min-height: 100vh;
-  }
-}
-
-@media (min-width: 768px) {
-  .hero-mobile-container {
-    height: 100vh;
-    min-height: 100vh;
-  }
-}
-
-@media (min-width: 1024px) {
-  .hero-mobile-container {
-    height: 100vh;
-    min-height: 100vh;
-  }
-}
-
-@media (min-width: 1280px) {
-  .hero-mobile-container {
-    height: 100vh;
-    min-height: 100vh;
-  }
-}
-
-/* 배너 모바일 최적화 높이 */
+/* 배너 모바일 최적화 높이 - 축소 */
 .banner-mobile-container {
-  height: 200px; /* 모바일 기본 높이 축소 */
+  height: 150px; /* 200px에서 150px로 축소 */
 }
 
 @media (min-width: 640px) {
   .banner-mobile-container {
-    height: 350px; /* sm 이상 */
+    height: 250px; /* 350px에서 250px로 축소 */
   }
 }
 
 @media (min-width: 768px) {
   .banner-mobile-container {
-    height: 400px; /* md 이상 */
+    height: 300px; /* 400px에서 300px로 축소 */
   }
 }
 
 @media (min-width: 1024px) {
   .banner-mobile-container {
-    height: 450px; /* lg 이상 */
+    height: 350px; /* 450px에서 350px로 축소 */
   }
 }
 
 @media (min-width: 1280px) {
   .banner-mobile-container {
-    height: 500px; /* xl 이상 */
-  }
-}
-
-/* 클릭 툴팁 모바일 최적화 */
-#ddokTooltip {
-  max-width: 280px;
-  word-wrap: break-word;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-#closeTooltip {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-  font-weight: 300;
-  font-size: 14px;
-}
-
-@media (min-width: 640px) {
-  #closeTooltip {
-    width: 18px;
-    height: 18px;
-    font-size: 16px;
-  }
-}
-
-#closeTooltip:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* 모바일에서 툴팁 크기 조정 */
-@media (max-width: 640px) {
-  #ddokTooltip {
-    max-width: 220px;
-    font-size: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    left: 50%;
-    transform: translateX(-50%);
+    height: 400px; /* 500px에서 400px로 축소 */
   }
 }
 
@@ -182,7 +105,7 @@
   width: 100%;
   height: 100%;
   position: relative;
-  background: transparent; /* 투명 배경 */
+  background: transparent;
 }
 
 /* 이미지를 컨테이너에 맞게 조정 */
@@ -192,7 +115,7 @@
   width: auto;
   height: auto;
   display: block;
-  object-fit: contain; /* 비율 유지하면서 컨테이너에 맞춤 */
+  object-fit: contain;
 }
 
 /* 배너 클릭 영역 호버 효과 */
@@ -207,7 +130,7 @@
 #bannerNextBtn {
   opacity: 0.7;
   transition: all 0.2s ease;
-  pointer-events: none; /* 직접 클릭 방지 */
+  pointer-events: none;
 }
 
 /* Today's Updates 커스텀 색상 */
@@ -250,45 +173,37 @@
 
 /* 슬라이드 아이템 크기 설정 */
 #sliderTrack > div {
-    flex: 0 0 100%;     /* 모바일: 100% */
+    flex: 0 0 100%;
     max-width: 100%;
 }
 
 @media (min-width: 640px) {
     #sliderTrack > div {
-        flex: 0 0 50%;   /* sm: 50% */
+        flex: 0 0 50%;
         max-width: 50%;
     }
 }
 
 @media (min-width: 768px) {
     #sliderTrack > div {
-        flex: 0 0 33.333333%;  /* md: 33.33% */
+        flex: 0 0 33.333333%;
         max-width: 33.333333%;
     }
 }
 
 @media (min-width: 1024px) {
     #sliderTrack > div {
-        flex: 0 0 25%;    /* lg: 25% */
+        flex: 0 0 25%;
         max-width: 25%;
     }
 }
 
 @media (min-width: 1280px) {
     #sliderTrack > div {
-        flex: 0 0 20%;    /* xl: 20% */
+        flex: 0 0 20%;
         max-width: 20%;
     }
 }
-
-/* 생일 카드 호버 효과 제거됨 */
-/* #sliderTrack .bg-white:hover,
-#sliderTrack .bg-red-50:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    transition: all 0.3s ease;
-} */
 
 /* 스크롤바 숨김 */
 #weeklyBirthdaySlider {
@@ -306,18 +221,15 @@
     min-width: 100%;
   }
   
-  /* 모바일에서 터치 영역 확대 */
   button, a[href] {
     min-height: 44px;
     min-width: 44px;
   }
   
-  /* 모바일에서 텍스트 크기 조정 */
   .text-xs {
     font-size: 0.75rem;
   }
   
-  /* 모바일에서 패딩 조정 */
   .px-3 {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
@@ -355,31 +267,43 @@
 
 /* 모바일 전용 스타일 개선 */
 @media (max-width: 640px) {
-  /* 히어로 섹션 모바일 최적화 */
-  .hero-mobile-container h2 {
-    font-size: 1.5rem; /* 24px */
-    line-height: 1.2;
-  }
-  
-  /* 검색창 모바일 최적화 */
-  #artist-search-hero {
-    font-size: 0.875rem; /* 14px */
-    padding: 0.5rem 0.75rem;
-  }
-  
-  /* 버튼 크기 모바일 최적화 */
   .rounded-full {
     border-radius: 9999px;
   }
   
-  /* 카드 간격 모바일 최적화 */
   .space-y-2 > * + * {
     margin-top: 0.5rem;
   }
   
-  /* 그리드 모바일 최적화 */
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* 컴팩트 레이아웃을 위한 추가 스타일 */
+.compact-section {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .compact-section {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .compact-section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .compact-section {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
   }
 }
 </style>
@@ -387,99 +311,35 @@
 
 {% block body %}
 
-<!-- 히어로 섹션 - 모바일 최적화 -->
-<section class="relative overflow-hidden">
-  <!-- 배경 이미지 -->
-  <div class="absolute inset-0">
-    <img src="{% static 'image/slide/intro_slide_1.jpg' %}" 
-         alt="배경 이미지" 
-         class="w-full h-full object-cover">
-  </div>
+<!-- 히어로 섹션 포함 -->
+{% include 'main/home_hero_section.html' %}
 
-  <!-- 모바일 최적화된 고정 높이 컨테이너 -->
-  <div class="flex items-center justify-center relative z-10 h-[55vh] min-h-[350px]">
-    <div class="text-center text-white max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
-      <!-- 메인 타이틀 - 모바일 최적화 -->
-      <div class="mb-3 sm:mb-6">
-        <h1 class="font-heading text-lg sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light mb-1 sm:mb-2 leading-tight tracking-wide">
-          <span class="italic text-white"></span> 
-          <span class="font-bold text-white"></span>
-        </h1>
-        <h2 class="font-heading text-2xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white tracking-wider">
-          어덕해
-        </h2>
-      </div>
-      
-      <!-- 클릭 가능한 텍스트와 말풍선 -->
-      <div class="relative">
-        <p class="text-xs sm:text-sm md:text-base lg:text-lg mb-6 sm:mb-8 font-light leading-relaxed opacity-90 max-w-xs sm:max-w-md md:max-w-2xl mx-auto text-black font-body cursor-pointer" onclick="showHeroTooltip()">
-          팬들을 위한 특별한 공간에서<br>
-          <span class="italic font-medium text-pink-350">굿즈 거래부터 덕질 기록까지</span>
-        </p>
-        
-        <!-- 말풍선 툴팁 -->
-        <div id="heroTooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-6 bg-gray-800 sm:bg-gray-800 text-white px-10 py-3 rounded-lg shadow-lg opacity-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-20 min-w-max">
-          <div class="text-sm text-center">덕질은 어디서든 어떻게든 어덕해~</div>
-          <!-- 말풍선 화살표 (아래로 향함) -->
-          <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-          <!-- 닫기 버튼 -->
-          <button onclick="hideHeroTooltip()" class="absolute top-1 right-3 text-gray-800 sm:text-gray-300 hover:text-white text-sm">&times;</button>
-        </div>
-      </div>
-      
-      <!-- 덕상 안경 이미지 -->
-      <div class="flex justify-center">
-        <a href="{% url 'intro' %}" class="inline-block hover:scale-110 transition-transform duration-300">
-          <img src="{% static 'image/ddok_y.png' %}" 
-               alt="덕상 안경" 
-               class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain filter drop-shadow-lg hover:drop-shadow-xl transition-all duration-300">
-        </a>
-      </div>
-    </div>
-
-    <div class="absolute bottom-1 sm:bottom-4 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
-      <svg class="w-3 h-3 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-      </svg>
-    </div>
-  </div>
-</section>
-
-
-<!-- 찜한 아티스트 섹션 -->
-<section class="py-4 sm:py-8 lg:py-10 bg-gray-50">
+<!-- 찜한 아티스트 섹션 - 패딩 축소 -->
+<section class="compact-section bg-gray-50 mb-4 sm:mb-6">
   <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
     <div class="relative">
       {% if raw_favs %}
-        <!-- 다른 섹션과 동일한 헤더 스타일 -->
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-6 sm:mb-12">
-          <div class="mb-4 sm:mb-0">
-            <!-- 빈 공간 또는 필요시 제목 추가 가능 -->
-          </div>
-
-        </div>
-        
         <!-- 가운데 정렬된 아티스트 로고들 -->
-        <div class="flex flex-wrap justify-center items-center gap-4 sm:gap-8 lg:gap-10">
+        <div class="flex flex-wrap justify-center items-center gap-3 sm:gap-6 lg:gap-8">
           {% for artist in raw_favs %}
             <div class="text-center">
               <a href="{% url 'artist:index' %}" class="block group">
                 <img src="{% static artist.logo %}" 
                      alt="{{ artist.display_name }}"
-                     class="w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full shadow-md border-2 border-gray-200 hover:shadow-lg hover:border-gray-400 transition-all duration-300 group-hover:scale-105">
-                <p class="mt-1 sm:mt-3 text-xs sm:text-sm font-body font-semibold text-black truncate max-w-[60px] sm:max-w-[100px] lg:max-w-[120px] hidden sm:block">{{ artist.display_name }}</p>
+                     class="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 mx-auto rounded-full shadow-md border-2 border-gray-200 hover:shadow-lg hover:border-gray-400 transition-all duration-300 group-hover:scale-105">
+                <p class="mt-1 sm:mt-2 text-[6px] sm:text-[8px] font-body font-normal text-black truncate max-w-[50px] sm:max-w-[80px] lg:max-w-[100px] hidden sm:block">{{ artist.display_name }}</p>
               </a>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <div class="flex flex-col items-center py-6 sm:py-10 w-full">
-          <div class="w-12 h-12 sm:w-20 sm:h-20 mx-auto mb-2 sm:mb-4 opacity-50">
+        <div class="flex flex-col items-center py-4 sm:py-6 w-full">
+          <div class="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 opacity-50">
             <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain" />
           </div>
-          <h4 class="font-heading text-sm sm:text-lg font-light text-black mb-1 sm:mb-2">아직 찜한 아티스트가 없어요!</h4>
-          <p class="text-gray-600 text-center text-xs sm:text-sm mb-3 sm:mb-4 font-body">마음에 드는 아티스트를 찜해보세요</p>
-          <a href="{% url 'artist:index' %}" class="inline-block px-3 sm:px-6 py-2 sm:py-3 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-300 shadow-lg font-bold text-xs sm:text-sm font-body">
+          <h4 class="font-heading text-sm sm:text-base font-light text-black mb-1 sm:mb-2">아직 찜한 아티스트가 없어요!</h4>
+          <p class="text-gray-600 text-center text-xs sm:text-sm mb-2 sm:mb-3 font-body">마음에 드는 아티스트를 찜해보세요</p>
+          <a href="{% url 'artist:index' %}" class="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-black text-white rounded-full hover:bg-gray-800 transition-colors duration-300 shadow-lg font-bold text-xs sm:text-sm font-body">
             찜하러 가기
           </a>
         </div>
@@ -488,15 +348,13 @@
   </div>
 </section>
 
-
-
-<!-- 찜한 아티스트 바로가기 버튼들 -->
+<!-- 찜한 아티스트 바로가기 버튼들 - 패딩 축소 -->
 {% if raw_favs %}
-<section class="py-6 sm:py-8 bg-gradient-to-r from-red-50 to-pink-50">
+<section class="py-4 sm:py-6 bg-gradient-to-r from-red-50 to-pink-50">
   <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
-    <div class="text-center mb-4 sm:mb-6">
-      <h3 class="font-heading text-base sm:text-lg font-semibold text-gray-800 mb-2 flex items-center justify-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-red-500">
+    <div class="text-center mb-3 sm:mb-4">
+      <h3 class="font-heading text-sm sm:text-base font-semibold text-gray-800 mb-1 flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-pink-400">
           <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
         </svg>
         ONLY 찜
@@ -505,45 +363,39 @@
     </div>
     
     <!-- 모바일 최적화된 버튼 그리드 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-lg sm:max-w-none mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg sm:max-w-none mx-auto">
       <!-- 찜한 덕 거래 보기 -->
       <a href="{% url 'ddokfarm:index' %}?favorites_only=on" 
-         class="group relative flex items-center justify-center bg-white hover:bg-red-50 border-2 border-red-200 hover:border-red-300 rounded-lg px-4 py-3 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
-        <!-- 기본 텍스트 -->
-        <span class="font-semibold text-gray-800 group-hover:text-red-700 text-sm sm:text-base group-hover:opacity-0 transition-opacity duration-300">찜 팜</span>
-        <!-- 호버 시 나타날 텍스트 (절대 위치로 완전히 가운데 정렬) -->
-        <span class="font-semibold text-red-700 text-sm sm:text-base absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕팜 보기</span>
+         class="group relative flex items-center justify-center bg-white hover:bg-pink-50 border-2 border-black hover:border-pink-300 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
+        <span class="font-semibold text-gray-800 group-hover:text-pink-700 text-sm group-hover:opacity-0 transition-opacity duration-300">찜 팜</span>
+        <span class="font-semibold text-gray-700 text-sm absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕팜 보기</span>
         
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-red-600 group-hover:translate-x-1 transition-transform absolute right-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 text-pink-600 group-hover:translate-x-1 transition-transform absolute right-3">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
         </svg>
       </a>
 
       <!-- 찜한 덕 생활 보기 -->
       <a href="{% url 'ddokdam:index' %}?favorites_only=on" 
-         class="group relative flex items-center justify-center bg-white hover:bg-red-50 border-2 border-red-200 hover:border-red-300 rounded-lg px-4 py-3 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
-        <!-- 기본 텍스트 -->
-        <span class="font-semibold text-gray-800 group-hover:text-red-700 text-sm sm:text-base group-hover:opacity-0 transition-opacity duration-300">찜 담</span>
-        <!-- 호버 시 나타날 텍스트 (절대 위치로 완전히 가운데 정렬) -->
-        <span class="font-semibold text-red-700 text-sm sm:text-base absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕담 보기</span>
+         class="group relative flex items-center justify-center bg-white hover:bg-pink-50 border-2 border-black hover:border-pink-300 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
+        <span class="font-semibold text-gray-800 group-hover:text-pink-700 text-sm group-hover:opacity-0 transition-opacity duration-300">찜 담</span>
+        <span class="font-semibold text-gray-700 text-sm absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕담 보기</span>
         
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-red-600 group-hover:translate-x-1 transition-transform absolute right-4">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 text-pink-600 group-hover:translate-x-1 transition-transform absolute right-3">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
         </svg>
       </a>
     </div>
 
     <!-- 찜한 아티스트 미니 통계 및 관리 -->
-    <div class="mt-4 sm:mt-6">
+    <div class="mt-3 sm:mt-4">
       <div class="relative flex items-center justify-center">
-        <!-- 통계 정보 (가운데 고정) -->
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/60 rounded-full text-xs text-gray-600">
-          <span>{{ raw_favs|length }}개 아티스트를 찜 중</span>
+        <div class="inline-flex items-center gap-2 px-2 py-1 bg-white/60 rounded-full text-xs text-gray-900">
+          <span>아티스트 {{ raw_favs|length }}그룹을 찜 중</span>
         </div>
         
-        <!-- 더 찜 버튼 (절대 위치로 오른쪽 끝) -->
         <a href="{% url 'artist:index' %}" 
-           class="absolute right-0 inline-flex items-center gap-1 px-3 py-1 text-xs text-red-600 hover:text-red-700 font-medium underline hover:no-underline transition-all">
+           class="absolute right-0 inline-flex items-center gap-1 px-2 py-1 text-xs text-pink-600 hover:text-pink-700 font-medium underline hover:no-underline transition-all">
           <span>더 찜</span>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -555,16 +407,13 @@
 </section>
 {% endif %}
 
-<!-- 배너 캐러셀 섹션 - 모바일 최적화 -->
-<section class="py-4 sm:py-10 lg:py-12 bg-white">
+<!-- 배너 캐러셀 섹션 - 패딩 축소 -->
+<section class="py-1 sm:py-3 lg:py-4 bg-gray-50 mb-4 sm:mb-6">
   <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-    <!-- 배너 캐러셀 - 모바일 최적화 높이 컨테이너 -->
     <div class="relative max-w-4xl mx-auto">
-      <!-- 좌우 클릭 영역 추가 -->
       <div id="bannerLeftArea" class="absolute left-0 top-0 w-1/3 h-full z-10 cursor-pointer"></div>
       <div id="bannerRightArea" class="absolute right-0 top-0 w-1/3 h-full z-10 cursor-pointer"></div>
       
-      <!-- 좌우 화살표 버튼 - 모바일에서 작게 -->
       <button id="bannerPrevBtn" class="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-20
                                          p-2 sm:p-3 transition-all duration-200 hover:scale-110 pointer-events-none">
         <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -579,18 +428,15 @@
         </svg>
       </button>
       
-      <!-- 모바일 최적화 배너 컨테이너 -->
       <div id="bannerCarousel" class="relative overflow-hidden rounded-xl sm:rounded-2xl banner-mobile-container">
         <div class="banner-container">
           {% for path in banner_images %}
             <div class="banner-slide {% if forloop.first %}active{% endif %}">
               {% if path|slice:":4" == "http" or path|slice:":1" == "/" %}
-                <!-- 사용자 업로드 배너 (절대 경로) -->
                 <img src="{{ path }}" 
                      class="banner-image" 
                      alt="사용자 배너 이미지 {{ forloop.counter }}" />
               {% else %}
-                <!-- 기본 배너 (static 경로) -->
                 <img src="{% static path %}" 
                      class="banner-image" 
                      alt="배너 이미지 {{ forloop.counter }}" />
@@ -603,89 +449,126 @@
   </div>
 </section>
 
-<!-- 오늘의 새 소식 -->
-<section class="py-6 sm:py-10 lg:py-12 bg-gray-50">
-  <div class="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
-    <div class="text-center mb-3">
-      <!-- 이미지와 제목을 함께 배치 -->
-      <div class="flex items-center justify-center gap-2 sm:gap-4 mb-4">
-        <img src="static/image/ddok_closed_eyes.png" alt="덕 캐릭터" class="w-6 h-6 sm:w-10 sm:h-10">
-        <h2 class="font-heading text-lg sm:text-2xl font-light text-black tracking-wider">최신글 덕보기</h2>
-        <img src="static/image/ddok_closed_eyes.png" alt="덕 캐릭터" class="w-6 h-6 sm:w-10 sm:h-10">
+<!-- 오늘의 새 소식 - 패딩 축소 -->
+<section class="py-4 sm:py-6 lg:py-8 bg-white mb-4 sm:mb-6">
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div class="text-center mb-4 sm:mb-6">
+      <div class="flex items-center justify-center gap-2 sm:gap-3 mb-3">
+        <img src="{% static 'image/ddok_closed_eyes.png' %}" alt="덕 캐릭터" class="w-5 h-5 sm:w-8 sm:h-8">
+        <h2 class="font-heading text-base sm:text-xl font-light text-black tracking-wider"> NEW 덕보기</h2>
+        <img src="{% static 'image/ddok_closed_eyes.png' %}" alt="덕 캐릭터" class="w-5 h-5 sm:w-8 sm:h-8">
       </div>
-      <div class="w-16 sm:w-24 h-px bg-white mx-auto mt-4 sm:mt-6"></div>
+      <div class="w-12 sm:w-20 h-px bg-gray-300 mx-auto"></div>
     </div>
 
-    <div class="space-y-2 sm:space-y-3">
-      <!-- 덕팜 최신 2개 -->
-      {% for post in latest_sell_posts|slice:":2" %}
-        <article class="group">
-          <a href="{% url 'ddokfarm:post_detail' category=post.category post_id=post.id %}"
-             class="block bg-gray-900 p-3 sm:p-4 transition-all duration-300 border border-gray-800 ddokfarm-hover-effect rounded-lg">
-            <div class="flex items-start space-x-3 sm:space-x-4">
-              {% if post.images.all %}
-                <div class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                  <img src="{{ post.images.first.image.url }}" alt="{{ post.title }}" 
-                       class="w-full h-full object-cover rounded" />
-                </div>
-              {% else %}
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white flex-shrink-0 rounded"></div>
-              {% endif %}
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between mb-1 sm:mb-2">
-                  <span class="inline-flex items-center px-2 py-0.5 sm:py-1 text-xs font-medium text-white group-hover:bg-black group-hover:text-white transition-colors duration-300 ddokfarm-tag rounded">덕팜</span>
-                  <span class="text-xs text-gray-400 group-hover:text-black transition-colors duration-300">{{ post.created_at|date:"H:i" }}</span>
-                </div>
-                <h3 class="text-white group-hover:text-black font-medium mb-1 leading-tight transition-colors duration-300 text-sm sm:text-base">{{ post.title }}</h3>
-                <p class="text-white group-hover:text-black font-bold transition-colors duration-300 text-sm sm:text-base">{{ post.price|default:"가격 문의" }}</p>
-              </div>
-            </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <!-- 덕팜 섹션 -->
+      <div class="bg-gray-100 rounded-xl p-3 sm:p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 class="font-heading text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+            <span class="bg-black text-white px-2 py-1 rounded-full text-xs font-medium">덕팜</span>
+            NEW 덕팜
+          </h3>
+          <a href="{% url 'ddokfarm:index' %}" class="text-xs sm:text-sm text-black hover:text-gray-800 font-medium">
+            덕보기 →
           </a>
-        </article>
-      {% endfor %}
+        </div>
+        
+        <div class="space-y-2">
+          {% for post in latest_sell_posts|slice:":2" %}
+            <article class="group">
+              <a href="{% url 'ddokfarm:post_detail' category=post.category post_id=post.id %}"
+                 class="flex items-start space-x-3 p-2 sm:p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+                {% if post.images.all %}
+                  <div class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                    <img src="{{ post.images.first.image.url }}" alt="{{ post.title }}" 
+                         class="w-full h-full object-cover rounded-lg" />
+                  </div>
+                {% else %}
+                  <div class="w-12 h-12 sm:w-16 sm:h-16 bg-pink-100 flex-shrink-0 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between mb-1">
+                    <span class="text-xs text-gray-500">{{ post.created_at|date:"H:i" }}</span>
+                  </div>
+                  <h4 class="text-gray-900 font-medium mb-1 leading-tight text-sm line-clamp-2">{{ post.title }}</h4>
+                  <p class="text-pink-400 font-semibold text-sm">{{ post.price|default:"가격 문의" }}</p>
+                </div>
+              </a>
+            </article>
+          {% empty %}
+            <div class="text-center py-3 text-gray-500 text-sm">
+              아직 등록된 덕팜 글이 없어요
+            </div>
+          {% endfor %}
+        </div>
+      </div>
 
-      <!-- 덕담 최신 2개 -->
-      {% for post in latest_community_posts|slice:":2" %}
-        <article class="group">
-          <a href="{% url 'ddokdam:post_detail' category=post.category post_id=post.id %}"
-             class="block bg-gray-900 p-3 sm:p-4 transition-all duration-300 border border-gray-800 ddokdam-hover-effect rounded-lg">
-            <div class="flex items-start space-x-3 sm:space-x-4">
-              {% if post.images.all %}
-                <div class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                  <img src="{{ post.images.first.image.url }}" alt="{{ post.title }}" 
-                       class="w-full h-full object-cover rounded" />
-                </div>
-              {% else %}
-                <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white flex-shrink-0 rounded"></div>
-              {% endif %}
-              <div class="flex-1 min-w-0">
-                <div class="flex items-start justify-between mb-1 sm:mb-2">
-                  <span class="inline-flex items-center px-2 py-0.5 sm:py-1 text-xs font-medium text-white group-hover:bg-black group-hover:text-white transition-colors duration-300 ddokdam-tag rounded">덕담</span>
-                  <span class="text-xs text-gray-400 group-hover:text-black transition-colors duration-300">{{ post.created_at|date:"H:i" }}</span>
-                </div>
-                <h3 class="text-white group-hover:text-black font-medium mb-1 leading-tight transition-colors duration-300 text-sm sm:text-base">{{ post.title }}</h3>
-                <p class="text-gray-300 group-hover:text-black text-xs sm:text-sm transition-colors duration-300">{{ post.content|truncatechars:40 }}</p>
-              </div>
-            </div>
+      <!-- 덕담 섹션 -->
+      <div class="bg-gray-100 rounded-xl p-3 sm:p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+          <h3 class="font-heading text-sm sm:text-base font-semibold text-gray-800 flex items-center gap-2">
+            <span class="bg-black text-white px-2 py-1 rounded-full text-xs font-medium">덕담</span>
+            NEW 덕담
+          </h3>
+          <a href="{% url 'ddokdam:index' %}" class="text-xs sm:text-sm text-black hover:text-gray-800 font-medium">
+            덕보기 →
           </a>
-        </article>
-      {% endfor %}
+        </div>
+        
+        <div class="space-y-2">
+          {% for post in latest_community_posts|slice:":2" %}
+            <article class="group">
+              <a href="{% url 'ddokdam:post_detail' category=post.category post_id=post.id %}"
+                 class="flex items-start space-x-3 p-2 sm:p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+                {% if post.images.all %}
+                  <div class="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                    <img src="{{ post.images.first.image.url }}" alt="{{ post.title }}" 
+                         class="w-full h-full object-cover rounded-lg" />
+                  </div>
+                {% else %}
+                  <div class="w-12 h-12 sm:w-16 sm:h-16 bg-amber-100 flex-shrink-0 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between mb-1">
+                    <span class="text-xs text-gray-500">{{ post.created_at|date:"H:i" }}</span>
+                  </div>
+                  <h4 class="text-gray-900 font-medium mb-1 leading-tight text-sm line-clamp-2">{{ post.title }}</h4>
+                  <p class="text-gray-600 text-xs line-clamp-2">{{ post.content|truncatechars:40 }}</p>
+                </div>
+              </a>
+            </article>
+          {% empty %}
+            <div class="text-center py-3 text-gray-500 text-sm">
+              아직 등록된 덕담이 없어요
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 이번 주 생일 멤버: 반응형 슬라이더 -->
-<section class="py-8 sm:py-16 lg:py-20 bg-white">
+<!-- 이번 주 생일 멤버: 반응형 슬라이더 - 패딩 대폭 축소 -->
+<section class="py-4 sm:py-8 lg:py-10 bg-gray-50">
   <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-6 sm:mb-12">
-        <div class="mb-4 sm:mb-0">
-          <h2 class="font-heading text-lg sm:text-2xl md:text-3xl lg:text-4xl font-light text-black mb-2 sm:mb-3 tracking-wide flex items-center">
-            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[50px] h-[50px] sm:w-[66px] sm:h-[66px] align-middle mr-2 sm:mr-3">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-4 sm:mb-8">
+        <div class="mb-3 sm:mb-0">
+          <h2 class="font-heading text-base sm:text-xl md:text-2xl lg:text-3xl font-light text-black mb-1 sm:mb-2 tracking-wide flex items-center">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="어덕해 로고" class="w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] align-middle mr-2 sm:mr-3">
             <span class="italic text-gray-600"></span> 생일 아티스트
           </h2>
-          <p class="text-gray-700 font-light text-xs sm:text-base font-body"> 월별 생일 아티스트가 궁금하다면 전체 달력 보기 클릭</p>
+          <p class="text-gray-700 font-light text-xs sm:text-sm font-body"> 월별 생일 아티스트가 궁금하다면 전체 달력 보기 클릭</p>
         </div>
-        <a href="{% url 'bday_calendar:calendar' %}" class="text-gray-700 hover:text-black font-semibold transition-colors border-b-2 border-gray-300 hover:border-black text-sm sm:text-base font-body">
+        <a href="{% url 'bday_calendar:calendar' %}" class="text-gray-700 hover:text-black font-semibold transition-colors border-b-2 border-gray-300 hover:border-black text-sm font-body">
           생일 (덕)보기 →
         </a>
     </div>
@@ -694,39 +577,37 @@
     <div class="relative mx-3 sm:mx-0">
       <div class="relative overflow-hidden">
         {% if birthday_artists %}
-          <!-- 슬라이더 컨테이너 -->
           <div id="weeklyBirthdaySlider" class="relative overflow-hidden">
             <div class="flex transition-transform duration-500 ease-in-out" id="sliderTrack">
               {% for artist in birthday_artists %}
-                <div class="min-w-full sm:min-w-1/2 md:min-w-1/3 lg:min-w-1/4 xl:min-w-1/5 px-1 sm:px-3 flex-shrink-0">
-                  <div class="{% if artist.is_today_birthday %}bg-red-50{% else %}bg-white{% endif %} rounded-lg sm:rounded-xl p-3 sm:p-4 text-center transition-all duration-300">
+                <div class="min-w-full sm:min-w-1/2 md:min-w-1/3 lg:min-w-1/4 xl:min-w-1/5 px-1 sm:px-2 flex-shrink-0">
+                  <div class="{% if artist.is_today_birthday %}bg-red-50{% else %}bg-white{% endif %} rounded-lg p-2 sm:p-3 text-center transition-all duration-300">
                     
-                    <!-- 오늘 생일 라벨 -->
                     {% if artist.is_today_birthday %}
-                      <div class="mb-2 sm:mb-3">
-                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                      <div class="mb-1 sm:mb-2">
+                        <span class="bg-pink-400 text-white text-xs px-2 py-1 rounded-full font-bold">
                           오늘 생일! 
                         </span>
                       </div>
                     {% else %}
-                      <div class="h-4 sm:h-6 mb-2 sm:mb-3"></div>
+                      <div class="h-3 sm:h-5 mb-1 sm:mb-2"></div>
                     {% endif %}
                     
-                    <div class="mb-2 sm:mb-4">
+                    <div class="mb-2 sm:mb-3">
                       <img src="{% member_image artist.member_name artist.artist_display_name %}" 
                            alt="{{ artist.member_name }}"
-                           class="w-12 h-12 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto rounded-full shadow-sm object-cover">
+                           class="w-10 h-10 sm:w-16 sm:h-16 md:w-18 md:h-18 mx-auto rounded-full shadow-sm object-cover">
                     </div>
                     <div class="space-y-1">
-                      <h4 class="font-body font-bold {% if artist.is_today_birthday %}text-red-600{% else %}text-black{% endif %} text-xs sm:text-base truncate">{{ artist.member_name }}</h4>
+                      <h4 class="font-body font-bold {% if artist.is_today_birthday %}text-pink-600{% else %}text-black{% endif %} text-xs sm:text-sm truncate">{{ artist.member_name }}</h4>
                       {% if artist.artist_name %}
-                        <p class="text-xs sm:text-sm text-gray-600 font-body">{{ artist.artist_name }}</p>
+                        <p class="text-xs text-gray-600 font-body">{{ artist.artist_name }}</p>
                       {% endif %}
-                      <div class="flex items-center justify-center space-x-1 {% if artist.is_today_birthday %}text-red-600{% else %}text-gray-600{% endif %}">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-3 sm:size-4">
+                      <div class="flex items-center justify-center space-x-1 {% if artist.is_today_birthday %}text-pink-600{% else %}text-gray-600{% endif %}">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-3">
                           <path d="m4.75 1-.884.884a1.25 1.25 0 1 0 1.768 0L4.75 1ZM11.25 1l-.884.884a1.25 1.25 0 1 0 1.768 0L11.25 1ZM8.884 1.884 8 1l-.884.884a1.25 1.25 0 1 0 1.768 0ZM4 7a2 2 0 0 0-2 2v1.034c.347 0 .694-.056 1.028-.167l.47-.157a4.75 4.75 0 0 1 3.004 0l.47.157a3.25 3.25 0 0 0 2.056 0l.47-.157a4.75 4.75 0 0 1 3.004 0l.47.157c.334.111.681.167 1.028.167V9a2 2 0 0 0-2-2V5.75a.75.75 0 0 0-1.5 0V7H8.75V5.75a.75.75 0 0 0-1.5 0V7H5.5V5.75a.75.75 0 0 0-1.5 0V7ZM14 11.534a4.749 4.749 0 0 1-1.502-.244l-.47-.157a3.25 3.25 0 0 0-2.056 0l-.47.157a4.75 4.75 0 0 1-3.004 0l-.47-.157a3.25 3.25 0 0 0-2.056 0l-.47.157A4.748 4.748 0 0 1 2 11.534V13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1.466Z" />
                         </svg>
-                        <span class="text-xs sm:text-sm font-medium font-body">{{ artist.birthday_display }}</span>
+                        <span class="text-xs font-medium font-body">{{ artist.birthday_display }}</span>
                       </div>
                     </div>
                   </div>
@@ -734,33 +615,31 @@
               {% endfor %}
             </div>
 
-            <!-- 좌우 화살표 버튼 추가 - 모바일 최적화 -->
-            <button id="birthdayPrevBtn" class="absolute left-3 sm:left-6 z-20
+            <button id="birthdayPrevBtn" class="absolute left-2 sm:left-4 z-20
                                               hover:opacity-80 transition-all duration-200 
                                               disabled:opacity-30 disabled:cursor-not-allowed"
-                                              style="top: calc(50% + 6px); transform: translateY(-50%);">
-              <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-700 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              style="top: calc(50% + 4px); transform: translateY(-50%);">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
               </svg>
             </button>
 
-            <button id="birthdayNextBtn" class="absolute right-3 sm:right-6 z-20
+            <button id="birthdayNextBtn" class="absolute right-2 sm:right-4 z-20
                                               hover:opacity-80 transition-all duration-200
                                               disabled:opacity-30 disabled:cursor-not-allowed"
-                                              style="top: calc(50% + 6px); transform: translateY(-50%);">
-              <svg class="w-4 h-4 sm:w-6 sm:h-6 text-gray-700 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              style="top: calc(50% + 4px); transform: translateY(-50%);">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
               </svg>
             </button>
 
         {% else %}
-          <!-- 빈 상태 -->
-          <div class="text-center py-8 sm:py-16">
-            <div class="w-12 h-12 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 bg-gray-100 rounded-full flex items-center justify-center opacity-60">
-              <span class="text-xl sm:text-3xl"></span>
+          <div class="text-center py-6 sm:py-10">
+            <div class="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 bg-gray-100 rounded-full flex items-center justify-center opacity-60">
+              <span class="text-lg sm:text-2xl"></span>
             </div>
-            <h4 class="font-heading text-base sm:text-xl font-light text-black mb-2">이번 주 생일인 아티스트가 없어요</h4>
-            <p class="text-gray-600 text-sm sm:text-base font-body">다른 생일 아티스트들을 확인해보세요</p>
+            <h4 class="font-heading text-sm sm:text-lg font-light text-black mb-1">이번 주 생일인 아티스트가 없어요</h4>
+            <p class="text-gray-600 text-xs sm:text-sm font-body">다른 생일 아티스트들을 확인해보세요</p>
           </div>
         {% endif %}
       </div>
@@ -778,97 +657,77 @@
 <!-- JavaScript 통합 섹션 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script>
-  // 히어로 섹션 말풍선 함수들
-  function showHeroTooltip() {
-    const tooltip = document.getElementById('heroTooltip');
-    tooltip.style.opacity = '1';
-    tooltip.style.pointerEvents = 'auto';
-    
-    // 3초 후 자동으로 숨김
-    setTimeout(() => {
-      hideHeroTooltip();
-    }, 3000);
-  }
-
-  function hideHeroTooltip() {
-    const tooltip = document.getElementById('heroTooltip');
-    tooltip.style.opacity = '0';
-    tooltip.style.pointerEvents = 'none';
-  }
-
   document.addEventListener("DOMContentLoaded", () => {
-    // 🔄 메인 배너 스와이퍼 초기화
-    const mainBannerSwiper = new Swiper('.mainBannerSwiper', {
-      loop: true,
-      autoplay: {
-        delay: 4000,
-        disableOnInteraction: false,
-      },
-      speed: 1000,
-      effect: 'slide',
-      grabCursor: true,
-      
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-        dynamicBullets: true,
-      },
-      
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-      
-      // 반응형 설정
-      breakpoints: {
-        320: {
-          slidesPerView: 1,
-          spaceBetween: 0,
-          autoplay: {
-            delay: 3500,
+    // 🔄 메인 배너 스와이퍼 초기화 (필요시)
+    if (document.querySelector('.mainBannerSwiper')) {
+      const mainBannerSwiper = new Swiper('.mainBannerSwiper', {
+        loop: true,
+        autoplay: {
+          delay: 4000,
+          disableOnInteraction: false,
+        },
+        speed: 1000,
+        effect: 'slide',
+        grabCursor: true,
+        
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+          dynamicBullets: true,
+        },
+        
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+        
+        breakpoints: {
+          320: {
+            slidesPerView: 1,
+            spaceBetween: 0,
+            autoplay: {
+              delay: 3500,
+            },
+          },
+          640: {
+            slidesPerView: 1,
+            spaceBetween: 0,
+            autoplay: {
+              delay: 4500,
+            },
+          },
+          1024: {
+            slidesPerView: 1,
+            spaceBetween: 0,
+            autoplay: {
+              delay: 5000,
+            },
           },
         },
-        640: {
-          slidesPerView: 1,
-          spaceBetween: 0,
-          autoplay: {
-            delay: 4500,
-          },
+        
+        keyboard: {
+          enabled: true,
+          onlyInViewport: true,
         },
-        1024: {
-          slidesPerView: 1,
-          spaceBetween: 0,
-          autoplay: {
-            delay: 5000,
-          },
+        
+        mousewheel: {
+          invert: false,
         },
-      },
-      
-      // 키보드 컨트롤
-      keyboard: {
-        enabled: true,
-        onlyInViewport: true,
-      },
-      
-      // 마우스휠 스크롤
-      mousewheel: {
-        invert: false,
-      },
-    });
-    
-    // 호버 시 자동재생 일시정지
-    const swiperContainer = document.querySelector('.mainBannerSwiper');
-    if (swiperContainer) {
-      swiperContainer.addEventListener('mouseenter', () => {
-        mainBannerSwiper.autoplay.stop();
       });
       
-      swiperContainer.addEventListener('mouseleave', () => {
-        mainBannerSwiper.autoplay.start();
-      });
+      const swiperContainer = document.querySelector('.mainBannerSwiper');
+      if (swiperContainer) {
+        swiperContainer.addEventListener('mouseenter', () => {
+          mainBannerSwiper.autoplay.stop();
+        });
+        
+        swiperContainer.addEventListener('mouseleave', () => {
+          mainBannerSwiper.autoplay.start();
+        });
+      }
     }
 
-    // 홈페이지 아티스트 검색 자동완성 초기화 (히어로 섹션)
+    // 홈페이지 아티스트 검색 자동완성 초기화
     if (typeof initAutocomplete === 'function') {
       try {
         initAutocomplete('artist-search-hero', 'autocomplete-list-hero', {
@@ -882,17 +741,9 @@
       }
     }
 
-    // 헤더 이미지 클릭 툴팁 기능 (삭제됨)
-    // const ddokHeader = document.getElementById('ddokHeader');
-    // const ddokTooltip = document.getElementById('ddokTooltip');
-    // const closeTooltip = document.getElementById('closeTooltip');
-    
-    // (헤더 이미지 관련 이벤트 리스너 삭제됨)
-
     // 맨 위로 스크롤 버튼 기능
     const scrollToTopBtn = document.getElementById('scrollToTop');
     
-    // 스크롤 위치에 따라 버튼 표시/숨김
     function toggleScrollButton() {
       if (window.pageYOffset > 300) {
         scrollToTopBtn.classList.remove('opacity-0', 'invisible');
@@ -903,7 +754,6 @@
       }
     }
     
-    // 맨 위로 스크롤 기능
     function scrollToTop() {
       window.scrollTo({
         top: 0,
@@ -911,11 +761,8 @@
       });
     }
     
-    // 이벤트 리스너 등록
     window.addEventListener('scroll', toggleScrollButton);
     scrollToTopBtn.addEventListener('click', scrollToTop);
-    
-    // 초기 버튼 상태 설정
     toggleScrollButton();
     
     // 배너 슬라이드 - 좌우 클릭 영역 포함
@@ -927,13 +774,9 @@
     let currentSlide = 0;
     
     function showSlide(index) {
-      // 모든 슬라이드 숨기기
       slides.forEach(slide => slide.classList.remove('active'));
-      
-      // 현재 슬라이드 보이기
       slides[index].classList.add('active');
       
-      // 화살표 버튼 애니메이션
       if (prevBtn && nextBtn) {
         prevBtn.style.transform = 'translateY(-50%) scale(1.1)';
         nextBtn.style.transform = 'translateY(-50%) scale(1.1)';
@@ -955,7 +798,6 @@
       showSlide(currentSlide);
     }
     
-    // 좌우 영역 클릭 이벤트
     if (leftArea) {
       leftArea.addEventListener('click', prevSlide);
     }
@@ -964,7 +806,6 @@
       rightArea.addEventListener('click', nextSlide);
     }
     
-    // 호버 효과 - 화살표 표시
     if (leftArea && prevBtn) {
       leftArea.addEventListener('mouseenter', () => {
         prevBtn.style.opacity = '1';
@@ -989,22 +830,20 @@
       });
     }
     
-    // 자동 슬라이드 (8초마다)
     if (slides.length > 0) {
       setInterval(nextSlide, 8000);
     }
 
-    // ✅ 생일 아티스트 슬라이더 초기화 추가
+    // 생일 아티스트 슬라이더 초기화
     initBirthdaySlider();
   });
 
-  // 생일 아티스트 슬라이더 함수
+  // 생일 아티스트 슬라이더 함수 (기존과 동일)
   function initBirthdaySlider() {
     const slider = document.getElementById('sliderTrack');
     const container = document.getElementById('weeklyBirthdaySlider');
     const prevBtn = document.getElementById('birthdayPrevBtn');
     const nextBtn = document.getElementById('birthdayNextBtn');
-    const indicatorsContainer = document.getElementById('birthdayIndicators');
     
     if (!slider || !container) {
       return;
@@ -1018,40 +857,15 @@
     let totalPages = Math.ceil(slides.length / itemsPerView);
     let autoSlideInterval;
     
-    // 화면 크기별 표시 아이템 수 계산
     function getItemsPerView() {
       const width = window.innerWidth;
-      if (width >= 1280) return 5;      // xl: 5개
-      if (width >= 1024) return 4;      // lg: 4개  
-      if (width >= 768) return 3;       // md: 3개
-      if (width >= 640) return 2;       // sm: 2개
-      return 1;                         // 모바일: 1개
+      if (width >= 1280) return 5;
+      if (width >= 1024) return 4;
+      if (width >= 768) return 3;
+      if (width >= 640) return 2;
+      return 1;
     }
 
-    // 인디케이터 생성
-    function createIndicators() {
-      if (!indicatorsContainer || totalPages <= 1) return;
-      
-      indicatorsContainer.innerHTML = '';
-      for (let i = 0; i < totalPages; i++) {
-        const dot = document.createElement('button');
-        dot.className = `w-2 h-2 rounded-full transition-colors mx-1 ${i === 0 ? 'bg-gray-800' : 'bg-gray-300'}`;
-        dot.onclick = () => goToPage(i);
-        indicatorsContainer.appendChild(dot);
-      }
-    }
-
-    // 인디케이터 업데이트
-    function updateIndicators() {
-      if (!indicatorsContainer) return;
-      
-      const dots = indicatorsContainer.children;
-      for (let i = 0; i < dots.length; i++) {
-        dots[i].className = `w-2 h-2 rounded-full transition-colors mx-1 ${i === currentIndex ? 'bg-gray-800' : 'bg-gray-300'}`;
-      }
-    }
-
-    // 버튼 상태 업데이트
     function updateButtons() {
       if (prevBtn) {
         prevBtn.disabled = currentIndex === 0;
@@ -1061,7 +875,6 @@
       }
     }
     
-    // 슬라이드 이동
     function goToPage(pageIndex) {
       if (pageIndex < 0 || pageIndex >= totalPages) return;
       
@@ -1070,84 +883,46 @@
       slider.style.transform = `translateX(${translateX}%)`;
       
       updateButtons();
-      updateIndicators();
     }
     
-    // 다음 슬라이드
     function nextSlide() {
       const nextIndex = (currentIndex + 1) % totalPages;
       goToPage(nextIndex);
     }
     
-    // 이전 슬라이드  
     function prevSlide() {
       const prevIndex = (currentIndex - 1 + totalPages) % totalPages;
       goToPage(prevIndex);
     }
     
-    // 자동 슬라이드 시작
     function startAutoSlide() {
       if (totalPages <= 1) return;
       
       autoSlideInterval = setInterval(() => {
         nextSlide();
-      }, 8000); // 8초마다 자동 이동
+      }, 8000);
     }
     
-    // 자동 슬라이드 중지
     function stopAutoSlide() {
       if (autoSlideInterval) {
         clearInterval(autoSlideInterval);
       }
     }
     
-    // 화면 크기 변경 시 재계산
     function handleResize() {
       const newItemsPerView = getItemsPerView();
       if (newItemsPerView !== itemsPerView) {
         itemsPerView = newItemsPerView;
         totalPages = Math.ceil(slides.length / itemsPerView);
         
-        // 현재 페이지가 범위를 벗어나면 조정
         if (currentIndex >= totalPages) {
           currentIndex = totalPages - 1;
         }
         
-        createIndicators();
         goToPage(currentIndex);
       }
     }
-    
-    // 터치/마우스 이벤트 처리
-    let startX = 0;
-    let isDragging = false;
-    
-    function handleStart(e) {
-      isDragging = true;
-      startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-      stopAutoSlide(); // 사용자 상호작용 시 자동 슬라이드 중지
-    }
-    
-    function handleEnd(e) {
-      if (!isDragging) return;
-      
-      const endX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
-      const diffX = startX - endX;
-      const threshold = 50; // 최소 스와이프 거리
-      
-      if (Math.abs(diffX) > threshold) {
-        if (diffX > 0) {
-          nextSlide(); // 왼쪽으로 스와이프 -> 다음
-        } else {
-          prevSlide(); // 오른쪽으로 스와이프 -> 이전
-        }
-      }
-      
-      isDragging = false;
-      startAutoSlide(); // 자동 슬라이드 재시작
-    }
 
-    // 버튼 이벤트 리스너
     if (prevBtn) {
       prevBtn.addEventListener('click', () => {
         stopAutoSlide();
@@ -1168,28 +943,11 @@
       });
     }
     
-    // 이벤트 리스너 등록
     window.addEventListener('resize', handleResize);
     
-    // 터치 이벤트
-    container.addEventListener('touchstart', handleStart, { passive: true });
-    container.addEventListener('touchend', handleEnd, { passive: true });
-    
-    // 마우스 이벤트 (데스크톱)
-    container.addEventListener('mousedown', handleStart);
-    container.addEventListener('mouseup', handleEnd);
-    
-    // 마우스가 컨테이너를 벗어날 때
-    container.addEventListener('mouseleave', () => {
-      isDragging = false;
-    });
-    
-    // 호버 시 자동 슬라이드 중지/재시작
     container.addEventListener('mouseenter', stopAutoSlide);
     container.addEventListener('mouseleave', startAutoSlide);
     
-    // 초기화
-    createIndicators();
     goToPage(0);
     startAutoSlide();
   }
