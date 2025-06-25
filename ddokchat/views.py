@@ -527,7 +527,6 @@ def _calculate_split_participant_total_price(post, application):
         print(f"분철 참여자 가격 계산 오류: {e}")
         return 0
 
-# 기존 함수들 유지...
 @login_required
 @require_POST
 def upload_image(request):
