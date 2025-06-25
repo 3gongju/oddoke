@@ -14,6 +14,9 @@ def group_artists(artists, group_size=5):
 
 def intro_view(request):
     """어덕해 소개 페이지 - 17개 슬라이드로 구성된 랜딩 페이지"""
+
+    # 기본 이미지 경로 정의
+    DEFAULT_SLIDE_IMAGE = 'image/slide/intro_slide_default.jpg'
     
     # 각 슬라이드별 콘텐츠 정보 정의
     slide_contents = [
@@ -21,61 +24,71 @@ def intro_view(request):
             'title': '어덕해에 오신 것을 환영합니다',
             'subtitle': '팬들을 위한 특별한 공간',
             'description': '덕질의 모든 것을 경험하세요',
-            'type': 'welcome'
+            'type': 'welcome',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '덕팜 - 굿즈 거래의 새로운 방식',
             'subtitle': '안전하고 편리한 거래',
             'description': '판매, 대여, 공동구매까지 모든 거래를 한 곳에서',
-            'type': 'ddokfarm'
+            'type': 'ddokfarm',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '덕담 - 팬들만의 소통 공간',
             'subtitle': '자유로운 소통과 정보 공유',
             'description': '커뮤니티, 매너샷, 생일카페 정보까지',
-            'type': 'ddokdam'
+            'type': 'ddokdam',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '덕생 - 아티스트 생일 달력',
             'subtitle': '소중한 순간을 놓치지 마세요',
             'description': '생일 알림과 기념 이벤트 정보',
-            'type': 'ddoksang'
+            'type': 'ddoksang',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '덕채팅 - 실시간 소통',
             'subtitle': '팬들과의 즉석 대화',
             'description': '같은 관심사를 가진 사람들과 실시간으로 소통하세요',
-            'type': 'ddokchat'
+            'type': 'ddokchat',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '안전한 거래 환경',
             'subtitle': '신뢰할 수 있는 플랫폼',
             'description': '검증된 사용자들과 안전하게 거래하세요',
-            'type': 'safety'
+            'type': 'safety',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '다양한 아티스트 지원',
             'subtitle': 'K-POP부터 일본 아티스트까지',
             'description': '모든 장르의 아티스트 팬들을 위한 공간',
-            'type': 'artists'
+            'type': 'artists',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '모바일 최적화',
             'subtitle': '언제 어디서나 편리하게',
             'description': '모바일에서도 완벽한 사용자 경험',
-            'type': 'mobile'
+            'type': 'mobile',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '커뮤니티 기능',
             'subtitle': '팬들과 함께 만드는 문화',
             'description': '후기, 리뷰, 정보 공유로 더 풍부한 덕질',
-            'type': 'community'
+            'type': 'community',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '이벤트 & 혜택',
             'subtitle': '특별한 혜택과 이벤트',
             'description': '정기적인 이벤트와 회원 전용 혜택',
-            'type': 'events'
+            'type': 'events',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '24/7 고객 지원',
@@ -87,37 +100,43 @@ def intro_view(request):
             'title': '개인정보 보호',
             'subtitle': '안전한 개인정보 관리',
             'description': '철저한 보안으로 개인정보를 보호합니다',
-            'type': 'privacy'
+            'type': 'privacy',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '글로벌 서비스',
             'subtitle': '전 세계 팬들과 연결',
             'description': '국경을 넘나드는 팬 문화 교류',
-            'type': 'global'
+            'type': 'global',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': 'AI 추천 시스템',
             'subtitle': '맞춤형 콘텐츠 추천',
             'description': '취향에 맞는 굿즈와 정보를 추천받으세요',
-            'type': 'ai'
+            'type': 'ai',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '실시간 알림',
             'subtitle': '중요한 소식을 놓치지 마세요',
             'description': '관심 아티스트의 새로운 소식을 실시간으로',
-            'type': 'notifications'
+            'type': 'notifications',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '팬클럽 연동',
             'subtitle': '공식 팬클럽과의 연계',
             'description': '공식 정보와 이벤트를 한 번에',
-            'type': 'fanclub'
+            'type': 'fanclub',
+            'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '지금 시작하세요',
             'subtitle': '새로운 덕질의 시작',
             'description': '어덕해와 함께 더 풍부한 팬 라이프를 경험하세요',
-            'type': 'cta'
+            'type': 'cta',
+            'image': DEFAULT_SLIDE_IMAGE
         }
     ]
     
