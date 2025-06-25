@@ -65,6 +65,9 @@
     grid-template-columns: 1fr !important;
     gap: 0.75rem !important;
     max-width: none !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
   }
 }
 
@@ -358,45 +361,97 @@
 /* === 모바일 반응형 === */
 @media (max-width: 768px) {
   .game-container {
-    margin: 1rem;
-    padding: 1.25rem;
+    margin: 1rem auto; /* 가운데 정렬 */
+    padding: 0;
     border-radius: 16px;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    width: 100%;
+    max-width: 400px; /* 최대 너비 제한으로 가운데 정렬 효과 */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 내부 요소들 가운데 정렬 */
   }
 
   .game-container .game-title {
     font-size: 1.25rem;
+    padding: 0 1.25rem;
+    margin-bottom: 1rem;
+    text-align: center; /* 제목 가운데 정렬 */
+    width: 100%;
   }
 
   .game-container .game-subtitle {
     font-size: 0.875rem;
+    padding: 0 1.25rem;
+    margin-bottom: 1.5rem;
+    text-align: center; /* 부제목 가운데 정렬 */
+    width: 100%;
   }
 
   /* 모바일에서는 완전히 다른 세로 레이아웃 */
   .game-container .game-layout {
-    flex-direction: column;
-    gap: 0;
+    flex-direction: column !important;
+    gap: 1rem !important;
     min-height: auto;
+    padding: 0;
+    width: 100%;
+    align-items: center; /* 레이아웃 내부 요소들 가운데 정렬 */
   }
 
+  /* 메인 게임 콘텐츠를 카드로 */
   .game-container .game-main-content {
     flex: none;
     order: 1;
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 2rem 1.25rem !important;
+    margin: 0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #f1f1f1 !important;
+    width: 100%;
+    max-width: 350px; /* 카드 최대 너비 */
   }
 
+  /* 사이드바를 별도 카드로 */
   .game-container .game-sidebar {
-    flex: none;
-    order: 2;
-    min-width: auto;
-    margin-top: 2rem;
+    flex: none !important;
+    order: 2 !important;
+    min-width: auto !important;
+    margin-top: 0 !important;
+    background: #ffffff !important;
+    border-radius: 20px !important;
+    padding: 1.5rem !important;
+    margin: 0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #f1f1f1 !important;
+    width: 100%;
+    max-width: 350px; /* 카드 최대 너비 */
+    display: block !important;
   }
 
-  /* 모바일 멤버 선택 - 가로 레이아웃 */
+  /* 멤버 선택 그리드도 카드로 */
+  .game-container .member-selector-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    max-width: none !important;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 모바일 멤버 선택 - 가로 레이아웃과 전체 폭 사용 */
   .game-container .member-item {
     display: flex !important;
     flex-direction: row !important;
-    align-items: center;
-    text-align: left;
-    padding: 1rem;
+    align-items: center !important;
+    text-align: left !important;
+    padding: 1rem !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
 
   .game-container .member-image {
@@ -474,7 +529,7 @@
     min-height: 30px;
   }
 
-  /* 모바일 사이드바 완전 가운데 정렬 - 우선순위 강화 */
+  /* 모바일 사이드바 가운데 정렬 */
   .game-container .sidebar-content {
     display: flex !important;
     flex-direction: column !important;
@@ -485,28 +540,29 @@
   }
 
   .game-container .total-ddok-card {
-    padding: 1.25rem;
-    width: 100%;
-    max-width: 280px;
-    margin: 0 auto !important;
+    padding: 1.25rem !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: center !important;
   }
 
   .game-container .total-ddok-label {
-    font-size: 0.75rem;
+    font-size: 0.75rem !important;
+    text-align: center !important;
   }
 
   .game-container .total-ddok-value {
-    font-size: 1.5rem;
+    font-size: 1.5rem !important;
+    text-align: center !important;
   }
 
   .game-container .back-to-selection-button {
-    width: 100%;
-    max-width: 280px;
-    padding: 0.75rem 1rem;
-    font-size: 0.75rem;
-    margin: 0 auto !important;
-    display: block;
-    margin-top: 0 !important;
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.75rem !important;
+    margin: 0 !important;
+    display: block !important;
+    text-align: center !important;
   }
 }
 
