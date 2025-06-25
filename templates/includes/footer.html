@@ -2,33 +2,33 @@
 <footer class="bg-gray-50 border-t border-gray-200 mt-16">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
     <!-- Desktop Footer -->
-    <div class="hidden md:grid md:grid-cols-4 gap-8 lg:gap-12">
-      <!-- 왼쪽 섹션: 이용안내 -->
-      <div>
-        <h3 class="font-bold text-black mb-4 font-heading">이용안내</h3>
-        <ul class="space-y-2 text-sm text-gray-600 font-body">
-          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="terms">이용약관</a></li>
-          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="privacy">개인정보처리방침</a></li>
-          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="communityRules">커뮤니티 규칙</a></li>
-          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="artistList">아티스트 목록</a></li>
-        </ul>
+    <div class="hidden md:flex md:justify-between md:items-start max-w-4xl mx-auto px-8">
+      <!-- 왼쪽 영역: 이용안내 + 서비스 -->
+      <div class="flex space-x-20">
+        <!-- 이용안내 섹션 -->
+        <div>
+          <h3 class="font-bold text-black mb-4 font-heading">이용안내</h3>
+          <ul class="space-y-2 text-sm text-gray-600 font-body">
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="terms">이용약관</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="privacy">개인정보처리방침</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="communityRules">커뮤니티 규칙</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="artistList">아티스트 목록</a></li>
+          </ul>
+        </div>
+
+        <!-- 서비스 섹션 -->
+        <div>
+          <h3 class="font-bold text-black mb-4 font-heading">서비스</h3>
+          <ul class="space-y-2 text-sm text-gray-600 font-body">
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="ddokfarm">덕팜 (굿즈 거래)</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="ddokdam">덕담 (커뮤니티)</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="ddoksang">덕생 (생일카페)</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="calendar">생일 캘린더</a></li>
+          </ul>
+        </div>
       </div>
 
-      <!-- 가운데 섹션: 서비스 -->
-      <div>
-        <h3 class="font-bold text-black mb-4 font-heading">서비스</h3>
-        <ul class="space-y-2 text-sm text-gray-600 font-body">
-          <li><a href="/ddokfarm/" class="hover:text-black transition-colors">덕팜 (굿즈 거래)</a></li>
-          <li><a href="/ddokdam/" class="hover:text-black transition-colors">덕담 (커뮤니티)</a></li>
-          <li><a href="/ddoksang/" class="hover:text-black transition-colors">덕생 (생일카페)</a></li>
-          <li><a href="/bday_calendar/" class="hover:text-black transition-colors">생일 캘린더</a></li>
-        </ul>
-      </div>
-
-      <!-- 빈 공간 (간격 만들기) -->
-      <div></div>
-
-      <!-- 오른쪽 섹션: 고객지원 -->
+      <!-- 오른쪽 영역: 고객지원 -->
       <div>
         <h3 class="font-bold text-black mb-4 font-heading">고객지원</h3>
         <ul class="space-y-2 text-sm text-gray-600 font-body">
@@ -39,7 +39,6 @@
         
         <!-- 소셜미디어 -->
         <div class="mt-6">
-          <h4 class="font-semibold text-black mb-3 font-heading">소셜미디어</h4>
           <a href="https://x.com/oddoke_official" 
              target="_blank" 
              rel="noopener noreferrer"
@@ -79,10 +78,10 @@
           </svg>
         </button>
         <div id="mobile-service" class="hidden border-t border-gray-200 p-4 space-y-2">
-          <a href="/ddokfarm/" class="block text-sm text-gray-600 hover:text-black font-body">덕팜 (굿즈 거래)</a>
-          <a href="/ddokdam/" class="block text-sm text-gray-600 hover:text-black font-body">덕담 (커뮤니티)</a>
-          <a href="/ddoksang/" class="block text-sm text-gray-600 hover:text-black font-body">덕생 (생일카페)</a>
-          <a href="/bday_calendar/" class="block text-sm text-gray-600 hover:text-black font-body">생일 캘린더</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="ddokfarm">덕팜 (굿즈 거래)</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="ddokdam">덕담 (커뮤니티)</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="ddoksang">덕생 (생일카페)</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="calendar">생일 캘린더</a>
         </div>
       </div>
 
@@ -118,8 +117,8 @@
         <h2 class="text-xl font-bold font-heading">이용약관</h2>
         <button class="modal-close text-gray-500 hover:text-black" data-modal="termsModal">&times;</button>
       </div>
-      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
-        <div class="space-y-4 text-sm text-gray-700">
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body leading-relaxed">
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
           <h3 class="font-bold text-black">제1조 (목적)</h3>
           <p>이 약관은 어덕해(이하 "서비스")가 제공하는 팬 커뮤니티 및 굿즈 거래 서비스의 이용조건 및 절차, 회원과 서비스 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
           
@@ -248,6 +247,161 @@
   </div>
 </div>
 
+<!-- 덕팜 모달 -->
+<div id="ddokfarmModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">덕팜 (굿즈 거래)</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="ddokfarmModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body leading-relaxed">
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+          <h3 class="font-bold text-black">주요 기능</h3>
+          <p>팬들 간의 안전한 굿즈 거래를 위한 중고거래 플랫폼입니다.</p>
+          
+          <h3 class="font-bold text-black">3가지 거래 방식</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>판매:</strong> 내 굿즈를 판매하고 싶을 때</li>
+            <li><strong>구매:</strong> 원하는 굿즈를 구매하고 싶을 때</li>
+            <li><strong>교환:</strong> 굿즈끼리 서로 교환하고 싶을 때</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">특징</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>아티스트별 카테고리 분류</li>
+            <li>실시간 채팅을 통한 거래 협의</li>
+            <li>신고 시스템으로 안전한 거래 환경</li>
+            <li>포토카드, 앨범, 굿즈 등 다양한 아이템 거래</li>
+          </ul>
+          
+          <div class="text-center pt-4">
+            <a href="/ddokfarm/" class="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-semibold">
+              덕팜 바로가기
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 덕담 모달 -->
+<div id="ddokdamModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">덕담 (커뮤니티)</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="ddokdamModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body leading-relaxed">
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+          <h3 class="font-bold text-black">주요 기능</h3>
+          <p>팬들이 모여 소통하고 정보를 공유하는 커뮤니티 공간입니다.</p>
+          
+          <h3 class="font-bold text-black">3가지 게시판</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>자유:</strong> 자유로운 주제로 소통하는 공간</li>
+            <li><strong>정보:</strong> 콘서트, 이벤트 등 유용한 정보 공유</li>
+            <li><strong>후기:</strong> 콘서트, 굿즈 구매 등 후기 공유</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">특징</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>아티스트별 전용 게시판</li>
+            <li>댓글과 대댓글로 활발한 소통</li>
+            <li>좋아요 기능으로 인기 게시글 확인</li>
+            <li>실시간 알림으로 빠른 소통</li>
+          </ul>
+          
+          <div class="text-center pt-4">
+            <a href="/ddokdam/" class="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-semibold">
+              덕담 바로가기
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 덕생 모달 -->
+<div id="ddoksangModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">덕생 (생일카페)</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="ddoksangModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body leading-relaxed">
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+          <h3 class="font-bold text-black">주요 기능</h3>
+          <p>아티스트 생일카페 정보를 확인하고 공유하는 플랫폼입니다.</p>
+          
+          <h3 class="font-bold text-black">3가지 정보 제공</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>예정:</strong> 앞으로 열릴 생일카페 일정</li>
+            <li><strong>진행중:</strong> 현재 운영 중인 생일카페</li>
+            <li><strong>종료:</strong> 완료된 생일카페 후기와 정보</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">특징</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>전국 생일카페 정보 한눈에 확인</li>
+            <li>카페별 상세 정보 (위치, 기간, 메뉴 등)</li>
+            <li>후기 및 사진 공유 기능</li>
+            <li>즐겨찾기로 관심 카페 저장</li>
+          </ul>
+          
+          <div class="text-center pt-4">
+            <a href="/ddoksang/" class="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-semibold">
+              덕생 바로가기
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 생일 캘린더 모달 -->
+<div id="calendarModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">생일 캘린더</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="calendarModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body leading-relaxed">
+        <div class="space-y-4 text-sm text-gray-700 leading-relaxed">
+          <h3 class="font-bold text-black">주요 기능</h3>
+          <p>매일 아티스트들과 멤버들의 생일을 축하해주세요!</p>
+          
+          <h3 class="font-bold text-black">덕 쌓기 게임</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>생일 맞추기:</strong> 오늘 생일인 아티스트/멤버 맞추기</li>
+            <li><strong>덕 포인트 획득:</strong> 정답을 맞출 때마다 덕 포인트 적립</li>
+            <li><strong>덕 쌓기:</strong> 매일 참여해서 더 많은 덕을 모아보세요</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">덕 포인트 활용</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>마이페이지에서 쌓인 덕 포인트 확인</li>
+            <li>덕 포인트로 어덕해 메인 페이지 배너 광고 등록 가능</li>
+            <li>다양한 혜택과 이벤트 참여 기회 제공</li>
+          </ul>
+          
+          <div class="text-center pt-4">
+            <a href="/calendar/" class="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-semibold">
+              생일 캘린더 바로가기
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 아티스트 목록 모달 -->
 <div id="artistListModal" class="footer-modal fixed inset-0 z-[9999] hidden">
   <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
@@ -260,9 +414,10 @@
         <div class="space-y-4 text-sm text-gray-700">
           <div class="bg-gray-50 p-4 rounded-lg">
             <p class="font-bold text-black mb-2">현재 등록된 아티스트</p>
-            <p><strong>108개의 아티스트 그룹</strong></p>
-            <p><strong>총 600명의 멤버</strong></p>
-            <p>에 대한 게시글 확인 가능</p>
+            <div class="text-center">
+              <p><strong>아티스트 103 그룹</strong></p>
+              <p><strong>총 600명의 멤버</strong></p>
+            </div>
           </div>
           
           <div class="space-y-3">
