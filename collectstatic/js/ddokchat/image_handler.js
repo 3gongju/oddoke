@@ -86,7 +86,7 @@ export function handleImageUpload(file) {
       if (data.success) {
         sendMessage({
           type: 'chat_image',
-          room_id: window.roomId,
+          room_code: window.roomCode,
           image_url: data.image_url,
           sender_id: window.currentUserId,
           message_id: data.message_id,

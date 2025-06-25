@@ -142,7 +142,7 @@
         <div class="border-t border-gray-100">
             {% for room in group.rooms %}
                 <div class="border-b border-gray-50 last:border-b-0 hover:bg-gray-50 transition-colors">
-                    <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block p-4 pl-8">
+                    <a href="{% url 'ddokchat:chat_room' room_code=room.room_code %}" class="block p-4 pl-8">
                         <div class="flex items-start space-x-3">
                             <!-- 프로필 영역 -->
                             <div class="flex-shrink-0">

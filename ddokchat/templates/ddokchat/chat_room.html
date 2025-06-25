@@ -126,8 +126,8 @@ body {
 </style>
 
 <script>
-  // 전역 변수 설정
-  window.roomId = "{{ room.id }}";
+  // ✅ 전역 변수 설정 - roomId를 roomCode로 변경
+  window.roomCode = "{{ room.room_code }}";  // room.id에서 room.room_code로 변경
   window.currentUser = "{{ current_user.username }}";
   window.currentUserId = "{{ current_user.id }}";
   window.isTradeCompleted = "{{ room.is_fully_completed }}" === "True";

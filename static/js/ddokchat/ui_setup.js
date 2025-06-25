@@ -131,7 +131,7 @@ export function setupTradeCompleteModal() {
         return;
       }
       
-      fetch(`/ddokchat/complete/${window.roomId}/`, {
+      fetch(`/ddokchat/complete/${window.roomCode}/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -253,6 +253,29 @@ function getOtherUserUsername() {
 //     return;
 //   }
 
+<<<<<<< HEAD
+  fetch('/accounts/report/', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      reported_user: username,
+      report_type: 'chat_abuse',
+      room_code: window.roomCode,
+      description: '채팅방에서 신고'
+    })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    hideLoadingToast(loadingToast);
+=======
   // fetch('/accounts/report/', {
   //   method: 'POST',
   //   headers: {
@@ -274,6 +297,7 @@ function getOtherUserUsername() {
   // })
   // .then(data => {
   //   hideLoadingToast(loadingToast);
+>>>>>>> 9f6bca406bf9680bfbf1526d9133f5d6622c47c6
     
   //   if (data.success) {
   //     showToast('신고가 접수되었습니다. 검토 후 조치하겠습니다.', 'success');
