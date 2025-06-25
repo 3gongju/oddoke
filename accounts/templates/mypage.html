@@ -112,7 +112,7 @@
             내 덕
           </h2>
           <div class="text-right">
-            <div class="text-xl sm:text-2xl font-bold text-purple-600">
+            <div class="text-xl sm:text-2xl font-bold text-gray-900">
               {{ total_ddok_points|default:0 }}덕
             </div>
             <!-- <p class="text-xs sm:text-sm text-gray-500">총 쌓인 덕</p> -->
@@ -122,7 +122,7 @@
         <!-- 덕 포인트 사용하기 버튼 -->
         <div class="mb-4 sm:mb-6">
           <button onclick="openBannerRequestModal()" 
-                  class="w-full sm:w-auto px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
+                  class="w-full sm:w-auto px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
             덕 쓸어가기 
           </button>
         </div>
@@ -134,10 +134,10 @@
             <h3 class="text-base sm:text-lg font-semibold text-gray-700">최근 내역</h3>
             <button 
               id="toggle-history-btn" 
-              class="text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
+              class="text-sm text-pink-600 hover:text-gray-800 font-medium transition-colors duration-200"
               onclick="toggleHistory()"
             >
-              더보기
+              (덕)보기 >
             </button>
           </div>
           
@@ -164,7 +164,7 @@
                         </span>
                       {% endif %}
                     </div>
-                    <span class="font-bold {% if latest_log.points_change > 0 %}text-purple-600{% else %}text-red-600{% endif %} text-sm sm:text-base">
+                    <span class="font-bold {% if latest_log.points_change > 0 %}text-pink-600{% else %}text-black-600{% endif %} text-sm sm:text-base">
                       {% if latest_log.points_change > 0 %}+{% endif %}{{ latest_log.points_change }}덕
                     </span>
                   </div>
@@ -198,7 +198,7 @@
                         </span>
                       {% endif %}
                     </div>
-                    <span class="font-bold {% if log.points_change > 0 %}text-purple-600{% else %}text-red-600{% endif %} text-sm sm:text-base">
+                    <span class="font-bold {% if log.points_change > 0 %}text-pink-600{% else %}text-black-600{% endif %} text-sm sm:text-base">
                       {% if log.points_change > 0 %}+{% endif %}{{ log.points_change }}덕
                     </span>
                   </div>
@@ -234,7 +234,7 @@
             내가 찜한 덕
           </h2>
           <a href="{% url 'artist:index' %}" 
-             class="text-blue-600 hover:text-blue-800 text-sm sm:text-base font-medium no-underline">
+             class="text-pink-600 hover:text-blue-800 text-sm sm:text-base font-medium no-underline">
             찜덕 하러 가기 →
           </a>
         </div>
@@ -701,7 +701,7 @@
             나의 덕생 활동
           </h2>
           <a href="{% url 'ddoksang:my_cafes' %}" 
-             class="text-blue-600 hover:text-blue-800 text-sm sm:text-base font-medium no-underline">
+             class="text-pink-600 hover:text-blue-800 text-sm sm:text-base font-medium no-underline">
             전체 관리하기 →
           </a>
         </div>
