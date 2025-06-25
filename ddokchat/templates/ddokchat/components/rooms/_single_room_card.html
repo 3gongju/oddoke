@@ -1,9 +1,8 @@
-<!-- ddokchat/templates/ddokchat/components/rooms/_single_room_card.html 수정 -->
-{% load humanize %}
-{% load price_filters %}
+<!-- ddokchat/templates/ddokchat/components/rooms/_single_room_card.html 수정 부분 -->
 
 <div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 chat-item">
-    <a href="{% url 'ddokchat:chat_room' room_id=room.id %}" class="block p-4">
+    <!-- ✅ room.id 대신 room.room_code 사용 -->
+    <a href="{% url 'ddokchat:chat_room' room_code=room.room_code %}" class="block p-4">
         <div class="space-y-4">
             <!-- 상품 정보 -->
             <div class="flex items-center space-x-3">
@@ -20,7 +19,6 @@
                             <p class="text-lg text-orange-600 font-bold">
                                 {{ price_info.display_price }}
                             </p>
-                            <!-- ✅ 뱃지 제거됨 - 요구사항대로 -->
                         </div>
                         
                         <!-- 개수 정보 표시 (선택적) -->

@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.conf import settings
 import uuid
+import base64
 
 # Create your models here.
 
@@ -19,16 +20,44 @@ class ChatRoom(models.Model):
 
     buyer_completed = models.BooleanField(default=False)  # 구매자 거래 완료 여부
     seller_completed = models.BooleanField(default=False)  # 판매자 거래 완료 
-    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False) # 채팅방 고유 난수 부여
+    
+    room_code = models.CharField(max_length=12, unique=True, blank=True, db_index=True)
     
     class Meta:
-        unique_together = ('content_type', 'object_id', 'buyer')  # 구매자는 같은 글에 대해 1방만
-        # 성능 최적화를 위한 인덱스 추가
+        unique_together = ('content_type', 'object_id', 'buyer')
         indexes = [
-            models.Index(fields=['buyer', 'created_at']),  # 구매자별 채팅방 조회
-            models.Index(fields=['seller', 'created_at']),  # 판매자별 채팅방 조회
-            models.Index(fields=['buyer_completed', 'seller_completed']),  # 거래 완료 상태별 조회
+            models.Index(fields=['buyer', 'created_at']),
+            models.Index(fields=['seller', 'created_at']),
+            models.Index(fields=['buyer_completed', 'seller_completed']),
+            models.Index(fields=['room_code']),  # ✅ room_code 인덱스만 추가
         ]
+
+    def save(self, *args, **kwargs):
+        # room_code가 없으면 생성
+        if not self.room_code:
+            self.room_code = self.generate_short_uuid()
+            # 중복 체크 (안전장치)
+            while ChatRoom.objects.filter(room_code=self.room_code).exists():
+                self.room_code = self.generate_short_uuid()
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def generate_short_uuid():
+        """8-10자리의 짧은 UUID 생성"""
+        uid = uuid.uuid4()
+        # Base64 인코딩 후 URL 안전 문자로 변환, 패딩 제거
+        short_id = base64.urlsafe_b64encode(uid.bytes).decode().rstrip('=')
+        # 8자리로 자르기 (필요시 10자리로 늘릴 수 있음)
+        return short_id[:8]
+
+    # ✅ room_code로 조회하는 헬퍼 메서드 추가
+    @classmethod
+    def get_by_code(cls, room_code):
+        """room_code로 채팅방 조회"""
+        try:
+            return cls.objects.get(room_code=room_code)
+        except cls.DoesNotExist:
+            return None
 
     def get_other_user(self, user):
         """

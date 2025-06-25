@@ -131,7 +131,7 @@ export function setupTradeCompleteModal() {
         return;
       }
       
-      fetch(`/ddokchat/complete/${window.roomId}/`, {
+      fetch(`/ddokchat/complete/${window.roomCode}/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': csrfToken,
@@ -257,7 +257,7 @@ function handleUserReport(username) {
     body: JSON.stringify({
       reported_user: username,
       report_type: 'chat_abuse',
-      room_id: window.roomId,
+      room_code: window.roomCode,
       description: '채팅방에서 신고'
     })
   })
