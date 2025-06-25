@@ -9,15 +9,7 @@
       <img src="{{ user_profile.profile_image.url }}" alt="프로필" class="w-16 h-16 rounded-full object-cover mr-4">
       <div>
         <h2 class="text-xl font-bold text-gray-800">
-          {% if user_profile.first_name %}
-            {{ user_profile.first_name }}
-          {% elif user_profile.last_name %}
-            {{ user_profile.last_name }}  
-          {% elif user_profile.username|length > 20 %}
-            닉네임 미설정
-          {% else %}
-            {{ user_profile.username }}
-          {% endif %}
+          {{ user_profile.username }}
         </h2>
         <p class="text-gray-600">매너 리뷰 통계</p>
       </div>

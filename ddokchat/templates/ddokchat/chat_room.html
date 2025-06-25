@@ -165,6 +165,107 @@ body {
       });
     }
   });
+
+  // 채팅방 위치 추적 관련 JavaScript
+  // ✅ 1. 현재 채팅방 위치 업데이트 함수
+  function updateCurrentChatroom(roomCode) {
+      fetch('/ddokchat/api/update-current-chatroom/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: JSON.stringify({
+              'room_code': roomCode
+          })
+      }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              console.log('✅ 현재 채팅방 위치 업데이트:', roomCode);
+          }
+      }).catch(error => {
+          console.error('❌ 채팅방 위치 업데이트 실패:', error);
+      });
+  }
+
+  // ✅ 2. 현재 채팅방 위치 해제 함수
+  function clearCurrentChatroom() {
+      fetch('/ddokchat/api/clear-current-chatroom/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          }
+      }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              console.log('🗑️ 현재 채팅방 위치 해제됨');
+          }
+      }).catch(error => {
+          console.error('❌ 채팅방 위치 해제 실패:', error);
+      });
+  }
+
+  // ✅ 3. 안읽은 메시지 읽음 처리 함수 (탭 활성화 시)
+  function markMessagesAsReadOnFocus() {
+      if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+          chatSocket.send(JSON.stringify({
+              'type': 'read_all'
+          }));
+          console.log('📖 탭 활성화로 인한 메시지 읽음 처리');
+      }
+  }
+
+  // ✅ 4. 이벤트 리스너 등록
+  document.addEventListener('DOMContentLoaded', function() {
+      const roomCode = '{{ room.room_code }}';  // Django 템플릿 변수
+      
+      // 페이지 로드 시 현재 위치 설정
+      updateCurrentChatroom(roomCode);
+      
+      // 탭/창 활성화 이벤트
+      window.addEventListener('focus', function() {
+          console.log('🎯 탭 활성화됨 - 채팅방:', roomCode);
+          updateCurrentChatroom(roomCode);
+          markMessagesAsReadOnFocus();
+      });
+      
+      // 탭/창 비활성화 이벤트
+      window.addEventListener('blur', function() {
+          console.log('😴 탭 비활성화됨');
+          clearCurrentChatroom();
+      });
+      
+      // 페이지 이탈 시 위치 해제
+      window.addEventListener('beforeunload', function() {
+          console.log('👋 페이지 이탈 - 위치 해제');
+          // 동기 방식으로 빠르게 전송
+          navigator.sendBeacon('/ddokchat/api/clear-current-chatroom/', 
+              new Blob([JSON.stringify({})], {type: 'application/json'})
+          );
+      });
+      
+      // 페이지 숨김/표시 이벤트 (모바일 대응)
+      document.addEventListener('visibilitychange', function() {
+          if (document.hidden) {
+              console.log('📱 페이지 숨김 (백그라운드)');
+              clearCurrentChatroom();
+          } else {
+              console.log('📱 페이지 표시 (포그라운드)');
+              updateCurrentChatroom(roomCode);
+              markMessagesAsReadOnFocus();
+          }
+      });
+  });
+
+  // ✅ 5. WebSocket 연결 해제 시에도 위치 정리
+  // 기존 WebSocket close 이벤트에 추가
+  if (typeof chatSocket !== 'undefined') {
+      chatSocket.addEventListener('close', function(e) {
+          console.log('🔌 WebSocket 연결 해제 - 위치 해제');
+          clearCurrentChatroom();
+      });
+  }
 </script>
 
 <!-- 🔥 신고 모달 스크립트 로드 -->

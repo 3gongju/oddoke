@@ -49,114 +49,58 @@ def index(request):
     sort_by = request.GET.get('sort', 'latest')
     show_available_only = request.GET.get('available_only') == 'on'
     
-    # ✅ 찜한 아티스트 필터링
-    favorites_only = request.GET.get('favorites_only') == 'on'
-    
-    # 기존 필터링 파라미터들
+    # 필터링 파라미터
     selected_shipping = request.GET.get('shipping', '')
     selected_conditions = request.GET.getlist('condition')
     selected_md = request.GET.getlist('md')
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
 
-    # ✅ 찜한 아티스트 ID 목록 미리 가져오기 (성능 최적화)
-    favorite_artist_ids = []
-    if favorites_only and request.user.is_authenticated:
-        favorite_artist_ids = list(request.user.favorite_artists.values_list('id', flat=True))
-        if not favorite_artist_ids:
-            # 찜한 아티스트가 없으면 빈 결과 반환
-            posts = []
-            # 컨텍스트는 그대로 유지...
-            context = {
-                'posts': posts,
-                'category': category,
-                'wantto': wantto,
-                'query': query,
-                'sort_by': sort_by,
-                'show_available_only': show_available_only,
-                'favorites_only': favorites_only,
-                'favorite_artists': [],
-                'search_action': reverse('ddokfarm:index'),
-                'create_url': f"{reverse('ddokfarm:post_create')}?category={category or 'sell'}",
-                'category_urls': get_ddokfarm_category_urls(),
-                'default_category': 'sell',
-                'selected_shipping': selected_shipping,
-                'selected_conditions': selected_conditions,
-                'selected_md': selected_md,
-                'min_price': min_price,
-                'max_price': max_price,
-                'selected_shipping_display': '',
-                'condition_display_map': {},
-                'md_display_map': {},
-            }
-            return render(request, 'ddokfarm/index.html', context)
-
     # 기본 필터링 조건 구성
-    def get_base_filter_conditions():
-        filter_conditions = Q()
-        
-        # 찜한 아티스트 필터
-        if favorites_only and favorite_artist_ids:
-            filter_conditions &= Q(artist_id__in=favorite_artist_ids)
-        
-        if selected_shipping:
-            filter_conditions &= Q(shipping=selected_shipping)
-        
-        if selected_conditions:
-            condition_q = Q()
-            for condition in selected_conditions:
-                condition_q |= Q(condition=condition)
-            filter_conditions &= condition_q
-        
-        if wantto:
-            filter_conditions &= Q(want_to=wantto)
-            
-        return filter_conditions
+    filter_conditions = Q()
+    
+    if selected_shipping:
+        filter_conditions &= Q(shipping=selected_shipping)
+    
+    if selected_conditions:
+        condition_q = Q()
+        for condition in selected_conditions:
+            condition_q |= Q(condition=condition)
+        filter_conditions &= condition_q
+    
+    # ✅ MD 필터링 - 판매 게시글에만 적용
+    sell_md_conditions = Q()
+    if selected_md:
+        md_q = Q()
+        for md in selected_md:
+            md_q |= Q(md=md)
+        sell_md_conditions = md_q
+    
+    # ✅ 가격 필터링 - ItemPrice를 통해 처리
+    price_conditions = Q()
+    if min_price:
+        try:
+            min_price_val = float(min_price)
+            # ItemPrice의 최소 가격으로 필터링
+            price_conditions &= Q(id__in=get_posts_with_min_price(min_price_val))
+        except ValueError:
+            min_price = ''
+    
+    if max_price:
+        try:
+            max_price_val = float(max_price)
+            # ItemPrice의 최대 가격으로 필터링 
+            price_conditions &= Q(id__in=get_posts_with_max_price(max_price_val))
+        except ValueError:
+            max_price = ''
 
-    # MD 필터링 (판매만)
-    def get_md_filter():
-        if selected_md:
-            md_q = Q()
-            for md in selected_md:
-                md_q |= Q(md=md)
-            return md_q
-        return Q()
+    # want_to 필터링
+    wantto_conditions = Q()
+    if wantto:
+        wantto_conditions &= Q(want_to=wantto)
 
-    # 가격 필터링 헬퍼
-    def get_price_filtered_ids(model_class):
-        ids = []
-        if min_price or max_price:
-            for post in model_class.objects.all():
-                item_prices = post.get_item_prices().filter(is_price_undetermined=False)
-                if item_prices.exists():
-                    prices = list(item_prices.values_list('price', flat=True))
-                    min_post_price = min(prices)
-                    max_post_price = max(prices)
-                    
-                    valid = True
-                    if min_price:
-                        try:
-                            if min_post_price < float(min_price):
-                                valid = False
-                        except ValueError:
-                            pass
-                    if max_price and valid:
-                        try:
-                            if max_post_price > float(max_price):
-                                valid = False
-                        except ValueError:
-                            pass
-                    
-                    if valid:
-                        ids.append(post.id)
-        return ids
-
-    # ✅ 검색 로직 개선
     if query:
-        base_filter = get_base_filter_conditions()
-        md_filter = get_md_filter()
-        
-        # 공통 검색 조건
+        # 검색 로직
         artist_filter = (
             Q(artist__display_name__icontains=query) |
             Q(artist__korean_name__icontains=query) |
@@ -165,180 +109,100 @@ def index(request):
         )
         member_filter = Q(members__member_name__icontains=query)
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
-        search_filter = text_filter | artist_filter | member_filter
+        common_filter = text_filter | artist_filter | member_filter
 
-        # 각 모델별로 별도 쿼리 (성능 최적화)
-        all_posts = []
-
-        # 판매 게시글
-        sell_price_ids = get_price_filtered_ids(FarmSellPost) if (min_price or max_price) else None
-        sell_conditions = base_filter & search_filter & md_filter
-        if sell_price_ids is not None:
-            sell_conditions &= Q(id__in=sell_price_ids)
+        # ✅ 판매 게시글 - MD 필터 포함, 가격 필터 수정
+        sell_results = FarmSellPost.objects.filter(
+            common_filter & filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
+        ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
-        sell_posts = FarmSellPost.objects.filter(sell_conditions).select_related(
-            'user', 'artist', 'user__fandom_profile'
-        ).prefetch_related('like', 'images').distinct()
-        for post in sell_posts:
-            post.category = 'sell'
-        all_posts.extend(sell_posts)
-
-        # 대여 게시글
-        rental_price_ids = get_price_filtered_ids(FarmRentalPost) if (min_price or max_price) else None
-        rental_conditions = base_filter & search_filter
-        if rental_price_ids is not None:
-            rental_conditions &= Q(id__in=rental_price_ids)
-            
-        rental_posts = FarmRentalPost.objects.filter(rental_conditions).select_related(
-            'user', 'artist', 'user__fandom_profile'
-        ).prefetch_related('like', 'images').distinct()
-        for post in rental_posts:
-            post.category = 'rental'
-        all_posts.extend(rental_posts)
-
-        # 분철 게시글 (별도 처리)
-        split_conditions = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
-        if favorites_only and favorite_artist_ids:
-            split_conditions &= Q(artist_id__in=favorite_artist_ids)
+        # ✅ 대여 게시글 - MD 필터 제외, 가격 필터 수정
+        rental_results = FarmRentalPost.objects.filter(
+            common_filter & filter_conditions & price_conditions & wantto_conditions
+        ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images').distinct()
         
-        # 분철 가격 필터
+        # 분철은 기존과 동일
+        split_filter = text_filter | artist_filter | Q(member_prices__member__member_name__icontains=query)
+        split_price_filter = Q()
         if min_price:
             try:
-                split_conditions &= Q(member_prices__price__gte=float(min_price))
+                split_price_filter &= Q(member_prices__price__gte=float(min_price))
             except ValueError:
                 pass
         if max_price:
             try:
-                split_conditions &= Q(member_prices__price__lte=float(max_price))
+                split_price_filter &= Q(member_prices__price__lte=float(max_price))
             except ValueError:
                 pass
-                
-        split_posts = FarmSplitPost.objects.filter(split_conditions).select_related(
-            'user', 'artist', 'user__fandom_profile'
-        ).prefetch_related('like', 'member_prices', 'images').distinct()
-        for post in split_posts:
-            post.category = 'split'
-        all_posts.extend(split_posts)
+            
+        split_results = FarmSplitPost.objects.filter(
+            split_filter & split_price_filter
+        ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
 
-        posts = all_posts
-
+        posts = list(chain(sell_results, rental_results, split_results))
     else:
-        # ✅ 카테고리별 필터링 개선
-        base_filter = get_base_filter_conditions()
-        
+        # 카테고리별 필터링
         if category == 'sell':
-            md_filter = get_md_filter()
-            price_ids = get_price_filtered_ids(FarmSellPost) if (min_price or max_price) else None
-            
-            conditions = base_filter & md_filter
-            if price_ids is not None:
-                conditions &= Q(id__in=price_ids)
-                
-            posts = FarmSellPost.objects.filter(conditions).select_related(
-                'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'images')
-            for post in posts:
-                post.category = 'sell'
-                
+            # ✅ 판매 - MD 필터 포함, 가격 필터 수정
+            posts = FarmSellPost.objects.filter(
+                filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'rental':
-            price_ids = get_price_filtered_ids(FarmRentalPost) if (min_price or max_price) else None
-            
-            conditions = base_filter
-            if price_ids is not None:
-                conditions &= Q(id__in=price_ids)
-                
-            posts = FarmRentalPost.objects.filter(conditions).select_related(
-                'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'images')
-            for post in posts:
-                post.category = 'rental'
-                
+            # ✅ 대여 - MD 필터 제외, 가격 필터 수정
+            posts = FarmRentalPost.objects.filter(
+                filter_conditions & price_conditions & wantto_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
         elif category == 'split':
-            conditions = Q()
-            if favorites_only and favorite_artist_ids:
-                conditions &= Q(artist_id__in=favorite_artist_ids)
-            
+            # 분철은 기존과 동일
+            split_price_filter = Q()
             if min_price:
                 try:
-                    conditions &= Q(member_prices__price__gte=float(min_price))
+                    split_price_filter &= Q(member_prices__price__gte=float(min_price))
                 except ValueError:
                     pass
             if max_price:
                 try:
-                    conditions &= Q(member_prices__price__lte=float(max_price))
+                    split_price_filter &= Q(member_prices__price__lte=float(max_price))
                 except ValueError:
                     pass
-                    
-            posts = FarmSplitPost.objects.filter(conditions).select_related(
-                'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'member_prices', 'images').distinct()
-            for post in posts:
-                post.category = 'split'
-                
+            posts = FarmSplitPost.objects.filter(
+                split_price_filter
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
         else:
-            # 전체 카테고리 - 각각 별도 쿼리 후 합치기
-            all_posts = []
+            # ✅ 전체 카테고리 - 각각 다르게 필터링
+            sell_posts = FarmSellPost.objects.filter(
+                filter_conditions & price_conditions & wantto_conditions & sell_md_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
             
-            # 판매
-            md_filter = get_md_filter()
-            sell_price_ids = get_price_filtered_ids(FarmSellPost) if (min_price or max_price) else None
-            sell_conditions = base_filter & md_filter
-            if sell_price_ids is not None:
-                sell_conditions &= Q(id__in=sell_price_ids)
-                
-            sell_posts = FarmSellPost.objects.filter(sell_conditions).select_related(
-                'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'images')
-            for post in sell_posts:
-                post.category = 'sell'
-            all_posts.extend(sell_posts)
+            rental_posts = FarmRentalPost.objects.filter(
+                filter_conditions & price_conditions & wantto_conditions
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'images')
             
-            # 대여
-            rental_price_ids = get_price_filtered_ids(FarmRentalPost) if (min_price or max_price) else None
-            rental_conditions = base_filter
-            if rental_price_ids is not None:
-                rental_conditions &= Q(id__in=rental_price_ids)
-                
-            rental_posts = FarmRentalPost.objects.filter(rental_conditions).select_related(
-                'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'images')
-            for post in rental_posts:
-                post.category = 'rental'
-            all_posts.extend(rental_posts)
-            
-            # 분철
-            split_conditions = Q()
-            if favorites_only and favorite_artist_ids:
-                split_conditions &= Q(artist_id__in=favorite_artist_ids)
-            
+            split_price_filter = Q()
             if min_price:
                 try:
-                    split_conditions &= Q(member_prices__price__gte=float(min_price))
+                    split_price_filter &= Q(member_prices__price__gte=float(min_price))
                 except ValueError:
                     pass
             if max_price:
                 try:
-                    split_conditions &= Q(member_prices__price__lte=float(max_price))
+                    split_price_filter &= Q(member_prices__price__lte=float(max_price))
                 except ValueError:
                     pass
-                    
-            split_posts = FarmSplitPost.objects.filter(split_conditions).select_related(
-                'user', 'artist', 'user__fandom_profile'
-            ).prefetch_related('like', 'member_prices', 'images').distinct()
-            for post in split_posts:
-                post.category = 'split'
-            all_posts.extend(split_posts)
+            split_posts = FarmSplitPost.objects.filter(
+                split_price_filter
+            ).select_related('user', 'artist', 'user__fandom_profile').prefetch_related('like', 'member_prices', 'images').distinct()
             
-            posts = all_posts
+            posts = list(chain(sell_posts, rental_posts, split_posts))
 
         if not isinstance(posts, list):
             posts = list(posts)
 
-    # 판매중 필터 적용
+    # 판매중 필터 적용 (기존과 동일)
     if show_available_only:
         posts = [post for post in posts if not post.is_sold]
 
-    # 정렬
+    # ✅ 정렬 로직 - effective_price 프로퍼티 사용
     if sort_by == 'latest':
         posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
     elif sort_by == 'price_low':
@@ -350,26 +214,22 @@ def index(request):
     else:
         posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
-    # detail_url 설정
     for post in posts:
-        post.detail_url = reverse('ddokfarm:post_detail', args=[post.category, post.id])
+        post.detail_url = reverse('ddokfarm:post_detail', args=[post.category_type, post.id])
 
-    clean_category = (category or 'sell').split('?')[0]
+    clean_category = (request.GET.get('category') or 'sell').split('?')[0]
 
-    # 찜한 아티스트 목록
-    favorite_artists = []
-    if request.user.is_authenticated:
-        favorite_artists = list(request.user.favorite_artists.all())
-    
-    # 필터 표시용 데이터 생성
+    # 필터 표시용 데이터 생성 (기존과 동일)
     shipping_choices = dict(FarmSellPost.SHIPPING_CHOICES)
     condition_choices = dict(FarmSellPost.CONDITION_CHOICES)
     md_choices = dict(FarmSellPost.MD_CHOICES)
     
+    # 상품 상태 표시 매핑 생성
     condition_display_map = {}
     for condition in selected_conditions:
         condition_display_map[condition] = condition_choices.get(condition, condition)
     
+    # MD 종류 표시 매핑 생성
     md_display_map = {}
     for md in selected_md:
         md_display_map[md] = md_choices.get(md, md)
@@ -381,12 +241,12 @@ def index(request):
         'query': query,
         'sort_by': sort_by,
         'show_available_only': show_available_only,
-        'favorites_only': favorites_only,
-        'favorite_artists': favorite_artists,
         'search_action': reverse('ddokfarm:index'),
         'create_url': f"{reverse('ddokfarm:post_create')}?category={clean_category}",
         'category_urls': get_ddokfarm_category_urls(),
         'default_category': 'sell',
+        
+        # 필터링 관련 컨텍스트
         'selected_shipping': selected_shipping,
         'selected_conditions': selected_conditions,
         'selected_md': selected_md,

@@ -39,15 +39,7 @@
             <div class="mb-3 sm:mb-4">
               <div class="flex items-center gap-3 mb-2">
                 <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
-                  {% if user_profile.first_name %}
-                    {{ user_profile.first_name }}
-                  {% elif user_profile.username|slice:":6" == "kakao_" %}
-                    카카오 사용자
-                  {% elif user_profile.username|slice:":6" == "naver_" %}
-                    네이버 사용자
-                  {% else %}
-                    {{ user_profile.username }}
-                  {% endif %}
+                   {{ user_profile.display_name }}
                 </h1>
 
                 <!-- 팬덤 인증 상태 - 유저네임 옆으로 이동 -->
@@ -68,19 +60,6 @@
                     class="inline-flex items-center px-2 py-1 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-800 transition-colors">
                     <span class="mr-1"></span> 공식 팬덤 인증
                   </a>
-                {% endif %}
-              </div>
-
-              <!-- 소셜 로그인 뱃지 -->
-              <div class="flex items-center gap-2">
-                {% if user_profile.username|slice:":6" == "kakao_" %}
-                  <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
-                    카카오
-                  </span>
-                {% elif user_profile.username|slice:":6" == "naver_" %}
-                  <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-50 text-green-700 border border-green-200">
-                    네이버
-                  </span>
                 {% endif %}
               </div>
             </div>
@@ -491,7 +470,7 @@
             <div class="space-y-3 sm:space-y-4" id="farm-reviewed-items">
               {% for r in my_reviews %}
                 <div class="p-3 sm:p-4 lg:p-5 bg-white rounded-xl border border-gray-200 farm-reviewed-item" style="display: none;">
-                  <p class="text-gray-900 font-medium text-sm sm:text-base">판매자: {{ r.target_user.first_name|default:r.target_user.username }}</p>
+                  <p class="text-gray-900 font-medium text-sm sm:text-base">판매자: {{ r.target_user.username }}</p>
                   <p class="text-gray-800 font-medium text-sm sm:text-base mt-1">평점: {{ r.rating }}점</p>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm mt-2 sm:mt-3">

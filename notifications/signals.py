@@ -7,6 +7,7 @@ from ddokchat.models import Message
 from accounts.models import User, FandomProfile
 from ddoksang.models import BdayCafe
 from .models import Notification
+from utils.redis_client import redis_client
 
 
 # 1. ✅ 개선된 댓글 관련 알림 (그룹핑 적용)
@@ -53,10 +54,10 @@ def create_comment_notification(sender, instance, created, **kwargs):
             )
 
 
-# 2. ✅ 개선된 채팅 관련 알림 (그룹핑 적용) - 기존과 동일
+# 2. ✅ 개선된 채팅 관련 알림 (Redis 기반 위치 확인 + 그룹핑 적용)
 @receiver(post_save, sender=Message)
 def create_chat_notification(sender, instance, created, **kwargs):
-    """채팅 메시지 발송 시 알림 생성 (그룹핑 적용)"""
+    """채팅 메시지 발송 시 알림 생성 (Redis 기반 위치 확인 + 그룹핑 적용)"""
     if not created:
         return
     
@@ -71,6 +72,19 @@ def create_chat_notification(sender, instance, created, **kwargs):
     
     # 받는 사람과 보내는 사람이 다를 때만 알림 생성
     if recipient != message.sender:
+        # ✅ Redis에서 받는 사람의 현재 위치 확인
+        try:
+            current_room_code = redis_client.get_user_current_chatroom(recipient.id)
+            print(f"🔍 Redis 조회 결과: current={current_room_code}, target={room.room_code}")
+            
+            if current_room_code == room.room_code:
+                print(f"🚫 알림 차단됨!")
+                return
+            else:
+                print(f"📨 알림 생성 진행...")
+        except Exception as e:
+            print(f"❌ Redis 오류: {e}")
+        
         # 🎯 그룹핑 로직 사용 (create_notification이 내부에서 처리)
         Notification.create_notification(
             recipient=recipient,

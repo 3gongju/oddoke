@@ -29,15 +29,7 @@
           <!-- Username and Follow Button -->
           <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
             <h1 class="text-3xl font-bold text-black font-heading">
-              {% if user_profile.first_name %}
-                {{ user_profile.first_name }}
-              {% elif user_profile.username|slice:":6" == "kakao_" %}
-                카카오 사용자
-              {% elif user_profile.username|slice:":6" == "naver_" %}
-                네이버 사용자
-              {% else %}
-                {{ user_profile.username }}
-              {% endif %}
+              {{ user_profile.username }}
             </h1>
 
             {% if user != user_profile %}

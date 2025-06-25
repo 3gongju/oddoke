@@ -380,55 +380,6 @@
 {% endblock %}
 
 {% block body %}
-<!-- 🔄 메인 배너 슬라이드 섹션 -->
-<section class="relative overflow-hidden bg-white">
-  <div class="swiper mainBannerSwiper">
-    <div class="swiper-wrapper">
-      <!-- 슬라이드 1: 랜딩페이지1 -->
-      <div class="swiper-slide">
-        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지1.jpg' %}" 
-               alt="어덕해 메인 소개" 
-               class="w-full h-full">
-        </div>
-      </div>
-      
-      <!-- 슬라이드 2: 랜딩페이지2 -->
-      <div class="swiper-slide">
-        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지222.jpg' %}" 
-               alt="아이돌 굿즈 중고거래 덕담" 
-               class="w-full h-full">
-        </div>
-      </div>
-      
-      <!-- 슬라이드 3: 랜딩페이지3 -->
-      <div class="swiper-slide">
-        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지33.jpg' %}" 
-               alt="아이돌 덕질 커뮤니티 덕담" 
-               class="w-full h-full">
-        </div>
-      </div>
-      
-      <!-- 슬라이드 4: 랜딩페이지4 -->
-      <div class="swiper-slide">
-        <div class="w-full h-full bg-white flex items-center justify-center overflow-hidden">
-          <img src="{% static 'image/랜딩페이지444.jpg' %}" 
-               alt="아이돌 생일카페 정보 덕생" 
-               class="w-full h-full">
-        </div>
-      </div>
-    </div>
-    
-    <!-- 페이지네이션 -->
-    <div class="swiper-pagination !bottom-4"></div>
-    
-    <!-- 네비게이션 버튼 -->
-    <div class="swiper-button-next !text-white"></div>
-    <div class="swiper-button-prev !text-white"></div>
-  </div>
-</section>
 
 <!-- 히어로 섹션 - 모바일 최적화 -->
 <section class="relative overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
@@ -527,6 +478,66 @@
     </div>
   </div>
 </section>
+
+
+<!-- 찜한 아티스트 바로가기 버튼들 -->
+{% if raw_favs %}
+<section class="py-6 sm:py-8 bg-gradient-to-r from-red-50 to-pink-50">
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div class="text-center mb-4 sm:mb-6">
+      <h3 class="font-heading text-base sm:text-lg font-semibold text-gray-800 mb-2 flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-red-500">
+          <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+        </svg>
+        찜한 덕의 최신 소식
+      </h3>
+      <p class="text-xs sm:text-sm text-gray-600">찜한 아티스트들의 게시물만 모아서 확인하세요</p>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+      <!-- 덕팜 찜한 아티스트 보기 -->
+      <a href="{% url 'ddokfarm:index' %}?favorites_only=on" 
+         class="group flex items-center gap-3 bg-white hover:bg-red-50 border-2 border-red-200 hover:border-red-300 rounded-lg px-4 py-3 transition-all duration-300 shadow-sm hover:shadow-md w-full sm:w-auto">
+        <div class="flex items-center gap-2">
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="덕팜" class="w-6 h-6">
+          <span class="font-semibold text-gray-800 group-hover:text-red-700">덕팜</span>
+        </div>
+        <div class="flex items-center gap-1 text-red-600">
+          <span class="text-sm font-medium">찜한 덕 거래</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 group-hover:translate-x-1 transition-transform">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </div>
+      </a>
+
+      <!-- 덕담 찜한 아티스트 보기 -->
+      <a href="{% url 'ddokdam:index' %}?favorites_only=on" 
+         class="group flex items-center gap-3 bg-white hover:bg-red-50 border-2 border-red-200 hover:border-red-300 rounded-lg px-4 py-3 transition-all duration-300 shadow-sm hover:shadow-md w-full sm:w-auto">
+        <div class="flex items-center gap-2">
+          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="덕담" class="w-6 h-6">
+          <span class="font-semibold text-gray-800 group-hover:text-red-700">덕담</span>
+        </div>
+        <div class="flex items-center gap-1 text-red-600">
+          <span class="text-sm font-medium">찜한 덕 생활</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 group-hover:translate-x-1 transition-transform">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </div>
+      </a>
+    </div>
+
+    <!-- 찜한 아티스트 미니 통계 -->
+    <div class="mt-4 sm:mt-6 text-center">
+      <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/60 rounded-full text-xs text-gray-600">
+        <span>현재 {{ raw_favs|length }}개 아티스트를 찜하고 있어요</span>
+        <a href="{% url 'artist:index' %}" class="text-red-600 hover:text-red-700 font-medium underline">
+          관리하기
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
 
 <!-- 배너 캐러셀 섹션 - 모바일 최적화 -->
 <section class="py-4 sm:py-10 lg:py-12 bg-white">

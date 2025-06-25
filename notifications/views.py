@@ -30,7 +30,7 @@ def notification_list(request):
                 'message': notification.message,
                 'is_read': notification.is_read,
                 'created_at': notification.created_at.isoformat(),
-                'actor_name': notification.actor.first_name or notification.actor.username,
+                'actor_name': notification.actor.username,
                 'actor_username': notification.actor.username,
                 'time_since': get_time_since(notification.created_at),
             })

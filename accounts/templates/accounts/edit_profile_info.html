@@ -90,33 +90,22 @@
       </div>
 
       <!-- 닉네임 수정 섹션 -->
-      <div class="mb-6 sm:mb-8">
-        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
-          닉네임
-        </div>
-        
+      <div class="mb-6 sm:mb-8">        
         <div class="bg-white">
           <!-- 닉네임 표시 -->
           <div id="nickname-display" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
             <div class="flex justify-between items-start">
               <div class="flex-1">
                 <div class="text-base sm:text-lg font-medium text-gray-900">
-                  현재 닉네임
-                  {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
-                    <span class="text-blue-600 text-xs">(소셜 로그인)</span>
-                  {% endif %}
+                  닉네임
                 </div>
                 <div class="text-sm sm:text-base text-gray-500 mt-1">
-                  {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
-                    이 닉네임이 게시글과 댓글에 표시됩니다
-                  {% else %}
-                    다른 사용자들에게 표시되는 이름입니다
-                  {% endif %}
+                  다른 사용자들에게 표시되는 이름입니다
                 </div>
               </div>
               <div class="ml-4 flex flex-col items-end">
                 <p class="text-base sm:text-lg font-medium text-gray-800 mb-2" id="current-nickname">
-                  {{ user_profile.display_name }}
+                  {{ user_profile.username }}
                 </p>
                 <button id="edit-nickname-btn" class="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
                   수정
@@ -131,22 +120,18 @@
               {% csrf_token %}
               <div class="space-y-4">
                 <div>
-                  <input type="text" id="new-nickname" name="first_name" 
-                         value="{{ user_profile.first_name|default:'' }}"
-                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base" 
-                         placeholder="{% if user_profile.social_signup_completed or user_profile.is_temp_username %}새로운 닉네임을 입력하세요{% else %}닉네임을 입력하세요{% endif %}">
+                  <input type="text" id="new-nickname" name="username" 
+                        value="{{ user_profile.username }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base" 
+                        placeholder="새로운 닉네임을 입력하세요">
                 </div>
                 
                 <div class="bg-blue-50 p-3 rounded-lg">
                   <p class="text-xs sm:text-sm text-blue-700">
-                    <strong>닉네임 설정 팁</strong><br>
+                    <strong>닉네임 변경 안내</strong><br>
                     • 2-20자의 한글, 영문, 숫자 사용 가능<br>
-                    • 언제든 변경할 수 있습니다<br>
-                    {% if user_profile.social_signup_completed or user_profile.is_temp_username %}
-                      • 변경한 닉네임이 모든 게시글과 댓글에 즉시 반영됩니다
-                    {% else %}
-                      • 다른 사용자들이 쉽게 기억할 수 있는 이름을 추천해요
-                    {% endif %}
+                    • 중복되지 않는 고유한 이름이어야 합니다<br>
+                    • 모든 게시글과 댓글에 즉시 반영됩니다
                   </p>
                 </div>
                 
@@ -166,82 +151,14 @@
         </div>
       </div>
 
-      <!-- 프로필 이름 수정 (일반 사용자만) -->
-      {% if not user_profile.social_signup_completed and not user_profile.is_temp_username %}
-      <div class="mb-6 sm:mb-8">
-        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
-          프로필 이름
-        </div>
-        
-        <div class="bg-white">
-          <!-- 프로필 이름 표시 -->
-          <div id="username-display" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
-            <div class="flex justify-between items-start">
-              <div class="flex-1">
-                <div class="text-base sm:text-lg font-medium text-gray-900">현재 프로필 이름</div>
-                <div class="text-sm sm:text-base text-gray-500 mt-1">프로필 URL에 사용되는 이름입니다</div>
-              </div>
-              <div class="ml-4 flex flex-col items-end">
-                <p class="text-base sm:text-lg font-medium text-gray-800 mb-2" id="current-username">
-                  {{ user_profile.username }}
-                </p>
-                <button id="edit-username-btn" class="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-                  수정
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 프로필 이름 수정 폼 -->
-          <div id="username-edit-form" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-gray-100" style="display: none;">
-            <form method="POST" action="{% url 'accounts:edit_profile_info' user_profile.username %}">
-              {% csrf_token %}
-              <div class="space-y-4">
-                <div>
-                  <input type="text" id="new-username" name="username" 
-                         value="{{ user_profile.username }}"
-                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base" 
-                         placeholder="새로운 프로필 이름을 입력하세요">
-                </div>
-                
-                <div class="bg-green-50 p-3 rounded-lg">
-                  <p class="text-xs sm:text-sm text-green-700">
-                    <strong>프로필 이름 안내</strong><br>
-                    • 프로필 URL에 사용됩니다 (예: /accounts/profile/새이름/)<br>
-                    • 중복되지 않는 고유한 이름이어야 합니다<br>
-                    • 영문, 숫자, 특수문자 사용 가능
-                  </p>
-                </div>
-                
-                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-                  <button type="button" id="cancel-username-btn"
-                          class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-                    취소
-                  </button>
-                  <button type="submit"
-                          class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
-                    저장
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
       <!-- 소개글 수정 섹션 -->
-      <div class="mb-6 sm:mb-8">
-        <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
-          소개
-        </div>
-        
+      <div class="mb-6 sm:mb-8">       
         <div class="bg-white">
           <!-- 소개글 표시 -->
           <div id="bio-display" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
             <div class="flex justify-between items-start">
               <div class="flex-1">
-                <div class="text-base sm:text-lg font-medium text-gray-900">현재 소개글</div>
+                <div class="text-base sm:text-lg font-medium text-gray-900">소개글</div>
                 <div class="text-sm sm:text-base text-gray-500 mt-1">자신을 간단히 소개해보세요</div>
               </div>
               <div class="ml-4 flex flex-col items-end">
