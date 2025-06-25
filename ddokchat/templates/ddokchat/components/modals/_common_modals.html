@@ -27,7 +27,7 @@
     <!-- 폼 내용 -->
     <form method="POST" action="{% url 'accounts:review_home' username=room.seller.username %}" class="p-6">
       {% csrf_token %}
-      <input type="hidden" name="chatroom_id" value="{{ room.id }}">
+      <input type="hidden" name="chatroom_code" value="{{ room.code }}">
       
       <div class="space-y-6">
         {{ form.as_p }}

@@ -27,7 +27,7 @@
 {% include 'ddokchat/components/modals/_common_modals.html' %}
 
 <!-- 🔥 신고 모달 추가 -->
-{% include 'components/_report_modal.html' with target_user=other_user report_type="사용자" %}
+{% include 'components/_report_modal.html' with target_user=other_user report_type="사용자" hide_button=True %}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.js"></script>
 
@@ -126,8 +126,8 @@ body {
 </style>
 
 <script>
-  // 전역 변수 설정
-  window.roomId = "{{ room.id }}";
+  // 전역 변수 설정 - 
+  window.roomCode = "{{ room.room_code }}";
   window.currentUser = "{{ current_user.username }}";
   window.currentUserId = "{{ current_user.id }}";
   window.isTradeCompleted = "{{ room.is_fully_completed }}" === "True";

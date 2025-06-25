@@ -27,13 +27,13 @@ import json
 
 # 채팅방
 @login_required 
-def chat_room(request, room_id):
+def chat_room(request, room_code):
     # N+1 해결: 관련 데이터 한번에 로드
     room = get_object_or_404(
         ChatRoom.objects.select_related(
             'buyer', 'seller', 'content_type'  # content_type도 추가
         ),
-        id=room_id
+        room_code=room_code
     )
 
     current_user = request.user
@@ -146,7 +146,7 @@ def get_or_create_chatroom(request, category, post_id):
         seller=post.user,
     )
 
-    return redirect('ddokchat:chat_room', room_id=room.id)
+    return redirect('ddokchat:chat_room', room_code=room.room_code)
 
 # ✅ 새로운 최적화된 내 채팅 목록
 @login_required
@@ -527,21 +527,20 @@ def _calculate_split_participant_total_price(post, application):
         print(f"분철 참여자 가격 계산 오류: {e}")
         return 0
 
-# 기존 함수들 유지...
 @login_required
 @require_POST
 def upload_image(request):
-    if 'image' not in request.FILES or 'room_id' not in request.POST:
+    if 'image' not in request.FILES or 'room_code' not in request.POST:
         return JsonResponse({'success': False, 'error': '요청이 잘못되었습니다.'}, status=400)
 
     image_file = request.FILES['image']
-    room_id = request.POST['room_id']
+    room_code = request.POST['room_code']
     
     # ✅ EXIF 데이터 받기
     taken_datetime_str = request.POST.get('taken_datetime')  # ISO 8601 형식
 
     try:
-        room = ChatRoom.objects.get(id=room_id)
+        room = ChatRoom.objects.get(room_code=room_code)
         
         if not room.is_participant(request.user):
             return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
@@ -606,8 +605,8 @@ def upload_image(request):
 
 @require_POST
 @login_required
-def complete_trade(request, room_id):
-    room = get_object_or_404(ChatRoom, id=room_id)
+def complete_trade(request, room_code):
+    room = get_object_or_404(ChatRoom, room_code=room_code)
     current_user = request.user
 
     if not room.is_participant(current_user):
@@ -637,10 +636,10 @@ def complete_trade(request, room_id):
         
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"chat_{room.id}",
+            f"chat_{room.room_code}",  # ✅ room_code 사용
             {
                 "type": "trade_completed_notification",
-                "room_id": room.id,
+                "room_code": room.room_code,
             }
         )
 
@@ -678,10 +677,10 @@ def delete_sensitive_info(room):
 # ✅ 수정된 계좌 정보 메시지 전송 함수 (읽음 처리 개선)
 @require_POST
 @login_required
-def send_account_info(request, room_id):
+def send_account_info(request, room_code):
     """계좌정보 전송"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code)
         sender = request.user
         
         # 채팅방 참여자 확인
@@ -750,10 +749,10 @@ def send_account_info(request, room_id):
 # ✅ 수정된 주소 정보 메시지 전송 함수 (읽음 처리 개선)
 @require_POST
 @login_required
-def send_address_info(request, room_id):
+def send_address_info(request, room_code):
     """배송정보 전송 - 핸드폰 번호 포함"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code)
         sender = request.user
         
         # 채팅방 참여자 확인
@@ -976,15 +975,14 @@ def get_or_create_split_chatroom(request, post_id, user_id):
         seller=request.user,  # 총대(게시글 작성자)를 seller로
     )
     
-    return redirect('ddokchat:chat_room', room_id=room.id)
-
+    return redirect('ddokchat:chat_room', room_code=room.room_code)
 
 @login_required
 @require_POST
-def report_trade_user(request, room_id):
+def report_trade_user(request, room_code):
     """덕팜 거래 사기 신고 처리"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code) 
         reporter = request.user
         
         # 채팅방 참여자 확인
@@ -1027,7 +1025,7 @@ def report_trade_user(request, room_id):
             report.save()
             
             # 신고 접수 완료 로그
-            print(f"✅ 거래 신고 접수: {reporter.username} → {reported_user.username} (채팅방 #{room.id})")
+            print(f"거래 신고 접수: {reporter.username} → {reported_user.username} (채팅방 #{room.room_code})")
             
             return JsonResponse({
                 'success': True,
@@ -1054,10 +1052,10 @@ def report_trade_user(request, room_id):
 
 
 @login_required
-def get_trade_report_form(request, room_id):
+def get_trade_report_form(request, room_code): 
     """거래 신고 폼 HTML 반환"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code) 
         
         # 채팅방 참여자 확인
         if not room.is_participant(request.user):
@@ -1111,10 +1109,10 @@ def get_trade_report_form(request, room_id):
 
 
 @login_required  
-def view_user_info(request, room_id):
+def view_user_info(request, room_code): 
     """거래자 정보 보기"""
     try:
-        room = get_object_or_404(ChatRoom, id=room_id)
+        room = get_object_or_404(ChatRoom, room_code=room_code) 
         
         # 채팅방 참여자 확인
         if not room.is_participant(request.user):
