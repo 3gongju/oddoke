@@ -228,20 +228,6 @@ function showUserInfo() {
   }
 }
 
-// 신고하기 함수
-// function showReportModal() {
-//   const otherUser = getOtherUserUsername();
-  
-//   if (!otherUser) {
-//     showToast('신고할 사용자 정보를 찾을 수 없습니다.', 'error');
-//     return;
-//   }
-  
-//   if (confirm(`'${otherUser}' 사용자를 신고하시겠습니까?\n\n신고 사유:\n• 사기/허위 거래\n• 욕설/비방\n• 불법 상품 거래\n• 기타 부적절한 행위\n\n신고 후 관리자가 검토합니다.`)) {
-//     handleUserReport(otherUser);
-//   }
-// }
-
 // 상대방 사용자명 가져오기 함수
 function getOtherUserUsername() {
   const userNameElement = document.querySelector('.bg-gray-50 h2.font-semibold');
