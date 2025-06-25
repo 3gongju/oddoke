@@ -528,46 +528,34 @@ def settings_main(request, username):
 
 @login_required
 def edit_profile_info(request, username):
+    """회원 정보 수정 - 간소화된 버전"""
     user_profile = get_object_or_404(User, username=username)
 
     if request.method == "POST":
         new_username = request.POST.get("username")
         new_bio = request.POST.get("bio")
-        new_first_name = request.POST.get("first_name")  # 닉네임 추가
 
-        # 닉네임 수정 (first_name 필드에 저장)
-        if new_first_name and new_first_name != request.user.first_name:
-            # 기본 유효성 검사
-            new_first_name = new_first_name.strip()
+        # 🔥 username 변경 (모든 사용자 동일하게 처리)
+        if new_username and new_username != request.user.username:
+            new_username = new_username.strip()
             
-            if len(new_first_name) < 2:
+            if len(new_username) < 2:
                 messages.error(request, "닉네임은 최소 2자 이상이어야 합니다.")
                 return redirect('accounts:edit_profile_info', username=request.user.username)
             
-            if len(new_first_name) > 20:
+            if len(new_username) > 20:
                 messages.error(request, "닉네임은 최대 20자까지 입력 가능합니다.")
                 return redirect('accounts:edit_profile_info', username=request.user.username)
             
-            # 소셜 로그인 사용자는 first_name을 닉네임으로 사용
-            request.user.first_name = new_first_name
+            if User.objects.filter(username=new_username).exists():
+                messages.error(request, "이미 존재하는 닉네임입니다.")
+                return redirect('accounts:edit_profile_info', username=request.user.username)
+            
+            # username 업데이트
+            request.user.username = new_username
             request.user.save()
             messages.success(request, "닉네임이 수정되었습니다.")
             return redirect('accounts:edit_profile_info', username=request.user.username)
-
-        # 일반 사용자용 username 변경 (소셜 로그인 사용자에게는 권장하지 않음)
-        if new_username and new_username != request.user.username:
-            # 소셜 로그인 사용자는 username 변경 제한
-            if request.user.social_signup_completed or request.user.is_temp_username:
-                messages.warning(request, "소셜 로그인 사용자는 위의 '닉네임' 필드를 이용해주세요.")
-                return redirect('accounts:edit_profile_info', username=request.user.username)
-                
-            if User.objects.filter(username=new_username).exists():
-                messages.error(request, "이미 존재하는 사용자 이름입니다.")
-            else:
-                request.user.username = new_username
-                request.user.save()
-                messages.success(request, "프로필 이름이 수정되었습니다.")
-                return redirect('accounts:edit_profile_info', username=request.user.username)
 
         # 소개 수정
         if new_bio is not None and new_bio != request.user.bio:
@@ -581,7 +569,7 @@ def edit_profile_info(request, username):
     context = {
         'user_profile': user_profile,
         'fandom_profile': fandom_profile,
-        'artist_list': Artist.objects.all(),  # 아티스트 목록 전달
+        'artist_list': Artist.objects.all(),
     }
     return render(request, 'accounts/edit_profile_info.html', context)
 
@@ -902,11 +890,11 @@ def address_delete(request, username):
 
 @login_required
 def social_signup_complete(request):
-    """소셜 로그인 후 추가 정보 입력 페이지 (필수)"""
+    """소셜 로그인 후 username 설정 페이지"""
     
     print(f"social_signup_complete 진입: {request.user.username}")
     
-    # 이미 프로필을 완성한 사용자는 메인 페이지로 리다이렉트
+    # 이미 가입 완료한 사용자는 메인으로
     if request.user.social_signup_completed:
         print("이미 프로필 완성됨 → 메인으로")
         return redirect('/')
@@ -918,10 +906,12 @@ def social_signup_complete(request):
             print("폼 유효성 검사 통과")
             try:
                 user = form.save()
-                messages.success(request, f'환영합니다, {user.username}님!')
+                # 🔥 소셜 가입 완료 표시
+                user.social_signup_completed = True
+                user.save()
                 
-                 # 소셜 가입 완료 후 아티스트 페이지로 
-                return redirect('artist:index')  # 메인이 아닌 아티스트 페이지로
+                messages.success(request, f'환영합니다, {user.username}님!')
+                return redirect('artist:index')
                 
             except Exception as e:
                 import traceback

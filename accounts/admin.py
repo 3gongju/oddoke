@@ -1,4 +1,4 @@
-# accounts/admin.py
+# accounts/admin.py 수정 버전
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPoint, DdokPointLog
@@ -11,27 +11,24 @@ from datetime import timedelta
 class UserAdmin(BaseUserAdmin):
     list_display = (
         'username', 'email', 'is_active', 'date_joined',
-        'is_temp_username', 'social_signup_completed', 'suspension_status_display'
+        'social_type_display', 'suspension_status_display'
     )
     
     list_filter = (
         'is_active', 'is_staff', 'is_superuser', 
-        'is_temp_username', 'social_signup_completed', 'date_joined',
-        'suspension_start', 'suspension_end'
+        'date_joined', 'suspension_start', 'suspension_end'
     )
     
-    search_fields = ('username', 'email', 'first_name', 'last_name')
+    search_fields = ('username', 'email', 'first_name', 'last_name', 'kakao_id', 'naver_id', 'google_id')
     
     ordering = ('-date_joined',)
 
     fieldsets = BaseUserAdmin.fieldsets + (
         ('소셜 로그인 정보', {
             'fields': (
-                'is_temp_username',
-                'social_signup_completed', 
-                'is_profile_completed',
                 'kakao_id',
                 'naver_id',
+                'google_id',
             ),
         }),
         ('프로필 정보', {
@@ -48,6 +45,18 @@ class UserAdmin(BaseUserAdmin):
             ),
         }),
     )
+    
+    def social_type_display(self, obj):
+        """소셜 로그인 타입 표시"""
+        if obj.kakao_id:
+            return format_html('<span style="color: #fee500; font-weight: bold;">카카오</span>')
+        elif obj.naver_id:
+            return format_html('<span style="color: #03c75a; font-weight: bold;">네이버</span>')
+        elif obj.google_id:
+            return format_html('<span style="color: #ea4335; font-weight: bold;">구글</span>')
+        else:
+            return format_html('<span style="color: gray;">일반</span>')
+    social_type_display.short_description = '가입 방식'
     
     def suspension_status_display(self, obj):
         """제재 상태 표시"""
@@ -117,6 +126,7 @@ class UserAdmin(BaseUserAdmin):
         'suspend_14_days', 'permanent_ban'
     ]
 
+# 나머지 Admin 클래스들은 그대로 유지...
 @admin.register(FandomProfile)
 class FandomProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -186,18 +196,15 @@ class FandomProfileAdmin(admin.ModelAdmin):
 
 @admin.register(BankProfile)
 class BankProfileAdmin(admin.ModelAdmin):
-    # 🔥 BankProfile 모델에 실제 있는 필드들만 사용
     list_display = (
         'user', 'bank_name', 'masked_account_number', 
         'account_holder', 'created_at'
     )
     
-    # 🔥 BankProfile 모델의 실제 필드들로 필터 수정
     list_filter = ('bank_name', 'created_at', 'updated_at')
     
     search_fields = ('user__username', 'user__email', 'account_holder')
     
-    # 🔥 BankProfile 모델의 실제 필드들로 readonly_fields 수정
     readonly_fields = ['created_at', 'updated_at']
     
     fieldsets = (
@@ -281,7 +288,6 @@ class MannerReviewAdmin(admin.ModelAdmin):
             'fields': ('created_at',)
         }),
     )
-
 
 @admin.register(PostReport)
 class PostReportAdmin(admin.ModelAdmin):

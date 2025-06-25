@@ -1,4 +1,3 @@
-# accounts/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django_resized import ResizedImageField
@@ -25,18 +24,15 @@ class User(AbstractUser):
     followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     bio = models.TextField(blank=True, null=True)
    
-    # 소셜 로그인 관련
-    is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
+    # 소셜 로그인 관련 - 간소화
     social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
-    is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
    
-    #  소셜 로그인 ID 저장 필드 추가
+    # 소셜 로그인 ID 저장 필드
     kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
     naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
     google_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="구글 ID")
 
-
-    #  제재 관련 필드 추가
+    # 제재 관련 필드
     suspension_start = models.DateTimeField(blank=True, null=True, verbose_name="제재 시작일")
     suspension_end = models.DateTimeField(blank=True, null=True, verbose_name="제재 종료일")
     suspension_reason = models.TextField(blank=True, null=True, verbose_name="제재 사유")
@@ -72,34 +68,27 @@ class User(AbstractUser):
         profile, created = AddressProfile.objects.get_or_create(user=self)
         return profile
 
+    # 🔥 간소화된 표시 이름 - username만 사용
     @property
     def display_name(self):
-        """화면에 표시할 이름 반환"""
-        # 🔥 1순위: first_name이 있으면 우선 사용 (프로필 관리에서 변경한 닉네임)
-        if self.first_name and self.first_name.strip():
-            return self.first_name
-        
-        # 🔥 2순위: 소셜 가입이 완료되고 임시 사용자명이 아닌 경우 username 사용
-        if self.social_signup_completed and not self.is_temp_username:
-            return self.username
-        
-        # 🔥 3순위: 임시 사용자명인 경우 (아직 프로필 완성하지 않은 경우)
-        if self.is_temp_username:
-            if self.username.startswith('temp_kakao_'):
-                return "카카오 사용자"
-            elif self.username.startswith('temp_naver_'):
-                return "네이버 사용자"
-            elif self.username.startswith('temp_google_'):
-                return "구글 사용자"
-            else:
-                return "새로운 사용자"
-        
-        # 🔥 4순위: 기본적으로 username 반환
+        """화면에 표시할 이름 - username만 사용"""
         return self.username
    
     @property
     def is_social_user(self):
-        return self.username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_'))
+        """소셜 로그인 사용자인지 확인"""
+        return bool(self.kakao_id or self.naver_id or self.google_id)
+
+    @property
+    def social_provider(self):
+        """소셜 로그인 제공자 반환"""
+        if self.kakao_id:
+            return 'kakao'
+        elif self.naver_id:
+            return 'naver'
+        elif self.google_id:
+            return 'google'
+        return None
 
     @property
     def is_suspended(self):
@@ -110,15 +99,12 @@ class User(AbstractUser):
         from django.utils import timezone
         now = timezone.now()
         
-        # 제재 시작일이 현재보다 미래면 아직 제재 아님
         if self.suspension_start > now:
             return False
         
-        # 제재 종료일이 없으면 영구정지
         if not self.suspension_end:
             return True
         
-        # 제재 종료일이 현재보다 미래면 제재 중
         return self.suspension_end > now
 
     @property
@@ -152,7 +138,7 @@ class User(AbstractUser):
         elif days:
             self.suspension_end = timezone.now() + timezone.timedelta(days=days)
         else:
-            self.suspension_end = None  # 영구정지
+            self.suspension_end = None
         
         self.save(update_fields=['suspension_start', 'suspension_end', 'suspension_reason'])
 
@@ -167,7 +153,6 @@ class User(AbstractUser):
         """사용자의 DdokPoint 인스턴스를 가져오거나 생성합니다."""
         ddok_point, created = DdokPoint.objects.get_or_create(user=self)
         return ddok_point
-
 
 class FandomProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
