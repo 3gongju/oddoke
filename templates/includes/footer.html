@@ -1,0 +1,388 @@
+<!-- Footer Section -->
+<footer class="bg-gray-50 border-t border-gray-200 mt-16">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <!-- Desktop Footer -->
+    <div class="hidden md:grid md:grid-cols-4 gap-8 lg:gap-12">
+      <!-- 왼쪽 섹션: 이용안내 -->
+      <div>
+        <h3 class="font-bold text-black mb-4 font-heading">이용안내</h3>
+        <ul class="space-y-2 text-sm text-gray-600 font-body">
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="terms">이용약관</a></li>
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="privacy">개인정보처리방침</a></li>
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="communityRules">커뮤니티 규칙</a></li>
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="artistList">아티스트 목록</a></li>
+        </ul>
+      </div>
+
+      <!-- 가운데 섹션: 서비스 -->
+      <div>
+        <h3 class="font-bold text-black mb-4 font-heading">서비스</h3>
+        <ul class="space-y-2 text-sm text-gray-600 font-body">
+          <li><a href="/ddokfarm/" class="hover:text-black transition-colors">덕팜 (굿즈 거래)</a></li>
+          <li><a href="/ddokdam/" class="hover:text-black transition-colors">덕담 (커뮤니티)</a></li>
+          <li><a href="/ddoksang/" class="hover:text-black transition-colors">덕생 (생일카페)</a></li>
+          <li><a href="/bday_calendar/" class="hover:text-black transition-colors">생일 캘린더</a></li>
+        </ul>
+      </div>
+
+      <!-- 빈 공간 (간격 만들기) -->
+      <div></div>
+
+      <!-- 오른쪽 섹션: 고객지원 -->
+      <div>
+        <h3 class="font-bold text-black mb-4 font-heading">고객지원</h3>
+        <ul class="space-y-2 text-sm text-gray-600 font-body">
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="notice">공지사항</a></li>
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="report">신고/문의</a></li>
+          <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="contact">운영진 연락처</a></li>
+        </ul>
+        
+        <!-- 소셜미디어 -->
+        <div class="mt-6">
+          <h4 class="font-semibold text-black mb-3 font-heading">소셜미디어</h4>
+          <a href="https://x.com/oddoke_official" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             class="inline-flex items-center text-gray-600 hover:text-black transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 50 50" class="mr-2">
+              <path d="M 11 4 C 7.1456661 4 4 7.1456661 4 11 L 4 39 C 4 42.854334 7.1456661 46 11 46 L 39 46 C 42.854334 46 46 42.854334 46 39 L 46 11 C 46 7.1456661 42.854334 4 39 4 L 11 4 z M 11 6 L 39 6 C 41.773666 6 44 8.2263339 44 11 L 44 39 C 44 41.773666 41.773666 44 39 44 L 11 44 C 8.2263339 44 6 41.773666 6 39 L 6 11 C 6 8.2263339 8.2263339 6 11 6 z M 13.085938 13 L 22.308594 26.103516 L 13 37 L 15.5 37 L 23.4375 27.707031 L 29.976562 37 L 37.914062 37 L 27.789062 22.613281 L 36 13 L 33.5 13 L 26.660156 21.009766 L 21.023438 13 L 13.085938 13 z M 16.914062 15 L 19.978516 15 L 34.085938 35 L 31.021484 35 L 16.914062 15 z"></path>
+            </svg>
+            <span class="text-sm font-body">트위터</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Footer -->
+    <div class="md:hidden space-y-4">
+      <!-- 모바일 섹션들 -->
+      <div class="border border-gray-200 rounded-lg">
+        <button class="mobile-footer-toggle w-full flex justify-between items-center p-4 text-left" data-target="mobile-usage">
+          <span class="font-bold text-black font-heading">이용안내</span>
+          <svg class="w-5 h-5 text-gray-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="mobile-usage" class="hidden border-t border-gray-200 p-4 space-y-2">
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="terms">이용약관</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="privacy">개인정보처리방침</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="communityRules">커뮤니티 규칙</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="artistList">아티스트 목록</a>
+        </div>
+      </div>
+
+      <div class="border border-gray-200 rounded-lg">
+        <button class="mobile-footer-toggle w-full flex justify-between items-center p-4 text-left" data-target="mobile-service">
+          <span class="font-bold text-black font-heading">서비스</span>
+          <svg class="w-5 h-5 text-gray-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="mobile-service" class="hidden border-t border-gray-200 p-4 space-y-2">
+          <a href="/ddokfarm/" class="block text-sm text-gray-600 hover:text-black font-body">덕팜 (굿즈 거래)</a>
+          <a href="/ddokdam/" class="block text-sm text-gray-600 hover:text-black font-body">덕담 (커뮤니티)</a>
+          <a href="/ddoksang/" class="block text-sm text-gray-600 hover:text-black font-body">덕생 (생일카페)</a>
+          <a href="/bday_calendar/" class="block text-sm text-gray-600 hover:text-black font-body">생일 캘린더</a>
+        </div>
+      </div>
+
+      <div class="border border-gray-200 rounded-lg">
+        <button class="mobile-footer-toggle w-full flex justify-between items-center p-4 text-left" data-target="mobile-support">
+          <span class="font-bold text-black font-heading">고객지원</span>
+          <svg class="w-5 h-5 text-gray-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        <div id="mobile-support" class="hidden border-t border-gray-200 p-4 space-y-2">
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="notice">공지사항</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="report">신고/문의</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="contact">운영진 연락처</a>
+          <a href="https://x.com/oddoke_official" target="_blank" class="block text-sm text-gray-600 hover:text-black font-body">트위터</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="mt-8 pt-6 border-t border-gray-300 text-center">
+      <p class="text-sm text-gray-500 font-body">© 2025 어덕해. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Footer Modals -->
+<!-- 이용약관 모달 -->
+<div id="termsModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">이용약관</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="termsModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-4 text-sm text-gray-700">
+          <h3 class="font-bold text-black">제1조 (목적)</h3>
+          <p>이 약관은 어덕해(이하 "서비스")가 제공하는 팬 커뮤니티 및 굿즈 거래 서비스의 이용조건 및 절차, 회원과 서비스 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+          
+          <h3 class="font-bold text-black">제2조 (정의)</h3>
+          <p>1. "서비스"란 어덕해가 제공하는 팬 커뮤니티, 굿즈 거래, 생일카페 정보 등의 서비스를 의미합니다.</p>
+          <p>2. "회원"이란 서비스에 접속하여 이 약관에 따라 서비스를 이용하는 고객을 말합니다.</p>
+          
+          <h3 class="font-bold text-black">제3조 (약관의 게시와 개정)</h3>
+          <p>서비스는 이 약관의 내용을 회원이 쉽게 알 수 있도록 서비스 화면에 게시합니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 개인정보처리방침 모달 -->
+<div id="privacyModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">개인정보처리방침</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="privacyModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-4 text-sm text-gray-700">
+          <h3 class="font-bold text-black">개인정보의 처리목적</h3>
+          <p>어덕해는 다음의 목적을 위하여 개인정보를 처리합니다.</p>
+          <ul class="list-disc list-inside space-y-1">
+            <li>회원 가입 및 관리</li>
+            <li>서비스 제공 및 계약의 이행</li>
+            <li>고객 문의 처리 및 고객 서비스 제공</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">처리하는 개인정보 항목</h3>
+          <p>필수항목: 이메일, 닉네임</p>
+          <p>선택항목: 프로필 이미지</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 커뮤니티 규칙 모달 -->
+<div id="communityRulesModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">커뮤니티 규칙</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="communityRulesModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-4 text-sm text-gray-700">
+          <h3 class="font-bold text-black">기본 원칙</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>상호 존중하며 예의를 지켜주세요</li>
+            <li>스팸, 도배, 광고성 게시물은 금지됩니다</li>
+            <li>타인의 개인정보를 무단으로 공유하지 마세요</li>
+            <li>건전한 팬 문화를 만들어가요</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">거래 시 주의사항</h3>
+          <ul class="list-disc list-inside space-y-1">
+            <li>안전한 거래를 위해 직거래를 권장합니다</li>
+            <li>의심스러운 거래는 즉시 신고해주세요</li>
+            <li>거래 관련 분쟁은 당사자 간 해결을 원칙으로 합니다</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 공지사항 모달 -->
+<div id="noticeModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">공지사항</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="noticeModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-6">
+          <div class="border-b border-gray-200 pb-4">
+            <h3 class="font-bold text-black mb-2">어덕해 서비스 정식 오픈 안내</h3>
+            <p class="text-xs text-gray-500 mb-2">2024.06.25</p>
+            <p class="text-sm text-gray-700">팬들을 위한 특별한 공간, 어덕해가 정식으로 오픈했습니다! 굿즈 거래부터 덕질 기록까지 함께해요.</p>
+          </div>
+          
+          <div class="border-b border-gray-200 pb-4">
+            <h3 class="font-bold text-black mb-2">안전한 거래를 위한 가이드라인</h3>
+            <p class="text-xs text-gray-500 mb-2">2024.06.20</p>
+            <p class="text-sm text-gray-700">사기 예방을 위한 안전거래 수칙을 확인해주세요. 의심스러운 거래는 언제든 신고해주시기 바랍니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 신고/문의 모달 -->
+<div id="reportModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">신고/문의</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="reportModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-4 text-sm text-gray-700">
+          <h3 class="font-bold text-black">신고 방법</h3>
+          <p>부적절한 게시물이나 사용자를 발견하시면 해당 게시물의 신고 버튼을 눌러주세요.</p>
+          
+          <h3 class="font-bold text-black">문의 방법</h3>
+          <p>서비스 이용 중 문의사항이 있으시면 아래 방법으로 연락주세요:</p>
+          <ul class="list-disc list-inside space-y-1">
+            <li>트위터 DM: @oddoke_official</li>
+            <li>FAQ 버튼을 통한 문의</li>
+          </ul>
+          
+          <h3 class="font-bold text-black">사기 신고</h3>
+          <p>다중 사기의 경우 온라인 신고센터를 이용해주세요:</p>
+          <a href="https://ecrm.police.go.kr/minwon/main" target="_blank" class="text-blue-600 hover:text-blue-800 underline">온라인 신고센터 바로가기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 아티스트 목록 모달 -->
+<div id="artistListModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">아티스트 목록</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="artistListModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-4 text-sm text-gray-700">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p class="font-bold text-black mb-2">현재 등록된 아티스트</p>
+            <p><strong>108개의 아티스트 그룹</strong></p>
+            <p><strong>총 600명의 멤버</strong></p>
+            <p>에 대한 게시글 확인 가능</p>
+          </div>
+          
+          <div class="space-y-3">
+            <h3 class="font-bold text-black">더 많은 아티스트 추가 예정</h3>
+            <p>어덕해는 지속적으로 새로운 아티스트 정보를 추가하고 있습니다.</p>
+            
+            <h3 class="font-bold text-black">원하는 아티스트 요청</h3>
+            <p>찾으시는 아티스트가 없나요? 어덕해 운영진에게 알려주세요!</p>
+            <p class="text-gray-600">트위터: @oddoke_official로 DM 보내기</p>
+          </div>
+          
+          <div class="text-center pt-4">
+            <a href="/artist/" class="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-semibold">
+              전체 아티스트 목록 보기
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 운영진 연락처 모달 -->
+<div id="contactModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">운영진 연락처</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="contactModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body">
+        <div class="space-y-4 text-sm text-gray-700">
+          <h3 class="font-bold text-black">연락처 안내</h3>
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <p><strong>트위터:</strong> @oddoke_official</p>
+            <p><strong>운영시간:</strong> 평일 10:00 - 18:00</p>
+            <p><strong>응답시간:</strong> 평일 기준 24시간 이내</p>
+          </div>
+          
+          <div class="mt-4">
+            <p class="text-red-600">※ 긴급한 사안(사기 신고 등)의 경우 FAQ 버튼을 통해 문의해주세요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 모바일 footer 토글
+  const mobileToggles = document.querySelectorAll('.mobile-footer-toggle');
+  
+  mobileToggles.forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const targetId = this.getAttribute('data-target');
+      const targetElement = document.getElementById(targetId);
+      const arrow = this.querySelector('svg');
+      
+      if (targetElement) {
+        targetElement.classList.toggle('hidden');
+        arrow.classList.toggle('rotate-180');
+      }
+    });
+  });
+  
+  // Footer modal 링크 처리
+  const footerLinks = document.querySelectorAll('.footer-link');
+  
+  footerLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const modalType = this.getAttribute('data-modal');
+      const modalId = modalType + 'Modal';
+      const modal = document.getElementById(modalId);
+      
+      if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  });
+  
+  // Modal 닫기
+  const modalCloseButtons = document.querySelectorAll('.modal-close');
+  
+  modalCloseButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const modalId = this.getAttribute('data-modal');
+      const modal = document.getElementById(modalId);
+      
+      if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      }
+    });
+  });
+  
+  // Modal 외부 클릭시 닫기
+  const modals = document.querySelectorAll('.footer-modal');
+  
+  modals.forEach(modal => {
+    modal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      }
+    });
+  });
+  
+  // ESC 키로 modal 닫기
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const openModals = document.querySelectorAll('.footer-modal:not(.hidden)');
+      openModals.forEach(modal => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      });
+    }
+  });
+});
+</script>
