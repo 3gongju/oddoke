@@ -1509,10 +1509,10 @@ function showBannerModal(formHtml) {
     existingModal.remove();
   }
   
-  // 모달 HTML 생성
+  // 모달 HTML 생성 - 크기 최적화 (위아래 여백 확보)
   const modalHTML = `
-    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
-      <div class="transform scale-95 opacity-0 transition-all duration-300" id="bannerModalContent">
+    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center py-8 px-4" style="background: rgba(0,0,0,0.5);">
+      <div class="transform scale-95 opacity-0 transition-all duration-300 w-full max-w-md mx-auto" id="bannerModalContent">
         ${formHtml}
       </div>
     </div>
@@ -1529,6 +1529,56 @@ function showBannerModal(formHtml) {
       modalContent.classList.add('scale-100', 'opacity-100');
     }
   }, 10);
+  
+  // 폼 제출 이벤트 바인딩
+  setTimeout(() => {
+    const form = document.getElementById('bannerRequestForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        // 필수 필드 확인
+        const artistName = formData.get('artist_name');
+        const bannerImage = formData.get('banner_image');
+        
+        if (!artistName || !bannerImage || bannerImage.size === 0) {
+          showToast('아티스트명과 배너 이미지를 모두 입력해주세요.', 'error');
+          return;
+        }
+        
+        // 서버로 전송
+        fetch('/accounts/banner-request/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            showToast(data.message, 'success');
+            closeBannerModal();
+            // 페이지 새로고침해서 업데이트된 포인트 표시
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            showToast(data.error, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('배너 신청 오류:', error);
+          showToast('배너 신청 중 오류가 발생했습니다.', 'error');
+        });
+      });
+    }
+  }, 100);
   
   // ESC 키로 모달 닫기
   const handleEscape = function(e) {
@@ -1579,209 +1629,5 @@ function showToast(message, type = 'info') {
     setTimeout(() => document.body.removeChild(toast), 300);
   }, 3000);
 }
-</script>
-
-<script>
-console.log('🔥 수정된 mypage.html JavaScript 로드됨');
-
-// CSRF 토큰 가져오기 함수
-function getCSRFToken() {
-  return document.querySelector('[name=csrfmiddlewaretoken]').value;
-}
-
-// 배너 신청 모달 관련 함수들
-function openBannerRequestModal() {
-  console.log('🔥 openBannerRequestModal 함수 호출됨');
-  
-  fetch('/accounts/banner-request/form/', {
-    method: 'GET',
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-CSRFToken': getCSRFToken()
-    }
-  })
-    .then(response => {
-      console.log('🔥 서버 응답 상태:', response.status);
-      return response.json();
-    })
-    .then(data => {
-      console.log('🔥 받은 데이터:', data);
-      if (data.success) {
-        showBannerModal(data.form_html);
-      } else {
-        console.error('🔥 폼 로드 실패:', data.error);
-        showToast(data.error, 'error');
-      }
-    })
-    .catch(error => {
-      console.error('🔥 배너 신청 폼 로드 오류:', error);
-      showToast('폼을 불러오는 중 오류가 발생했습니다.', 'error');
-    });
-}
-
-function showBannerModal(formHtml) {
-  console.log('🔥 showBannerModal 호출됨');
-  
-  // 기존 모달 제거
-  const existingModal = document.getElementById('bannerRequestModal');
-  if (existingModal) {
-    console.log('🔥 기존 모달 제거됨');
-    existingModal.remove();
-  }
-  
-  // 모달 HTML 생성
-  const modalHTML = `
-    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
-      <div class="transform scale-95 opacity-0 transition-all duration-300" id="bannerModalContent">
-        ${formHtml}
-      </div>
-    </div>
-  `;
-  
-  console.log('🔥 모달 HTML 생성됨');
-  
-  // body에 모달 추가
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-  
-  // 애니메이션 효과
-  setTimeout(() => {
-    const modalContent = document.getElementById('bannerModalContent');
-    if (modalContent) {
-      console.log('🔥 모달 애니메이션 적용됨');
-      modalContent.classList.remove('scale-95', 'opacity-0');
-      modalContent.classList.add('scale-100', 'opacity-100');
-    }
-  }, 10);
-  
-  // 🔥 폼 제출 이벤트 바인딩 - 중요!
-  setTimeout(() => {
-    const form = document.getElementById('bannerRequestForm');
-    if (form) {
-      console.log('🔥 폼 이벤트 바인딩 시작');
-      
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        console.log('🔥 배너 신청 폼 제출됨');
-        
-        const formData = new FormData(this);
-        
-        // 필수 필드 확인
-        const artistName = formData.get('artist_name');
-        const bannerImage = formData.get('banner_image');
-        
-        if (!artistName || !bannerImage || bannerImage.size === 0) {
-          showToast('아티스트명과 배너 이미지를 모두 입력해주세요.', 'error');
-          return;
-        }
-        
-        console.log('🔥 폼 데이터 준비 완료');
-        console.log('🔥 아티스트명:', artistName);
-        console.log('🔥 이미지 크기:', bannerImage.size);
-        
-        // 🔥 CSRF 토큰 확인
-        const csrfToken = formData.get('csrfmiddlewaretoken');
-        console.log('🔥 CSRF 토큰:', csrfToken ? '존재함' : '없음');
-        
-        // 서버로 전송
-        fetch('/accounts/banner-request/', {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-            // 🔥 주의: FormData 사용 시 Content-Type 헤더를 설정하지 마세요!
-            // 🔥 CSRF 토큰은 FormData에 포함되어 있으므로 별도 헤더 불필요
-          }
-        })
-        .then(response => {
-          console.log('🔥 서버 응답 상태:', response.status);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('🔥 서버 응답 데이터:', data);
-          
-          if (data.success) {
-            showToast(data.message, 'success');
-            closeBannerModal();
-            // 페이지 새로고침해서 업데이트된 포인트 표시
-            setTimeout(() => location.reload(), 1500);
-          } else {
-            showToast(data.error, 'error');
-          }
-        })
-        .catch(error => {
-          console.error('🔥 배너 신청 오류:', error);
-          showToast('배너 신청 중 오류가 발생했습니다.', 'error');
-        });
-      });
-      
-      console.log('🔥 폼 이벤트 바인딩 완료');
-    } else {
-      console.error('🔥 배너 폼을 찾을 수 없음');
-    }
-  }, 100);
-  
-  // ESC 키로 모달 닫기
-  const handleEscape = function(e) {
-    if (e.key === 'Escape') {
-      console.log('🔥 ESC 키로 모달 닫기');
-      closeBannerModal();
-      document.removeEventListener('keydown', handleEscape);
-    }
-  };
-  document.addEventListener('keydown', handleEscape);
-  
-  // 모달 외부 클릭 시 닫기
-  document.getElementById('bannerRequestModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-      console.log('🔥 모달 외부 클릭으로 닫기');
-      closeBannerModal();
-    }
-  });
-}
-
-function closeBannerModal() {
-  console.log('🔥 closeBannerModal 호출됨');
-  const modal = document.getElementById('bannerRequestModal');
-  if (modal) {
-    const modalContent = document.getElementById('bannerModalContent');
-    if (modalContent) {
-      modalContent.classList.add('scale-95', 'opacity-0');
-      modalContent.classList.remove('scale-100', 'opacity-100');
-    }
-    
-    setTimeout(() => {
-      modal.remove();
-      console.log('🔥 모달 제거됨');
-    }, 300);
-  }
-}
-
-// 토스트 메시지 함수
-function showToast(message, type = 'info') {
-  console.log('🔥 토스트 메시지:', message, type);
-  const toast = document.createElement('div');
-  toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed; bottom: 20px; right: 20px; z-index: 9999;
-    padding: 12px 20px; border-radius: 8px; color: white;
-    background: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6'};
-    opacity: 0; transition: opacity 0.3s;
-  `;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.style.opacity = '1', 10);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => {
-      if (document.body.contains(toast)) {
-        document.body.removeChild(toast);
-      }
-    }, 300);
-  }, 3000);
-}
-
-console.log('🔥 수정된 배너 관련 함수들 정의 완료');
 </script>
 {% endblock %}
