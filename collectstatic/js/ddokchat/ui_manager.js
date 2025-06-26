@@ -258,7 +258,7 @@ const observer = new IntersectionObserver((entries) => {
       if (window.sendWebSocketMessage) {
         window.sendWebSocketMessage({
           type: 'read_message_sync',
-          'room_id': window.roomId
+          room_code: window.roomCode
         });
       }
       observer.unobserve(entry.target);

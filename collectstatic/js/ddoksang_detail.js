@@ -97,6 +97,7 @@
         
         const modalImage = document.getElementById('modalImage');
         const modalTitle = document.getElementById('modalImageTitle');
+        const modalCaption = document.getElementById('modalImageCaption');
         const modalCounter = document.getElementById('modalImageCounter');
         
         const image = imageData[currentModalIndex];
