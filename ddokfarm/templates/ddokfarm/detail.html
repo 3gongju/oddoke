@@ -2,6 +2,9 @@
 {% load static %}
 
 {% block body %}
+{% csrf_token %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
   {% include 'ddokfarm/components/_header.html' %}
   <div class="bg-white p-6 rounded-lg shadow-md max-w-5xl mx-auto">

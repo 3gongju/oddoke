@@ -1,5 +1,5 @@
 <div class="flex gap-2 mt-4">
-  <!-- ✅ 찜하기 버튼 - 초기 상태 개선 -->
+  <!-- 찜하기 버튼 - 초기 상태 개선 -->
   <button id="like-button-top" data-liked="{{ is_liked|yesno:'true,false' }}"
           class="flex-1 bg-pink-100 hover:bg-pink-200 text-pink-600 font-semibold py-2 rounded-lg flex items-center justify-center gap-2">
     {% if is_liked %}
@@ -35,7 +35,7 @@
     </a>
   {% endif %}
 
-  <!-- ✅ 거래 완료 알림 모달 -->
+  <!-- 거래 완료 알림 모달 -->
   <div id="completedModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-xl shadow-lg p-6 max-w-xs w-full text-center">
       <h3 class="text-lg font-semibold mb-3 text-gray-800">거래가 완료된 게시글입니다</h3>
@@ -45,7 +45,49 @@
   </div>
 </div>
 
-<!-- ✅ 거래 완료 알림 모달 자바스크립트 -->
+<!-- 판매자인 경우에만 거래완료 버튼 표시 -->
+{% if is_owner %}
+  <div class="mt-4">
+    {% if post.is_sold %}
+      <button class="w-full bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed" disabled>
+        거래 완료됨
+      </button>
+    {% else %}
+      <button onclick="showMarkAsSoldModal()" 
+              class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
+        거래완료로 변경
+      </button>
+    {% endif %}
+  </div>
+
+  <!-- 거래완료 확인 모달 -->
+  <div id="markAsSoldModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+          <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.75 0a9 9 0 1 1 18 0 9 9 0 0 1-18 0Zm9 3.75h.008v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">거래완료 확인</h3>
+        <p class="text-sm text-gray-600 mb-6">거래를 완료하시겠습니까?<br><span class="text-red-500 font-medium">(거래완료는 되돌릴 수 없습니다.)</span></p>
+        
+        <div class="flex gap-3">
+          <button onclick="closeMarkAsSoldModal()" 
+                  class="flex-1 px-4 py-2 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            취소
+          </button>
+          <button onclick="confirmMarkAsSold()" 
+                  class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+            확인
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- 거래 완료 알림 모달 자바스크립트 -->
 <script>
   function showCompletedModal() {
     document.getElementById('completedModal').classList.remove('hidden');
@@ -54,4 +96,64 @@
   function closeCompletedModal() {
     document.getElementById('completedModal').classList.add('hidden');
   }
+
+  // 거래완료 모달 관련 함수들
+  function showMarkAsSoldModal() {
+    document.getElementById('markAsSoldModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMarkAsSoldModal() {
+    document.getElementById('markAsSoldModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  function confirmMarkAsSold() {
+    // CSRF 토큰 가져오기
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value || 
+                      document.querySelector('meta[name=csrf-token]').content ||
+                      window.csrfToken;
+
+    // 폼 생성 및 제출
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = "{% url 'ddokfarm:mark_as_sold' category=category post_id=post.id %}";
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = csrfToken;
+    
+    form.appendChild(csrfInput);
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  // ESC 키로 모달 닫기
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const markAsSoldModal = document.getElementById('markAsSoldModal');
+      const completedModal = document.getElementById('completedModal');
+      
+      if (markAsSoldModal && !markAsSoldModal.classList.contains('hidden')) {
+        closeMarkAsSoldModal();
+      }
+      if (completedModal && !completedModal.classList.contains('hidden')) {
+        closeCompletedModal();
+      }
+    }
+  });
+
+  // 모달 배경 클릭시 닫기
+  document.addEventListener('click', function(e) {
+    const markAsSoldModal = document.getElementById('markAsSoldModal');
+    const completedModal = document.getElementById('completedModal');
+    
+    if (e.target === markAsSoldModal) {
+      closeMarkAsSoldModal();
+    }
+    if (e.target === completedModal) {
+      closeCompletedModal();
+    }
+  });
 </script>
