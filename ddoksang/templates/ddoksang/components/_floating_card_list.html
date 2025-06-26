@@ -20,9 +20,9 @@
     </div>
     
     <!-- 간단한 안내 - 크기 축소 -->
-    <div class="bg-blue-50 p-2 rounded border border-blue-100">
+    <div class="bg-pink-100 p-2 rounded border border-gray-100">
       <div class="text-center">
-        <p class="text-xs text-blue-700 leading-relaxed">
+        <p class="text-xs text-gray-800 leading-relaxed">
           <span class="flex items-center justify-center">
             <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -30,7 +30,7 @@
             카페 클릭 시 지도 이동
           </span>
         </p>
-        <p class="text-xs text-blue-600 mt-0.5 font-medium">
+        <p class="text-xs text-gray-800 mt-0.5 font-medium">
           + 버튼으로 상세보기
         </p>
       </div>
@@ -43,7 +43,7 @@
       {% for cafe in active_cafes|slice:":20" %}
         {% with cafe|cafe_status as cafe_state %}
           {% if cafe_state == 'ongoing' %}
-            <div class="cafe-card-mini bg-white border border-gray-200 p-2.5 rounded hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all duration-200 group transform hover:-translate-y-1"
+            <div class="cafe-card-mini bg-white border border-gray-200 p-2.5 rounded hover:shadow-lg hover:border-pink-300 cursor-pointer transition-all duration-200 group transform hover:-translate-y-1"
                  data-cafe-id="{{ cafe.id }}"
                  data-cafe-lat="{{ cafe.latitude }}"
                  data-cafe-lng="{{ cafe.longitude }}">
@@ -71,7 +71,7 @@
                 <div class="flex-1 min-w-0 relative">
                   <!-- 상세보기 버튼 -->
                   <a href="{% url 'ddoksang:detail' cafe.id %}"
-                     class="detail-link absolute top-0 right-0 w-5 h-5 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10 shadow-lg"
+                     class="detail-link absolute top-0 right-0 w-5 h-5 bg-pink-400 hover:bg-blue-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10 shadow-lg"
                      title="상세 보기"
                      onclick="event.stopPropagation(); return true;">
                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +80,7 @@
                   </a>
                   
                   <!-- 카페명 -->
-                  <h4 class="font-semibold text-sm text-gray-900 leading-tight mb-0.5 group-hover:text-blue-600 transition-colors pr-6">
+                  <h4 class="font-semibold text-sm text-gray-900 leading-tight mb-0.5 group-hover:text-gray-600 transition-colors pr-6">
                     {{ cafe.cafe_name|truncatechars:16 }}
                   </h4>
                   
@@ -109,7 +109,7 @@
                   </p>
                   
                   <!-- 도보 시간 및 거리 -->
-                  <div class="distance-time text-xs text-green-600 font-medium hidden">
+                  <div class="distance-time text-xs text-blue-500 font-medium hidden">
                     <div>도보: <span class="walk-time"></span></div>
                     <div>(총 <span class="walk-distance"></span>)</div>
                   </div>
@@ -153,10 +153,10 @@
     {% else %}
       <div class="text-center">
         {% if active_cafes.count > 0 %}
-          <p class="text-xs text-gray-500 mb-1">모든 운영중인 카페입니다</p>
+          <p class="text-xs text-gray-700 mb-1">오늘 기준 운영중인 카페</p>
         {% endif %}
         <a href="{% url 'ddoksang:create' %}"
-           class="inline-block text-sm text-green-600 hover:text-green-800 font-medium">
+           class="inline-block text-sm text-gray-500 hover:text-pink-800 font-medium">
            + 새 생카 등록하기
         </a>
       </div>
