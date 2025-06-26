@@ -63,14 +63,20 @@
                 
                 <!-- 소셜 로그인 뱃지 -->
                 <div class="flex items-center gap-2 mb-2">
-                  {% if user_profile.username|slice:":6" == "kakao_" %}
-                    <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                      카카오 연결됨
-                    </span>
-                  {% elif user_profile.username|slice:":6" == "naver_" %}
-                    <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                      네이버 연결됨
-                    </span>
+                  {% if user_profile.social_account %}
+                    {% if user_profile.social_account.provider == 'kakao' %}
+                      <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                        카카오 연결됨
+                      </span>
+                    {% elif user_profile.social_account.provider == 'naver' %}
+                      <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                        네이버 연결됨
+                      </span>
+                    {% elif user_profile.social_account.provider == 'google' %}
+                      <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                        구글 연결됨
+                      </span>
+                    {% endif %}
                   {% endif %}
                 </div>
                 

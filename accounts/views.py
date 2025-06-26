@@ -26,7 +26,7 @@ from ddokdam.models import DamCommunityPost, DamMannerPost, DamBdaycafePost, Dam
 from ddokchat.models import ChatRoom 
 from artist.models import Artist, Member
 
-from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPointLog
+from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPointLog, SocialAccount, UserSuspension
 from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm, PostReportForm, BannerRequestForm
 from .services import KakaoAuthService, NaverAuthService, GoogleAuthService
 
@@ -595,6 +595,7 @@ def edit_profile_image(request, username):
 
 @login_required
 def upload_fandom_card(request, username):
+    """🔥 수정: null/blank 제거에 따른 필수 필드 검증 강화"""
     user = get_object_or_404(User, username=username)
 
     if request.method == 'POST':
@@ -604,8 +605,21 @@ def upload_fandom_card(request, username):
         verification_start_date = request.POST.get('verification_start_date')
         verification_end_date = request.POST.get('verification_end_date')
 
+        # 🔥 필수 필드 검증 강화
         if not image:
-            messages.error(request, '이미지를 업로드해주세요.')
+            messages.error(request, '팬덤 카드 이미지를 업로드해주세요.')
+            return redirect('accounts:settings_main', username=username)
+        
+        if not artist_id:
+            messages.error(request, '아티스트를 선택해주세요.')
+            return redirect('accounts:settings_main', username=username)
+            
+        if not verification_start_date:
+            messages.error(request, '인증 시작일을 입력해주세요.')
+            return redirect('accounts:settings_main', username=username)
+            
+        if not verification_end_date:
+            messages.error(request, '인증 만료일을 입력해주세요.')
             return redirect('accounts:settings_main', username=username)
 
         try:
@@ -629,7 +643,7 @@ def upload_fandom_card(request, username):
             except (AttributeError, KeyError, TypeError):
                 pass
             
-            # 이미지 비율 계산 (누락된 부분 추가)
+            # 이미지 비율 계산
             width, height = img.size
             uploaded_ratio = width / height if height > 0 else 0
 
@@ -637,31 +651,39 @@ def upload_fandom_card(request, username):
             messages.error(request, f'이미지를 처리할 수 없습니다: {str(e)}')
             return redirect('accounts:settings_main', username=username)
 
-        # FandomProfile에 저장 (인증 기간 포함)
-        fandom_profile = user.get_or_create_fandom_profile()
-        fandom_profile.fandom_card = image
-        fandom_profile.fandom_artist = get_object_or_404(Artist, id=artist_id)
-        
-        # 인증 기간 설정
-        from datetime import datetime
-        if verification_start_date:
-            fandom_profile.verification_start_date = datetime.strptime(verification_start_date, '%Y-%m-%d').date()
-        if verification_end_date:
-            fandom_profile.verification_end_date = datetime.strptime(verification_end_date, '%Y-%m-%d').date()
-        
-        fandom_profile.is_verified_fandom = False
-        fandom_profile.is_pending_verification = True
-        fandom_profile.verification_failed = False
-        fandom_profile.applied_at = now()
-        fandom_profile.save()
-
-        messages.success(request, '공식 팬덤 인증 확인 중입니다. (3일 소요)')
-        return redirect('accounts:settings_main', username=username)
+        # 🔥 지연 생성 방식: 모든 필드가 준비된 후 생성
+        try:
+            from datetime import datetime
+            
+            # 기존 프로필이 있다면 삭제 (재인증)
+            existing_profile = user.get_fandom_profile()
+            if existing_profile:
+                existing_profile.delete()
+            
+            # 새로운 완전한 프로필 생성
+            fandom_profile = FandomProfile.objects.create(
+                user=user,
+                fandom_card=image,
+                fandom_artist=get_object_or_404(Artist, id=artist_id),
+                verification_start_date=datetime.strptime(verification_start_date, '%Y-%m-%d').date(),
+                verification_end_date=datetime.strptime(verification_end_date, '%Y-%m-%d').date(),
+                applied_at=now(),
+                is_verified_fandom=False,
+                is_pending_verification=True,
+                verification_failed=False
+            )
+            
+            messages.success(request, '공식 팬덤 인증 확인 중입니다. (3일 소요)')
+            return redirect('accounts:settings_main', username=username)
+            
+        except Exception as e:
+            messages.error(request, f'팬덤 프로필 생성 중 오류가 발생했습니다: {str(e)}')
+            return redirect('accounts:settings_main', username=username)
 
 # 기존 계좌 인증 함수들을 간소화된 버전으로 교체
 @login_required
 def account_registration(request, username):
-    """계좌 정보 등록 (인증 없이 수집만)"""
+    """🔥 수정: 계좌 정보 등록 - 필수 필드 검증 강화"""
     user_profile = get_object_or_404(User, username=username)
     
     # 본인만 접근 가능
@@ -684,7 +706,14 @@ def account_registration(request, username):
             print("폼 유효성 검사 통과")
             print(f"cleaned_data: {form.cleaned_data}")
             try:
-                bank_profile = form.save(user_profile)
+                # 🔥 지연 생성 방식: 모든 필드가 검증된 후 생성
+                bank_profile = BankProfile.objects.create(
+                    user=user_profile,
+                    bank_code=form.cleaned_data['bank_code'],
+                    bank_name=dict(form.BANK_CHOICES)[form.cleaned_data['bank_code']],
+                    account_number=form.cleaned_data['account_number'],  # 암호화는 setter에서 처리
+                    account_holder=form.cleaned_data['account_holder']
+                )
                 print(f"저장 성공: {bank_profile}")
                 messages.success(request, '계좌 정보가 등록되었습니다!')
                 return redirect('accounts:account_settings', username=username)  
@@ -778,7 +807,7 @@ def account_delete(request, username):
 
 @login_required
 def address_registration(request, username):
-    """주소 정보 등록 - 핸드폰 번호 포함"""
+    """🔥 수정: 주소 정보 등록 - 필수 필드 검증 강화"""
     user_profile = get_object_or_404(User, username=username)
     
     # 본인만 접근 가능
@@ -796,7 +825,16 @@ def address_registration(request, username):
         form = AddressForm(request.POST)
         if form.is_valid():
             try:
-                address_profile = form.save(user_profile)
+                # 🔥 지연 생성 방식: 모든 필드가 검증된 후 생성
+                address_profile = AddressProfile.objects.create(
+                    user=user_profile,
+                    postal_code=form.cleaned_data['postal_code'],  # 암호화는 setter에서 처리
+                    road_address=form.cleaned_data['road_address'],
+                    detail_address=form.cleaned_data['detail_address'],
+                    phone_number=form.cleaned_data['phone_number'],
+                    sido=form.cleaned_data['sido'],
+                    sigungu=form.cleaned_data['sigungu']
+                )
                 messages.success(request, '배송정보가 등록되었습니다!')
                 return redirect('accounts:address_settings', username=username) 
             except Exception as e:
@@ -890,12 +928,13 @@ def address_delete(request, username):
 
 @login_required
 def social_signup_complete(request):
-    """소셜 로그인 후 username 설정 페이지"""
+    """🔥 수정: 소셜 로그인 후 username 설정 페이지 - SocialAccount 모델 사용"""
     
     print(f"social_signup_complete 진입: {request.user.username}")
     
-    # 이미 가입 완료한 사용자는 메인으로
-    if request.user.social_signup_completed:
+    # 🔥 SocialAccount 모델을 통해 가입 완료 여부 확인
+    social_account = request.user.get_social_account()
+    if social_account and social_account.signup_completed:
         print("이미 프로필 완성됨 → 메인으로")
         return redirect('/')
     
@@ -906,9 +945,11 @@ def social_signup_complete(request):
             print("폼 유효성 검사 통과")
             try:
                 user = form.save()
-                # 🔥 소셜 가입 완료 표시
-                user.social_signup_completed = True
-                user.save()
+                
+                # 🔥 SocialAccount에서 가입 완료 표시
+                if social_account:
+                    social_account.signup_completed = True
+                    social_account.save()
                 
                 messages.success(request, f'환영합니다, {user.username}님!')
                 return redirect('artist:index')
@@ -932,7 +973,7 @@ def kakao_login(request):
     return redirect(auth_url)
 
 def kakao_callback(request):
-    """카카오 로그인 콜백 처리"""
+    """🔥 수정: 카카오 로그인 콜백 처리 - SocialAccount 모델 사용"""
     print("=== 카카오 콜백 디버깅 ===")
     
     code = request.GET.get('code')
@@ -950,8 +991,11 @@ def kakao_callback(request):
         user = service.handle_callback(code)
         print(f"반환된 사용자: {user.username}")
         print(f"사용자 이메일: {user.email}")
-        print(f"임시 사용자명 여부: {user.is_temp_username}")
-        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
+        
+        # 🔥 SocialAccount 모델을 통해 소셜 상태 확인
+        social_account = user.get_social_account()
+        print(f"소셜 계정: {social_account}")
+        print(f"가입 완료 여부: {social_account.signup_completed if social_account else 'N/A'}")
         
         # 이메일 기반 인증 (패스워드 없이)
         from django.contrib.auth import authenticate
@@ -968,8 +1012,9 @@ def kakao_callback(request):
             auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
             print(f"로그인 성공: {request.user.is_authenticated}")
             
-            # 프로필 완성 여부에 따라 분기 처리
-            if not authenticated_user.social_signup_completed:
+            # 🔥 SocialAccount를 통해 프로필 완성 여부 확인
+            social_account = authenticated_user.get_social_account()
+            if not social_account or not social_account.signup_completed:
                 print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
                 return redirect('accounts:social_signup_complete')
             else:
@@ -1019,7 +1064,7 @@ def naver_login(request):
     return redirect(auth_url)
 
 def naver_callback(request):
-    """네이버 로그인 콜백 처리"""
+    """🔥 수정: 네이버 로그인 콜백 처리 - SocialAccount 모델 사용"""
     code = request.GET.get('code')
     state = request.GET.get('state')
     error = request.GET.get('error')
@@ -1045,8 +1090,11 @@ def naver_callback(request):
         user = service.handle_callback(code, state)
         print(f"반환된 사용자: {user.username}")
         print(f"사용자 이메일: {user.email}")
-        print(f"임시 사용자명 여부: {user.is_temp_username}")
-        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
+        
+        # 🔥 SocialAccount 모델을 통해 소셜 상태 확인
+        social_account = user.get_social_account()
+        print(f"소셜 계정: {social_account}")
+        print(f"가입 완료 여부: {social_account.signup_completed if social_account else 'N/A'}")
         
         # 이메일 기반 인증 (패스워드 없이)
         from django.contrib.auth import authenticate
@@ -1063,8 +1111,9 @@ def naver_callback(request):
             if 'naver_state' in request.session:
                 del request.session['naver_state']
             
-            # 프로필 완성 여부에 따라 분기 처리
-            if not authenticated_user.social_signup_completed:
+            # 🔥 SocialAccount를 통해 프로필 완성 여부 확인
+            social_account = authenticated_user.get_social_account()
+            if not social_account or not social_account.signup_completed:
                 print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
                 return redirect('accounts:social_signup_complete')
             else:
@@ -1102,7 +1151,7 @@ def google_login(request):
     return redirect(auth_url)
 
 def google_callback(request):
-    """구글 로그인 콜백 처리"""
+    """🔥 수정: 구글 로그인 콜백 처리 - SocialAccount 모델 사용"""
     print("=== 구글 콜백 디버깅 ===")
     
     code = request.GET.get('code')
@@ -1128,8 +1177,11 @@ def google_callback(request):
         user = service.handle_callback(code)
         print(f"반환된 사용자: {user.username}")
         print(f"사용자 이메일: {user.email}")
-        print(f"임시 사용자명 여부: {user.is_temp_username}")
-        print(f"소셜 가입 완료 여부: {user.social_signup_completed}")
+        
+        # 🔥 SocialAccount 모델을 통해 소셜 상태 확인
+        social_account = user.get_social_account()
+        print(f"소셜 계정: {social_account}")
+        print(f"가입 완료 여부: {social_account.signup_completed if social_account else 'N/A'}")
         
         # 이메일 기반 인증 (패스워드 없이)
         from django.contrib.auth import authenticate
@@ -1146,8 +1198,9 @@ def google_callback(request):
             auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
             print(f"로그인 성공: {request.user.is_authenticated}")
             
-            # 프로필 완성 여부에 따라 분기 처리
-            if not authenticated_user.social_signup_completed:
+            # 🔥 SocialAccount를 통해 프로필 완성 여부 확인
+            social_account = authenticated_user.get_social_account()
+            if not social_account or not social_account.signup_completed:
                 print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
                 return redirect('accounts:social_signup_complete')
             else:
@@ -1187,21 +1240,23 @@ def google_logout(request):
 
 # 스마트 로그아웃 (기존 함수 개선)
 def smart_logout(request):
-    """사용자 타입에 따라 적절한 로그아웃 방식 선택"""
+    """🔥 수정: 사용자 타입에 따라 적절한 로그아웃 방식 선택 - SocialAccount 모델 사용"""
     if not request.user.is_authenticated:
         return redirect('/')
     
-    username = request.user.username
+    # 🔥 SocialAccount 모델을 통해 소셜 로그인 여부 확인
+    social_account = request.user.get_social_account()
+    if social_account:
+        provider = social_account.provider
+        if provider == 'kakao':
+            return kakao_logout(request)
+        elif provider == 'naver':
+            return naver_logout(request)
+        elif provider == 'google':
+            return google_logout(request)
     
-    if username.startswith('kakao_'):
-        return kakao_logout(request)
-    elif username.startswith('naver_'):
-        return naver_logout(request)
-    elif username.startswith('temp_google_'):
-        return google_logout(request)
-    else:
-        return logout(request)  # 기존 logout 함수 호출
-
+    # 소셜 계정이 아니면 일반 로그아웃
+    return logout(request)
 
 @login_required
 def fandom_verification(request, username):

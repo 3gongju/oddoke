@@ -12,12 +12,16 @@
       </div>
       <h1 class="text-3xl font-bold text-gray-900 mb-3">환영합니다!</h1>
       <p class="text-gray-600 leading-relaxed">
-        {% if user.username|slice:":11" == "temp_kakao_" %}
-          카카오 간편 로그인이 완료되었습니다.<br>
-        {% elif user.username|slice:":11" == "temp_naver_" %}
-          네이버 간편 로그인이 완료되었습니다.<br>
-        {% elif user.username|slice:":12" == "temp_google_" %}
-          구글 간편 로그인이 완료되었습니다.<br>
+        {% if user.social_account %}
+          {% if user.social_account.provider == 'kakao' %}
+            카카오 간편 로그인이 완료되었습니다.<br>
+          {% elif user.social_account.provider == 'naver' %}
+            네이버 간편 로그인이 완료되었습니다.<br>
+          {% elif user.social_account.provider == 'google' %}
+            구글 간편 로그인이 완료되었습니다.<br>
+          {% endif %}
+        {% else %}
+          간편 로그인이 완료되었습니다.<br>
         {% endif %}
         프로필을 설정해서 어덕해를 시작해보세요!
       </p>

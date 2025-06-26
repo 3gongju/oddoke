@@ -1,7 +1,11 @@
 # accounts/admin.py 수정 버전
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPoint, DdokPointLog
+from .models import (
+    User, MannerReview, FandomProfile, BankProfile, AddressProfile, 
+    PostReport, BannerRequest, DdokPoint, DdokPointLog,
+    SocialAccount, UserSuspension  # 🔥 새로 추가된 모델들
+)
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
@@ -16,62 +20,54 @@ class UserAdmin(BaseUserAdmin):
     
     list_filter = (
         'is_active', 'is_staff', 'is_superuser', 
-        'date_joined', 'suspension_start', 'suspension_end'
+        'date_joined'  # 🔥 suspension 필드들 제거
     )
     
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'kakao_id', 'naver_id', 'google_id')
+    search_fields = ('username', 'email', 'first_name', 'last_name')  # 🔥 소셜 ID 필드들 제거
     
     ordering = ('-date_joined',)
 
+    # 🔥 fieldsets 완전히 재구성 (분리된 필드들 제거)
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('소셜 로그인 정보', {
-            'fields': (
-                'kakao_id',
-                'naver_id',
-                'google_id',
-            ),
-        }),
         ('프로필 정보', {
             'fields': (
                 'profile_image',
                 'bio',
             ),
         }),
-        ('제재 정보', {
-            'fields': (
-                'suspension_start',
-                'suspension_end', 
-                'suspension_reason',
-            ),
-        }),
     )
     
     def social_type_display(self, obj):
-        """소셜 로그인 타입 표시"""
-        if obj.kakao_id:
-            return format_html('<span style="color: #fee500; font-weight: bold;">카카오</span>')
-        elif obj.naver_id:
-            return format_html('<span style="color: #03c75a; font-weight: bold;">네이버</span>')
-        elif obj.google_id:
-            return format_html('<span style="color: #ea4335; font-weight: bold;">구글</span>')
-        else:
+        """소셜 로그인 타입 표시 - SocialAccount 모델 사용"""
+        try:
+            social_account = obj.get_social_account()
+            if social_account:
+                provider = social_account.provider
+                if provider == 'kakao':
+                    return format_html('<span style="color: #fee500; font-weight: bold;">카카오</span>')
+                elif provider == 'naver':
+                    return format_html('<span style="color: #03c75a; font-weight: bold;">네이버</span>')
+                elif provider == 'google':
+                    return format_html('<span style="color: #ea4335; font-weight: bold;">구글</span>')
             return format_html('<span style="color: gray;">일반</span>')
+        except Exception as e:
+            return format_html('<span style="color: gray;">확인 불가</span>')
     social_type_display.short_description = '가입 방식'
     
     def suspension_status_display(self, obj):
-        """제재 상태 표시"""
+        """제재 상태 표시 - UserSuspension 모델 사용"""
         try:
-            if obj.is_suspended:
-                if obj.suspension_end:
+            user_suspension = obj.get_user_suspension()
+            if user_suspension and user_suspension.is_suspended:
+                if user_suspension.suspension_end:
                     return format_html(
                         '<span style="color: red; font-weight: bold;">제재중 ({})</span>',
-                        obj.suspension_status
+                        user_suspension.status_display
                     )
                 else:
                     return format_html('<span style="color: red; font-weight: bold;">영구정지</span>')
             return format_html('<span style="color: green;">정상</span>')
         except Exception as e:
-            # 오류 발생 시 기본값 반환
             return format_html('<span style="color: gray;">확인 불가</span>')
     suspension_status_display.short_description = '제재 상태'
 
@@ -126,7 +122,124 @@ class UserAdmin(BaseUserAdmin):
         'suspend_14_days', 'permanent_ban'
     ]
 
-# 나머지 Admin 클래스들은 그대로 유지...
+
+# 🔥 새로 추가된 Admin 클래스들
+@admin.register(SocialAccount)
+class SocialAccountAdmin(admin.ModelAdmin):
+    list_display = (
+        'user_link', 'provider', 'social_id_masked', 
+        'signup_completed', 'created_at'
+    )
+    
+    list_filter = ('provider', 'signup_completed', 'created_at')
+    
+    search_fields = ('user__username', 'user__email', 'social_id')
+    
+    readonly_fields = ('created_at', 'updated_at')
+    
+    fieldsets = (
+        ('기본 정보', {
+            'fields': ('user', 'provider', 'social_id')
+        }),
+        ('상태', {
+            'fields': ('signup_completed',)
+        }),
+        ('기록', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def user_link(self, obj):
+        """사용자 링크"""
+        if obj.user:
+            return format_html(
+                '<a href="/admin/accounts/user/{}/change/">{}</a>',
+                obj.user.id, obj.user.username
+            )
+        return '-'
+    user_link.short_description = '사용자'
+    
+    def social_id_masked(self, obj):
+        """소셜 ID 마스킹 표시"""
+        if obj.social_id and len(obj.social_id) > 6:
+            return obj.social_id[:3] + '***' + obj.social_id[-3:]
+        return obj.social_id
+    social_id_masked.short_description = '소셜 ID'
+
+
+@admin.register(UserSuspension)
+class UserSuspensionAdmin(admin.ModelAdmin):
+    list_display = (
+        'user_link', 'suspension_start', 'suspension_end', 
+        'is_suspended', 'days_remaining', 'created_at'
+    )
+    
+    list_filter = ('suspension_start', 'suspension_end', 'created_at')
+    
+    search_fields = ('user__username', 'user__email', 'suspension_reason')
+    
+    readonly_fields = ('created_at', 'updated_at', 'is_suspended', 'status_display')
+    
+    fieldsets = (
+        ('사용자', {
+            'fields': ('user',)
+        }),
+        ('제재 정보', {
+            'fields': (
+                'suspension_start', 'suspension_end', 
+                'suspension_reason'
+            )
+        }),
+        ('상태', {
+            'fields': ('is_suspended', 'status_display'),
+            'classes': ('collapse',)
+        }),
+        ('기록', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def user_link(self, obj):
+        """사용자 링크"""
+        if obj.user:
+            return format_html(
+                '<a href="/admin/accounts/user/{}/change/">{}</a>',
+                obj.user.id, obj.user.username
+            )
+        return '-'
+    user_link.short_description = '사용자'
+    
+    def days_remaining(self, obj):
+        """남은 제재 일수"""
+        if not obj.is_suspended:
+            return '제재 해제됨'
+        
+        if not obj.suspension_end:
+            return '영구정지'
+        
+        remaining = obj.suspension_end - timezone.now()
+        if remaining.days > 0:
+            return f"{remaining.days}일 {remaining.seconds // 3600}시간"
+        elif remaining.seconds > 0:
+            return f"{remaining.seconds // 3600}시간 {(remaining.seconds % 3600) // 60}분"
+        else:
+            return '곧 해제'
+    days_remaining.short_description = '남은 기간'
+    
+    @admin.action(description="🔓 선택된 제재 해제")
+    def lift_selected_suspensions(self, request, queryset):
+        """선택된 제재들을 해제"""
+        count = queryset.count()
+        queryset.delete()  # UserSuspension 객체 삭제 = 제재 해제
+        
+        self.message_user(request, f"{count}개의 제재를 해제했습니다.")
+    
+    actions = ['lift_selected_suspensions']
+
+
+# 🔥 FandomProfile Admin 수정 (null/blank 제거에 따른 수정)
 @admin.register(FandomProfile)
 class FandomProfileAdmin(admin.ModelAdmin):
     list_display = (
@@ -142,7 +255,7 @@ class FandomProfileAdmin(admin.ModelAdmin):
     
     search_fields = ('user__username', 'user__email', 'fandom_artist__name')
     
-    readonly_fields = ['fandom_card_preview', 'applied_at', 'verified_at', 'created_at', 'updated_at']
+    readonly_fields = ['fandom_card_preview', 'verified_at', 'created_at', 'updated_at']
     
     fieldsets = (
         ('기본 정보', {
@@ -227,7 +340,7 @@ class BankProfileAdmin(admin.ModelAdmin):
 @admin.register(AddressProfile)
 class AddressProfileAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'sido', 'sigungu', 'masked_address', 'created_at'
+        'user', 'sido', 'sigungu', 'masked_address', 'masked_phone', 'created_at'
     )
     
     list_filter = ('sido', 'sigungu', 'created_at')
@@ -247,6 +360,10 @@ class AddressProfileAdmin(admin.ModelAdmin):
             'fields': ('full_address_display',),
             'description': '보안을 위해 상세 주소는 읽기 전용으로 표시됩니다.'
         }),
+        ('연락처', {
+            'fields': ('masked_phone_display',),
+            'description': '보안을 위해 핸드폰 번호는 마스킹되어 표시됩니다.'
+        }),
         ('기록', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
@@ -256,11 +373,20 @@ class AddressProfileAdmin(admin.ModelAdmin):
     def masked_address(self, obj):
         return obj.get_masked_address()
     masked_address.short_description = '주소'
+    
+    def masked_phone(self, obj):
+        return obj.get_masked_phone_number()
+    masked_phone.short_description = '연락처'
 
     def full_address_display(self, obj):
         """관리자용 전체 주소 표시 (보안상 마스킹)"""
         return obj.get_masked_address()
     full_address_display.short_description = '전체 주소'
+    
+    def masked_phone_display(self, obj):
+        """관리자용 핸드폰 번호 표시 (보안상 마스킹)"""
+        return obj.get_masked_phone_number()
+    masked_phone_display.short_description = '연락처'
 
 @admin.register(MannerReview)
 class MannerReviewAdmin(admin.ModelAdmin):
