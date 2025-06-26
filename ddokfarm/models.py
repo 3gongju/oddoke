@@ -3,8 +3,13 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 from django.contrib.contenttypes.models import ContentType
 from artist.models import Artist, Member
-from upload_utils import ddokfarm_image_upload
+import os
+from datetime import datetime
 
+def ddokfarm_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('ddokfarm/images', now.strftime('%y/%m'), filename)
+    
 # 배송 방법 선택지
 SHIPPING_METHOD_CHOICES = [
     ('post_parcel', '우체국 택배'),       # 우체국 소포

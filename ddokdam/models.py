@@ -3,8 +3,13 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 from django.contrib.contenttypes.models import ContentType
 from artist.models import Artist, Member
-from upload_utils import ddokdam_image_upload
+import os
+from datetime import datetime
 
+def ddokdam_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('ddokdam/images', now.strftime('%y/%m'), filename)
+    
 class DamBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField() 

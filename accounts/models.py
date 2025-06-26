@@ -6,7 +6,20 @@ from .utils import BankEncryption, AddressEncryption
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
-from upload_utils import profile_image_upload, fandom_card_upload, banner_image_upload
+import os
+from datetime import datetime
+
+def profile_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('accounts/profile', now.strftime('%y/%m'), filename)
+
+def banner_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('accounts/banners', now.strftime('%y/%m'), filename)
+
+def fandom_card_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('accounts/fandom_cards', now.strftime('%y/%m'), filename)
 
 class User(AbstractUser):
     email = models.EmailField(unique=True, error_messages={
