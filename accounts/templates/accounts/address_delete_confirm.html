@@ -7,17 +7,13 @@
     
     <!-- 헤더 - account_delete_confirm과 동일한 구조 -->
     <div class="bg-white border-b border-gray-200 relative z-10">
-      <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <div class="flex items-center">
-          <a href="{% url 'accounts:mypage' %}" class="mr-4 text-gray-600 hover:text-gray-800">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </a>
-          <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">주소정보 삭제</h1>
-        </div>
-        <!-- 빈 div로 균형 맞추기 -->
-        <div class="w-6 h-6"></div>
+      <div class="flex items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <a href="{% url 'accounts:mypage' %}" class="mr-4 text-gray-600 hover:text-gray-800">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">주소정보 삭제</h1>
       </div>
     </div>
 
