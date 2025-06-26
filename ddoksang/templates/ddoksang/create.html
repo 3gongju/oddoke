@@ -5,6 +5,7 @@
 {% block head %}
 <!-- Flatpickr CSS 추가 -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
 {% endblock %}
 
 {% block body %}
@@ -151,7 +152,7 @@
           <input type="text" 
                  id="start_date" 
                  name="start_date" 
-                 class="w-full border rounded px-3 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 text-sm" 
+                 class="w-full border rounded px-3 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 text-sm mobile-date-input" 
                  placeholder="YYYY-MM-DD"
                  maxlength="10"
                  required>
@@ -162,7 +163,7 @@
           <input type="text" 
                  id="end_date" 
                  name="end_date" 
-                 class="w-full border rounded px-3 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 text-sm" 
+                 class="w-full border rounded px-3 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 text-sm mobile-date-input" 
                  placeholder="YYYY-MM-DD"
                  maxlength="10"
                  required>
@@ -399,6 +400,204 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Styles -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
+  /* 모바일 안정화를 위한 기본 스타일 */
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    width: 100%;
+    overflow-x: hidden; /* 가로 스크롤만 방지 */
+    overflow-y: auto; /* 세로 스크롤 허용 */
+    -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    position: relative; /* fixed 제거 */
+  }
+
+  /* 컨테이너 안정화 */
+  .max-w-2xl {
+    max-width: 42rem;
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* 모바일 전용 최적화 */
+  @media (max-width: 768px) {
+    body {
+      width: 100vw;
+      max-width: 100vw;
+      position: relative;
+    }
+
+    .max-w-2xl {
+      max-width: 100%;
+      width: 100%;
+      padding: 0 16px;
+      margin: 0;
+    }
+
+    /* 모든 입력 필드 안정화 */
+    input, textarea, select {
+      width: 100%;
+      max-width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 6px;
+      font-size: 16px; /* iOS 줌 방지 */
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      background-color: #ffffff;
+      transform: translateZ(0);
+      box-sizing: border-box;
+    }
+
+    /* 날짜 입력 필드 특별 처리 */
+    .mobile-date-input {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      -webkit-touch-callout: default !important;
+      pointer-events: auto !important;
+      background-color: white !important;
+      cursor: text !important;
+      opacity: 1 !important;
+      position: relative;
+      z-index: 1;
+      font-size: 16px !important;
+    }
+
+    /* Flatpickr 달력 모바일 최적화 */
+    .flatpickr-calendar {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 99999 !important;
+      max-width: 90vw !important;
+      max-height: 90vh !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .flatpickr-calendar.open {
+      display: block !important;
+    }
+
+    /* 그리드 레이아웃 안정화 */
+    .grid {
+      display: grid;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .grid-cols-1 {
+      grid-template-columns: 1fr;
+    }
+
+    .grid-cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .grid-cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* 중복 확인 단계 날짜 필드 모바일 최적화 */
+    #step-0 .grid-cols-2 {
+      grid-template-columns: 1fr; /* 모바일에서는 세로로 배치 */
+      gap: 0.75rem;
+    }
+
+    #step-0 .grid-cols-2 > div {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* 일반 단계 날짜 필드는 2열 유지 가능 */
+    #step-3 .grid-cols-2 {
+      grid-template-columns: 1fr 1fr; /* 2열 유지 */
+      gap: 0.5rem;
+    }
+
+    /* 특전 버튼 모바일 최적화 */
+    .perk-btn {
+      font-size: 10px !important;
+      padding: 4px 2px !important;
+      word-break: keep-all;
+      line-height: 1.2;
+    }
+
+    /* 네비게이션 버튼 모바일 최적화 - 크기 통일 */
+    #prevBtn, #nextBtn {
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 22px !important;
+      font-weight: bold !important;
+      touch-action: manipulation;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    /* 텍스트 영역 모바일 최적화 */
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    /* 플렉스 레이아웃 안정화 */
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    /* 스크롤 안정화 */
+    .step {
+      min-height: auto;
+      padding-bottom: 20px;
+    }
+
+    /* 지도 컨테이너 모바일 최적화 */
+    #map {
+      width: 100% !important;
+      height: 250px !important;
+      min-height: 250px !important;
+      max-height: 250px !important;
+    }
+
+    /* 지도 컨테이너 wrapper 최적화 */
+    .relative.w-full.h-64 {
+      height: 250px !important;
+      min-height: 250px !important;
+      overflow: visible !important;
+    }
+
+    /* 지도 플레이스홀더도 동일한 높이 */
+    #mapPlaceholder {
+      height: 250px !important;
+    }
+
+    /* 이미지 업로드 영역 모바일 최적화 */
+    #image-upload-container {
+      max-width: 100%;
+      padding: 0 10px;
+    }
+
+    /* 프로그레스 바 모바일 최적화 */
+    #progressBar {
+      transition: width 0.3s ease-in-out;
+    }
+  }
+
+  /* 기본 스타일 유지 */
   .perk-btn {
     display: block;
     width: 100%;
@@ -407,15 +606,18 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: all 0.2s;
     padding: 2px;
   }
+  
   input[type="checkbox"]:checked + .perk-btn {
     background-color: #111827;
     color: white;
     border-radius: 4px;
     transform: scale(0.95);
   }
+  
   label:hover .perk-btn {
     background-color: #f3f4f6;
   }
+  
   input[type="checkbox"]:checked + .perk-btn:hover {
     background-color: #374151 !important;
     color: white !important;
@@ -453,13 +655,20 @@ document.addEventListener('DOMContentLoaded', function() {
     display: none;
     width: 40px;
     height: 40px;
-    font-size: 16px;
+    font-size: 20px;
+    font-weight: bold;
     border-radius: 9999px;
     background-color: #111827;
     color: white;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    text-align: center;
   }
 
   #prevBtn:hover, #nextBtn:hover {
@@ -476,54 +685,27 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: relative;
+    width: 100%;
   }
 
-  #prevBtn {
-    left: 120px !important;
-  }
-
-  #nextBtn {
-    right: 20px !important;
-  }
-
-  /* 반응형 디자인 */
-  @media (max-width: 640px) {
-    .step button {
-      font-size: 0.75rem;
-      padding: 0.5rem 0.75rem;
-    }
-    
-    h1 {
-      font-size: 1.25rem;
-    }
-    
-    h2 {
-      font-size: 1rem;
-    }
-    
-    #progressBar {
-      height: 0.25rem;
-    }
-
-    #prevBtn {
-      left: 100px !important;
-      width: 36px !important;
-      height: 36px !important;
-      font-size: 14px !important;
-    }
-
-    #nextBtn {
-      right: 12px !important;
-      width: 36px !important;
-      height: 36px !important;
-      font-size: 14px !important;
+  /* 모바일에서 버튼 크기 통일 */
+  @media (max-width: 768px) {
+    #prevBtn, #nextBtn {
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 22px !important;
+      font-weight: bold !important;
+      line-height: 1 !important;
     }
   }
 
-  /* 매우 작은 화면 */
+  /* 매우 작은 화면에서도 동일한 크기 유지 */
   @media (max-width: 375px) {
-    #prevBtn {
-      left: 90px !important;
+    #prevBtn, #nextBtn {
+      width: 44px !important;
+      height: 44px !important;
+      font-size: 22px !important;
     }
   }
 
@@ -553,6 +735,60 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: white !important;
     cursor: text !important;
     opacity: 1 !important;
+  }
+
+  /* 자동완성 결과 모바일 최적화 */
+  @media (max-width: 768px) {
+    #final-artist-member-results,
+    #place-results {
+      max-height: 150px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* 중복 확인 단계 특별 처리 */
+    #step-0 .grid-cols-2 {
+      grid-template-columns: 1fr !important; /* 강제로 1열 배치 */
+    }
+
+    #step-0 .grid-cols-2 > div {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin-bottom: 0.75rem;
+    }
+
+    #step-0 .grid-cols-2 > div:last-child {
+      margin-bottom: 0;
+    }
+
+    /* 중복 확인 단계 입력 필드 너비 제한 */
+    #step-0 input[type="text"] {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+  }
+
+  /* 키보드 표시 시 뷰포트 조정 방지 */
+  @media (max-width: 768px) {
+    .step input:focus,
+    .step textarea:focus,
+    .step select:focus {
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+  }
+
+  /* 터치 디바이스 최적화 */
+  @media (pointer: coarse) {
+    button, .cursor-pointer {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    input, textarea, select {
+      min-height: 44px;
+    }
   }
 </style>
 
@@ -655,6 +891,15 @@ window.DdoksangDateUtils = {
                 field.style.backgroundColor = 'white';
                 field.style.cursor = 'text';
                 field.style.opacity = '1';
+                
+                // 모바일에서 키보드 표시 시 뷰포트 조정 방지
+                field.addEventListener('focus', function() {
+                    setTimeout(() => {
+                        if (window.scrollY > 0) {
+                            window.scrollTo(0, window.scrollY);
+                        }
+                    }, 300);
+                });
             }
         });
     },
@@ -664,7 +909,14 @@ window.DdoksangDateUtils = {
             ['check_start_date', 'check_end_date'].forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
-                    flatpickr(element, { dateFormat: "Y-m-d", locale: "ko" });
+                    flatpickr(element, { 
+                        dateFormat: "Y-m-d", 
+                        locale: "ko",
+                        // 모바일 최적화 옵션
+                        disableMobile: false,
+                        allowInput: true,
+                        clickOpens: true
+                    });
                 }
             });
         }
@@ -675,7 +927,14 @@ window.DdoksangDateUtils = {
             ['start_date', 'end_date'].forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
-                    flatpickr(element, { dateFormat: "Y-m-d", locale: "ko" });
+                    flatpickr(element, { 
+                        dateFormat: "Y-m-d", 
+                        locale: "ko",
+                        // 모바일 최적화 옵션
+                        disableMobile: false,
+                        allowInput: true,
+                        clickOpens: true
+                    });
                 }
             });
         }
@@ -775,6 +1034,64 @@ window.DdoksangMapUtils = {
         }
     }
 };
+
+// 모바일 안정화 유틸리티
+window.MobileStabilizer = {
+    init() {
+        this.preventZoom();
+        this.stabilizeViewport();
+        this.optimizeScrolling();
+    },
+
+    preventZoom() {
+        // iOS Safari 줌 방지
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    },
+
+    stabilizeViewport() {
+        // 뷰포트 메타 태그 동적 조정
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0');
+        }
+
+        // 가로 스크롤만 방지 (세로 스크롤은 허용)
+        document.body.style.overflowX = 'hidden';
+        document.body.style.overflowY = 'auto';
+        document.documentElement.style.overflowX = 'hidden';
+        document.documentElement.style.overflowY = 'auto';
+    },
+
+    optimizeScrolling() {
+        // 스크롤 최적화
+        let ticking = false;
+        
+        function updateScrolling() {
+            // 필요한 스크롤 로직
+            ticking = false;
+        }
+
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                requestAnimationFrame(updateScrolling);
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+};
 </script>
 
 <!-- 5. 이미지 업로드 모듈 (압축 기능 포함) -->
@@ -790,18 +1107,60 @@ window.DdoksangMapUtils = {
 <script src="{% static 'js/ddoksang_duplicate_card_template.js' %}"></script>
 <script src="{% static 'js/ddoksang_duplicate_check.js' %}"></script>
 
-<!-- 9. 스크롤 관리 스크립트 -->
+<!-- 9. 모바일 안정화 및 스크롤 관리 스크립트 -->
 <script>
-// 단계 변경 시 스크롤을 맨 위로 이동
+// 단계 변경 시 스크롤을 맨 위로 이동 (부드럽게)
 function scrollToTop() {
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
+    // 모바일에서 더 안정적인 스크롤
+    if (window.innerWidth <= 768) {
+        // 모바일에서는 즉시 스크롤
+        window.scrollTo(0, 0);
+    } else {
+        // 데스크톱에서는 부드러운 스크롤
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+}
+
+// 스크롤 위치 기억 및 복원 방지
+function preventScrollRestoration() {
+    if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+    }
+}
+
+// 키보드 표시/숨김 시 레이아웃 안정화
+function handleKeyboardToggle() {
+    let initialViewportHeight = window.innerHeight;
+    
+    window.addEventListener('resize', function() {
+        const currentHeight = window.innerHeight;
+        const heightDifference = initialViewportHeight - currentHeight;
+        
+        // 키보드가 표시된 것으로 판단 (높이가 150px 이상 줄어들었을 때)
+        if (heightDifference > 150) {
+            document.body.classList.add('keyboard-open');
+        } else {
+            document.body.classList.remove('keyboard-open');
+        }
     });
 }
 
 // 단계 전환 함수에 스크롤 기능 추가
 document.addEventListener('DOMContentLoaded', function() {
+    // 모바일 안정화 초기화
+    if (window.MobileStabilizer) {
+        window.MobileStabilizer.init();
+    }
+    
+    // 스크롤 복원 방지
+    preventScrollRestoration();
+    
+    // 키보드 토글 핸들링
+    handleKeyboardToggle();
+    
     // 기존 단계 변경 이벤트에 스크롤 추가
     const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
@@ -839,7 +1198,8 @@ document.addEventListener('DOMContentLoaded', function() {
             카드템플릿: !!window.DuplicateCardTemplate,
             중복확인: !!window.DuplicateChecker,
             아티스트배지: !!window.ArtistBadgeUtils,
-            자동완성: !!window.initAutocomplete
+            자동완성: !!window.initAutocomplete,
+            모바일안정화: !!window.MobileStabilizer
         };
         
         // 필수 함수 누락 확인 (이미지 업로더 제외)
@@ -883,7 +1243,45 @@ window.addEventListener('load', function() {
             }
         });
         
+        // 모바일 환경에서 추가 안정화
+        if (window.innerWidth <= 768) {
+            // 터치 이벤트 최적화 (스크롤은 허용)
+            document.body.style.touchAction = 'pan-y pinch-zoom'; /* 세로 스크롤과 줌 허용 */
+            
+            // 모든 입력 필드에 모바일 최적화 클래스 추가
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.style.transform = 'translateZ(0)';
+                input.style.webkitTransform = 'translateZ(0)';
+            });
+        }
+        
     }, 1000);
 });
+
+// 추가 CSS for keyboard-open 상태
+const additionalCSS = `
+.keyboard-open {
+    /* position fixed 제거 - 스크롤 허용 */
+    width: 100%;
+}
+
+.keyboard-open .max-w-2xl {
+    height: auto;
+    overflow-y: visible;
+}
+
+@media (max-width: 768px) {
+    .keyboard-open #navigationButtons {
+        position: static;
+        margin-top: 1rem;
+    }
+}
+`;
+
+// 스타일 시트에 추가 CSS 삽입
+const style = document.createElement('style');
+style.textContent = additionalCSS;
+document.head.appendChild(style);
 </script>
 {% endblock %}
