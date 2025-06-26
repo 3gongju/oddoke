@@ -44,7 +44,7 @@ urlpatterns = [
     path('<str:username>/edit/profile/', views.edit_profile_info, name='edit_profile_info'),
     path('<str:username>/edit/image/', views.edit_profile_image, name='edit_profile_image'),
     path('<str:username>/edit/fandom/', views.fandom_verification, name='fandom_verification'),
-    path('<str:username>/edit/account/', views.account_settings, name='account_settings'),
+    path('<str:username>/edit/bank/', views.bank_settings, name='bank_settings'),
     path('<str:username>/edit/address/', views.address_settings, name='address_settings'),
     path('<str:username>/edit/info/', views.account_info, name='account_info'),
     
@@ -62,9 +62,9 @@ urlpatterns = [
     path('<username>/reviews/', views.review_home, name='review_home'), 
 
     # 계좌
-    path('<str:username>/account/', views.account_registration, name='account_registration'),
-    path('<str:username>/account/modify/', views.account_modify, name='account_modify'),
-    path('<str:username>/account/delete/', views.account_delete, name='account_delete'),
+    path('<str:username>/bank/', views.bank_registration, name='bank_registration'),
+    path('<str:username>/bank/modify/', views.bank_modify, name='bank_modify'),
+    path('<str:username>/bank/delete/', views.bank_delete, name='bank_delete'),
 
     # 주소
     path('<str:username>/address/', views.address_registration, name='address_registration'),

@@ -2,7 +2,7 @@
 from cryptography.fernet import Fernet
 from django.conf import settings
 
-class AccountEncryption:
+class BankEncryption:    
     @staticmethod
     def encrypt(data):
         if not data:

@@ -310,13 +310,13 @@ class FandomProfileAdmin(admin.ModelAdmin):
 @admin.register(BankProfile)
 class BankProfileAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'bank_name', 'masked_account_number', 
-        'account_holder', 'created_at'
+        'user', 'bank_name', 'masked_bank_number', 
+        'bank_holder', 'created_at'
     )
     
     list_filter = ('bank_name', 'created_at', 'updated_at')
     
-    search_fields = ('user__username', 'user__email', 'account_holder')
+    search_fields = ('user__username', 'user__email', 'bank_holder')
     
     readonly_fields = ['created_at', 'updated_at']
     
@@ -325,7 +325,7 @@ class BankProfileAdmin(admin.ModelAdmin):
             'fields': ('user',)
         }),
         ('계좌 정보', {
-            'fields': ('bank_code', 'bank_name', 'account_holder')
+            'fields': ('bank_code', 'bank_name', 'bank_holder')
         }),
         ('기록', {
             'fields': ('created_at', 'updated_at'),
@@ -333,9 +333,9 @@ class BankProfileAdmin(admin.ModelAdmin):
         }),
     )
 
-    def masked_account_number(self, obj):
-        return obj.get_masked_account_number()
-    masked_account_number.short_description = '계좌번호'
+    def masked_bank_number(self, obj):
+        return obj.get_masked_bank_number()
+    masked_bank_number.short_description = '계좌번호'
 
 @admin.register(AddressProfile)
 class AddressProfileAdmin(admin.ModelAdmin):

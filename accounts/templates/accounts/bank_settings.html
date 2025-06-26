@@ -75,7 +75,7 @@
                 </div>
                 <div class="ml-4 text-right">
                   <p class="text-base sm:text-lg font-semibold text-gray-800 font-mono">
-                    {{ bank_profile.get_masked_account_number }}
+                    {{ bank_profile.get_masked_bank_number }}
                   </p>
                 </div>
               </div>
@@ -89,7 +89,7 @@
                   <div class="text-sm sm:text-base text-gray-500 mt-1">계좌 소유자</div>
                 </div>
                 <div class="ml-4 text-right">
-                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ bank_profile.account_holder }}</p>
+                  <p class="text-base sm:text-lg font-semibold text-gray-800">{{ bank_profile.bank_holder }}</p>
                 </div>
               </div>
             </div>
@@ -126,7 +126,7 @@
                   <div class="text-sm sm:text-base text-gray-500 mt-1">은행, 계좌번호, 예금주명을 새로운 정보로 변경합니다</div>
                 </div>
                 <div class="ml-4">
-                  <a href="{% url 'accounts:account_modify' user_profile.username %}"
+                  <a href="{% url 'accounts:bank_modify' user_profile.username %}"
                      class="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
                     수정
                   </a>
@@ -142,7 +142,7 @@
                   <div class="text-sm sm:text-base text-gray-500 mt-1">등록된 계좌정보를 완전히 삭제합니다</div>
                 </div>
                 <div class="ml-4">
-                  <a href="{% url 'accounts:account_delete' user_profile.username %}"
+                  <a href="{% url 'accounts:bank_delete' user_profile.username %}"
                      class="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
                     삭제
                   </a>
@@ -204,7 +204,7 @@
         <!-- 등록 버튼 섹션 -->
         <div class="mb-6 sm:mb-8">
           <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 bg-white">
-            <a href="{% url 'accounts:account_registration' user_profile.username %}"
+            <a href="{% url 'accounts:bank_registration' user_profile.username %}"
                class="w-full block px-4 py-3 sm:px-6 sm:py-4 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
               계좌 등록하기
             </a>

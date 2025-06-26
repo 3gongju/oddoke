@@ -27,7 +27,7 @@ from ddokchat.models import ChatRoom
 from artist.models import Artist, Member
 
 from .models import User, MannerReview, FandomProfile, BankProfile, AddressProfile, PostReport, BannerRequest, DdokPointLog, SocialAccount, UserSuspension
-from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankAccountForm, AddressForm, SocialSignupCompleteForm, PostReportForm, BannerRequestForm
+from .forms import CustomUserCreationForm, EmailAuthenticationForm, MannerReviewForm, ProfileImageForm, BankForm, AddressForm, SocialSignupCompleteForm, PostReportForm, BannerRequestForm
 from .services import KakaoAuthService, NaverAuthService, GoogleAuthService
 
 from django.views.decorators.http import require_POST, require_GET
@@ -682,7 +682,7 @@ def upload_fandom_card(request, username):
 
 # 기존 계좌 인증 함수들을 간소화된 버전으로 교체
 @login_required
-def account_registration(request, username):
+def bank_registration(request, username):
     """🔥 수정: 계좌 정보 등록 - 필수 필드 검증 강화"""
     user_profile = get_object_or_404(User, username=username)
     
@@ -695,11 +695,11 @@ def account_registration(request, username):
     bank_profile = user_profile.get_bank_profile()
     if bank_profile:
         messages.info(request, '이미 등록된 계좌가 있습니다.')
-        return redirect('accounts:account_settings', username=username)  
+        return redirect('accounts:bank_settings', username=username)  
     
     if request.method == 'POST':
         print("POST 요청 받음")
-        form = BankAccountForm(request.POST)
+        form = BankForm(request.POST)
         print(f"폼 데이터: {request.POST}")
         
         if form.is_valid():
@@ -711,28 +711,28 @@ def account_registration(request, username):
                     user=user_profile,
                     bank_code=form.cleaned_data['bank_code'],
                     bank_name=dict(form.BANK_CHOICES)[form.cleaned_data['bank_code']],
-                    account_number=form.cleaned_data['account_number'],  # 암호화는 setter에서 처리
-                    account_holder=form.cleaned_data['account_holder']
+                    bank_number=form.cleaned_data['bank_number'],  # 암호화는 setter에서 처리
+                    bank_holder=form.cleaned_data['bank_holder']
                 )
                 print(f"저장 성공: {bank_profile}")
                 messages.success(request, '계좌 정보가 등록되었습니다!')
-                return redirect('accounts:account_settings', username=username)  
+                return redirect('accounts:bank_settings', username=username)  
             except Exception as e:
                 print(f"저장 실패: {str(e)}")
                 messages.error(request, f'계좌 등록 중 오류가 발생했습니다: {str(e)}')
         else:
             print(f"폼 에러: {form.errors}")
     else:
-        form = BankAccountForm()
+        form = BankForm()
     
     context = {
         'form': form,
         'user_profile': user_profile,
     }
-    return render(request, 'accounts/account_registration.html', context)
+    return render(request, 'accounts/bank_registration.html', context)
 
 @login_required  
-def account_modify(request, username):
+def bank_modify(request, username):
     """등록된 계좌정보 수정"""
     user_profile = get_object_or_404(User, username=username)
     
@@ -744,31 +744,31 @@ def account_modify(request, username):
     bank_profile = user_profile.get_bank_profile()
     if not bank_profile:
         messages.warning(request, '등록된 계좌가 없습니다. 먼저 계좌를 등록해주세요.')
-        return redirect('accounts:account_registration', username=username)
+        return redirect('accounts:bank_registration', username=username)
     
     if request.method == 'POST':
-        form = BankAccountForm(request.POST)
+        form = BankForm(request.POST)
         if form.is_valid():
             try:
                 # 기존 계좌 정보 업데이트
                 bank_profile.bank_code = form.cleaned_data['bank_code']
                 bank_profile.bank_name = dict(form.BANK_CHOICES)[form.cleaned_data['bank_code']]
-                bank_profile.account_number = form.cleaned_data['account_number']
-                bank_profile.account_holder = form.cleaned_data['account_holder']
+                bank_profile.bank_number = form.cleaned_data['bank_number']
+                bank_profile.bank_holder = form.cleaned_data['bank_holder']
                 bank_profile.save()
                 
                 messages.success(request, '계좌정보가 수정되었습니다!')
-                return redirect('accounts:account_settings', username=username)  
+                return redirect('accounts:bank_settings', username=username)  
             except Exception as e:
                 messages.error(request, f'계좌 수정 중 오류가 발생했습니다: {str(e)}')
     else:
         # 기존 정보로 폼 초기화
         initial_data = {
             'bank_code': bank_profile.bank_code,
-            'account_number': bank_profile.account_number,
-            'account_holder': bank_profile.account_holder,
+            'bank_number': bank_profile.bank_number,
+            'bank_holder': bank_profile.bank_holder,
         }
-        form = BankAccountForm(initial=initial_data)
+        form = BankForm(initial=initial_data)
     
     context = {
         'form': form,
@@ -776,10 +776,10 @@ def account_modify(request, username):
         'bank_profile': bank_profile,
         'is_modify': True,
     }
-    return render(request, 'accounts/account_registration.html', context)
+    return render(request, 'accounts/bank_registration.html', context)
 
 @login_required
-def account_delete(request, username):
+def bank_delete(request, username):
     """등록된 계좌정보 삭제"""
     user_profile = get_object_or_404(User, username=username)
     
@@ -791,18 +791,18 @@ def account_delete(request, username):
     bank_profile = user_profile.get_bank_profile()
     if not bank_profile:
         messages.warning(request, '등록된 계좌가 없습니다.')
-        return redirect('accounts:account_settings', username=username)  
+        return redirect('accounts:bank_settings', username=username)  
     
     if request.method == 'POST':
         bank_profile.delete()
         messages.success(request, '계좌정보가 삭제되었습니다.')
-        return redirect('accounts:account_settings', username=username)  
+        return redirect('accounts:bank_settings', username=username)  
     
     context = {
         'user_profile': user_profile,
         'bank_profile': bank_profile,
     }
-    return render(request, 'accounts/account_delete_confirm.html', context)
+    return render(request, 'accounts/bank_delete_confirm.html', context)
 
 
 @login_required
@@ -1291,7 +1291,7 @@ def fandom_verification(request, username):
 
 
 @login_required
-def account_settings(request, username):
+def bank_settings(request, username):
     """계좌 설정 페이지 (기존 계좌 함수들 활용)"""
     user_profile = get_object_or_404(User, username=username)
     
@@ -1307,7 +1307,7 @@ def account_settings(request, username):
         'user_profile': user_profile,
         'bank_profile': bank_profile,
     }
-    return render(request, 'accounts/account_settings.html', context)
+    return render(request, 'accounts/bank_settings.html', context)
 
 
 @login_required
