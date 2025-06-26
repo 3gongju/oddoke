@@ -16,7 +16,7 @@
     <!-- Open Graph Meta Tags (Facebook, 카카오톡 등) -->
     <meta property="og:title" content="어덕해 - 팬들을 위한 특별한 공간">
     <meta property="og:description" content="굿즈 거래, 팬 커뮤니티, 생일 달력 등 덕질의 모든 것을 한 곳에서 경험하세요.">
-    <meta property="og:image" content="{% static 'image/slide/intro_slide_1.jpg' %}">
+    <meta property="og:image" content="{% static 'image/slide/intro_slide_default.jpg' %}">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="어덕해">
@@ -25,12 +25,10 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="어덕해 - 팬들을 위한 특별한 공간">
     <meta name="twitter:description" content="굿즈 거래, 팬 커뮤니티, 생일 달력 등 덕질의 모든 것을 한 곳에서 경험하세요.">
-    <meta name="twitter:image" content="{% static 'image/slide/intro_slide_1.jpg' %}">
+    <meta name="twitter:image" content="{% static 'image/slide/intro_slide_default.jpg' %}">
     
     <!-- Performance Optimization -->
-    <link rel="preload" href="{% static 'image/slide/intro_slide_1.jpg' %}" as="image">
-    <link rel="prefetch" href="{% static 'image/slide/intro_slide_2.jpg' %}">
-    <link rel="prefetch" href="{% static 'image/slide/intro_slide_3.jpg' %}">
+    <link rel="preload" href="{% static 'image/slide/intro_slide_default.jpg' %}" as="image">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
@@ -65,34 +63,11 @@
             content-visibility: auto;
         }
         
-        /* 이미지 로딩 상태 */
-        .intro-image[loading="lazy"] {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: loading-shimmer 1.5s infinite;
-        }
-        
-        @keyframes loading-shimmer {
-            0% {
-                background-position: -200% 0;
-            }
-            100% {
-                background-position: 200% 0;
-            }
-        }
-        
         /* 고해상도 디스플레이 대응 */
         @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
             .intro-image {
                 image-rendering: -webkit-optimize-contrast;
                 image-rendering: crisp-edges;
-            }
-        }
-        
-        /* 다크모드 대응 */
-        @media (prefers-color-scheme: dark) {
-            .intro-image[loading="lazy"] {
-                background: linear-gradient(90deg, #2a2a2a 25%, #1a1a1a 50%, #2a2a2a 75%);
             }
         }
         
@@ -299,10 +274,10 @@
         <!-- 17개 슬라이드 동적 생성 -->
         {% for slide in slide_contents %}
         <section class="snap-section h-screen relative" id="section-{{ forloop.counter0 }}">
-            <img src="{% static 'image/slide/intro_slide_' %}{{ forloop.counter }}.jpg" 
+            <img src="{% static slide.image %}" 
                  alt="어덕해 소개 슬라이드 {{ forloop.counter }} - {{ slide.title }}" 
                  class="intro-image"
-                 {% if forloop.first %}loading="eager"{% else %}loading="lazy"{% endif %}>
+                 loading="eager">
             
             <!-- 슬라이드별 오버레이 콘텐츠 -->
             <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
@@ -368,7 +343,7 @@
                     {% else %}
                     <!-- 일반 슬라이드 -->
                     <h2 class="text-3xl md:text-5xl font-bold mb-4">{{ slide.title }}</h2>
-                    <h3 class="text-xl md:text-2xl mb-6 text-blue-300">{{ slide.subtitle }}</h3>
+                    <h3 class="text-xl md:text-2xl mb-6 text-pink-200">{{ slide.subtitle }}</h3>
                     <p class="text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
                         {{ slide.description }}
                     </p>
@@ -405,6 +380,14 @@
                             <div class="text-sm opacity-90">특별한 순간</div>
                         </div>
                     </div>
+
+                    {% elif slide.type == 'favorite_artists' %}
+                    <!-- 🔥 찜한 아티스트 슬라이드 - 별도 파일로 분리 -->
+                    {% include 'main/intro/favorite_artists_slide.html' %}
+                    
+                    {% elif slide.type == 'ddoksang' %}
+                    <!-- 🎂 덕생 - 아티스트 생일 달력 슬라이드 - 별도 파일로 분리 -->
+                    {% include 'main/intro/birthday_artists_slide.html' %}
                     
                     {% elif slide.type == 'safety' %}
                     <div class="mt-8 flex justify-center items-center space-x-8">
@@ -464,39 +447,22 @@
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
         
-        // 이미지 로딩 관리 (간소화된 버전)
+        // 이미지 로딩 관리 (더욱 간소화된 버전)
         function checkImagesLoaded() {
-            // 이미지 로딩을 기다리지 않고 바로 시작
-            console.log('이미지 로딩 체크 시작...');
+            console.log('단일 이미지 로딩 체크 시작...');
             
-            // 첫 번째 이미지만 체크
+            // 모든 이미지가 같으므로 첫 번째만 체크
             const firstImage = document.querySelector('.intro-image');
             
-            if (firstImage) {
-                if (firstImage.complete && firstImage.naturalHeight !== 0) {
-                    console.log('첫 번째 이미지 로딩 완료');
-                    finishLoading();
-                } else {
-                    // 첫 번째 이미지 로딩 대기
-                    firstImage.addEventListener('load', () => {
-                        console.log('첫 번째 이미지 로드됨');
-                        finishLoading();
-                    });
-                    
-                    firstImage.addEventListener('error', () => {
-                        console.log('첫 번째 이미지 로딩 실패, 계속 진행');
-                        finishLoading();
-                    });
-                    
-                    // 3초 후 강제로 로딩 완료
-                    setTimeout(() => {
-                        console.log('3초 타임아웃, 강제 로딩 완료');
-                        finishLoading();
-                    }, 3000);
-                }
-            } else {
-                console.log('이미지를 찾을 수 없음, 바로 진행');
+            if (firstImage && firstImage.complete && firstImage.naturalHeight !== 0) {
+                console.log('이미지 로딩 완료');
                 finishLoading();
+            } else {
+                // 1초 후 강제로 로딩 완료 (같은 이미지이므로 빠름)
+                setTimeout(() => {
+                    console.log('1초 타임아웃, 강제 로딩 완료');
+                    finishLoading();
+                }, 1000);
             }
         }
         

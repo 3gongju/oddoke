@@ -1,0 +1,51 @@
+{# templates/main/intro/favorite_artists_slide.html #}
+{% load static %}
+
+<!-- 찜한 아티스트 전용 CSS 로드 -->
+<link rel="stylesheet" href="{% static 'css/intro/favorite_artists.css' %}">
+
+<!--찜한 아티스트 슬라이드 -->
+{% if slide.real_data %}
+<div class="mt-8 max-w-6xl mx-auto">
+    <!-- 가운데 정렬된 아티스트 로고들 -->
+    <div class="flex flex-wrap justify-center items-center gap-4 sm:gap-8 lg:gap-10 mb-8">
+    {% for artist in slide.real_data|slice:":8" %}
+        <div class="text-center">
+        <a href="{% url 'artist:index' %}?artist={{ artist.id }}" class="favorite-artist-card block group">
+            <img src="{% static artist.logo %}" 
+                alt="{{ artist.display_name }}"
+                class="artist-logo-glow w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto rounded-full shadow-md border-2 border-white border-opacity-50 hover:shadow-lg hover:border-opacity-100 transition-all duration-300 group-hover:scale-105">
+            <p class="artist-name mt-2 text-xs sm:text-sm font-semibold text-white truncate max-w-[60px] sm:max-w-[100px] lg:max-w-[120px]">{{ artist.display_name }}</p>
+        </a>
+        </div>
+    {% endfor %}
+    </div>
+    
+    <!-- 전체 아티스트 관리 링크 -->
+    <div class="text-center mt-6">
+        <a href="{% url 'artist:index' %}" 
+        class="intro-btn inline-flex items-center space-x-2 bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-full text-sm font-medium transition-all transform hover:scale-105">
+            <span>아티스트 관리하기</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+        </a>
+    </div>
+</div>
+{% else %}
+<!-- 찜한 아티스트가 없을 때 -->
+<div class="empty-state mt-8 text-center max-w-md mx-auto">
+    <div class="w-16 h-16 mx-auto mb-4 opacity-60">
+        <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 아티스트 없음" class="w-full h-full object-contain brightness-0 invert" />
+    </div>
+    <h4 class="text-xl font-light text-white mb-3">아직 찜한 덕이 없어요!</h4>
+    <p class="text-gray-300 text-center mb-6">마음에 드는 아티스트를 찜해보세요</p>
+    <a href="{% url 'artist:index' %}" 
+    class="intro-btn inline-flex items-center space-x-2 bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-full font-medium transition-all transform hover:scale-105">
+        <span>찜덕하러 가기</span>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+    </a>
+</div>
+{% endif %}
