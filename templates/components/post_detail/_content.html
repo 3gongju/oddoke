@@ -13,18 +13,18 @@
             참여자 관리
           </a>
         {% endif %}
-        <form action="{% url 'ddokfarm:mark_as_sold' category=category post_id=post.id %}" method="post" class="inline">
-          {% csrf_token %}
-          <button type="submit"
-                  class="px-3 py-1 text-sm rounded transition
-                        {% if post.is_sold %}
-                          bg-gray-300 hover:bg-gray-400 active:bg-gray-500 text-black
-                        {% else %}
-                          bg-black hover:bg-gray-800 active:bg-gray-700 text-white
-                        {% endif %}">
-            {% if post.is_sold %}거래중으로 변경{% else %}거래 완료로 변경{% endif %}
+        
+        <!-- 수정된 거래완료 버튼 -->
+        {% if post.is_sold %}
+          <button class="px-3 py-1 text-sm rounded transition bg-gray-300 text-gray-500 cursor-not-allowed" disabled>
+            거래 완료됨
           </button>
-        </form>
+        {% else %}
+          <button onclick="showMarkAsSoldModal()" 
+                  class="px-3 py-1 text-sm rounded transition bg-black hover:bg-gray-800 active:bg-gray-700 text-white">
+            거래 완료로 변경
+          </button>
+        {% endif %}
       </div>
     {% endif %}
   {% endif %}
@@ -67,3 +67,34 @@
     {% endif %}
   </div>
 </div>
+
+<!-- 거래완료 확인 모달 (덕팜이고 게시글 작성자이고 아직 거래완료되지 않았을 때만 포함) -->
+{% if is_ddokfarm and request.user == post.user and not post.is_sold %}
+<div id="markAsSoldModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4">
+    <div class="text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+        <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.75 0a9 9 0 1 1 18 0 9 9 0 0 1-18 0Zm9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">거래완료 확인</h3>
+      <p class="text-sm text-gray-600 mb-6">
+        거래를 완료하시겠습니까?<br>
+        <span class="text-red-500 font-medium">(거래완료는 되돌릴 수 없습니다.)</span>
+      </p>
+      
+      <div class="flex gap-3">
+        <button onclick="closeMarkAsSoldModal()" 
+                class="flex-1 px-4 py-2 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+          취소
+        </button>
+        <button onclick="confirmMarkAsSold()" 
+                class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
