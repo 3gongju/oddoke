@@ -29,7 +29,11 @@ class User(AbstractUser):
        'unique': "이미 사용 중인 닉네임입니다."
     })
    
-    profile_image = models.ImageField(upload_to=profile_image_upload)
+    profile_image = models.ImageField(
+        upload_to=profile_image_upload,
+        null=True,
+        blank=True,
+        )
     followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     bio = models.TextField(blank=True, null=True)
 
