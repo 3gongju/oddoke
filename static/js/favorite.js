@@ -17,9 +17,9 @@ class UnifiedFavoriteManager {
     initializeExistingStates() {
         document.querySelectorAll('[data-favorite-btn][data-cafe-id]').forEach(btn => {
             const cafeId = btn.dataset.cafeId;
-            //  SVG fill 속성으로 찜 상태 확인 (fill="currentColor"면 찜됨)
+            // SVG fill 속성으로 찜 상태 확인 (fill="#ef4444"면 찜됨)
             const heartSvg = btn.querySelector('svg');
-            const isFavorited = heartSvg && heartSvg.getAttribute('fill') === 'currentColor';
+            const isFavorited = heartSvg && heartSvg.getAttribute('fill') === '#ef4444';
             this.favoriteStates.set(cafeId.toString(), isFavorited);
         });
     }
@@ -69,7 +69,7 @@ class UnifiedFavoriteManager {
                     this.removeCafeFromCarousel(cafeId);
                 }
 
-                //  detail 페이지에서만 토스트 출력
+                // detail 페이지에서만 토스트 출력
                 const pageId = document.getElementById('page-identifier');
                 const isDetailPage = pageId && pageId.dataset.page === 'detail';
 
@@ -90,15 +90,10 @@ class UnifiedFavoriteManager {
     
     updateAllButtons(cafeId, isFavorited) {
         document.querySelectorAll(`[data-favorite-btn][data-cafe-id="${cafeId}"]`).forEach(button => {
-            //  하트 아이콘 업데이트 (크기 유지)
+            // 하트 아이콘 업데이트 (크기 유지)
             this.updateButtonIcon(button, isFavorited);
             
-            //  색상 업데이트
-            if (button.style) {
-                button.style.color = isFavorited ? '#ef4444' : '#6b7280';
-            }
-            
-            //  클래스 기반 스타일링도 지원
+            // 클래스 기반 스타일링도 지원
             if (isFavorited) {
                 button.classList.add('favorited');
                 button.classList.remove('not-favorited');
@@ -110,15 +105,26 @@ class UnifiedFavoriteManager {
     }
 
     updateButtonIcon(button, isFavorited) {
+        // 카드 템플릿과 일치하는 하트 아이콘 사용
         if (isFavorited) {
+            // 찜된 상태: 채워진 하트 (빨간색)
             button.innerHTML = `
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.218l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M12.001 4.529c2.349-2.342 6.151-2.354 8.502-.022
+                            2.357 2.339 2.365 6.133.01 8.482l-7.104 7.066a1.5 1.5 0
+                            01-2.116 0l-7.104-7.066c-2.355-2.349-2.348-6.143.01-8.482
+                            2.351-2.332 6.153-2.32 8.502.022z"/>
                 </svg>`;
         } else {
+            // 찜하지 않은 상태: 빈 하트 (빨간색 테두리)
             button.innerHTML = `
-                <svg class="w-5 h-5" fill="none" stroke="#ef4444" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 000-6.364 4.5 4.5 0 00-6.364 0L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M12.001 4.529c2.349-2.342 6.151-2.354 8.502-.022
+                            2.357 2.339 2.365 6.133.01 8.482l-7.104 7.066a1.5 1.5 0
+                            01-2.116 0l-7.104-7.066c-2.355-2.349-2.348-6.143.01-8.482
+                            2.351-2.332 6.153-2.32 8.502.022z"/>
                 </svg>`;
         }
     }
@@ -127,7 +133,7 @@ class UnifiedFavoriteManager {
         const favoriteCarousel = document.getElementById('favoriteCarousel');
         if (!favoriteCarousel) return;
 
-        //  중복 방지: 이미 존재하는 슬라이드 제거
+        // 중복 방지: 이미 존재하는 슬라이드 제거
         const existing = favoriteCarousel.querySelector(`.swiper-slide[data-cafe-id="${cafeId}"]`);
         if (existing) {
             existing.remove();
@@ -137,7 +143,7 @@ class UnifiedFavoriteManager {
         wrapper.innerHTML = html.trim();
         const newCard = wrapper.firstElementChild;
 
-        //  강제 스타일 및 클래스 지정
+        // 강제 스타일 및 클래스 지정
         newCard.classList.add('swiper-slide');
         newCard.setAttribute('data-cafe-id', cafeId);
         newCard.style.width = '260px';
@@ -177,7 +183,6 @@ class UnifiedFavoriteManager {
         }
     }
 
-
     setButtonsLoading(buttons, isLoading) {
         buttons.forEach(button => {
             button.disabled = isLoading;
@@ -189,12 +194,11 @@ class UnifiedFavoriteManager {
         });
     }
 
-
     getCSRFToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]')?.value;
     }
 
-    //  외부에서 호출할 수 있는 상태 설정 함수
+    // 외부에서 호출할 수 있는 상태 설정 함수
     setFavoriteState(cafeId, isFavorited) {
         this.favoriteStates.set(cafeId.toString(), isFavorited);
     }
