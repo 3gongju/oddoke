@@ -3,7 +3,13 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 from django.contrib.contenttypes.models import ContentType
 from artist.models import Artist, Member
+import os
+from datetime import datetime
 
+def ddokfarm_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('ddokfarm/images', now.strftime('%y/%m'), filename)
+    
 # 배송 방법 선택지
 SHIPPING_METHOD_CHOICES = [
     ('post_parcel', '우체국 택배'),       # 우체국 소포
@@ -354,7 +360,7 @@ class FarmComment(models.Model):
 
 # 이미지 여러장
 class FarmPostImage(models.Model):
-    image = models.ImageField(upload_to='ddokfarm/image')
+    image = models.ImageField(upload_to=ddokfarm_image_upload)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')

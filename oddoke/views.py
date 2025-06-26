@@ -132,7 +132,7 @@ def intro_view(request):
         {
             'title': '덕팜 - 굿즈 거래의 새로운 방식',
             'subtitle': '안전하고 편리한 거래',
-            'description': '판매, 대여, 공동구매까지 모든 거래를 한 곳에서',
+            'description': '양도, 대여, 분철까지 모든 거래를 한 곳에서',
             'type': 'ddokfarm',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokfarm_posts  # 🔥 실제 데이터 추가
@@ -140,7 +140,7 @@ def intro_view(request):
         {
             'title': '덕담 - 팬들만의 소통 공간',
             'subtitle': '자유로운 소통과 정보 공유',
-            'description': '커뮤니티, 매너샷, 생일카페 정보까지',
+            'description': '커뮤니티, 예절샷, 생일카페 후기까지',
             'type': 'ddokdam',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokdam_posts  # 🔥 실제 데이터 추가
@@ -155,9 +155,9 @@ def intro_view(request):
             'stats_data': birthday_stats    # 🔥 생일 통계 데이터 추가
         },
         {
-            'title': '덕채팅 - 실시간 소통',
-            'subtitle': '팬들과의 즉석 대화',
-            'description': '같은 관심사를 가진 사람들과 실시간으로 소통하세요',
+            'title': '덕챗 - 팬과 팬을 잇는 대화',
+            'subtitle': '실시간 대화로 더 편하게',
+            'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
             'type': 'ddokchat',
             'image': DEFAULT_SLIDE_IMAGE
         },
@@ -170,8 +170,8 @@ def intro_view(request):
         },
         {
             'title': '다양한 아티스트 지원',
-            'subtitle': 'K-POP부터 일본 아티스트까지',
-            'description': '모든 장르의 아티스트 팬들을 위한 공간',
+            'subtitle': '모든 덕들을 위한 플랫폼',
+            'description': 'K-POP 팬들을 위한 맞춤형 공간',
             'type': 'artists',
             'image': DEFAULT_SLIDE_IMAGE
         },

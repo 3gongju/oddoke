@@ -3,7 +3,13 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
 from django.contrib.contenttypes.models import ContentType
 from artist.models import Artist, Member
+import os
+from datetime import datetime
 
+def ddokdam_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('ddokdam/images', now.strftime('%y/%m'), filename)
+    
 class DamBasePost(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField() 
@@ -117,7 +123,7 @@ class DamComment(models.Model):
 
 # 이미지 여러장
 class DamPostImage(models.Model):
-    image = models.ImageField(upload_to='ddokdam/image')
+    image = models.ImageField(upload_to=ddokdam_image_upload)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')

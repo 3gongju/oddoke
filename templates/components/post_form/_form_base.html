@@ -29,6 +29,15 @@
   <!-- ✅ split일 때는 완전히 숨기고 렌더링도 안 함 -->
   {% if category != 'split' %}
     <label class="block text-lg font-bold text-gray-900 mb-2">멤버 선택</label>
+
+    <!-- 전체 선택 체크박스 -->
+    <div class="mb-3 pb-2 border-b border-gray-200">
+      <label class="flex items-center text-sm font-medium text-gray-700">
+        <input type="checkbox" id="select-all-members" class="mr-2 rounded">
+        <span>전체 선택</span>
+      </label>
+    </div>
+    
     <div id="member-checkboxes">
       {% for member in selected_members %}
         <label class="block mb-2">

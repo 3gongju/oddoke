@@ -3,11 +3,17 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.conf import settings
+import os
+from datetime import datetime
 import uuid
 import base64
 
 # Create your models here.
 
+def ddokchat_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('ddokchat/images', now.strftime('%y/%m'), filename)
+    
 class ChatRoom(models.Model):
     # 거래글: FarmSellPost, FarmRentalPost, FarmSplitPost 중 하나
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE) # 포스트 모델 선택
@@ -229,7 +235,7 @@ class TextMessage(models.Model):
 class ImageMessage(models.Model):
     """이미지 메시지 상세 정보"""
     message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='image_content')
-    image = models.ImageField(upload_to='chat_images/')
+    image = models.ImageField(upload_to=ddokchat_image_upload)
     
     # ✅ 새로 추가: EXIF 메타데이터 필드 (촬영시간만)
     taken_datetime = models.DateTimeField(null=True, blank=True, help_text="촬영 날짜/시간")
