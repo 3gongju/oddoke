@@ -7,7 +7,7 @@
     {% for choice in form.shipping_methods.field.choices %}
       <label class="inline-flex items-center cursor-pointer">
         <input type="checkbox" name="shipping_methods" value="{{ choice.0 }}" 
-               class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+               class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-pink-500"
                {% if choice.0 in form.shipping_methods.value %}checked{% endif %}>
         <span class="ml-2 text-sm text-gray-700">{{ choice.1 }}</span>
       </label>

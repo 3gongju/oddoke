@@ -62,21 +62,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    
     'ddokfarm',
     'ddokdam',
     'accounts',
-    'django_browser_reload',
-    'widget_tweaks',
-    'import_export',
     'artist',
-    'django.contrib.humanize',
     'bday_calendar',
     'ddoksang',
     'ddokchat',
-    'channels',
     'notifications',
     'faq',
     'oddmin',
+
+    'widget_tweaks',
+    'import_export',
+    'django_browser_reload',
+    'channels',
+    'storages', 
 ]
 
 MIDDLEWARE = [
@@ -171,9 +174,42 @@ STATIC_ROOT = BASE_DIR / 'collectstatic'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_ROOT = BASE_DIR / 'media'
+# s3 설정
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'oddoke-bucket'
+AWS_S3_REGION_NAME = 'ap-northeast-2'
 
-MEDIA_URL = '/media/'
+# 표준 S3 엔드포인트 사용
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+
+# 기타 설정
+# AWS_DEFAULT_ACL = 'public-read'
+AWS_DEFAULT_ACL = None  # ACL 사용 안 함
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+if DEBUG:
+    # 개발 환경: 로컬 저장
+    MEDIA_ROOT = BASE_DIR / 'media'
+    MEDIA_URL = '/media/'
+else:
+    # 운영 환경: S3 저장
+    # DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        }
+    }
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -213,9 +249,15 @@ KAKAO_API_KEY = KAKAO_MAP_API_KEY
 # 카카오톡 공유하기 키 설정
 KAKAO_JAVASCRIPT_KEY = os.getenv('KAKAO_JAVASCRIPT_KEY')
 
+# 구글 OAuth 설정
+GOOGLE_OAUTH_CLIENT_ID = os.getenv('GOOGLE_OAUTH_CLIENT_ID')
+GOOGLE_OAUTH_SECRET_ID = os.getenv('GOOGLE_OAUTH_SECRET_ID')
+
 # 실시간 채팅 기능(WebSocket) 쓰기 위한 설정
 ASGI_APPLICATION = 'oddoke.asgi.application'
 
+# Redis 설정
+REDIS_URL = os.getenv('REDIS_URL')
 
 # 채널 레이어 설정
 CHANNEL_LAYERS = {

@@ -1,35 +1,33 @@
 import json
-import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth import get_user_model
-from .models import ChatRoom, Message, TextMessage, ImageMessage, AccountInfoMessage, AddressMessage
+from .models import ChatRoom, Message, TextMessage
 from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from asgiref.sync import async_to_sync
+from utils.redis_client import redis_client
 
 User = get_user_model()
-logger = logging.getLogger(__name__)
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         """WebSocket 연결 처리"""
         try:
-            self.room_id = self.scope['url_route']['kwargs']['room_id']
-            self.room_group_name = f'chat_{self.room_id}'
+            self.room_code = self.scope['url_route']['kwargs']['room_code']
+            self.room_group_name = f'chat_{self.room_code}'
             self.user = self.scope['user']
             
             # 사용자 인증 확인
             if not self.user.is_authenticated:
-                logger.warning(f"비인증 사용자의 연결 시도: {self.scope.get('client', 'unknown')}")
                 await self.close()
                 return
             
             # 채팅방 참여 권한 확인
             if not await self.check_room_permission():
-                logger.warning(f"권한 없는 사용자의 채팅방 접근: user={self.user.id}, room={self.room_id}")
                 await self.close()
                 return
+            
+            # ✅ 수정: 채팅방 그룹 참여 전에 Redis 위치 설정
+            await self.set_user_current_chatroom(self.user.id, self.room_code)
             
             # 채팅방에 참여
             await self.channel_layer.group_add(
@@ -38,23 +36,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             
             await self.accept()
-            logger.info(f"사용자 {self.user.username}이 채팅방 {self.room_id}에 연결됨")
             
-        except Exception as e:
-            logger.error(f"WebSocket 연결 오류: {e}")
+        except Exception:
             await self.close()
 
     async def disconnect(self, close_code):
         """WebSocket 연결 해제 처리"""
         try:
+            # ✅ Redis에서 현재 채팅방 위치 삭제
+            if hasattr(self, 'user') and self.user.is_authenticated:
+                await self.clear_user_current_chatroom(self.user.id)
+            
             if hasattr(self, 'room_group_name'):
                 await self.channel_layer.group_discard(
                     self.room_group_name,
                     self.channel_name
                 )
-                logger.info(f"사용자 {getattr(self, 'user', 'unknown')}이 채팅방 {getattr(self, 'room_id', 'unknown')}에서 연결 해제됨")
-        except Exception as e:
-            logger.error(f"WebSocket 연결 해제 오류: {e}")
+        except Exception:
+            pass
 
     async def receive(self, text_data):
         """메시지 수신 처리"""
@@ -62,7 +61,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             data = json.loads(text_data)
             message_type = data.get('type', 'chat')
             
-            logger.debug(f"메시지 수신: type={message_type}, user={self.user.username}, room={self.room_id}")
+            # ✅ 메시지 수신 시 Redis TTL 갱신 (활성 상태 유지)
+            await self.refresh_user_current_chatroom(self.user.id, self.room_code)
             
             # 거래 완료 상태 확인
             if await self.is_trade_completed():
@@ -73,12 +73,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.handle_message_by_type(message_type, data)
             
         except json.JSONDecodeError:
-            logger.warning(f"잘못된 JSON 형식의 메시지: {text_data}")
             await self.send_error("잘못된 메시지 형식입니다.")
-        except Exception as e:
-            logger.error(f"메시지 처리 오류: {e}")
+        except Exception:
             await self.send_error("메시지 처리 중 오류가 발생했습니다.")
 
+    # ✅ Redis 관련 비동기 메서드들 추가
+    async def set_user_current_chatroom(self, user_id, room_code):
+        """Redis에 사용자 현재 채팅방 설정 (비동기)"""
+        try:
+            # CPU 집약적 작업을 별도 스레드에서 실행
+            from asgiref.sync import sync_to_async
+            sync_redis_set = sync_to_async(redis_client.set_user_current_chatroom, thread_sensitive=False)
+            return await sync_redis_set(user_id, room_code, ttl=120)  # 2분 TTL
+        except Exception as e:
+            print(f"Redis 설정 실패: {e}")
+            return False
+    
+    async def clear_user_current_chatroom(self, user_id):
+        """Redis에서 사용자 현재 채팅방 삭제 (비동기)"""
+        try:
+            from asgiref.sync import sync_to_async
+            sync_redis_clear = sync_to_async(redis_client.clear_user_current_chatroom, thread_sensitive=False)
+            return await sync_redis_clear(user_id)
+        except Exception as e:
+            print(f"Redis 삭제 실패: {e}")
+            return False
+    
+    async def refresh_user_current_chatroom(self, user_id, room_code):
+        """Redis TTL 갱신 (활성 상태 유지)"""
+        try:
+            from asgiref.sync import sync_to_async
+            sync_redis_set = sync_to_async(redis_client.set_user_current_chatroom, thread_sensitive=False)
+            return await sync_redis_set(user_id, room_code, ttl=120)  # 2분 TTL 갱신
+        except Exception as e:
+            print(f"Redis TTL 갱신 실패: {e}")
+            return False
+
+    # 기존 메서드들은 그대로 유지...
     async def handle_message_by_type(self, message_type, data):
         """메시지 타입별 처리 분기"""
         handlers = {
@@ -95,7 +126,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if handler:
             await handler(data)
         else:
-            logger.warning(f"알 수 없는 메시지 타입: {message_type}")
             await self.send_error(f"지원하지 않는 메시지 타입입니다: {message_type}")
 
     async def handle_read_all(self, data):
@@ -138,7 +168,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_error("메시지 내용이 없습니다.")
             return
         
-        # 메시지 길이 제한
         if len(message_content) > 1000:
             await self.send_error("메시지가 너무 깁니다. (최대 1000자)")
             return
@@ -156,10 +185,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'is_read': False,
                 }
             )
-            logger.info(f"텍스트 메시지 전송 완료: user={self.user.username}, room={self.room_id}")
             
-        except Exception as e:
-            logger.error(f"텍스트 메시지 저장 오류: {e}")
+        except Exception:
             await self.send_error("메시지 전송에 실패했습니다.")
 
     async def handle_image_message(self, data):
@@ -167,13 +194,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         image_url = data.get('image_url')
         sender_id = data.get('sender_id')
         message_id = data.get('message_id')
-        taken_datetime = data.get('taken_datetime')  # ✅ 추가: 촬영시간
+        taken_datetime = data.get('taken_datetime')
         
         if not all([image_url, sender_id]):
             await self.send_error("이미지 정보가 부족합니다.")
             return
         
-        # 권한 확인 (자신의 메시지만 전송 가능)
         if int(sender_id) != self.user.id:
             await self.send_error("권한이 없습니다.")
             return
@@ -185,11 +211,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'image_url': image_url,
                 'sender_id': sender_id,
                 'message_id': message_id,
-                'taken_datetime': taken_datetime,  # ✅ 추가: 촬영시간 전달
+                'taken_datetime': taken_datetime,
                 'is_read': False,
             }
         )
-        logger.info(f"이미지 메시지 전송 완료: user={self.user.username}, room={self.room_id}")
 
     async def handle_account_info(self, data):
         """계좌정보 메시지 처리"""
@@ -201,7 +226,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_error("계좌정보가 부족합니다.")
             return
         
-        # 권한 확인
         if int(sender_id) != self.user.id:
             await self.send_error("권한이 없습니다.")
             return
@@ -217,10 +241,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'is_read': False,
                 }
             )
-            logger.info(f"계좌정보 메시지 전송 완료: user={self.user.username}, room={self.room_id}")
-            
-        except Exception as e:
-            logger.error(f"계좌정보 처리 오류: {e}")
+        except Exception:
             await self.send_error("계좌정보 전송에 실패했습니다.")
 
     async def handle_address_info(self, data):
@@ -233,7 +254,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send_error("주소정보가 부족합니다.")
             return
         
-        # 권한 확인
         if int(sender_id) != self.user.id:
             await self.send_error("권한이 없습니다.")
             return
@@ -249,29 +269,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'is_read': False,
                 }
             )
-            logger.info(f"주소정보 메시지 전송 완료: user={self.user.username}, room={self.room_id}")
-            
-        except Exception as e:
-            logger.error(f"주소정보 처리 오류: {e}")
+        except Exception:
             await self.send_error("주소정보 전송에 실패했습니다.")
 
-    # ===== 메시지 전송 메서드들 =====
-
+    # 메시지 전송 메서드들
     async def chat_message(self, event):
         """텍스트 메시지 전송"""
         try:
             sender = await self.get_username(event['sender_id'])
-            is_read = event.get('is_read', False)
-
             await self.send(text_data=json.dumps({
                 'type': 'chat_message',
                 'message': event['message'],
                 'sender': sender,
                 'message_id': event.get('message_id'),
-                'is_read': is_read,
+                'is_read': event.get('is_read', False),
             }))
-        except Exception as e:
-            logger.error(f"텍스트 메시지 전송 오류: {e}")
+        except Exception:
+            pass
 
     async def image_message(self, event):
         """이미지 메시지 전송"""
@@ -282,17 +296,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'image_url': event['image_url'],
                 'sender': sender,
                 'message_id': event.get('message_id'),
-                'taken_datetime': event.get('taken_datetime'),  # ✅ 추가: 촬영시간 전달
+                'taken_datetime': event.get('taken_datetime'),
                 'is_read': event.get('is_read', False), 
             }))
-        except Exception as e:
-            logger.error(f"이미지 메시지 전송 오류: {e}")
+        except Exception:
+            pass
 
     async def account_info_message(self, event):
         """계좌정보 메시지 전송"""
         try:
             sender = await self.get_username(event['sender_id'])
-            
             await self.send(text_data=json.dumps({
                 'type': 'account_info',
                 'account_info': event['account_info'],
@@ -300,14 +313,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message_id': event.get('message_id'),
                 'is_read': event.get('is_read', False),
             }))
-        except Exception as e:
-            logger.error(f"계좌정보 메시지 전송 오류: {e}")
+        except Exception:
+            pass
 
     async def address_info_message(self, event):
         """주소정보 메시지 전송"""
         try:
             sender = await self.get_username(event['sender_id'])
-            
             await self.send(text_data=json.dumps({
                 'type': 'address_info',
                 'address_info': event['address_info'],
@@ -315,11 +327,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'message_id': event.get('message_id'),
                 'is_read': event.get('is_read', False),
             }))
-        except Exception as e:
-            logger.error(f"주소정보 메시지 전송 오류: {e}")
+        except Exception:
+            pass
 
-    # ===== 읽음 처리 메서드들 =====
-
+    # 읽음 처리 메서드들
     async def read_update(self, event):
         """읽음 결과 전송"""
         await self.send(text_data=json.dumps({
@@ -345,11 +356,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         """거래 완료 알림"""
         await self.send(text_data=json.dumps({
             'type': 'trade_completed',
-            'room_id': event['room_id'],
+            'room_code': event['room_code'],
         }))
 
-    # ===== 유틸리티 메서드들 =====
-
+    # 유틸리티 메서드들
     async def send_error(self, message):
         """에러 메시지 전송"""
         try:
@@ -357,45 +367,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'error',
                 'message': message
             }))
-        except Exception as e:
-            logger.error(f"에러 메시지 전송 실패: {e}")
+        except Exception:
+            pass
 
     @database_sync_to_async
     def check_room_permission(self):
-        """채팅방 접근 권한 확인 - select_related로 최적화"""
+        """채팅방 접근 권한 확인"""
         try:
-            room = ChatRoom.objects.select_related('buyer', 'seller').get(id=self.room_id)
+            room = ChatRoom.objects.select_related('buyer', 'seller').get(room_code=self.room_code)
             return self.user in [room.buyer, room.seller]
         except ChatRoom.DoesNotExist:
             return False
-        except Exception as e:
-            logger.error(f"권한 확인 오류: {e}")
+        except Exception:
             return False
 
     @database_sync_to_async
     def is_trade_completed(self):
         """거래 완료 상태 확인"""
         try:
-            room = ChatRoom.objects.get(id=self.room_id)
+            room = ChatRoom.objects.get(room_code=self.room_code)
             return room.is_fully_completed
         except ChatRoom.DoesNotExist:
-            return True  # 방이 없으면 차단
-        except Exception as e:
-            logger.error(f"거래 상태 확인 오류: {e}")
-            return True  # 에러 시 안전하게 차단
+            return True
+        except Exception:
+            return True
 
     @database_sync_to_async
     def save_text_message(self, content):
-        """텍스트 메시지 DB 저장 - 최적화됨"""
+        """텍스트 메시지 DB 저장"""
         try:
             with transaction.atomic():
-                # select_related로 한번에 가져오기
-                room = ChatRoom.objects.select_related('buyer', 'seller').get(id=self.room_id)
-                
-                # receiver 계산
+                room = ChatRoom.objects.select_related('buyer', 'seller').get(room_code=self.room_code)
                 receiver = room.seller if self.user == room.buyer else room.buyer
                 
-                # 메시지 생성
                 message = Message.objects.create(
                     room=room, 
                     sender=self.user,
@@ -403,56 +407,47 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     message_type='text'
                 )
                 
-                # 텍스트 메시지 상세 정보 생성
                 TextMessage.objects.create(
                     message=message,
                     content=content
                 )
                 
                 return message
-        except Exception as e:
-            logger.error(f"텍스트 메시지 저장 오류: {e}")
+        except Exception:
             raise
 
     @database_sync_to_async
     def get_username(self, user_id):
-        """사용자 이름 가져오기 - 캐시 추가 고려"""
+        """사용자 이름 가져오기"""
         try:
-            # 나중에 캐시 추가 가능
             return User.objects.values_list('username', flat=True).get(id=user_id)
         except User.DoesNotExist:
-            logger.error(f"존재하지 않는 사용자 ID: {user_id}")
             return "Unknown User"
-        except Exception as e:
-            logger.error(f"사용자명 조회 오류: {e}")
+        except Exception:
             return "Unknown User"
-
-    @database_sync_to_async
-    def get_chatroom_seller(self, room_id):
-        """채팅방 판매자 가져오기"""
-        try:
-            return ChatRoom.objects.get(id=room_id).seller
-        except ChatRoom.DoesNotExist:
-            logger.error(f"존재하지 않는 채팅방: {room_id}")
-            return None
-        except Exception as e:
-            logger.error(f"채팅방 정보 조회 오류: {e}")
-            return None
 
     @database_sync_to_async
     def mark_all_as_read(self):
-        """읽음 처리 - 최적화된 bulk update"""
+        """읽음 처리"""
         try:
-            # bulk_update 사용으로 성능 개선
-            updated_count = Message.objects.filter(
-                room_id=self.room_id,
+            # 채팅 메시지 읽음 처리
+            Message.objects.filter(
+                room__room_code=self.room_code,
                 receiver=self.user,
                 is_read=False
             ).update(is_read=True)
             
-            if updated_count > 0:
-                logger.debug(f"읽음 처리 완료: user={self.user.username}, count={updated_count}")
+            # 관련 채팅 알림도 읽음 처리
+            room = ChatRoom.objects.select_related('content_type').get(room_code=self.room_code)
             
-        except Exception as e:
-            logger.error(f"읽음 처리 오류: {e}")
-            raise
+            try:
+                from notifications.models import Notification
+                Notification.mark_chat_notifications_read(
+                    user=self.user,
+                    room_post=room.post
+                )
+            except ImportError:
+                pass
+            
+        except Exception:
+            pass

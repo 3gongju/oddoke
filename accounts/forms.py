@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, MannerReview, BankProfile, AddressProfile, PostReport
+from .models import User, MannerReview, BankProfile, AddressProfile, PostReport, BannerRequest
 from django.contrib.auth.forms import PasswordResetForm, SetPasswordForm
 from django.contrib.auth import get_user_model
 
@@ -82,9 +82,9 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
     
-    # 🔥 프로필 이미지를 선택사항으로 변경
+    # 프로필 이미지 필드
     profile_image = forms.ImageField(
-        required=False,  # 🔥 필수가 아님
+        required=False,
         widget=forms.FileInput(attrs={
             'accept': 'image/*',
             'style': 'position: absolute; left: -9999px; opacity: 0;'
@@ -130,7 +130,7 @@ class CustomUserCreationForm(UserCreationForm):
         if not re.match(r'^[가-힣a-zA-Z0-9\s]+$', username):
             raise forms.ValidationError("닉네임은 한글, 영문, 숫자, 공백만 사용 가능합니다.")
         
-        # 🔥 임시 username 패턴 금지
+        # 임시 username 패턴 금지
         if username.startswith(('temp_kakao_', 'temp_naver_')):
             raise forms.ValidationError("사용할 수 없는 닉네임 형식입니다.")
         
@@ -151,8 +151,14 @@ class CustomUserCreationForm(UserCreationForm):
         return cleaned_data
 
     def save(self, commit=True):
+        """ 프로필 이미지 처리 추가된 save 메서드"""
         user = super().save(commit=False)
         user.is_active = False  # 이메일 인증 전까지 비활성화
+        
+        # 프로필 이미지 처리
+        if self.cleaned_data.get('profile_image'):
+            user.profile_image = self.cleaned_data['profile_image']
+            
         if commit:
             user.save()
         return user
@@ -244,7 +250,7 @@ class SocialSignupCompleteForm(forms.ModelForm):
             raise forms.ValidationError("닉네임은 한글, 영문, 숫자, 공백만 사용 가능합니다.")
         
         # 🔥 임시 username 패턴 금지
-        if username.startswith(('temp_kakao_', 'temp_naver_')):
+        if username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_')):
             raise forms.ValidationError("사용할 수 없는 닉네임 형식입니다.")
         
         # 🔥 기존 username 중복 검사 (현재 사용자 제외)
@@ -315,7 +321,7 @@ class ProfileImageForm(forms.ModelForm):
         model = User
         fields = ['profile_image']
 
-class BankAccountForm(forms.ModelForm):
+class BankForm(forms.ModelForm):
     BANK_CHOICES = [
         ('004', 'KB국민은행'),
         ('088', '신한은행'),
@@ -350,7 +356,7 @@ class BankAccountForm(forms.ModelForm):
         label="은행 선택"
     )
     
-    account_number = forms.CharField(
+    bank_number = forms.CharField(
         max_length=20,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -360,7 +366,7 @@ class BankAccountForm(forms.ModelForm):
         label="계좌번호"
     )
     
-    account_holder = forms.CharField(
+    bank_holder = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -372,15 +378,15 @@ class BankAccountForm(forms.ModelForm):
     
     class Meta:
         model = BankProfile
-        fields = ['bank_code', 'account_number', 'account_holder']
+        fields = ['bank_code', 'bank_number', 'bank_holder']
     
-    def clean_account_number(self):
-        account_number = self.cleaned_data.get('account_number')
-        if not account_number:
+    def clean_bank_number(self):
+        bank_number = self.cleaned_data.get('bank_number')
+        if not bank_number:
             raise forms.ValidationError("계좌번호를 입력해주세요.")
         
         # 숫자만 남기기 (하이픈, 공백 등 제거)
-        cleaned_number = ''.join(filter(str.isdigit, account_number))
+        cleaned_number = ''.join(filter(str.isdigit, bank_number))
         
         if len(cleaned_number) < 8:
             raise forms.ValidationError("올바른 계좌번호를 입력해주세요. (최소 8자리)")
@@ -390,35 +396,35 @@ class BankAccountForm(forms.ModelForm):
         
         return cleaned_number
     
-    def clean_account_holder(self):
-        account_holder = self.cleaned_data.get('account_holder')
-        if not account_holder:
+    def clean_bank_holder(self):
+        bank_holder = self.cleaned_data.get('bank_holder')
+        if not bank_holder:
             raise forms.ValidationError("예금주명을 입력해주세요.")
         
         # 공백 제거
-        account_holder = account_holder.strip()
+        bank_holder = bank_holder.strip()
         
         # 한글, 영문만 허용 (공백 포함)
         import re
-        if not re.match(r'^[가-힣a-zA-Z\s]+$', account_holder):
+        if not re.match(r'^[가-힣a-zA-Z\s]+$', bank_holder):
             raise forms.ValidationError("예금주명은 한글 또는 영문만 입력 가능합니다.")
         
-        if len(account_holder) < 2:
+        if len(bank_holder) < 2:
             raise forms.ValidationError("예금주명은 최소 2자 이상 입력해주세요.")
         
-        if len(account_holder) > 20:
+        if len(bank_holder) > 20:
             raise forms.ValidationError("예금주명이 너무 깁니다. (최대 20자)")
         
-        return account_holder
+        return bank_holder
     
     def clean(self):
         cleaned_data = super().clean()
         bank_code = cleaned_data.get('bank_code')
-        account_number = cleaned_data.get('account_number')
-        account_holder = cleaned_data.get('account_holder')
+        bank_number = cleaned_data.get('bank_number')
+        bank_holder = cleaned_data.get('bank_holder')
         
         # 모든 필드가 입력되었는지 확인
-        if not all([bank_code, account_number, account_holder]):
+        if not all([bank_code, bank_number, bank_holder]):
             raise forms.ValidationError("모든 필드를 입력해주세요.")
         
         return cleaned_data
@@ -428,8 +434,8 @@ class BankAccountForm(forms.ModelForm):
         bank_profile = user.get_or_create_bank_profile()
         bank_profile.bank_code = self.cleaned_data['bank_code']
         bank_profile.bank_name = dict(self.BANK_CHOICES)[self.cleaned_data['bank_code']]
-        bank_profile.account_number = self.cleaned_data['account_number']
-        bank_profile.account_holder = self.cleaned_data['account_holder']
+        bank_profile.bank_number = self.cleaned_data['bank_number']
+        bank_profile.bank_holder = self.cleaned_data['bank_holder']
         bank_profile.save()
         return bank_profile
 
@@ -576,3 +582,46 @@ class PostReportForm(forms.ModelForm):
         self.fields['reason'].label = '신고 사유'
         self.fields['additional_info'].label = '추가 설명'
         self.fields['additional_info'].required = False
+
+class BannerRequestForm(forms.ModelForm):
+    """배너 신청 폼"""
+    class Meta:
+        model = BannerRequest
+        fields = ['artist_name', 'banner_image']
+        widgets = {
+            'artist_name': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500',
+                'placeholder': '아티스트명을 입력하세요',
+                'maxlength': 100
+            }),
+            'banner_image': forms.FileInput(attrs={
+                'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500',
+                'accept': 'image/*'
+            })
+        }
+    
+    def clean_artist_name(self):
+        artist_name = self.cleaned_data.get('artist_name')
+        if not artist_name:
+            raise forms.ValidationError("아티스트명을 입력해주세요.")
+        
+        artist_name = artist_name.strip()
+        if len(artist_name) < 2:
+            raise forms.ValidationError("아티스트명은 최소 2자 이상이어야 합니다.")
+        
+        return artist_name
+    
+    def clean_banner_image(self):
+        banner_image = self.cleaned_data.get('banner_image')
+        if not banner_image:
+            raise forms.ValidationError("배너 이미지를 업로드해주세요.")
+        
+        # 파일 크기 검증 (5MB 제한)
+        if banner_image.size > 5 * 1024 * 1024:
+            raise forms.ValidationError("이미지 크기는 5MB 이하여야 합니다.")
+        
+        # 이미지 형식 검증
+        if not banner_image.content_type.startswith('image/'):
+            raise forms.ValidationError("이미지 파일만 업로드 가능합니다.")
+        
+        return banner_image

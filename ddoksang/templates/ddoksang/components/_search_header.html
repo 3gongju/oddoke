@@ -1,8 +1,54 @@
 {% load static %}
 
+<!-- compact 모드 조건부 스타일 -->
+{% if compact_mode %}
+<!-- 컴팩트 모드: 홈페이지용 -->
+<section class="py-4 sm:py-6">
+  <div class="max-w-5xl mx-auto px-4">
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+      
+      <!-- 검색창 -->
+      <div class="flex-1 relative">
+        <form method="get" action="{% url 'ddoksang:search' %}">
+          <input 
+            id="{{ search_input_id|default:'search-input' }}" 
+            type="text" 
+            name="q" 
+            placeholder="아티스트/멤버를 검색하세요" 
+            class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm sm:text-lg"
+            value="{{ query|default:'' }}" 
+            autocomplete="off">
+          
+          <button type="submit" class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z"/>
+            </svg>
+          </button>
+        </form>
+        
+        <!-- 자동완성 드롭다운 -->
+        <ul id="{{ autocomplete_list_id|default:'autocomplete-list' }}" 
+            class="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-48 overflow-y-auto z-50 mt-1">
+        </ul>
+      </div>
+
+      <!-- 생카 등록 버튼 (데스크톱에서만 표시) -->
+      {% if show_create_button %}
+      <div class="hidden sm:flex flex-shrink-0">
+        <a href="{% url 'ddoksang:create' %}" 
+           class="bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-base whitespace-nowrap">
+          생카 등록
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% else %}
+<!-- 일반 모드: 기존 크기 -->
 <section class="py-4 sm:py-6">
   <div class="max-w-7xl mx-auto px-4">
-    <!-- 🔧 수정: 모바일에서도 한 줄 배치를 위한 Flexbox 조정 -->
     <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
       
       <!-- 검색창 -->
@@ -13,7 +59,7 @@
             type="text" 
             name="q" 
             placeholder="{{ search_placeholder|default:'아티스트, 멤버 검색' }}" 
-            class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm sm:text-lg"
+            class="w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm sm:text-lg"
             value="{{ query|default:'' }}" 
             autocomplete="off">
           
@@ -30,19 +76,18 @@
         </ul>
       </div>
 
-      <!-- 생카 등록 버튼 (데스크톱에서만 표시, 모바일에서는 하단 FAB 사용) -->
+      <!-- 생카 등록 버튼 -->
       {% if show_create_button %}
-      <!-- 🔧 모바일에서는 숨김 (hidden), 데스크톱에서만 표시 (sm:block) -->
       <div class="hidden sm:flex flex-shrink-0">
         <a href="{% url 'ddoksang:create' %}" 
            class="bg-gray-900 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-base whitespace-nowrap">
-          + 생카 등록
+          생카 등록
         </a>
       </div>
       {% endif %}
     </div>
 
-    <!-- 검색 결과 요약 (검색 페이지에서만 표시) -->
+    <!-- 검색 결과 요약 -->
     {% if show_results_summary and query %}
     <div class="mt-4 text-center">
       <p class="text-lg text-gray-600">
@@ -57,8 +102,20 @@
     {% endif %}
   </div>
 </section>
+{% endif %}
 
-<!-- 모든 검색창에서 동일한 설정 -->
+{% if compact_mode %}
+<style>
+/* iOS 줌 방지 */
+@media (max-width: 640px) {
+  input[type="text"] {
+    font-size: 16px;
+  }
+}
+</style>
+{% endif %}
+
+<!-- 자동완성 스크립트 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -67,8 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (typeof initAutocomplete === 'function') {
     initAutocomplete(searchInputId, autocompleteListId, {
-      showBirthday: true,        // 생일 표시
-      showArtistTag: true,       // 아티스트/멤버 태그 표시
+      showBirthday: true,
+      showArtistTag: true,
       submitOnSelect: true,
       artistOnly: false,
       apiUrl: '/artist/autocomplete/'

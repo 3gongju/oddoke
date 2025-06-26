@@ -5,7 +5,7 @@
 {% block body %}
 <!-- 페이지 헤더 -->
 <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-900 mb-4">☕ 생일카페 관리</h2>
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">생일카페 관리</h2>
     
     <!-- 필터 버튼들 -->
     <div class="flex space-x-2 mb-4">
@@ -149,7 +149,7 @@
 {% else %}
 <!-- 빈 상태 -->
 <div class="bg-white shadow rounded-lg p-8 text-center">
-    <div class="text-gray-400 text-6xl mb-4">☕</div>
+    <div class="text-gray-400 text-6xl mb-4"></div>
     <h3 class="text-lg font-medium text-gray-900 mb-2">카페가 없습니다</h3>
     <p class="text-gray-500">
         {% if status_filter %}
@@ -175,11 +175,11 @@
     <div class="flex space-x-3">
         <a href="{% url 'oddmin:dashboard' %}" 
            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            📊 대시보드
+            대시보드
         </a>
         <a href="{% url 'oddmin:fandom_list' %}" 
            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
-            🎭 팬덤 인증 관리
+            팬덤 인증 관리
         </a>
     </div>
 </div>

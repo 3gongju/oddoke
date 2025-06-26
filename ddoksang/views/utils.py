@@ -1,4 +1,4 @@
-from ddoksang.models import BdayCafe, CafeFavorite
+from ddoksang.models import BdayCafe
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Q
 from datetime import date

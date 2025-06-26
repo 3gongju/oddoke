@@ -1,27 +1,26 @@
 {% load static %}
 {% load filters %}
 
-<!-- 사이드바 (왼쪽) - 운영중인 카페만 표시하도록 개선 -->
-<div class="w-full lg:w-80 border-r border-gray-200 bg-white flex flex-col" style="height: 600px;">
+<!-- 사이드바 (왼쪽) - 컴팩트 버전 -->
+<div class="w-full lg:w-80 border-r border-gray-200 bg-white flex flex-col" style="height: 480px;">
   
-  <!-- 고정 헤더 -->
-  <div class="flex-shrink-0 p-4 border-b border-gray-100 bg-gray-50">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="text-lg font-bold text-gray-800 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- 고정 헤더 - 패딩 축소 -->
+  <div class="flex-shrink-0 p-3 border-b border-gray-100 bg-gray-50">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-base font-bold text-gray-800 flex items-center">
+        <svg class="w-4 h-4 mr-1.5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
         </svg>
         운영중
       </h3>
       <div class="flex items-center space-x-2">
-        <!-- ✅ 수정: 실제 운영중인 카페 수만 표시 -->
-        <span class="text-sm text-gray-500 bg-white px-2 py-1 rounded-full border">{{ active_cafes.count }}개</span>
+        <span class="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border">{{ active_cafes.count }}개</span>
         <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
       </div>
     </div>
     
-    <!-- 간단한 안내 -->
-    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+    <!-- 간단한 안내 - 크기 축소 -->
+    <div class="bg-blue-50 p-2 rounded border border-blue-100">
       <div class="text-center">
         <p class="text-xs text-blue-700 leading-relaxed">
           <span class="flex items-center justify-center">
@@ -31,7 +30,7 @@
             카페 클릭 시 지도 이동
           </span>
         </p>
-        <p class="text-xs text-blue-600 mt-1 font-medium">
+        <p class="text-xs text-blue-600 mt-0.5 font-medium">
           + 버튼으로 상세보기
         </p>
       </div>
@@ -40,64 +39,58 @@
 
   <!-- 스크롤 가능한 카드 리스트 영역 -->
   <div class="flex-1 overflow-y-auto" style="scroll-behavior: smooth;">
-    <div id="cafeCardContainer" class="p-4 space-y-3">
-      <!-- ✅ 수정: active_cafes 변수 사용 (운영중인 카페만) -->
+    <div id="cafeCardContainer" class="p-3 space-y-2">
       {% for cafe in active_cafes|slice:":20" %}
-        {% comment %}
-        ✅ 운영 상태 검증: 템플릿에서 다시 한번 확인
-        cafe|cafe_status 필터가 'ongoing'인 경우만 표시
-        {% endcomment %}
         {% with cafe|cafe_status as cafe_state %}
           {% if cafe_state == 'ongoing' %}
-            <!-- ✅ 수정: onclick 속성 제거, 지도 이동은 JavaScript로 처리 -->
-            <div class="cafe-card-mini bg-white border border-gray-200 p-3 rounded-lg hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all duration-200 group transform hover:-translate-y-1"
+            <div class="cafe-card-mini bg-white border border-gray-200 p-2.5 rounded hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all duration-200 group transform hover:-translate-y-1"
                  data-cafe-id="{{ cafe.id }}"
                  data-cafe-lat="{{ cafe.latitude }}"
                  data-cafe-lng="{{ cafe.longitude }}">
 
-              <div class="flex items-start space-x-3">
-                <!-- 썸네일 이미지 -->
+              <div class="flex items-start space-x-2.5">
+                <!-- 썸네일 이미지 - 크기 축소 -->
                 <div class="flex-shrink-0 relative">
                   {% if cafe.get_main_image %}
                     <img src="{{ cafe.get_main_image }}"
                          alt="{{ cafe.cafe_name }}"
-                         class="w-14 h-14 object-cover rounded-lg shadow-sm border-2 border-white group-hover:border-blue-200 transition-colors">
+                         class="w-12 h-12 object-cover rounded shadow-sm border-2 border-white group-hover:border-blue-200 transition-colors">
                   {% else %}
-                    <div class="w-14 h-14 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center shadow-sm border-2 border-white group-hover:border-blue-200 transition-colors">
-                      <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-12 h-12 bg-gradient-to-br from-pink-100 to-purple-100 rounded flex items-center justify-center shadow-sm border-2 border-white group-hover:border-blue-200 transition-colors">
+                      <svg class="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                       </svg>
                     </div>
                   {% endif %}
                   
-                  <!-- ✅ 운영 상태 표시 (초록색 점) -->
-                  <div class="absolute -top-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
+                  <!-- 운영 상태 표시 -->
+                  <div class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
                 </div>
 
-                <!-- ✅ 수정된 카페 정보 레이아웃 -->
+                <!-- 카페 정보 레이아웃 - 축소 -->
                 <div class="flex-1 min-w-0 relative">
-                  <!-- ✅ 상세보기 버튼 (우상단) -->
+                  <!-- 상세보기 버튼 -->
                   <a href="{% url 'ddoksang:detail' cafe.id %}"
-                     class="detail-link absolute top-0 right-0 w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10 shadow-lg"
+                     class="detail-link absolute top-0 right-0 w-5 h-5 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110 z-10 shadow-lg"
                      title="상세 보기"
-                     onclick="event.stopPropagation(); console.log('상세보기 클릭:', {{ cafe.id }}); return true;">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     onclick="event.stopPropagation(); return true;">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
                     </svg>
                   </a>
                   
-                  <!-- 1. 카페명 -->
-                  <h4 class="font-semibold text-sm text-gray-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors pr-8">
-                    {{ cafe.cafe_name|truncatechars:18 }}
+                  <!-- 카페명 -->
+                  <h4 class="font-semibold text-sm text-gray-900 leading-tight mb-0.5 group-hover:text-blue-600 transition-colors pr-6">
+                    {{ cafe.cafe_name|truncatechars:16 }}
                   </h4>
                   
-                  <!-- 2. 아티스트/멤버 정보 -->
-                  <p class="text-xs text-gray-600 leading-tight mb-1">
+                  <!-- 아티스트/멤버 정보 -->
+                  <p class="text-xs text-gray-600 leading-tight mb-0.5">
                     {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name|truncatechars:8 }}{% endif %}
                   </p>
                   
-                  <!-- 3. 운영 기간 -->
-                  <div class="flex items-center mb-1">
+                  <!-- 운영 기간 -->
+                  <div class="flex items-center mb-0.5">
                     <svg class="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
@@ -106,25 +99,25 @@
                     </p>
                   </div>
                   
-                  <!-- 4. 주소 (호버 시에만 표시) -->
-                  <p class="text-xs text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity leading-tight mb-1">
-                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <!-- 주소 -->
+                  <p class="text-xs text-gray-500 truncate opacity-0 group-hover:opacity-100 transition-opacity leading-tight mb-0.5">
+                    <svg class="w-2.5 h-2.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
                     </svg>
-                    {{ cafe.place_name|truncatechars:25 }}
+                    {{ cafe.place_name|truncatechars:22 }}
                   </p>
                   
-                  <!-- 5. 도보 시간 및 거리 (줄바꿈 적용, svg 제거) -->
+                  <!-- 도보 시간 및 거리 -->
                   <div class="distance-time text-xs text-green-600 font-medium hidden">
                     <div>도보: <span class="walk-time"></span></div>
                     <div>(총 <span class="walk-distance"></span>)</div>
                   </div>
                   
-                  <!-- ✅ 종료 임박 알림 (7일 이내) -->
+                  <!-- 종료 임박 알림 -->
                   {% if cafe.days_remaining <= 7 and cafe.days_remaining > 0 %}
-                    <div class="text-xs text-red-600 font-medium mt-1 bg-red-50 px-2 py-1 rounded-full">
-                      <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="text-xs text-red-600 font-medium mt-0.5 bg-red-50 px-1.5 py-0.5 rounded-full">
+                      <svg class="w-2.5 h-2.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                       </svg>
                       종료 D-{{ cafe.days_remaining }}
@@ -136,17 +129,17 @@
           {% endif %}
         {% endwith %}
       {% empty %}
-        <!-- ✅ 운영중인 카페가 없는 경우 -->
-        <div class="text-center py-8">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- 운영중인 카페가 없는 경우 -->
+        <div class="text-center py-6">
+          <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
             </svg>
           </div>
-          <h3 class="font-medium text-gray-900 mb-2">현재 운영중인 생카가 없어요</h3>
-          <p class="text-sm text-gray-600 mb-4">새로운 생일카페를 기다려보세요!</p>
+          <h3 class="font-medium text-gray-900 mb-1">현재 운영중인 생카가 없어요</h3>
+          <p class="text-sm text-gray-600 mb-3">새로운 생일카페를 기다려보세요!</p>
           <a href="{% url 'ddoksang:create' %}" 
-             class="inline-block text-sm bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+             class="inline-block text-sm bg-blue-500 text-white px-3 py-1.5 rounded hover:bg-blue-600 transition-colors">
             생카 등록하기
           </a>
         </div>
@@ -154,17 +147,17 @@
     </div>
   </div>
 
-  <!-- 하단 액션 영역 (고정) -->
-  <div class="flex-shrink-0 p-4 border-t border-gray-100 bg-gray-50">
+  <!-- 하단 액션 영역 - 패딩 축소 -->
+  <div class="flex-shrink-0 p-3 border-t border-gray-100 bg-gray-50">
     {% if active_cafes.count > 20 %}
       <a href="{% url 'ddoksang:search' %}?status=ongoing"
-         class="block w-full text-center py-2.5 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200 hover:border-blue-300">
+         class="block w-full text-center py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors border border-blue-200 hover:border-blue-300">
         전체 {{ active_cafes.count }}개 운영중 카페 보기 →
       </a>
     {% else %}
       <div class="text-center">
         {% if active_cafes.count > 0 %}
-          <p class="text-xs text-gray-500 mb-2">모든 운영중인 카페입니다</p>
+          <p class="text-xs text-gray-500 mb-1">모든 운영중인 카페입니다</p>
         {% endif %}
         <a href="{% url 'ddoksang:create' %}"
            class="inline-block text-sm text-green-600 hover:text-green-800 font-medium">
@@ -175,7 +168,7 @@
   </div>
 </div>
 
-<!-- ✅ 수정된 JavaScript 이벤트 처리 -->
+<!-- JavaScript 이벤트 처리 - 콘솔로그 제거 -->
 <script>
   function haversine(lat1, lng1, lat2, lng2) {
     const R = 6371;
@@ -210,11 +203,10 @@ function updateDistances(userLat, userLng) {
     
     if (!isNaN(lat) && !isNaN(lng)) {
       const distKm = haversine(userLat, userLng, lat, lng);
-      const minutes = Math.round((distKm / 5) * 60); // 평균 도보 5km/h
+      const minutes = Math.round((distKm / 5) * 60);
 
       card.dataset.distance = distKm;
       
-      // ✅ 새로운 형식: 도보: 15분 (총 1.2km)
       const walkTimeEl = card.querySelector('.walk-time');
       const walkDistanceEl = card.querySelector('.walk-distance');
       const distanceTimeEl = card.querySelector('.distance-time');
@@ -233,39 +225,32 @@ function updateDistances(userLat, userLng) {
   if (container) {
     cards.forEach(card => container.appendChild(card));
   }
-  
-  // ✅ 정렬 완료 후 사용자에게 알림
-  if (cards.length > 0) {
-    console.log(`📍 ${cards.length}개 카페를 거리순으로 정렬했습니다`);
-  }
 }
 
   function requestLocationAndSort() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         pos => updateDistances(pos.coords.latitude, pos.coords.longitude),
-        err => console.warn("위치 정보 접근 거부됨", err)
+        err => {}
       );
     }
   }
 
-  // ✅ 수정된 카드 클릭 이벤트 (지도 이동만)
+  // 카드 클릭 이벤트
   document.addEventListener('DOMContentLoaded', function () {
-    // ✅ 페이지 로드 시 자동으로 위치 요청 (선택사항)
+    // 페이지 로드 시 자동으로 위치 요청
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log('📍 사용자 위치 확인됨 - 도보 시간 계산 중...');
           updateDistances(position.coords.latitude, position.coords.longitude);
         },
         (error) => {
-          console.log('📍 위치 정보 없음 - 도보 시간 표시 안함');
-          // 위치 정보가 없어도 에러 메시지는 표시하지 않음 (선택사항)
+          // 위치 정보 없음
         },
         {
           enableHighAccuracy: false,
           timeout: 10000,
-          maximumAge: 600000 // 10분간 캐시
+          maximumAge: 600000
         }
       );
     }
@@ -273,21 +258,18 @@ function updateDistances(userLat, userLng) {
     // 카드 클릭 이벤트 설정
     document.querySelectorAll('.cafe-card-mini').forEach(card => {
       card.addEventListener('click', function (e) {
-        // ✅ 상세보기 버튼(.detail-link) 클릭은 무시
+        // 상세보기 버튼 클릭은 무시
         if (e.target.closest('.detail-link')) {
-          console.log('상세보기 버튼 클릭됨');
-          return; // 상세 페이지로 이동 (기본 링크 동작)
+          return;
         }
 
-        // ✅ 카드 클릭 시 지도 이동만 수행
+        // 카드 클릭 시 지도 이동
         const lat = parseFloat(card.dataset.cafeLat);
         const lng = parseFloat(card.dataset.cafeLng);
         const cafeId = card.dataset.cafeId;
 
         if (!isNaN(lat) && !isNaN(lng)) {
-          console.log(`📍 카드 클릭: ${cafeId}번 카페로 지도 이동 (${lat}, ${lng})`);
-          
-          // 지도 이동 (ddoksang_home_main.js의 함수 사용)
+          // 지도 이동
           if (typeof moveToLocationHome === 'function') {
             moveToLocationHome(lat, lng);
           } else if (typeof window.map !== 'undefined' && window.map) {
@@ -302,7 +284,7 @@ function updateDistances(userLat, userLng) {
             card.classList.remove('ring-2', 'ring-blue-400');
           }, 1000);
           
-          // 선택사항: 해당 카페 모달 표시 (모달 시스템이 있는 경우)
+          // 카페 모달 표시 (선택사항)
           if (typeof showCafeInfoModal === 'function') {
             const cafeData = { id: cafeId, latitude: lat, longitude: lng };
             // showCafeInfoModal(cafeData);
@@ -315,9 +297,9 @@ function updateDistances(userLat, userLng) {
 
 <!-- 커스텀 스크롤바 스타일 -->
 <style>
-  /* Webkit 브라우저 (Chrome, Safari) */
+  /* Webkit 브라우저 */
   .overflow-y-auto::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
   }
   
   .overflow-y-auto::-webkit-scrollbar-track {
@@ -342,18 +324,18 @@ function updateDistances(userLat, userLng) {
   
   /* 스크롤 시 부드러운 효과 */
   .cafe-card-mini {
-    scroll-margin-top: 1rem;
+    scroll-margin-top: 0.5rem;
   }
   
   /* 반응형 조정 */
   @media (max-width: 1024px) {
     .w-full.lg\:w-80 {
-      min-height: 300px;
-      max-height: 400px;
+      min-height: 250px;
+      max-height: 350px;
     }
   }
 
-  /* ✅ 추가: 카드 클릭 시 시각적 피드백 */
+  /* 카드 클릭 시 시각적 피드백 */
   .cafe-card-mini.ring-2 {
     animation: pulseBlue 1s ease-in-out;
   }
@@ -361,20 +343,20 @@ function updateDistances(userLat, userLng) {
   @keyframes pulseBlue {
     0%, 100% { 
       transform: translateY(-1px); 
-      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
     }
     50% { 
-      transform: translateY(-3px); 
-      box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+      transform: translateY(-2px); 
+      box-shadow: 0 12px 25px rgba(59, 130, 246, 0.4);
     }
   }
 
-  /* ✅ 상세보기 버튼 강조 */
+  /* 상세보기 버튼 강조 */
   .detail-link {
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
   }
 
   .detail-link:hover {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.5);
   }
 </style>

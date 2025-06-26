@@ -27,7 +27,7 @@ def handle_is_read_change(sender, instance, created, **kwargs):
         # is_read가 False → True로 변경된 경우
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"chat_{instance.room.id}",
+            f"chat_{instance.room.room_code}",
             {
                 "type": "read_update",
                 "reader": instance.receiver.username,  # 읽은 사람은 receiver

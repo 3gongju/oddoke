@@ -1,4 +1,6 @@
 import logging
+import json
+
 from datetime import timedelta, date
 
 from django.shortcuts import render, get_object_or_404
@@ -10,7 +12,7 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.conf import settings
 
-from ddoksang.models import BdayCafe, CafeFavorite
+from ddoksang.models import BdayCafe
 from ddoksang.utils.favorite_utils import get_user_favorites
 from ..utils.cafe_utils import get_cafe_detail_context
 
@@ -52,19 +54,17 @@ def home_view(request):
     my_favorite_cafes = []
     user_favorites = []
     if request.user.is_authenticated:
+        # ManyToManyField 사용
         user_favorites = list(
-            CafeFavorite.objects.filter(user=request.user)
-            .values_list('cafe_id', flat=True)
+            request.user.favorite_cafes.values_list('id', flat=True)
         )
 
-        # 찜한 카페를 찜 시간순으로 가져오기 
-        favorites = CafeFavorite.objects.filter(
-            user=request.user,
-            cafe__status='approved'
-        ).select_related('cafe__artist', 'cafe__member') \
-        .order_by('-created_at')[:10]
-
-        my_favorite_cafes = [fav.cafe for fav in favorites]
+        # ManyToManyField 사용한 찜한 카페 목록
+        my_favorite_cafes = list(
+            request.user.favorite_cafes.filter(
+                status='approved'
+            ).select_related('artist', 'member').order_by('-id')[:10]
+        )
 
     # === 5. 지도용 데이터 - 운영중인 카페만 사용하되 지도 중심은 서울로 고정 ===
     cafes_json_data = []
@@ -117,6 +117,7 @@ def search_view(request):
         # 카페 검색 - 아티스트/멤버 정확히 일치
         cafes = BdayCafe.objects.filter(
             Q(artist__display_name__iexact=query) |
+            Q(artist__alias__iexact=query) |  
             Q(member__member_name__iexact=query),
             status='approved'
         ).select_related('artist', 'member').distinct()
@@ -162,72 +163,6 @@ def search_view(request):
     return render(request, 'ddoksang/search.html', context)
 
 
-def cafe_detail_view(request, cafe_id):
-    """생일카페 상세 뷰"""
-    cafe = get_object_or_404(
-        BdayCafe.objects.select_related('artist', 'member'),
-        id=cafe_id,
-        status='approved'
-    )
-    # 조회수 증가
-    try:
-        BdayCafe.objects.filter(id=cafe_id).update(view_count=F('view_count') + 1)
-        cafe.refresh_from_db()
-    except Exception as e:
-        logger.warning(f"조회수 업데이트 실패: {e}")
-    
-    # 디버깅: 카페 정보 확인
-    logger.info(f"카페 상세 조회: {cafe.cafe_name} (ID: {cafe.id})")
-    logger.info(f"카페 아티스트: {cafe.artist.display_name if cafe.artist else 'None'}")
-    logger.info(f"카페 멤버: {cafe.member.member_name if cafe.member else 'None'}")
-    logger.info(f"카페 좌표: ({cafe.latitude}, {cafe.longitude})")
-    
-    # 주변 카페들 (map_utils 사용)
-    nearby_cafes = []
-    if cafe.latitude and cafe.longitude:
-        try:
-            approved_cafes = BdayCafe.objects.filter(status='approved', member=cafe.member).select_related('artist', 'member')
-            nearby_cafes = get_nearby_cafes(
-                user_lat=float(cafe.latitude), 
-                user_lng=float(cafe.longitude), 
-                cafes_queryset=approved_cafes,
-                radius_km=5, 
-                limit=5, 
-                exclude_id=cafe.id
-            )
-        except (ValueError, TypeError) as e:
-            logger.warning(f"주변 카페 조회 오류: {e}")
-    
-    # 같은 아티스트/멤버의 다른 카페들
-    related_cafes = BdayCafe.objects.filter(
-        Q(artist=cafe.artist) | Q(member=cafe.member),
-        status='approved'
-    ).exclude(id=cafe.id).select_related('artist', 'member')[:6]
-    
-    # 사용자 찜 목록
-    user_favorites = get_user_favorites(request.user)
-
-    # 현재 카페가 찜 목록에 있는지 확인
-    is_favorited = cafe.id in user_favorites if user_favorites else False
-    
-    # 지도 관련 컨텍스트 생성 (map_utils 사용)
-    map_context = get_map_context()
-    
-    context = {
-        'cafe': cafe,
-        'is_favorited': is_favorited,
-        'nearby_cafes': nearby_cafes,
-        'related_cafes': related_cafes,
-        'user_favorites': user_favorites,
-        'is_preview': False,
-        'can_edit': False,
-        'preview_type': None,
-        'settings': settings,
-        **map_context,
-    }
-    
-    return render(request, 'ddoksang/detail.html', context)
-
 
 @cache_page(60 * 5)  # 5분 캐시
 def map_view(request):
@@ -269,27 +204,11 @@ def cafe_detail_view(request, cafe_id):
     except Exception as e:
         logger.warning(f"조회수 업데이트 실패: {e}")
     
-    # 🔥 조회 기록 저장 (로그인된 사용자만) - 새로 추가된 부분
-    if request.user.is_authenticated:
-        try:
-            from ddoksang.models import CafeViewHistory
-            
-            # get_or_create로 중복 방지, viewed_at만 업데이트
-            view_history, created = CafeViewHistory.objects.get_or_create(
-                user=request.user,
-                cafe=cafe,
-                defaults={
-                    'ip_address': request.META.get('REMOTE_ADDR'),
-                }
-            )
-            
-            # 기존 기록이 있으면 조회 시간만 업데이트
-            if not created:
-                view_history.viewed_at = timezone.now()
-                view_history.save(update_fields=['viewed_at'])
-                
-        except Exception as e:
-            logger.warning(f"조회 기록 저장 실패: {e}")
+    # ✅ 쿠키에서 최근 본 카페 목록 가져오기
+    recent_cafes = get_recent_cafes_from_cookie(request)
+    
+    # ✅ 현재 카페를 최근 본 카페 목록에 추가
+    recent_cafes = add_cafe_to_recent(recent_cafes, cafe_id)
     
     # 디버깅: 카페 정보 확인
     logger.info(f"카페 상세 조회: {cafe.cafe_name} (ID: {cafe.id})")
@@ -341,8 +260,67 @@ def cafe_detail_view(request, cafe_id):
         **map_context,
     }
     
-    # 이 return 문이 꼭 있어야 함
-    return render(request, 'ddoksang/detail.html', context)
+    # ✅ 응답 생성
+    response = render(request, 'ddoksang/detail.html', context)
+    
+    # ✅ 쿠키에 최근 본 카페 저장 (30일 유지)
+    response.set_cookie(
+        'recent_cafes', 
+        json.dumps(recent_cafes),
+        max_age=30*24*3600,  # 30일
+        httponly=True,  # XSS 보안
+        samesite='Lax'  # CSRF 보안
+    )
+    
+    return response
+
+
+def get_recent_cafes_from_cookie(request):
+    """쿠키에서 최근 본 카페 목록 가져오기"""
+    try:
+        recent_cafes_str = request.COOKIES.get('recent_cafes', '[]')
+        recent_cafes = json.loads(recent_cafes_str)
+        
+        # 유효성 검사: 리스트이고, 숫자들로만 구성되어야 함
+        if isinstance(recent_cafes, list):
+            return [int(cafe_id) for cafe_id in recent_cafes if str(cafe_id).isdigit()]
+    except (json.JSONDecodeError, ValueError, TypeError):
+        pass
+    
+    return []
+
+
+def add_cafe_to_recent(recent_cafes, new_cafe_id):
+    """최근 본 카페 목록에 새 카페 추가"""
+    new_cafe_id = int(new_cafe_id)
+    
+    # 이미 목록에 있으면 제거 (맨 앞으로 이동하기 위해)
+    if new_cafe_id in recent_cafes:
+        recent_cafes.remove(new_cafe_id)
+    
+    # 맨 앞에 추가
+    recent_cafes.insert(0, new_cafe_id)
+    
+    # 최대 10개까지만 유지
+    return recent_cafes[:10]
+
+
+def get_recent_cafes_objects(request):
+    """쿠키에서 최근 본 카페 객체들 가져오기 (템플릿에서 사용)"""
+    recent_cafe_ids = get_recent_cafes_from_cookie(request)
+    
+    if not recent_cafe_ids:
+        return []
+    
+    # DB에서 카페 객체들 가져오기 (순서 유지)
+    cafes = BdayCafe.objects.filter(
+        id__in=recent_cafe_ids,
+        status='approved'
+    ).select_related('artist', 'member')
+    
+    # 쿠키의 순서대로 정렬
+    cafe_dict = {cafe.id: cafe for cafe in cafes}
+    return [cafe_dict[cafe_id] for cafe_id in recent_cafe_ids if cafe_id in cafe_dict]
     
  
 #  추가: 투어맵 뷰 (cafe_views.py에서 이동)

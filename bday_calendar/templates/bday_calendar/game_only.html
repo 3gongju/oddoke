@@ -4,8 +4,10 @@
 <div id="birthday-game-container" class="game-container hidden">
   <!-- 멤버 선택 화면 -->
   <div id="member-selection-view">
-    <h3 class="text-2xl font-bold text-center mb-2">오늘 생일인 멤버</h3>
-    <p class="text-center text-gray-300 mb-6">누구의 생일시를 맞춰서 덕을 쌓을까요?</p>
+    <div class="text-center mb-8">
+      <h3 class="game-title">오늘 생일인 멤버</h3>
+      <p class="game-subtitle">누구의 생일시를 맞춰서 덕을 쌓을까요?</p>
+    </div>
     <div id="member-selector-grid" class="member-selector-grid"></div>
   </div>
 
@@ -15,41 +17,55 @@
       <!-- 왼쪽: 메인 게임 콘텐츠 -->
       <div class="game-main-content">
         <div class="text-center">
-          <div class="relative inline-block mb-4">
-            <img id="game-idol-image" src="" alt="아이돌 사진" class="game-idol-image">
-            <span class="birthday-badge">HBD!</span>
+          <!-- 멤버 이미지 -->
+          <div class="game-member-image-wrapper">
+            <img id="game-idol-image" src="" alt="멤버 사진" class="game-member-image">
+            <div class="birthday-badge">BIRTHDAY</div>
           </div>
 
-          <h1 id="idol-name" class="text-2xl font-black text-black mb-1">아이돌 이름</h1>
-          <p id="idol-group" class="text-base text-gray-300 mb-4">그룹명</p>
-
-          <div class="target-time-box">
-            <p>목표 생일시</p>
-            <p id="target-time">--:--:--</p>
+          <!-- 멤버 정보 -->
+          <div class="game-member-info">
+            <h1 id="idol-name" class="member-name-title">멤버 이름</h1>
+            <p id="idol-group" class="member-group-name">그룹명</p>
           </div>
 
-          <div class="bg-transparent rounded-lg p-2 mb-6">
-            <div id="current-time" class="game-time-display">
+          <!-- 목표 시간 -->
+          <div class="target-time-container">
+            <div class="target-time-label">목표 생일시</div>
+            <div id="target-time" class="target-time-value">--:--:--</div>
+          </div>
+
+          <!-- 현재 시간 -->
+          <div class="current-time-container">
+            <div id="current-time" class="current-time-display">
               <span id="time-main">--:--:--</span>
-              <span id="time-ms" class="game-time-ms">.---</span>
+              <span id="time-ms" class="current-time-ms">.---</span>
             </div>
           </div>
 
+          <!-- 덕 쌓기 버튼 -->
           <button id="ddok-button" class="ddok-button">덕 쌓기</button>
 
-          <div id="result-container" class="mt-6 h-12 flex items-center justify-center"></div>
+          <!-- 결과 표시 -->
+          <div id="result-container" class="result-container"></div>
         </div>
       </div>
 
       <!-- 오른쪽: 점수 및 네비게이션 -->
       <div class="game-sidebar">
         <div class="sidebar-content">
-          <div class="total-ddok-display">
-            <p class="text-lg text-gray-300">총 쌓은 덕</p>
-            <p class="font-bold text-3xl text-black"><span id="total-score">0</span></p>
+          <!-- 총 덕 표시 -->
+          <div class="total-ddok-card">
+            <div class="total-ddok-label">총 쌓은 덕</div>
+            <div class="total-ddok-value">
+              <span id="total-score">0</span>덕
+            </div>
           </div>
 
-          <button id="back-to-selection" class="back-button">‹ 다른 덕 쌓기</button>
+          <!-- 뒤로가기 버튼 -->
+          <button id="back-to-selection" class="back-to-selection-button">
+            다른 멤버 선택
+          </button>
         </div>
       </div>
     </div>

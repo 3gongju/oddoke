@@ -1,13 +1,9 @@
-// static/js/ddoksang_home_modals.js (수정된 버전)
-// DdoksangMap 모듈 - 홈페이지 지도 관리 (중심점 고정 기능 추가)
-
 (function(window) {
     'use strict';
 
-    // 유틸리티 함수들
     const Utils = {
         calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371; // km
+            const R = 6371;
             const dLat = (lat2 - lat1) * Math.PI / 180;
             const dLng = (lng2 - lng1) * Math.PI / 180;
             const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -34,7 +30,7 @@
                 return {
                     ...cafe,
                     distance,
-                    walkTime: Math.round(distance * 12) // 도보 시간 추정 (분)
+                    walkTime: Math.round(distance * 12)
                 };
             }).sort((a, b) => a.distance - b.distance);
         },
@@ -56,7 +52,6 @@
         }
     };
 
-    // 지도 관리 클래스 (수정된 버전)
     class MapManager {
         constructor(containerId, options = {}) {
             this.containerId = containerId;
@@ -66,9 +61,8 @@
             this.userLocationMarker = null;
             this.isClusteringEnabled = true;
             
-            // ✅ 기본 설정 (서울 중심)
             this.defaultOptions = {
-                center: { lat: 37.5665, lng: 126.9780 }, // 서울 시청
+                center: { lat: 37.5665, lng: 126.9780 },
                 zoom: 8,
                 ...options
             };
@@ -81,7 +75,6 @@
                     throw new Error(`지도 컨테이너를 찾을 수 없습니다: ${this.containerId}`);
                 }
 
-                // ✅ 지도 생성 (옵션 적용)
                 const mapOption = {
                     center: new kakao.maps.LatLng(this.defaultOptions.center.lat, this.defaultOptions.center.lng),
                     level: this.defaultOptions.zoom
@@ -89,7 +82,6 @@
                 
                 this.map = new kakao.maps.Map(container, mapOption);
 
-                // 클러스터러 생성
                 this.clusterer = new kakao.maps.MarkerClusterer({
                     map: this.map,
                     averageCenter: true,
@@ -110,15 +102,13 @@
                     ]
                 });
 
-                console.log(`✅ 지도 초기화 완료 - 중심: ${this.defaultOptions.center.lat}, ${this.defaultOptions.center.lng}`);
                 return true;
             } catch (error) {
-                console.error('❌ 지도 초기화 실패:', error);
+                console.error('지도 초기화 실패:', error);
                 return false;
             }
         }
 
-        // ✅ 새로운 메서드: 지도 중심점과 줌 레벨 설정
         setCenter(lat, lng, zoom = null) {
             if (!this.map) return;
             
@@ -128,11 +118,8 @@
             if (zoom !== null) {
                 this.map.setLevel(zoom);
             }
-            
-            console.log(`📍 지도 중심 이동: ${lat}, ${lng} (줌: ${zoom || '유지'})`);
         }
 
-        // ✅ 수정된 loadCafes 메서드: 중심점 이동 제어 옵션 추가
         async loadCafes(cafes, onMarkerClick, moveToCafes = false) {
             try {
                 this.clearMarkers();
@@ -149,7 +136,6 @@
                         title: cafe.cafe_name || cafe.name
                     });
 
-                    // 마커 클릭 이벤트
                     if (onMarkerClick) {
                         kakao.maps.event.addListener(marker, 'click', () => {
                             onMarkerClick(cafe);
@@ -159,27 +145,21 @@
                     this.markers.push(marker);
                 }
 
-                // 클러스터에 마커 추가
                 if (this.isClusteringEnabled && this.clusterer) {
                     this.clusterer.addMarkers(this.markers);
                 } else {
                     this.markers.forEach(marker => marker.setMap(this.map));
                 }
 
-                // ✅ 중심점 이동 제어: moveToCafes가 true일 때만 첫 번째 마커로 이동
                 if (moveToCafes && this.markers.length > 0) {
                     const firstMarker = this.markers[0];
                     this.map.setCenter(firstMarker.getPosition());
                     this.map.setLevel(8);
-                    console.log('📍 첫 번째 카페로 지도 중심 이동');
-                } else {
-                    console.log('📍 지도 중심점 유지 (카페 위치로 이동하지 않음)');
                 }
 
-                console.log(`✅ ${this.markers.length}개 마커 로드 완료`);
                 return true;
             } catch (error) {
-                console.error('❌ 카페 마커 로드 실패:', error);
+                console.error('카페 마커 로드 실패:', error);
                 return false;
             }
         }
@@ -192,26 +172,21 @@
             this.markers = [];
         }
 
-        // ✅ 기존 moveToLocation 메서드 (사용자 명시적 이동용)
         moveToLocation(lat, lng, level = 6) {
             if (!this.map) return;
             
             const moveLatLng = new kakao.maps.LatLng(lat, lng);
             this.map.setCenter(moveLatLng);
             this.map.setLevel(level);
-            
-            console.log(`🎯 사용자 요청으로 지도 이동: ${lat}, ${lng} (줌: ${level})`);
         }
 
         addUserLocationMarker(lat, lng) {
-            // 기존 사용자 위치 마커 제거
             if (this.userLocationMarker) {
                 this.userLocationMarker.setMap(null);
             }
 
             const position = new kakao.maps.LatLng(lat, lng);
             
-            // 사용자 위치 마커 이미지
             const imageSrc = 'data:image/svg+xml;base64,' + btoa(`
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" fill="#3b82f6" stroke="white" stroke-width="2"/>
@@ -230,38 +205,30 @@
                 position: position,
                 image: markerImage
             });
-
-            console.log(`📍 사용자 위치 마커 추가: ${lat}, ${lng}`);
         }
 
         toggleClustering() {
             this.isClusteringEnabled = !this.isClusteringEnabled;
             
             if (this.isClusteringEnabled) {
-                // 개별 마커 제거 후 클러스터에 추가
                 this.markers.forEach(marker => marker.setMap(null));
                 this.clusterer.addMarkers(this.markers);
             } else {
-                // 클러스터 제거 후 개별 마커 표시
                 this.clusterer.clear();
                 this.markers.forEach(marker => marker.setMap(this.map));
             }
 
-            console.log(`🔄 클러스터링 ${this.isClusteringEnabled ? '활성화' : '비활성화'}`);
             return this.isClusteringEnabled;
         }
 
-        // ✅ 새로운 메서드: 기본 중심점으로 리셋
         resetToDefault() {
             this.setCenter(
                 this.defaultOptions.center.lat, 
                 this.defaultOptions.center.lng, 
                 this.defaultOptions.zoom
             );
-            console.log('🔄 지도를 기본 위치로 리셋');
         }
 
-        // ✅ 새로운 메서드: 현재 지도 상태 정보 반환
         getMapInfo() {
             if (!this.map) return null;
 
@@ -280,7 +247,6 @@
         }
     }
 
-    // 주변 카페 표시 함수
     function displayNearbyCafes(cafes, containerId, onCafeClick) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -317,7 +283,6 @@
                 </div>
             `;
 
-            // 클릭 이벤트
             if (onCafeClick) {
                 item.addEventListener('click', () => onCafeClick(cafe));
             }
@@ -326,13 +291,10 @@
         });
     }
 
-    // 전역 네임스페이스에 등록
     window.DdoksangMap = {
         MapManager,
         Utils,
         displayNearbyCafes
     };
-
-
 
 })(window);

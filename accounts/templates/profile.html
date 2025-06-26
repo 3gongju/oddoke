@@ -15,7 +15,7 @@
               {% if user_profile.profile_image and user_profile.profile_image.name %}
                 <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
               {% else %}
-                <img src="{% static 'image/ddok_logo.png' %}" alt="기본 프로필 이미지" class="w-full h-full object-cover rounded-full">
+                <img src="{% static 'image/ddok_glasses.png' %}" alt="기본 프로필 이미지" class="w-full h-full object-cover rounded-full">
               {% endif %}
             </div>
           </div>
@@ -29,15 +29,7 @@
           <!-- Username and Follow Button -->
           <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
             <h1 class="text-3xl font-bold text-black font-heading">
-              {% if user_profile.first_name %}
-                {{ user_profile.first_name }}
-              {% elif user_profile.username|slice:":6" == "kakao_" %}
-                카카오 사용자
-              {% elif user_profile.username|slice:":6" == "naver_" %}
-                네이버 사용자
-              {% else %}
-                {{ user_profile.username }}
-              {% endif %}
+              {{ user_profile.username }}
             </h1>
 
             {% if user != user_profile %}

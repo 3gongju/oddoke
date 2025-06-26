@@ -102,15 +102,7 @@
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4 mr-1">
                 <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 0 0-11.215 0c-.22.578.254 1.139.872 1.139h9.47Z" />
               </svg>
-              {% if request.user.first_name %}
-                {{ request.user.first_name }}
-              {% elif request.user.username|slice:":10" == "naver_" %}
-                네이버 사용자
-              {% elif request.user.username|slice:":10" == "kakao_" %}
-                카카오 사용자
-              {% else %}
-                {{ request.user.username }}
-              {% endif %}
+              {{ request.user.username }}
               님
             </span>
             <a href="/ddokchat/my/" class="text-xs sm:text-sm text-black transition-colors font-body">내 채팅방</a>
@@ -136,34 +128,17 @@
   <div id="mobile-menu" class="md:hidden bg-white border-t border-gray-200 hidden">
     <div class="px-4 py-3 space-y-2 sm:space-y-3">
       {% if request.user.is_authenticated %}
-        <!-- 사용자 정보 섹션 (모바일 전용) -->
-        <div class="bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200">
-          <div class="flex items-center space-x-2">
-            <div class="w-7 h-7 sm:w-8 sm:h-8 bg-black rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold font-body">
-              {% if request.user.first_name %}
-                {{ request.user.first_name|first }}
-              {% elif request.user.username|slice:":10" == "naver_" %}
-                N
-              {% elif request.user.username|slice:":10" == "kakao_" %}
-                K
-              {% else %}
+        <div class="user-greeting bg-gray-50 rounded-lg p-3 mb-3 border border-gray-200">
+          <div class="flex items-center space-x-3">
+            {% if request.user.profile_image %}
+              <img src="{{ request.user.profile_image.url }}" 
+                  alt="프로필" 
+                  class="w-8 h-8 rounded-full object-cover">
+            {% else %}
+              <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white text-sm font-bold">
                 {{ request.user.username|first|upper }}
-              {% endif %}
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-black truncate font-body">
-                {% if request.user.first_name %}
-                  {{ request.user.first_name }}님
-                {% elif request.user.username|slice:":10" == "naver_" %}
-                  네이버 사용자님
-                {% elif request.user.username|slice:":10" == "kakao_" %}
-                  카카오 사용자님
-                {% else %}
-                  {{ request.user.username }}님
-                {% endif %}
-              </p>
-              <p class="text-xs text-gray-600 font-body">환영합니다!</p>
-            </div>
+              </div>
+            {% endif %}
           </div>
         </div>
       {% endif %}
@@ -201,10 +176,11 @@
   </div>
 </nav>
 
-
-
 <!-- ✅ 본문 블록 -->
 {% block body %}{% endblock %}
+
+<!-- ✅ 새로운 Footer 포함 -->
+{% include 'includes/footer.html' %}
 
 <!-- ✅ FAQ 버튼 - 고정 위치 및 커서 스타일 수정 -->
 <button id="faqButton"
@@ -225,7 +201,7 @@
   <div class="px-4 py-3 space-y-2 max-h-72 sm:max-h-80 overflow-y-auto text-sm font-body">
     <div class="bg-gray-100 p-2 sm:p-3 rounded-lg w-fit max-w-[90%] text-black">무엇이 궁금하신가요?</div>
     <div class="bg-gray-100 p-2 sm:p-3 rounded-lg w-fit max-w-[90%] text-black">
-      어덕해 소개, 회원가입 안내, 탈퇴 안내, 용어 설명 중 선택해주세요!
+      어덕해 소개, 회원가입 안내, 중고 거래 사기 신고 안내, 용어 설명 중 선택해주세요!
     </div>
 
     <!-- 질문 버튼 -->
@@ -235,24 +211,25 @@
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-white transition-colors font-semibold text-sm font-body"
               data-target="signup">회원가입 안내</button>
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-white transition-colors font-semibold text-sm font-body"
-              data-target="withdraw">탈퇴 안내</button>
+              data-target="withdraw">중고 거래 사기 신고 안내</button>
       <button class="faq-option block w-full text-left px-3 py-2 rounded-md bg-black hover:bg-gray-800 text-white transition-colors font-semibold text-sm font-body"
               data-target="terms">용어 설명</button>
     </div>
 
     <!-- 답변 -->
     <div id="answerSection" class="hidden space-y-2">
-      <div id="about" class="faq-answer hidden bg-blue-50 p-2 sm:p-3 rounded-lg text-black border border-blue-200">
+      <div id="about" class="faq-answer hidden bg-pink-50 p-2 sm:p-3 rounded-lg text-black border border-pink-200">
         <p><strong>"어덕해"</strong>는 팬들을 위한 굿즈 거래, 생일카페 정보, 덕질 기록 플랫폼입니다.</p>
       </div>
-      <div id="signup" class="faq-answer hidden bg-blue-50 p-2 sm:p-3 rounded-lg text-black border border-blue-200">
+      <div id="signup" class="faq-answer hidden bg-pink-50 p-2 sm:p-3 rounded-lg text-black border border-pink-200">
         <p>비회원은 열람만 가능하며, 댓글/작성은 로그인 필요 (이메일, 카카오, 네이버 가입 가능)</p>
         <p><strong>이메일 인증 메일이 오지 않을 경우 스팸메일함을 확인해주세요!</strong></p>
       </div>
-      <div id="withdraw" class="faq-answer hidden bg-blue-50 p-2 sm:p-3 rounded-lg text-black border border-blue-200">
-        <p>마이페이지 → 프로필 관리 → 회원탈퇴 가능. 탈퇴 후 30일간 재가입 제한됩니다.</p>
+      <div id="withdraw" class="faq-answer hidden bg-pink-50 p-2 sm:p-3 rounded-lg text-black border border-pink-200">
+        <p>만약 사기꾼이 여러 사람에게 사기를 친 다중 사기건의 경우라면 온라인 신고도 가능해요.</p>
+        <a href="https://ecrm.police.go.kr/minwon/main" target="_blank" class="text-pink-600 hover:text-pink-800 underline">온라인 신고하기</a>
       </div>
-      <div id="terms" class="faq-answer hidden bg-blue-50 p-2 sm:p-3 rounded-lg text-black border border-blue-200">
+      <div id="terms" class="faq-answer hidden bg-pink-50 p-2 sm:p-3 rounded-lg text-black border border-pink-200">
         <ul class="list-disc list-inside space-y-1 text-sm">
           <li><strong>포카</strong> = 포토카드</li>
           <li><strong>덕팜</strong> = 굿즈 거래</li>
@@ -265,29 +242,10 @@
   </div>
 </div>
 
-<!-- ✅ 하단 소셜 미디어 링크 및 여유 공간 -->
-<div class="flex flex-col items-center justify-center py-8 sm:py-12">
-  <!-- 트위터 링크 -->
-  <a href="https://x.com/oddoke_official" 
-     target="_blank" 
-     rel="noopener noreferrer"
-     class="mb-6 sm:mb-8 hover:scale-110 transition-transform duration-300">
-    <svg xmlns="http://www.w3.org/2000/svg" 
-        x="0px" y="0px" 
-        width="30" height="30" 
-        viewBox="0 0 50 50">
-      <path d="M 11 4 C 7.1456661 4 4 7.1456661 4 11 L 4 39 C 4 42.854334 7.1456661 46 11 46 L 39 46 C 42.854334 46 46 42.854334 46 39 L 46 11 C 46 7.1456661 42.854334 4 39 4 L 11 4 z M 11 6 L 39 6 C 41.773666 6 44 8.2263339 44 11 L 44 39 C 44 41.773666 41.773666 44 39 44 L 11 44 C 8.2263339 44 6 41.773666 6 39 L 6 11 C 6 8.2263339 8.2263339 6 11 6 z M 13.085938 13 L 22.308594 26.103516 L 13 37 L 15.5 37 L 23.4375 27.707031 L 29.976562 37 L 37.914062 37 L 27.789062 22.613281 L 36 13 L 33.5 13 L 26.660156 21.009766 L 21.023438 13 L 13.085938 13 z M 16.914062 15 L 19.978516 15 L 34.085938 35 L 31.021484 35 L 16.914062 15 z"></path>
-    </svg>
-  </a>
-  
-  <!-- 추가 여유 공간 -->
-  <div class="h-16 sm:h-24"></div>
-</div>
-
 <!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-<!-- 🔄 수정된 Swiper 초기화 스크립트 -->
+<!-- 🔄 Swiper 초기화 스크립트 추가 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // 메인 배너 스와이퍼 초기화

@@ -24,7 +24,7 @@ from ..utils.cafe_utils import get_cafe_detail_context
 
 from ddoksang.utils.favorite_utils import get_user_favorites
 
-from ..models import BdayCafe, CafeFavorite
+from ..models import BdayCafe
 from ..forms import BdayCafeForm
 from ..utils.map_utils import get_map_context, get_nearby_cafes  # 유틸리티 사용
 from artist.models import Artist, Member
@@ -33,7 +33,7 @@ from artist.models import Artist, Member
 logger = logging.getLogger(__name__)
 
 
-
+@login_required(login_url='/accounts/login/')
 def cafe_create_view(request):
     if request.method == 'POST':
         try:
@@ -74,16 +74,12 @@ def cafe_create_view(request):
                 'place_name': request.POST.get('place_name', ''),
                 'address': request.POST.get('address'),
                 'road_address': request.POST.get('road_address', ''),
-                'detailed_address': request.POST.get('detailed_address', ''),
                 'kakao_place_id': request.POST.get('kakao_place_id', ''),
                 'latitude': float(request.POST.get('latitude')),
                 'longitude': float(request.POST.get('longitude')),
                 'start_date': request.POST.get('start_date'),
                 'end_date': request.POST.get('end_date'),
-                'start_time': request.POST.get('start_time') or None,
-                'end_time': request.POST.get('end_time') or None,
                 'event_description': request.POST.get('event_description', ''),
-                'hashtags': request.POST.get('hashtags', ''),
                 'x_source': x_source,
                 'status': 'pending',
                 'image_gallery': []  # ✅ 빈 이미지 갤러리로 초기화
@@ -112,7 +108,6 @@ def cafe_create_view(request):
                     cafe.add_image(
                         image_file=image_file,
                         image_type='main' if index == 0 else 'other',
-                        caption=f"이미지 {index + 1}",
                         is_main=(index == 0),  # 첫 번째 이미지가 대표
                         order=index
                     )
@@ -149,7 +144,7 @@ def cafe_create_success(request, cafe_id):
             submitted_by=request.user
         )
         
-        print(f"🎉 등록 성공 페이지: 카페 ID {cafe.id}")
+        print(f" 등록 성공 페이지: 카페 ID {cafe.id}")
         print(f"   카페명: {cafe.cafe_name}")
         print(f"   아티스트: {cafe.artist.display_name if cafe.artist else 'N/A'}")
         print(f"   멤버: {cafe.member.member_name if cafe.member else 'N/A'}")
@@ -370,28 +365,26 @@ def toggle_favorite(request, cafe_id):
     """카페 찜하기/찜해제 토글 (HTML 조각 포함)"""
     try:
         cafe = get_object_or_404(BdayCafe, id=cafe_id, status='approved')
-        favorite, created = CafeFavorite.objects.get_or_create(
-            user=request.user,
-            cafe=cafe
-        )
         
-        if not created:
+        # ✅ ManyToManyField 사용한 간단한 토글
+        if request.user.favorite_cafes.filter(id=cafe_id).exists():
             # 찜 해제
-            favorite.delete()
+            request.user.favorite_cafes.remove(cafe)
             is_favorited = False
             message = "찜 목록에서 제거했어요!"
-            card_html = None  # 찜 해제 시에는 HTML 불필요
+            card_html = None
         else:
             # 찜 추가
+            request.user.favorite_cafes.add(cafe)
             is_favorited = True
             message = "찜 목록에 추가했어요!"
             
-            # ✅ 찜 추가 시에만 HTML 조각 렌더링
+            # 찜 추가 시에만 HTML 조각 렌더링
             card_html = render_to_string(
                 'ddoksang/components/_cafe_card_base.html',
                 {
                     'cafe': cafe,
-                    'card_variant': 'favorite',  # 📌 찜한 카페용 오버레이 스타일
+                    'card_variant': 'favorite',
                     'user': request.user,
                     'user_favorites': get_user_favorites(request.user),
                     'show_favorite_btn': True,
@@ -419,27 +412,26 @@ def toggle_favorite(request, cafe_id):
             'error': '처리 중 오류가 발생했습니다.'
         }, status=500)
 
-
 @login_required
 def favorites_view(request):
     """찜한 카페 목록 페이지"""
-    favorites = CafeFavorite.objects.filter(
-        user=request.user
-    ).select_related('cafe__artist', 'cafe__member').order_by('-created_at')
+    #  ManyToManyField 사용
+    favorite_cafes = request.user.favorite_cafes.select_related(
+        'artist', 'member'
+    ).order_by('-id')  # 최신순 정렬 (created_at 대신 id 사용)
     
     # 사용자 찜 목록 (ID 리스트)
     user_favorites = list(
-        CafeFavorite.objects.filter(user=request.user)
-        .values_list('cafe_id', flat=True)
+        request.user.favorite_cafes.values_list('id', flat=True)
     )
     
+    # 템플릿 호환성을 위해 기존 구조 유지
     context = {
-        'favorites': favorites,
+        'favorites': [{'cafe': cafe} for cafe in favorite_cafes],
         'user_favorites': user_favorites,
     }
     
     return render(request, 'ddoksang/favorites.html', context)
-
 
 
 @login_required
@@ -468,7 +460,6 @@ def cafe_image_upload_view(request):
         cafe_id = request.POST.get('cafe_id')
         image_file = request.FILES.get('image')
         image_type = request.POST.get('image_type', 'other')
-        caption = request.POST.get('caption', '')
         is_main = request.POST.get('is_main', 'false').lower() == 'true'
         
         if not cafe_id or not image_file:
@@ -481,7 +472,6 @@ def cafe_image_upload_view(request):
         image_data = cafe.add_image(
             image_file=image_file,
             image_type=image_type,
-            caption=caption,
             is_main=is_main
         )
         

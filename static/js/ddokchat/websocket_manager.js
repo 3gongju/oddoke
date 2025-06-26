@@ -4,13 +4,13 @@ let socket;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
 let reconnectInterval = null;
-let roomId;
+let roomCode; // ✅ 변수명 유지
 
 // 메시지 핸들러 콜백들
 let messageHandlers = {};
 
-export function setupWebSocket(chatRoomId) {
-  roomId = chatRoomId;
+export function setupWebSocket(chatRoomCode) {
+  roomCode = chatRoomCode; // ✅ 수정: 올바른 변수에 할당
   connectWebSocket();
 }
 
@@ -33,8 +33,8 @@ export function getSocketState() {
 function connectWebSocket() {
   socket = new WebSocket(
     window.location.protocol === "https:"
-      ? `wss://${window.location.host}/ws/chat/${roomId}/`
-      : `ws://${window.location.host}/ws/chat/${roomId}/`
+      ? `wss://${window.location.host}/ws/chat/${roomCode}/`
+      : `ws://${window.location.host}/ws/chat/${roomCode}/`
   );
 
   socket.onopen = handleOpen;
@@ -55,7 +55,7 @@ function handleOpen() {
   // 채팅방 입장 알림
   sendMessage({
     'type': 'enter_chatroom',
-    'room_id': roomId
+    'room_code': roomCode
   });
 }
 

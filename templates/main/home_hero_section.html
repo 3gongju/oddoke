@@ -1,0 +1,88 @@
+{% load static %}
+<!-- 히어로 섹션 - 땡땡이 패턴 배경 -->
+<section class="relative overflow-hidden">
+  <!-- 연한 분홍색 단색 배경 -->
+  <div class="absolute inset-0 bg-pink-200"></div>
+
+  <!-- 정적인 땡땡이 패턴 -->
+  <div class="absolute inset-0 opacity-80" 
+       style="background-image: radial-gradient(circle, white 2px, transparent 2px); 
+              background-size: 30px 30px; 
+              background-position: 15px 15px;">
+  </div>
+
+  <!-- 높이를 줄여서 아래 섹션이 함께 보이게 -->
+  <div class="flex items-center justify-center relative z-10 h-[35vh] sm:h-[45vh] lg:h-[60vh] min-h-[250px] sm:min-h-[300px] lg:min-h-[400px]">
+    <div class="text-center max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 w-full flex flex-col items-center">
+      <!-- 메인 타이틀 - 완전히 가운데 정렬 -->
+      <div class="mb-3 sm:mb-6 flex flex-col items-center">
+        <h1 class="font-heading text-lg sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light mb-1 sm:mb-2 leading-tight tracking-wide text-center">
+          <span class="italic text-white"></span> 
+          <span class="font-bold text-white"></span>
+        </h1>
+ 
+      </div>
+      
+      <!-- 클릭 가능한 텍스트와 말풍선 - 완전히 가운데 정렬 -->
+      <div class="relative flex flex-col items-center">
+        <!-- 말풍선 툴팁 - 텍스트 위에 위치 -->
+        <div id="heroTooltip" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 bg-gray-800 text-white px-8 py-2.5 rounded-lg shadow-lg opacity-0 transition-all duration-300 pointer-events-none whitespace-nowrap z-30 min-w-max">
+          <div class="text-sm text-center">덕질은 어디서든 어떻게든 어덕해~</div>
+          <!-- 말풍선 화살표 (아래로 향함) -->
+          <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+          <!-- 닫기 버튼 -->
+          <button onclick="hideHeroTooltip()" class="absolute top-1 right-3 text-gray-300 hover:text-white text-sm">&times;</button>
+        </div>
+        
+        <p class="text-xs sm:text-sm md:text-base lg:text-lg mb-6 sm:mb-8 font-light leading-relaxed opacity-90 text-gray-800 font-body cursor-pointer drop-shadow-md text-center" onclick="showHeroTooltip()">
+          어덕해! <br>
+          <span class="italic font-medium text-gray-700">어떻게든 어디서든</span>
+        </p>
+      </div>
+      
+      <!-- 덕생 안경 이미지 - 완전히 가운데 정렬 -->
+      <div class="flex flex-col items-center relative">
+        <img src="{% static 'image/ddok_y.png' %}" 
+            alt="덕생 안경" 
+            class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 object-contain filter drop-shadow-lg transition-all duration-300 mb-3">
+        
+        <!-- 기본 텍스트 -->
+        <span class="text-xs sm:text-sm text-gray-700 font-body text-center block drop-shadow-sm mb-4">
+          (어떻게 어덕해?)
+        </span>
+      </div>
+
+      <!-- 어덕해 가이드 확인하기 버튼 - 항상 표시 (말풍선 스타일) -->
+      <div class="mt-2 sm:mt-4 flex justify-center">
+        <a href="{% url 'intro' %}" class="relative inline-block group">
+          <!-- 텍스트 박스 (말풍선) -->
+          <div class="bg-white border border-gray-400 rounded px-3 py-1.5 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-gray-50">
+            <span class="text-xs sm:text-sm text-gray-800 font-body font-medium whitespace-nowrap">
+              어덕해 가이드 확인하기
+            </span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+// 히어로 섹션 말풍선 함수들
+function showHeroTooltip() {
+  const tooltip = document.getElementById('heroTooltip');
+  tooltip.style.opacity = '1';
+  tooltip.style.pointerEvents = 'auto';
+  
+  // 3초 후 자동으로 숨김
+  setTimeout(() => {
+    hideHeroTooltip();
+  }, 3000);
+}
+
+function hideHeroTooltip() {
+  const tooltip = document.getElementById('heroTooltip');
+  tooltip.style.opacity = '0';
+  tooltip.style.pointerEvents = 'none';
+}
+</script>

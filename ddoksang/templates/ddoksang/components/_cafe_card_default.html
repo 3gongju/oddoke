@@ -1,25 +1,22 @@
 {% comment %}
 =====================================
-_cafe_card_default.html - 향상된 버전
+_cafe_card_default.html - 고정 높이 버전
 =====================================
 특징:
-- 종료된 카페: 블러/그림자 효과 적용
-- 포스터 이미지 비율 최적화 (3:4)
-- 이중 레이어 이미지 처리
-- 새로운 날짜 로직 적용 (시작 D-X / 종료 D-X)
-- 통일된 디자인
-- 이미지 없을 때 로고 표시
+- 카드 높이 고정
+- 텍스트 말줄임 처리
+- 일관된 이미지 크기
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
 {% with cafe|cafe_status as cafe_state %}
-<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-300 overflow-hidden {% if cafe_state == 'ended' %}ended-cafe{% endif %}"
+<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-300 overflow-hidden cafe-card-fixed {% if cafe_state == 'ended' %}ended-cafe{% endif %}"
      data-cafe-id="{{ cafe.id }}">
   
-  <!-- 카페 이미지 -->
-  <div class="relative poster-aspect overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+  <!-- 카페 이미지 - 고정 높이 -->
+  <div class="relative h-[240px] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 flex-shrink-0">
     {% if cafe.get_main_image %}
       <!-- 백그라운드 블러 이미지 -->
       <div class="absolute inset-0">
@@ -51,10 +48,10 @@ _cafe_card_default.html - 향상된 버전
         {% endif %}
       </div>
     {% else %}
-      <!-- 🔧 이미지 없을 때 로고 표시 -->
-      <div class="w-full h-full bg-gradient-to-br from-orange-50 to-orange-100 flex flex-col items-center justify-center {% if cafe_state == 'ended' %}relative{% endif %}">
+      <!-- 이미지 없을 때 로고 표시 -->
+      <div class="w-full h-full bg-gradient-to-br from-pink-50 to-pink-100 flex flex-col items-center justify-center {% if cafe_state == 'ended' %}relative{% endif %}">
         <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
-        <p class="text-orange-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
+        <p class="text-pink-600 font-medium text-lg text-center px-4 line-clamp-2">{{ cafe.cafe_name }}</p>
         
         <!-- 종료된 카페 오버레이 (이미지 없는 경우) -->
         {% if cafe_state == 'ended' %}
@@ -68,140 +65,169 @@ _cafe_card_default.html - 향상된 버전
     {% endif %}
   </div>
 
-  <!-- 카페 정보 -->
-  <div class="px-5 py-4 {% if cafe_state == 'ended' %}opacity-75{% endif %}">
-    <div class="flex justify-between items-start mb-3">
-      <div class="flex items-center space-x-2">
+  <!-- 카페 정보 - 나머지 공간 사용 -->
+  <div class="card-content-area"
+       style="{% if cafe_state == 'ended' %}opacity: 0.75;{% endif %}">
+    <div class="flex justify-between items-start mb-2">
+      <div class="flex items-center space-x-2 flex-1 min-w-0">
         {% if show_admin_status %}
           {% if cafe.status == 'pending' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">⏳ 승인대기</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 flex-shrink-0">
+              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              승인대기
+            </span>
           {% elif cafe.status == 'approved' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">✅ 승인됨</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 flex-shrink-0">
+              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              승인됨
+            </span>
           {% elif cafe.status == 'rejected' %}
-            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">❌ 거절됨</span>
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700 flex-shrink-0">
+              <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              거절됨
+            </span>
           {% endif %}
         {% endif %}
 
-        <!-- 상태 뱃지 (항상 표시) -->
+        <!-- 상태 뱃지 -->
         {% if cafe_state == 'ongoing' %}
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-green-500 text-white">운영중</span>
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-400 text-white flex-shrink-0">운영중</span>
         {% elif cafe_state == 'upcoming' %}
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-blue-500 text-white">예정</span>
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-300 text-white flex-shrink-0">예정</span>
         {% else %}
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-gray-500 text-white">종료</span>
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-200 text-pink-700 flex-shrink-0">종료</span>
         {% endif %}
 
         {% if show_type_badge %}
-          <span class="text-xs text-gray-500">{{ cafe.get_cafe_type_display }}</span>
+          <span class="text-xs text-gray-500 truncate">{{ cafe.get_cafe_type_display }}</span>
         {% endif %}
       </div>
 
       <!-- 찜하기 버튼 -->
       {% if show_favorite_btn and user.is_authenticated and cafe.status == 'approved' %}
         <button 
+          type="button"
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
-          class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none heart-btn-large"
+          class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none heart-btn-large flex-shrink-0 ml-2 z-10 relative"
           title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
-          style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
-          <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
+          onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite(this, {{ cafe.id }});">
+          {% if cafe.id in user_favorites %}
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12.001 4.529c2.349-2.342 6.151-2.354 8.502-.022
+                      2.357 2.339 2.365 6.133.01 8.482l-7.104 7.066a1.5 1.5 0
+                      01-2.116 0l-7.104-7.066c-2.355-2.349-2.348-6.143.01-8.482
+                      2.351-2.332 6.153-2.32 8.502.022z"/>
+            </svg>
+          {% else %}
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12.001 4.529c2.349-2.342 6.151-2.354 8.502-.022
+                      2.357 2.339 2.365 6.133.01 8.482l-7.104 7.066a1.5 1.5 0
+                      01-2.116 0l-7.104-7.066c-2.355-2.349-2.348-6.143.01-8.482
+                      2.351-2.332 6.153-2.32 8.502.022z"/>
+            </svg>
+          {% endif %}
         </button>
       {% endif %}
     </div>
 
-    <div class="mb-2">
+    <!-- 제목 영역 - 고정 높이 -->
+    <div class="mb-2 min-h-[3rem]">
       {% if cafe.member %}
-        <h3 class="font-semibold text-lg text-gray-900">
+        <h3 class="font-semibold text-base text-gray-900 line-clamp-1">
           {{ cafe.member.member_name }}
           <span class="text-sm text-gray-500 font-normal">({{ cafe.artist.display_name }})</span>
         </h3>
       {% else %}
-        <h3 class="font-semibold text-lg text-gray-900">{{ cafe.artist.display_name }}</h3>
+        <h3 class="font-semibold text-base text-gray-900 line-clamp-1">{{ cafe.artist.display_name }}</h3>
       {% endif %}
+      <h4 class="text-gray-700 line-clamp-2 font-medium text-sm">{{ cafe.cafe_name }}</h4>
     </div>
 
-    <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium">{{ cafe.cafe_name }}</h4>
-
-    <div class="flex items-center text-sm text-gray-600 mb-2">
-      <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- 위치 정보 -->
+    <div class="flex items-center text-xs text-gray-600 mb-2">
+      <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
       </svg>
-      <span class="truncate">{{ cafe.place_name|default:cafe.address|truncatechars:35 }}</span>
+      <span class="truncate">{{ cafe.place_name|default:cafe.address|truncatechars:30 }}</span>
     </div>
 
-    <!-- 날짜 계산 로직 적용 -->
-    <div class="flex items-center text-sm text-gray-600 mb-3">
-      <div class="flex items-center">
-        <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- 날짜 정보 -->
+    <div class="flex items-center text-xs text-gray-600 mb-2">
+      <div class="flex items-center flex-1 min-w-0">
+        <svg class="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
         </svg>
         <span class="truncate">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
       </div>
       {% if cafe_state == 'upcoming' and cafe.days_until_start > 0 and cafe.days_until_start <= 7 %}
-        <span class="text-blue-600 font text-xs bg-blue-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">시작 D-{{ cafe.days_until_start }}</span>
+        <span class="text-pink-600 text-xs bg-pink-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">시작 D-{{ cafe.days_until_start }}</span>
       {% elif cafe_state == 'ongoing' and cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
-        <span class="text-red-600 font text-xs bg-red-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">종료 D-{{ cafe.days_remaining }}</span>
+        <span class="text-pink-700 text-xs bg-pink-100 px-2 py-0.5 rounded-full flex-shrink-0 ml-2">종료 D-{{ cafe.days_remaining }}</span>
       {% endif %}
     </div>
 
-    {% if cafe.special_benefits and show_benefits %}
-      <div class="mb-3">
+    <!-- 혜택 정보 - 고정 높이 -->
+    <div class="mb-2 h-[2.5rem] overflow-hidden">
+      {% if cafe.special_benefits and show_benefits %}
         <div class="flex flex-wrap gap-1">
-          {% for benefit in cafe.special_benefits|split:","|slice:":3" %}
+          {% for benefit in cafe.special_benefits|split:","|slice:":2" %}
             {% if benefit|strip %}
-              <span class="inline-block bg-purple-50 text-purple-700 text-xs px-2 py-1 rounded">{{ benefit|strip }}</span>
+              <span class="inline-block bg-pink-50 text-pink-700 text-xs px-2 py-1 rounded">{{ benefit|strip|truncatechars:8 }}</span>
             {% endif %}
           {% endfor %}
-          {% if cafe.special_benefits|split:","|length > 3 %}
-            <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-3" }}개</span>
+          {% if cafe.special_benefits|split:","|length > 2 %}
+            <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-2" }}개</span>
           {% endif %}
         </div>
-      </div>
-    {% endif %}
+      {% endif %}
+    </div>
 
-    {% if cafe.hashtags and show_hashtags %}
-      <div class="mb-3">
-        <div class="flex flex-wrap gap-1">
-          {% for tag in cafe.hashtags|split:"#"|slice:":3" %}
-            {% if tag|strip %}
-              <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded">#{{ tag|strip }}</span>
-            {% endif %}
+    <!-- 버튼 영역 - 하단 고정 (검색페이지에서는 숨김) -->
+    {% if not hide_detail_btn %}
+      <div class="mt-auto">
+        <div class="flex space-x-2">
+          {% if cafe.status == 'approved' %}
+            <a href="{% url 'ddoksang:detail' cafe.id %}" 
+               class="flex-1 bg-gray-900 text-white py-2 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium {% if cafe_state == 'ended' %}opacity-75{% endif %}">
+              자세히 보기
+            </a>
+          {% elif cafe.status == 'pending' and show_preview %}
+            <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+               class="flex-1 bg-pink-500 text-white py-2 text-center rounded-lg hover:bg-pink-600 transition-colors text-sm font-medium">
+              미리보기
+            </a>
+          {% elif cafe.status == 'rejected' %}
+            <div class="flex-1 bg-gray-300 text-gray-600 py-2 text-center rounded-lg text-sm font-medium cursor-not-allowed">
+              거절됨
+            </div>
+          {% endif %}
+
+          {% for action in extra_actions %}
+            <a href="{{ action.url }}" 
+               class="{{ action.class|default:'px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}">
+              {{ action.text }}
+            </a>
           {% endfor %}
         </div>
       </div>
+    {% else %}
+      <!-- 버튼이 없을 때도 공간 확보 -->
+      <div class="mt-auto pb-2"></div>
     {% endif %}
 
-    <div class="space-y-2">
-      <div class="flex space-x-2">
-        {% if cafe.status == 'approved' %}
-          <a href="{% url 'ddoksang:detail' cafe.id %}" 
-             class="flex-1 bg-gray-900 text-white py-2.5 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium {% if cafe_state == 'ended' %}opacity-75{% endif %}">
-            자세히 보기
-          </a>
-        {% elif cafe.status == 'pending' and show_preview %}
-          <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
-             class="flex-1 bg-orange-600 text-white py-2.5 text-center rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium">
-            미리보기
-          </a>
-        {% elif cafe.status == 'rejected' %}
-          <div class="flex-1 bg-gray-300 text-gray-600 py-2.5 text-center rounded-lg text-sm font-medium cursor-not-allowed">
-            거절됨
-          </div>
-        {% endif %}
-
-        {% for action in extra_actions %}
-          <a href="{{ action.url }}" 
-             class="{{ action.class|default:'px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}">
-            {{ action.text }}
-          </a>
-        {% endfor %}
-      </div>
-    </div>
-
     {% if show_meta_info %}
-      <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-        <div class="flex space-x-3">
+      <div class="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
+        <div class="flex space-x-2">
           {% if show_created_date %}
             <span>{{ cafe.created_at|date:"m.d" }} 등록</span>
           {% endif %}
@@ -210,7 +236,7 @@ _cafe_card_default.html - 향상된 버전
           {% endif %}
         </div>
         {% if show_submitter %}
-          <span>{{ cafe.submitted_by.username }}</span>
+          <span class="truncate">{{ cafe.submitted_by.username }}</span>
         {% endif %}
       </div>
     {% endif %}
@@ -219,35 +245,38 @@ _cafe_card_default.html - 향상된 버전
 {% endwith %}
 
 <style>
-/* 기본 스타일 */
+/* 카드 높이 강제 고정 */
+.bg-white.rounded-lg.shadow-sm.border {
+  height: 480px !important;
+  min-height: 480px !important;
+  max-height: 480px !important;
+}
+
+/* 텍스트 말줄임 처리 */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
 }
 
-/* 포스터 비율 유지 (3:4 비율) */
-.poster-aspect {
-  aspect-ratio: 3 / 4;
-}
-
-/* Fallback for older browsers */
-@supports not (aspect-ratio: 3 / 4) {
-  .poster-aspect {
-    position: relative;
-    padding-bottom: 133.33%; /* 4/3 * 100% */
-    height: 0;
-  }
-  
-  .poster-aspect > * {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
+/* 찜하기 버튼 클릭 가능하도록 */
+[data-favorite-btn] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 100 !important;
+  position: relative !important;
 }
 
 /* 종료된 카페 스타일 */
@@ -261,11 +290,7 @@ _cafe_card_default.html - 향상된 버전
   transform: translateY(-2px);
 }
 
-.ended-cafe .p-4 {
-  background: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.05) 100%);
-}
-
-/* 호버 효과 개선 */
+/* 호버 효과 */
 [data-cafe-id]:hover {
   transform: translateY(-2px);
 }
@@ -275,11 +300,53 @@ _cafe_card_default.html - 향상된 버전
 }
 
 /* 이미지 호버 효과 */
-.poster-aspect img {
-  transition: transform 0.5s ease;
-}
-
-[data-cafe-id]:hover .poster-aspect img {
+[data-cafe-id]:hover img {
   transform: scale(1.02);
 }
+
+/* 카드 내용 강제 고정 */
+.px-4.py-4.flex.flex-col.flex-1 {
+  flex: 1 !important;
+  overflow: hidden !important;
+}
 </style>
+
+<script>
+// 찜하기 기능
+function toggleFavorite(button, cafeId) {
+  // 기존 찜하기 로직이 있다면 그대로 사용하고, 없다면 아래 코드 사용
+  const isAuthenticated = document.getElementById('user-data')?.dataset.authenticated === 'true';
+  
+  if (!isAuthenticated) {
+    alert('로그인이 필요합니다.');
+    return;
+  }
+
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  
+  fetch(`/ddoksang/favorite/${cafeId}/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+    },
+    body: JSON.stringify({})
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+      const svg = button.querySelector('svg');
+      if (data.is_favorite) {
+        svg.setAttribute('fill', '#ef4444');
+        button.title = '찜 해제';
+      } else {
+        svg.setAttribute('fill', 'none');
+        button.title = '찜하기';
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+}
+</script>

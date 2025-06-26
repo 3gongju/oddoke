@@ -1,0 +1,677 @@
+{# templates/main/intro.html #}
+<!DOCTYPE html>
+{% load static %}
+<html lang="ko" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} - 어덕해</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="어덕해 - 팬들을 위한 특별한 공간. 굿즈 거래, 팬 커뮤니티, 생일 달력 등 덕질의 모든 것을 경험하세요.">
+    <meta name="keywords" content="덕질, 굿즈거래, 팬커뮤니티, K-POP, 아이돌, 덕팜, 덕담, 생일달력">
+    <meta name="author" content="어덕해">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags (Facebook, 카카오톡 등) -->
+    <meta property="og:title" content="어덕해 - 팬들을 위한 특별한 공간">
+    <meta property="og:description" content="굿즈 거래, 팬 커뮤니티, 생일 달력 등 덕질의 모든 것을 한 곳에서 경험하세요.">
+    <meta property="og:image" content="{% static 'image/slide/intro_slide_default.jpg' %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="어덕해">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="어덕해 - 팬들을 위한 특별한 공간">
+    <meta name="twitter:description" content="굿즈 거래, 팬 커뮤니티, 생일 달력 등 덕질의 모든 것을 한 곳에서 경험하세요.">
+    <meta name="twitter:image" content="{% static 'image/slide/intro_slide_default.jpg' %}">
+    
+    <!-- Performance Optimization -->
+    <link rel="preload" href="{% static 'image/slide/intro_slide_default.jpg' %}" as="image">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 커스텀 스타일 -->
+    <style>
+        /* 스크롤 스냅 설정 */
+        .snap-container {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        
+        .snap-section {
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+        
+        /* 이미지 최적화 */
+        .intro-image {
+            object-fit: cover;
+            object-position: center;
+            width: 100%;
+            height: 100vh;
+            /* 이미지 압축 품질 향상 */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: optimize-contrast;
+            /* 레이지 로딩 지원 */
+            content-visibility: auto;
+        }
+        
+        /* 고해상도 디스플레이 대응 */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .intro-image {
+                image-rendering: -webkit-optimize-contrast;
+                image-rendering: crisp-edges;
+            }
+        }
+        
+        /* 접근성 개선 - 모션 감소 설정 */
+        @media (prefers-reduced-motion: reduce) {
+            .snap-container {
+                scroll-behavior: auto;
+            }
+            
+            .fade-in,
+            .scroll-indicator,
+            .nav-dot {
+                animation: none;
+                transition: none;
+            }
+            
+            .loading-spinner {
+                animation: none;
+            }
+        }
+        
+        /* 인터넷 익스플로러 대응 */
+        @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+            .intro-image {
+                object-fit: cover;
+                height: 100vh;
+            }
+        }
+        
+        /* 모바일에서 이미지 비율 유지 */
+        @media (max-width: 768px) {
+            .intro-image {
+                object-fit: contain;
+                background-color: #f8fafc;
+            }
+        }
+        
+        /* 네비게이션 도트 */
+        .nav-dot {
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-dot.active {
+            transform: scale(1.3);
+            background-color: white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        /* 스크롤 인디케이터 애니메이션 */
+        .scroll-indicator {
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        /* 로딩 스피너 */
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 오버레이 콘텐츠 페이드 인 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+        
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 네비게이션 도트 컨테이너 스크롤 */
+        .nav-dots-container {
+            max-height: 80vh;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .nav-dots-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* 통계 카운터 애니메이션 */
+        .counter {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 overflow-x-hidden">
+    
+    <!-- 로딩 화면 -->
+    <div id="loading" class="fixed inset-0 bg-black z-50 flex items-center justify-center transition-opacity duration-500">
+        <div class="text-center text-white">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <div class="text-lg font-light">어덕해 로딩 중...</div>
+        </div>
+    </div>
+    
+    <!-- 상단 네비게이션 바 -->
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-black bg-opacity-80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 로고 -->
+                <div class="flex-shrink-0">
+                    <a href="/" class="text-white text-xl font-bold hover:text-gray-300 transition-colors">
+                        어덕해
+                    </a>
+                </div>
+                
+                <!-- 네비게이션 메뉴 -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                            홈
+                        </a>
+                        <a href="/ddokfarm/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                            덕팜
+                        </a>
+                        <a href="/ddokdam/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                            덕담
+                        </a>
+                        <a href="/calendar/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
+                            덕생
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- CTA 버튼 -->
+                <div class="flex items-center space-x-3">
+                    {% if user.is_authenticated %}
+                        <span class="text-gray-300 text-sm">{{ user.display_name }}님</span>
+                        <a href="/accounts/logout/" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                            로그아웃
+                        </a>
+                    {% else %}
+                        <a href="/accounts/login/" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition-colors">
+                            로그인
+                        </a>
+                        <a href="/accounts/signup/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
+                            회원가입
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- 모바일 메뉴 버튼 -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-300 hover:text-white p-2">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 모바일 메뉴 -->
+        <div id="mobile-menu" class="md:hidden hidden bg-black bg-opacity-90">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">홈</a>
+                <a href="/ddokfarm/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">덕팜</a>
+                <a href="/ddokdam/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">덕담</a>
+                <a href="/calendar/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">덕생</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 우측 네비게이션 도트 -->
+    <div class="fixed right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40">
+        <div class="nav-dots-container space-y-2">
+            {% for slide in slide_contents %}
+            <div class="nav-dot w-3 h-3 bg-white bg-opacity-50 rounded-full cursor-pointer transition-all hover:bg-opacity-80 {% if forloop.first %}active{% endif %}" 
+                 data-section="{{ forloop.counter0 }}" 
+                 title="{{ slide.subtitle }}"></div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- 메인 컨테이너 -->
+    <main class="h-screen overflow-y-auto snap-container" id="main-container">
+        
+        <!-- 17개 슬라이드 동적 생성 -->
+        {% for slide in slide_contents %}
+        <section class="snap-section h-screen relative" id="section-{{ forloop.counter0 }}">
+            <img src="{% static slide.image %}" 
+                 alt="어덕해 소개 슬라이드 {{ forloop.counter }} - {{ slide.title }}" 
+                 class="intro-image"
+                 loading="eager">
+            
+            <!-- 슬라이드별 오버레이 콘텐츠 -->
+            <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+                <div class="text-center text-white fade-in px-4 max-w-4xl">
+                    
+                    {% if slide.type == 'welcome' %}
+                    <!-- 첫 번째 슬라이드 - 웰컴 -->
+                    <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ slide.title }}</h1>
+                    <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+                        {{ slide.subtitle }}<br>
+                        {{ slide.description }}
+                    </p>
+                    
+                    {% elif slide.type == 'cta' %}
+                    <!-- 마지막 슬라이드 - CTA -->
+                    <h2 class="text-4xl md:text-6xl font-bold mb-6">{{ slide.title }}</h2>
+                    <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto">
+                        {{ slide.subtitle }}<br>
+                        {{ slide.description }}
+                    </p>
+                    
+                    <!-- 통계 정보 -->
+                    {% if stats.total_users > 0 %}
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 max-w-2xl mx-auto">
+                        <div class="text-center">
+                            <div class="text-2xl md:text-3xl font-bold counter">{{ stats.total_users }}</div>
+                            <div class="text-sm opacity-80">활성 사용자</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl md:text-3xl font-bold counter">{{ stats.total_artists }}</div>
+                            <div class="text-sm opacity-80">등록 아티스트</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl md:text-3xl font-bold counter">{{ stats.total_posts }}</div>
+                            <div class="text-sm opacity-80">게시물</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl md:text-3xl font-bold counter">{{ stats.total_trades }}</div>
+                            <div class="text-sm opacity-80">거래 완료</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- CTA 버튼 -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        {% if not user.is_authenticated %}
+                            <a href="/accounts/signup/" 
+                               class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all transform hover:scale-105 shadow-xl">
+                                지금 시작하기
+                            </a>
+                            <a href="/" 
+                               class="border-2 border-white text-white hover:bg-white hover:text-black px-8 py-4 rounded-full text-lg font-semibold transition-all">
+                                둘러보기
+                            </a>
+                        {% else %}
+                            <a href="/" 
+                               class="bg-white text-black hover:bg-gray-100 px-8 py-4 rounded-full text-lg font-semibold transition-all transform hover:scale-105 shadow-xl">
+                                메인으로 돌아가기
+                            </a>
+                        {% endif %}
+                    </div>
+                    
+                    {% else %}
+                    <!-- 일반 슬라이드 -->
+                    <h2 class="text-3xl md:text-5xl font-bold mb-4">{{ slide.title }}</h2>
+                    <h3 class="text-xl md:text-2xl mb-6 text-pink-200">{{ slide.subtitle }}</h3>
+                    <p class="text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                        {{ slide.description }}
+                    </p>
+                    
+                    <!-- 슬라이드 타입별 추가 콘텐츠 -->
+                    {% if slide.type == 'ddokfarm' %}
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                            <div class="text-lg font-semibold mb-2">양도</div>
+                            <div class="text-sm opacity-90">안전한 굿즈 거래</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                            <div class="text-lg font-semibold mb-2">대여</div>
+                            <div class="text-sm opacity-90">경제적인 선택</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                            <div class="text-lg font-semibold mb-2">분철</div>
+                            <div class="text-sm opacity-90">취향대로 함께</div>
+                        </div>
+                    </div>
+                    
+                    {% elif slide.type == 'ddokdam' %}
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                            <div class="text-lg font-semibold mb-2">커뮤니티</div>
+                            <div class="text-sm opacity-90">자유로운 소통</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                            <div class="text-lg font-semibold mb-2">예절샷</div>
+                            <div class="text-sm opacity-90">정성의 기록</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                            <div class="text-lg font-semibold mb-2">생일카페</div>
+                            <div class="text-sm opacity-90">특별한 순간</div>
+                        </div>
+                    </div>
+
+                    {% elif slide.type == 'favorite_artists' %}
+                    <!-- 🔥 찜한 아티스트 슬라이드 - 별도 파일로 분리 -->
+                    {% include 'main/intro/favorite_artists_slide.html' %}
+                    
+                    {% elif slide.type == 'ddoksang' %}
+                    <!-- 🎂 덕생 - 아티스트 생일 달력 슬라이드 - 별도 파일로 분리 -->
+                    {% include 'main/intro/birthday_artists_slide.html' %}
+                    
+                    {% elif slide.type == 'safety' %}
+                    <div class="mt-8 flex justify-center items-center space-x-8">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🔒</div>
+                            <div class="text-sm">보안 거래</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">✅</div>
+                            <div class="text-sm">신뢰성 검증</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🛡️</div>
+                            <div class="text-sm">안전 보장</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if forloop.first %}
+            <!-- 첫 번째 슬라이드에만 스크롤 힌트 표시 -->
+            <div class="scroll-indicator absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white text-center">
+                <div class="text-sm mb-2 opacity-80">아래로 스크롤하세요</div>
+                <svg class="w-6 h-6 mx-auto opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                </svg>
+            </div>
+            {% endif %}
+        </section>
+        {% endfor %}
+        
+    </main>
+    
+    <!-- 진행률 표시바 -->
+    <div class="fixed bottom-0 left-0 right-0 z-30">
+        <div class="bg-gray-800 bg-opacity-50 h-1">
+            <div id="progress-bar" class="bg-white h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // 전역 변수
+        let currentSection = 0;
+        const totalSections = {{ total_slides }};  // Django에서 전달받은 슬라이드 수
+        let isScrolling = false;
+        let touchStartY = 0;
+        
+        // DOM 요소
+        const mainContainer = document.getElementById('main-container');
+        const loading = document.getElementById('loading');
+        const navDots = document.querySelectorAll('.nav-dot');
+        const progressBar = document.getElementById('progress-bar');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        // 이미지 로딩 관리 (더욱 간소화된 버전)
+        function checkImagesLoaded() {
+            console.log('단일 이미지 로딩 체크 시작...');
+            
+            // 모든 이미지가 같으므로 첫 번째만 체크
+            const firstImage = document.querySelector('.intro-image');
+            
+            if (firstImage && firstImage.complete && firstImage.naturalHeight !== 0) {
+                console.log('이미지 로딩 완료');
+                finishLoading();
+            } else {
+                // 1초 후 강제로 로딩 완료 (같은 이미지이므로 빠름)
+                setTimeout(() => {
+                    console.log('1초 타임아웃, 강제 로딩 완료');
+                    finishLoading();
+                }, 1000);
+            }
+        }
+        
+        function finishLoading() {
+            console.log('로딩 완료 처리 시작');
+            loading.style.opacity = '0';
+            setTimeout(() => {
+                loading.style.display = 'none';
+                initializeApp();
+                console.log('앱 초기화 완료');
+            }, 500);
+        }
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM 로드 완료');
+            // 즉시 로딩 체크 시작
+            checkImagesLoaded();
+        });
+        
+        // 백업: 윈도우 로드 이벤트
+        window.addEventListener('load', () => {
+            console.log('윈도우 로드 완료');
+            // 만약 아직 로딩 중이라면 강제로 완료
+            if (loading.style.display !== 'none') {
+                console.log('백업 로딩 완료 처리');
+                finishLoading();
+            }
+        });
+        
+        // 앱 초기화
+        function initializeApp() {
+            updateNavigation();
+            setupEventListeners();
+            updateProgressBar(); // 초기 진행률 설정
+            
+            // 페이드 인 효과
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach(el => {
+                    el.classList.add('visible');
+                });
+            }, 500);
+            
+            // 카운터 애니메이션 (마지막 슬라이드용)
+            if (currentSection === totalSections - 1) {
+                animateCounters();
+            }
+        }
+        
+        // 카운터 애니메이션
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.textContent);
+                if (target > 0) {
+                    let current = 0;
+                    const increment = target / 50;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        counter.textContent = Math.floor(current).toLocaleString();
+                    }, 40);
+                }
+            });
+        }
+        
+        // 네비게이션 업데이트
+        function updateNavigation() {
+            navDots.forEach((dot, index) => {
+                if (index === currentSection) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+        
+        // 진행률 바 업데이트
+        function updateProgressBar() {
+            const progress = ((currentSection + 1) / totalSections) * 100;
+            progressBar.style.width = progress + '%';
+        }
+        
+        // 특정 섹션으로 이동
+        function goToSection(sectionIndex) {
+            if (sectionIndex < 0 || sectionIndex >= totalSections || isScrolling) return;
+            
+            isScrolling = true;
+            currentSection = sectionIndex;
+            
+            const targetSection = document.getElementById(`section-${sectionIndex}`);
+            targetSection.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            updateNavigation();
+            updateProgressBar();
+            
+            // 마지막 슬라이드에서 카운터 애니메이션 실행
+            if (sectionIndex === totalSections - 1) {
+                setTimeout(() => {
+                    animateCounters();
+                }, 500);
+            }
+            
+            setTimeout(() => {
+                isScrolling = false;
+            }, 1000);
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 네비게이션 도트 클릭
+            navDots.forEach((dot, index) => {
+                dot.addEventListener('click', () => goToSection(index));
+            });
+            
+            // 모바일 메뉴 토글
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // 키보드 네비게이션
+            document.addEventListener('keydown', (e) => {
+                if (isScrolling) return;
+                
+                switch(e.key) {
+                    case 'ArrowDown':
+                    case ' ':
+                        e.preventDefault();
+                        if (currentSection < totalSections - 1) {
+                            goToSection(currentSection + 1);
+                        }
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (currentSection > 0) {
+                            goToSection(currentSection - 1);
+                        }
+                        break;
+                    case 'Home':
+                        e.preventDefault();
+                        goToSection(0);
+                        break;
+                    case 'End':
+                        e.preventDefault();
+                        goToSection(totalSections - 1);
+                        break;
+                }
+            });
+            
+            // 터치 이벤트 (모바일)
+            mainContainer.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+            
+            mainContainer.addEventListener('touchend', (e) => {
+                if (isScrolling) return;
+                
+                const touchEndY = e.changedTouches[0].clientY;
+                const diff = touchStartY - touchEndY;
+                const threshold = 50;
+                
+                if (Math.abs(diff) > threshold) {
+                    if (diff > 0 && currentSection < totalSections - 1) {
+                        goToSection(currentSection + 1);
+                    } else if (diff < 0 && currentSection > 0) {
+                        goToSection(currentSection - 1);
+                    }
+                }
+            }, { passive: true });
+            
+            // 스크롤 이벤트 감지
+            let scrollTimeout;
+            mainContainer.addEventListener('scroll', () => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    if (!isScrolling) {
+                        detectCurrentSection();
+                    }
+                }, 100);
+            }, { passive: true });
+        }
+        
+        // 현재 섹션 감지
+        function detectCurrentSection() {
+            const scrollTop = mainContainer.scrollTop;
+            const windowHeight = window.innerHeight;
+            const newSection = Math.round(scrollTop / windowHeight);
+            
+            if (newSection !== currentSection && newSection >= 0 && newSection < totalSections) {
+                currentSection = newSection;
+                updateNavigation();
+                updateProgressBar();
+                
+                // 마지막 슬라이드에서 카운터 애니메이션
+                if (currentSection === totalSections - 1) {
+                    animateCounters();
+                }
+            }
+        }
+        
+        console.log(`어덕해 소개 페이지 로드 완료 - ${totalSections}개 슬라이드`);
+    </script>
+</body>
+</html>

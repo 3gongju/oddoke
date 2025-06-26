@@ -1,45 +1,36 @@
 <!-- ddokfarm/templates/ddokfarm/components/post_detail/_exchange_info.html -->
 
 {% if post.want_to == 'exchange' and post.exchange_info %}
-<div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg">
-  <div class="flex items-center mb-3">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-blue-600 mr-2">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-    </svg>
-    <h3 class="text-lg font-bold text-blue-900">교환 정보</h3>
-  </div>
-  
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- 주는 것 -->
-    <div class="bg-white rounded-lg p-3 border border-blue-200">
-      <div class="flex items-center mb-2">
+<div class="border-t p-2 text-sm">
+  <h2 class="font-bold mb-3 text-gray-800">교환 정보</h2>
+
+  <!-- 주는 것 -->
+  <div class="mb-3 border border-green-200 rounded-lg px-3 py-2">
+    <div class="flex items-center mb-2">
+      <span class="inline-flex items-center text-sm font-semibold text-gray-800">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2 text-green-600">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
         </svg>
-        <span class="text-sm font-semibold text-green-800">주는 것</span>
-      </div>
-      <p class="text-sm text-gray-700 leading-relaxed">{{ post.exchange_info.give_description|linebreaks }}</p>
+        주는 것
+      </span>
     </div>
-    
-    <!-- 받고 싶은 것 -->
-    <div class="bg-white rounded-lg p-3 border border-blue-200">
-      <div class="flex items-center mb-2">
+    <div class="text-gray-800 text-xs">
+      {{ post.exchange_info.give_description|linebreaks }}
+    </div>
+  </div>
+
+  <!-- 받고 싶은 것 -->
+  <div class="mb-3 border border-orange-200 rounded-lg px-3 py-2">
+    <div class="flex items-center mb-2">
+      <span class="inline-flex items-center text-sm font-semibold text-gray-800">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-2 text-orange-600">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
         </svg>
-        <span class="text-sm font-semibold text-orange-800">받고 싶은 것</span>
-      </div>
-      <p class="text-sm text-gray-700 leading-relaxed">{{ post.exchange_info.want_description|linebreaks }}</p>
+        받고 싶은 것
+      </span>
     </div>
-  </div>
-  
-  <!-- 교환 안내 메시지 -->
-  <div class="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-700">
-    <div class="flex items-center">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-      </svg>
-      <span><strong>교환 희망:</strong> 문의를 통해 교환 조건을 상세히 협의해주세요. 교환이 어려운 경우 아래 가격으로 판매도 가능합니다.</span>
+    <div class="text-gray-800 text-xs">
+      {{ post.exchange_info.want_description|linebreaks }}
     </div>
   </div>
 </div>

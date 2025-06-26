@@ -1,4 +1,5 @@
 <!-- 디테일 페이지 이미지 헤더 컴포넌트 -->
+{% load static %}
 
 <style>
 .text-info-bar {
@@ -30,10 +31,40 @@
   background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
+/* 종료된 카페 오버레이 스타일 */
+.closed-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+}
+
+.closed-text {
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.closed-image-filter {
+  filter: brightness(0.5);
+}
+
 @media (max-width: 768px) {
   .text-info-bar {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.88) 100%);
     backdrop-filter: blur(15px);
+  }
+  
+  .closed-text {
+    font-size: 0.75rem;
   }
 }
 </style>
@@ -47,9 +78,20 @@
           {% for image in all_images %}
             <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}"
                  onclick="window.openImageModal({{ forloop.counter0 }})">
-              <div class="flex items-center justify-center w-full h-full bg-white rounded-lg">
-                <img src="{{ image.url }}" alt="{{ image.caption|default:cafe.cafe_name }}"
-                     class="object-contain max-h-[330px] w-auto h-auto cursor-zoom-in rounded-lg shadow-lg">
+              <div class="flex items-center justify-center w-full h-full bg-white rounded-lg relative">
+                <img src="{{ image.url }}" 
+                     alt="{{ cafe.cafe_name }} 이미지"
+                     class="object-contain max-h-[330px] w-auto h-auto cursor-zoom-in rounded-lg shadow-lg
+                            {% if cafe.status == 'approved' and not cafe.is_active and cafe.days_until_start <= 0 %}closed-image-filter{% endif %}">
+                
+                <!-- 종료된 카페 오버레이 -->
+                {% if cafe.status == 'approved' and not cafe.is_active and cafe.days_until_start <= 0 %}
+                  <div class="closed-overlay">
+                    <div class="closed-text">
+                      CLOSED
+                    </div>
+                  </div>
+                {% endif %}
               </div>
             </div>
           {% endfor %}
@@ -57,13 +99,13 @@
           {% if all_images|length > 1 %}
             <!-- 좌우 화살표 -->
             <button type="button" onclick="window.prevGalleryImage()"
-                    class="gallery-nav-btn absolute left-2 top-1/2 transform -translate-y-1/2 bg-opacity-70 p-1.5 rounded-full hover:bg-black/50 transition-colors z-20">
+                    class="gallery-nav-btn absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-70 text-white p-1.5 rounded-full hover:bg-opacity-50 transition-colors z-20">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
             </button>
             <button type="button" onclick="window.nextGalleryImage()"
-                    class="gallery-nav-btn absolute right-2 top-1/2 transform -translate-y-1/2 bg-opacity-70 text-gray-800 p-1.5 rounded-full hover:bg-black/50 transition-colors z-20">
+                    class="gallery-nav-btn absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-70 text-white p-1.5 rounded-full hover:bg-opacity-50 transition-colors z-20">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
               </svg>
@@ -71,8 +113,10 @@
           {% endif %}
         </div>
       {% else %}
-        <div class="w-full h-[350px] bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center rounded-lg">
-          <span class="text-white text-4xl">🏪</span>
+        <div class="w-full h-[350px] bg-white flex items-center justify-center rounded-lg border border-gray-200">
+          <img src="{% static 'image/ddoks_closed_eyes.png' %}" 
+               alt="이미지 없음" 
+               class="max-h-[200px] w-auto opacity-60">
         </div>
       {% endif %}
     {% endwith %}
@@ -82,20 +126,22 @@
   <div class="text-info-bar -mt-4 py-6 px-8">
     <div class="max-w-4xl mx-auto">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <!-- 왼쪽: 상태 및 타입 배지 -->
+        <!-- 왼쪽: 상태 배지만 -->
         <div class="flex items-center gap-3">
           <span class="px-4 py-2 rounded-full text-sm font-bold text-white shadow-md
-                     {% if cafe.is_active %}bg-emerald-500{% elif cafe.days_until_start > 0 %}bg-blue-500{% else %}bg-gray-500{% endif %}">
-            {% if cafe.is_active %}
+                     {% if cafe.status != 'approved' %}bg-orange-500
+                     {% elif cafe.is_active %}bg-emerald-500
+                     {% elif cafe.days_until_start > 0 %}bg-blue-500
+                     {% else %}bg-gray-500{% endif %}">
+            {% if cafe.status != 'approved' %}
+              승인 대기
+            {% elif cafe.is_active %}
               진행중
             {% elif cafe.days_until_start > 0 %}
               예정
             {% else %}
               종료
             {% endif %}
-          </span>
-          <span class="px-4 py-2 bg-black rounded-full text-sm font-bold text-white shadow-md">
-            {{ cafe.get_cafe_type_display }}
           </span>
         </div>
         
@@ -106,7 +152,7 @@
           </h1>
           <div class="flex items-center justify-end gap-3">
             <p class="text-lg text-gray-600 font-medium">
-              {{ cafe.artist.display_name }}{% if cafe.member %} - {{ cafe.member.member_name }}{% endif %}
+              {{ cafe.artist.display_name }}{% if cafe.member %} ({{ cafe.member.member_name }}){% endif %}
             </p>
             
             <!-- 찜 버튼 - 텍스트 옆으로 이동 -->

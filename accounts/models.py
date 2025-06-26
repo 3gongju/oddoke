@@ -1,13 +1,25 @@
-# accounts/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django_resized import ResizedImageField
 from django.utils import timezone
 from datetime import timedelta
-from .utils import AccountEncryption, AddressEncryption
+from .utils import BankEncryption, AddressEncryption
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
+import os
+from datetime import datetime
+
+def profile_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('accounts/profile', now.strftime('%y/%m'), filename)
+
+def banner_image_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('accounts/banners', now.strftime('%y/%m'), filename)
+
+def fandom_card_upload(instance, filename):
+    now = datetime.now()
+    return os.path.join('accounts/fandom_cards', now.strftime('%y/%m'), filename)
 
 class User(AbstractUser):
     email = models.EmailField(unique=True, error_messages={
@@ -17,27 +29,9 @@ class User(AbstractUser):
        'unique': "이미 사용 중인 닉네임입니다."
     })
    
-    profile_image = ResizedImageField(
-       size=[500, 500],
-       crop=['middle', 'center'],
-       upload_to='profile',
-    )
+    profile_image = models.ImageField(upload_to=profile_image_upload)
     followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     bio = models.TextField(blank=True, null=True)
-   
-    # 소셜 로그인 관련
-    is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
-    social_signup_completed = models.BooleanField(default=False, verbose_name="소셜 가입 완료 여부")
-    is_temp_username = models.BooleanField(default=False, verbose_name="임시 사용자명 여부")
-   
-    # 🔥 소셜 로그인 ID 저장 필드 추가
-    kakao_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="카카오 ID")
-    naver_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="네이버 ID")
-
-    # 🔥 제재 관련 필드 추가
-    suspension_start = models.DateTimeField(blank=True, null=True, verbose_name="제재 시작일")
-    suspension_end = models.DateTimeField(blank=True, null=True, verbose_name="제재 종료일")
-    suspension_reason = models.TextField(blank=True, null=True, verbose_name="제재 사유")
 
     # 편의 메서드들
     def get_fandom_profile(self):
@@ -70,55 +64,164 @@ class User(AbstractUser):
         profile, created = AddressProfile.objects.get_or_create(user=self)
         return profile
 
+    # 소셜 로그인 관련 편의 메서드들
+    def get_social_account(self):
+        try:
+            return self.social_account
+        except SocialAccount.DoesNotExist:
+            return None
+    
+    def get_or_create_social_account(self):
+        account, created = SocialAccount.objects.get_or_create(user=self)
+        return account
+
+    # 제재 관련 편의 메서드들
+    def get_user_suspension(self):
+        try:
+            return self.user_suspension
+        except UserSuspension.DoesNotExist:
+            return None
+    
+    def get_or_create_user_suspension(self):
+        suspension, created = UserSuspension.objects.get_or_create(user=self)
+        return suspension
+
+    # 표시 이름 - username만 사용
     @property
     def display_name(self):
-        """화면에 표시할 이름 반환"""
-        # 🔥 1순위: first_name이 있으면 우선 사용 (프로필 관리에서 변경한 닉네임)
-        if self.first_name and self.first_name.strip():
-            return self.first_name
-        
-        # 🔥 2순위: 소셜 가입이 완료되고 임시 사용자명이 아닌 경우 username 사용
-        if self.social_signup_completed and not self.is_temp_username:
-            return self.username
-        
-        # 🔥 3순위: 임시 사용자명인 경우 (아직 프로필 완성하지 않은 경우)
-        if self.is_temp_username:
-            if self.username.startswith('temp_kakao_'):
-                return "카카오 사용자"
-            elif self.username.startswith('temp_naver_'):
-                return "네이버 사용자"
-            else:
-                return "새로운 사용자"
-        
-        # 🔥 4순위: 기본적으로 username 반환
+        """화면에 표시할 이름 - username만 사용"""
         return self.username
    
+    # 소셜 로그인 관련 프로퍼티들 (위임)
     @property
     def is_social_user(self):
-        return self.username.startswith(('temp_kakao_', 'temp_naver_'))
+        """소셜 로그인 사용자인지 확인"""
+        social_account = self.get_social_account()
+        return social_account.is_social_user if social_account else False
 
+    @property
+    def social_provider(self):
+        """소셜 로그인 제공자 반환"""
+        social_account = self.get_social_account()
+        return social_account.provider if social_account else None
+
+    @property
+    def social_signup_completed(self):
+        """소셜 가입 완료 여부"""
+        social_account = self.get_social_account()
+        return social_account.signup_completed if social_account else False
+
+    # 제재 관련 프로퍼티들 (위임)
     @property
     def is_suspended(self):
         """현재 제재 중인지 확인"""
-        if not self.suspension_start:
-            return False
-        
-        from django.utils import timezone
-        now = timezone.now()
-        
-        # 제재 시작일이 현재보다 미래면 아직 제재 아님
-        if self.suspension_start > now:
-            return False
-        
-        # 제재 종료일이 없으면 영구정지
-        if not self.suspension_end:
-            return True
-        
-        # 제재 종료일이 현재보다 미래면 제재 중
-        return self.suspension_end > now
+        user_suspension = self.get_user_suspension()
+        return user_suspension.is_suspended if user_suspension else False
 
     @property
     def suspension_status(self):
+        """제재 상태 문자열 반환"""
+        user_suspension = self.get_user_suspension()
+        return user_suspension.status_display if user_suspension else "정상"
+
+    def suspend_user(self, reason, days=None, end_datetime=None):
+        """사용자 제재"""
+        suspension = self.get_or_create_user_suspension()
+        suspension.suspend(reason, days, end_datetime)
+
+    def lift_suspension(self):
+        """제재 해제"""
+        user_suspension = self.get_user_suspension()
+        if user_suspension:
+            user_suspension.lift()
+
+    def get_or_create_ddok_point(self):
+        """사용자의 DdokPoint 인스턴스를 가져오거나 생성합니다."""
+        ddok_point, created = DdokPoint.objects.get_or_create(user=self)
+        return ddok_point
+
+
+class SocialAccount(models.Model):
+    """소셜 로그인 계정 정보"""
+    PROVIDER_CHOICES = [
+        ('kakao', '카카오'),
+        ('naver', '네이버'),
+        ('google', '구글'),
+    ]
+    
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='social_account'
+    )
+    provider = models.CharField(
+        max_length=20, 
+        choices=PROVIDER_CHOICES,
+        verbose_name="소셜 제공자"
+    )
+    social_id = models.CharField(
+        max_length=100, 
+        verbose_name="소셜 ID"
+    )
+    signup_completed = models.BooleanField(
+        default=False, 
+        verbose_name="소셜 가입 완료 여부"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['provider', 'social_id']
+        verbose_name = '소셜 계정'
+        verbose_name_plural = '소셜 계정 목록'
+    
+    @property
+    def is_social_user(self):
+        """소셜 로그인 사용자인지 확인"""
+        return bool(self.social_id)
+    
+    def __str__(self):
+        return f"{self.user.username}의 {self.get_provider_display()} 계정"
+
+
+class UserSuspension(models.Model):
+    """사용자 제재 정보"""
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='user_suspension'
+    )
+    suspension_start = models.DateTimeField(verbose_name="제재 시작일")
+    suspension_end = models.DateTimeField(
+        blank=True, 
+        null=True, 
+        verbose_name="제재 종료일"
+    )
+    suspension_reason = models.TextField(verbose_name="제재 사유")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = '사용자 제재'
+        verbose_name_plural = '사용자 제재 목록'
+    
+    @property
+    def is_suspended(self):
+        """현재 제재 중인지 확인"""
+        now = timezone.now()
+        
+        if self.suspension_start > now:
+            return False
+        
+        if not self.suspension_end:
+            return True
+        
+        return self.suspension_end > now
+
+    @property
+    def status_display(self):
         """제재 상태 문자열 반환"""
         if not self.is_suspended:
             return "정상"
@@ -126,7 +229,6 @@ class User(AbstractUser):
         if not self.suspension_end:
             return "영구정지"
         
-        from django.utils import timezone
         remaining = self.suspension_end - timezone.now()
         
         if remaining.days > 0:
@@ -136,10 +238,8 @@ class User(AbstractUser):
         else:
             return f"{remaining.seconds // 60}분 남음"
 
-    def suspend_user(self, reason, days=None, end_datetime=None):
-        """사용자 제재"""
-        from django.utils import timezone
-        
+    def suspend(self, reason, days=None, end_datetime=None):
+        """제재 실행"""
         self.suspension_start = timezone.now()
         self.suspension_reason = reason
         
@@ -148,27 +248,23 @@ class User(AbstractUser):
         elif days:
             self.suspension_end = timezone.now() + timezone.timedelta(days=days)
         else:
-            self.suspension_end = None  # 영구정지
+            self.suspension_end = None
         
-        self.save(update_fields=['suspension_start', 'suspension_end', 'suspension_reason'])
+        self.save()
 
-    def lift_suspension(self):
-        """제재 해제"""
-        self.suspension_start = None
-        self.suspension_end = None
-        self.suspension_reason = None
-        self.save(update_fields=['suspension_start', 'suspension_end', 'suspension_reason'])
-
-    def get_or_create_ddok_point(self):
-        """사용자의 DdokPoint 인스턴스를 가져오거나 생성합니다."""
-        ddok_point, created = DdokPoint.objects.get_or_create(user=self)
-        return ddok_point
+    def lift(self):
+        """제재 해제 - 객체 삭제"""
+        self.delete()
+    
+    def __str__(self):
+        status = "영구정지" if not self.suspension_end else f"{self.suspension_end.date()}까지"
+        return f"{self.user.username} 제재 ({status})"
 
 
 class FandomProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
-    fandom_card = models.ImageField(upload_to='fandom_cards/', blank=True, null=True)
-    fandom_artist = models.ForeignKey('artist.Artist', on_delete=models.SET_NULL, blank=True, null=True)
+    fandom_card = models.ImageField(upload_to=fandom_card_upload)
+    fandom_artist = models.ForeignKey('artist.Artist', on_delete=models.CASCADE)
 
     # 인증 상태
     is_verified_fandom = models.BooleanField(default=False)
@@ -176,11 +272,11 @@ class FandomProfile(models.Model):
     verification_failed = models.BooleanField(default=False)
 
     # 사용자 입력 인증 기간
-    verification_start_date = models.DateField(blank=True, null=True, verbose_name="인증 시작일")
-    verification_end_date = models.DateField(blank=True, null=True, verbose_name="인증 만료일")
+    verification_start_date = models.DateField(verbose_name="인증 시작일")
+    verification_end_date = models.DateField(verbose_name="인증 만료일")
 
     # 기록
-    applied_at = models.DateTimeField(blank=True, null=True)
+    applied_at = models.DateTimeField()
     verified_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -188,15 +284,11 @@ class FandomProfile(models.Model):
     @property
     def is_verification_expired(self):
         """인증이 만료되었는지 확인"""
-        if not self.verification_end_date:
-            return False
         return timezone.now().date() > self.verification_end_date
    
     @property
     def days_until_expiration(self):
         """만료까지 남은 일수"""
-        if not self.verification_end_date:
-            return None
         today = timezone.now().date()
         if today > self.verification_end_date:
             return 0
@@ -205,7 +297,7 @@ class FandomProfile(models.Model):
     @property
     def needs_renewal_alert(self):
         """갱신 알림이 필요한지 확인 (7일 전)"""
-        if not self.verification_end_date or not self.is_verified_fandom:
+        if not self.is_verified_fandom:
             return False
        
         today = timezone.now().date()
@@ -248,25 +340,25 @@ class BankProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='bank_profile')
     bank_code = models.CharField(max_length=10)
     bank_name = models.CharField(max_length=50)
-    _encrypted_account_number = models.TextField()
-    account_holder = models.CharField(max_length=50)
+    _encrypted_bank_number = models.TextField()
+    bank_holder = models.CharField(max_length=50)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     @property
-    def account_number(self):
-        return AccountEncryption.decrypt(self._encrypted_account_number)
+    def bank_number(self):
+        return BankEncryption.decrypt(self._encrypted_bank_number)
     
-    @account_number.setter
-    def account_number(self, value):
-        self._encrypted_account_number = AccountEncryption.encrypt(value)
+    @bank_number.setter
+    def bank_number(self, value):
+        self._encrypted_bank_number = BankEncryption.encrypt(value)
     
-    def get_masked_account_number(self):
+    def get_masked_bank_number(self):
         """마스킹된 계좌번호 반환"""
-        account = self.account_number
-        if account and len(account) > 4:
-            return '****' + account[-4:]
+        bank = self.bank_number
+        if bank and len(bank) > 4:
+            return '****' + bank[-4:]
         return '****'
     
     def __str__(self):
@@ -277,10 +369,10 @@ class AddressProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='address_profile')
 
     # 암호화 저장 필드들
-    _encrypted_postal_code = models.TextField(blank=True, null=True)
-    _encrypted_road_address = models.TextField(blank=True, null=True)
-    _encrypted_detail_address = models.TextField(blank=True, null=True)
-    _encrypted_phone_number = models.TextField(blank=True, null=True)
+    _encrypted_postal_code = models.TextField()
+    _encrypted_road_address = models.TextField()
+    _encrypted_detail_address = models.TextField()
+    _encrypted_phone_number = models.TextField()
 
     # 검색용 (암호화 안 함)
     sido = models.CharField(max_length=20)
@@ -372,7 +464,7 @@ class PostReport(models.Model):
         ('profanity', '욕설, 불쾌한 표현 사용'),
         ('hate_spam', '혐오 발언, 반복적 광고, 선정적 내용'),
         ('illegal', '불법 콘텐츠, 범죄, 개인정보 노출'),
-        ('irrelevant', '관련성이 낮은 게시글'),  # 🔥 새로운 신고 사유 추가
+        ('irrelevant', '관련성이 낮은 게시글'),
     ]
     
     STATUS_CHOICES = [
@@ -515,6 +607,12 @@ class DdokPoint(models.Model):
         default=0,
         verbose_name='쌓인 덕'
     )
+
+    created_at = models.DateTimeField(     
+        auto_now_add=True,
+        verbose_name='생성 일시'
+    )
+
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name='최근 변동 일시'
@@ -536,7 +634,8 @@ class DdokPointLog(models.Model):
         ('BIRTHDAY_GAME', '생일시 맞추기'),
         ('EVENT_PARTICIPATION', '이벤트 참여'),
         ('POST_REWARD', '게시글 작성 보상'),
-        # ... 추후 다양한 포인트 획득/사용처 추가 가능
+        ('BANNER_REQUEST', '배너 신청'),
+        ('BANNER_REFUND', '배너 신청 환불'),
     ]
 
     point_owner = models.ForeignKey(
@@ -572,3 +671,141 @@ class DdokPointLog(models.Model):
         verbose_name = '덕 포인트 로그'
         verbose_name_plural = '덕덕 포인트 로그 목록'
         ordering = ['-created_at']
+
+
+class BannerRequest(models.Model):
+    """사용자 배너 신청 모델"""
+    STATUS_CHOICES = [
+        ('pending', '승인 대기'),
+        ('approved', '승인됨'),
+        ('rejected', '거절됨'),
+        ('expired', '만료됨'),
+    ]
+    
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='banner_requests',
+        verbose_name='신청자'
+    )
+    
+    artist_name = models.CharField(
+        max_length=100,
+        verbose_name='아티스트명'
+    )
+    
+    banner_image = models.ImageField(upload_to=banner_image_upload)
+    
+    ddok_points_used = models.PositiveIntegerField(
+        default=1000,
+        verbose_name='사용된 덕 포인트'
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='pending',
+        verbose_name='상태'
+    )
+    
+    start_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='배너 시작일'
+    )
+    
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name='배너 종료일'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='활성화 상태'
+    )
+    
+    # 승인 관련
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_banners',
+        verbose_name='승인자'
+    )
+    
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='승인 일시'
+    )
+    
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name='만료 일시'
+    )
+    
+    # 거절 사유
+    rejection_reason = models.TextField(
+        blank=True,
+        verbose_name='거절 사유'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='신청 일시')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='수정 일시')
+    
+    class Meta:
+        verbose_name = '배너 신청'
+        verbose_name_plural = '배너 신청 목록'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.artist_name} ({self.get_status_display()})"
+    
+    @property
+    def is_currently_active(self):
+        """현재 활성화된 배너인지 확인 (날짜 기반)"""
+        if self.status != 'approved' or not self.is_active:
+            return False
+        
+        if not self.start_date or not self.end_date:
+            return False
+            
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.start_date <= today <= self.end_date
+    
+    def approve(self, admin_user, start_date=None, end_date=None):
+        """배너 승인 처리"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        self.status = 'approved'
+        self.approved_by = admin_user
+        self.approved_at = timezone.now()
+        self.expires_at = timezone.now() + timedelta(days=3)
+        
+        if start_date:
+            self.start_date = start_date
+        else:
+            self.start_date = timezone.now().date()
+            
+        if end_date:
+            self.end_date = end_date
+        else:
+            self.end_date = timezone.now().date() + timedelta(days=3)
+            
+        self.is_active = True
+        self.save()
+    
+    def reject(self, admin_user, reason=""):
+        """배너 거절 처리"""
+        from django.utils import timezone
+        
+        self.status = 'rejected'
+        self.approved_by = admin_user
+        self.approved_at = timezone.now()
+        self.rejection_reason = reason
+        self.is_

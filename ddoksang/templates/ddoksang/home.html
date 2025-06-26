@@ -12,29 +12,29 @@
 {{ cafes_json|json_script:"cafes-data" }}
 
 <!-- 위치 동의 모달 -->
-<div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl">
+<div id="locationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-white rounded-xl p-4 sm:p-6 max-w-sm w-full mx-3 shadow-2xl">
         <div class="text-center">
-            <div class="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
                 </svg>
             </div>
-            <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">위치 정보 사용 동의</h2>
-            <p class="text-sm sm:text-base text-gray-600 mb-6 leading-relaxed">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-2">위치 정보 사용 동의</h2>
+            <p class="text-xs sm:text-sm text-gray-600 mb-4 leading-relaxed">
                 내 주변의 생일카페를 찾아드리기 위해<br>
                 위치 정보를 사용하겠습니다.
             </p>
-            <div class="space-y-3">
-                <button id="allowLocationBtn" class="w-full bg-gray-900 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-sm sm:text-base">
+            <div class="space-y-2">
+                <button id="allowLocationBtn" class="w-full bg-gray-900 text-white py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 text-xs sm:text-sm">
                     위치 정보 허용하기
                 </button>
-                <button id="denyLocationBtn" class="w-full bg-gray-100 text-gray-700 py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm sm:text-base">
+                <button id="denyLocationBtn" class="w-full bg-gray-100 text-gray-700 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors text-xs sm:text-sm">
                     거부하고 기본 지도 보기
                 </button>
             </div>
-            <p class="text-xs text-gray-500 mt-4">
+            <p class="text-xs text-gray-500 mt-3">
                 위치 정보는 카페 검색에만 사용되며 저장되지 않습니다.
             </p>
         </div>
@@ -42,14 +42,14 @@
 </div>
 
 <!-- 카페 정보 모달 -->
-<div id="cafeInfoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4" onclick="closeCafeInfoModal(event)">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto transform transition-all duration-300 scale-95" onclick="event.stopPropagation()" id="cafeInfoContent">
+<div id="cafeInfoModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-3" onclick="closeCafeInfoModal(event)">
+    <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full max-h-[80vh] overflow-y-auto transform transition-all duration-300 scale-95" onclick="event.stopPropagation()" id="cafeInfoContent">
         <!-- 모달 헤더 -->
-        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl z-10">
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 rounded-t-lg z-10">
             <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-900" id="modalCafeTitle">카페 정보</h3>
+                <h3 class="text-base font-bold text-gray-900" id="modalCafeTitle">카페 정보</h3>
                 <button onclick="closeCafeInfoModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
@@ -57,50 +57,36 @@
         </div>
 
         <!-- 모달 콘텐츠 -->
-        <div class="p-6" id="modalCafeContent">
+        <div class="p-4" id="modalCafeContent">
             <!-- 카페 정보가 여기에 동적으로 삽입됩니다 -->
         </div>
     </div>
 </div>
 
 <!-- 상단 검색 헤더 -->
-{% include 'ddoksang/components/_search_header.html' with search_input_id='ddok-search' autocomplete_list_id='ddok-autocomplete-list' show_create_button=True %}
+{% include 'ddoksang/components/_search_header.html' with search_input_id='ddok-search' autocomplete_list_id='ddok-autocomplete-list' show_create_button=True compact_mode=True %}
 
 <!--  메인 지도 섹션 with 사이드바 -->
-<section class="py-4 sm:py-8 px-4">
-  <div class="max-w-7xl mx-auto">
-    <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
+<section class="py-3 sm:py-6 px-3">
+  <div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-lg sm:rounded-xl shadow-xl overflow-hidden">
       
       <!-- 헤더 -->
-      <div class="p-4 sm:p-6 bg-gray-50 border-b">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+      <div class="p-3 sm:p-4 bg-gray-50 border-b">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
           <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
-              <img src="{% static 'image/ddok_logo_filled.png' %}" alt="투어맵 로고" class="w-10 h-10 sm:w-12 sm:h-12 mr-2 sm:mr-3">
+            <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center">
+              <img src="{% static 'image/ddok_logo_filled.png' %}" alt="투어맵 로고" class="w-8 h-8 sm:w-10 sm:h-10 mr-2">
               <span>생카 투어맵</span>
             </h2>
-            <!-- <div class="flex items-center mt-2">
-              <span class="text-xs sm:text-sm bg-gray-200 text-gray-800 px-2 sm:px-3 py-1 rounded-full" id="cafeCountDisplay">{{ total_cafes }}개 운영중</span>
-            </div>
-            <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">투어맵을 통해 더 자세한 카페 위치 정보를 확인하세요!</p> -->
           </div>
           
           <!-- 지도 컨트롤 버튼들 -->
-          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-            <!-- 투어맵 버튼
-            <a href="{% url 'ddoksang:tour_map' %}" 
-                class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-w-[80px] sm:min-w-[120px]">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"></path>
-              </svg>
-              <span class="hidden sm:inline">투어맵</span>
-              <span class="sm:hidden">투어</span>
-            </a> -->
+          <div class="flex flex-wrap items-center gap-2">
             <!-- 내 위치 버튼 -->
             <button id="myLocationBtn"
-                    class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-1 sm:gap-2 transition-colors min-w-[80px] sm:min-w-[100px]">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="flex-1 sm:flex-none px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-xs bg-pink-300 text-white rounded-md hover:bg-pink-500 flex items-center justify-center gap-1 transition-colors min-w-[60px] sm:min-w-[80px]">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 </svg>
@@ -109,7 +95,7 @@
 
             <!-- 클러스터링 토글 버튼 -->
             <button id="clusterToggle" 
-                class="flex-1 sm:flex-none px-3 py-2 text-xs sm:px-4 sm:py-2.5 sm:text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center justify-center transition-colors gap-1 sm:gap-2 min-w-[80px] sm:min-w-[120px]">
+                class="flex-1 sm:flex-none px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-xs bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center justify-center transition-colors gap-1 min-w-[60px] sm:min-w-[90px]">
               <span class="hidden sm:inline">클러스터링 ON</span>
               <span class="sm:hidden">클러스터</span>
             </button>
@@ -122,98 +108,92 @@
         
         {% include 'ddoksang/components/_floating_card_list.html' %}
 
-        <!-- 지도 컨테이너 (오른쪽) -->
+        <!-- 지도 컨테이너 - 원래 크기로 복원 -->
         <div class="flex-1 relative">
-          <div id="mapContainer" class="w-full h-[500px] lg:h-[600px] bg-gray-100"></div>
+          <div id="mapContainer" class="w-full h-[400px] lg:h-[480px] bg-gray-100"></div>
           
           <!-- 지도 로딩 상태 -->
           <div id="mapLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
               <div class="text-center">
-                  <div class="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-gray-800 mx-auto mb-2 sm:mb-4"></div>
-                  <p class="text-gray-600 text-sm sm:text-base">생일카페 지도를 불러오는 중...</p>
+                  <div class="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-gray-800 mx-auto mb-2"></div>
+                  <p class="text-gray-600 text-xs">생일카페 지도를 불러오는 중...</p>
               </div>
           </div>
-
-
         </div>
       </div>
     </div>
   </div>
 </section>
 
-
-<!-- 이번 주 생일 아티스트 섹션 -->
-<div class="mt-16 text-center mb-6 sm:mb-8">
-  <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center">
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
-    이번 주 생일덕  
-    <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-8 h-8 sm:w-10 sm:h-10 ml-2 sm:ml-3">
-  </h2>
-  <p class="text-gray-600 text-sm sm:text-base">(덕덕) 축하해요 (덕덕) </p>
+<!-- 이번 주 생일 아티스트 섹션 - 다른 섹션과 동일한 가로폭 -->
+<div class="mt-12 mb-4 sm:mb-6 px-3">
+  <div class="max-w-5xl mx-auto">
+    <!-- 제목 -->
+    <div class="flex items-center justify-start mb-2">
+      <img src="{% static 'image/ddok_logo_filled.png' %}" alt="오리 아이콘" class="w-6 h-6 sm:w-8 sm:h-8 mr-2">
+      <h2 class="text-base sm:text-lg font-semibold text-gray-800">이번 주 생일덕</h2>
+    </div>
+    
+    <!-- 부제목 - 제목 바로 아래 중앙 -->
+    <div class="text-center mb-4">
+      <p class="text-gray-600 text-xs">(덕덕) 축하해요 (덕덕)</p>
+    </div>
+    
+    <!-- 덕 쌓는 게임하러 가기 버튼 - 슬라이더 위쪽 중앙 -->
+    <div class="flex justify-center mb-4">
+      <a href="{% url 'bday_calendar:calendar' %}" 
+        class="inline-flex items-center justify-center bg-gray-900 hover:bg-gray-800 text-white text-sm font-light px-6 py-2.5 transition-all duration-200 shadow-lg hover:shadow-xl rounded-lg transform hover:scale-105">
+        <!-- 텍스트 -->
+        <span>생일시 맞추고 덕쌓자!</span>
+        <!-- 화살표 -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 ml-2">
+          <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+        </svg>
+      </a>
+    </div>
+  </div>
 </div>
 
-
-<section class="px-4 mb-16"> 
-  <div class="max-w-7xl mx-auto">
+<section class="px-3 mb-12"> 
+  <div class="max-w-5xl mx-auto">
     {% include 'ddoksang/_weekly_bday_member.html' %}
   </div>
 </section>
 
 <!-- 찜한 카페 섹션 -->
-<section class="py-4 sm:py-8 px-4">
-  <div class="max-w-7xl mx-auto">
+<section class="px-3">
+  <div class="max-w-5xl mx-auto">
     {% include 'ddoksang/components/_favorites_section.html' %}
   </div>
 </section>
 
-<!-- 덕생 my-cafes로 가는 링크 버튼 -->
-{% if user.is_authenticated %}
-  <section class="py-4 px-4">
-    <div class="max-w-7xl mx-auto">
-      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-gray-900 rounded-full mb-3">
-          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-16 h-16 mr-2">
-    
-        </div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">내 덕생 관리</h3>
-        <p class="text-gray-600 mb-4 text-sm">등록한 생카와 찜한 카페를 확인하고 관리하세요</p>
-        <a href="{% url 'ddoksang:my_cafes' %}" 
-           class="inline-block bg-gray-900 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-gray-800 transition-colors">
-          GO!
-        </a>
-      </div>
-    </div>
-  </section>
-{% endif %}
-
-<!-- 최신 등록된 생일카페 섹션 -->
-<section class="mt-16 sm:mt-20 py-8 sm:py-12 px-4">  
-  <div class="max-w-7xl mx-auto">
-    
+<!-- 최신 등록된 생일카페 섹션 - 찜한 생카와 동일한 가로폭 -->
+<section class="pt-2 pb-3 sm:pb-4 px-3">   
+  <div class="max-w-5xl mx-auto">
     {% include 'ddoksang/components/_latest_cafe_section.html' %}
   </div>
 </section>
 
 <!-- 플로팅 액션 버튼 -->
 <a href="{% url 'ddoksang:create' %}" class="floating-action-button">
-  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
   </svg>
 </a>
 
 <style>
-/* 플로팅 액션 버튼 - FAQ와 정확히 대칭 위치 */
+/* 플로팅 액션 버튼 - 크기 축소 */
 .floating-action-button {
     position: fixed;
-    bottom: 1rem;   /* 16px - FAQ와 동일 */
-    right: 1rem;    /* 16px - FAQ와 대칭 */
+    bottom: 1rem;
+    right: 1rem;
     z-index: 50;
-    width: 3.5rem;  /* 56px - FAQ와 동일한 크기 */
-    height: 3.5rem; /* 56px - FAQ와 동일한 크기 */
-    background-color: #111827; /* gray-900 */
+    width: 3rem;  /* 48px로 축소 */
+    height: 3rem; /* 48px로 축소 */
+    background-color: #111827;
     color: white;
     border-radius: 50%;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -223,15 +203,22 @@
 
 .floating-action-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.35);
-    background-color: #1f2937; /* gray-800 */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    background-color: #1f2937;
 }
 
-/* 데스크톱에서는 FAQ와 동일하게 24px */
+/* 데스크톱에서는 조금 더 크게 */
 @media (min-width: 640px) {
     .floating-action-button {
-        bottom: 1.5rem; /* 24px - FAQ sm:bottom-6과 동일 */
-        right: 1.5rem;  /* 24px - FAQ sm:left-6과 대칭 */
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 3.5rem;  /* 56px */
+        height: 3.5rem; /* 56px */
+    }
+    
+    .floating-action-button svg {
+        width: 1.25rem;
+        height: 1.25rem;
     }
 }
 
@@ -249,84 +236,67 @@
 }
 </style>
 
-
 <!-- 페이지 식별자 (찜하기 기능용) -->
 <div id="page-identifier" data-page="home" style="display: none;"></div>
 
 {% endblock %}
 
-
 {% block extra_js %}
-<!-- ✅ 1. 카카오맵 API를 동기적으로 먼저 로드 -->
+<!-- 카카오맵 API를 동기적으로 먼저 로드 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services,clusterer"></script>
 
-<!-- ✅ 2. 카카오맵 로드 확인 -->
+<!-- 카카오맵 로드 확인 -->
 <script>
-console.log('=== 카카오맵 API 로드 상태 확인 ===');
-console.log('kakao 객체:', typeof kakao);
-console.log('kakao.maps:', typeof kakao !== 'undefined' ? typeof kakao.maps : 'undefined');
-console.log('kakao.maps.Map:', typeof kakao !== 'undefined' && kakao.maps ? typeof kakao.maps.Map : 'undefined');
-
 if (typeof kakao === 'undefined' || !kakao.maps) {
-    console.error('❌ 카카오맵 API 로드 실패!');
-    console.error('API 키:', '{{ kakao_api_key }}');
-} else {
-    console.log('✅ 카카오맵 API 로드 성공!');
+    // 추후 구현 예정: 사용자에게 친화적인 오류 알림 표시
 }
 </script>
 
-<!-- ✅ 3. 다른 스크립트들 -->
+<!-- 스크립트 파일들 -->
 <script src="{% static 'js/autocomplete.js' %}"></script>
 <script src="{% static 'js/ddoksang_maps.js' %}"></script>
 <script src="{% static 'js/ddoksang_ui_components.js' %}"></script>
 
-<!-- ✅ 4. 홈페이지 관련 스크립트들 -->
+<!-- 홈페이지 관련 스크립트들 -->
 <script src="{% static 'js/ddoksang_home_main.js' %}"></script>
 <script src="{% static 'js/ddoksang_home_modals.js' %}"></script>
 <script src="{% static 'js/ddoksang_home_location.js' %}"></script>
 
-<!-- ✅ 5. 초기화 스크립트 (간소화) -->
+<!-- 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 홈페이지 초기화 시작...');
-    
-    // 카카오맵 API가 이미 로드되어 있는지 다시 한번 확인
+    // 카카오맵 API가 이미 로드되어 있는지 확인
     if (typeof kakao === 'undefined' || !kakao.maps) {
-        console.error('❌ 초기화 시점에 카카오맵 API가 없습니다');
-        console.error('페이지를 새로고침해주세요.');
+        // 추후 구현 예정: 사용자에게 친화적인 오류 알림 표시
         return;
     }
-    
-    console.log('✅ 카카오맵 API 확인됨, 앱 초기화 시작');
     
     // 메인 앱 초기화
     if (window.ddoksangHome) {
         window.ddoksangHome.init().then(() => {
-            console.log('✅ DdoksangHome 초기화 완료');
+            // 추후 구현 예정: 초기화 완료 상태 UI 표시
         }).catch(error => {
-            console.error('❌ DdoksangHome 초기화 실패:', error);
+            // 추후 구현 예정: 오류 발생 시 사용자 알림
         });
-    } else {
-        console.error('❌ ddoksangHome 인스턴스를 찾을 수 없습니다');
     }
     
     // 위치 관리 초기화
     if (window.DdoksangLocation) {
         window.DdoksangLocation.init();
-        console.log('✅ 위치 관리 초기화 완료');
+        // 추후 구현 예정: 위치 서비스 상태 표시
     }
     
     // 모달 시스템 초기화
     if (window.DdoksangModals) {
         window.DdoksangModals.init();
-        console.log('✅ 모달 시스템 초기화 완료');
+        // 추후 구현 예정: 모달 상태 관리 강화
     }
     
     // 찜하기 기능 초기화
     if (window.Ddoksang && window.Ddoksang.favoriteManager) {
         if (document.querySelector('[data-favorite-btn]')) {
             new window.Ddoksang.FavoriteManager();
-            console.log('✅ 찜하기 기능 초기화 완료');
+            // 추후 구현 예정: 찜하기 통계 표시
         }
     }
     
@@ -334,28 +304,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof initBirthdayNavigation === 'function') {
         setTimeout(() => {
             initBirthdayNavigation();
-            console.log('✅ 생일 아티스트 슬라이더 초기화 완료');
         }, 100);
     }
 });
 
 // 전역 함수들
 window.moveToLocationHome = function(lat, lng) {
-    console.log('🗺️ moveToLocationHome 호출:', lat, lng);
     if (window.ddoksangHome && window.ddoksangHome.mapManager) {
         window.ddoksangHome.mapManager.moveToLocation(lat, lng, 5);
-    } else {
-        console.warn('⚠️ ddoksangHome.mapManager를 찾을 수 없습니다');
     }
+    // 추후 구현 예정: 위치 이동 실패 시 사용자 알림
 };
 
 window.showCafeInfoModal = function(cafe) {
-    console.log('📱 showCafeInfoModal 호출:', cafe);
     if (window.DdoksangModals && window.DdoksangModals.showCafeInfo) {
         window.DdoksangModals.showCafeInfo(cafe);
-    } else {
-        console.warn('⚠️ DdoksangModals를 찾을 수 없습니다');
     }
+    // 추후 구현 예정: 모달 표시 실패 시 fallback UI
 };
 
 window.closeCafeInfoModal = function(event) {

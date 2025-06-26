@@ -13,8 +13,8 @@ from django.conf import settings
 from operator import attrgetter
 from itertools import chain
 from artist.models import Member, Artist
-from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage, DamPostReport
-from .forms import DamCommentForm, DamPostReportForm
+from .models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost, DamPostImage
+from .forms import DamCommentForm
 from .utils import (
     get_post_model,
     get_post_form,
@@ -30,8 +30,44 @@ logger = logging.getLogger(__name__)
 def index(request):
     category = request.GET.get('category')
     query = request.GET.get('q', '').strip()
+    
+    # ✅ 찜한 아티스트 필터링 추가
+    favorites_only = request.GET.get('favorites_only') == 'on'
+    
+    # ✅ 찜한 아티스트 ID 목록 미리 가져오기
+    favorite_artist_ids = []
+    if favorites_only and request.user.is_authenticated:
+        favorite_artist_ids = list(request.user.favorite_artists.values_list('id', flat=True))
+        if not favorite_artist_ids:
+            # 찜한 아티스트가 없으면 빈 결과 반환
+            posts = []
+            # 컨텍스트는 그대로 유지하되 빈 결과로 설정
+            clean_category = (category or 'community').split('?')[0]
+            
+            # ✅ 찜한 아티스트 목록 추가
+            favorite_artists = []
+            if request.user.is_authenticated:
+                favorite_artists = list(request.user.favorite_artists.all())
+            
+            context = {
+                'posts': posts,
+                'category': category,
+                'query': query,
+                'favorites_only': favorites_only,  # ✅ 추가
+                'favorite_artists': favorite_artists,  # ✅ 추가
+                'search_action': reverse('ddokdam:index'),
+                'create_url': f"{reverse('ddokdam:post_create')}?category={clean_category}",
+                'category_urls': get_ddokdam_category_urls(),
+                'default_category': 'community',
+            }
+            return render(request, 'ddokdam/index.html', context)
 
     if query:
+        # ✅ 기존 검색 로직에 찜한 아티스트 필터 추가
+        base_filter = Q()
+        if favorites_only and favorite_artist_ids:
+            base_filter = Q(artist_id__in=favorite_artist_ids)
+        
         artist_filter = (
             Q(artist__display_name__icontains=query) |
             Q(artist__korean_name__icontains=query) |
@@ -40,11 +76,14 @@ def index(request):
         )
         member_filter = Q(members__member_name__icontains=query)
         text_filter = Q(title__icontains=query) | Q(content__icontains=query)
-        common_filter = text_filter | artist_filter | member_filter
+        search_filter = text_filter | artist_filter | member_filter
+        
+        # ✅ 검색 조건에 찜한 아티스트 필터 결합
+        final_filter = base_filter & search_filter if base_filter else search_filter
 
-        community_results = DamCommunityPost.objects.filter(common_filter).distinct()
-        manner_results = DamMannerPost.objects.filter(common_filter).distinct()
-        bdaycafe_results = DamBdaycafePost.objects.filter(common_filter).distinct()
+        community_results = DamCommunityPost.objects.filter(final_filter).distinct()
+        manner_results = DamMannerPost.objects.filter(final_filter).distinct()
+        bdaycafe_results = DamBdaycafePost.objects.filter(final_filter).distinct()
 
         posts = sorted(
             chain(community_results, manner_results, bdaycafe_results),
@@ -52,18 +91,47 @@ def index(request):
             reverse=True
         )
     else:
-        posts = get_post_queryset(category)
-        posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
+        # ✅ 전체 조회 시에도 찜한 아티스트 필터 적용
+        if favorites_only and favorite_artist_ids:
+            # 찜한 아티스트만 필터링
+            if category == 'community':
+                posts = DamCommunityPost.objects.filter(artist_id__in=favorite_artist_ids)
+            elif category == 'manner':
+                posts = DamMannerPost.objects.filter(artist_id__in=favorite_artist_ids)
+            elif category == 'bdaycafe':
+                posts = DamBdaycafePost.objects.filter(artist_id__in=favorite_artist_ids)
+            else:
+                # 전체 카테고리
+                community_posts = DamCommunityPost.objects.filter(artist_id__in=favorite_artist_ids)
+                manner_posts = DamMannerPost.objects.filter(artist_id__in=favorite_artist_ids)
+                bdaycafe_posts = DamBdaycafePost.objects.filter(artist_id__in=favorite_artist_ids)
+                
+                posts = sorted(
+                    chain(community_posts, manner_posts, bdaycafe_posts),
+                    key=attrgetter('created_at'),
+                    reverse=True
+                )
+        else:
+            # 기존 로직 (전체 게시물)
+            posts = get_post_queryset(category)
+            posts = sorted(posts, key=attrgetter('created_at'), reverse=True)
 
     for post in posts:
         post.detail_url = reverse('ddokdam:post_detail', args=[post.category_type, post.id])
 
     clean_category = (category or 'community').split('?')[0]
+    
+    # ✅ 찜한 아티스트 목록 추가
+    favorite_artists = []
+    if request.user.is_authenticated:
+        favorite_artists = list(request.user.favorite_artists.all())
 
     context = {
         'posts': posts,
         'category': category,
         'query': query,
+        'favorites_only': favorites_only,  # ✅ 추가
+        'favorite_artists': favorite_artists,  # ✅ 추가
         'search_action': reverse('ddokdam:index'),
         'create_url': f"{reverse('ddokdam:post_create')}?category={clean_category}",
         'category_urls': get_ddokdam_category_urls(),
@@ -71,7 +139,6 @@ def index(request):
     }
 
     return render(request, 'ddokdam/index.html', context)
-
 # 커뮤니티 게시글 보기
 def community_index(request):
     return redirect('/ddokdam/?category=community')
@@ -84,7 +151,7 @@ def manner_index(request):
 def bdaycafe_index(request):
     return redirect('/ddokdam/?category=bdaycafe')
 
-# 게시글 상세보기
+# 게시글 상세보기 - 이 함수가 누락되었습니다!
 def post_detail(request, category, post_id):
     model = get_post_model(category)
     if not model:
@@ -110,7 +177,6 @@ def post_detail(request, category, post_id):
         ''
     )
 
-
     context = {
         'post': post,
         'category': category,
@@ -128,7 +194,6 @@ def post_detail(request, category, post_id):
     }
 
     return render(request, 'ddokdam/detail.html', context)
-
 
 # 게시글 작성
 @login_required
@@ -522,97 +587,3 @@ def search_ddoksang_cafes(request):
         }, status=500)
 
 
-@login_required
-@require_POST
-def report_post(request, category, post_id):
-    """게시글 신고 처리"""
-    model = get_post_model(category)
-    if not model:
-        raise Http404("존재하지 않는 카테고리입니다.")
-    
-    post = get_object_or_404(model, id=post_id)
-    
-    # 자신의 게시글은 신고할 수 없음
-    if request.user == post.user:
-        return JsonResponse({
-            'success': False, 
-            'error': '자신의 게시글은 신고할 수 없습니다.'
-        })
-    
-    # 이미 신고한 경우 중복 신고 방지
-    existing_report = DamPostReport.objects.filter(
-        reporter=request.user,
-        content_type=ContentType.objects.get_for_model(post.__class__),
-        object_id=post.id
-    ).first()
-    
-    if existing_report:
-        return JsonResponse({
-            'success': False,
-            'error': '이미 신고한 게시글입니다.'
-        })
-    
-    form = DamPostReportForm(request.POST)
-    
-    if form.is_valid():
-        report = form.save(commit=False)
-        report.reporter = request.user
-        report.reported_user = post.user
-        report.content_type = ContentType.objects.get_for_model(post.__class__)
-        report.object_id = post.id
-        report.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': '신고가 접수되었습니다. 검토 후 조치하겠습니다.'
-        })
-    else:
-        return JsonResponse({
-            'success': False,
-            'error': '신고 정보를 확인해주세요.',
-            'form_errors': form.errors
-        })
-
-@login_required
-@require_GET  
-def get_report_form(request, category, post_id):
-    """신고 폼 HTML 반환"""
-    model = get_post_model(category)
-    if not model:
-        raise Http404("존재하지 않는 카테고리입니다.")
-    
-    post = get_object_or_404(model, id=post_id)
-    
-    # 자신의 게시글은 신고할 수 없음
-    if request.user == post.user:
-        return JsonResponse({
-            'success': False,
-            'error': '자신의 게시글은 신고할 수 없습니다.'
-        })
-    
-    # 이미 신고한 경우
-    existing_report = DamPostReport.objects.filter(
-        reporter=request.user,
-        content_type=ContentType.objects.get_for_model(post.__class__),
-        object_id=post.id
-    ).first()
-    
-    if existing_report:
-        return JsonResponse({
-            'success': False,
-            'error': '이미 신고한 게시글입니다.'
-        })
-    
-    form = DamPostReportForm()
-    
-    # 폼 HTML 렌더링
-    form_html = render_to_string('ddokdam/components/_report_form.html', {
-        'form': form,
-        'post': post,
-        'category': category,
-    }, request=request)
-    
-    return JsonResponse({
-        'success': True,
-        'form_html': form_html
-    })
