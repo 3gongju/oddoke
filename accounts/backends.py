@@ -1,7 +1,7 @@
 # backends.py
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth import get_user_model
-from accounts.models import SocialAccount  # ✅ 이 부분 반드시 필요
+from accounts.models import SocialAccount
 
 UserModel = get_user_model()
 
@@ -29,17 +29,34 @@ class EmailBackend(ModelBackend):
             print("🔍 소셜 로그인 인증 시도")
             try:
                 user = UserModel.objects.get(email=email)
-                is_temp_social = user.username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_'))
-                is_completed_social = getattr(user, 'social_signup_completed', False)
-
-                # ✅ SocialAccount 기반 소셜 로그인 판단
+                print(f"🔍 사용자 찾음: {user.username}")
+                
+                # ✅ SocialAccount 기반 소셜 로그인 판단 (우선)
                 has_social_account = SocialAccount.objects.filter(user=user).exists()
-
-                if is_temp_social or is_completed_social or has_social_account:
-                    print("✅ 소셜 로그인 사용자 인증 성공")
+                print(f"🔍 SocialAccount 존재: {has_social_account}")
+                
+                if has_social_account:
+                    print("✅ SocialAccount 기반 소셜 로그인 사용자 인증 성공")
                     return user
-                else:
-                    print("❌ 일반 사용자이므로 소셜 로그인 불가")
+                
+                # ✅ 레거시 임시 username 패턴 지원 (호환성)
+                is_temp_social = user.username.startswith(('temp_kakao_', 'temp_naver_', 'temp_google_'))
+                print(f"🔍 임시 소셜 username: {is_temp_social}")
+                
+                if is_temp_social:
+                    print("✅ 레거시 임시 소셜 사용자 인증 성공")
+                    return user
+                
+                # ✅ 일반 사용자 프로필 완성 상태도 체크
+                is_profile_completed = getattr(user, 'is_profile_completed', False)
+                print(f"🔍 프로필 완성 여부: {is_profile_completed}")
+                
+                if not is_profile_completed:
+                    print("✅ 미완성 프로필 사용자 (소셜 가능) 인증 성공")
+                    return user
+                
+                print("❌ 일반 이메일 사용자이므로 소셜 로그인 불가")
+                
             except UserModel.DoesNotExist:
                 print("❌ 해당 이메일의 사용자 없음")
             return None
