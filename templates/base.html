@@ -23,27 +23,18 @@
     font-style: normal;
   }
 
-  /* 네비바 정렬 강화 */
-nav .max-w-7xl > .flex {
-  align-items: center !important;
-  justify-content: space-between !important;
-  min-height: 56px;
+/* 네비바 z-index 강화 */
+nav {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important;
 }
 
-@media (min-width: 640px) {
-  nav .max-w-7xl > .flex {
-    min-height: 64px;
-  }
-}
-
-/* 네비바 왼쪽/오른쪽 영역 고정 */
-nav .flex.items-center:first-child {
-  flex: 0 0 auto;
-}
-
-nav .flex.items-center:last-child {
-  flex: 0 0 auto;
-  align-self: center;
+/* 페이지 헤더 z-index 조정 */
+.page-header,
+.bg-white.border-b.border-gray-200 {
+  z-index: 10 !important;
+  position: relative;
 }
   </style>
   
