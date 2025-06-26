@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django_resized import ResizedImageField
 from django.utils import timezone
 from datetime import timedelta
 from .utils import BankEncryption, AddressEncryption
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
+from upload_utils import profile_image_upload, fandom_card_upload, banner_image_upload
 
 class User(AbstractUser):
     email = models.EmailField(unique=True, error_messages={
@@ -16,11 +16,7 @@ class User(AbstractUser):
        'unique': "이미 사용 중인 닉네임입니다."
     })
    
-    profile_image = ResizedImageField(
-       size=[500, 500],
-       crop=['middle', 'center'],
-       upload_to='profile',
-    )
+    profile_image = models.ImageField(upload_to=profile_image_upload)
     followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     bio = models.TextField(blank=True, null=True)
 
@@ -254,7 +250,7 @@ class UserSuspension(models.Model):
 
 class FandomProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='fandom_profile')
-    fandom_card = models.ImageField(upload_to='fandom_cards/')
+    fandom_card = models.ImageField(upload_to=fandom_card_upload)
     fandom_artist = models.ForeignKey('artist.Artist', on_delete=models.CASCADE)
 
     # 인증 상태
@@ -685,10 +681,7 @@ class BannerRequest(models.Model):
         verbose_name='아티스트명'
     )
     
-    banner_image = models.ImageField(
-        upload_to='user_banners/',
-        verbose_name='배너 이미지'
-    )
+    banner_image = models.ImageField(upload_to=banner_image_upload)
     
     ddok_points_used = models.PositiveIntegerField(
         default=1000,

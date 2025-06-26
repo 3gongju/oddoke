@@ -2,6 +2,7 @@
 from django.db import models
 from django.conf import settings
 from artist.models import Artist, Member
+from datetime import datetime
 from PIL import Image
 import os
 import json
@@ -169,55 +170,73 @@ class BdayCafe(models.Model):
                 img['is_main'] = False
         
         # 이미지 저장 및 메타데이터 추출
-        file_path = default_storage.save(
-            f'bday_cafes/images/{self.id}/{image_file.name}',
-            image_file
-        )
+        now = datetime.now()
+        date_path = now.strftime('%y/%m')
+        file_path = f'ddoksang/images/{date_path}/{image_file.name}'
+
+        saved_path = default_storage.save(file_path, image_file)
         
-        # 이미지 메타데이터
+        # 이미지 메타데이터 (S3 환경에 맞게 수정)
         width, height, file_size = None, None, None
         try:
-            full_path = default_storage.path(file_path)
-            with Image.open(full_path) as img:
+            # 파일 크기
+            file_size = image_file.size
+            
+            # PIL로 이미지 크기 확인 (메모리에서)
+            from PIL import Image
+            image_file.seek(0)  # 파일 포인터 초기화
+            with Image.open(image_file) as img:
                 width, height = img.size
-                file_size = os.path.getsize(full_path)
         except Exception as e:
             print(f"이미지 메타데이터 추출 실패: {e}")
         
         # 이미지 정보 추가
         image_data = {
             'id': str(uuid.uuid4()),
-            'url': default_storage.url(file_path),
+            'url': default_storage.url(saved_path),
+            'file_path': saved_path,  # S3 키 저장 (삭제시 필요)
             'type': image_type,
             'is_main': is_main,
             'order': order,
             'width': width,
             'height': height,
             'file_size': file_size,
-            'created_at': self.updated_at.isoformat() if self.updated_at else None
+            'created_at': datetime.now().isoformat()
         }
         
         self.image_gallery.append(image_data)
         self.save(update_fields=['image_gallery'])
         
+        print(f"✅ 덕생 이미지 저장 성공: {saved_path}")
         return image_data
 
     def remove_image(self, image_id):
-        """이미지 제거 메서드"""
+        """이미지 제거 메서드 - S3 환경에 맞게 수정"""
         if not self.image_gallery:
             return False
         
         # 해당 이미지 찾기 및 제거
         for i, img in enumerate(self.image_gallery):
             if img.get('id') == image_id:
-                # 파일 삭제
+                # S3에서 파일 삭제
                 try:
                     from django.core.files.storage import default_storage
-                    file_path = img['url'].replace(default_storage.base_url, '')
-                    if default_storage.exists(file_path):
+                    # file_path가 있으면 사용, 없으면 URL에서 추출
+                    file_path = img.get('file_path')
+                    if not file_path:
+                        # 기존 방식 호환성 (URL에서 경로 추출)
+                        file_url = img.get('url', '')
+                        if default_storage.base_url in file_url:
+                            file_path = file_url.replace(default_storage.base_url, '')
+                        else:
+                            # S3 URL 형태에서 키 추출
+                            file_path = file_url.split('amazonaws.com/')[-1]
+                    
+                    if file_path and default_storage.exists(file_path):
                         default_storage.delete(file_path)
+                        print(f"✅ S3 파일 삭제 성공: {file_path}")
                 except Exception as e:
-                    print(f"파일 삭제 실패: {e}")
+                    print(f"❌ S3 파일 삭제 실패: {e}")
                 
                 # 목록에서 제거
                 self.image_gallery.pop(i)
