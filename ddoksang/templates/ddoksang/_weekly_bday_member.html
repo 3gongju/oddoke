@@ -38,6 +38,65 @@
     transition: transform 0.2s ease;
 }
 
+/* 좌우 클릭 영역 스타일 */
+.click-area {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 25%;
+    z-index: 10;
+    cursor: pointer;
+}
+
+.click-area-left {
+    left: 0;
+}
+
+.click-area-right {
+    right: 0;
+}
+
+/* 데스크톱에서만 호버 효과 적용 */
+@media (hover: hover) and (pointer: fine) {
+    .click-area {
+        transition: background-color 0.2s ease;
+    }
+    
+    .click-area:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    /* 클릭 영역에 미세한 화살표 힌트 (데스크톱만) */
+    .click-area::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .click-area:hover::before {
+        opacity: 0.3;
+    }
+
+    .click-area-left::before {
+        left: 20px;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: 12px solid #666;
+    }
+
+    .click-area-right::before {
+        right: 20px;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-left: 12px solid #666;
+    }
+}
+
 /* 모바일 최적화 */
 @media (max-width: 768px) {
     #indicators button,
@@ -46,12 +105,38 @@
         height: 6px !important;
         margin: 0 2px !important;
     }
+    
+    .click-area {
+        width: 30%; /* 모바일에서 더 넓은 터치 영역 */
+        cursor: default; /* 모바일에서 포인터 커서 제거 */
+    }
+}
+
+/* 터치 디바이스에서 호버 효과 완전 제거 */
+@media (hover: none) {
+    .click-area {
+        cursor: default;
+    }
+    
+    .click-area:hover {
+        background-color: transparent !important;
+    }
+    
+    .click-area::before {
+        display: none !important;
+    }
 }
 </style>
 
 <div class="max-w-7xl mx-auto"> 
   {% if birthday_artists %}
-    <div class="relative">
+    <div class="relative overflow-hidden">
+      <!-- 좌측 클릭 영역 -->
+      <div class="click-area click-area-left" id="birthdayLeftArea"></div>
+      
+      <!-- 우측 클릭 영역 -->
+      <div class="click-area click-area-right" id="birthdayRightArea"></div>
+      
       <div class="overflow-hidden">
         <div id="birthdaySlider" class="flex transition-transform duration-500 ease-in-out">
           {% for artist in birthday_artists %}
@@ -96,22 +181,6 @@
         </div>
       </div>
 
-      <!-- 네비게이션 - 크기 축소 -->
-      <button id="birthdayPrevBtn" class="absolute left-1 top-1/2 -translate-y-1/2 z-10
-                                          bg-white border border-gray-300 rounded-full p-1.5
-                                          hover:bg-gray-50 transition disabled:opacity-50">
-        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </button>
-      <button id="birthdayNextBtn" class="absolute right-1 top-1/2 -translate-y-1/2 z-10
-                                          bg-white border border-gray-300 rounded-full p-1.5
-                                          hover:bg-gray-50 transition disabled:opacity-50">
-        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-        </svg>
-      </button>
-
       <!-- 인디케이터 -->
       <div class="flex justify-center mt-4 space-x-2" id="birthdayIndicators">
         <!-- JS 생성 -->
@@ -137,8 +206,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function initBirthdaySlider() {
   const slider = document.getElementById('birthdaySlider');
-  const prevBtn = document.getElementById('birthdayPrevBtn');
-  const nextBtn = document.getElementById('birthdayNextBtn');
+  const leftArea = document.getElementById('birthdayLeftArea');
+  const rightArea = document.getElementById('birthdayRightArea');
   const indicatorsContainer = document.getElementById('birthdayIndicators');
   
   if (!slider) return;
@@ -171,13 +240,20 @@ function initBirthdaySlider() {
     currentIndex = Math.max(0, Math.min(pageIndex, totalPages - 1));
     const translateX = -(currentIndex * 100);
     slider.style.transform = `translateX(${translateX}%)`;
-    updateButtons();
     updateIndicators();
+    updateClickAreas();
   }
 
-  function updateButtons() {
-    if (prevBtn) prevBtn.disabled = currentIndex === 0;
-    if (nextBtn) nextBtn.disabled = currentIndex >= totalPages - 1;
+  function updateClickAreas() {
+    // 좌측 영역 표시/숨김
+    if (leftArea) {
+      leftArea.style.display = currentIndex === 0 ? 'none' : 'block';
+    }
+    
+    // 우측 영역 표시/숨김
+    if (rightArea) {
+      rightArea.style.display = currentIndex >= totalPages - 1 ? 'none' : 'block';
+    }
   }
 
   function updateIndicators() {
@@ -188,14 +264,74 @@ function initBirthdaySlider() {
     }
   }
 
-  if (prevBtn) {
-    prevBtn.addEventListener('click', () => goToPage(currentIndex - 1));
+  function goToPrev() {
+    if (currentIndex > 0) {
+      goToPage(currentIndex - 1);
+    }
   }
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', () => goToPage(currentIndex + 1));
+  function goToNext() {
+    if (currentIndex < totalPages - 1) {
+      goToPage(currentIndex + 1);
+    }
   }
 
+  // 좌우 영역 클릭 이벤트
+  if (leftArea) {
+    leftArea.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToPrev();
+    });
+  }
+
+  if (rightArea) {
+    rightArea.addEventListener('click', (e) => {
+      e.stopPropagation();
+      goToNext();
+    });
+  }
+
+  // 키보드 지원 (선택사항)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') {
+      goToPrev();
+    } else if (e.key === 'ArrowRight') {
+      goToNext();
+    }
+  });
+
+  // 터치 스와이프 지원 (모바일)
+  let startX = 0;
+  let isDragging = false;
+
+  slider.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    isDragging = true;
+  });
+
+  slider.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+  });
+
+  slider.addEventListener('touchend', (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    const endX = e.changedTouches[0].clientX;
+    const diff = startX - endX;
+    
+    // 최소 50px 이동 시 슬라이드
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        goToNext(); // 왼쪽으로 스와이프 = 다음 페이지
+      } else {
+        goToPrev(); // 오른쪽으로 스와이프 = 이전 페이지
+      }
+    }
+  });
+
+  // 창 크기 변경 시 재계산
   window.addEventListener('resize', () => {
     const newItemsPerView = getItemsPerView();
     if (newItemsPerView !== itemsPerView) {
@@ -206,7 +342,8 @@ function initBirthdaySlider() {
     }
   });
 
+  // 초기화
   createIndicators();
-  updateButtons();
+  updateClickAreas();
 }
 </script>
