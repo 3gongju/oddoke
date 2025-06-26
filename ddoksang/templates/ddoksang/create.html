@@ -8,16 +8,16 @@
 {% endblock %}
 
 {% block body %}
-<section class="max-w-4xl mx-auto px-4 py-10">
-  <h1 class="text-2xl font-bold mb-6 flex items-center space-x-3">
-    <img src="{% static 'image/ddok_circle_red.png' %}" alt="로고" class="w-[66px] h-[66px] align-middle">
+<section class="max-w-2xl mx-auto px-3 py-6">
+  <h1 class="text-xl font-bold mb-4 flex items-center space-x-2">
+    <img src="{% static 'image/ddok_circle_red.png' %}" alt="로고" class="w-[44px] h-[44px] align-middle">
     <span>생카 등록하기</span>
   </h1>
-  <p class="text-sm text-gray-600 mb-8">좋아하는 아티스트/ 멤버의 생카 정보를 등록해주세요!</p>
+  <p class="text-xs text-gray-600 mb-6">좋아하는 아티스트/ 멤버의 생카 정보를 등록해주세요!</p>
 
   <!-- Progress Bar -->
-  <div class="w-full bg-gray-200 rounded-full h-2 mb-8 overflow-hidden">
-    <div id="progressBar" class="bg-gray-900 h-2 w-0 transition-width duration-300"></div>
+  <div class="w-full bg-gray-200 rounded-full h-1.5 mb-6 overflow-hidden">
+    <div id="progressBar" class="bg-gray-900 h-1.5 w-0 transition-width duration-300"></div>
   </div>
 
   <form method="POST" enctype="multipart/form-data" id="multiStepForm" action="{% url 'ddoksang:create' %}">
@@ -28,25 +28,25 @@
 
     <!-- STEP 1: 아티스트/멤버 확인 -->
     <div id="step-1" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">선택 확인</h2>
+      <h2 class="text-base font-semibold mb-4">선택 확인</h2>
       
       <!-- 간단한 확인 메시지 -->
       <div id="step1-confirm-mode" class="text-center">
-        <div class="mb-6">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mb-4">
+          <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
           </div>
-          <p class="text-lg text-gray-700 mb-2">방금 선택한 아티스트/멤버의</p>
-          <p class="text-lg text-gray-700 mb-6">생카를 그대로 작성하시겠습니까?</p>
+          <p class="text-base text-gray-700 mb-1">방금 선택한 아티스트/멤버의</p>
+          <p class="text-base text-gray-700 mb-4">생카를 그대로 작성하시겠습니까?</p>
         </div>
         
-        <div class="flex gap-4 justify-center">
-          <button type="button" onclick="useSelectedArtist()" class="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium transition-colors">
+        <div class="flex gap-3 justify-center">
+          <button type="button" onclick="useSelectedArtist()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-medium transition-colors text-sm">
             이 정보 그대로 사용하기
           </button>
-          <button type="button" onclick="showArtistSearch()" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors">
+          <button type="button" onclick="showArtistSearch()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors text-sm">
             수정하기
           </button>
         </div>
@@ -54,38 +54,36 @@
 
       <!-- 아티스트 검색 모드 (처음에는 숨김) -->
       <div id="step1-search-mode" class="hidden">
-        <p class="text-sm text-gray-600 mb-4">다른 아티스트/멤버를 선택해주세요.</p>
+        <p class="text-xs text-gray-600 mb-3">다른 아티스트/멤버를 선택해주세요.</p>
 
         <!-- 아티스트/멤버명 검색 -->
-        <label class="block text-sm font-medium mb-1">아티스트/멤버명</label>
-        <div class="relative mb-4">
-          <input type="text" id="final-artist-member-search" class="w-full border rounded px-4 py-2" autocomplete="off" required>
+        <label class="block text-xs font-medium mb-1">아티스트/멤버명</label>
+        <div class="relative mb-3">
+          <input type="text" id="final-artist-member-search" class="w-full border rounded px-3 py-2 text-sm" autocomplete="off" required>
           <ul id="final-artist-member-results" class="absolute z-10 w-full bg-white border mt-1 rounded shadow-lg overflow-hidden hidden max-h-48 overflow-y-auto"></ul>
         </div>
         
         <!-- 선택된 아티스트 표시 -->
-        <div id="final-selected-artist" class="mb-4 p-3 border rounded bg-green-50 hidden">
+        <div id="final-selected-artist" class="mb-3 p-2 border rounded bg-green-50 hidden">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <!--  아티스트/멤버 구분 배지 추가 (Step 0과 동일한 구조) -->
               <span id="final-selected-artist-type-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                <!-- 아티스트/멤버 구분 배지가 여기에 표시됩니다 -->
               </span>
               <div>
-                <p class="font-medium text-green-800" id="final-selected-artist-text"></p>
-                <p class="text-sm text-green-600">새로 선택된 아티스트/멤버입니다</p>
+                <p class="font-medium text-green-800 text-sm" id="final-selected-artist-text"></p>
+                <p class="text-xs text-green-600">새로 선택된 아티스트/멤버입니다</p>
               </div>
             </div>
-            <button type="button" onclick="clearFinalSelection()" class="text-green-600 hover:text-green-800 text-sm">변경</button>
+            <button type="button" onclick="clearFinalSelection()" class="text-green-600 hover:text-green-800 text-xs">변경</button>
           </div>
         </div>
         
         <!-- 확인/취소 버튼 -->
-        <div class="flex gap-3 justify-end">
-          <button type="button" onclick="cancelArtistSearch()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors">
+        <div class="flex gap-2 justify-end">
+          <button type="button" onclick="cancelArtistSearch()" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm">
             취소
           </button>
-          <button type="button" onclick="confirmNewArtist()" id="confirm-new-artist-btn" class="px-4 py-2 bg-gray-400 text-gray-200 rounded cursor-not-allowed" disabled>
+          <button type="button" onclick="confirmNewArtist()" id="confirm-new-artist-btn" class="px-3 py-1.5 bg-gray-400 text-gray-200 rounded cursor-not-allowed text-sm" disabled>
             선택 완료
           </button>
         </div>
@@ -98,13 +96,13 @@
 
     <!-- STEP 2: 카페 정보 -->
     <div id="step-2" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">카페 정보</h2>
+      <h2 class="text-base font-semibold mb-4">카페 정보</h2>
       
-      <label class="block text-sm font-medium mb-2">생카명</label>
-      <input type="text" name="cafe_name" id="cafe_name" class="w-full border rounded px-4 py-2 mb-4" placeholder="생카명 입력" required>
+      <label class="block text-xs font-medium mb-1">생카명</label>
+      <input type="text" name="cafe_name" id="cafe_name" class="w-full border rounded px-3 py-2 mb-3 text-sm" placeholder="생카명 입력" required>
 
-      <label class="block text-sm font-medium mb-2">이벤트 유형</label>
-      <select name="cafe_type" class="w-full border rounded px-4 py-2 mb-4" required>
+      <label class="block text-xs font-medium mb-1">이벤트 유형</label>
+      <select name="cafe_type" class="w-full border rounded px-3 py-2 mb-3 text-sm" required>
         <option value="bday">생일</option>
         <option value="debut">데뷔</option>
         <option value="comeback">컴백</option>
@@ -112,25 +110,25 @@
         <option value="other">기타</option>
       </select>
 
-      <label class="block text-sm font-medium mb-2">주소 검색</label>
+      <label class="block text-xs font-medium mb-1">주소 검색</label>
       <div class="flex gap-2 mb-2">
-        <input type="text" id="place-search" class="flex-grow border rounded px-4 py-2" placeholder="주소명을 입력하세요" autocomplete="off" required>
-        <button type="button" id="searchBtn" class="bg-gray-900 text-white px-4 rounded hover:bg-gray-800 transition-colors">검색</button>
+        <input type="text" id="place-search" class="flex-grow border rounded px-3 py-2 text-sm" placeholder="주소명을 입력하세요" autocomplete="off" required>
+        <button type="button" id="searchBtn" class="bg-gray-900 text-white px-3 rounded hover:bg-gray-800 transition-colors text-sm">검색</button>
       </div>
 
-      <ul id="place-results" class="mt-2 max-h-40 overflow-y-auto border rounded hidden"></ul>
+      <ul id="place-results" class="mt-2 max-h-32 overflow-y-auto border rounded hidden"></ul>
       <div id="selected-place" class="mt-2 p-2 border rounded bg-green-50 hidden"></div>
 
       <!-- 지도 컨테이너 -->
-      <div class="relative w-full h-96 bg-gray-100 rounded border overflow-hidden"> 
+      <div class="relative w-full h-64 bg-gray-100 rounded border overflow-hidden"> 
         <div id="map" class="w-full h-full"></div>
         <div id="mapPlaceholder" class="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div class="text-center text-gray-500">
-            <svg class="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
             </svg>
-            <p class="text-sm">주소를 검색하면 지도가 표시됩니다</p>
+            <p class="text-xs">주소를 검색하면 지도가 표시됩니다</p>
           </div>
         </div>
       </div>
@@ -145,45 +143,44 @@
 
     <!-- STEP 3: 일정 -->
     <div id="step-3" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">운영 기간</h2>
+      <h2 class="text-base font-semibold mb-4">운영 기간</h2>
       
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <div>
-          <label class="block text-sm font-medium mb-2">시작일 *</label>
+          <label class="block text-xs font-medium mb-1">시작일</label>
           <input type="text" 
                  id="start_date" 
                  name="start_date" 
-                 class="w-full border rounded px-4 py-3 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10" 
+                 class="w-full border rounded px-3 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 text-sm" 
                  placeholder="YYYY-MM-DD"
                  maxlength="10"
                  required>
-          <p class="text-xs text-gray-500 mt-1">달력 선택 또는 직접 입력 (예: 20241225)</p>
+          <p class="text-xs text-gray-500 mt-0.5">달력 선택 또는 직접 입력 (예: 20241225)</p>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-2">종료일 *</label>
+          <label class="block text-xs font-medium mb-1">종료일</label>
           <input type="text" 
                  id="end_date" 
                  name="end_date" 
-                 class="w-full border rounded px-4 py-3 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10" 
+                 class="w-full border rounded px-3 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 text-sm" 
                  placeholder="YYYY-MM-DD"
                  maxlength="10"
                  required>
-          <p class="text-xs text-gray-500 mt-1">시작일 이후 날짜만 선택 가능합니다</p>
+          <p class="text-xs text-gray-500 mt-0.5">시작일 이후 날짜만 선택 가능합니다</p>
         </div>
       </div>
 
       <!-- 운영 기간 표시 -->
-      <div id="duration-display" class="hidden text-center p-3 bg-blue-50 rounded-lg text-blue-800 text-sm font-medium mb-4">
-        <!-- 자동으로 업데이트됨 -->
+      <div id="duration-display" class="hidden text-center p-2 bg-blue-50 rounded-lg text-blue-800 text-xs font-medium mb-3">
       </div>
 
       <!-- 도움말 -->
-      <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-         <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-            <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
+      <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600">
+         <h4 class="text-xs font-semibold mb-2 flex items-center gap-1">
+            <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-6 h-6">
           날짜 입력 방법
         </h4>        
-        <ul class="space-y-1 list-disc list-inside">
+        <ul class="space-y-0.5 list-disc list-inside">
           <li><strong>달력 선택:</strong> 입력 필드를 클릭하여 달력에서 날짜를 선택할 수 있습니다</li>
           <li><strong>직접 입력:</strong> 숫자 8자리 (20241225) 또는 YYYY-MM-DD 형식으로 입력 가능</li>
           <li><strong>자동 조정:</strong> 종료일이 시작일보다 이르면 자동으로 조정됩니다</li>
@@ -193,18 +190,18 @@
 
     <!-- STEP 4: 특전 및 이벤트 정보 -->
     <div id="step-4" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">특전 및 이벤트 정보</h2>
+      <h2 class="text-base font-semibold mb-4">특전 및 이벤트 정보</h2>
       
       <!-- 일반 특전 -->
-      <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-8 h-8">
+      <div class="mb-4">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-1">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-6 h-6">
           일반 특전
         </h4>
 
-        <div class="grid grid-cols-4 gap-2">
+        <div class="grid grid-cols-4 gap-1.5">
           {% for item in "ID카드,그립톡,거울,달력,띠부띠부씰,마스킹테이프,메모지,부채,스티커,슬로건,아크릴,액자,엽서,엘홀더,증명사진,종이컵,짐색,카드지갑,컵,키링,포스터,포카홀더,포토매틱,포토카드,프리쿠라,편지지,틴케이스,토이카메라,티셔츠,트레카,티켓,수건,+기타"|split:"," %}
-            <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <label class="inline-flex items-center p-1.5 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
             </label>
@@ -213,15 +210,15 @@
       </div>
 
       <!-- 선착 특전 -->
-      <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+      <div class="mb-4">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-1">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-6 h-6">
           선착 특전
         </h4>
 
-        <div class="grid grid-cols-4 gap-2">
+        <div class="grid grid-cols-4 gap-1.5">
           {% for item in "ID카드,그립톡,거울,달력,띠부띠부씰,마스킹테이프,메모지,부채,스티커,슬로건,아크릴,액자,엽서,엘홀더,증명사진,종이컵,짐색,카드지갑,컵,키링,포스터,포카홀더,포토매틱,포토카드,프리쿠라,편지지,틴케이스,토이카메라,티셔츠,트레카,티켓,수건,+기타"|split:"," %}
-            <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <label class="inline-flex items-center p-1.5 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_priority" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
             </label>
@@ -230,15 +227,15 @@
       </div>
 
       <!-- 그 외 특전 -->
-      <div class="mb-6">
-        <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-10 h-10">
+      <div class="mb-4">
+        <h4 class="text-xs font-semibold mb-2 flex items-center gap-1">
+          <img src="{% static 'image/ddok_transparent.png' %}" alt="오리 아이콘" class="w-6 h-6">
           그 외 특전
         </h4>
 
-        <div class="grid grid-cols-4 gap-2">
+        <div class="grid grid-cols-4 gap-1.5">
           {% for item in "가챠 뽑기,당일 특전,랜덤 특전,럭키 드로우,럭키 넘버,메뉴 특전,선착 특전,전시회,포토부스,해시태그 이벤트,+기타"|split:"," %}
-            <label class="inline-flex items-center p-2 border rounded hover:bg-gray-50 cursor-pointer">
+            <label class="inline-flex items-center p-1.5 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_extra" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>
             </label>
@@ -246,21 +243,21 @@
         </div>
       </div>
 
-      <label class="block text-sm font-medium mb-2">이벤트 설명</label>
-      <textarea name="event_description" id="event_description" class="w-full border rounded p-3" rows="14" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required></textarea>
+      <label class="block text-xs font-medium mb-1">이벤트 설명</label>
+      <textarea name="event_description" id="event_description" class="w-full border rounded p-2 text-sm" rows="10" placeholder="생일카페 이벤트에 대한 자세한 설명을 입력해주세요." required tabindex="-1"></textarea>
     </div>
 
     <!-- STEP 5: 출처 정보 -->
     <div id="step-5" class="step hidden">
-      <h2 class="text-lg font-semibold mb-6">출처 정보 (선택사항)</h2>
+      <h2 class="text-base font-semibold mb-4">출처 정보 (선택사항)</h2>
       
-      <label class="block text-sm font-medium mb-2">X 계정</label>
-      <div class="flex items-stretch mb-4">
-        <span class="inline-flex items-center px-3 py-3 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l whitespace-nowrap">@</span>
+      <label class="block text-xs font-medium mb-1">X 계정</label>
+      <div class="flex items-stretch mb-3">
+        <span class="inline-flex items-center px-2 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-xs rounded-l whitespace-nowrap">@</span>
         <input type="text" 
                name="x_source" 
                id="x_username"
-               class="flex-1 border border-gray-300 rounded-r px-3 py-3 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 min-w-0" 
+               class="flex-1 border border-gray-300 rounded-r px-2 py-2 focus:border-pink-900 focus:ring-2 focus:ring-pink-900 focus:ring-opacity-10 min-w-0 text-sm" 
                placeholder="username"
                autocomplete="off">
       </div>
@@ -269,45 +266,45 @@
 
     <!-- Step 6: 이미지 업로드 -->
     <div id="step-6" class="step hidden">
-      <div class="text-center mb-8">
-        <h2 class="text-lg font-semibold mb-4">이미지 업로드</h2>
-        <p class="text-sm text-gray-600">생일카페 이미지를 업로드해주세요</p>
+      <div class="text-center mb-6">
+        <h2 class="text-base font-semibold mb-3">이미지 업로드</h2>
+        <p class="text-xs text-gray-600">생일카페 이미지를 업로드해주세요</p>
       </div>
 
       <!-- 이미지 업로드 전체를 감싸는 container -->
-      <div id="image-upload-container" class="max-w-md mx-auto">
+      <div id="image-upload-container" class="max-w-sm mx-auto">
 
         <!-- 숨겨진 파일 input -->
         <input type="file" id="image-upload" name="images" multiple accept="image/*" class="hidden">
 
         <!-- 커스텀 버튼 -->
-        <div class="text-center mb-4">
+        <div class="text-center mb-3">
           <label for="image-upload"
-                class="inline-block cursor-pointer px-6 py-3 text-sm text-white bg-black rounded-lg shadow hover:bg-gray-800 transition font-medium">
+                class="inline-block cursor-pointer px-4 py-2 text-xs text-white bg-black rounded-lg shadow hover:bg-gray-800 transition font-medium">
             이미지 선택
           </label>
         </div>
 
         <!-- 선택된 파일 개수 표시 -->
-        <div class="text-center mb-6">
-          <span id="file-count" class="text-sm text-gray-500">선택된 파일 없음</span>
+        <div class="text-center mb-4">
+          <span id="file-count" class="text-xs text-gray-500">선택된 파일 없음</span>
         </div>
 
         <!-- 이미지 미리보기 -->
         <div id="image-preview-container" class="hidden">
-          <div class="mb-4">
-            <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4" id="image-preview-list"></div>
+          <div class="mb-3">
+            <div class="grid grid-cols-2 gap-2" id="image-preview-list"></div>
           </div>
         </div>
 
         <!-- 업로드 안내 -->
         <div class="text-xs text-gray-600">
-          <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="text-sm font-semibold mb-3 flex items-center gap-2">
-                <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-8 h-8">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <h4 class="text-xs font-semibold mb-2 flex items-center gap-1">
+                <img src="{% static 'image/ddok_transparent.png' %}" alt="아이콘" class="w-6 h-6">
               이미지 첨부 가이드 
             </h4> 
-            <ul class="space-y-1 list-disc list-inside">
+            <ul class="space-y-0.5 list-disc list-inside">
               <li><strong>대표 이미지:</strong> 1번 이미지가 대표 이미지로 설정됩니다</li>
               <li><strong>파일 형식:</strong> JPG, PNG, GIF 형식만 업로드 가능합니다</li>
               <li><strong>파일 크기:</strong> 파일당 최대 5MB까지 업로드할 수 있습니다</li>
@@ -319,17 +316,16 @@
       </div>
     </div>
 
-        <!-- 네비게이션 버튼 -->
-<div id="navigationButtons" class="mt-12 flex justify-between items-center">
-  <button type="button" id="prevBtn"
-          class="w-12 h-12 bg-gray-900 text-white text-xl rounded-full hover:bg-gray-800 shadow-md transition-all duration-200 hidden items-center justify-center"
-          title="이전 단계">‹</button>
+    <!-- 네비게이션 버튼 -->
+    <div id="navigationButtons" class="mt-8 flex justify-between items-center">
+      <button type="button" id="prevBtn"
+              class="w-10 h-10 bg-gray-900 text-white text-lg rounded-full hover:bg-gray-800 shadow-md transition-all duration-200 hidden items-center justify-center"
+              title="이전 단계">‹</button>
 
-  <button type="button" id="nextBtn"
-          class="w-12 h-12 bg-gray-900 text-white text-xl rounded-full hover:bg-gray-800 shadow-md transition-all duration-200 hidden items-center justify-center"
-          title="다음 단계">›</button>
-</div>
-
+      <button type="button" id="nextBtn"
+              class="w-10 h-10 bg-gray-900 text-white text-lg rounded-full hover:bg-gray-800 shadow-md transition-all duration-200 hidden items-center justify-center"
+              title="다음 단계">›</button>
+    </div>
 
   </form>
 </section>
@@ -341,7 +337,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('메시지 시스템 초기화');
     
     // messages.py에서 온 데이터 로드
     let DDOKSANG_MESSAGES = {};
@@ -349,16 +344,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageElement = document.getElementById('ddoksang-messages');
         if (messageElement && messageElement.textContent.trim()) {
             DDOKSANG_MESSAGES = JSON.parse(messageElement.textContent);
-            console.log('messages.py 데이터 로드 성공:', Object.keys(DDOKSANG_MESSAGES));
-            
-            if (DDOKSANG_MESSAGES.DUPLICATE_CHECK) {
-                console.log('DUPLICATE_CHECK 메시지들:', Object.keys(DDOKSANG_MESSAGES.DUPLICATE_CHECK));
-            }
         } else {
             throw new Error('메시지 요소가 비어있음');
         }
     } catch (error) {
-        console.error('messages.py 데이터 로드 실패:', error);
         DDOKSANG_MESSAGES = {
             DUPLICATE_CHECK: {
                 NO_DUPLICATE: '해당 덕의 생카를 어덕해에 등록해주세요',
@@ -371,12 +360,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.msg = function(category, key, params = {}) {
         try {
             if (!DDOKSANG_MESSAGES[category]) {
-                console.warn(`메시지 카테고리를 찾을 수 없음: ${category}`);
                 return `[${category}.${key}]`;
             }
             
             if (!DDOKSANG_MESSAGES[category][key]) {
-                console.warn(`메시지 키를 찾을 수 없음: ${category}.${key}`);
                 return `[${category}.${key}]`;
             }
             
@@ -390,7 +377,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             return message;
         } catch (error) {
-            console.error('메시지 처리 오류:', error);
             return `[오류: ${category}.${key}]`;
         }
     };
@@ -404,10 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
   window.KAKAO_API_KEY = "{{ kakao_api_key|escapejs }}";
   
   if (!window.KAKAO_API_KEY || window.KAKAO_API_KEY.trim() === '') {
-    console.error('❌ 카카오맵 API 키가 비어있습니다.');
     window.KAKAO_MAP_DISABLED = true;
   } else {
-    console.log('✅ 카카오맵 API 키 확인됨');
     window.KAKAO_MAP_DISABLED = false;
   }
 </script>
@@ -419,8 +403,9 @@ document.addEventListener('DOMContentLoaded', function() {
     display: block;
     width: 100%;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
     transition: all 0.2s;
+    padding: 2px;
   }
   input[type="checkbox"]:checked + .perk-btn {
     background-color: #111827;
@@ -460,16 +445,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* X 계정 입력 필드 스타일 통일 */
   #x_username {
-    height: 48px;
+    height: 40px;
   }
 
-  /* FAQ 버튼과 완전히 겹치지 않는 위치 설정 */
   /* 새 버튼 스타일 */
   #prevBtn, #nextBtn {
-    display: none;            /* 자바스크립트로 토글 */
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+    display: none;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
     border-radius: 9999px;
     background-color: #111827;
     color: white;
@@ -488,65 +472,58 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   #navigationButtons {
-    margin-top: 3rem;
+    margin-top: 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
-
-  /* FAQ 버튼 위치를 고려한 이전 버튼 위치 */
   #prevBtn {
-    left: 144px !important;
+    left: 120px !important;
   }
 
   #nextBtn {
-    right: 24px !important;
-  }
-
-
-
-  /* 아주 작은 화면에서 추가 조정 */
-  @media (max-width: 480px) {
-    #prevBtn {
-      left: 120px !important;
-      width: 44px !important;
-      height: 44px !important;
-      font-size: 16px !important;
-    }
-
-    #nextBtn {
-      right: 12px !important;
-      width: 44px !important;
-      height: 44px !important;
-      font-size: 16px !important;
-    }
-  }
-
-  /* 매우 작은 화면 (iPhone SE 등) */
-  @media (max-width: 375px) {
-    #prevBtn {
-      left: 110px !important;
-    }
+    right: 20px !important;
   }
 
   /* 반응형 디자인 */
   @media (max-width: 640px) {
     .step button {
-      font-size: 0.875rem;
-      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      padding: 0.5rem 0.75rem;
     }
     
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
     }
     
     h2 {
-      font-size: 1.25rem;
+      font-size: 1rem;
     }
     
     #progressBar {
       height: 0.25rem;
+    }
+
+    #prevBtn {
+      left: 100px !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 14px !important;
+    }
+
+    #nextBtn {
+      right: 12px !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 14px !important;
+    }
+  }
+
+  /* 매우 작은 화면 */
+  @media (max-width: 375px) {
+    #prevBtn {
+      left: 90px !important;
     }
   }
 
@@ -587,20 +564,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- 2. 카카오맵 API -->
 {% if kakao_api_key %}
-<script>
-console.log('🔄 카카오맵 API 로드 시작...');
-</script>
-<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services" 
-        onload="console.log('✅ 카카오맵 API 로드 완료')" 
-        onerror="console.error('❌ 카카오맵 API 로드 실패')">
-</script>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}&libraries=services"></script>
 <script>
 setTimeout(() => {
     if (typeof kakao !== 'undefined' && kakao.maps) {
-        console.log('✅ 카카오맵 객체 사용 가능');
         window.KAKAO_MAP_READY = true;
     } else {
-        console.error('❌ 카카오맵 객체 사용 불가');
         window.KAKAO_MAP_READY = false;
         window.KAKAO_MAP_DISABLED = true;
     }
@@ -608,7 +577,6 @@ setTimeout(() => {
 </script>
 {% else %}
 <script>
-console.warn('⚠️ 카카오 API 키가 없음');
 window.KAKAO_MAP_DISABLED = true;
 window.KAKAO_MAP_READY = false;
 </script>
@@ -675,7 +643,6 @@ window.showToast = function(message, type = 'info', duration = 3000) {
 // 날짜 유틸리티
 window.DdoksangDateUtils = {
     forceEnableAllDateFields() {
-        console.log('🔧 날짜 필드 강제 활성화');
         const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
         dateFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
@@ -688,13 +655,11 @@ window.DdoksangDateUtils = {
                 field.style.backgroundColor = 'white';
                 field.style.cursor = 'text';
                 field.style.opacity = '1';
-                console.log(`✅ 활성화: ${fieldId}`);
             }
         });
     },
     
     initDuplicateCheckPickers() {
-        console.log('📅 중복 확인 날짜 피커 초기화');
         if (typeof flatpickr !== 'undefined') {
             ['check_start_date', 'check_end_date'].forEach(id => {
                 const element = document.getElementById(id);
@@ -706,7 +671,6 @@ window.DdoksangDateUtils = {
     },
     
     initCreateFormPickers() {
-        console.log('📅 메인 폼 날짜 피커 초기화');
         if (typeof flatpickr !== 'undefined') {
             ['start_date', 'end_date'].forEach(id => {
                 const element = document.getElementById(id);
@@ -731,8 +695,6 @@ window.DdoksangFormUtils = {
     showToast(message, type = 'info') {
         if (window.showToast) {
             window.showToast(message, type);
-        } else {
-            console.log(`Toast: ${message}`);
         }
     }
 };
@@ -747,7 +709,6 @@ window.DdoksangMapUtils = {
     initMap(containerId = 'map') {
         const container = document.getElementById(containerId);
         if (!container || typeof kakao === 'undefined' || !kakao.maps) {
-            console.error('지도 초기화 실패');
             return null;
         }
 
@@ -767,10 +728,8 @@ window.DdoksangMapUtils = {
             this.marker.setMap(null);
 
             this.isInitialized = true;
-            console.log('✅ 지도 초기화 완료');
             return this.map;
         } catch (error) {
-            console.error('지도 초기화 오류:', error);
             return null;
         }
     },
@@ -812,7 +771,6 @@ window.DdoksangMapUtils = {
 
             return place;
         } catch (error) {
-            console.error('장소 선택 오류:', error);
             return null;
         }
     }
@@ -828,15 +786,46 @@ window.DdoksangMapUtils = {
 <!-- 7. 메인 앱 (수정된 버전) -->
 <script src="{% static 'js/ddoksang_create.js' %}?v=8.0"></script>
 
-
-
 <!-- 8. 중복 확인 모듈들 (새로 추가) -->
 <script src="{% static 'js/ddoksang_duplicate_card_template.js' %}"></script>
 <script src="{% static 'js/ddoksang_duplicate_check.js' %}"></script>
 
+<!-- 9. 스크롤 관리 스크립트 -->
+<script>
+// 단계 변경 시 스크롤을 맨 위로 이동
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+// 단계 전환 함수에 스크롤 기능 추가
+document.addEventListener('DOMContentLoaded', function() {
+    // 기존 단계 변경 이벤트에 스크롤 추가
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const target = mutation.target;
+                if (target.classList.contains('step') && !target.classList.contains('hidden')) {
+                    // 새로운 단계가 표시될 때 스크롤을 맨 위로
+                    setTimeout(() => {
+                        scrollToTop();
+                    }, 100);
+                }
+            }
+        });
+    });
+
+    // 모든 step 요소를 관찰
+    document.querySelectorAll('.step').forEach(step => {
+        observer.observe(step, { attributes: true });
+    });
+});
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 페이지 초기화 시작');
     
     // 모듈 로딩 상태 확인 (이미지 업로더는 Step 6에서만 체크)
     setTimeout(() => {
@@ -853,17 +842,12 @@ document.addEventListener('DOMContentLoaded', function() {
             자동완성: !!window.initAutocomplete
         };
         
-        console.log('📊 모듈 로딩 상태:', moduleStatus);
-        
         // 필수 함수 누락 확인 (이미지 업로더 제외)
         const requiredFunctions = ['showToast'];
         const missingFunctions = requiredFunctions.filter(fn => typeof window[fn] !== 'function');
         
         if (missingFunctions.length > 0) {
-            console.error('❌ 필수 함수 누락:', missingFunctions);
             showToast('스크립트 로딩 오류 발생. 페이지를 새로고침해주세요.', 'error');
-        } else {
-            console.log('✅ 모든 필수 함수 로딩 완료');
         }
     }, 1000);
     
@@ -883,7 +867,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // 페이지 완전 로드 후 최종 확인
 window.addEventListener('load', function() {
     setTimeout(() => {
-        console.log('🔧 페이지 로드 완료 후 최종 확인');
         
         // 날짜 필드 재활성화
         const dateFields = ['check_start_date', 'check_end_date', 'start_date', 'end_date'];
@@ -897,18 +880,8 @@ window.addEventListener('load', function() {
                 field.style.pointerEvents = 'auto';
                 field.style.backgroundColor = 'white';
                 needsReactivation = true;
-                console.log(`🔄 최종 재활성화: ${fieldId}`);
             }
         });
-        
-        if (needsReactivation) {
-            console.log('⚠️ 일부 날짜 필드 재활성화됨');
-        } else {
-            console.log('✅ 모든 날짜 필드 정상');
-        }
-        
-        // ✅ 이미지 업로더는 Step 6에서만 초기화되므로 여기서는 체크하지 않음
-        console.log('📷 이미지 업로더: Step 6에서 초기화 예정');
         
     }, 1000);
 });

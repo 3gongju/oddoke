@@ -5,10 +5,10 @@
   <div class="flex items-center justify-between mb-4 px-4">
     <div class="flex items-center">
       <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페" class="w-6 h-6 sm:w-8 sm:h-8 mr-2">
-      <h2 class="text-lg sm:text-xl font-semibold text-gray-800">찜한 생카</h2>
+      <h2 class="text-base sm:text-lg font-semibold text-gray-800">찜한 생카</h2>
     </div>
     
-    <!-- 정렬 수정된 (덕)보기 링크 -->
+    <!-- (덕)보기 링크 -->
     <div class="flex items-center">
       <a href="{% url 'ddoksang:favorites' %}" class="inline-flex items-center text-blue-600 hover:text-pink-600 text-sm font-medium transition-colors duration-200">
         <span>(덕)보기</span>
@@ -20,7 +20,6 @@
   </div>
 
   {% if my_favorite_cafes %}
-    <!-- 상단 패딩 추가로 호버 시 잘림 방지, 하단 여백도 추가 -->
     <div class="relative px-4 pt-2 pb-12">
       <div class="swiper favorites-swiper">
         <div class="swiper-wrapper" id="favoriteCarousel">
@@ -32,7 +31,7 @@
         </div>
       </div>
       
-      <!--  스와이프 안내 문구 (HTML로 직접 추가) -->
+      <!-- 스와이프 안내 문구 -->
       <div class="text-center mt-4 mb-2">
         <!-- 데스크톱용 안내 -->
         <p class="hidden sm:block text-xs text-gray-500 font-body">
@@ -62,10 +61,7 @@
         <img src="{% static 'image/ddok_logo_filled.png' %}" alt="찜한 카페 없음" class="w-16 h-16 mx-auto opacity-50">
       </div>
       <h3 class="text-lg font-medium text-gray-900 mb-2">아직 찜한 생카가 없어요</h3>
-      <p class="text-gray-600 mb-6">마음에 드는 생카를 찜해보세요!</p>
-      <a href="{% url 'ddoksang:home' %}" class="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-blue-500 transition-colors">
-        생카 둘러보기
-      </a>
+      <p class="text-gray-600">마음에 드는 생카를 찜해보세요</p>
     </div>
   {% endif %}
 </section>
@@ -116,7 +112,7 @@ function initFavoritesSwiper() {
         },
         on: {
             init: function() {
-                console.log('찜한 카페 Swiper 초기화 완료');
+                
             }
         }
     });
@@ -134,10 +130,8 @@ function updateFavoritesSwiper() {
 
 <style>
 .favorites-swiper {
-  /* 호버 효과가 잘리지 않도록 상단 여백 추가 */
   padding-top: 8px;
   margin-top: -8px;
-  /* 우측 여백 추가로 마지막 카드 잘림 방지 */
   padding-right: 20px;
   margin-right: -20px;
 }

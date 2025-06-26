@@ -7,7 +7,7 @@
 {% block body %}
 {% csrf_token %}
 <div class="min-h-screen bg-white">
-  <div class="max-w-7xl mx-auto px-4 py-10">
+  <div class="max-w-[1080px] mx-auto px-4 py-10">  {# 전체 너비 줄임 #}
 
     <!-- 페이지 헤더 -->
     <div class="mb-6">
@@ -20,8 +20,10 @@
             <p class="text-sm text-gray-600">등록한 생일카페를 관리하고 현황을 확인하세요</p>
           </div>
           <a href="{% url 'ddoksang:create' %}" 
-             class="flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-            + 생일카페 등록하기
+            class="hidden sm:flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 
+                    bg-black text-white text-sm font-medium rounded-lg 
+                    hover:bg-gray-700 transition-colors">
+            + 생카 등록
           </a>
         </div>
       </div>
@@ -30,18 +32,12 @@
     <!-- 진행 상태 필터 섹션 -->
     {% if runtime_filters %}
     <div class="mb-6">
-      <h2 class="text-lg font-bold text-gray-900 mb-4">
-        진행 상태
-      </h2>
+      <h2 class="text-lg font-bold text-gray-900 mb-4">진행 상태</h2>
       <div class="flex bg-gray-100 rounded-xl p-1">
         {% for filter in runtime_filters %}
           <a href="{{ filter.url }}"
              class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 text-center
-             {% if filter.active %}
-               bg-white text-gray-900 shadow-sm
-             {% else %}
-               text-gray-600 hover:text-gray-900
-             {% endif %}">
+             {% if filter.active %} bg-white text-gray-900 shadow-sm {% else %} text-gray-600 hover:text-gray-900 {% endif %}">
             {{ filter.text }}
           </a>
         {% endfor %}
@@ -49,47 +45,37 @@
     </div>
     {% endif %}
 
-    <!-- 통계 및 필터 섹션 -->
+    <!-- 통계 및 토글 -->
     <div class="mb-6">
       <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
-        <h2 class="text-lg font-bold text-gray-900 mb-3">
-          등록 현황
-        </h2>
+        <h2 class="text-lg font-bold text-gray-900 mb-3">등록 현황</h2>
 
-        <!-- 통계 토글 버튼 -->
         <div class="mb-3">
-          <button 
-            onclick="toggleStats()" 
-            class="flex items-center justify-between w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
+          <button onclick="toggleStats()" class="flex items-center justify-between w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
             <span class="text-sm font-medium text-gray-700">상세 통계 보기</span>
             <svg id="stats-arrow" class="w-4 h-4 text-gray-500 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
         </div>
 
-        <!-- 접을 수 있는 통계 카드 -->
-        <div id="stats-content" class="hidden mb-4">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <a href="?{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" 
-               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
-              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{{ stats.total }}</div>
-              <div class="text-xs sm:text-sm text-gray-500 mt-1">총 등록</div>
+        <div id="stats-content" class="hidden mb-3">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <a href="?{% if request.GET.runtime %}runtime={{ request.GET.runtime }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" class="text-center py-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-base sm:text-lg font-bold text-gray-900">{{ stats.total }}</div>
+              <div class="text-xs text-gray-500">총 등록</div>
             </a>
-            <a href="?status=pending{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
-              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-yellow-600">{{ stats.pending }}</div>
-              <div class="text-xs sm:text-sm text-gray-500 mt-1">승인 대기</div>
+            <a href="?status=pending{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="text-center py-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-base sm:text-lg font-bold text-yellow-600">{{ stats.pending }}</div>
+              <div class="text-xs text-gray-500">승인 대기</div>
             </a>
-            <a href="?status=approved{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
-              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">{{ stats.approved }}</div>
-              <div class="text-xs sm:text-sm text-gray-500 mt-1">승인됨</div>
+            <a href="?status=approved{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="text-center py-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-base sm:text-lg font-bold text-green-600">{{ stats.approved }}</div>
+              <div class="text-xs text-gray-500">승인됨</div>
             </a>
-            <a href="?status=rejected{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-               class="text-center py-2 hover:bg-white rounded-lg transition-colors cursor-pointer">
-              <div class="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">{{ stats.rejected }}</div>
-              <div class="text-xs sm:text-sm text-gray-500 mt-1">거절됨</div>
+            <a href="?status=rejected{% if request.GET.runtime %}&runtime={{ request.GET.runtime }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" class="text-center py-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer">
+              <div class="text-base sm:text-lg font-bold text-red-600">{{ stats.rejected }}</div>
+              <div class="text-xs text-gray-500">거절됨</div>
             </a>
           </div>
         </div>
@@ -100,15 +86,10 @@
     <div class="mb-6">
       <div class="bg-white rounded-2xl shadow-sm p-4 sm:p-6 border border-gray-100">
         {% if cafes %}
-          <!-- 목록 헤더 -->
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <div>
-              <h2 class="text-lg sm:text-xl font-bold text-gray-900">
-                생일카페 목록
-              </h2>
-              <p class="text-sm text-gray-600 mt-1">
-                총 {{ cafes.paginator.count }}개의 생일카페
-              </p>
+              <h2 class="text-lg sm:text-xl font-bold text-gray-900">생일카페 목록</h2>
+              <p class="text-sm text-gray-600 mt-1">총 {{ cafes.paginator.count }}개의 생일카페</p>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-sm text-gray-600">정렬:</span>
@@ -120,27 +101,19 @@
             </div>
           </div>
 
-          <!-- 카페 그리드 컴포넌트 -->
-          {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes empty_message="카페가 없습니다." show_admin_status=True show_status_badge=True show_preview=True show_favorite_btn=True user_favorites=user_favorites %}
-          
-          <!-- 페이지네이션 컴포넌트 -->
+          {# ✅ 하트 버튼 표시 #}
+          {% include 'ddoksang/components/_cafe_grid.html' with cafes=cafes show_admin_status=True show_status_badge=True show_preview=True show_favorite_btn=True user_favorites=user_favorites %}
+
           <div class="mt-8">
             {% include 'ddoksang/components/_pagination.html' with paginated_object=cafes extra_params=extra_params %}
           </div>
-
         {% else %}
-          <!-- 빈 상태 -->
           <div class="text-center py-12 lg:py-16">
             <img src="{% static 'image/ddok_logo_filled.png' %}" alt="빈 상태" class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 opacity-50 mx-auto mb-4 sm:mb-6" />
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">
-              검색 결과가 없덕요
-            </h3>
-            <p class="text-sm sm:text-base text-gray-600 mb-6">
-              덕덕 (생카를 등록해 주세요)
-            </p>
-            <a href="{% url 'ddoksang:create' %}" 
-               class="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-              + 생카 등록하기
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">검색 결과가 없덕요</h3>
+            <p class="text-sm sm:text-base text-gray-600 mb-6">덕덕 (생카를 등록해 주세요)</p>
+            <a href="{% url 'ddoksang:create' %}" class="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+              + 생카 등록
             </a>
           </div>
         {% endif %}
@@ -150,22 +123,23 @@
   </div>
 </div>
 
-<!-- JavaScript -->
-<script src="{% static 'js/favorite.js' %}"></script>
+<!-- 모바일 플로팅 버튼 (sm 이하에서만 표시) -->
+<div class="fixed bottom-6 right-6 sm:hidden z-50">
+  <a href="{% url 'ddoksang:create' %}" 
+     class="flex items-center justify-center w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg hover:bg-gray-800 transition-all duration-300 hover:scale-110">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+    </svg>
+  </a>
+</div>
 
+<script src="{% static 'js/favorite.js' %}"></script>
 <script>
-// 통계 토글 기능
 function toggleStats() {
   const content = document.getElementById('stats-content');
   const arrow = document.getElementById('stats-arrow');
-  
-  if (content.classList.contains('hidden')) {
-    content.classList.remove('hidden');
-    arrow.style.transform = 'rotate(180deg)';
-  } else {
-    content.classList.add('hidden');
-    arrow.style.transform = 'rotate(0deg)';
-  }
+  content.classList.toggle('hidden');
+  arrow.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 </script>
 {% endblock %}
