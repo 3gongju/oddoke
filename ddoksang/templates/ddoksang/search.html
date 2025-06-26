@@ -21,7 +21,8 @@
     <section class="pt-2 pb-2">
       <div class="max-w-4xl mx-auto px-3">
         <div class="flex justify-center">
-          {% include 'ddoksang/components/_search_header.html' with compact_mode=True search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=False show_create_button=False %}
+            {% include 'ddoksang/components/_search_header.html' with compact_mode=True search_input_id='search-autocomplete' autocomplete_list_id='search-autocomplete-list' search_placeholder='아티스트, 멤버 검색...' query=query show_results_summary=False show_create_button=False show_birthday=False %}
+
         </div>
       </div>
     </section>
@@ -42,24 +43,24 @@
   
   <!-- 간단한 상태 필터 버튼 - 컴팩트하게 -->
   {% if query %}
-  <div class="flex justify-center gap-2 mb-5">
+  <div class="status-filter-buttons flex justify-center gap-2 mb-5">
     <a href="?q={{ query }}&sort={{ current_sort }}" 
-       class="px-3 py-1.5 rounded-md border text-xs transition
+       class="status-btn px-3 py-1.5 rounded-md border text-xs transition
        {% if not current_status %}bg-black text-white {% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
       전체
     </a>
     <a href="?q={{ query }}&status=ongoing&sort={{ current_sort }}" 
-       class="px-3 py-1.5 rounded-md border text-xs transition
+       class="status-btn px-3 py-1.5 rounded-md border text-xs transition
        {% if current_status == 'ongoing' %}bg-black text-white{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
       진행중
     </a>
     <a href="?q={{ query }}&status=upcoming&sort={{ current_sort }}" 
-       class="px-3 py-1.5 rounded-md border text-xs transition
+       class="status-btn px-3 py-1.5 rounded-md border text-xs transition
        {% if current_status == 'upcoming' %}bg-black text-white{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
       예정
     </a>
     <a href="?q={{ query }}&status=ended&sort={{ current_sort }}" 
-       class="px-3 py-1.5 rounded-md border text-xs transition
+       class="status-btn px-3 py-1.5 rounded-md border text-xs transition
        {% if current_status == 'ended' %}bg-black text-white{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
       종료
     </a>
@@ -191,6 +192,30 @@
   align-items: center !important;
 }
 
+/* 상태 필터 버튼 컨테이너 중앙 정렬 */
+.status-filter-buttons {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  flex-wrap: wrap !important;
+  gap: 0.5rem !important;
+}
+
+/* 상태 필터 버튼 개별 스타일 */
+.status-btn {
+  flex: none !important;
+  white-space: nowrap !important;
+  min-width: fit-content !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.75rem !important;
+  padding: 0.375rem 0.75rem !important;
+  text-decoration: none !important;
+}
+
 /* 지도 컨테이너 - 가로 늘리고 세로 줄임 */
 .map-container {
   height: 350px !important;
@@ -277,6 +302,23 @@
   .grid-cols-1 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+  
+  /* 모바일에서 상태 필터 버튼 완전 중앙 정렬 */
+  .status-filter-buttons {
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  .status-btn {
+    font-size: 0.7rem !important;
+    padding: 0.3rem 0.6rem !important;
+    min-width: auto !important;
+    flex-shrink: 0 !important;
+  }
 }
 
 /* 검색 폼 크기 고정 */
@@ -312,12 +354,6 @@ section {
   padding-bottom: 0.5rem !important;
 }
 
-/* 필터 버튼 컴팩트 */
-.flex.justify-center.gap-2 a {
-  font-size: 0.75rem !important;
-  padding: 0.375rem 0.75rem !important;
-}
-
 /* 검색창 아이콘 크기 조정 */
 .max-w-4xl svg {
   width: 12px !important;
@@ -329,6 +365,23 @@ section {
     width: 12px !important;
     height: 12px !important;
   }
+}
+
+/* 추가: 컨테이너 오버플로우 방지 */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+.max-w-5xl {
+  max-width: 100%;
+  overflow-x: hidden;
+  width: 100%;
 }
 </style>
 
