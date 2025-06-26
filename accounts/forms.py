@@ -154,6 +154,7 @@ class CustomUserCreationForm(UserCreationForm):
         """ 프로필 이미지 처리 추가된 save 메서드"""
         user = super().save(commit=False)
         user.is_active = False  # 이메일 인증 전까지 비활성화
+        user.is_profile_completed = False
         
         # 프로필 이미지 처리
         if self.cleaned_data.get('profile_image'):
