@@ -321,7 +321,7 @@ class ProfileImageForm(forms.ModelForm):
         model = User
         fields = ['profile_image']
 
-class BankAccountForm(forms.ModelForm):
+class BankForm(forms.ModelForm):
     BANK_CHOICES = [
         ('004', 'KB국민은행'),
         ('088', '신한은행'),
@@ -356,7 +356,7 @@ class BankAccountForm(forms.ModelForm):
         label="은행 선택"
     )
     
-    account_number = forms.CharField(
+    bank_number = forms.CharField(
         max_length=20,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -366,7 +366,7 @@ class BankAccountForm(forms.ModelForm):
         label="계좌번호"
     )
     
-    account_holder = forms.CharField(
+    bank_holder = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
             'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
@@ -378,15 +378,15 @@ class BankAccountForm(forms.ModelForm):
     
     class Meta:
         model = BankProfile
-        fields = ['bank_code', 'account_number', 'account_holder']
+        fields = ['bank_code', 'bank_number', 'bank_holder']
     
-    def clean_account_number(self):
-        account_number = self.cleaned_data.get('account_number')
-        if not account_number:
+    def clean_bank_number(self):
+        bank_number = self.cleaned_data.get('bank_number')
+        if not bank_number:
             raise forms.ValidationError("계좌번호를 입력해주세요.")
         
         # 숫자만 남기기 (하이픈, 공백 등 제거)
-        cleaned_number = ''.join(filter(str.isdigit, account_number))
+        cleaned_number = ''.join(filter(str.isdigit, bank_number))
         
         if len(cleaned_number) < 8:
             raise forms.ValidationError("올바른 계좌번호를 입력해주세요. (최소 8자리)")
@@ -396,35 +396,35 @@ class BankAccountForm(forms.ModelForm):
         
         return cleaned_number
     
-    def clean_account_holder(self):
-        account_holder = self.cleaned_data.get('account_holder')
-        if not account_holder:
+    def clean_bank_holder(self):
+        bank_holder = self.cleaned_data.get('bank_holder')
+        if not bank_holder:
             raise forms.ValidationError("예금주명을 입력해주세요.")
         
         # 공백 제거
-        account_holder = account_holder.strip()
+        bank_holder = bank_holder.strip()
         
         # 한글, 영문만 허용 (공백 포함)
         import re
-        if not re.match(r'^[가-힣a-zA-Z\s]+$', account_holder):
+        if not re.match(r'^[가-힣a-zA-Z\s]+$', bank_holder):
             raise forms.ValidationError("예금주명은 한글 또는 영문만 입력 가능합니다.")
         
-        if len(account_holder) < 2:
+        if len(bank_holder) < 2:
             raise forms.ValidationError("예금주명은 최소 2자 이상 입력해주세요.")
         
-        if len(account_holder) > 20:
+        if len(bank_holder) > 20:
             raise forms.ValidationError("예금주명이 너무 깁니다. (최대 20자)")
         
-        return account_holder
+        return bank_holder
     
     def clean(self):
         cleaned_data = super().clean()
         bank_code = cleaned_data.get('bank_code')
-        account_number = cleaned_data.get('account_number')
-        account_holder = cleaned_data.get('account_holder')
+        bank_number = cleaned_data.get('bank_number')
+        bank_holder = cleaned_data.get('bank_holder')
         
         # 모든 필드가 입력되었는지 확인
-        if not all([bank_code, account_number, account_holder]):
+        if not all([bank_code, bank_number, bank_holder]):
             raise forms.ValidationError("모든 필드를 입력해주세요.")
         
         return cleaned_data
@@ -434,8 +434,8 @@ class BankAccountForm(forms.ModelForm):
         bank_profile = user.get_or_create_bank_profile()
         bank_profile.bank_code = self.cleaned_data['bank_code']
         bank_profile.bank_name = dict(self.BANK_CHOICES)[self.cleaned_data['bank_code']]
-        bank_profile.account_number = self.cleaned_data['account_number']
-        bank_profile.account_holder = self.cleaned_data['account_holder']
+        bank_profile.bank_number = self.cleaned_data['bank_number']
+        bank_profile.bank_holder = self.cleaned_data['bank_holder']
         bank_profile.save()
         return bank_profile
 

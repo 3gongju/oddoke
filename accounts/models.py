@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django_resized import ResizedImageField
 from django.utils import timezone
 from datetime import timedelta
-from .utils import AccountEncryption, AddressEncryption
+from .utils import BankEncryption, AddressEncryption
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation 
@@ -331,25 +331,25 @@ class BankProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='bank_profile')
     bank_code = models.CharField(max_length=10)
     bank_name = models.CharField(max_length=50)
-    _encrypted_account_number = models.TextField()
-    account_holder = models.CharField(max_length=50)
+    _encrypted_bank_number = models.TextField()
+    bank_holder = models.CharField(max_length=50)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     @property
-    def account_number(self):
-        return AccountEncryption.decrypt(self._encrypted_account_number)
+    def bank_number(self):
+        return BankEncryption.decrypt(self._encrypted_bank_number)
     
-    @account_number.setter
-    def account_number(self, value):
-        self._encrypted_account_number = AccountEncryption.encrypt(value)
+    @bank_number.setter
+    def bank_number(self, value):
+        self._encrypted_bank_number = BankEncryption.encrypt(value)
     
-    def get_masked_account_number(self):
+    def get_masked_bank_number(self):
         """마스킹된 계좌번호 반환"""
-        account = self.account_number
-        if account and len(account) > 4:
-            return '****' + account[-4:]
+        bank = self.bank_number
+        if bank and len(bank) > 4:
+            return '****' + bank[-4:]
         return '****'
     
     def __str__(self):

@@ -27,7 +27,7 @@
         </div>
         
         <div class="bg-white">
-          <form method="POST" id="accountForm" class="space-y-0">
+          <form method="POST" id="bankForm" class="space-y-0">
             {% csrf_token %}
 
             <!-- 은행 선택 -->
@@ -56,18 +56,18 @@
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
-                  <label for="{{ form.account_number.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
-                    {{ form.account_number.label }} <span class="text-red-500">*</span>
+                  <label for="{{ form.bank_number.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.bank_number.label }} <span class="text-red-500">*</span>
                   </label>
                   <div class="text-sm sm:text-base text-gray-500 mt-1">하이픈(-) 없이 숫자만 입력해주세요</div>
                 </div>
                 <div class="ml-4 min-w-0 flex-1 max-w-xs">
-                  {{ form.account_number }}
+                  {{ form.bank_number }}
                 </div>
               </div>
-              {% if form.account_number.errors %}
+              {% if form.bank_number.errors %}
                 <div class="text-red-500 text-sm mt-2">
-                  {% for error in form.account_number.errors %}
+                  {% for error in form.bank_number.errors %}
                     <p>{{ error }}</p>
                   {% endfor %}
                 </div>
@@ -78,18 +78,18 @@
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
-                  <label for="{{ form.account_holder.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
-                    {{ form.account_holder.label }} <span class="text-red-500">*</span>
+                  <label for="{{ form.bank_holder.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
+                    {{ form.bank_holder.label }} <span class="text-red-500">*</span>
                   </label>
                   <div class="text-sm sm:text-base text-gray-500 mt-1">통장에 기재된 예금주명을 정확히 입력해주세요</div>
                 </div>
                 <div class="ml-4 min-w-0 flex-1 max-w-xs">
-                  {{ form.account_holder }}
+                  {{ form.bank_holder }}
                 </div>
               </div>
-              {% if form.account_holder.errors %}
+              {% if form.bank_holder.errors %}
                 <div class="text-red-500 text-sm mt-2">
-                  {% for error in form.account_holder.errors %}
+                  {% for error in form.bank_holder.errors %}
                     <p>{{ error }}</p>
                   {% endfor %}
                 </div>
@@ -194,7 +194,7 @@
              class="w-full sm:flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
             취소
           </a>
-          <button type="submit" form="accountForm" id="submitBtn"
+          <button type="submit" form="bankForm" id="submitBtn"
                   class="w-full sm:flex-1 px-4 py-2 sm:px-6 sm:py-3 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-sm sm:text-base">
             {% if is_modify %}계좌정보 수정{% else %}계좌 등록{% endif %}
           </button>
@@ -291,44 +291,45 @@ body {
 <!-- JavaScript -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('accountForm');
+    const form = document.getElementById('bankForm');
     const submitBtn = document.getElementById('submitBtn');
     
     // 계좌번호 입력 시 숫자만 허용
-    const accountNumberInput = document.getElementById('{{ form.account_number.id_for_label }}');
-    if (accountNumberInput) {
-      accountNumberInput.addEventListener('input', function(e) {
+    const bankNumberInput = document.getElementById('{{ form.bank_number.id_for_label }}');
+    if (bankNumberInput) {
+      bankNumberInput.addEventListener('input', function(e) {
         // 숫자가 아닌 문자 제거
         this.value = this.value.replace(/[^0-9]/g, '');
       });
     }
     
-    // 예금주명 입력 시 한글/영문만 허용
-    const accountHolderInput = document.getElementById('{{ form.account_holder.id_for_label }}');
-    if (accountHolderInput) {
-      accountHolderInput.addEventListener('input', function(e) {
-        // 한글, 영문, 공백만 허용
-        this.value = this.value.replace(/[^가-힣a-zA-Z\s]/g, '');
-      });
-    }
+    // 예금주명은 JavaScript에서 제한하지 않고 서버에서만 검증
+    // (한글 입력 IME 문제 방지)
 
     // 폼 제출 시 간단한 검증
     form.addEventListener('submit', function(e) {
       const bankCode = document.getElementById('{{ form.bank_code.id_for_label }}').value;
-      const accountNumber = document.getElementById('{{ form.account_number.id_for_label }}').value;
-      const accountHolder = document.getElementById('{{ form.account_holder.id_for_label }}').value;
+      const bankNumber = document.getElementById('{{ form.bank_number.id_for_label }}').value;
+      const bankHolder = document.getElementById('{{ form.bank_holder.id_for_label }}').value;
       
-      if (!bankCode || !accountNumber || !accountHolder) {
+      if (!bankCode || !bankNumber || !bankHolder) {
         e.preventDefault();
         alert('모든 필드를 입력해주세요.');
         return;
       }
       
       // 계좌번호 숫자 검증
-      const cleanNumber = accountNumber.replace(/[^0-9]/g, '');
+      const cleanNumber = bankNumber.replace(/[^0-9]/g, '');
       if (cleanNumber.length < 8) {
         e.preventDefault();
         alert('계좌번호를 확인해주세요. (최소 8자리)');
+        return;
+      }
+      
+      // 예금주명 길이만 검증
+      if (bankHolder.trim().length < 2) {
+        e.preventDefault();
+        alert('예금주명은 최소 2자 이상 입력해주세요.');
         return;
       }
     });
