@@ -8,7 +8,7 @@
     <!-- 헤더 -->
     <div class="bg-white border-b border-gray-200 relative z-10">
       <div class="flex items-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        <a href="{% url 'accounts:settings_main' user_profile.username %}" class="mr-4 text-gray-600 hover:text-gray-800">
+        <a href="{% url 'accounts:settings_main' %}" class="mr-4 text-gray-600 hover:text-gray-800">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
           </svg>
@@ -85,7 +85,7 @@
               
               <!-- 프로필 이미지 변경 버튼 -->
               <div class="w-full sm:w-auto">
-                <a href="{% url 'accounts:edit_profile_image' user_profile.username %}"
+                <a href="{% url 'accounts:edit_profile_image' %}"
                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors">
                   프로필 이미지 변경
                 </a>
@@ -122,7 +122,7 @@
 
           <!-- 닉네임 수정 폼 -->
           <div id="nickname-edit-form" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-gray-100" style="display: none;">
-            <form method="POST" action="{% url 'accounts:edit_profile_info' user_profile.username %}">
+            <form method="POST" action="{% url 'accounts:edit_profile_info' %}">
               {% csrf_token %}
               <div class="space-y-4">
                 <div>
@@ -184,7 +184,7 @@
 
           <!-- 소개글 수정 폼 -->
           <div id="bio-edit-form" class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-t border-gray-100" style="display: none;">
-            <form method="POST" action="{% url 'accounts:edit_profile_info' user_profile.username %}">
+            <form method="POST" action="{% url 'accounts:edit_profile_info' %}">
               {% csrf_token %}
               <div class="space-y-4">
                 <div>

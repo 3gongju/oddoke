@@ -503,15 +503,11 @@ def mypage(request):
     }
     return render(request, 'mypage.html', context)
 
+# 🔥 개인 설정 관련 함수들 - username 파라미터 제거
 @login_required
-def settings_main(request, username):
-    """설정 메인 페이지 (새로 추가)"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
-        return redirect('accounts:mypage')
+def settings_main(request):
+    """설정 메인 페이지 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     # 필요한 프로필 정보들 가져오기 (기존 mypage 로직 활용)
     fandom_profile = user_profile.get_fandom_profile()
@@ -527,9 +523,9 @@ def settings_main(request, username):
     return render(request, 'accounts/settings_main.html', context)
 
 @login_required
-def edit_profile_info(request, username):
-    """회원 정보 수정 - 간소화된 버전"""
-    user_profile = get_object_or_404(User, username=username)
+def edit_profile_info(request):
+    """회원 정보 수정 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
 
     if request.method == "POST":
         new_username = request.POST.get("username")
@@ -541,28 +537,28 @@ def edit_profile_info(request, username):
             
             if len(new_username) < 2:
                 messages.error(request, "닉네임은 최소 2자 이상이어야 합니다.")
-                return redirect('accounts:edit_profile_info', username=request.user.username)
+                return redirect('accounts:edit_profile_info')  # username 제거
             
             if len(new_username) > 20:
                 messages.error(request, "닉네임은 최대 20자까지 입력 가능합니다.")
-                return redirect('accounts:edit_profile_info', username=request.user.username)
+                return redirect('accounts:edit_profile_info')  # username 제거
             
             if User.objects.filter(username=new_username).exists():
                 messages.error(request, "이미 존재하는 닉네임입니다.")
-                return redirect('accounts:edit_profile_info', username=request.user.username)
+                return redirect('accounts:edit_profile_info')  # username 제거
             
             # username 업데이트
             request.user.username = new_username
             request.user.save()
             messages.success(request, "닉네임이 수정되었습니다.")
-            return redirect('accounts:edit_profile_info', username=request.user.username)
+            return redirect('accounts:edit_profile_info')  # username 제거
 
         # 소개 수정
         if new_bio is not None and new_bio != request.user.bio:
             request.user.bio = new_bio
             request.user.save()
             messages.success(request, "소개가 수정되었습니다.")
-            return redirect('accounts:edit_profile_info', username=request.user.username)
+            return redirect('accounts:edit_profile_info')  # username 제거
 
     fandom_profile = user_profile.get_fandom_profile()
 
@@ -575,16 +571,15 @@ def edit_profile_info(request, username):
 
 
 @login_required
-def edit_profile_image(request, username):
-    user = get_object_or_404(User, username=username)
-    if request.user != user:
-        return redirect('accounts:profile', username=username)
+def edit_profile_image(request):
+    """프로필 이미지 수정 - username 파라미터 제거"""
+    user = request.user  # 직접 사용
 
     if request.method == 'POST':
         form = ProfileImageForm(request.POST, request.FILES, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('accounts:edit_profile_info', username=username)
+            return redirect('accounts:edit_profile_info')  # username 제거
     else:
         form = ProfileImageForm(instance=user)
 
@@ -594,9 +589,9 @@ def edit_profile_image(request, username):
     })
 
 @login_required
-def upload_fandom_card(request, username):
-    """🔥 수정: null/blank 제거에 따른 필수 필드 검증 강화"""
-    user = get_object_or_404(User, username=username)
+def upload_fandom_card(request):
+    """🔥 수정: null/blank 제거에 따른 필수 필드 검증 강화 - username 파라미터 제거"""
+    user = request.user  # 직접 사용
 
     if request.method == 'POST':
         image = request.FILES.get('fandom_card')
@@ -608,19 +603,19 @@ def upload_fandom_card(request, username):
         # 🔥 필수 필드 검증 강화
         if not image:
             messages.error(request, '팬덤 카드 이미지를 업로드해주세요.')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
         
         if not artist_id:
             messages.error(request, '아티스트를 선택해주세요.')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
             
         if not verification_start_date:
             messages.error(request, '인증 시작일을 입력해주세요.')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
             
         if not verification_end_date:
             messages.error(request, '인증 만료일을 입력해주세요.')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
 
         try:
             img = Image.open(image)
@@ -649,7 +644,7 @@ def upload_fandom_card(request, username):
 
         except Exception as e:
             messages.error(request, f'이미지를 처리할 수 없습니다: {str(e)}')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
 
         # 🔥 지연 생성 방식: 모든 필드가 준비된 후 생성
         try:
@@ -674,28 +669,23 @@ def upload_fandom_card(request, username):
             )
             
             messages.success(request, '공식 팬덤 인증 확인 중입니다. (3일 소요)')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
             
         except Exception as e:
             messages.error(request, f'팬덤 프로필 생성 중 오류가 발생했습니다: {str(e)}')
-            return redirect('accounts:settings_main', username=username)
+            return redirect('accounts:settings_main')  # username 제거
 
 # 기존 계좌 인증 함수들을 간소화된 버전으로 교체
 @login_required
-def bank_registration(request, username):
-    """🔥 수정: 계좌 정보 등록 - 필수 필드 검증 강화"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 계좌만 등록할 수 있습니다.')
-        return redirect('accounts:mypage')
+def bank_registration(request):
+    """🔥 수정: 계좌 정보 등록 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     # 이미 등록된 계좌가 있는지 확인
     bank_profile = user_profile.get_bank_profile()
     if bank_profile:
         messages.info(request, '이미 등록된 계좌가 있습니다.')
-        return redirect('accounts:bank_settings', username=username)  
+        return redirect('accounts:bank_settings')  # username 제거
     
     if request.method == 'POST':
         print("POST 요청 받음")
@@ -716,7 +706,7 @@ def bank_registration(request, username):
                 )
                 print(f"저장 성공: {bank_profile}")
                 messages.success(request, '계좌 정보가 등록되었습니다!')
-                return redirect('accounts:bank_settings', username=username)  
+                return redirect('accounts:bank_settings')  # username 제거
             except Exception as e:
                 print(f"저장 실패: {str(e)}")
                 messages.error(request, f'계좌 등록 중 오류가 발생했습니다: {str(e)}')
@@ -732,19 +722,14 @@ def bank_registration(request, username):
     return render(request, 'accounts/bank_registration.html', context)
 
 @login_required  
-def bank_modify(request, username):
-    """등록된 계좌정보 수정"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 계좌만 수정할 수 있습니다.')
-        return redirect('accounts:mypage')
+def bank_modify(request):
+    """등록된 계좌정보 수정 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     bank_profile = user_profile.get_bank_profile()
     if not bank_profile:
         messages.warning(request, '등록된 계좌가 없습니다. 먼저 계좌를 등록해주세요.')
-        return redirect('accounts:bank_registration', username=username)
+        return redirect('accounts:bank_registration')  # username 제거
     
     if request.method == 'POST':
         form = BankForm(request.POST)
@@ -758,7 +743,7 @@ def bank_modify(request, username):
                 bank_profile.save()
                 
                 messages.success(request, '계좌정보가 수정되었습니다!')
-                return redirect('accounts:bank_settings', username=username)  
+                return redirect('accounts:bank_settings')  # username 제거
             except Exception as e:
                 messages.error(request, f'계좌 수정 중 오류가 발생했습니다: {str(e)}')
     else:
@@ -779,24 +764,19 @@ def bank_modify(request, username):
     return render(request, 'accounts/bank_registration.html', context)
 
 @login_required
-def bank_delete(request, username):
-    """등록된 계좌정보 삭제"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 계좌만 삭제할 수 있습니다.')
-        return redirect('accounts:mypage')
+def bank_delete(request):
+    """등록된 계좌정보 삭제 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     bank_profile = user_profile.get_bank_profile()
     if not bank_profile:
         messages.warning(request, '등록된 계좌가 없습니다.')
-        return redirect('accounts:bank_settings', username=username)  
+        return redirect('accounts:bank_settings')  # username 제거
     
     if request.method == 'POST':
         bank_profile.delete()
         messages.success(request, '계좌정보가 삭제되었습니다.')
-        return redirect('accounts:bank_settings', username=username)  
+        return redirect('accounts:bank_settings')  # username 제거
     
     context = {
         'user_profile': user_profile,
@@ -804,22 +784,17 @@ def bank_delete(request, username):
     }
     return render(request, 'accounts/bank_delete_confirm.html', context)
 
-
+# 🔥 주소 관련 함수들 - username 파라미터 제거
 @login_required
-def address_registration(request, username):
-    """🔥 수정: 주소 정보 등록 - 필수 필드 검증 강화"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 주소만 등록할 수 있습니다.')
-        return redirect('accounts:mypage')
+def address_registration(request):
+    """🔥 수정: 주소 정보 등록 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     # 이미 등록된 주소가 있는지 확인
     address_profile = user_profile.get_address_profile()
     if address_profile:
         messages.info(request, '이미 등록된 배송정보가 있습니다.')
-        return redirect('accounts:address_settings', username=username)  
+        return redirect('accounts:address_settings')  # username 제거
     
     if request.method == 'POST':
         form = AddressForm(request.POST)
@@ -836,7 +811,7 @@ def address_registration(request, username):
                     sigungu=form.cleaned_data['sigungu']
                 )
                 messages.success(request, '배송정보가 등록되었습니다!')
-                return redirect('accounts:address_settings', username=username) 
+                return redirect('accounts:address_settings')  # username 제거
             except Exception as e:
                 messages.error(request, f'배송정보 등록 중 오류가 발생했습니다: {str(e)}')
     else:
@@ -849,19 +824,14 @@ def address_registration(request, username):
     return render(request, 'accounts/address_registration.html', context)
 
 @login_required  
-def address_modify(request, username):
-    """등록된 주소정보 수정 - 핸드폰 번호 포함"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 주소만 수정할 수 있습니다.')
-        return redirect('accounts:mypage')
+def address_modify(request):
+    """등록된 주소정보 수정 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     address_profile = user_profile.get_address_profile()
     if not address_profile:
         messages.warning(request, '등록된 주소가 없습니다. 먼저 주소를 등록해주세요.')
-        return redirect('accounts:address_registration', username=username)
+        return redirect('accounts:address_registration')  # username 제거
     
     if request.method == 'POST':
         form = AddressForm(request.POST)
@@ -877,7 +847,7 @@ def address_modify(request, username):
                 address_profile.save()
                 
                 messages.success(request, '배송정보가 수정되었습니다!')
-                return redirect('accounts:address_settings', username=username)  
+                return redirect('accounts:address_settings')  # username 제거
             except Exception as e:
                 messages.error(request, f'배송정보 수정 중 오류가 발생했습니다: {str(e)}')
     else:
@@ -901,24 +871,19 @@ def address_modify(request, username):
     return render(request, 'accounts/address_registration.html', context)
 
 @login_required
-def address_delete(request, username):
-    """등록된 주소정보 삭제"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 주소만 삭제할 수 있습니다.')
-        return redirect('accounts:mypage')
+def address_delete(request):
+    """등록된 주소정보 삭제 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     address_profile = user_profile.get_address_profile()
     if not address_profile:
         messages.warning(request, '등록된 주소가 없습니다.')
-        return redirect('accounts:address_settings', username=username) 
+        return redirect('accounts:address_settings')  # username 제거
     
     if request.method == 'POST':
         address_profile.delete()
         messages.success(request, '배송정보가 삭제되었습니다.')
-        return redirect('accounts:address_settings', username=username) 
+        return redirect('accounts:address_settings')  # username 제거
     
     context = {
         'user_profile': user_profile,
@@ -926,6 +891,7 @@ def address_delete(request, username):
     }
     return render(request, 'accounts/address_delete_confirm.html', context)
 
+# 🔥 소셜 로그인 관련 함수들 (수정 없음 - 이미 올바름)
 @login_required
 def social_signup_complete(request):
     """🔥 수정: 소셜 로그인 후 username 설정 페이지 - SocialAccount 모델 사용"""
@@ -965,7 +931,7 @@ def social_signup_complete(request):
     
     return render(request, 'accounts/social_signup_complete.html', {'form': form})
 
-# 카카오 로그인
+# 카카오 로그인 (수정 없음 - 이미 올바름)
 def kakao_login(request):
     """카카오 로그인 페이지로 리다이렉트"""
     service = KakaoAuthService()
@@ -1052,7 +1018,7 @@ def kakao_logout(request):
     logout_url = service.get_logout_url()
     return redirect(logout_url)
 
-# 네이버 로그인
+# 네이버 로그인 (수정 없음 - 이미 올바름)
 def naver_login(request):
     """네이버 로그인 페이지로 리다이렉트"""
     service = NaverAuthService()
@@ -1143,7 +1109,7 @@ def naver_logout(request):
     request.session.flush()
     return redirect('/')
 
-# 구글 로그인
+# 구글 로그인 (수정 없음 - 이미 올바름)
 def google_login(request):
     """구글 로그인 페이지로 리다이렉트"""
     service = GoogleAuthService()
@@ -1238,7 +1204,7 @@ def google_logout(request):
     logout_url = service.get_logout_url()
     return redirect(logout_url)
 
-# 스마트 로그아웃 (기존 함수 개선)
+# 스마트 로그아웃 (수정 없음 - 이미 올바름)
 def smart_logout(request):
     """🔥 수정: 사용자 타입에 따라 적절한 로그아웃 방식 선택 - SocialAccount 모델 사용"""
     if not request.user.is_authenticated:
@@ -1258,15 +1224,11 @@ def smart_logout(request):
     # 소셜 계정이 아니면 일반 로그아웃
     return logout(request)
 
+# 🔥 설정 페이지들 - username 파라미터 제거
 @login_required
-def fandom_verification(request, username):
-    """팬덤 인증 페이지 (기존 upload_fandom_card 활용)"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
-        return redirect('accounts:mypage')
+def fandom_verification(request):
+    """팬덤 인증 페이지 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     # 찜한 아티스트와 그렇지 않은 아티스트 분리
     fandom_profile = user_profile.get_fandom_profile()
@@ -1291,14 +1253,9 @@ def fandom_verification(request, username):
 
 
 @login_required
-def bank_settings(request, username):
-    """계좌 설정 페이지 (기존 계좌 함수들 활용)"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
-        return redirect('accounts:mypage')
+def bank_settings(request):
+    """계좌 설정 페이지 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     # 기존 로직 재사용
     bank_profile = user_profile.get_bank_profile()
@@ -1311,14 +1268,9 @@ def bank_settings(request, username):
 
 
 @login_required
-def address_settings(request, username):
-    """주소 설정 페이지 (기존 주소 함수들 활용) - 메시지 업데이트"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
-        return redirect('accounts:mypage')
+def address_settings(request):
+    """주소 설정 페이지 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     # 기존 로직 재사용
     address_profile = user_profile.get_address_profile()
@@ -1330,14 +1282,9 @@ def address_settings(request, username):
     return render(request, 'accounts/address_settings.html', context)
 
 @login_required
-def account_info(request, username):
-    """계정 정보 페이지"""
-    user_profile = get_object_or_404(User, username=username)
-    
-    # 본인만 접근 가능
-    if request.user != user_profile:
-        messages.error(request, '본인의 정보만 확인할 수 있습니다.')
-        return redirect('accounts:mypage')
+def account_info(request):
+    """계정 정보 페이지 - username 파라미터 제거"""
+    user_profile = request.user  # 직접 사용
     
     context = {
         'user_profile': user_profile,
@@ -1345,7 +1292,7 @@ def account_info(request, username):
     return render(request, 'accounts/account_info.html', context)
 
 
-# 공통 신고 
+# 🔥 공통 신고 및 기타 함수들 (수정 없음 - 이미 올바름)
 @login_required
 @require_POST
 def report_post(request, app_name, category, post_id):
@@ -1642,4 +1589,3 @@ def banner_request_form(request):
             'success': False,
             'error': '배너 신청 폼을 불러올 수 없습니다.'
         })
-

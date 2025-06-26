@@ -56,7 +56,7 @@
                     <span class="mr-1"></span> 팬덤 인증 확인 중
                   </div>
                 {% else %}
-                  <a href="{% url 'accounts:fandom_verification' user_profile.username %}"
+                  <a href="{% url 'accounts:fandom_verification' %}"
                     class="inline-flex items-center px-2 py-1 bg-black text-white text-xs font-medium rounded-full hover:bg-gray-800 transition-colors">
                     <span class="mr-1"></span> 공식 팬덤 인증
                   </a>
@@ -67,7 +67,7 @@
           
           <!-- 액션 버튼들 -->
           <div class="flex sm:flex-col gap-2 w-full sm:w-auto sm:min-w-[140px] lg:min-w-[160px]">
-            <a href="{% url 'accounts:settings_main' user_profile.username %}" 
+            <a href="{% url 'accounts:settings_main' %}" 
                class="flex-1 sm:flex-initial flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm font-medium rounded-lg transition-colors">
                설정
             </a>
