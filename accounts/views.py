@@ -178,6 +178,7 @@ def activate(request, uidb64, token):
 
     if user and default_token_generator.check_token(user, token):
         user.is_active = True
+        user.is_profile_completed = True
         user.save()
         
         # 이메일 인증 완료 = 회원가입 완료이므로 바로 로그인 처리 후 아티스트 페이지로
