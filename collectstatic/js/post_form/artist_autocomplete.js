@@ -23,6 +23,50 @@ export function setupArtistAutocomplete(ajaxBaseUrl) {
     selectBox.dispatchEvent(new Event("change"));
   }
 
+  // 멤버 전체 선택/해제 기능
+  function setupSelectAllMembers() {
+    const selectAllCheckbox = document.getElementById('select-all-members');
+    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+    
+    if (selectAllCheckbox && memberCheckboxes.length > 0) {
+      // 전체 선택 체크박스 이벤트
+      selectAllCheckbox.addEventListener('change', function() {
+        memberCheckboxes.forEach(checkbox => {
+          checkbox.checked = this.checked;
+        });
+      });
+      
+      // 개별 체크박스 이벤트 (전체 선택 상태 업데이트)
+      memberCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const checkedCount = document.querySelectorAll('.member-checkbox:checked').length;
+          const totalCount = memberCheckboxes.length;
+          
+          if (checkedCount === 0) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = false;
+          } else if (checkedCount === totalCount) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = true;
+          } else {
+            selectAllCheckbox.indeterminate = true;
+            selectAllCheckbox.checked = false;
+          }
+        });
+      });
+      
+      // 초기 상태 설정
+      const checkedCount = document.querySelectorAll('.member-checkbox:checked').length;
+      const totalCount = memberCheckboxes.length;
+      
+      if (checkedCount === totalCount && totalCount > 0) {
+        selectAllCheckbox.checked = true;
+      } else if (checkedCount > 0) {
+        selectAllCheckbox.indeterminate = true;
+      }
+    }
+  }
+
   if (searchInput) {
     searchInput.addEventListener("input", function () {
       const query = this.value.trim();
@@ -76,6 +120,18 @@ export function setupArtistAutocomplete(ajaxBaseUrl) {
       if (!resultBox.contains(e.target) && e.target !== searchInput) {
         resultBox.classList.add("hidden");
       }
+    });
+  }
+
+  // 페이지 로드 시 전체 선택 기능 설정
+  setupSelectAllMembers();
+  
+  // 아티스트 변경 시 새로운 멤버 목록에 대해 전체 선택 기능 재설정
+  const artistSelect = document.getElementById('artist');
+  if (artistSelect) {
+    artistSelect.addEventListener('change', function() {
+      // 멤버 목록이 업데이트된 후 전체 선택 기능 재설정
+      setTimeout(setupSelectAllMembers, 100);
     });
   }
 }
