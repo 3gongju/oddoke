@@ -1509,10 +1509,10 @@ function showBannerModal(formHtml) {
     existingModal.remove();
   }
   
-  // 모달 HTML 생성
+  // 모달 HTML 생성 - 크기 최적화 (위아래 여백 확보)
   const modalHTML = `
-    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.5);">
-      <div class="transform scale-95 opacity-0 transition-all duration-300" id="bannerModalContent">
+    <div id="bannerRequestModal" class="fixed inset-0 z-[9999] flex items-center justify-center py-8 px-4" style="background: rgba(0,0,0,0.5);">
+      <div class="transform scale-95 opacity-0 transition-all duration-300 w-full max-w-md mx-auto" id="bannerModalContent">
         ${formHtml}
       </div>
     </div>
@@ -1529,6 +1529,56 @@ function showBannerModal(formHtml) {
       modalContent.classList.add('scale-100', 'opacity-100');
     }
   }, 10);
+  
+  // 폼 제출 이벤트 바인딩
+  setTimeout(() => {
+    const form = document.getElementById('bannerRequestForm');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        // 필수 필드 확인
+        const artistName = formData.get('artist_name');
+        const bannerImage = formData.get('banner_image');
+        
+        if (!artistName || !bannerImage || bannerImage.size === 0) {
+          showToast('아티스트명과 배너 이미지를 모두 입력해주세요.', 'error');
+          return;
+        }
+        
+        // 서버로 전송
+        fetch('/accounts/banner-request/', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            showToast(data.message, 'success');
+            closeBannerModal();
+            // 페이지 새로고침해서 업데이트된 포인트 표시
+            setTimeout(() => location.reload(), 1500);
+          } else {
+            showToast(data.error, 'error');
+          }
+        })
+        .catch(error => {
+          console.error('배너 신청 오류:', error);
+          showToast('배너 신청 중 오류가 발생했습니다.', 'error');
+        });
+      });
+    }
+  }, 100);
   
   // ESC 키로 모달 닫기
   const handleEscape = function(e) {
