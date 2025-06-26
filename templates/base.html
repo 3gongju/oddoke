@@ -22,6 +22,29 @@
     font-weight: normal;
     font-style: normal;
   }
+
+  /* 네비바 정렬 강화 */
+nav .max-w-7xl > .flex {
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 56px;
+}
+
+@media (min-width: 640px) {
+  nav .max-w-7xl > .flex {
+    min-height: 64px;
+  }
+}
+
+/* 네비바 왼쪽/오른쪽 영역 고정 */
+nav .flex.items-center:first-child {
+  flex: 0 0 auto;
+}
+
+nav .flex.items-center:last-child {
+  flex: 0 0 auto;
+  align-self: center;
+}
   </style>
   
   <!-- Tailwind CSS with Custom Config -->
