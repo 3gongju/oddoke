@@ -1,6 +1,6 @@
 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
   {% for cafe in cafes %}
-    {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe today=today show_admin_status=show_admin_status show_status_badge=show_status_badge show_type_badge=show_type_badge show_favorite_btn=show_favorite_btn show_preview=show_preview %}
+    {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe today=today show_admin_status=show_admin_status show_status_badge=show_status_badge show_type_badge=show_type_badge show_favorite_btn=show_favorite_btn show_preview=show_preview user_favorites=user_favorites %}
   {% empty %}
     <div class="col-span-full">
       {% include 'ddoksang/components/_empty_message.html' with message=empty_message|default:"등록된 카페가 없습니다." %}

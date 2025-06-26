@@ -1,26 +1,24 @@
 {% comment %}
 =====================================
-_cafe_card.html - 최적화된 버전
+_cafe_card.html - 통합 최적화 버전
 =====================================
 특징:
+- 모든 상태(pending/approved/rejected)에서 일관된 UI
 - 종료된 카페: 블러/그림자 효과 적용
 - 포스터 이미지 비율 최적화 (3:4)
-- 이중 레이어 이미지 처리
-- 새로운 날짜 로직 적용 (시작 D-X / 종료 D-X)
-- 통일된 디자인 (pink 기준 색감)
-- 상태 뱃지 항상 표시
-- 이미지 없을 때 로고 표시
-- Heroicons 적용
-- 빨간색 하트 아이콘
+- 통일된 버튼 로직
+- 반응형 디자인
+- 찜하기 기능 완전 지원
 {% endcomment %}
 
 {% load static %}
 {% load filters %}
 
 {% with cafe|cafe_status as cafe_state %}
-<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-300 overflow-hidden {% if cafe_state == 'ended' %}ended-cafe{% endif %} cursor-pointer"
+<div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-300 overflow-hidden 
+     {% if cafe_state == 'ended' %}ended-cafe{% endif %} cursor-pointer"
      data-cafe-id="{{ cafe.id }}"
-     onclick="location.href='{% url 'ddoksang:detail' cafe.id %}'"
+     onclick="location.href='{% if cafe.status == 'approved' %}{% url 'ddoksang:detail' cafe.id %}{% elif cafe.status == 'pending' and show_preview %}{% url 'ddoksang:user_preview' cafe.id %}{% else %}#{% endif %}'"
      role="button"
      tabindex="0">
   
@@ -49,6 +47,7 @@ _cafe_card.html - 최적화된 버전
         </div>
       {% endif %}
       
+      <!-- 커스텀 뱃지 -->
       <div class="absolute top-3 left-3 flex space-x-2 z-30">
         {% if custom_badge %}
           <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ custom_badge.class }}">
@@ -77,7 +76,8 @@ _cafe_card.html - 최적화된 버전
   <!-- 카페 정보 -->
   <div class="px-6 py-5 {% if cafe_state == 'ended' %}opacity-75{% endif %}">
     <div class="flex justify-between items-start mb-3">
-      <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-2 flex-1 min-w-0">
+        <!-- 관리자 상태 뱃지 (show_admin_status가 true일 때만) -->
         {% if show_admin_status %}
           {% if cafe.status == 'pending' %}
             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
@@ -103,26 +103,29 @@ _cafe_card.html - 최적화된 버전
           {% endif %}
         {% endif %}
 
-        <!-- 상태 뱃지 (항상 표시) - pink 기준 색감으로 통일 -->
-        {% if cafe_state == 'ongoing' %}
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-400 text-white">운영중</span>
-        {% elif cafe_state == 'upcoming' %}
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-300 text-white">예정</span>
-        {% else %}
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-200 text-pink-700">종료</span>
+        <!-- 진행 상태 뱃지 (approved 상태에서만 표시, 또는 show_status_badge가 true일 때) -->
+        {% if cafe.status == 'approved' or show_status_badge %}
+          {% if cafe_state == 'ongoing' %}
+            <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-400 text-white">운영중</span>
+          {% elif cafe_state == 'upcoming' %}
+            <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-300 text-white">예정</span>
+          {% elif cafe_state == 'ended' %}
+            <span class="inline-flex px-2.5 py-1 rounded-full text-xs bg-pink-200 text-pink-700">종료</span>
+          {% endif %}
         {% endif %}
 
+        <!-- 카페 타입 뱃지 -->
         {% if show_type_badge %}
           <span class="text-xs text-gray-500">{{ cafe.get_cafe_type_display }}</span>
         {% endif %}
       </div>
 
-      <!-- 찜하기 버튼 -->
+      <!-- 찜하기 버튼 (인증된 사용자, approved 상태에서만) -->
       {% if show_favorite_btn and user.is_authenticated and cafe.status == 'approved' %}
         <button 
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
-          class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none heart-btn-large"
+          class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none heart-btn-large flex-shrink-0"
           title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
           onclick="event.stopPropagation();">
           {% if cafe.id in user_favorites %}
@@ -146,6 +149,7 @@ _cafe_card.html - 최적화된 버전
       {% endif %}
     </div>
 
+    <!-- 제목 영역 -->
     <div class="mb-2">
       {% if cafe.member %}
         <h3 class="font-semibold text-lg text-gray-900">
@@ -159,6 +163,7 @@ _cafe_card.html - 최적화된 버전
 
     <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium">{{ cafe.cafe_name }}</h4>
 
+    <!-- 위치 정보 -->
     <div class="flex items-center text-sm text-gray-600 mb-2">
       <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -167,7 +172,7 @@ _cafe_card.html - 최적화된 버전
       <span class="truncate">{{ cafe.place_name|default:cafe.address|truncatechars:35 }}</span>
     </div>
 
-    <!-- 날짜 계산 로직 적용 - 모바일에서는 D-day 뱃지 숨김 -->
+    <!-- 날짜 정보 -->
     <div class="flex items-center text-sm text-gray-600 mb-3">
       <div class="flex items-center">
         <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,14 +180,17 @@ _cafe_card.html - 최적화된 버전
         </svg>
         <span class="truncate">{{ cafe.start_date|date:"m.d" }} - {{ cafe.end_date|date:"m.d" }}</span>
       </div>
-      <!-- D-day 뱃지: sm(640px) 이상에서만 표시 -->
-      {% if cafe_state == 'upcoming' and cafe.days_until_start > 0 and cafe.days_until_start <= 7 %}
-        <span class="hidden sm:inline-flex text-pink-600 font text-xs bg-pink-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">시작 D-{{ cafe.days_until_start }}</span>
-      {% elif cafe_state == 'ongoing' and cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
-        <span class="hidden sm:inline-flex text-pink-700 font text-xs bg-pink-100 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">종료 D-{{ cafe.days_remaining }}</span>
+      <!-- D-day 뱃지: sm(640px) 이상에서만 표시, approved 상태에서만 -->
+      {% if cafe.status == 'approved' %}
+        {% if cafe_state == 'upcoming' and cafe.days_until_start > 0 and cafe.days_until_start <= 7 %}
+          <span class="hidden sm:inline-flex text-pink-600 font text-xs bg-pink-50 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">시작 D-{{ cafe.days_until_start }}</span>
+        {% elif cafe_state == 'ongoing' and cafe.days_remaining > 0 and cafe.days_remaining <= 7 %}
+          <span class="hidden sm:inline-flex text-pink-700 font text-xs bg-pink-100 px-2 py-0.5 rounded-full flex-shrink-0 ml-3">종료 D-{{ cafe.days_remaining }}</span>
+        {% endif %}
       {% endif %}
     </div>
 
+    <!-- 혜택 정보 -->
     {% if cafe.special_benefits and show_benefits %}
       <div class="mb-3">
         <div class="flex flex-wrap gap-1">
@@ -198,6 +206,7 @@ _cafe_card.html - 최적화된 버전
       </div>
     {% endif %}
 
+    <!-- 버튼 영역 -->
     <div class="space-y-2">
       <div class="flex space-x-2">
         {% if not hide_detail_button %}
@@ -213,22 +222,29 @@ _cafe_card.html - 최적화된 버전
               onclick="event.stopPropagation();">
               미리보기
             </a>
-          {% elif cafe.status == 'rejected' %>
+          {% elif cafe.status == 'pending' %}
+            <div class="flex-1 bg-amber-100 text-amber-700 py-2.5 text-center rounded-lg text-sm font-medium cursor-default">
+              승인 대기 중
+            </div>
+          {% elif cafe.status == 'rejected' %}
             <div class="flex-1 bg-gray-300 text-gray-600 py-2.5 text-center rounded-lg text-sm font-medium cursor-not-allowed">
               거절됨
             </div>
           {% endif %}
         {% endif %}
 
+        <!-- 추가 액션 버튼들 -->
         {% for action in extra_actions %}
           <a href="{{ action.url }}" 
-            class="{{ action.class|default:'px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}">
+            class="{{ action.class|default:'px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}"
+            onclick="event.stopPropagation();">
             {{ action.text }}
           </a>
         {% endfor %}
       </div>
     </div>
 
+    <!-- 메타 정보 -->
     {% if show_meta_info %}
       <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
         <div class="flex space-x-3">
@@ -291,7 +307,7 @@ _cafe_card.html - 최적화된 버전
   transform: translateY(-2px);
 }
 
-.ended-cafe .p-4 {
+.ended-cafe .px-6 {
   background: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.05) 100%);
 }
 
@@ -300,7 +316,7 @@ _cafe_card.html - 최적화된 버전
   transform: translateY(-2px);
 }
 
-.ended-cafe [data-cafe-id]:hover {
+.ended-cafe[data-cafe-id]:hover {
   transform: translateY(-4px);
 }
 
@@ -311,5 +327,36 @@ _cafe_card.html - 최적화된 버전
 
 [data-cafe-id]:hover .poster-aspect img {
   transform: scale(1.02);
+}
+
+/* 찜하기 버튼 스타일 */
+[data-favorite-btn] {
+  z-index: 10;
+  position: relative;
+}
+
+[data-favorite-btn]:hover {
+  transform: scale(1.25);
+}
+
+/* 클릭 영역 무효화 (상태별) */
+[data-cafe-id].cursor-default {
+  cursor: default !important;
+  pointer-events: none;
+}
+
+[data-cafe-id][onclick="#"] {
+  cursor: default !important;
+  pointer-events: none;
+}
+
+/* 승인대기/거절 상태 스타일 */
+.cursor-default .poster-aspect {
+  opacity: 0.8;
+}
+
+.cursor-not-allowed .poster-aspect {
+  opacity: 0.6;
+  filter: grayscale(30%);
 }
 </style>
