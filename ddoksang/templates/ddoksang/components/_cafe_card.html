@@ -164,30 +164,33 @@ _cafe_card.html - 최적화된 버전
 
     <div class="space-y-2">
       <div class="flex space-x-2">
-        {% if cafe.status == 'approved' %}
-          <a href="{% url 'ddoksang:detail' cafe.id %}" 
-             class="flex-1 bg-gray-900 text-white py-2.5 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium {% if cafe_state == 'ended' %}opacity-75{% endif %}">
-            자세히 보기
-          </a>
-        {% elif cafe.status == 'pending' and show_preview %}
-          <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
-             class="flex-1 bg-orange-600 text-white py-2.5 text-center rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium">
-            미리보기
-          </a>
-        {% elif cafe.status == 'rejected' %}
-          <div class="flex-1 bg-gray-300 text-gray-600 py-2.5 text-center rounded-lg text-sm font-medium cursor-not-allowed">
-            거절됨
-          </div>
+        {% if not hide_detail_button %}
+          {% if cafe.status == 'approved' %}
+            <a href="{% url 'ddoksang:detail' cafe.id %}" 
+              class="flex-1 bg-gray-900 text-white py-2.5 text-center rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium {% if cafe_state == 'ended' %}opacity-75{% endif %}">
+              자세히 보기
+            </a>
+          {% elif cafe.status == 'pending' and show_preview %}
+            <a href="{% url 'ddoksang:user_preview' cafe.id %}" 
+              class="flex-1 bg-orange-600 text-white py-2.5 text-center rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium">
+              미리보기
+            </a>
+          {% elif cafe.status == 'rejected' %}
+            <div class="flex-1 bg-gray-300 text-gray-600 py-2.5 text-center rounded-lg text-sm font-medium cursor-not-allowed">
+              거절됨
+            </div>
+          {% endif %}
         {% endif %}
 
         {% for action in extra_actions %}
           <a href="{{ action.url }}" 
-             class="{{ action.class|default:'px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}">
+            class="{{ action.class|default:'px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm' }}">
             {{ action.text }}
           </a>
         {% endfor %}
       </div>
     </div>
+
 
     {% if show_meta_info %}
       <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">

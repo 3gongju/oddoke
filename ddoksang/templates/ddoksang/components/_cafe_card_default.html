@@ -102,10 +102,26 @@ _cafe_card_default.html - 향상된 버전
           data-favorite-btn 
           data-cafe-id="{{ cafe.id }}" 
           class="text-lg hover:scale-125 transition-transform duration-200 focus:outline-none heart-btn-large"
-          title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}"
-          style="color: {% if cafe.id in user_favorites %}#ef4444{% else %}#6b7280{% endif %};">
-          <span>{% if cafe.id in user_favorites %}♥{% else %}♡{% endif %}</span>
+          title="{% if cafe.id in user_favorites %}찜 해제{% else %}찜하기{% endif %}">
+          {% if cafe.id in user_favorites %}
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12.001 4.529c2.349-2.342 6.151-2.354 8.502-.022
+                      2.357 2.339 2.365 6.133.01 8.482l-7.104 7.066a1.5 1.5 0
+                      01-2.116 0l-7.104-7.066c-2.355-2.349-2.348-6.143.01-8.482
+                      2.351-2.332 6.153-2.32 8.502.022z"/>
+            </svg>
+          {% else %}
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12.001 4.529c2.349-2.342 6.151-2.354 8.502-.022
+                      2.357 2.339 2.365 6.133.01 8.482l-7.104 7.066a1.5 1.5 0
+                      01-2.116 0l-7.104-7.066c-2.355-2.349-2.348-6.143.01-8.482
+                      2.351-2.332 6.153-2.32 8.502.022z"/>
+            </svg>
+          {% endif %}
         </button>
+
       {% endif %}
     </div>
 
