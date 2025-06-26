@@ -68,3 +68,5 @@ class KakaoAuthService(BaseSocialAuthService):
             f"?client_id={self.client_id}"
             f"&logout_redirect_uri={logout_redirect_uri}"
         )
+
+    
