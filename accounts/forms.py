@@ -15,7 +15,7 @@ class CustomPasswordResetForm(PasswordResetForm):
         label="이메일",
         max_length=254,
         widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '가입 시 사용한 이메일을 입력하세요',
             'autocomplete': 'email'
         })
@@ -35,7 +35,7 @@ class CustomSetPasswordForm(SetPasswordForm):
         label="새 비밀번호",
         strip=False,
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '새로운 비밀번호를 입력하세요',
             'autocomplete': 'new-password'
         }),
@@ -45,7 +45,7 @@ class CustomSetPasswordForm(SetPasswordForm):
         label="새 비밀번호 확인",
         strip=False,
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '새로운 비밀번호를 다시 입력하세요',
             'autocomplete': 'new-password'
         })
@@ -55,7 +55,7 @@ class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
         widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '이메일을 입력하세요'
         })
     )
@@ -63,21 +63,21 @@ class CustomUserCreationForm(UserCreationForm):
     username = forms.CharField(
         max_length=20,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '다른 사용자들에게 보여질 닉네임을 입력하세요'
         })
     )
     
     password1 = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '비밀번호를 입력하세요'
         })
     )
     
     password2 = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '비밀번호를 다시 입력하세요'
         })
     )
@@ -169,14 +169,14 @@ class EmailAuthenticationForm(forms.Form):
     email = forms.EmailField(
         label="이메일",
         widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-500',
             'placeholder': '이메일을 입력하세요'
         })
     )
     password = forms.CharField(
         label="비밀번호",
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500',
+            'class': 'w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-500',
             'placeholder': '비밀번호를 입력하세요'
         })
     )
@@ -200,7 +200,7 @@ class SocialSignupCompleteForm(forms.ModelForm):
         max_length=20,
         label="닉네임",
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '다른 사용자들에게 보여질 닉네임을 입력하세요',
             'required': True
         }),
@@ -355,7 +355,7 @@ class BankForm(forms.ModelForm):
     bank_code = forms.ChoiceField(
         choices=BANK_CHOICES,
         widget=forms.Select(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'required': True
         }),
         label="은행 선택"
@@ -364,7 +364,7 @@ class BankForm(forms.ModelForm):
     bank_number = forms.CharField(
         max_length=20,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '계좌번호를 입력하세요 (하이픈 제외)',
             'required': True
         }),
@@ -374,7 +374,7 @@ class BankForm(forms.ModelForm):
     bank_holder = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '예금주명을 입력하세요',
             'required': True
         }),
@@ -448,7 +448,7 @@ class AddressForm(forms.ModelForm):
     postal_code = forms.CharField(
         max_length=10,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '우편번호',
             'readonly': True  # 검색으로만 입력 가능
         }),
@@ -458,7 +458,7 @@ class AddressForm(forms.ModelForm):
     road_address = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '도로명주소',
             'readonly': True  # 검색으로만 입력 가능
         }),
@@ -469,7 +469,7 @@ class AddressForm(forms.ModelForm):
         max_length=200,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '상세주소를 입력하세요 (동, 호수 등)',
         }),
         label="상세주소"
@@ -478,7 +478,7 @@ class AddressForm(forms.ModelForm):
     phone_number = forms.CharField(
         max_length=15,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'class': 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500',
             'placeholder': '010-1234-5678',
             'required': True
         }),

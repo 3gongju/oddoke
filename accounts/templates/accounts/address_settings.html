@@ -35,11 +35,11 @@
                 <div class="flex items-center space-x-4">
                   
                   <div>
-                    <h4 class="font-bold text-green-800 text-lg">주소 등록 완료</h4>
-                    <p class="text-green-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
+                    <h4 class="font-bold text-pink-800 text-lg">주소 등록 완료</h4>
+                    <p class="text-pink-600 text-sm">거래에서 배송 주소를 공유할 수 있습니다</p>
                   </div>
                 </div>
-                <span class="px-4 py-2 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
+                <span class="px-4 py-2 bg-pink-100 text-pink-800 text-sm font-semibold rounded-full">
                   등록완료
                 </span>
               </div>
@@ -147,7 +147,7 @@
                 </div>
                 <div class="ml-4">
                   <a href="{% url 'accounts:address_modify' %}"
-                     class="px-3 py-1 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition">
+                     class="px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition">
                     수정
                   </a>
                 </div>
@@ -163,7 +163,7 @@
                 </div>
                 <div class="ml-4">
                   <a href="{% url 'accounts:address_delete' %}"
-                     class="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                    class="px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition">
                     삭제
                   </a>
                 </div>
@@ -225,7 +225,7 @@
         <div class="mb-6 sm:mb-8">
           <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 bg-white">
             <a href="{% url 'accounts:address_registration' %}"
-               class="w-full block px-4 py-3 sm:px-6 sm:py-4 bg-black hover:bg-gray-800 text-white font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
+               class="w-full block px-4 py-3 sm:px-6 sm:py-4 bg-pink-500 hover:bg-pink-600 text-white font-medium rounded-lg transition-colors text-center text-sm sm:text-base">
               주소 등록하기
             </a>
           </div>
@@ -244,18 +244,18 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- 개인정보 보호 -->
               <div>
-                <h4 class="font-bold text-yellow-800 mb-3 text-base sm:text-lg">개인정보 보호</h4>
+                <h4 class="font-bold text-pink-800 mb-3 text-base sm:text-lg">개인정보 보호</h4>
                 <ul class="text-sm sm:text-base text-gray-700 space-y-2">
                   <li class="flex items-start space-x-2">
-                    <span class="text-yellow-500 mt-1">•</span>
+                    <span class="text-pink-500 mt-1">•</span>
                     <span>주소정보는 암호화되어 저장됩니다</span>
                   </li>
                   <li class="flex items-start space-x-2">
-                    <span class="text-yellow-500 mt-1">•</span>
+                    <span class="text-pink-500 mt-1">•</span>
                     <span>주소는 마스킹 처리됩니다</span>
                   </li>
                   <li class="flex items-start space-x-2">
-                    <span class="text-yellow-500 mt-1">•</span>
+                    <span class="text-pink-500 mt-1">•</span>
                     <span>상세 주소는 거래 확정 후 공개</span>
                   </li>
                 </ul>
@@ -263,18 +263,18 @@
               
               <!-- 안전한 거래 -->
               <div>
-                <h4 class="font-bold text-green-800 mb-3 text-base sm:text-lg">안전한 거래</h4>
+                <h4 class="font-bold text-pink-800 mb-3 text-base sm:text-lg">안전한 거래</h4>
                 <ul class="text-sm sm:text-base text-gray-700 space-y-2">
                   <li class="flex items-start space-x-2">
-                    <span class="text-green-500 mt-1">•</span>
+                    <span class="text-pink-500 mt-1">•</span>
                     <span>거래 완료 후 언제든 삭제 가능</span>
                   </li>
                   <li class="flex items-start space-x-2">
-                    <span class="text-green-500 mt-1">•</span>
+                    <span class="text-pink-500 mt-1">•</span>
                     <span>주소 정보는 거래 상대방에게만 공개</span>
                   </li>
                   <li class="flex items-start space-x-2">
-                    <span class="text-green-500 mt-1">•</span>
+                    <span class="text-pink-500 mt-1">•</span>
                     <span>24시간 고객센터 지원</span>
                   </li>
                 </ul>
@@ -348,24 +348,24 @@ body {
 }
 
 /* 버튼 스타일 */
-.bg-green-50:hover {
-  background-color: #dcfce7;
+.bg-pink-50:hover {
+  background-color: #fdf2f8;
 }
 
-.bg-red-50:hover {
-  background-color: #fef2f2;
+.bg-gray-50:hover {
+  background-color: #f9fafb;
 }
 
-.bg-green-100 {
-  background-color: #dcfce7;
+.bg-pink-500:hover {
+  background-color: #ec4899;
 }
 
-.bg-red-100 {
-  background-color: #fecaca;
+.bg-pink-600:hover {
+  background-color: #db2777;
 }
 
-.bg-black:hover {
-  background-color: #374151;
+.bg-gray-100 {
+  background-color: #f3f4f6;
 }
 
 /* 그리드 레이아웃 조정 */
@@ -375,42 +375,38 @@ body {
   }
 }
 
-/* 텍스트 색상 */
-.text-green-600 {
-  color: #059669;
+/* 핑크 테마 색상 */
+.text-pink-600 {
+  color: #db2777;
 }
 
-.text-green-800 {
-  color: #065f46;
+.text-pink-800 {
+  color: #9d174d;
 }
 
-.text-yellow-800 {
-  color: #92400e;
+.text-pink-500 {
+  color: #ec4899;
 }
 
-.text-yellow-500 {
-  color: #f59e0b;
+.bg-pink-100 {
+  background-color: #fce7f3;
 }
 
-.text-green-500 {
-  color: #10b981;
+.bg-pink-50 {
+  background-color: #fdf2f8;
 }
 
-.text-red-600 {
-  color: #dc2626;
+.bg-pink-500 {
+  background-color: #ec4899;
 }
 
-/* 배경 색상 */
-.bg-green-100 {
-  background-color: #dcfce7;
+.bg-pink-600 {
+  background-color: #db2777;
 }
 
-.bg-green-50 {
-  background-color: #f0fdf4;
-}
-
-.bg-red-50 {
-  background-color: #fef2f2;
+/* 그레이 색상 */
+.text-gray-600 {
+  color: #4b5563;
 }
 
 .bg-gray-50 {

@@ -67,6 +67,15 @@ export function setupArtistAutocomplete(ajaxBaseUrl) {
     }
   }
 
+  // ✅ DOM이 완전히 준비된 후 전체 선택 기능 초기화
+  function initializeSelectAll() {
+    // requestAnimationFrame으로 브라우저 렌더링 완료 후 실행
+    requestAnimationFrame(() => {
+      // 추가로 50ms 지연하여 CSS 적용 완료 보장
+      setTimeout(setupSelectAllMembers, 50);
+    });
+  }
+
   if (searchInput) {
     searchInput.addEventListener("input", function () {
       const query = this.value.trim();
@@ -123,15 +132,17 @@ export function setupArtistAutocomplete(ajaxBaseUrl) {
     });
   }
 
-  // 페이지 로드 시 전체 선택 기능 설정
-  setupSelectAllMembers();
+  // ✅ 페이지 로드 시 전체 선택 기능 설정 (DOM 준비 완료 후)
+  initializeSelectAll();
   
   // 아티스트 변경 시 새로운 멤버 목록에 대해 전체 선택 기능 재설정
   const artistSelect = document.getElementById('artist');
   if (artistSelect) {
     artistSelect.addEventListener('change', function() {
-      // 멤버 목록이 업데이트된 후 전체 선택 기능 재설정
-      setTimeout(setupSelectAllMembers, 100);
+      // ✅ 동일한 지연 처리 방식 적용
+      requestAnimationFrame(() => {
+        setTimeout(setupSelectAllMembers, 100);
+      });
     });
   }
 }

@@ -9,8 +9,8 @@
     
     <!-- 이미지 입력 -->
     <div>
-      <label for="{{ form.profile_image.id_for_label }}" class="block text-sm font-medium text-gray-700">이미지 업로드</label>
-      {{ form.profile_image }}
+      <label for="{{ form.profile_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">이미지 업로드</label>
+      <input type="file" name="profile_image" accept="image/*" id="id_profile_image" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100">
       {% if form.profile_image.errors %}
         <p class="text-red-500 text-sm">{{ form.profile_image.errors.0 }}</p>
       {% endif %}
@@ -21,7 +21,7 @@
       <img id="image-preview" src="#" alt="미리보기" class="hidden max-h-64 rounded border" />
     </div>
 
-    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">변경하기</button>
+    <button type="submit" class="bg-pink-500 text-white px-4 py-2 rounded">변경하기</button>
   </form>
 </div>
 

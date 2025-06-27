@@ -360,26 +360,44 @@
     opacity: 1;
   }
 
-  /* Follow List Styles */
+ /* Follow List Styles */
+.follow-list-item {
+  @apply flex items-center p-3 sm:p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200;
+}
+
+.user-info {
+  @apply flex items-center gap-3 w-full;
+  align-items: center !important; /* 강제로 중앙 정렬 */
+}
+
+.user-info > a {
+  display: flex !important; /* 프로필 이미지 링크를 flex로 */
+  align-items: center; /* 프로필 이미지 중앙 정렬 */
+}
+
+.user-name {
+  @apply font-semibold text-black text-base sm:text-lg font-body;
+  display: flex !important; /* 닉네임 링크를 flex로 */
+  align-items: center !important; /* 닉네임 중앙 정렬 */
+  line-height: 1 !important; /* 라인 높이 조정 */
+  margin: 0 !important; /* 마진 제거 */
+  padding: 0 !important; /* 패딩 제거 */
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
   .follow-list-item {
-    @apply flex items-center justify-between p-4 hover:bg-cream-light rounded-2xl transition-all duration-200;
+    @apply p-3;
   }
-
+  
   .user-info {
-    @apply flex items-center gap-3;
+    @apply gap-2;
   }
-
-  .user-avatar {
-    @apply w-12 h-12 bg-cream-accent rounded-full flex items-center justify-center text-black font-bold text-lg shadow-sm;
-  }
-
+  
   .user-name {
-    @apply font-semibold text-black text-lg font-body;
+    @apply text-sm;
   }
-
-  .view-profile {
-    @apply text-cream-dark hover:text-black font-semibold text-sm px-4 py-2 bg-cream-light rounded-lg hover:bg-cream-accent transition-all duration-200 font-body;
-  }
+}
 
   /* Animations */
   @keyframes fadeInUp {
@@ -473,30 +491,37 @@
   }
 
   function displayFollowList(users) {
-    followModalList.innerHTML = "";
-    
-    if (users.length === 0) {
-      modalEmpty.classList.remove("hidden");
-      return;
-    }
-    
-    followModalList.classList.remove("hidden");
-    
-    users.forEach(user => {
-      const li = document.createElement('li');
-      li.className = 'follow-list-item';
-      li.innerHTML = `
-        <div class="user-info">
-          <div class="user-avatar">
-            ${getInitials(user.username)}
-          </div>
-          <span class="user-name">${user.username}</span>
-        </div>
-        <a href="/accounts/profile/${user.username}/" class="view-profile">프로필 보기</a>
-      `;
-      followModalList.appendChild(li);
-    });
+  followModalList.innerHTML = "";
+  
+  if (users.length === 0) {
+    modalEmpty.classList.remove("hidden");
+    return;
   }
+  
+  followModalList.classList.remove("hidden");
+  
+  users.forEach(user => {
+    const li = document.createElement('li');
+    li.className = 'follow-list-item';
+    
+    // 전체를 하나의 링크로 만들기
+    li.innerHTML = `
+      <a href="/accounts/profile/${user.username}/" class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-all duration-200 no-underline">
+        ${user.profile_image_url ? 
+          `<img src="${user.profile_image_url}" 
+               alt="${user.username}의 프로필" 
+               class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0">` :
+          `<div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-gray-200 flex-shrink-0">
+             ${getInitials(user.username)}
+           </div>`
+        }
+        <span class="text-gray-600 text-base sm:text-lg font-body">${user.username}</span>
+      </a>
+    `;
+    
+    followModalList.appendChild(li);
+  });
+}
 
   function showModalError() {
     followModalList.innerHTML = `
