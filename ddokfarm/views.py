@@ -1065,7 +1065,7 @@ def post_edit(request, category, post_id):
 
     return render(request, 'ddokfarm/edit.html', context)
 
-# 게시글 삭제 (기존과 동일)
+# 게시글 삭제
 @login_required
 @require_POST  # ✅ 이 데코레이터 제거하여 GET/POST 모두 허용
 def post_delete(request, category, post_id):
