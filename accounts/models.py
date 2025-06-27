@@ -231,19 +231,6 @@ class User(AbstractUser):
             """신뢰덕 점수 프로퍼티"""
             return self.calculate_trust_score()
 
-    @property
-    def trust_score_level(self):
-            """신뢰덕 점수 레벨 (색상 구분용)"""
-            score = self.trust_score
-            if score >= 80:
-                return 'excellent'  # 초록색
-            elif score >= 60:
-                return 'good'      # 파란색  
-            elif score >= 40:
-                return 'average'   # 노란색
-            else:
-                return 'poor'      # 빨간색
-
 
 class SocialAccount(models.Model):
     """소셜 로그인 계정 정보"""

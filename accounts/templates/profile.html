@@ -84,14 +84,13 @@
 
           <!-- Action Button -->
           <a href="{% url 'accounts:review_home' user_profile.username %}" 
-            class="inline-flex items-center px-6 py-3 font-semibold rounded-full transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl font-body trust-score-btn trust-score-{{ user_profile.trust_score_level }}">
+            class="inline-flex items-center px-6 py-3 bg-pink-400 hover:bg-pink-500 text-white font-semibold rounded-full transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl font-body">
             
             <!-- 신뢰도 아이콘 -->
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             
-            <!-- 신뢰덕 점수 표시 -->
             신뢰덕 {{ user_profile.trust_score }}점
           </a>
         </div>
@@ -438,78 +437,6 @@
 
 .trust-score-btn:hover::before {
   left: 100%;
-}
-
-/* 점수별 색상 스타일 */
-.trust-score-excellent {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-}
-
-.trust-score-excellent:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-}
-
-.trust-score-good {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-}
-
-.trust-score-good:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-}
-
-.trust-score-average {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-}
-
-.trust-score-average:hover {
-  background: linear-gradient(135deg, #d97706, #b45309);
-}
-
-.trust-score-poor {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-}
-
-.trust-score-poor:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-}
-
-/* 신뢰덕 점수 뱃지 (선택사항) */
-.trust-score-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.trust-score-badge.excellent {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.trust-score-badge.good {
-  background: #dbeafe;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
-}
-
-.trust-score-badge.average {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fed7aa;
-}
-
-.trust-score-badge.poor {
-  background: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fecaca;
 }
 </style>
 
