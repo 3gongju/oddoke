@@ -361,25 +361,32 @@
   }
 
   /* Follow List Styles */
+.follow-list-item {
+  @apply flex items-center p-3 sm:p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200;
+}
+
+.user-info {
+  @apply flex items-center gap-3 w-full;
+}
+
+.user-name {
+  @apply font-semibold text-black text-base sm:text-lg font-body block flex-1;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 640px) {
   .follow-list-item {
-    @apply flex items-center justify-between p-4 hover:bg-cream-light rounded-2xl transition-all duration-200;
+    @apply p-3;
   }
-
+  
   .user-info {
-    @apply flex items-center gap-3;
+    @apply gap-2;
   }
-
-  .user-avatar {
-    @apply w-12 h-12 bg-cream-accent rounded-full flex items-center justify-center text-black font-bold text-lg shadow-sm;
-  }
-
+  
   .user-name {
-    @apply font-semibold text-black text-lg font-body;
+    @apply text-sm;
   }
-
-  .view-profile {
-    @apply text-cream-dark hover:text-black font-semibold text-sm px-4 py-2 bg-cream-light rounded-lg hover:bg-cream-accent transition-all duration-200 font-body;
-  }
+}
 
   /* Animations */
   @keyframes fadeInUp {
@@ -511,7 +518,6 @@
         ${profileImageHtml}
         <a href="/accounts/profile/${user.username}/" class="user-name hover:text-gray-600 transition-colors">${user.username}</a>
       </div>
-      <a href="/accounts/profile/${user.username}/" class="view-profile">프로필 보기</a>
     `;
     followModalList.appendChild(li);
   });
