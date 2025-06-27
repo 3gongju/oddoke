@@ -37,7 +37,7 @@ from .utils import (
 )
 from ddokchat.models import ChatRoom
 
-# ✅ 홈 화면 (루트 URL)
+# 홈 화면 (루트 URL)
 def main(request):
     return render(request, 'main/home.html')
 
@@ -49,7 +49,7 @@ def index(request):
     sort_by = request.GET.get('sort', 'latest')
     show_available_only = request.GET.get('available_only') == 'on'
     
-    # ✅ 찜한 아티스트 필터링
+    # 찜한 아티스트 필터링
     favorites_only = request.GET.get('favorites_only') == 'on'
     
     # 기존 필터링 파라미터들
@@ -59,7 +59,7 @@ def index(request):
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
 
-    # ✅ 찜한 아티스트 ID 목록 미리 가져오기 (성능 최적화)
+    # 찜한 아티스트 ID 목록 미리 가져오기 (성능 최적화)
     favorite_artist_ids = []
     if favorites_only and request.user.is_authenticated:
         favorite_artist_ids = list(request.user.favorite_artists.values_list('id', flat=True))
@@ -151,7 +151,7 @@ def index(request):
                         ids.append(post.id)
         return ids
 
-    # ✅ 검색 로직 개선
+    # 검색 로직 개선
     if query:
         base_filter = get_base_filter_conditions()
         md_filter = get_md_filter()
@@ -223,7 +223,7 @@ def index(request):
         posts = all_posts
 
     else:
-        # ✅ 카테고리별 필터링 개선
+        # 카테고리별 필터링 개선
         base_filter = get_base_filter_conditions()
         
         if category == 'sell':
@@ -406,7 +406,7 @@ def index(request):
 
     return render(request, 'ddokfarm/index.html', context)
 
-# ✅ 가격 필터링을 위한 헬퍼 함수들
+# 가격 필터링을 위한 헬퍼 함수들
 def get_posts_with_min_price(min_price):
     """최소 가격 이상인 게시글 ID 목록 반환 (가격 미정 제외)"""
     sell_ids = []
@@ -473,7 +473,7 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    # ✅ 조회수 증가 로직 (접근할 때마다 무조건 증가)
+    # 조회수 증가 로직 (접근할 때마다 무조건 증가)
     model.objects.filter(id=post_id).update(view_count=F('view_count') + 1)
     # post 객체 새로고침하여 최신 view_count 반영
     post.refresh_from_db(fields=['view_count'])
@@ -500,7 +500,7 @@ def post_detail(request, category, post_id):
         'is_owner': is_owner,
     }
 
-    # ✅ 개별 가격 정보 추가 (판매/대여)
+    # 개별 가격 정보 추가 (판매/대여)
     if category in ['sell', 'rental']:
         item_prices = post.get_item_prices().order_by('id')
         context['item_prices'] = item_prices
@@ -766,7 +766,7 @@ def post_create(request):
                     post.artist_id = selected_artist_id
                 post.save()
 
-                # ✅ 단일 가격 저장
+                # 단일 가격 저장
                 if is_single_mode and single_price_data:
                     ItemPrice.objects.create(
                         content_type=ContentType.objects.get_for_model(post.__class__),
@@ -899,7 +899,7 @@ def search_artists(request):
 
     return JsonResponse(data)
 
-# ✅ 게시글 수정 (ItemPrice 처리 로직 수정)
+# 게시글 수정 (ItemPrice 처리 로직 수정)
 @login_required
 def post_edit(request, category, post_id):
     model = get_post_model(category)
@@ -913,6 +913,15 @@ def post_edit(request, category, post_id):
         context = {
             'title': '접근 권한 없음',
             'message': '이 게시글을 수정할 권한이 없습니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
+
+    # ✅ 거래 완료된 게시글 수정 방지
+    if post.is_sold:
+        context = {
+            'title': '수정 불가',
+            'message': '거래가 완료된 게시글은 수정할 수 없습니다.',
             'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         }
         return render(request, 'ddokfarm/error_message.html', context)
