@@ -3,11 +3,14 @@
 
 <!-- 아티스트 선택 -->
 <div class="mb-6 relative">
-  <label for="artist" class="block mb-1 text-lg font-bold text-gray-900">아티스트 선택</label>
+  <label for="artist" class="block mb-1 text-lg font-bold text-gray-900">
+    아티스트 선택
+  </label>
+  
   <select name="artist" id="artist"
-          class="w-full px-3 py-2 border rounded"
+          class="w-full px-3 py-2 border rounded {% if mode == 'edit' %}bg-gray-100 text-gray-600 cursor-not-allowed{% endif %}"
           {% if mode == 'edit' %}disabled{% endif %}>
-    <option value="" {% if not default_artist_id %}selected{% endif %} hidden>아티스트를 선택하세요</option>
+    <option value="" {% if not default_artist_id and not post %}selected{% endif %} hidden>아티스트를 선택하세요</option>
     {% for artist in sorted_artists %}
       <option value="{{ artist.id }}"
               {% if artist.id == default_artist_id or post and post.artist.id == artist.id %}selected{% endif %}>
@@ -16,7 +19,11 @@
     {% endfor %}
   </select>
 
-  {% if mode != 'edit' %}
+  {% if mode == 'edit' %}
+    <!-- 수정 모드에서는 hidden input으로 값 전달 -->
+    <input type="hidden" name="artist" value="{{ post.artist.id }}">
+  {% else %}
+    <!-- 생성 모드에서만 검색 기능 -->
     <input type="text" id="artist-search" placeholder="검색으로 아티스트 추가"
            class="mt-2 w-full px-3 py-2 border rounded" autocomplete="off" />
     <div id="artist-search-results"
