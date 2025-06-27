@@ -1,6 +1,14 @@
-<!-- ddokfarm/components/post_form/_price_fields.html -->
+<!-- ddokfarm/templates/ddokfarm/components/post_form/_price_fields.html -->
+<!-- FormSet 기반으로 완전히 개선된 가격 필드 -->
 
-<!-- 가격 설정 (간소화된 버전) -->
+<!-- FormSet Management Form (Django에서 자동 생성) -->
+{% if item_price_formset %}
+  <div style="display: none;">
+    {{ item_price_formset.management_form }}
+  </div>
+{% endif %}
+
+<!-- 가격 설정 -->
 <div class="mb-6">
   <label class="block text-lg font-bold text-gray-900 mb-3">가격</label>
   
@@ -52,56 +60,52 @@
       
       <!-- 개별 아이템 목록 -->
       <div id="items-list" class="space-y-4 mb-4">
-        <!-- 수정 모드에서 기존 아이템들 표시 -->
-        {% if mode == 'edit' and post.has_multiple_items %}
-          {% for item_price in post.get_item_prices %}
+        <!-- 수정 모드에서 기존 아이템들 표시 (FormSet 기반) -->
+        {% if item_price_formset %}
+          {% for form in item_price_formset %}
             <div class="item-row p-3 bg-white border border-gray-200 rounded-md">
+              <!-- FormSet의 hidden 필드들 -->
+              {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+              {% endfor %}
+              
               <!-- 데스크탑 레이아웃 -->
               <div class="desktop-layout">
-                <!-- 첫 번째 줄: 번호, 물건명, 가격, X 버튼 -->
-                <div class="flex items-start gap-3 mb-2">
+                <div class="flex items-start gap-3 w-full">
+                  <!-- 번호 (고정 너비) -->
                   <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
                     <span class="item-number">덕{{ forloop.counter }}</span>
                   </div>
                   
-                  <div class="flex-1">
-                    <input type="text" 
-                           name="item_prices-{{ forloop.counter0 }}-item_name"
-                           value="{{ item_price.item_name }}"
-                           class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
-                           placeholder="물건명 (선택사항)" 
-                           maxlength="20">
+                  <!-- 물건명 (flex-1으로 늘어나기) -->
+                  <div class="flex-1 min-w-0">
+                    {{ form.item_name }}
                   </div>
                   
-                  <div class="flex-1 max-w-xs">
+                  <!-- 가격 영역 (고정 너비) -->
+                  <div class="flex-shrink-0 w-48">
                     <div class="relative mb-2">
-                      <input type="number" 
-                             name="item_prices-{{ forloop.counter0 }}-price"
-                             value="{% if not item_price.is_price_undetermined %}{{ item_price.price }}{% endif %}"
-                             class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
-                             placeholder="가격" 
-                             min="0"
-                             {% if item_price.is_price_undetermined %}disabled{% endif %}>
+                      {{ form.price }}
                       <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
                     </div>
-                    <!-- 가격 미정 체크박스 (가격 필드 바로 아래) -->
+                    <!-- 가격 미정 체크박스 -->
                     <div class="flex justify-end">
                       <label class="inline-flex items-center text-xs text-gray-600 cursor-pointer">
-                        <input type="checkbox" 
-                               name="item_price_undetermined_{{ forloop.counter0 }}"
-                               class="item-price-undetermined-checkbox mr-2 w-3 h-3 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                               {% if item_price.is_price_undetermined %}checked{% endif %}>
-                        <span>가격 미정</span>
+                        {{ form.is_price_undetermined }}
+                        <span class="ml-2">가격 미정</span>
                       </label>
                     </div>
                   </div>
                   
-                  <button type="button" 
-                          class="remove-item-btn flex-shrink-0 w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                  </button>
+                  <!-- 삭제 버튼 (고정 너비) -->
+                  <div class="flex-shrink-0">
+                    <button type="button" 
+                            class="remove-item-btn w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -120,35 +124,21 @@
                 </div>
                 
                 <div>
-                  <input type="text" 
-                         name="item_prices-{{ forloop.counter0 }}-item_name"
-                         value="{{ item_price.item_name }}"
-                         class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
-                         placeholder="물건명 (선택사항)" 
-                         maxlength="20">
+                  {{ form.item_name }}
                 </div>
                 
                 <div>
                   <div class="relative">
-                    <input type="number" 
-                           name="item_prices-{{ forloop.counter0 }}-price"
-                           value="{% if not item_price.is_price_undetermined %}{{ item_price.price }}{% endif %}"
-                           class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
-                           placeholder="가격" 
-                           min="0"
-                           {% if item_price.is_price_undetermined %}disabled{% endif %}>
+                    {{ form.price }}
                     <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
                   </div>
                 </div>
                 
-                <!-- 가격 미정 체크박스 (별도 줄, 모바일 오른쪽 정렬) -->
+                <!-- 가격 미정 체크박스 (모바일) -->
                 <div class="flex justify-end">
                   <label class="inline-flex items-center text-xs text-gray-600 cursor-pointer">
-                    <input type="checkbox" 
-                           name="item_price_undetermined_{{ forloop.counter0 }}"
-                           class="item-price-undetermined-checkbox-mobile mr-2 w-3 h-3 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                           {% if item_price.is_price_undetermined %}checked{% endif %}>
-                    <span>가격 미정</span>
+                    {{ form.is_price_undetermined }}
+                    <span class="ml-2">가격 미정</span>
                   </label>
                 </div>
               </div>
@@ -178,24 +168,26 @@
   </div>
 </div>
 
-<!-- 개별 아이템 템플릿 -->
+<!-- 개별 아이템 템플릿 (JavaScript에서 사용) -->
 <template id="item-template">
   <div class="item-row p-3 bg-white border border-gray-200 rounded-md">
-    <!-- 데스크탑: 가로 레이아웃 -->
+    <!-- 데스크탑: 수정된 레이아웃 -->
     <div class="desktop-layout">
-      <!-- 첫 번째 줄: 번호, 물건명, 가격, X 버튼 -->
-      <div class="flex items-start gap-3 mb-2 w-full">
+      <div class="flex items-start gap-3 w-full">
+        <!-- 번호 (고정 너비) -->
         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
           <span class="item-number">덕1</span>
         </div>
         
-        <div class="flex-grow min-w-0" style="flex: 2;">
+        <!-- 물건명 (flex-1으로 늘어나기) -->
+        <div class="flex-1 min-w-0">
           <input type="text" 
                  class="item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" 
                  placeholder="물건명 (선택사항)" 
                  maxlength="20">
         </div>
         
+        <!-- 가격 영역 (고정 너비) -->
         <div class="flex-shrink-0 w-48">
           <div class="relative mb-2">
             <input type="number" 
@@ -204,7 +196,7 @@
                    min="0">
             <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
           </div>
-          <!-- 가격 미정 체크박스 (가격 필드 바로 아래) -->
+          <!-- 가격 미정 체크박스 -->
           <div class="flex justify-end">
             <label class="inline-flex items-center text-xs text-gray-600 cursor-pointer">
               <input type="checkbox" 
@@ -214,12 +206,15 @@
           </div>
         </div>
         
-        <button type="button" 
-                class="remove-item-btn flex-shrink-0 w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
+        <!-- 삭제 버튼 (고정 너비) -->
+        <div class="flex-shrink-0">
+          <button type="button" 
+                  class="remove-item-btn w-8 h-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -254,7 +249,7 @@
         </div>
       </div>
       
-      <!-- 가격 미정 체크박스 (별도 줄, 모바일 오른쪽 정렬) -->
+      <!-- 가격 미정 체크박스 (모바일) -->
       <div class="flex justify-end">
         <label class="inline-flex items-center text-xs text-gray-600 cursor-pointer">
           <input type="checkbox" 
@@ -265,3 +260,276 @@
     </div>
   </div>
 </template>
+
+<!-- CSS로 반응형 제어 -->
+<style>
+  /* FormSet 에러 메시지 숨기기 */
+  .errorlist {
+    display: none !important;
+  }
+  
+  /* 기본적으로 데스크탑 레이아웃만 표시 */
+  .desktop-layout {
+    display: flex;
+  }
+  
+  .mobile-layout {
+    display: none;
+  }
+  
+  /* 모바일에서는 반대로 */
+  @media screen and (max-width: 767px) {
+    .desktop-layout {
+      display: none !important;
+    }
+    .mobile-layout {
+      display: block !important;
+    }
+  }
+  
+  /* 데스크탑에서 확실히 */
+  @media screen and (min-width: 768px) {
+    .desktop-layout {
+      display: flex !important;
+    }
+    .mobile-layout {
+      display: none !important;
+    }
+  }
+  
+  /* FormSet 필드 스타일링 */
+  #items-list input[type="text"],
+  #items-list input[type="number"] {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    outline: none;
+  }
+  
+  #items-list input[type="text"]:focus,
+  #items-list input[type="number"]:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+  }
+  
+  #items-list input[type="checkbox"] {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: #16a34a;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+  }
+  
+  #items-list input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  }
+  
+  /* 레이아웃 일관성 강제 */
+  .desktop-layout .flex {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+  
+  .desktop-layout .flex-shrink-0 {
+    flex-shrink: 0 !important;
+  }
+  
+  .desktop-layout .flex-1 {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+  }
+  
+  .desktop-layout .w-48 {
+    width: 12rem !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .desktop-layout .w-8 {
+    width: 2rem !important;
+    height: 2rem !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* 아이템 행 스타일링 */
+  .item-row {
+    padding: 0.75rem;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+  }
+  
+  /* 번호 배지 스타일 */
+  .item-number,
+  .item-number-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  /* 삭제 버튼 스타일 */
+  .remove-item-btn {
+    width: 2rem;
+    height: 2rem;
+    color: #ef4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  
+  .remove-item-btn:hover {
+    color: #dc2626;
+    background-color: #fef2f2;
+  }
+  
+  /* 가격 입력 필드 특별 스타일링 */
+  .item-row .relative {
+    position: relative;
+  }
+  
+  .item-row .relative span {
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  /* 가격 미정 체크박스 라벨 */
+  .item-row label {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #4b5563;
+    cursor: pointer;
+  }
+  
+  /* 비활성화된 입력 필드 스타일 */
+  .item-row input:disabled {
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+    cursor: not-allowed;
+  }
+  
+  /* 모바일 레이아웃 스타일 */
+  .mobile-layout {
+    gap: 0.75rem;
+  }
+  
+  .mobile-layout > div {
+    margin-bottom: 0.75rem;
+  }
+  
+  .mobile-layout > div:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* 버튼 스타일 개선 */
+  #add-items-btn,
+  #add-another-item-btn,
+  #back-to-single-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  #add-items-btn:hover,
+  #add-another-item-btn:hover {
+    background-color: #f9fafb;
+    border-color: #ec4899;
+  }
+  
+  #back-to-single-btn {
+    color: #6b7280;
+    border-color: #e5e7eb;
+  }
+  
+  #back-to-single-btn:hover {
+    background-color: #f9fafb;
+  }
+  
+  /* 카운터 표시 스타일 */
+  #item-counter-display {
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  
+  /* 다중 아이템 컨테이너 스타일 */
+  #multiple-items-mode .border-dashed {
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background-color: #f9fafb;
+  }
+  
+  /* 아이템 리스트 간격 */
+  #items-list {
+    gap: 1rem;
+  }
+  
+  #items-list > .item-row {
+    margin-bottom: 1rem;
+  }
+  
+  #items-list > .item-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* 단일 가격 입력 필드 스타일 */
+  #single-price-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    outline: none;
+  }
+  
+  #single-price-input:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+  }
+  
+  #single-price-input:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+  
+  /* 단일 가격 체크박스 스타일 */
+  #single-price-undetermined {
+    margin-right: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    color: #16a34a;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+  }
+  
+  #single-price-undetermined:focus {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+  }
+</style>

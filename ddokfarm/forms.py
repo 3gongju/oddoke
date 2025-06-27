@@ -60,63 +60,62 @@ market_widgets = {
 
 # 개별 아이템 가격 폼 수정 (가격 미정 옵션 추가)
 class ItemPriceForm(forms.ModelForm):
-    PRICE_TYPE_CHOICES = [
-        ('set', '가격 설정'),
-        ('undetermined', '가격 미정'),
-    ]
-    
-    price_type = forms.ChoiceField(
-        choices=PRICE_TYPE_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'mr-2'}),
-        initial='set',
-        label='가격 유형'
-    )
+    """개별 아이템 가격 입력 폼 (ModelForm 기반)"""
     
     class Meta:
         model = ItemPrice
         fields = ['item_name', 'price', 'is_price_undetermined']
         widgets = {
             'item_name': forms.TextInput(attrs={
-                'class': COMMON_INPUT_CLASS,
+                'class': 'item-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400',
                 'placeholder': '물건명 (선택사항)',
                 'maxlength': 20,
             }),
             'price': forms.NumberInput(attrs={
-                'class': COMMON_INPUT_CLASS,
-                'placeholder': '가격을 입력하세요',
+                'class': 'item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400',
+                'placeholder': '가격',
                 'min': 0,
             }),
-            'is_price_undetermined': forms.HiddenInput(),
+            'is_price_undetermined': forms.CheckboxInput(attrs={
+                'class': 'item-price-undetermined-checkbox w-3 h-3 text-green-600 border-gray-300 rounded focus:ring-green-500',
+            }),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['item_name'].required = False
-        self.fields['price'].required = False  # JavaScript에서 조건부로 변경
+        self.fields['price'].required = False  # JavaScript에서 조건부로 검증
+        self.fields['is_price_undetermined'].required = False
         
-        # 기존 데이터가 있을 때 price_type 초기값 설정
-        if self.instance and self.instance.pk:
-            if self.instance.is_price_undetermined:
-                self.fields['price_type'].initial = 'undetermined'
-            else:
-                self.fields['price_type'].initial = 'set'
+        # 필드 라벨 제거 (템플릿에서 직접 처리)
+        for field in self.fields.values():
+            field.label = ''
     
     def clean(self):
         cleaned_data = super().clean()
-        price_type = cleaned_data.get('price_type')
         price = cleaned_data.get('price')
+        is_undetermined = cleaned_data.get('is_price_undetermined', False)
         
-        if price_type == 'set' and not price:
-            raise forms.ValidationError("가격을 설정하는 경우 가격을 입력해야 합니다.")
-        
-        # price_type에 따라 is_price_undetermined 설정
-        cleaned_data['is_price_undetermined'] = (price_type == 'undetermined')
-        
-        # 가격 미정인 경우 price를 0으로 설정 (NULL 방지)
-        if price_type == 'undetermined':
+        # 가격 미정이 아닌데 가격이 없거나 0이면 에러
+        if not is_undetermined and (not price or price <= 0):
+            raise forms.ValidationError("가격을 입력하거나 '가격 미정'을 선택해주세요.")
+            
+        # 가격 미정이면 price를 0으로 설정
+        if is_undetermined:
             cleaned_data['price'] = 0
             
         return cleaned_data
+
+# ItemPrice ModelFormSet 생성
+ItemPriceFormSet = modelformset_factory(
+    ItemPrice,
+    form=ItemPriceForm,
+    extra=0,  # 기본적으로 빈 폼 없음
+    can_delete=True,
+    min_num=1,  # 최소 1개 필요
+    validate_min=True,
+    max_num=20,  # 최대 20개로 제한
+)
 
 class FarmSellPostForm(forms.ModelForm):
     md = custom_choice_field(FarmSellPost.MD_CHOICES, label='종류')
@@ -159,7 +158,10 @@ class FarmSellPostForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
+        # ItemPrice 초기 데이터 처리
+        self.item_prices_initial = kwargs.pop('item_prices_initial', [])
         super().__init__(*args, **kwargs)
+
         # 기존 데이터가 있을 때 shipping_methods 초기화
         if self.instance and self.instance.pk:
             self.fields['shipping_methods'].initial = self.instance.get_shipping_methods_list()
@@ -177,6 +179,15 @@ class FarmSellPostForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+    def get_item_price_formset(self, data=None):
+        """ItemPrice FormSet 반환"""
+        if data:
+            return ItemPriceFormSet(data, prefix='item_prices')
+        else:
+            # 수정 모드에서 기존 데이터로 초기화
+            initial_data = self.item_prices_initial or []
+            return ItemPriceFormSet(initial=initial_data, prefix='item_prices')
 
 class FarmRentalPostForm(forms.ModelForm):
     condition = custom_choice_field(FarmRentalPost.CONDITION_CHOICES, label='상품 상태')
@@ -207,7 +218,10 @@ class FarmRentalPostForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
+        # ItemPrice 초기 데이터 처리
+        self.item_prices_initial = kwargs.pop('item_prices_initial', [])
         super().__init__(*args, **kwargs)
+
         # 기존 데이터가 있을 때 shipping_methods 초기화
         if self.instance and self.instance.pk:
             self.fields['shipping_methods'].initial = self.instance.get_shipping_methods_list()
@@ -220,6 +234,15 @@ class FarmRentalPostForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+    
+    def get_item_price_formset(self, data=None):
+        """ItemPrice FormSet 반환"""
+        if data:
+            return ItemPriceFormSet(data, prefix='item_prices')
+        else:
+            # 수정 모드에서 기존 데이터로 초기화
+            initial_data = self.item_prices_initial or []
+            return ItemPriceFormSet(initial=initial_data, prefix='item_prices')
 
 class FarmSplitPostForm(forms.ModelForm):
     album = custom_choice_field(FarmSplitPost.ALBUM_CHOICES, label='앨범 포함 여부')

@@ -96,7 +96,7 @@
 
 {% block extra_fields %}
   {% if category == 'sell' or category == 'rental' %}
-    {% include "ddokfarm/components/post_form/_fields_sell_rental.html" %}
+    {% include 'ddokfarm/components/post_form/_fields_sell_rental.html' with item_price_formset=item_price_formset %}
   {% elif category == 'split' %}
     {% include "ddokfarm/components/post_form/_fields_split.html" %}
   {% elif category == 'manner' %}

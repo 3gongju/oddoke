@@ -1,4 +1,6 @@
 <!-- ddokfarm/components/post_form/_fields_sell_rental.html -->
+<!-- 기존 인라인 JavaScript 제거하고 정리된 버전 -->
+
 <!-- 거래 방식 -->
 <div class="mb-6">
   <label for="{{ form.want_to.id_for_label }}" class="block text-lg font-bold text-gray-900 mb-3">거래 방식</label>
@@ -15,7 +17,7 @@
   {% if form.want_to.errors %}<p class="text-red-500 text-sm mt-1">{{ form.want_to.errors.0 }}</p>{% endif %}
 </div>
 
-<!-- 가격 설정 필드 -->
+<!-- 가격 설정 필드 (FormSet 기반) -->
 {% include 'ddokfarm/components/post_form/_price_fields.html' %}
 
 <!-- 교환하기 선택 시 -->
@@ -38,7 +40,6 @@
   {% if form.md.errors %}<p class="text-red-500 text-sm mt-1">{{ form.md.errors.0 }}</p>{% endif %}
 </div>
 {% endif %}
-
 
 <!-- 상품 상태 -->
 <div class="mb-6">
@@ -134,9 +135,10 @@
   }
 </style>
 
+<!-- 배송 방법 조건부 표시 JavaScript (간단한 로직만) -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // 배송 방법 조건부 표시 로직 (기존 유지)
+  // 배송 방법 조건부 표시 로직
   const shippingElements = document.querySelectorAll('input[name="shipping"]');
   const locationField = document.getElementById('location-field');
   const shippingFields = document.getElementById('shipping-fields');
@@ -164,278 +166,5 @@ document.addEventListener('DOMContentLoaded', function() {
   shippingElements.forEach(function(element) {
     element.addEventListener('change', toggleFields);
   });
-
-  // ✅ 단일 가격 모드에서 가격 미정 체크박스 토글
-  const singlePriceInput = document.getElementById('single-price-input');
-  const singlePriceUndetermined = document.getElementById('single-price-undetermined');
-
-  function toggleSinglePriceInput() {
-    if (singlePriceUndetermined && singlePriceUndetermined.checked) {
-      // 가격 미정 체크됨
-      singlePriceInput.disabled = true;
-      singlePriceInput.value = '';
-      singlePriceInput.style.backgroundColor = '#f3f4f6';
-      singlePriceInput.style.color = '#9ca3af';
-      singlePriceInput.required = false;
-    } else {
-      // 가격 미정 체크 해제됨
-      singlePriceInput.disabled = false;
-      singlePriceInput.style.backgroundColor = '';
-      singlePriceInput.style.color = '';
-      singlePriceInput.required = true;
-    }
-  }
-
-  if (singlePriceUndetermined) {
-    singlePriceUndetermined.addEventListener('change', toggleSinglePriceInput);
-    // 초기 로드 시 실행
-    toggleSinglePriceInput();
-  }
-
-  // ✅ 개별 아이템에서 가격 미정 체크박스 토글
-  document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('item-price-undetermined-checkbox') || 
-        e.target.classList.contains('item-price-undetermined-checkbox-mobile')) {
-      
-      const itemRow = e.target.closest('.item-row');
-      if (!itemRow) return;
-      
-      const priceInputs = itemRow.querySelectorAll('.item-price-input, .item-price-input-mobile');
-      const isChecked = e.target.checked;
-      
-      priceInputs.forEach(input => {
-        if (isChecked) {
-          // 가격 미정 체크됨
-          input.disabled = true;
-          input.value = '';
-          input.style.backgroundColor = '#f3f4f6';
-          input.style.color = '#9ca3af';
-          input.required = false;
-        } else {
-          // 가격 미정 체크 해제됨
-          input.disabled = false;
-          input.style.backgroundColor = '';
-          input.style.color = '';
-          input.required = true;
-        }
-      });
-      
-      // 데스크탑과 모바일 체크박스 동기화
-      const otherCheckbox = itemRow.querySelector(
-        e.target.classList.contains('item-price-undetermined-checkbox') 
-          ? '.item-price-undetermined-checkbox-mobile'
-          : '.item-price-undetermined-checkbox'
-      );
-      if (otherCheckbox) {
-        otherCheckbox.checked = isChecked;
-      }
-    }
-  });
-
-  // ✅ 기존 가격 관련 JavaScript (덕템 추가하기 등)
-  const singlePriceMode = document.getElementById('single-price-mode');
-  const multipleItemsMode = document.getElementById('multiple-items-mode');
-  const addItemsBtn = document.getElementById('add-items-btn');
-  const addAnotherItemBtn = document.getElementById('add-another-item-btn');
-  const backToSingleBtn = document.getElementById('back-to-single-btn');
-  const itemsList = document.getElementById('items-list');
-  const itemTemplate = document.getElementById('item-template');
-  const itemCounterDisplay = document.getElementById('item-counter-display');
-  
-  let itemCounter = itemsList ? itemsList.querySelectorAll('.item-row').length : 0;
-  let isMultipleMode = multipleItemsMode ? !multipleItemsMode.classList.contains('hidden') : false;
-
-  function addItem(defaultPrice = '', isUndetermined = false) {
-    if (itemCounter >= 20) {
-      alert('덕템은 최대 20개까지만 추가할 수 있습니다.');
-      return;
-    }
-    
-    itemCounter++;
-    const clone = itemTemplate.content.cloneNode(true);
-    
-    // 덕템 번호 설정
-    const itemNumbers = clone.querySelectorAll('.item-number, .item-number-mobile');
-    itemNumbers.forEach(el => el.textContent = `덕${itemCounter}`);
-    
-    // name 속성 설정
-    const nameInputs = clone.querySelectorAll('.item-name-input, .item-name-input-mobile');
-    const priceInputs = clone.querySelectorAll('.item-price-input, .item-price-input-mobile');
-    const undeterminedCheckboxes = clone.querySelectorAll('.item-price-undetermined-checkbox, .item-price-undetermined-checkbox-mobile');
-    
-    nameInputs.forEach(input => input.name = `item_prices-${itemCounter-1}-item_name`);
-    priceInputs.forEach(input => {
-      input.name = `item_prices-${itemCounter-1}-price`;
-      if (defaultPrice && !isUndetermined) {
-        input.value = defaultPrice;
-      }
-    });
-    
-    undeterminedCheckboxes.forEach(checkbox => {
-      checkbox.name = `item_price_undetermined_${itemCounter-1}`;
-      checkbox.checked = isUndetermined;
-    });
-    
-    // 초기 상태 설정
-    if (isUndetermined) {
-      priceInputs.forEach(input => {
-        input.disabled = true;
-        input.style.backgroundColor = '#f3f4f6';
-        input.style.color = '#9ca3af';
-        input.required = false;
-      });
-    }
-    
-    // 동기화 로직
-    if (nameInputs.length >= 2) {
-      nameInputs[0].addEventListener('input', function() {
-        nameInputs[1].value = this.value;
-      });
-      nameInputs[1].addEventListener('input', function() {
-        nameInputs[0].value = this.value;
-      });
-    }
-    
-    if (priceInputs.length >= 2) {
-      priceInputs[0].addEventListener('input', function() {
-        if (!this.disabled) {
-          priceInputs[1].value = this.value;
-        }
-      });
-      priceInputs[1].addEventListener('input', function() {
-        if (!this.disabled) {
-          priceInputs[0].value = this.value;
-        }
-      });
-    }
-    
-    // 삭제 버튼 이벤트
-    clone.querySelectorAll('.remove-item-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        if (itemCounter <= 1) {
-          alert('최소 1개의 덕템은 있어야 합니다.');
-          return;
-        }
-        this.closest('.item-row').remove();
-        itemCounter--;
-        updateUI();
-      });
-    });
-    
-    itemsList.appendChild(clone);
-    updateUI();
-  }
-
-  function updateUI() {
-    if (itemCounterDisplay) {
-      itemCounterDisplay.textContent = `${itemCounter}/20`;
-    }
-    
-    if (addAnotherItemBtn) {
-      if (itemCounter >= 20) {
-        addAnotherItemBtn.disabled = true;
-        addAnotherItemBtn.classList.add('opacity-50', 'cursor-not-allowed');
-      } else {
-        addAnotherItemBtn.disabled = false;
-        addAnotherItemBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-      }
-    }
-  }
-
-  // 이벤트 리스너
-  addItemsBtn?.addEventListener('click', function() {
-    singlePriceMode.classList.add('hidden');
-    multipleItemsMode.classList.remove('hidden');
-    isMultipleMode = true;
-    
-    const singlePrice = singlePriceInput.value;
-    const isUndetermined = singlePriceUndetermined.checked;
-    
-    if (singlePrice && !isUndetermined) {
-      addItem(singlePrice, false);
-    } else {
-      addItem('', isUndetermined);
-    }
-    addItem(); // 두 번째 아이템 추가
-  });
-
-  addAnotherItemBtn?.addEventListener('click', function() {
-    addItem();
-  });
-
-  backToSingleBtn?.addEventListener('click', function() {
-    singlePriceMode.classList.remove('hidden');
-    multipleItemsMode.classList.add('hidden');
-    isMultipleMode = false;
-    
-    itemsList.innerHTML = '';
-    itemCounter = 0;
-    updateUI();
-  });
-
-  // ✅ 폼 제출 시 데이터 처리
-  const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function() {
-      if (isMultipleMode) {
-        // 복수 아이템 모드
-        const managementFields = [
-          { name: 'item_prices-TOTAL_FORMS', value: itemCounter },
-          { name: 'item_prices-INITIAL_FORMS', value: 0 },
-          { name: 'item_prices-MIN_NUM_FORMS', value: 0 },
-          { name: 'item_prices-MAX_NUM_FORMS', value: 20 }
-        ];
-        
-        managementFields.forEach(field => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = field.name;
-          input.value = field.value;
-          form.appendChild(input);
-        });
-        
-        // 각 아이템의 가격 미정 정보 추가
-        for (let i = 0; i < itemCounter; i++) {
-          const undeterminedCheckbox = document.querySelector(`input[name="item_price_undetermined_${i}"]`);
-          if (undeterminedCheckbox && undeterminedCheckbox.checked) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = `item_price_undetermined_${i}`;
-            input.value = 'true';
-            form.appendChild(input);
-          }
-        }
-      } else {
-        // 단일 모드
-        const isUndetermined = singlePriceUndetermined.checked;
-        const singlePrice = singlePriceInput.value;
-        
-        const managementFields = [
-          { name: 'item_prices-TOTAL_FORMS', value: 1 },
-          { name: 'item_prices-INITIAL_FORMS', value: 0 },
-          { name: 'item_prices-MIN_NUM_FORMS', value: 0 },
-          { name: 'item_prices-MAX_NUM_FORMS', value: 20 },
-          { name: 'item_prices-0-item_name', value: '' },
-          { name: 'single_price_undetermined', value: isUndetermined ? 'true' : 'false' }
-        ];
-        
-        if (isUndetermined) {
-          managementFields.push({ name: 'item_prices-0-price', value: '0' });
-        } else if (singlePrice) {
-          managementFields.push({ name: 'item_prices-0-price', value: singlePrice });
-        }
-        
-        managementFields.forEach(field => {
-          const input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = field.name;
-          input.value = field.value;
-          form.appendChild(input);
-        });
-      }
-    });
-  }
-
-  updateUI();
 });
 </script>
