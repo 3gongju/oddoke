@@ -354,6 +354,13 @@ def index(request):
     for post in posts:
         post.detail_url = reverse('ddokfarm:post_detail', args=[post.category, post.id])
 
+        # 댓글 개수 계산 추가
+        content_type = ContentType.objects.get_for_model(post.__class__)
+        post.total_comment_count = FarmComment.objects.filter(
+            content_type=content_type, 
+            object_id=post.id
+        ).count()
+
     clean_category = (category or 'sell').split('?')[0]
 
     # 찜한 아티스트 목록
