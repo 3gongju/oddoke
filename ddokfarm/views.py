@@ -37,7 +37,7 @@ from .utils import (
 )
 from ddokchat.models import ChatRoom
 
-# ✅ 홈 화면 (루트 URL)
+# 홈 화면 (루트 URL)
 def main(request):
     return render(request, 'main/home.html')
 
@@ -49,7 +49,7 @@ def index(request):
     sort_by = request.GET.get('sort', 'latest')
     show_available_only = request.GET.get('available_only') == 'on'
     
-    # ✅ 찜한 아티스트 필터링
+    # 찜한 아티스트 필터링
     favorites_only = request.GET.get('favorites_only') == 'on'
     
     # 기존 필터링 파라미터들
@@ -59,7 +59,7 @@ def index(request):
     min_price = request.GET.get('min_price', '')
     max_price = request.GET.get('max_price', '')
 
-    # ✅ 찜한 아티스트 ID 목록 미리 가져오기 (성능 최적화)
+    # 찜한 아티스트 ID 목록 미리 가져오기 (성능 최적화)
     favorite_artist_ids = []
     if favorites_only and request.user.is_authenticated:
         favorite_artist_ids = list(request.user.favorite_artists.values_list('id', flat=True))
@@ -151,7 +151,7 @@ def index(request):
                         ids.append(post.id)
         return ids
 
-    # ✅ 검색 로직 개선
+    # 검색 로직 개선
     if query:
         base_filter = get_base_filter_conditions()
         md_filter = get_md_filter()
@@ -223,7 +223,7 @@ def index(request):
         posts = all_posts
 
     else:
-        # ✅ 카테고리별 필터링 개선
+        # 카테고리별 필터링 개선
         base_filter = get_base_filter_conditions()
         
         if category == 'sell':
@@ -406,7 +406,7 @@ def index(request):
 
     return render(request, 'ddokfarm/index.html', context)
 
-# ✅ 가격 필터링을 위한 헬퍼 함수들
+# 가격 필터링을 위한 헬퍼 함수들
 def get_posts_with_min_price(min_price):
     """최소 가격 이상인 게시글 ID 목록 반환 (가격 미정 제외)"""
     sell_ids = []
@@ -473,7 +473,7 @@ def post_detail(request, category, post_id):
 
     post = get_object_or_404(model, id=post_id)
 
-    # ✅ 조회수 증가 로직 (접근할 때마다 무조건 증가)
+    # 조회수 증가 로직 (접근할 때마다 무조건 증가)
     model.objects.filter(id=post_id).update(view_count=F('view_count') + 1)
     # post 객체 새로고침하여 최신 view_count 반영
     post.refresh_from_db(fields=['view_count'])
@@ -500,7 +500,7 @@ def post_detail(request, category, post_id):
         'is_owner': is_owner,
     }
 
-    # ✅ 개별 가격 정보 추가 (판매/대여)
+    # 개별 가격 정보 추가 (판매/대여)
     if category in ['sell', 'rental']:
         item_prices = post.get_item_prices().order_by('id')
         context['item_prices'] = item_prices
@@ -615,86 +615,82 @@ def get_item_price_formset(post=None, data=None):
         return ItemPriceFormSet(queryset=queryset, prefix='item_prices')
 
 def save_item_prices_from_formset(formset, post):
-    """ModelFormSet을 사용한 ItemPrice 저장 - 디버깅 추가"""
+    """ModelFormSet을 사용한 ItemPrice 저장 (안정성 향상 버전)"""
     print(f"=== save_item_prices_from_formset DEBUG ===")
     print(f"Post ID: {post.id}")
     print(f"Post type: {type(post)}")
-    
-    # 🔧 post.id가 None인지 확인
+
     if post.id is None:
-        print("ERROR: Post ID is None in save_item_prices_from_formset")
-        raise ValueError("Post must be saved before creating ItemPrice objects")
-    
+        print("❌ ERROR: Post ID is None")
+        raise ValueError("Post must be saved before saving item prices")
+
     content_type = ContentType.objects.get_for_model(post.__class__)
     print(f"Content type: {content_type}")
-    
-    # 기존 ItemPrice 모두 삭제 (수정 시)
+
+    # 기존 ItemPrice 삭제
     ItemPrice.objects.filter(content_type=content_type, object_id=post.id).delete()
-    
-    # FormSet에서 유효한 인스턴스들만 저장
+
     valid_instances = []
-    
+
     for i, form in enumerate(formset):
         print(f"Processing form {i}: valid={form.is_valid()}")
-        if form.is_valid():
-            print(f"Form {i} cleaned_data: {form.cleaned_data}")
-        
-        if form.is_valid() and not form.cleaned_data.get('DELETE', False):
-            cleaned_data = form.cleaned_data
-            
-            # 🔧 완전히 비어있는 폼 건너뛰기 (더 엄격한 체크)
-            item_name = cleaned_data.get('item_name', '').strip()
-            price = cleaned_data.get('price')
-            is_undetermined = cleaned_data.get('is_price_undetermined', False)
-            
-            print(f"Form {i} data: name='{item_name}', price={price}, undetermined={is_undetermined}")
-            
-            # 모든 필드가 기본값이면 건너뛰기
-            if not item_name and not price and not is_undetermined:
-                print(f"Form {i} skipped: all fields empty")
-                continue
-            
-            # 가격이 없고 미정도 아니면 건너뛰기
-            if not is_undetermined and (price is None or price == ''):
-                print(f"Form {i} skipped: no price and not undetermined")
-                continue
-            
-            # 🔧 수정: save() 메서드 사용 대신 직접 인스턴스 생성
-            try:
-                instance = ItemPrice(
-                    content_type=content_type,
-                    object_id=post.id,
-                    item_name=item_name,
-                    price=0 if is_undetermined else (price or 0),
-                    is_price_undetermined=is_undetermined
-                )
-                print(f"Created instance {i}: object_id={instance.object_id}")
-                valid_instances.append(instance)
-            except Exception as e:
-                print(f"Error creating instance {i}: {e}")
-                raise
-    
-    print(f"Total valid instances: {len(valid_instances)}")
-    
-    # 일괄 저장
-    if valid_instances:
+
+        if not form.is_valid():
+            print(f"❌ Form {i} is invalid: {form.errors}")
+            continue
+
         try:
-            ItemPrice.objects.bulk_create(valid_instances)
-            print(f"Successfully bulk created {len(valid_instances)} instances")
+            cleaned_data = form.cleaned_data
         except Exception as e:
-            print(f"Error in bulk_create: {e}")
-            # 🔧 개별 저장으로 fallback
-            print("Trying individual saves...")
-            for i, instance in enumerate(valid_instances):
-                try:
-                    instance.save()
-                    print(f"Saved instance {i} individually")
-                except Exception as save_error:
-                    print(f"Error saving instance {i}: {save_error}")
-                    raise
-    
-    print(f"Saved {len(valid_instances)} item prices")
+            print(f"❌ Error reading cleaned_data of form {i}: {e}")
+            continue
+
+        item_name = cleaned_data.get('item_name', '').strip()
+        price = cleaned_data.get('price')
+        is_undetermined = cleaned_data.get('is_price_undetermined', False)
+
+        print(f"Form {i} data: name='{item_name}', price={price}, undetermined={is_undetermined}")
+
+        # 완전히 빈 폼 건너뛰기
+        if not item_name and not price and not is_undetermined:
+            print(f"⚠️ Form {i} skipped (empty)")
+            continue
+
+        if not is_undetermined and (price is None or price == ''):
+            print(f"⚠️ Form {i} skipped (price missing)")
+            continue
+
+        try:
+            instance = ItemPrice(
+                content_type=content_type,
+                object_id=post.id,
+                item_name=item_name,
+                price=0 if is_undetermined else int(price),
+                is_price_undetermined=is_undetermined
+            )
+            valid_instances.append(instance)
+        except Exception as e:
+            print(f"❌ Error creating instance from form {i}: {e}")
+
+    print(f"Total valid instances: {len(valid_instances)}")
+
+    # 저장
+    try:
+        ItemPrice.objects.bulk_create(valid_instances)
+        print(f"✅ Successfully bulk created {len(valid_instances)} items")
+    except Exception as e:
+        print(f"⚠️ bulk_create failed: {e}")
+        print("⏪ Trying individual save...")
+        for i, instance in enumerate(valid_instances):
+            try:
+                instance.save()
+                print(f"✅ Saved item {i} individually")
+            except Exception as e:
+                print(f"❌ Failed to save item {i}: {e}")
+                raise
+
     return len(valid_instances)
+
 
 @login_required
 def post_create(request):
@@ -770,7 +766,7 @@ def post_create(request):
                     post.artist_id = selected_artist_id
                 post.save()
 
-                # ✅ 단일 가격 저장
+                # 단일 가격 저장
                 if is_single_mode and single_price_data:
                     ItemPrice.objects.create(
                         content_type=ContentType.objects.get_for_model(post.__class__),
@@ -903,7 +899,7 @@ def search_artists(request):
 
     return JsonResponse(data)
 
-# ✅ 게시글 수정 (ItemPrice 처리 로직 수정)
+# 게시글 수정 (ItemPrice 처리 로직 수정)
 @login_required
 def post_edit(request, category, post_id):
     model = get_post_model(category)
@@ -913,7 +909,6 @@ def post_edit(request, category, post_id):
         raise Http404("존재하지 않는 카테고리입니다.")
 
     post = get_object_or_404(model, id=post_id)
-
     if request.user != post.user:
         context = {
             'title': '접근 권한 없음',
@@ -922,65 +917,88 @@ def post_edit(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
 
+    # ✅ 거래 완료된 게시글 수정 방지
+    if post.is_sold:
+        context = {
+            'title': '수정 불가',
+            'message': '거래가 완료된 게시글은 수정할 수 없습니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
+
     if request.method == 'POST':
-        # artist 수정 불가: 기존 artist로 강제 세팅
         post_data = request.POST.copy()
-        post_data['artist'] = post.artist.id
+        post_data['artist'] = post.artist.id  # 아티스트는 변경 불가
 
         form = form_class(post_data, request.FILES, instance=post)
-        
-        # ItemPrice FormSet 처리
-        item_price_formset = None
-        if category in ['sell', 'rental']:
-            item_price_formset = get_item_price_formset(post=post, data=request.POST)
-
-        image_files = request.FILES.getlist('images')
-        removed_ids = post_data.get('removed_image_ids', '').split(',')
-        removed_ids = [int(id) for id in removed_ids if id.isdigit()]
+        price_mode = post_data.get('price_mode')
+        is_single_mode = price_mode == 'single'
         selected_member_ids = list(map(int, post_data.getlist('members')))
+        image_files = request.FILES.getlist('images')
+        removed_ids = [int(id) for id in post_data.get('removed_image_ids', '').split(',') if id.isdigit()]
 
-        # 분철 처리 (기존과 동일)
-        formset_with_names = None
+        # 가격 처리
+        item_price_formset = None
+        single_price_data = None
+        if category in ['sell', 'rental']:
+            if is_single_mode:
+                price = post_data.get('single_price', '').strip()
+                undetermined = post_data.get('single_price_undetermined') == 'on'
+                single_price_data = {'price': price, 'undetermined': undetermined}
+                item_price_formset = get_item_price_formset(post=post, data=None)
+            else:
+                item_price_formset = get_item_price_formset(post=post, data=post_data)
+
+        # 분철 formset
+        formset_with_names = []
         if category == 'split':
             selected_members = Member.objects.filter(artist_name=post.artist).distinct()
             splitprice_dict = {sp.member_id: sp for sp in post.member_prices.all()}
-
-            formset_with_names = []
             for member in selected_members:
-                sp_instance = splitprice_dict.get(member.id)
-                sp_form = SplitPriceForm(
-                    post_data,
-                    prefix=f'splitprice-{member.id}',
-                    instance=sp_instance
-                )
+                sp_form = SplitPriceForm(post_data, prefix=f'splitprice-{member.id}', instance=splitprice_dict.get(member.id))
                 sp_form.fields['member'].initial = member.id
-
-                # 체크된 멤버는 price.required=False
                 if str(member.id) in post_data.getlist('members'):
                     sp_form.fields['price'].required = False
                     sp_form.fields['price'].widget.attrs.pop('required', None)
-
                 formset_with_names.append((sp_form, member.member_name))
 
-        # 모든 폼 유효성 검사
+        # 유효성 검사
         form_valid = form.is_valid()
-        item_price_formset_valid = item_price_formset.is_valid() if item_price_formset else True
-        split_formset_valid = all(form.is_valid() for form, _ in formset_with_names) if formset_with_names else True
+        item_price_formset_valid = item_price_formset.is_valid() if item_price_formset and not is_single_mode else True
+        split_formset_valid = all(f.is_valid() for f, _ in formset_with_names) if formset_with_names else True
+
+        if is_single_mode and category in ['sell', 'rental']:
+            if not single_price_data['price'] and not single_price_data['undetermined']:
+                form.add_error(None, "가격을 입력하거나 '가격 미정'을 선택해주세요.")
+                item_price_formset_valid = False
 
         if form_valid and item_price_formset_valid and split_formset_valid:
             post = form.save(commit=False)
             post.save()
 
-            # ItemPrice 저장 (판매/대여)
-            if category in ['sell', 'rental'] and item_price_formset:
-                save_item_prices_from_formset(item_price_formset, post)
+            # 기존 가격 삭제
+            if category in ['sell', 'rental']:
+                ItemPrice.objects.filter(
+                    content_type=ContentType.objects.get_for_model(post.__class__),
+                    object_id=post.id
+                ).delete()
+                if is_single_mode and single_price_data:
+                    ItemPrice.objects.create(
+                        content_type=ContentType.objects.get_for_model(post.__class__),
+                        object_id=post.id,
+                        item_name='',
+                        price=0 if single_price_data['undetermined'] else int(single_price_data['price']),
+                        is_price_undetermined=single_price_data['undetermined']
+                    )
+                elif item_price_formset:
+                    save_item_prices_from_formset(item_price_formset, post)
 
-            # 교환 정보 저장/삭제 (판매에서만)
+            # 교환 정보
             if category == 'sell':
                 save_exchange_info(request, post)
 
-            # 분철 처리
-            if category == 'split' and formset_with_names:
+            # 분철 저장
+            if category == 'split':
                 post.member_prices.all().delete()
                 for sp_form, _ in formset_with_names:
                     member_id = sp_form.cleaned_data.get('member').id
@@ -993,10 +1011,9 @@ def post_edit(request, category, post_id):
             else:
                 post.members.set(selected_member_ids)
 
-            # 이미지 처리
+            # 이미지 삭제 및 추가
             if removed_ids:
                 post.images.filter(id__in=removed_ids).delete()
-
             if image_files:
                 content_type = ContentType.objects.get_for_model(post.__class__)
                 for idx, image in enumerate(image_files):
@@ -1009,67 +1026,39 @@ def post_edit(request, category, post_id):
 
             form.save_m2m()
             return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
-        else:
-            # 에러 로깅
-            if not form_valid:
-                print("Main form errors:", form.errors)
-            if item_price_formset and not item_price_formset_valid:
-                print("ItemPrice formset errors:", item_price_formset.errors)
-                print("ItemPrice formset non_form_errors:", item_price_formset.non_form_errors())
 
     else:
         form = form_class(instance=post)
-        
-        # ItemPrice FormSet 초기화
-        item_price_formset = None
-        if category in ['sell', 'rental']:
-            item_price_formset = get_item_price_formset(post=post)
-
-        # 분철 처리 (기존과 동일)
-        formset_with_names = None
+        item_price_formset = get_item_price_formset(post=post) if category in ['sell', 'rental'] else None
+        formset_with_names = []
         if category == 'split':
             selected_members = Member.objects.filter(artist_name=post.artist).distinct()
             splitprice_dict = {sp.member_id: sp for sp in post.member_prices.all()}
-
-            formset_with_names = []
             for member in selected_members:
-                sp_instance = splitprice_dict.get(member.id)
-                sp_form = SplitPriceForm(
-                    prefix=f'splitprice-{member.id}',
-                    instance=sp_instance
-                )
+                sp_form = SplitPriceForm(prefix=f'splitprice-{member.id}', instance=splitprice_dict.get(member.id))
                 sp_form.fields['member'].initial = member.id
                 formset_with_names.append((sp_form, member.member_name))
 
-    # 나머지 컨텍스트 준비
-    existing_images = [
-        {"id": img.id, "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"}
-        for img in post.images.all()
-    ]
-    sorted_artists = Artist.objects.order_by('display_name')
-    selected_members = Member.objects.filter(artist_name=post.artist).distinct()
-    selected_member_ids = (
-        list(post.checked_out_members.values_list('id', flat=True))
-        if category == 'split' else list(post.members.values_list('id', flat=True))
-    )
-    selected_artist_id = post.artist.id if post.artist else None
-
+    # 공통 context
     context = {
         'form': form,
         'item_price_formset': item_price_formset,
-        'post': post,
-        'category': category,
-        'sorted_artists': sorted_artists,
-        'selected_members': selected_members,
-        'selected_member_ids': selected_member_ids,
-        'selected_artist_id': selected_artist_id,
         'formset_with_names': formset_with_names,
-        'formset': None,  # 분철용 dummy formset은 필요 없음
+        'category': category,
+        'post': post,
+        'mode': 'edit',
         'submit_label': '수정 완료',
         'cancel_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
-        'mode': 'edit',
+        'sorted_artists': Artist.objects.order_by('display_name'),
+        'selected_members': Member.objects.filter(artist_name=post.artist),
+        'selected_member_ids': list(post.checked_out_members.values_list('id', flat=True)) if category == 'split'
+                              else list(post.members.values_list('id', flat=True)),
+        'selected_artist_id': post.artist.id,
+        'existing_images': [
+            {"id": img.id, "url": img.image.url if img.image else f"{settings.MEDIA_URL}default.jpg"}
+            for img in post.images.all()
+        ],
         'categories': get_ddokfarm_categories(),
-        'existing_images': existing_images,
         'ajax_base_url': '/ddokfarm/ajax',
     }
 

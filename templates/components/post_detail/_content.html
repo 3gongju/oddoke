@@ -40,18 +40,28 @@
 
   <hr class="border-gray-300">
 
-  <!-- ✅ 수정된 수정/삭제 버튼 - 본인일 경우 -->
+  <!-- 수정/삭제 버튼 - 본인일 경우 (거래 완료 시 수정 불가) -->
   {% if request.user == post.user %}
     <div class="flex justify-end space-x-2 mt-2">
-      <a href="{% url app_name|add:':post_edit' category=category post_id=post.id %}"
-         class="text-sm text-blue-600 hover:underline">수정</a>
-      
-      <!-- ✅ 삭제 버튼을 JavaScript 함수로 변경 -->
-      <button type="button" 
-              onclick="confirmDelete('{% url app_name|add:':post_delete' category=category post_id=post.id %}')"
-              class="text-sm text-red-600 hover:underline bg-transparent border-none cursor-pointer">
-        삭제
-      </button>
+      {% if post.is_sold %}
+        <!-- 거래 완료된 경우: 수정 버튼 비활성화, 삭제만 가능 -->
+        <span class="text-sm text-gray-400 cursor-not-allowed">수정 불가</span>
+        <button type="button" 
+                onclick="confirmDelete('{% url app_name|add:':post_delete' category=category post_id=post.id %}')"
+                class="text-sm text-red-600 hover:underline bg-transparent border-none cursor-pointer">
+          삭제
+        </button>
+      {% else %}
+        <!-- 거래 진행 중인 경우: 수정/삭제 모두 가능 -->
+        <a href="{% url app_name|add:':post_edit' category=category post_id=post.id %}"
+           class="text-sm text-blue-600 hover:underline">수정</a>
+        
+        <button type="button" 
+                onclick="confirmDelete('{% url app_name|add:':post_delete' category=category post_id=post.id %}')"
+                class="text-sm text-red-600 hover:underline bg-transparent border-none cursor-pointer">
+          삭제
+        </button>
+      {% endif %}
     </div>
   {% endif %}
 
@@ -103,7 +113,7 @@
 </div>
 {% endif %}
 
-<!-- ✅ 삭제 확인 JavaScript 함수 추가 -->
+<!-- 삭제 확인 JavaScript 함수 추가 -->
 <script>
 function confirmDelete(deleteUrl) {
   if (confirm('정말 삭제하시겠습니까?')) {
