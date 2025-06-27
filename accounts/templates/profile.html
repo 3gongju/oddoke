@@ -367,10 +367,16 @@
 
 .user-info {
   @apply flex items-center gap-3 w-full;
+  align-items: center; /* 명시적으로 중앙 정렬 */
+}
+
+.user-info > a {
+  display: inline-flex; /* 인라인 플렉스로 강제 */
 }
 
 .user-name {
-  @apply font-semibold text-black text-base sm:text-lg font-body block flex-1;
+  @apply font-semibold text-black text-base sm:text-lg font-body flex-1;
+  display: inline-block; /* 인라인 블록으로 강제 */
 }
 
 /* 모바일 최적화 */
@@ -497,15 +503,15 @@
     let profileImageHtml;
     if (user.profile_image_url) {
       profileImageHtml = `
-        <a href="/accounts/profile/${user.username}/" class="block">
+        <a href="/accounts/profile/${user.username}/" class="flex-shrink-0">
           <img src="${user.profile_image_url}" 
-               alt="${user.username}의 프로필" 
-               class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-gray-400 transition-colors">
+              alt="${user.username}의 프로필" 
+              class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-gray-400 transition-colors">
         </a>
       `;
     } else {
       profileImageHtml = `
-        <a href="/accounts/profile/${user.username}/" class="block">
+        <a href="/accounts/profile/${user.username}/" class="flex-shrink-0">
           <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-gray-400 transition-colors border-2 border-gray-200">
             ${getInitials(user.username)}
           </div>
