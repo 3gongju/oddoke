@@ -123,6 +123,18 @@ body {
 #messageInputArea {
   padding-bottom: 0.75rem !important; /* pb-3만 유지 */
 }
+
+/* 채팅방에서 푸터 완전 숨김 */
+footer {
+  display: none !important;
+}
+
+/* base.html의 footer include도 숨김 */
+body > footer,
+body > div:has(footer),
+[class*="footer"] {
+  display: none !important;
+}
 </style>
 
 <script>
