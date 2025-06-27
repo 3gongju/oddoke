@@ -9,6 +9,7 @@ _cafe_card.html - 통합 최적화 버전
 - 통일된 버튼 로직
 - 반응형 디자인
 - 찜하기 기능 완전 지원
+- 카드 높이 통일 및 텍스트 길이 제한
 {% endcomment %}
 
 {% load static %}
@@ -16,7 +17,7 @@ _cafe_card.html - 통합 최적화 버전
 
 {% with cafe|cafe_status as cafe_state %}
 <div class="bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-300 overflow-hidden 
-     {% if cafe_state == 'ended' %}ended-cafe{% endif %} cursor-pointer"
+     {% if cafe_state == 'ended' %}ended-cafe{% endif %} cursor-pointer cafe-card-container"
      data-cafe-id="{{ cafe.id }}"
      onclick="location.href='{% if cafe.status == 'approved' %}{% url 'ddoksang:detail' cafe.id %}{% elif cafe.status == 'pending' and show_preview %}{% url 'ddoksang:user_preview' cafe.id %}{% else %}#{% endif %}'"
      role="button"
@@ -59,7 +60,7 @@ _cafe_card.html - 통합 최적화 버전
       <!-- 이미지 없을 때 로고 표시 -->
       <div class="w-full h-full bg-gradient-to-br from-pink-50 to-pink-100 flex flex-col items-center justify-center {% if cafe_state == 'ended' %}relative{% endif %}">
         <img src="{% static 'image/ddok_logo_filled.png' %}" alt="생일카페" class="w-16 h-16 mb-3 opacity-60">
-        <p class="text-pink-600 font-medium text-lg text-center px-4">{{ cafe.cafe_name }}</p>
+        <p class="text-pink-600 font-medium text-lg text-center px-4 line-clamp-2">{{ cafe.cafe_name }}</p>
         
         <!-- 종료된 카페 오버레이 (이미지 없는 경우) -->
         {% if cafe_state == 'ended' %}
@@ -74,7 +75,7 @@ _cafe_card.html - 통합 최적화 버전
   </div>
 
   <!-- 카페 정보 -->
-  <div class="px-6 py-5 {% if cafe_state == 'ended' %}opacity-75{% endif %}">
+  <div class="px-6 py-5 {% if cafe_state == 'ended' %}opacity-75{% endif %} cafe-info-container">
     <div class="flex justify-between items-start mb-3">
       <div class="flex items-center space-x-2 flex-1 min-w-0">
         <!-- 관리자 상태 뱃지 (show_admin_status가 true일 때만) -->
@@ -150,18 +151,18 @@ _cafe_card.html - 통합 최적화 버전
     </div>
 
     <!-- 제목 영역 -->
-    <div class="mb-2">
+    <div class="mb-2 cafe-title-section">
       {% if cafe.member %}
-        <h3 class="font-semibold text-lg text-gray-900">
+        <h3 class="font-semibold text-lg text-gray-900 truncate">
           {{ cafe.member.member_name }}
           <span class="text-sm text-gray-500 font-normal">({{ cafe.artist.display_name }})</span>
         </h3>
       {% else %}
-        <h3 class="font-semibold text-lg text-gray-900">{{ cafe.artist.display_name }}</h3>
+        <h3 class="font-semibold text-lg text-gray-900 truncate">{{ cafe.artist.display_name }}</h3>
       {% endif %}
     </div>
 
-    <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium">{{ cafe.cafe_name }}</h4>
+    <h4 class="text-gray-700 mb-3 line-clamp-2 font-medium cafe-name">{{ cafe.cafe_name }}</h4>
 
     <!-- 위치 정보 -->
     <div class="flex items-center text-sm text-gray-600 mb-2">
@@ -169,7 +170,7 @@ _cafe_card.html - 통합 최적화 버전
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"></path>
       </svg>
-      <span class="truncate">{{ cafe.place_name|default:cafe.address|truncatechars:35 }}</span>
+      <span class="truncate">{{ cafe.place_name|default:cafe.address|truncatechars:30 }}</span>
     </div>
 
     <!-- 날짜 정보 -->
@@ -192,22 +193,22 @@ _cafe_card.html - 통합 최적화 버전
 
     <!-- 혜택 정보 -->
     {% if cafe.special_benefits and show_benefits %}
-      <div class="mb-3">
+      <div class="mb-3 cafe-benefits-section">
         <div class="flex flex-wrap gap-1">
-          {% for benefit in cafe.special_benefits|split:","|slice:":3" %}
+          {% for benefit in cafe.special_benefits|split:","|slice:":2" %}
             {% if benefit|strip %}
-              <span class="inline-block bg-pink-50 text-pink-700 text-xs px-2 py-1 rounded">{{ benefit|strip }}</span>
+              <span class="inline-block bg-pink-50 text-pink-700 text-xs px-2 py-1 rounded">{{ benefit|strip|truncatechars:8 }}</span>
             {% endif %}
           {% endfor %}
-          {% if cafe.special_benefits|split:","|length > 3 %}
-            <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-3" }}개</span>
+          {% if cafe.special_benefits|split:","|length > 2 %}
+            <span class="text-xs text-gray-500">+{{ cafe.special_benefits|split:","|length|add:"-2" }}개</span>
           {% endif %}
         </div>
       </div>
     {% endif %}
 
     <!-- 버튼 영역 -->
-    <div class="space-y-2">
+    <div class="space-y-2 mt-auto">
       <div class="flex space-x-2">
         {% if not hide_detail_button %}
           {% if cafe.status == 'approved' %}
@@ -274,9 +275,41 @@ _cafe_card.html - 통합 최적화 버전
   text-overflow: ellipsis;
 }
 
+/* 카드 컨테이너 높이 통일 */
+.cafe-card-container {
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 카페 정보 영역을 플렉스로 만들어 버튼을 하단에 고정 */
+.cafe-info-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* 제목 섹션 높이 고정 */
+.cafe-title-section {
+  min-height: 2rem;
+}
+
+/* 카페명 높이 고정 */
+.cafe-name {
+  min-height: 3rem;
+}
+
+/* 혜택 섹션 높이 제한 */
+.cafe-benefits-section {
+  min-height: 2rem;
+  max-height: 3rem;
+  overflow: hidden;
+}
+
 /* 포스터 비율 유지 (3:4 비율) */
 .poster-aspect {
   aspect-ratio: 3 / 4;
+  flex-shrink: 0;
 }
 
 /* Fallback for older browsers */
@@ -293,6 +326,27 @@ _cafe_card.html - 통합 최적화 버전
     left: 0;
     width: 100%;
     height: 100%;
+  }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .cafe-card-container {
+    min-height: 420px;
+  }
+  
+  .cafe-title-section h3 {
+    font-size: 1rem;
+  }
+  
+  .cafe-name {
+    font-size: 0.875rem;
+    min-height: 2.5rem;
+  }
+  
+  .cafe-benefits-section {
+    min-height: 1.5rem;
+    max-height: 2.5rem;
   }
 }
 
