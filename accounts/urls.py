@@ -72,6 +72,7 @@ urlpatterns = [
 
     # 리뷰 페이지
     path('<username>/reviews/', views.review_home, name='review_home'), 
+    path('<username>/review/write/', views.write_review, name='write_review'),
 
     # ===== 공통 기능들 =====
     # 공통 신고 기능 URL 추가
