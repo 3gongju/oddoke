@@ -1,28 +1,30 @@
-// static/js/post_form/post_form_edit.js - 기존 코드에 덕생 카페 자동완성만 추가
-
-import { setupArtistAutocomplete } from "./artist_autocomplete.js";
-import { setupCategoryButtons } from "./category_buttons.js";
-import { setupImageUpload } from "./image_upload.js";
-import { setupMembersLoader } from "./members_loader.js";
-import { setupDdoksangCafeAutocomplete } from "./cafe_autocomplete.js"; // 새로 추가
-import { setupPriceHandlers } from "./price_handler.js"; // 새로 추가
+import { setupImagePreview } from "./image_preview";
+import { setupPriceHandlers } from "./price_handler";
+import { setupCategoryButtons } from "./category_buttons";
+import { setupMemberCheckboxes } from "./member_checkboxes";
+import { setupFormSubmission } from "./form_submit";
 
 document.addEventListener("DOMContentLoaded", () => {
   const ajaxBaseUrl = window.ajaxBaseUrl;
   const selectedMemberIds = window.selectedMemberIds || [];
   const existingImages = window.existingImages || [];
 
- 
-  setupArtistAutocomplete(ajaxBaseUrl);
-  setupCategoryButtons(ajaxBaseUrl);
-  setupImageUpload({ formId: "edit-form", existingImages });
-  setupMembersLoader(ajaxBaseUrl, selectedMemberIds);
-  
-  // 덕생 카페 자동완성 (bdaycafe 카테고리에서만 작동)
-  setupDdoksangCafeAutocomplete();
+  // ✅ category 값 추가 (핵심)
+  const category = document.getElementById("selected-category")?.value || 'community';
 
-  // 가격 처리 기능 추가 (판매/대여 카테고리에만)
-  if (category === 'sell' || category === 'rental') {
-    setupPriceHandlers();
-  }
+  // 기존 이미지 미리보기
+  setupImagePreview(existingImages);
+
+  // 덕템 가격 필드 (단일/다중 모드 전환)
+  setupPriceHandlers(category);
+
+  // 카테고리 버튼 비활성화 (수정 페이지에서는 선택 불가)
+  const buttons = document.querySelectorAll(".category-btn");
+  buttons.forEach(btn => btn.classList.add("pointer-events-none", "opacity-50"));
+
+  // 멤버 전체 선택 등 체크박스
+  setupMemberCheckboxes(category, selectedMemberIds);
+
+  // 폼 제출
+  setupFormSubmission();
 });
