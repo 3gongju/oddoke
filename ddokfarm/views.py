@@ -615,7 +615,7 @@ def get_item_price_formset(post=None, data=None):
         return ItemPriceFormSet(queryset=queryset, prefix='item_prices')
 
 def save_item_prices_from_formset(formset, post):
-    """ModelFormSet을 사용한 ItemPrice 저장 (안정성 향상 버전)"""
+    """ModelFormSet을 사용한 ItemPrice 저장 (개선된 버전)"""
     print(f"=== save_item_prices_from_formset DEBUG ===")
     print(f"Post ID: {post.id}")
     print(f"Post type: {type(post)}")
@@ -627,70 +627,24 @@ def save_item_prices_from_formset(formset, post):
     content_type = ContentType.objects.get_for_model(post.__class__)
     print(f"Content type: {content_type}")
 
-    # 기존 ItemPrice 삭제
-    ItemPrice.objects.filter(content_type=content_type, object_id=post.id).delete()
-
-    valid_instances = []
-
-    for i, form in enumerate(formset):
-        print(f"Processing form {i}: valid={form.is_valid()}")
-
-        if not form.is_valid():
-            print(f"❌ Form {i} is invalid: {form.errors}")
-            continue
-
-        try:
-            cleaned_data = form.cleaned_data
-        except Exception as e:
-            print(f"❌ Error reading cleaned_data of form {i}: {e}")
-            continue
-
-        item_name = cleaned_data.get('item_name', '').strip()
-        price = cleaned_data.get('price')
-        is_undetermined = cleaned_data.get('is_price_undetermined', False)
-
-        print(f"Form {i} data: name='{item_name}', price={price}, undetermined={is_undetermined}")
-
-        # 완전히 빈 폼 건너뛰기
-        if not item_name and not price and not is_undetermined:
-            print(f"⚠️ Form {i} skipped (empty)")
-            continue
-
-        if not is_undetermined and (price is None or price == ''):
-            print(f"⚠️ Form {i} skipped (price missing)")
-            continue
-
-        try:
-            instance = ItemPrice(
-                content_type=content_type,
-                object_id=post.id,
-                item_name=item_name,
-                price=0 if is_undetermined else int(price),
-                is_price_undetermined=is_undetermined
-            )
-            valid_instances.append(instance)
-        except Exception as e:
-            print(f"❌ Error creating instance from form {i}: {e}")
-
-    print(f"Total valid instances: {len(valid_instances)}")
-
-    # 저장
-    try:
-        ItemPrice.objects.bulk_create(valid_instances)
-        print(f"✅ Successfully bulk created {len(valid_instances)} items")
-    except Exception as e:
-        print(f"⚠️ bulk_create failed: {e}")
-        print("⏪ Trying individual save...")
-        for i, instance in enumerate(valid_instances):
-            try:
-                instance.save()
-                print(f"✅ Saved item {i} individually")
-            except Exception as e:
-                print(f"❌ Failed to save item {i}: {e}")
-                raise
-
-    return len(valid_instances)
-
+    # 🔧 기존 방식: 모든 ItemPrice 삭제 후 재생성
+    # 개선된 방식: FormSet의 save() 메서드 활용
+    instances = formset.save(commit=False)
+    
+    # 각 인스턴스에 post 정보 설정
+    for instance in instances:
+        instance.content_type = content_type
+        instance.object_id = post.id
+        print(f"Saving instance: {instance.item_name or 'unnamed'} - {instance.price}")
+        instance.save()
+    
+    # 삭제 표시된 객체들 처리
+    for obj in formset.deleted_objects:
+        print(f"Deleting instance: {obj.id}")
+        obj.delete()
+    
+    print(f"✅ Successfully saved {len(instances)} items and deleted {len(formset.deleted_objects)} items")
+    return len(instances)
 
 @login_required
 def post_create(request):
