@@ -473,30 +473,49 @@
   }
 
   function displayFollowList(users) {
-    followModalList.innerHTML = "";
+  followModalList.innerHTML = "";
+  
+  if (users.length === 0) {
+    modalEmpty.classList.remove("hidden");
+    return;
+  }
+  
+  followModalList.classList.remove("hidden");
+  
+  users.forEach(user => {
+    const li = document.createElement('li');
+    li.className = 'follow-list-item';
     
-    if (users.length === 0) {
-      modalEmpty.classList.remove("hidden");
-      return;
-    }
-    
-    followModalList.classList.remove("hidden");
-    
-    users.forEach(user => {
-      const li = document.createElement('li');
-      li.className = 'follow-list-item';
-      li.innerHTML = `
-        <div class="user-info">
-          <div class="user-avatar">
+    // 프로필 이미지 HTML 생성
+    let profileImageHtml;
+    if (user.profile_image_url) {
+      profileImageHtml = `
+        <a href="/accounts/profile/${user.username}/" class="block">
+          <img src="${user.profile_image_url}" 
+               alt="${user.username}의 프로필" 
+               class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-gray-400 transition-colors">
+        </a>
+      `;
+    } else {
+      profileImageHtml = `
+        <a href="/accounts/profile/${user.username}/" class="block">
+          <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-gray-400 transition-colors border-2 border-gray-200">
             ${getInitials(user.username)}
           </div>
-          <span class="user-name">${user.username}</span>
-        </div>
-        <a href="/accounts/profile/${user.username}/" class="view-profile">프로필 보기</a>
+        </a>
       `;
-      followModalList.appendChild(li);
-    });
-  }
+    }
+    
+    li.innerHTML = `
+      <div class="user-info">
+        ${profileImageHtml}
+        <a href="/accounts/profile/${user.username}/" class="user-name hover:text-gray-600 transition-colors">${user.username}</a>
+      </div>
+      <a href="/accounts/profile/${user.username}/" class="view-profile">프로필 보기</a>
+    `;
+    followModalList.appendChild(li);
+  });
+}
 
   function showModalError() {
     followModalList.innerHTML = `
