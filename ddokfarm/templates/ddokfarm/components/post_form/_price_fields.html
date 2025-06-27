@@ -1,5 +1,5 @@
 <!-- ddokfarm/templates/ddokfarm/components/post_form/_price_fields.html -->
-<!-- 🔧 단일/다중 모드 구분 버전 -->
+<!-- 수정된 단일/다중 모드 구분 버전 -->
 
 <!-- 가격 설정 -->
 <div class="mb-6">
@@ -30,7 +30,7 @@
                id="single-price-undetermined"
                name="single_price_undetermined"
                class="mr-2 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-               {% if mode == 'edit' and not post.has_multiple_items and post.get_item_prices.first.is_price_undetermined %}checked{% endif %}>
+               {% if mode == 'edit' and not post.has_multiple_items and post.get_item_prices.first and post.get_item_prices.first.is_price_undetermined %}checked{% endif %}>
         <span>가격 미정 (문의를 통해 협의)</span>
       </label>
     </div>
@@ -172,7 +172,7 @@
   </div>
 </div>
 
-<!-- 🔧 FormSet 에러 표시 (디버그용) -->
+<!-- FormSet 에러 표시 (디버그용) -->
 {% if item_price_formset.non_form_errors %}
   <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
     <strong>가격 설정 오류:</strong>
@@ -183,7 +183,7 @@
 <!-- 개별 아이템 템플릿 (JavaScript에서 사용) -->
 <template id="item-template">
   <div class="item-row p-3 bg-white border border-gray-200 rounded-md">
-    <!-- 데스크탑: 레이아웃 -->
+    <!-- 데스크탑 레이아웃 -->
     <div class="desktop-layout">
       <div class="flex items-start gap-3 w-full">
         <!-- 번호 (고정 너비) -->
@@ -230,7 +230,7 @@
       </div>
     </div>
 
-    <!-- 모바일: 세로 레이아웃 -->
+    <!-- 모바일 레이아웃 -->
     <div class="mobile-layout space-y-3">
       <div class="flex items-center justify-between">
         <div class="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
@@ -271,82 +271,9 @@
       </div>
     </div>
   </div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">가격</label>
-          <div class="relative mb-2">
-            <input type="number" 
-                   class="item-price-input w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400" 
-                   placeholder="가격 입력" 
-                   min="0">
-            <span class="absolute right-3 top-2 text-sm text-gray-500 font-medium">원</span>
-          </div>
-          <!-- 가격 미정 체크박스 -->
-          <div class="flex justify-end">
-            <label class="inline-flex items-center text-xs text-gray-600 cursor-pointer">
-              <input type="checkbox" 
-                     class="item-price-undetermined-checkbox mr-2 w-3 h-3 text-green-600 border-gray-300 rounded focus:ring-green-500">
-              <span>가격 미정</span>
-            </label>
-          </div>
-        </div>
-        
-        <!-- 삭제 버튼 -->
-        <div class="flex-shrink-0">
-          <button type="button" 
-                  class="remove-item-btn w-10 h-10 text-red-500 hover:text-white hover:bg-red-500 border border-red-300 hover:border-red-500 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 모바일: 세로 레이아웃 -->
-    <div class="mobile-layout space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-          <span class="item-number-mobile">덕1</span>
-        </div>
-        <button type="button" 
-                class="remove-item-btn w-10 h-10 text-red-500 hover:text-white hover:bg-red-500 border border-red-300 hover:border-red-500 rounded-full flex items-center justify-center transition-all duration-200">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-      
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">물건명 (선택사항)</label>
-        <input type="text" 
-               class="item-name-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400" 
-               placeholder="예: 포토카드, 키링 등" 
-               maxlength="20">
-      </div>
-      
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">가격</label>
-        <div class="relative">
-          <input type="number" 
-                 class="item-price-input-mobile w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-400" 
-                 placeholder="가격 입력" 
-                 min="0">
-          <span class="absolute right-3 top-2 text-sm text-gray-500">원</span>
-        </div>
-      </div>
-      
-      <!-- 가격 미정 체크박스 (모바일) -->
-      <div class="flex justify-end">
-        <label class="inline-flex items-center text-xs text-gray-600 cursor-pointer">
-          <input type="checkbox" 
-                 class="item-price-undetermined-checkbox-mobile mr-2 w-3 h-3 text-green-600 border-gray-300 rounded focus:ring-green-500">
-          <span>가격 미정</span>
-        </label>
-      </div>
-    </div>
-  </div>
 </template>
 
-<!-- 🔧 스타일 개선 -->
+<!-- 스타일 개선 -->
 <style>
   /* 반응형 레이아웃 */
   .desktop-layout { display: flex; }

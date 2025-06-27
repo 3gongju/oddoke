@@ -904,7 +904,8 @@ def search_artists(request):
 
     return JsonResponse(data)
 
-# 게시글 수정
+# views.py에서 post_edit 함수 수정
+
 @login_required
 def post_edit(request, category, post_id):
     model = get_post_model(category)
@@ -1101,6 +1102,18 @@ def post_edit(request, category, post_id):
                 sp_form.fields['member'].initial = member.id
                 formset_with_names.append((sp_form, member.member_name))
 
+    # 🔧 기존 ItemPrice 데이터를 JavaScript로 전달
+    existing_item_prices = []
+    if category in ['sell', 'rental']:
+        item_prices = post.get_item_prices().order_by('id')
+        for item in item_prices:
+            existing_item_prices.append({
+                'id': item.id,
+                'item_name': item.item_name,
+                'price': item.price,
+                'is_price_undetermined': item.is_price_undetermined,
+            })
+
     # 템플릿 컨텍스트
     context = {
         'form': form,
@@ -1126,6 +1139,8 @@ def post_edit(request, category, post_id):
             }
             for img in post.images.all()
         ],
+        # 🔧 기존 ItemPrice 데이터 추가
+        'existing_item_prices': existing_item_prices,
         'categories': get_ddokfarm_categories(),
         'ajax_base_url': '/ddokfarm/ajax',
     }
