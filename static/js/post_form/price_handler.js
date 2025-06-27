@@ -66,6 +66,18 @@ export function setupPriceHandlers() {
                     singlePriceInput.style.backgroundColor = '';
                     singlePriceInput.style.color = '';
                 }
+                
+                // 🔧 단일 가격 필드에 change 이벤트 리스너 추가
+                singlePriceInput.addEventListener('input', function() {
+                    console.log('Single price changed:', this.value);
+                    // 값이 변경되었음을 표시하기 위해 데이터 속성 추가
+                    this.setAttribute('data-changed', 'true');
+                });
+                
+                singlePriceUndetermined.addEventListener('change', function() {
+                    console.log('Single price undetermined changed:', this.checked);
+                    this.setAttribute('data-changed', 'true');
+                });
             }
         } else if (currentMode === 'multiple') {
             // 다중 모드: 모든 아이템을 다중 아이템 리스트에 추가
@@ -360,13 +372,13 @@ export function setupPriceHandlers() {
         }
     }
 
-    // 🔧 폼 제출 시 데이터 전처리
+    // 🔧 폼 제출 시 데이터 전처리 (수정된 버전)
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
             console.log('Form submission, current mode:', currentMode);
             
-            // 모드 필드 추가
+            // 🔧 price_mode 필드를 항상 추가하도록 수정
             let modeInput = form.querySelector('input[name="price_mode"]');
             if (!modeInput) {
                 modeInput = document.createElement('input');
@@ -375,20 +387,41 @@ export function setupPriceHandlers() {
                 form.appendChild(modeInput);
             }
             modeInput.value = currentMode;
+            console.log('Set price_mode to:', currentMode);
 
             // 단일 모드인 경우: FormSet 필드 제거하고 단일 가격 데이터만 전송
             if (currentMode === 'single') {
                 console.log('Single mode: removing FormSet fields');
                 
-                // FormSet 관련 필드 모두 제거
-                const formsetFields = form.querySelectorAll('input[name^="item_prices-"]');
-                formsetFields.forEach(field => field.remove());
+                // 🔧 FormSet 관련 필드 모두 제거 (management form 포함)
+                const formsetFields = form.querySelectorAll('input[name^="item_prices-"], select[name^="item_prices-"], textarea[name^="item_prices-"]');
+                console.log(`Removing ${formsetFields.length} FormSet fields`);
+                formsetFields.forEach(field => {
+                    console.log(`Removing field: ${field.name}`);
+                    field.remove();
+                });
                 
                 // 단일 가격 데이터 확인
                 const singlePrice = singlePriceInput?.value || '';
                 const isUndetermined = singleUndeterminedCheckbox?.checked || false;
                 
                 console.log('Single price data:', singlePrice, 'Undetermined:', isUndetermined);
+                
+                // 🔧 값이 변경되었는지 확인
+                const priceChanged = singlePriceInput?.getAttribute('data-changed') === 'true';
+                const undeterminedChanged = singleUndeterminedCheckbox?.getAttribute('data-changed') === 'true';
+                
+                console.log('Price changed:', priceChanged, 'Undetermined changed:', undeterminedChanged);
+                
+                // 변경사항이 있음을 표시하는 hidden field 추가
+                if (priceChanged || undeterminedChanged) {
+                    const changedInput = document.createElement('input');
+                    changedInput.type = 'hidden';
+                    changedInput.name = 'price_changed';
+                    changedInput.value = 'true';
+                    form.appendChild(changedInput);
+                    console.log('Added price_changed flag');
+                }
                 
                 // 단일 가격이 입력되었거나 가격 미정이 체크된 경우에만 진행
                 if (!singlePrice && !isUndetermined) {
@@ -401,6 +434,14 @@ export function setupPriceHandlers() {
             // 다중 모드인 경우: FormSet 데이터 검증 및 정리
             if (currentMode === 'multiple') {
                 console.log('Multiple mode: validating FormSet data');
+                
+                // 🔧 단일 가격 필드 제거 (다중 모드에서는 불필요)
+                const singlePriceFields = form.querySelectorAll('input[name="single_price"], input[name="single_price_undetermined"]');
+                console.log(`Removing ${singlePriceFields.length} single price fields`);
+                singlePriceFields.forEach(field => {
+                    console.log(`Removing single price field: ${field.name}`);
+                    field.remove();
+                });
                 
                 const items = itemsList.querySelectorAll('.item-row');
                 let hasValidItem = false;
@@ -422,6 +463,8 @@ export function setupPriceHandlers() {
                         if (isUndetermined && priceInput) {
                             priceInput.value = '0';
                         }
+                        
+                        console.log(`Item ${index}: name="${itemName}", price="${price}", undetermined=${isUndetermined}`);
                     }
                 });
                 
@@ -433,6 +476,15 @@ export function setupPriceHandlers() {
                 
                 // FormSet 관리 필드 최종 업데이트
                 updateFormsetManagement();
+            }
+            
+            // 🔧 최종 폼 데이터 로그
+            console.log('=== FINAL FORM DATA ===');
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('price') || key.includes('item_prices') || key === 'price_mode' || key === 'price_changed') {
+                    console.log(`${key}: ${value}`);
+                }
             }
         });
     }

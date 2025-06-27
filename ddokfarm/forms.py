@@ -1,5 +1,6 @@
 from django import forms
 from django.forms import modelformset_factory, HiddenInput
+from django.contrib.contenttypes.models import ContentType
 from .models import FarmSellPost, FarmRentalPost, FarmSplitPost, FarmComment, SplitPrice, ItemPrice, ExchangeItem, SHIPPING_METHOD_CHOICES
 
 COMMON_INPUT_CLASS = 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-pink-400'
@@ -115,16 +116,51 @@ class ItemPriceForm(forms.ModelForm):
             
         return cleaned_data
 
-# ItemPrice ModelFormSet 생성 - 수정된 버전
-ItemPriceFormSet = modelformset_factory(
-    ItemPrice,
-    form=ItemPriceForm,
-    extra=0,  # 기본적으로 빈 폼 없음
-    can_delete=True,
-    min_num=0,  # 🔧 최소 개수를 0으로 변경 (빈 폼 허용)
-    validate_min=False,  # 🔧 최소 검증 비활성화
-    max_num=20,  # 최대 20개로 제한
-)
+# 🔧 글로벌 ItemPrice FormSet 생성 함수 (수정된 버전)
+def get_item_price_formset(post=None, data=None):
+    """ItemPrice FormSet 생성 헬퍼 - 수정된 버전"""
+    
+    # 🔧 FormSet 클래스 정의 (수정 모드와 생성 모드 구분)
+    if post:
+        # 수정 모드: 기존 데이터 기반
+        ItemPriceFormSet = modelformset_factory(
+            ItemPrice,
+            form=ItemPriceForm,
+            extra=0,  # 추가 빈 폼 없음
+            can_delete=True,
+            min_num=0,
+            validate_min=False,
+            max_num=20,
+        )
+        
+        content_type = ContentType.objects.get_for_model(post.__class__)
+        queryset = ItemPrice.objects.filter(
+            content_type=content_type, 
+            object_id=post.id
+        ).order_by('id')
+        
+        if data:
+            return ItemPriceFormSet(data, queryset=queryset, prefix='item_prices')
+        else:
+            return ItemPriceFormSet(queryset=queryset, prefix='item_prices')
+    else:
+        # 생성 모드: 빈 쿼리셋
+        ItemPriceFormSet = modelformset_factory(
+            ItemPrice,
+            form=ItemPriceForm,
+            extra=0,
+            can_delete=True,
+            min_num=0,
+            validate_min=False,
+            max_num=20,
+        )
+        
+        queryset = ItemPrice.objects.none()
+        
+        if data:
+            return ItemPriceFormSet(data, queryset=queryset, prefix='item_prices')
+        else:
+            return ItemPriceFormSet(queryset=queryset, prefix='item_prices')
 
 class FarmSellPostForm(forms.ModelForm):
     md = custom_choice_field(FarmSellPost.MD_CHOICES, label='종류')
@@ -167,8 +203,6 @@ class FarmSellPostForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        # ItemPrice 초기 데이터 처리
-        self.item_prices_initial = kwargs.pop('item_prices_initial', [])
         super().__init__(*args, **kwargs)
 
         # 기존 데이터가 있을 때 shipping_methods 초기화
@@ -188,15 +222,6 @@ class FarmSellPostForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-
-    def get_item_price_formset(self, data=None):
-        """ItemPrice FormSet 반환"""
-        if data:
-            return ItemPriceFormSet(data, prefix='item_prices')
-        else:
-            # 수정 모드에서 기존 데이터로 초기화
-            initial_data = self.item_prices_initial or []
-            return ItemPriceFormSet(initial=initial_data, prefix='item_prices')
 
 class FarmRentalPostForm(forms.ModelForm):
     condition = custom_choice_field(FarmRentalPost.CONDITION_CHOICES, label='상품 상태')
@@ -227,8 +252,6 @@ class FarmRentalPostForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
-        # ItemPrice 초기 데이터 처리
-        self.item_prices_initial = kwargs.pop('item_prices_initial', [])
         super().__init__(*args, **kwargs)
 
         # 기존 데이터가 있을 때 shipping_methods 초기화
@@ -243,15 +266,6 @@ class FarmRentalPostForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-    
-    def get_item_price_formset(self, data=None):
-        """ItemPrice FormSet 반환"""
-        if data:
-            return ItemPriceFormSet(data, prefix='item_prices')
-        else:
-            # 수정 모드에서 기존 데이터로 초기화
-            initial_data = self.item_prices_initial or []
-            return ItemPriceFormSet(initial=initial_data, prefix='item_prices')
 
 class FarmSplitPostForm(forms.ModelForm):
     album = custom_choice_field(FarmSplitPost.ALBUM_CHOICES, label='앨범 포함 여부')

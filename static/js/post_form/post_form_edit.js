@@ -12,11 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🔧 기존 ItemPrice 데이터 전역 변수로 설정
   const existingItemPrices = window.existingItemPrices || [];
   console.log('Edit mode - existing item prices:', existingItemPrices);
+  console.log('Edit mode - existing images:', existingImages);
 
   // category 값 추가 (핵심)
   const category = document.getElementById("selected-category")?.value || 'community';
 
-  // 기존 이미지 미리보기
+  // 🔧 기존 이미지 미리보기 - setupImageUpload 대신 setupImagePreview 사용
   setupImagePreview(existingImages);
 
   // 🔧 덕템 가격 필드 (단일/다중 모드 전환) - 기존 데이터와 함께 초기화
