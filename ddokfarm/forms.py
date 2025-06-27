@@ -58,9 +58,9 @@ market_widgets = {
     }),
 }
 
-# 개별 아이템 가격 폼 수정 (가격 미정 옵션 추가)
+# 개별 아이템 가격 폼
 class ItemPriceForm(forms.ModelForm):
-    """개별 아이템 가격 입력 폼 (ModelForm 기반)"""
+    """개별 아이템 가격 입력 폼 (ModelForm 기반) - 수정된 버전"""
     
     class Meta:
         model = ItemPrice
@@ -92,28 +92,37 @@ class ItemPriceForm(forms.ModelForm):
             field.label = ''
     
     def clean(self):
+        """🔧 수정된 clean 메서드"""
         cleaned_data = super().clean()
         price = cleaned_data.get('price')
         is_undetermined = cleaned_data.get('is_price_undetermined', False)
         
+        # 🔧 빈 폼 체크 (모든 필드가 비어있으면 무시)
+        item_name = cleaned_data.get('item_name', '').strip()
+        if not item_name and not price and not is_undetermined:
+            # 완전히 빈 폼은 그냥 통과 (FormSet에서 처리)
+            return cleaned_data
+        
         # 가격 미정이 아닌데 가격이 없거나 0이면 에러
-        if not is_undetermined and (not price or price <= 0):
-            raise forms.ValidationError("가격을 입력하거나 '가격 미정'을 선택해주세요.")
-            
-        # 가격 미정이면 price를 0으로 설정
-        if is_undetermined:
+        if not is_undetermined:
+            if price is None or price == '' or price == 0:
+                raise forms.ValidationError("가격을 입력하거나 '가격 미정'을 선택해주세요.")
+            if price < 0:
+                raise forms.ValidationError("가격은 0 이상이어야 합니다.")
+        else:
+            # 가격 미정이면 price를 0으로 설정
             cleaned_data['price'] = 0
             
         return cleaned_data
 
-# ItemPrice ModelFormSet 생성
+# ItemPrice ModelFormSet 생성 - 수정된 버전
 ItemPriceFormSet = modelformset_factory(
     ItemPrice,
     form=ItemPriceForm,
     extra=0,  # 기본적으로 빈 폼 없음
     can_delete=True,
-    min_num=1,  # 최소 1개 필요
-    validate_min=True,
+    min_num=0,  # 🔧 최소 개수를 0으로 변경 (빈 폼 허용)
+    validate_min=False,  # 🔧 최소 검증 비활성화
     max_num=20,  # 최대 20개로 제한
 )
 
