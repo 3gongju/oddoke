@@ -6,7 +6,7 @@
   <!-- 헤더 -->
   {% include 'ddokfarm/components/_header.html' %}
 
-  <!-- 카테고리 선택 -->
+  <!-- 카테고리 선택 (수정 시에는 비활성화) -->
   {% include 'components/post_form/_category_buttons.html' %}
 
   <!-- 작성 폼 -->
@@ -14,6 +14,8 @@
     <form method="post" enctype="multipart/form-data" id="edit-form"
           class="w-full max-w-2xl bg-white p-6 rounded-xl shadow-lg">
       {% csrf_token %}
+      
+      <!-- _form_base.html만 include -->
       {% include 'components/post_form/_form_base.html' %}
     </form>
   </div>
@@ -21,7 +23,7 @@
 
 {{ existing_images|json_script:"existing-images-data" }}
 <script>
-  // ✅ 원래대로 복구 - 뷰에서 전달받는 방식
+  // 전역 변수 설정
   window.ajaxBaseUrl = "{{ ajax_base_url }}";
   window.selectedMemberIds = {{ selected_member_ids|default:"[]"|safe }};
 
