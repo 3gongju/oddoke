@@ -412,7 +412,7 @@
   <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
     <div class="relative max-w-4xl mx-auto">
       <!-- 배너 신청자 표시 (사용자가 업로드한 승인된 배너가 있을 때만) -->
-      {% if active_banner and active_banner.user %}
+      {% if active_banner and active_banner.user and not active_banner.is_default %}
         <div id="bannerTopText" class="text-center group cursor-pointer transition-all duration-300">
           <!-- 호버시에만 나타나는 후원 메시지 - 위쪽에 위치 -->
           <p class="text-xs sm:text-sm text-gray-500 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 mb-1">
@@ -503,7 +503,6 @@
   }
 }
 </style>
-
 
 <!-- 오늘의 새 소식 - 패딩 축소 -->
 <section class="py-4 sm:py-6 lg:py-8 bg-white mb-4 sm:mb-6">
@@ -821,6 +820,9 @@
     scrollToTopBtn.addEventListener('click', scrollToTop);
     toggleScrollButton();
     
+    // 배너 이미지 반응형 텍스트 위치 조정
+    initResponsiveBannerLayout();
+    
     // 배너 슬라이드 - 좌우 클릭 영역 포함
     const slides = document.querySelectorAll(".banner-slide");
     const prevBtn = document.getElementById('bannerPrevBtn');
@@ -893,6 +895,93 @@
     // 생일 아티스트 슬라이더 초기화
     initBirthdaySlider();
   });
+
+  // 배너 이미지 크기에 따른 반응형 텍스트 위치 조정
+  function initResponsiveBannerLayout() {
+    const bannerCarousel = document.getElementById('bannerCarousel');
+    const bannerTopText = document.getElementById('bannerTopText');
+    const bannerBottomText = document.getElementById('bannerBottomText');
+    
+    if (!bannerCarousel) return;
+    
+    function adjustTextPositions() {
+      const activeSlide = document.querySelector('.banner-slide.active img');
+      if (!activeSlide) return;
+      
+      // 이미지가 로드될 때까지 대기
+      if (activeSlide.complete && activeSlide.naturalHeight !== 0) {
+        adjustBasedOnImageSize(activeSlide);
+      } else {
+        activeSlide.addEventListener('load', () => {
+          adjustBasedOnImageSize(activeSlide);
+        });
+      }
+    }
+    
+    function adjustBasedOnImageSize(img) {
+      const container = bannerCarousel;
+      const containerHeight = container.offsetHeight;
+      const containerWidth = container.offsetWidth;
+      
+      // 이미지의 실제 비율 계산
+      const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+      const containerAspectRatio = containerWidth / containerHeight;
+      
+      // 상하 여백 계산
+      let topMargin, bottomMargin;
+      
+      if (imageAspectRatio > containerAspectRatio) {
+        // 이미지가 가로로 긴 경우 (위아래 여백 생김)
+        const actualImageHeight = containerWidth / imageAspectRatio;
+        const verticalSpace = (containerHeight - actualImageHeight) / 2;
+        
+        // 여백이 클수록 텍스트를 더 가깝게
+        if (verticalSpace > 40) {
+          topMargin = Math.max(10, 40 - verticalSpace * 0.3);
+          bottomMargin = Math.max(10, 40 - verticalSpace * 0.3);
+        } else {
+          topMargin = 40;
+          bottomMargin = 40;
+        }
+      } else {
+        // 이미지가 세로로 긴 경우 또는 비슷한 비율
+        topMargin = 20;
+        bottomMargin = 20;
+      }
+      
+      // 텍스트 위치 조정
+      if (bannerTopText) {
+        bannerTopText.style.marginBottom = `${topMargin}px`;
+      }
+      
+      if (bannerBottomText) {
+        bannerBottomText.style.marginTop = `${bottomMargin}px`;
+      }
+    }
+    
+    // 초기 조정
+    adjustTextPositions();
+    
+    // 윈도우 리사이즈 시 재조정
+    window.addEventListener('resize', adjustTextPositions);
+    
+    // 슬라이드 변경 시 재조정
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const target = mutation.target;
+          if (target.classList.contains('banner-slide') && target.classList.contains('active')) {
+            setTimeout(adjustTextPositions, 100); // 약간의 지연 후 조정
+          }
+        }
+      });
+    });
+    
+    // 모든 배너 슬라이드 관찰
+    document.querySelectorAll('.banner-slide').forEach(slide => {
+      observer.observe(slide, { attributes: true });
+    });
+  }
 
   // 생일 아티스트 슬라이더 함수 (기존과 동일)
   function initBirthdaySlider() {
