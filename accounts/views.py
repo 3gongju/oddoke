@@ -289,7 +289,20 @@ def follow_list(request, username):
     else:
         return JsonResponse({'users': []})
 
-    user_data = [{'username': u.username} for u in users]
+    user_data = []
+    for u in users:
+        profile_image_url = None
+        if u.profile_image and hasattr(u.profile_image, 'url'):
+            try:
+                profile_image_url = u.profile_image.url
+            except:
+                profile_image_url = None
+        
+        user_data.append({
+            'username': u.username,
+            'profile_image_url': profile_image_url
+        })
+    
     return JsonResponse({'users': user_data})
 
 @login_required

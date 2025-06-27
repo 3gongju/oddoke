@@ -1,4 +1,4 @@
-// static/js/post_form/post_form.js - 기존 기능 유지하면서 안전하게 확장
+// static/js/post_form/post_form.js - 가격 처리 기능 추가
 
 import { setupArtistAutocomplete } from "./artist_autocomplete.js";
 import { setupCategoryButtons } from "./category_buttons.js";
@@ -6,6 +6,7 @@ import { setupImageUpload } from "./image_upload.js";
 import { setupMembersLoader } from "./members_loader.js";
 import { setupArtistChangeHandlers } from "./artist_change_handler.js";
 import { setupDdoksangCafeAutocomplete } from "./cafe_autocomplete.js";
+import { setupPriceHandlers } from "./price_handler.js"; // 새로 추가
 
 document.addEventListener("DOMContentLoaded", () => {
   const ajaxBaseUrl = window.ajaxBaseUrl;
@@ -25,4 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // 생카후기 카테고리일 때만 덕생 카페 자동완성 활성화
   setupDdoksangCafeAutocomplete();
+  
+  // 가격 처리 기능 추가 (판매/대여 카테고리에만)
+  if (category === 'sell' || category === 'rental') {
+    setupPriceHandlers();
+  }
 });

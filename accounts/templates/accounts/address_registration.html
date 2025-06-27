@@ -43,7 +43,7 @@
                   <div class="flex flex-col space-y-2">
                     {{ form.postal_code }}
                     <button type="button" id="addressSearchBtn" 
-                            class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm">
+                            class="px-3 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors text-sm">
                       주소 검색
                     </button>
                   </div>
@@ -80,50 +80,6 @@
               {% endif %}
             </div>
 
-            <!-- 지번주소 -->
-            <!-- <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <label for="{{ form.jibun_address.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
-                    {{ form.jibun_address.label }}
-                  </label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">지번 주소 (자동 입력)</div>
-                </div>
-                <div class="ml-4 min-w-0 flex-1 max-w-xs">
-                  {{ form.jibun_address }}
-                </div>
-              </div>
-              {% if form.jibun_address.errors %}
-                <div class="text-red-500 text-sm mt-2">
-                  {% for error in form.jibun_address.errors %}
-                    <p>{{ error }}</p>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div> -->
-
-            <!-- 건물명 -->
-            <!-- <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5 border-b border-gray-100">
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <label for="{{ form.building_name.id_for_label }}" class="text-base sm:text-lg font-medium text-gray-900">
-                    {{ form.building_name.label }}
-                  </label>
-                  <div class="text-sm sm:text-base text-gray-500 mt-1">아파트명, 건물명 등 (선택사항)</div>
-                </div>
-                <div class="ml-4 min-w-0 flex-1 max-w-xs">
-                  {{ form.building_name }}
-                </div>
-              </div>
-              {% if form.building_name.errors %}
-                <div class="text-red-500 text-sm mt-2">
-                  {% for error in form.building_name.errors %}
-                    <p>{{ error }}</p>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div> -->
-
             <!-- 상세주소 -->
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
               <div class="flex justify-between items-start">
@@ -146,7 +102,7 @@
               {% endif %}
             </div>
 
-            <!-- 🔥 연락처 (핸드폰 번호) 추가 -->
+            <!-- 연락처 (핸드폰 번호) 추가 -->
             <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
@@ -185,19 +141,19 @@
           <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
             <ul class="text-sm sm:text-base text-gray-700 space-y-2">
               <li class="flex items-start space-x-2">
-                <span class="text-green-500 mt-1">🔒</span>
+                <span class="text-pink-500 mt-1">•</span>
                 <span>배송정보(주소, 연락처)는 암호화되어 안전하게 저장됩니다</span>
               </li>
               <li class="flex items-start space-x-2">
-                <span class="text-blue-500 mt-1">👁️</span>
+                <span class="text-pink-500 mt-1">•</span>
                 <span>거래 시에만 마스킹된 정보가 공개됩니다</span>
               </li>
               <li class="flex items-start space-x-2">
-                <span class="text-purple-500 mt-1">📦</span>
+                <span class="text-pink-500 mt-1">•</span>
                 <span>상세 배송정보는 거래 확정 후에만 공개됩니다</span>
               </li>
               <li class="flex items-start space-x-2">
-                <span class="text-red-500 mt-1">🗑️</span>
+                <span class="text-pink-500 mt-1">•</span>
                 <span>거래 완료 시 모든 배송정보가 자동으로 삭제됩니다</span>
               </li>
             </ul>
@@ -216,7 +172,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
                 <div class="flex items-center space-x-2 mb-2">
-                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                  <span class="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-xs font-bold">1</span>
                   <p class="text-sm font-medium text-gray-800">주소 검색</p>
                 </div>
                 <p class="text-xs text-gray-600">주소 검색 버튼을 클릭하여 카카오 우편번호 서비스를 이용하세요</p>
@@ -224,7 +180,7 @@
               
               <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
                 <div class="flex items-center space-x-2 mb-2">
-                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                  <span class="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-xs font-bold">2</span>
                   <p class="text-sm font-medium text-gray-800">정확한 주소</p>
                 </div>
                 <p class="text-xs text-gray-600">도로명, 건물명 등으로 정확한 주소를 검색하세요</p>
@@ -232,7 +188,7 @@
               
               <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
                 <div class="flex items-center space-x-2 mb-2">
-                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                  <span class="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
                   <p class="text-sm font-medium text-gray-800">상세정보 입력</p>
                 </div>
                 <p class="text-xs text-gray-600">동, 호수 등의 상세주소와 연락처를 입력하세요</p>
@@ -240,7 +196,7 @@
               
               <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-200">
                 <div class="flex items-center space-x-2 mb-2">
-                  <span class="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                  <span class="w-6 h-6 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center text-xs font-bold">4</span>
                   <p class="text-sm font-medium text-gray-800">안전한 거래</p>
                 </div>
                 <p class="text-xs text-gray-600">배송정보는 거래 시에만 공개되며 거래 완료 후 자동 삭제됩니다</p>
@@ -284,8 +240,8 @@ select, input[type="text"], input[type="number"], textarea {
 
 select:focus, input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #ec4899;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
 }
 
 /* 반응형 폼 필드 */
@@ -390,6 +346,27 @@ input[readonly] {
 
 .toast.warning {
   background-color: #f59e0b;
+}
+
+/* 핑크 테마 색상 정의 */
+.text-pink-500 {
+  color: #ec4899;
+}
+
+.text-pink-600 {
+  color: #db2777;
+}
+
+.bg-pink-100 {
+  background-color: #fce7f3;
+}
+
+.bg-pink-600 {
+  background-color: #db2777;
+}
+
+.bg-pink-700 {
+  background-color: #be185d;
 }
 </style>
 
