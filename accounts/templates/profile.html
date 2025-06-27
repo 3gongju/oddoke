@@ -2,15 +2,15 @@
 {% load static %}
 {% block body %}
 <div class="min-h-screen bg-white">
-  <div class="max-w-5xl mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto px-4 py-8">
     
     <!-- Profile Header -->
-    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-8 mb-8">
-      <div class="flex flex-col lg:flex-row items-center lg:items-start gap-8">
+    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-3 sm:p-4 lg:p-6 mb-4 lg:mb-6">
+      <div class="flex flex-col lg:flex-row items-center lg:items-start gap-3 sm:gap-4 lg:gap-6">
         
         <!-- Profile Image -->
         <div class="relative">
-          <div class="w-40 h-40 rounded-full bg-cream-accent p-1 shadow-lg">
+          <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-cream-accent p-1 shadow-lg">
             <div class="w-full h-full rounded-full overflow-hidden bg-white p-1">
               {% if user_profile.profile_image and user_profile.profile_image.name %}
                 <img src="{{ user_profile.profile_image.url }}" alt="프로필 이미지" class="w-full h-full object-cover rounded-full">
@@ -27,8 +27,8 @@
         <!-- Profile Info -->
         <div class="flex-1 text-center lg:text-left">
           <!-- Username and Follow Button -->
-          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-6">
-            <h1 class="text-3xl font-bold text-black font-heading">
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <h1 class="text-sm sm:text-base lg:text-lg font-bold text-black font-heading">
               {{ user_profile.username }}
             </h1>
 
@@ -58,8 +58,8 @@
 
           <!-- Verification Badge -->
           {% if fandom_profile and fandom_profile.is_verified_fandom %}
-            <div class="mb-4">
-              <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-cream-accent text-black border border-cream-dark">
+            <div class="mb-3">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-cream-accent text-black border border-cream-dark">
                 {{ fandom_profile.fandom_artist.fandom }}
               </span>
             </div>
@@ -67,27 +67,27 @@
 
           <!-- Bio -->
           {% if user_profile.bio %}
-            <p class="text-gray-700 mb-6 text-lg leading-relaxed max-w-md mx-auto lg:mx-0 font-body">{{ user_profile.bio }}</p>
+            <p class="text-gray-700 mb-3 sm:mb-4 text-sm sm:text-base leading-relaxed max-w-md mx-auto lg:mx-0 font-body">{{ user_profile.bio }}</p>
           {% endif %}
 
           <!-- Stats -->
-          <div class="flex justify-center lg:justify-start gap-8 mb-6">
-            <button id="followerBtn" class="stat-button group">
-              <div class="text-2xl font-bold text-black group-hover:text-cream-dark transition-colors font-heading">{{ user_profile.followers.all|length }}</div>
-              <div class="text-sm text-gray-600 group-hover:text-cream-dark transition-colors font-body">팔로워</div>
+          <div class="flex justify-center lg:justify-start gap-4 sm:gap-6 mb-3 sm:mb-4">
+            <button id="followerBtn" class="stat-button group flex items-center gap-1">
+              <div class="text-xs sm:text-sm text-black group-hover:text-cream-dark transition-colors font-heading">팔로워</div>
+              <div class="text-xs sm:text-sm text-black group-hover:text-cream-dark transition-colors font-heading">{{ user_profile.followers.all|length }}</div>
             </button>
-            <button id="followingBtn" class="stat-button group">
-              <div class="text-2xl font-bold text-black group-hover:text-cream-dark transition-colors font-heading">{{ user_profile.followings.all|length }}</div>
-              <div class="text-sm text-gray-600 group-hover:text-cream-dark transition-colors font-body">팔로잉</div>
+            <button id="followingBtn" class="stat-button group flex items-center gap-1">
+              <div class="text-xs sm:text-sm text-black group-hover:text-cream-dark transition-colors font-heading">팔로잉</div>
+              <div class="text-xs sm:text-sm text-black group-hover:text-cream-dark transition-colors font-heading">{{ user_profile.followings.all|length }}</div>
             </button>
           </div>
 
           <!-- Action Button -->
           <a href="{% url 'accounts:review_home' user_profile.username %}" 
-            class="inline-flex items-center px-6 py-3 bg-pink-400 hover:bg-pink-500 text-white font-semibold rounded-full transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl font-body">
+            class="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-pink-400 hover:bg-pink-500 text-white font-semibold rounded-full transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-xl font-body text-xs sm:text-sm">
             
             <!-- 신뢰도 아이콘 -->
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             
@@ -98,10 +98,10 @@
     </div>
 
     <!-- Favorite Artists -->
-    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-8 mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-black flex items-center gap-3 font-heading">
-          찜한 덕
+    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-4 sm:p-6 lg:p-8 mb-6 lg:mb-8">
+      <div class="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 class="text-base sm:text-lg lg:text-xl font-bold text-black flex items-center gap-3 font-heading">
+          찜한 아티스트
         </h2>
         <div class="text-sm text-gray-600 bg-cream-light px-3 py-1 rounded-full font-body">
           {{ favorite_artists|length }}개
@@ -139,9 +139,9 @@
     </div>
 
     <!-- Posts Section -->
-    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-8">
+    <div class="bg-cream-bg rounded-2xl shadow-sm border border-cream-light p-4 sm:p-6 lg:p-8">
       <!-- Category Tabs -->
-      <div class="flex justify-center mb-8">
+      <div class="flex justify-center mb-4 sm:mb-6 lg:mb-8">
         <div class="bg-cream-light rounded-2xl p-2 shadow-inner">
           <button id="tab-all" class="category-tab active">
             <span>전체</span>
@@ -158,7 +158,7 @@
       <!-- Posts Grid -->
       <div id="posts-container">
         {% if ddokfarm_posts or ddokdam_posts %}
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="posts-grid">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6" id="posts-grid">
             <!-- 덕팜 게시글들 -->
             {% for post in ddokfarm_posts %}
             <div class="post-item post-card" data-category="ddokfarm">
@@ -181,7 +181,7 @@
                   </div>
                   
                   <!-- Badge -->
-                  <div class="absolute top-3 right-3 bg-cream-accent text-black text-xs px-2 py-1 rounded-full font-medium shadow-sm font-body">
+                  <div class="absolute top-3 right-3 bg-pink-100 text-black text-xs px-2 py-1 rounded-full font-medium shadow-sm font-body">
                     덕팜
                   </div>
                 </div>
@@ -306,7 +306,7 @@
 
   /* Follow Button */
   .follow-btn {
-    @apply px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 transform hover:-translate-y-1 shadow-lg font-body;
+    @apply px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-semibold text-sm transition-all duration-300 transform hover:-translate-y-1 shadow-lg font-body;
   }
   
   .follow-btn.following {
@@ -329,9 +329,9 @@
 
   /* Category Tabs */
   .category-tab {
-    @apply flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer font-body;
+    @apply flex items-center gap-2 px-6 py-2 sm:px-8 sm:py-3 rounded-xl font-semibold text-sm transition-all duration-300 cursor-pointer font-body;
     color: #6b7280;
-    min-width: 80px;
+    min-width: 70px;
   }
 
   .category-tab.active {
@@ -370,21 +370,21 @@
 
 .user-info {
   @apply flex items-center gap-3 w-full;
-  align-items: center !important; /* 강제로 중앙 정렬 */
+  align-items: center !important;
 }
 
 .user-info > a {
-  display: flex !important; /* 프로필 이미지 링크를 flex로 */
-  align-items: center; /* 프로필 이미지 중앙 정렬 */
+  display: flex !important;
+  align-items: center;
 }
 
 .user-name {
   @apply font-semibold text-black text-base sm:text-lg font-body;
-  display: flex !important; /* 닉네임 링크를 flex로 */
-  align-items: center !important; /* 닉네임 중앙 정렬 */
-  line-height: 1 !important; /* 라인 높이 조정 */
-  margin: 0 !important; /* 마진 제거 */
-  padding: 0 !important; /* 패딩 제거 */
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* 모바일 최적화 */

@@ -24,9 +24,9 @@
             <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="ddokdam">덕담 (커뮤니티)</a></li>
             <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="ddoksang">덕생 (생일카페)</a></li>
             <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="calendar">생일 캘린더</a></li>
+            <li><a href="#" class="hover:text-black transition-colors footer-link" data-modal="trustReview">신뢰덕 (리뷰)</a></li>
           </ul>
         </div>
-      </div>
 
       <!-- 오른쪽 영역: 고객지원 -->
       <div>
@@ -82,6 +82,7 @@
           <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="ddokdam">덕담 (커뮤니티)</a>
           <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="ddoksang">덕생 (생일카페)</a>
           <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="calendar">생일 캘린더</a>
+          <a href="#" class="block text-sm text-gray-600 hover:text-black font-body footer-link" data-modal="trustReview">신뢰덕 (리뷰)</a>
         </div>
       </div>
 
@@ -459,6 +460,133 @@
           
           <div class="mt-4">
             <p class="text-red-600">※ 긴급한 사안(사기 신고 등)의 경우 FAQ 버튼을 통해 문의해주세요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 신뢰덕(리뷰) 모달 -->
+<div id="trustReviewModal" class="footer-modal fixed inset-0 z-[9999] hidden">
+  <div class="bg-black bg-opacity-50 w-full h-full flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+      <div class="flex justify-between items-center p-6 border-b border-gray-200">
+        <h2 class="text-xl font-bold font-heading">신뢰덕 (리뷰 시스템)</h2>
+        <button class="modal-close text-gray-500 hover:text-black" data-modal="trustReviewModal">&times;</button>
+      </div>
+      <div class="p-6 overflow-y-auto max-h-[60vh] font-body leading-relaxed">
+        <div class="space-y-6 text-sm text-gray-700 leading-relaxed">
+          
+          <!-- 시스템 소개 -->
+          <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h3 class="font-bold text-black mb-2">신뢰덕이란?</h3>
+            <p>거래 후기를 바탕으로 사용자의 신뢰도를 0-100점으로 나타내는 시스템입니다.</p>
+            <p>안전한 거래를 위해 상대방의 신뢰도를 미리 확인할 수 있어요!</p>
+          </div>
+
+          <!-- 점수 구성 -->
+          <div>
+            <h3 class="font-bold text-black mb-3 text-lg">신뢰점수 구성 (총 100점)</h3>
+            
+            <div class="grid md:grid-cols-2 gap-4">
+              <!-- 별점 점수 -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-bold text-black mb-2">1. 별점 점수 (40점)</h4>
+                <div class="text-xs space-y-1">
+                  <p>• 평균 5점 = 40점 만점</p>
+                  <p>• 평균 4점 = 32점</p>
+                  <p>• 평균 3점 = 24점</p>
+                  <p>• 평균 2점 = 16점</p>
+                  <p>• 평균 1점 = 8점</p>
+                </div>
+              </div>
+
+              <!-- 상품 상태 일치도 -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-bold text-black mb-2">2. 상품 상태 일치도 (20점)</h4>
+                <div class="text-xs space-y-1">
+                  <p>• "설명과 동일함" = 20점</p>
+                  <p>• "미세한 차이" = 15점</p>
+                  <p>• "많이 다름" = 5점</p>
+                  <p class="text-gray-500 mt-2">※ 각 평가 비율만큼 점수 적용</p>
+                </div>
+              </div>
+
+              <!-- 응답 속도 -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-bold text-black mb-2">3. 응답 속도 (15점)</h4>
+                <div class="text-xs space-y-1">
+                  <p>• "빠름" = 15점</p>
+                  <p>• "보통" = 10점</p>
+                  <p>• "느림" = 5점</p>
+                  <p>• "무응답" = 0점</p>
+                </div>
+              </div>
+
+              <!-- 메시지 매너 -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-bold text-black mb-2">4. 메시지 매너 (15점)</h4>
+                <div class="text-xs space-y-1">
+                  <p>• "친절함" = 15점</p>
+                  <p>• "보통" = 10점</p>
+                  <p>• "불친절함" = 0점</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 재거래 의사 -->
+            <div class="bg-gray-50 p-4 rounded-lg mt-4">
+              <h4 class="font-bold text-black mb-2">5. 재거래 의사 (10점)</h4>
+              <p class="text-xs">"재거래 하고 싶다"고 답한 비율 × 10점</p>
+              <p class="text-xs text-gray-500">예시: 10개 리뷰 중 7개가 "예" → 70% × 10점 = 7점</p>
+            </div>
+          </div>
+
+          <!-- 특별 규칙 -->
+          <div>
+            <h3 class="font-bold text-black mb-3 text-lg">특별 규칙</h3>
+            
+            <div class="space-y-3">
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-black mb-2">신규 사용자 (리뷰 없음)</h4>
+                <p class="text-xs">기본 점수 50점으로 시작</p>
+                <p class="text-xs text-gray-500">→ 평균적인 신뢰도로 출발!</p>
+              </div>
+
+              <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 class="font-bold text-black mb-2">리뷰가 적은 경우 (5개 미만)</h4>
+                <p class="text-xs">계산된 점수와 기본점수(50점)를 섞어서 계산</p>
+                <div class="text-xs text-gray-500 mt-1">
+                  <p>예시: 리뷰 2개, 계산점수 70점인 경우</p>
+                  <p>→ (70점 × 40%) + (50점 × 60%) = 58점</p>
+                  <p>※ 리뷰가 많을수록 실제 계산점수에 가까워짐</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 활용법 -->
+          <div>
+            <h3 class="font-bold text-black mb-3 text-lg">신뢰덕 활용법</h3>
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>거래 전 상대방의 신뢰점수를 확인하세요</li>
+                <li>70점 이상이면 안전한 거래 상대입니다</li>
+                <li>50점 미만이면 신중하게 거래하세요</li>
+                <li>거래 후 정직한 리뷰를 남겨주세요</li>
+                <li>여러분의 리뷰가 안전한 거래 환경을 만듭니다</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="text-center pt-4">
+            <div class="text-xs text-gray-600 mb-4">
+              신뢰덕으로 더 안전하고 즐거운 덕질을 시작해보세요!
+            </div>
+            <a href="/ddokfarm/" class="inline-block bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors font-semibold">
+              덕팜에서 거래하기
+            </a>
           </div>
         </div>
       </div>

@@ -2,16 +2,15 @@
 
 <!-- 가격 정보 표시 -->
 <div class="mt-4 border-t border-gray-200 pt-4">
-  <h3 class="text-lg font-semibold text-gray-900 mb-3">가격</h3>
-
   {% if has_individual_prices %}
-    <!-- 🔄 가격 목록 바로 노출 -->
+    <!-- 다중 가격일 경우 - 제목과 목록 분리 -->
+    <h3 class="text-lg font-semibold text-gray-900 mb-3">가격</h3>
     <div class="space-y-3">
       {% for item_price in item_prices %}
         <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
           <div class="flex items-center gap-3">
             <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">
-              덕{{ forloop.counter }}
+              {{ item_price.get_display_name }}
             </div>
             {% if item_price.item_name %}
               <span class="text-sm font-medium text-gray-900">{{ item_price.item_name }}</span>
@@ -19,7 +18,13 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <span class="text-lg font-bold text-gray-900">{{ item_price.get_display_price }}</span>
+            <span class="text-lg font-bold text-gray-900">
+              {% if item_price.is_price_undetermined %}
+                가격 미정
+              {% else %}
+                {{ item_price.price|floatformat:0|intcomma }}원
+              {% endif %}
+            </span>
             {% if item_price.is_sold %}
               <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
                 완료
@@ -30,7 +35,25 @@
       {% endfor %}
     </div>
   {% else %}
-    <!-- 단일 가격일 경우 기존 방식 유지 -->
-    <span class="text-2xl font-bold text-gray-900">{{ post.get_display_price }}</span>
+    <!-- 단일 가격일 경우 - 제목과 가격을 한 줄로 표시 -->
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-gray-900">가격</h3>
+      <span class="text-2xl font-bold text-gray-900">
+        {% if single_item_price %}
+          {% if single_item_price.is_price_undetermined %}
+            가격 미정
+          {% else %}
+            {{ single_item_price.price|floatformat:0|intcomma }}원
+          {% endif %}
+        {% elif post.get_price_range %}
+          {{ post.get_price_base }}
+          {% if post.get_price_note %}
+            <span class="text-sm text-gray-500 ml-2">({{ post.get_price_note }})</span>
+          {% endif %}
+        {% else %}
+          가격 미정
+        {% endif %}
+      </span>
+    </div>
   {% endif %}
 </div>

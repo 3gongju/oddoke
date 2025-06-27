@@ -1,4 +1,4 @@
-// static/js/post_form/price_handler.js - 단일/다중 모드 구분 버전
+// static/js/post_form/price_handler.js - 최종 수정된 버전
 
 export function setupPriceHandlers() {
     const singlePriceMode = document.getElementById('single-price-mode');
@@ -11,101 +11,114 @@ export function setupPriceHandlers() {
 
     if (!singlePriceMode || !multiplePriceMode) return;
 
-    let itemCounter = getInitialItemCount();
-    let currentMode = itemCounter > 0 ? 'multiple' : 'single';
+    // 🔧 기존 ItemPrice 데이터 확인 (수정 모드)
+    const existingItemPrices = window.existingItemPrices || [];
+    console.log('Existing item prices:', existingItemPrices);
 
-    // 초기 아이템 개수 확인 (수정 모드에서)
-    function getInitialItemCount() {
-        const existingItems = itemsList.querySelectorAll('.item-row');
-        return existingItems.length;
+    let itemCounter = 0;
+    let currentMode = determineInitialMode();
+
+    // 🔧 초기 모드 결정 로직 개선
+    function determineInitialMode() {
+        // 기존 데이터가 있으면 해당 개수에 따라 결정
+        if (existingItemPrices.length > 1) {
+            console.log('Multiple mode: more than 1 item exists');
+            return 'multiple';
+        } else if (existingItemPrices.length === 1) {
+            // 단일 아이템이면서 이름이 비어있으면 단일 모드
+            const item = existingItemPrices[0];
+            const isSingleMode = (!item.item_name || item.item_name.trim() === '');
+            console.log(`Single item mode determination: name="${item.item_name}", isSingle=${isSingleMode}`);
+            return isSingleMode ? 'single' : 'multiple';
+        }
+        
+        // DOM에서 기존 FormSet 필드 확인
+        const formsetItems = itemsList.querySelectorAll('.item-row');
+        if (formsetItems.length > 1) {
+            console.log('Multiple mode: FormSet has multiple items');
+            return 'multiple';
+        } else if (formsetItems.length === 1) {
+            // FormSet에 아이템이 하나 있으면 다중 모드로 간주
+            console.log('Multiple mode: FormSet has one item');
+            return 'multiple';
+        }
+        
+        // 기본값: 단일 모드
+        console.log('Default: single mode');
+        return 'single';
     }
 
-    // 다중 가격 모드로 전환
-    addItemsBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
+    // 🔧 수정 모드에서 기존 데이터로 UI 초기화
+    function initializeFromExistingData() {
+        console.log(`Initializing UI for ${currentMode} mode with ${existingItemPrices.length} items`);
         
-        currentMode = 'multiple';
-        singlePriceMode.classList.add('hidden');
-        multiplePriceMode.classList.remove('hidden');
-        
-        // 첫 번째 아이템을 단일 가격에서 복사
-        if (itemCounter === 0) {
-            addItemFromSinglePrice();
+        if (currentMode === 'single' && existingItemPrices.length === 1) {
+            // 단일 모드: 첫 번째 아이템 데이터를 단일 가격 필드에 설정
+            initializeSingleMode();
+        } else if (currentMode === 'multiple') {
+            // 다중 모드: FormSet이 이미 렌더링되어 있으므로 UI만 조정
+            initializeMultipleMode();
         }
-        addNewItem();
-        updateFormsetManagement();
-    });
+        
+        // UI 모드 설정
+        updateUIMode();
+    }
 
-    // 단일 가격에서 첫 번째 아이템 생성
-    function addItemFromSinglePrice() {
+    function initializeSingleMode() {
+        const item = existingItemPrices[0];
         const singlePriceInput = document.getElementById('single-price-input');
         const singlePriceUndetermined = document.getElementById('single-price-undetermined');
         
-        const price = singlePriceInput?.value || '';
-        const isUndetermined = singlePriceUndetermined?.checked || false;
-        
-        addNewItem('', price, isUndetermined);
+        if (singlePriceInput && singlePriceUndetermined) {
+            if (item.is_price_undetermined) {
+                singlePriceUndetermined.checked = true;
+                singlePriceInput.disabled = true;
+                singlePriceInput.value = '';
+                singlePriceInput.style.backgroundColor = '#f3f4f6';
+                singlePriceInput.style.color = '#9ca3af';
+            } else {
+                singlePriceUndetermined.checked = false;
+                singlePriceInput.disabled = false;
+                singlePriceInput.value = item.price;
+                singlePriceInput.style.backgroundColor = '';
+                singlePriceInput.style.color = '';
+            }
+            
+            console.log(`Single mode initialized: price=${item.price}, undetermined=${item.is_price_undetermined}`);
+        }
     }
 
-    // 새 아이템 추가
-    addAnotherItemBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
+    function initializeMultipleMode() {
+        // FormSet이 이미 렌더링되어 있으므로 itemCounter만 설정
+        const formsetItems = itemsList.querySelectorAll('.item-row');
+        itemCounter = formsetItems.length;
         
-        if (itemCounter < 20) {
-            addNewItem();
-            updateFormsetManagement();
+        console.log(`Multiple mode initialized with ${itemCounter} FormSet items`);
+        
+        // 각 FormSet 아이템에 이벤트 리스너 추가
+        formsetItems.forEach((item, index) => {
+            setupItemEventListeners(item, index);
+        });
+    }
+
+    function updateUIMode() {
+        if (currentMode === 'single') {
+            singlePriceMode.classList.remove('hidden');
+            multiplePriceMode.classList.add('hidden');
+        } else {
+            singlePriceMode.classList.add('hidden');
+            multiplePriceMode.classList.remove('hidden');
         }
-    });
-
-    // 단일 모드로 돌아가기
-    backToSingleBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
         
-        currentMode = 'single';
-        singlePriceMode.classList.remove('hidden');
-        multiplePriceMode.classList.add('hidden');
-        
-        // 다중 아이템 모두 제거
-        const items = itemsList.querySelectorAll('.item-row');
-        items.forEach(item => item.remove());
-        itemCounter = 0;
-        updateFormsetManagement();
         updateItemCounter();
-    });
+        updateFormsetManagement();
+    }
 
-    // 새 아이템 추가 함수
-    function addNewItem(itemName = '', price = '', isUndetermined = false) {
-        if (itemCounter >= 20) return;
-
-        const template = itemTemplate.content.cloneNode(true);
-        const itemRow = template.querySelector('.item-row');
-        
-        // 번호 업데이트
-        const itemNumbers = template.querySelectorAll('.item-number, .item-number-mobile');
-        itemNumbers.forEach(el => {
-            el.textContent = `덕${itemCounter + 1}`;
-        });
-
-        // ModelFormSet 필드명 설정
-        const nameInputs = template.querySelectorAll('.item-name-input, .item-name-input-mobile');
-        nameInputs.forEach(input => {
-            input.name = `item_prices-${itemCounter}-item_name`;
-            input.value = itemName;
-        });
-
-        const priceInputs = template.querySelectorAll('.item-price-input, .item-price-input-mobile');
-        priceInputs.forEach(input => {
-            input.name = `item_prices-${itemCounter}-price`;
-            input.value = price;
-            input.disabled = isUndetermined;
-        });
-
-        const undeterminedCheckboxes = template.querySelectorAll('.item-price-undetermined-checkbox, .item-price-undetermined-checkbox-mobile');
+    // FormSet 아이템에 이벤트 리스너 설정
+    function setupItemEventListeners(itemRow, index) {
+        // 가격 미정 체크박스 이벤트
+        const undeterminedCheckboxes = itemRow.querySelectorAll('.item-price-undetermined-checkbox, .item-price-undetermined-checkbox-mobile');
         undeterminedCheckboxes.forEach(checkbox => {
-            checkbox.name = `item_prices-${itemCounter}-is_price_undetermined`;
-            checkbox.checked = isUndetermined;
-            
-            // 체크박스 이벤트 리스너
             checkbox.addEventListener('change', function() {
                 const row = this.closest('.item-row');
                 const priceInputsInRow = row.querySelectorAll('.item-price-input, .item-price-input-mobile');
@@ -135,14 +148,8 @@ export function setupPriceHandlers() {
             });
         });
 
-        // ID 필드 추가 (Django FormSet 요구사항)
-        const idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = `item_prices-${itemCounter}-id`;
-        idInput.value = '';
-        itemRow.appendChild(idInput);
-
         // 입력 필드 동기화 (데스크톱 ↔ 모바일)
+        const nameInputs = itemRow.querySelectorAll('.item-name-input, .item-name-input-mobile');
         if (nameInputs.length >= 2) {
             nameInputs[0].addEventListener('input', () => {
                 nameInputs[1].value = nameInputs[0].value;
@@ -152,6 +159,7 @@ export function setupPriceHandlers() {
             });
         }
 
+        const priceInputs = itemRow.querySelectorAll('.item-price-input, .item-price-input-mobile');
         if (priceInputs.length >= 2) {
             priceInputs[0].addEventListener('input', () => {
                 if (!priceInputs[0].disabled) {
@@ -166,7 +174,7 @@ export function setupPriceHandlers() {
         }
 
         // 삭제 버튼 이벤트
-        const removeButtons = template.querySelectorAll('.remove-item-btn');
+        const removeButtons = itemRow.querySelectorAll('.remove-item-btn');
         removeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -180,6 +188,157 @@ export function setupPriceHandlers() {
                 updateFormsetManagement();
             });
         });
+    }
+
+    // 🔧 다중 가격 모드로 전환 (수정된 버전)
+    addItemsBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        currentMode = 'multiple';
+        updateUIMode();
+        
+        // 🔧 기존 FormSet 아이템이 있는지 확인
+        const existingFormsetItems = itemsList.querySelectorAll('.item-row');
+        
+        if (existingFormsetItems.length === 0) {
+            // 기존 FormSet 아이템이 없으면 단일 가격에서 첫 번째 아이템 생성
+            console.log('No existing FormSet items, creating from single price');
+            addItemFromSinglePrice();
+        } else {
+            // 🔧 기존 FormSet 아이템이 있으면 해당 아이템들에 이벤트 리스너만 추가
+            console.log('Found existing FormSet items:', existingFormsetItems.length);
+            itemCounter = existingFormsetItems.length;
+            existingFormsetItems.forEach((item, index) => {
+                setupItemEventListeners(item, index);
+            });
+        }
+        
+        // 새 아이템 하나 추가 (덕템 추가하기 버튼을 눌렀으므로)
+        addNewItem();
+    });
+
+    // 단일 가격에서 첫 번째 아이템 생성
+    function addItemFromSinglePrice() {
+        const singlePriceInput = document.getElementById('single-price-input');
+        const singlePriceUndetermined = document.getElementById('single-price-undetermined');
+        
+        const price = singlePriceInput?.value || '';
+        const isUndetermined = singlePriceUndetermined?.checked || false;
+        
+        addNewItem('', price, isUndetermined);
+    }
+
+    // 새 아이템 추가
+    addAnotherItemBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        if (itemCounter < 20) {
+            addNewItem();
+            updateFormsetManagement();
+        }
+    });
+
+    // 🔧 단일 모드로 돌아가기 (수정된 버전)
+    backToSingleBtn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // 첫 번째 아이템의 데이터를 단일 가격 필드로 복사
+        const firstItem = itemsList.querySelector('.item-row');
+        if (firstItem) {
+            const nameInput = firstItem.querySelector('.item-name-input');
+            const priceInput = firstItem.querySelector('.item-price-input');
+            const undeterminedCheckbox = firstItem.querySelector('.item-price-undetermined-checkbox');
+            
+            const singlePriceInput = document.getElementById('single-price-input');
+            const singlePriceUndetermined = document.getElementById('single-price-undetermined');
+            
+            if (singlePriceInput && singlePriceUndetermined) {
+                // 이름이 비어있는 경우에만 단일 모드로 전환 허용
+                const itemName = nameInput?.value?.trim() || '';
+                if (itemName) {
+                    if (!confirm('물건명이 있는 아이템이 있습니다. 단일 가격 모드로 전환하면 물건명 정보가 사라집니다. 계속하시겠습니까?')) {
+                        return;
+                    }
+                }
+                
+                singlePriceInput.value = priceInput?.value || '';
+                singlePriceUndetermined.checked = undeterminedCheckbox?.checked || false;
+                
+                // 가격 미정 상태에 따른 입력 필드 비활성화
+                if (singlePriceUndetermined.checked) {
+                    singlePriceInput.disabled = true;
+                    singlePriceInput.style.backgroundColor = '#f3f4f6';
+                    singlePriceInput.style.color = '#9ca3af';
+                } else {
+                    singlePriceInput.disabled = false;
+                    singlePriceInput.style.backgroundColor = '';
+                    singlePriceInput.style.color = '';
+                }
+            }
+        }
+        
+        currentMode = 'single';
+        updateUIMode();
+        
+        // 🔧 FormSet 아이템들을 완전히 제거
+        const items = itemsList.querySelectorAll('.item-row');
+        items.forEach(item => item.remove());
+        itemCounter = 0;
+    });
+
+    // 새 아이템 추가 함수
+    function addNewItem(itemName = '', price = '', isUndetermined = false, existingId = null) {
+        if (itemCounter >= 20) return;
+
+        const template = itemTemplate.content.cloneNode(true);
+        const itemRow = template.querySelector('.item-row');
+        
+        // 번호 업데이트
+        const itemNumbers = template.querySelectorAll('.item-number, .item-number-mobile');
+        itemNumbers.forEach(el => {
+            el.textContent = `덕${itemCounter + 1}`;
+        });
+
+        // ModelFormSet 필드명 설정
+        const nameInputs = template.querySelectorAll('.item-name-input, .item-name-input-mobile');
+        nameInputs.forEach(input => {
+            input.name = `item_prices-${itemCounter}-item_name`;
+            input.value = itemName;
+        });
+
+        const priceInputs = template.querySelectorAll('.item-price-input, .item-price-input-mobile');
+        priceInputs.forEach(input => {
+            input.name = `item_prices-${itemCounter}-price`;
+            input.value = price;
+            input.disabled = isUndetermined;
+            if (isUndetermined) {
+                input.style.backgroundColor = '#f3f4f6';
+                input.style.color = '#9ca3af';
+            }
+        });
+
+        const undeterminedCheckboxes = template.querySelectorAll('.item-price-undetermined-checkbox, .item-price-undetermined-checkbox-mobile');
+        undeterminedCheckboxes.forEach(checkbox => {
+            checkbox.name = `item_prices-${itemCounter}-is_price_undetermined`;
+            checkbox.checked = isUndetermined;
+        });
+
+        // ID 필드 추가 (수정 모드에서 기존 ID 유지)
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = `item_prices-${itemCounter}-id`;
+        idInput.value = existingId || '';
+        itemRow.appendChild(idInput);
+
+        // 🔧 DELETE 필드 추가 (FormSet 삭제용)
+        const deleteInput = document.createElement('input');
+        deleteInput.type = 'hidden';
+        deleteInput.name = `item_prices-${itemCounter}-DELETE`;
+        deleteInput.value = 'False';
+        itemRow.appendChild(deleteInput);
+
+        // 이벤트 리스너 설정
+        setupItemEventListeners(itemRow, itemCounter);
 
         itemsList.appendChild(itemRow);
         itemCounter++;
@@ -217,6 +376,12 @@ export function setupPriceHandlers() {
             if (idInput) {
                 idInput.name = `item_prices-${index}-id`;
             }
+
+            // DELETE 필드 업데이트
+            const deleteInput = item.querySelector(`input[name^="item_prices-"][name$="-DELETE"]`);
+            if (deleteInput) {
+                deleteInput.name = `item_prices-${index}-DELETE`;
+            }
         });
         
         itemCounter = items.length;
@@ -247,11 +412,14 @@ export function setupPriceHandlers() {
         const form = document.querySelector('form');
         if (!form) return;
 
-        // 🔧 다중 모드일 때만 FormSet 관리 필드 업데이트
+        // 다중 모드일 때만 FormSet 관리 필드 업데이트
         if (currentMode === 'multiple') {
+            // 기존 아이템 개수 계산 (수정 모드에서)
+            const initialFormsCount = existingItemPrices.length;
+            
             const managementFields = [
                 { name: 'item_prices-TOTAL_FORMS', value: itemCounter.toString() },
-                { name: 'item_prices-INITIAL_FORMS', value: '0' },
+                { name: 'item_prices-INITIAL_FORMS', value: initialFormsCount.toString() },
                 { name: 'item_prices-MIN_NUM_FORMS', value: '0' },
                 { name: 'item_prices-MAX_NUM_FORMS', value: '20' }
             ];
@@ -285,22 +453,15 @@ export function setupPriceHandlers() {
                 singlePriceInput.style.color = '';
             }
         });
-
-        // 초기 상태 설정
-        if (singleUndeterminedCheckbox.checked) {
-            singlePriceInput.disabled = true;
-            singlePriceInput.style.backgroundColor = '#f3f4f6';
-            singlePriceInput.style.color = '#9ca3af';
-        }
     }
 
-    // 🔧 폼 제출 시 데이터 전처리
+    // 폼 제출 시 데이터 전처리
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
             console.log('Form submission, current mode:', currentMode);
             
-            // 모드 필드 추가
+            // price_mode 필드 추가
             let modeInput = form.querySelector('input[name="price_mode"]');
             if (!modeInput) {
                 modeInput = document.createElement('input');
@@ -309,14 +470,19 @@ export function setupPriceHandlers() {
                 form.appendChild(modeInput);
             }
             modeInput.value = currentMode;
+            console.log('Set price_mode to:', currentMode);
 
-            // 🔧 단일 모드인 경우: FormSet 필드 제거하고 단일 가격 데이터만 전송
+            // 단일 모드인 경우
             if (currentMode === 'single') {
                 console.log('Single mode: removing FormSet fields');
                 
                 // FormSet 관련 필드 모두 제거
-                const formsetFields = form.querySelectorAll('input[name^="item_prices-"]');
-                formsetFields.forEach(field => field.remove());
+                const formsetFields = form.querySelectorAll('input[name^="item_prices-"], select[name^="item_prices-"], textarea[name^="item_prices-"]');
+                console.log(`Removing ${formsetFields.length} FormSet fields`);
+                formsetFields.forEach(field => {
+                    console.log(`Removing field: ${field.name}`);
+                    field.remove();
+                });
                 
                 // 단일 가격 데이터 확인
                 const singlePrice = singlePriceInput?.value || '';
@@ -332,9 +498,17 @@ export function setupPriceHandlers() {
                 }
             }
 
-            // 🔧 다중 모드인 경우: FormSet 데이터 검증 및 정리
+            // 다중 모드인 경우
             if (currentMode === 'multiple') {
                 console.log('Multiple mode: validating FormSet data');
+                
+                // 단일 가격 필드 제거
+                const singlePriceFields = form.querySelectorAll('input[name="single_price"], input[name="single_price_undetermined"]');
+                console.log(`Removing ${singlePriceFields.length} single price fields`);
+                singlePriceFields.forEach(field => {
+                    console.log(`Removing single price field: ${field.name}`);
+                    field.remove();
+                });
                 
                 const items = itemsList.querySelectorAll('.item-row');
                 let hasValidItem = false;
@@ -356,6 +530,8 @@ export function setupPriceHandlers() {
                         if (isUndetermined && priceInput) {
                             priceInput.value = '0';
                         }
+                        
+                        console.log(`Item ${index}: name="${itemName}", price="${price}", undetermined=${isUndetermined}`);
                     }
                 });
                 
@@ -368,23 +544,20 @@ export function setupPriceHandlers() {
                 // FormSet 관리 필드 최종 업데이트
                 updateFormsetManagement();
             }
+            
+            // 최종 폼 데이터 로그
+            console.log('=== FINAL FORM DATA ===');
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('price') || key.includes('item_prices') || key === 'price_mode') {
+                    console.log(`${key}: ${value}`);
+                }
+            }
         });
     }
 
     // 초기화
-    updateFormsetManagement();
-    updateItemCounter();
-    
-    // 🔧 초기 모드 설정 및 UI 업데이트
-    if (itemCounter > 0) {
-        currentMode = 'multiple';
-        singlePriceMode.classList.add('hidden');
-        multiplePriceMode.classList.remove('hidden');
-    } else {
-        currentMode = 'single';
-        singlePriceMode.classList.remove('hidden');
-        multiplePriceMode.classList.add('hidden');
-    }
-    
-    console.log('Price handler initialized, mode:', currentMode, 'itemCounter:', itemCounter);
+    console.log('Initializing price handler, mode:', currentMode);
+    initializeFromExistingData();
+    console.log('Price handler initialized, final mode:', currentMode, 'itemCounter:', itemCounter);
 }

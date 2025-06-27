@@ -293,6 +293,45 @@ def intro_view(request):
     }
     return render(request, 'main/intro.html', context)
 
+def get_active_user_banners_with_info():
+    """수정된 함수: 각 배너별 신청자 정보를 함께 반환"""
+    try:
+        from django.utils import timezone
+        
+        today = timezone.now().date()
+        now = timezone.now()
+        
+        # 활성화된 배너들 조회
+        active_banners = BannerRequest.objects.filter(
+            status='approved',
+            is_active=True,
+            start_date__lte=today,
+            end_date__gte=today
+        ).select_related('user').order_by('-approved_at')
+        
+        # expires_at도 체크 (있는 경우)
+        if active_banners.exists():
+            active_banners = active_banners.filter(
+                Q(expires_at__isnull=True) | Q(expires_at__gt=now)
+            )
+        
+        # 🔥 핵심 변경: 각 배너의 URL과 해당 배너의 신청자 정보를 매핑
+        banner_data = []  # [{url: '...', banner_info: BannerRequest객체}, ...]
+        
+        for banner in active_banners:
+            if banner.banner_image:
+                banner_data.append({
+                    'url': banner.banner_image.url,
+                    'banner_info': banner,
+                    'user': banner.user,
+                    'artist_name': banner.artist_name
+                })
+        
+        return banner_data
+        
+    except Exception as e:
+        return []
+
 
 def main(request):
     # 1) 찜한 아티스트 원본 목록
@@ -301,19 +340,25 @@ def main(request):
     # 2) 그룹별 페이징 캐러셀을 위한 5개씩 묶기
     grouped_artists = group_artists(raw_favs) if raw_favs else []
 
-    # 3) 수정된 배너 관련 로직 - 활성 배너 정보도 함께 전달
-    user_banners, active_banner = get_active_user_banners_with_info()
+    # 3) 🔥 수정된 배너 관련 로직 - 각 배너별 정보 포함
+    user_banner_data = get_active_user_banners_with_info()
     
-    # 기본 배너 이미지들
-    default_banner_images = [
-        'image/banner/banner1.jpg',
-        'image/banner/banner2.jpg',
-        'image/banner/banner3.jpg',
-        'image/banner/banner4.jpg',
+    # 기본 배너 이미지들 (신청자 정보 없음)
+    default_banner_data = [
+        {'url': 'image/banner/banner1.jpg', 'banner_info': None, 'user': None, 'artist_name': None},
+        {'url': 'image/banner/banner2.jpg', 'banner_info': None, 'user': None, 'artist_name': None},
+        {'url': 'image/banner/banner3.jpg', 'banner_info': None, 'user': None, 'artist_name': None},
+        {'url': 'image/banner/banner4.jpg', 'banner_info': None, 'user': None, 'artist_name': None},
     ]
     
-    # 사용자 배너와 기본 배너 합치기
-    banner_images = user_banners + default_banner_images
+    # 사용자 배너와 기본 배너를 함께 표시
+    all_banner_data = user_banner_data + default_banner_data
+    
+    # 템플릿에서 사용할 배너 이미지 URL 리스트 (기존 호환성)
+    banner_images = [banner['url'] for banner in all_banner_data]
+    
+    # 첫 번째 사용자 배너가 있으면 그것을 active_banner로 설정
+    active_banner = user_banner_data[0]['banner_info'] if user_banner_data else None
 
     # 4) 덕팜 최신 게시물들 - 각 카테고리별로 가져온 후 통합
     sell_posts = list(FarmSellPost.objects.order_by('-created_at')[:10])
@@ -417,8 +462,9 @@ def main(request):
     return render(request, 'main/home.html', {
         'raw_favs': raw_favs,
         'grouped_artists': grouped_artists,
-        'banner_images': banner_images,
-        'active_banner': active_banner,
+        'banner_images': banner_images,  # 기존 호환성용 URL 리스트
+        'all_banner_data': all_banner_data,  # 🔥 새로 추가: 각 배너별 상세 정보
+        'active_banner': active_banner,  # 첫 번째 사용자 배너 정보
 
         # 템플릿에서 사용할 통합된 데이터 (중요!)
         'latest_sell_posts': latest_sell_posts,           # 덕팜 전체 통합
@@ -437,47 +483,7 @@ def main(request):
     })
 
 
-def get_active_user_banners_with_info():
-    """새로운 함수: 활성화된 사용자 배너들과 배너 정보를 함께 가져오기"""
-    try:
-        from django.utils import timezone
-        
-        today = timezone.now().date()
-        now = timezone.now()
-        
-        # 개선된 활성화된 배너들 조회 (날짜와 시간 둘 다 체크)
-        active_banners = BannerRequest.objects.filter(
-            status='approved',
-            is_active=True,
-            start_date__lte=today,
-            end_date__gte=today
-        ).select_related('user').order_by('-approved_at')
-        
-        # 추가: expires_at도 체크 (있는 경우)
-        if active_banners.exists():
-            active_banners = active_banners.filter(
-                Q(expires_at__isnull=True) | Q(expires_at__gt=now)
-            )
-        
-        # 이미지 URL들과 첫 번째 활성 배너 정보를 반환
-        user_banner_urls = []
-        first_active_banner = None
-        
-        for banner in active_banners:
-            if banner.banner_image:
-                user_banner_urls.append(banner.banner_image.url)
-                
-                # 첫 번째 배너를 대표 배너로 설정
-                if first_active_banner is None:
-                    first_active_banner = banner
-        
-        return user_banner_urls, first_active_banner
-        
-    except Exception as e:
-        return [], None
-
-
 def get_active_user_banners():
     """활성화된 사용자 배너들을 가져오기 (기존 함수 - 하위 호환성 유지)"""
-    user_banner_urls, _ = get_active_user_banners_with_info()
-    return user_banner_urls
+    banner_data = get_active_user_banners_with_info()
+    return [banner['url'] for banner in banner_data]
