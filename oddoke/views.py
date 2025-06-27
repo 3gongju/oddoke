@@ -18,15 +18,15 @@ def intro_view(request):
     # 기본 이미지 경로 정의
     DEFAULT_SLIDE_IMAGE = 'image/slide/intro_slide_default.jpg'
     
-    # 🔥 실제 데이터 가져오기
+    # 실제 데이터 가져오기
     try:
-        # 🔥 찜한 아티스트 데이터 추가
+        # 찜한 아티스트 데이터 추가
         raw_favs = list(Artist.objects.filter(followers=request.user)) if request.user.is_authenticated else []
         
-        # 🔥 덕생 - 생일 아티스트 데이터 (개선된 버전)
+        # 덕생 - 생일 아티스트 데이터 (개선된 버전)
         birthday_artists = get_weekly_bday_artists()
         
-        # 🔥 추가 생일 관련 데이터 수집
+        # 추가 생일 관련 데이터 수집
         try:
             from django.utils import timezone
             import calendar
@@ -35,7 +35,7 @@ def intro_view(request):
             current_month = current_date.month
             current_year = current_date.year
             
-            # 🔥 이번 달 생일 멤버들 추가 조회
+            # 이번 달 생일 멤버들 추가 조회
             monthly_birthday_count = 0
             upcoming_birthdays = []
             
@@ -83,7 +83,6 @@ def intro_view(request):
             }
             
         except Exception as e:
-            print(f"생일 데이터 추가 처리 오류: {e}")
             birthday_stats = {
                 'weekly_count': len(birthday_artists),
                 'monthly_count': 0,
@@ -107,7 +106,6 @@ def intro_view(request):
             latest_ddokdam_posts.append(post)
             
     except Exception as e:
-        print(f"실제 데이터 로드 오류: {e}")
         raw_favs = []
         birthday_artists = []
         latest_ddokfarm_posts = []
@@ -135,7 +133,7 @@ def intro_view(request):
             'description': '양도, 대여, 분철까지 모든 거래를 한 곳에서',
             'type': 'ddokfarm',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': latest_ddokfarm_posts  # 🔥 실제 데이터 추가
+            'real_data': latest_ddokfarm_posts
         },
         {
             'title': '덕담 - 팬들만의 소통 공간',
@@ -143,7 +141,7 @@ def intro_view(request):
             'description': '커뮤니티, 예절샷, 생일카페 후기까지',
             'type': 'ddokdam',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': latest_ddokdam_posts  # 🔥 실제 데이터 추가
+            'real_data': latest_ddokdam_posts
         },
         {
             'title': '덕생 - 아티스트 생일 캘린더',
@@ -151,8 +149,8 @@ def intro_view(request):
             'description': '이번주의 생일을 확인하고, 생일을 축하하며, 덕을 쌓아요.',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': birthday_artists,  # 🔥 실제 생일 아티스트 데이터
-            'stats_data': birthday_stats    # 🔥 생일 통계 데이터 추가
+            'real_data': birthday_artists,
+            'stats_data': birthday_stats
         },
         {
             'title': '덕챗 - 팬과 팬을 잇는 대화',
@@ -244,7 +242,7 @@ def intro_view(request):
             'description': '찜한 아티스트들의 최신 소식을 놓치지 마세요',
             'type': 'favorite_artists',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': raw_favs  # 🔥 찜한 아티스트 실제 데이터
+            'real_data': raw_favs
         },
         {
             'title': '지금 시작하세요',
@@ -280,17 +278,16 @@ def intro_view(request):
         stats['total_trades'] = farm_posts
         
     except Exception as e:
-        print(f"통계 정보 로드 오류: {e}")
+        pass
     
     context = {
         'page_title': '어덕해 소개',
-        'total_slides': 18,  # 🔥 17개 → 18개로 변경
+        'total_slides': 18,
         'slide_contents': slide_contents,
         'stats': stats,
-        # 🔥 실제 데이터를 별도로도 전달
-        'raw_favs': raw_favs,  # 🔥 찜한 아티스트 추가
+        'raw_favs': raw_favs,
         'birthday_artists': birthday_artists,
-        'birthday_stats': birthday_stats,  # 🔥 생일 통계 추가
+        'birthday_stats': birthday_stats,
         'latest_ddokfarm_posts': latest_ddokfarm_posts,
         'latest_ddokdam_posts': latest_ddokdam_posts,
     }
@@ -298,15 +295,14 @@ def intro_view(request):
 
 
 def main(request):
-    # 기존 main 뷰 코드는 그대로 유지
     # 1) 찜한 아티스트 원본 목록
     raw_favs = list(Artist.objects.filter(followers=request.user)) if request.user.is_authenticated else []
 
     # 2) 그룹별 페이징 캐러셀을 위한 5개씩 묶기
     grouped_artists = group_artists(raw_favs) if raw_favs else []
 
-    # 3) 배너 이미지 리스트 (사용자 배너 + 기본 배너)
-    user_banners = get_active_user_banners()
+    # 3) 수정된 배너 관련 로직 - 활성 배너 정보도 함께 전달
+    user_banners, active_banner = get_active_user_banners_with_info()
     
     # 기본 배너 이미지들
     default_banner_images = [
@@ -422,6 +418,7 @@ def main(request):
         'raw_favs': raw_favs,
         'grouped_artists': grouped_artists,
         'banner_images': banner_images,
+        'active_banner': active_banner,
 
         # 템플릿에서 사용할 통합된 데이터 (중요!)
         'latest_sell_posts': latest_sell_posts,           # 덕팜 전체 통합
@@ -439,33 +436,48 @@ def main(request):
         'birthday_artists': birthday_artists,
     })
 
-def get_active_user_banners():
-    """활성화된 사용자 배너들을 가져오기"""
+
+def get_active_user_banners_with_info():
+    """새로운 함수: 활성화된 사용자 배너들과 배너 정보를 함께 가져오기"""
     try:
         from django.utils import timezone
         
         today = timezone.now().date()
+        now = timezone.now()
         
-        # 🔥 수정된 필터링 조건
+        # 개선된 활성화된 배너들 조회 (날짜와 시간 둘 다 체크)
         active_banners = BannerRequest.objects.filter(
             status='approved',
             is_active=True,
             start_date__lte=today,
             end_date__gte=today
-        ).order_by('-approved_at')
+        ).select_related('user').order_by('-approved_at')
         
-        print(f"🔥 DEBUG: 활성 배너 조회 결과 - {active_banners.count()}개")
+        # 추가: expires_at도 체크 (있는 경우)
+        if active_banners.exists():
+            active_banners = active_banners.filter(
+                Q(expires_at__isnull=True) | Q(expires_at__gt=now)
+            )
         
-        # 이미지 URL들을 반환
+        # 이미지 URL들과 첫 번째 활성 배너 정보를 반환
         user_banner_urls = []
+        first_active_banner = None
+        
         for banner in active_banners:
             if banner.banner_image:
-                print(f"🔥 DEBUG: 배너 추가 - {banner.artist_name}, {banner.banner_image.url}")
                 user_banner_urls.append(banner.banner_image.url)
+                
+                # 첫 번째 배너를 대표 배너로 설정
+                if first_active_banner is None:
+                    first_active_banner = banner
         
-        print(f"🔥 DEBUG: 최종 배너 URL 개수 - {len(user_banner_urls)}개")
-        return user_banner_urls
+        return user_banner_urls, first_active_banner
         
     except Exception as e:
-        print(f"🔥 DEBUG: 사용자 배너 로드 오류: {e}")
-        return []
+        return [], None
+
+
+def get_active_user_banners():
+    """활성화된 사용자 배너들을 가져오기 (기존 함수 - 하위 호환성 유지)"""
+    user_banner_urls, _ = get_active_user_banners_with_info()
+    return user_banner_urls

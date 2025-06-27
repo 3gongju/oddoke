@@ -374,6 +374,56 @@ def review_home(request, username):
 
     return render(request, 'accounts/review_home.html', context)
 
+
+@login_required
+@require_POST
+def write_review(request, username):
+    """매너 리뷰 작성 처리"""
+    target_user = get_object_or_404(User, username=username)
+    
+    # 자신에게 리뷰할 수 없음
+    if request.user == target_user:
+        messages.error(request, '자신에게는 리뷰를 작성할 수 없습니다.')
+        return redirect('accounts:review_home', username=username)
+    
+    form = MannerReviewForm(request.POST)
+    if form.is_valid():
+        review = form.save(commit=False)
+        review.user = request.user
+        review.target_user = target_user
+        
+        # 채팅방 정보 연결
+        room_code = request.POST.get('room_code')
+        if room_code:
+            try:
+                chatroom = ChatRoom.objects.get(room_code=room_code)
+                
+                # 이미 리뷰를 작성했는지 확인
+                existing_review = MannerReview.objects.filter(
+                    user=request.user,
+                    target_user=target_user,
+                    chatroom=chatroom
+                ).first()
+                
+                if existing_review:
+                    messages.warning(request, '이미 이 거래에 대한 리뷰를 작성하셨습니다.')
+                    return redirect('accounts:review_home', username=username)
+                
+                review.chatroom = chatroom
+                review.save()
+                
+                messages.success(request, f'{target_user.username}님에 대한 매너 리뷰가 작성되었습니다.')
+                return redirect('accounts:review_home', username=username)
+                
+            except ChatRoom.DoesNotExist:
+                messages.error(request, '채팅방 정보를 찾을 수 없습니다.')
+        else:
+            messages.error(request, '채팅방 정보가 필요합니다.')
+    else:
+        messages.error(request, '리뷰 작성 중 오류가 발생했습니다.')
+    
+    return redirect('accounts:review_home', username=username)
+
 @login_required
 def mypage(request): 
     user_profile = request.user
