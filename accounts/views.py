@@ -336,7 +336,7 @@ def review_home(request, username):
 
     reviews = MannerReview.objects.filter(target_user=user_profile).order_by('-created_at')
 
-    # 상세 항목별 카운터 수집
+    # 상세 항목별 카운터 수집...
     rating_counter = Counter()
     description_counter = Counter()
     response_counter = Counter()
