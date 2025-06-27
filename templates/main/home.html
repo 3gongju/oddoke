@@ -411,9 +411,9 @@
 <section class="py-4 sm:py-6 lg:py-8 bg-gray-50 mb-8 sm:mb-12 lg:mb-16">
   <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
     <div class="relative max-w-4xl mx-auto">
-      <!-- 배너 신청자 표시 (승인된 배너가 있을 때만) - 크기 축소 및 호버 효과 -->
-      {% if active_banner %}
-        <div class="text-center -mb-1 group cursor-pointer">
+      <!-- 배너 신청자 표시 (사용자가 업로드한 승인된 배너가 있을 때만) -->
+      {% if active_banner and active_banner.user and not active_banner.is_default %}
+        <div id="bannerTopText" class="text-center group cursor-pointer transition-all duration-300">
           <!-- 호버시에만 나타나는 후원 메시지 - 위쪽에 위치 -->
           <p class="text-xs sm:text-sm text-gray-500 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-y-2 group-hover:translate-y-0 mb-1">
             {{ active_banner.artist_name }} 사랑으로 배너를 후원해주셨습니다 
@@ -422,7 +422,7 @@
             </svg>
           </p>
           <!-- 메인 제목 -->
-          <h2 class="text-base sm:text-l lg:text-xl font-light text-black mb-1">
+          <h2 class="text-base sm:text-lg lg:text-xl font-bold text-black">
             {{ active_banner.user.username }}님 덕분에
           </h2>
         </div>
@@ -463,13 +463,13 @@
         </div>
       </div>
       
-      <!-- 배너 하단 텍스트 - 더욱 가깝게 -->
-      <div class="text-center -mt-3">
-        <h3 class="text-lg sm:text-l lg:text-xl font-bold text-gray-800 mb-2">
+      <!-- 배너 하단 텍스트 - 반응형 위치 조정 -->
+      <div id="bannerBottomText" class="text-center transition-all duration-300">
+        <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2">
           덕이 쌓인 자여, 덕을 베푸소서.
         </h3>
         <p class="text-sm sm:text-base text-gray-600 font-light">
-          > 쌓은 덕을 끌어모아 광고를 띄워요. 
+          쌓은 덕을 끌어모아 광고를 띄워요. 
           <a href="http://127.0.0.1:8000/accounts/my/" class="text-black hover:text-blue-800 underline font-medium">德</a>
         </p>
       </div>
@@ -820,6 +820,9 @@
     scrollToTopBtn.addEventListener('click', scrollToTop);
     toggleScrollButton();
     
+    // 배너 이미지 반응형 텍스트 위치 조정
+    initResponsiveBannerLayout();
+    
     // 배너 슬라이드 - 좌우 클릭 영역 포함
     const slides = document.querySelectorAll(".banner-slide");
     const prevBtn = document.getElementById('bannerPrevBtn');
@@ -892,6 +895,93 @@
     // 생일 아티스트 슬라이더 초기화
     initBirthdaySlider();
   });
+
+  // 배너 이미지 크기에 따른 반응형 텍스트 위치 조정
+  function initResponsiveBannerLayout() {
+    const bannerCarousel = document.getElementById('bannerCarousel');
+    const bannerTopText = document.getElementById('bannerTopText');
+    const bannerBottomText = document.getElementById('bannerBottomText');
+    
+    if (!bannerCarousel) return;
+    
+    function adjustTextPositions() {
+      const activeSlide = document.querySelector('.banner-slide.active img');
+      if (!activeSlide) return;
+      
+      // 이미지가 로드될 때까지 대기
+      if (activeSlide.complete && activeSlide.naturalHeight !== 0) {
+        adjustBasedOnImageSize(activeSlide);
+      } else {
+        activeSlide.addEventListener('load', () => {
+          adjustBasedOnImageSize(activeSlide);
+        });
+      }
+    }
+    
+    function adjustBasedOnImageSize(img) {
+      const container = bannerCarousel;
+      const containerHeight = container.offsetHeight;
+      const containerWidth = container.offsetWidth;
+      
+      // 이미지의 실제 비율 계산
+      const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+      const containerAspectRatio = containerWidth / containerHeight;
+      
+      // 상하 여백 계산
+      let topMargin, bottomMargin;
+      
+      if (imageAspectRatio > containerAspectRatio) {
+        // 이미지가 가로로 긴 경우 (위아래 여백 생김)
+        const actualImageHeight = containerWidth / imageAspectRatio;
+        const verticalSpace = (containerHeight - actualImageHeight) / 2;
+        
+        // 여백이 클수록 텍스트를 더 가깝게
+        if (verticalSpace > 40) {
+          topMargin = Math.max(10, 40 - verticalSpace * 0.3);
+          bottomMargin = Math.max(10, 40 - verticalSpace * 0.3);
+        } else {
+          topMargin = 40;
+          bottomMargin = 40;
+        }
+      } else {
+        // 이미지가 세로로 긴 경우 또는 비슷한 비율
+        topMargin = 20;
+        bottomMargin = 20;
+      }
+      
+      // 텍스트 위치 조정
+      if (bannerTopText) {
+        bannerTopText.style.marginBottom = `${topMargin}px`;
+      }
+      
+      if (bannerBottomText) {
+        bannerBottomText.style.marginTop = `${bottomMargin}px`;
+      }
+    }
+    
+    // 초기 조정
+    adjustTextPositions();
+    
+    // 윈도우 리사이즈 시 재조정
+    window.addEventListener('resize', adjustTextPositions);
+    
+    // 슬라이드 변경 시 재조정
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const target = mutation.target;
+          if (target.classList.contains('banner-slide') && target.classList.contains('active')) {
+            setTimeout(adjustTextPositions, 100); // 약간의 지연 후 조정
+          }
+        }
+      });
+    });
+    
+    // 모든 배너 슬라이드 관찰
+    document.querySelectorAll('.banner-slide').forEach(slide => {
+      observer.observe(slide, { attributes: true });
+    });
+  }
 
   // 생일 아티스트 슬라이더 함수 (기존과 동일)
   function initBirthdaySlider() {
