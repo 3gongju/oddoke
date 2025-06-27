@@ -1,12 +1,30 @@
-/* calendar.css - 캘린더 전용 스타일 */
-
+/* NanumSquareRound 폰트 패밀리 추가 */
+@font-face {
+    font-family: 'NanumSquareRoundLight';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundL.woff') format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
 
 @font-face {
-  font-family: 'NanumSquareRound';
-  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
+    font-family: 'NanumSquareRound';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRound.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRoundBold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundB.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'NanumSquareRoundExtraBold';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/NanumSquareRoundEB.woff') format('woff');
+    font-weight: 800;
+    font-style: normal;
 }
 
 /* 기본 폰트 설정 */
@@ -20,6 +38,44 @@ body,
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* 캘린더와 게임 영역 + 헤더에 폰트 적용 */
+#calendar,
+#calendar-mobile,
+#calendar *,
+#calendar-mobile *,
+#birthday-game-container,
+#birthday-game-container *,
+.calendar-header,
+.calendar-header *,
+.calendar-header h2,
+.calendar-header a {
+    font-family: 'NanumSquareRound', sans-serif !important;
+}
+
+/* 굵기별 폰트 적용 - 캘린더/게임 영역에만 */
+#calendar .font-light,
+#calendar-mobile .font-light,
+#birthday-game-container .font-light {
+    font-family: 'NanumSquareRoundLight', sans-serif !important;
+}
+
+#calendar .font-bold, #calendar strong, #calendar b,
+#calendar-mobile .font-bold, #calendar-mobile strong, #calendar-mobile b,
+#birthday-game-container .font-bold, #birthday-game-container strong, #birthday-game-container b {
+    font-family: 'NanumSquareRoundBold', sans-serif !important;
+}
+
+#calendar .font-black, #calendar .font-extrabold,
+#calendar-mobile .font-black, #calendar-mobile .font-extrabold,
+#birthday-game-container .font-black, #birthday-game-container .font-extrabold {
+    font-family: 'NanumSquareRoundExtraBold', sans-serif !important;
+}
+
+/* 게임과 캘린더 간격 조정 */
+.game-container {
+  margin-bottom: 4rem !important;
 }
 
 /* 캘린더 기본 스타일 */
@@ -74,12 +130,12 @@ body,
   font-weight: 600;
 }
 
-/* 날짜 셀 스타일 - 오버레이 제거 */
+/* 날짜 셀 스타일 - 찌그러진 느낌 개선 */
 .fc-daygrid-day-frame {
   position: relative;
   overflow: visible;
-  padding: 0.25rem;
-  min-height: 120px;
+  padding: 0.5rem;
+  min-height: 140px !important; /* 기존 120px에서 140px로 증가 */
   background: transparent !important;
 }
 
@@ -245,6 +301,17 @@ body,
 
 /* 모바일 스타일 */
 @media (max-width: 768px) {
+  /* 게임과 캘린더 간격 모바일 조정 */
+  .game-container {
+    margin-bottom: 3rem !important;
+  }
+
+  /* 캘린더 셀 높이 모바일 최적화 */
+  .fc-daygrid-day-frame {
+    min-height: 120px !important;
+    padding: 0.2rem !important;
+  }
+
   .fc-toolbar-title {
     font-size: 1rem !important;
   }
@@ -274,12 +341,6 @@ body,
   #calendar-mobile {
     padding: 0 !important;
     margin: 0 !important;
-    overflow: visible !important;
-  }
-  
-  .fc-daygrid-day-frame {
-    min-height: 100px !important;
-    padding: 0.1rem !important;
     overflow: visible !important;
   }
   

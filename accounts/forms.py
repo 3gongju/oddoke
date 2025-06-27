@@ -154,6 +154,7 @@ class CustomUserCreationForm(UserCreationForm):
         """ 프로필 이미지 처리 추가된 save 메서드"""
         user = super().save(commit=False)
         user.is_active = False  # 이메일 인증 전까지 비활성화
+        user.is_profile_completed = False
         
         # 프로필 이미지 처리
         if self.cleaned_data.get('profile_image'):
@@ -264,24 +265,28 @@ class SocialSignupCompleteForm(forms.ModelForm):
         print("🔄 SocialSignupCompleteForm save 메서드 호출됨")
         user = super().save(commit=False)
         
-        # 🔥 임시 username에서 실제 username으로 변경
+        # 사용자명 변경
         old_username = user.username
         new_username = self.cleaned_data['username']
         
         print(f"🔄 사용자명 변경: {old_username} → {new_username}")
         
-        user.username = new_username  # 실제 닉네임으로 변경
-        user.is_temp_username = False  # 더 이상 임시가 아님
-        user.is_profile_completed = True
-        user.social_signup_completed = True  # 🔥 가입 완료 표시
+        user.username = new_username
+        user.is_profile_completed = True  # 이것만 User 모델에 있음
         
         if commit:
             user.save()
+            
+            # 🔥 소셜 계정의 가입 완료 상태 업데이트 (별도 모델 사용)
+            social_account = user.get_social_account()
+            if social_account:
+                social_account.signup_completed = True
+                social_account.save()
+            
             print(f"✅ 소셜 가입 완료 저장됨:")
             print(f"   - username: {user.username}")
-            print(f"   - is_temp_username: {user.is_temp_username}")
-            print(f"   - social_signup_completed: {user.social_signup_completed}")
             print(f"   - is_profile_completed: {user.is_profile_completed}")
+            print(f"   - social_account.signup_completed: {social_account.signup_completed if social_account else 'N/A'}")
         
         return user
 

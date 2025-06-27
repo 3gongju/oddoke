@@ -6,6 +6,19 @@ from django.conf import settings
 
 register = template.Library()
 
+def check_file_exists(image_path):
+    """개발/배포 환경에 따라 파일 존재 여부 확인"""
+    if settings.DEBUG and settings.STATICFILES_DIRS:
+        # 개발 환경: STATICFILES_DIRS에서 확인
+        full_path = os.path.join(settings.STATICFILES_DIRS[0], image_path)
+        return os.path.exists(full_path)
+    else:
+        # 배포 환경: STATIC_ROOT에서 확인
+        if hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+            full_path = os.path.join(settings.STATIC_ROOT, image_path)
+            return os.path.exists(full_path)
+    return False
+
 @register.simple_tag
 def member_image(member_name, artist_display_name=None):
     """
@@ -23,12 +36,7 @@ def member_image(member_name, artist_display_name=None):
     if artist_display_name:
         for ext in extensions:
             image_path = f'image/member_namu_images/{artist_display_name}_{member_name}{ext}'
-            
-            if settings.DEBUG and settings.STATICFILES_DIRS:
-                full_path = os.path.join(settings.STATICFILES_DIRS[0], image_path)
-                if os.path.exists(full_path):
-                    return static(image_path)
-            else:
+            if check_file_exists(image_path):
                 return static(image_path)
     
     # 아티스트명이 없거나 위에서 찾지 못한 경우, 모든 가능한 조합 시도
@@ -38,26 +46,31 @@ def member_image(member_name, artist_display_name=None):
     for artist in common_artists:
         for ext in extensions:
             image_path = f'image/member_namu_images/{artist}_{member_name}{ext}'
-            
-            if settings.DEBUG and settings.STATICFILES_DIRS:
-                full_path = os.path.join(settings.STATICFILES_DIRS[0], image_path)
-                if os.path.exists(full_path):
-                    return static(image_path)
+            if check_file_exists(image_path):
+                return static(image_path)
     
-    # 그래도 없으면 패턴 매칭으로 찾기 (개발환경에서만)
+    # 그래도 없으면 패턴 매칭으로 찾기
+    import glob
+    
     if settings.DEBUG and settings.STATICFILES_DIRS:
-        import glob
         namu_dir = os.path.join(settings.STATICFILES_DIRS[0], 'image/member_namu_images')
+    elif hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+        namu_dir = os.path.join(settings.STATIC_ROOT, 'image/member_namu_images')
+    else:
+        return static('image/default_member.svg')
+    
+    for ext in extensions:
+        # *_멤버명.jpg 패턴으로 검색
+        pattern = os.path.join(namu_dir, f'*_{member_name}{ext}')
+        matches = glob.glob(pattern)
         
-        for ext in extensions:
-            # *_멤버명.jpg 패턴으로 검색
-            pattern = os.path.join(namu_dir, f'*_{member_name}{ext}')
-            matches = glob.glob(pattern)
-            
-            if matches:
-                # 첫 번째 매치된 파일 사용
+        if matches:
+            # 첫 번째 매치된 파일 사용
+            if settings.DEBUG and settings.STATICFILES_DIRS:
                 relative_path = os.path.relpath(matches[0], settings.STATICFILES_DIRS[0]).replace('\\', '/')
-                return static(relative_path)
+            else:
+                relative_path = os.path.relpath(matches[0], settings.STATIC_ROOT).replace('\\', '/')
+            return static(relative_path)
     
     # 이미지가 없으면 기본 아바타 반환
     return static('image/default_member.svg')
@@ -94,21 +107,23 @@ def member_has_image(member_name, artist_display_name=None):
     if artist_display_name:
         for ext in extensions:
             image_path = f'image/member_namu_images/{artist_display_name}_{member_name}{ext}'
-            
-            if settings.DEBUG and settings.STATICFILES_DIRS:
-                full_path = os.path.join(settings.STATICFILES_DIRS[0], image_path)
-                if os.path.exists(full_path):
-                    return True
+            if check_file_exists(image_path):
+                return True
     
     # 패턴 매칭으로 찾기
+    import glob
+    
     if settings.DEBUG and settings.STATICFILES_DIRS:
-        import glob
         namu_dir = os.path.join(settings.STATICFILES_DIRS[0], 'image/member_namu_images')
-        
-        for ext in extensions:
-            pattern = os.path.join(namu_dir, f'*_{member_name}{ext}')
-            matches = glob.glob(pattern)
-            if matches:
-                return True
+    elif hasattr(settings, 'STATIC_ROOT') and settings.STATIC_ROOT:
+        namu_dir = os.path.join(settings.STATIC_ROOT, 'image/member_namu_images')
+    else:
+        return False
+    
+    for ext in extensions:
+        pattern = os.path.join(namu_dir, f'*_{member_name}{ext}')
+        matches = glob.glob(pattern)
+        if matches:
+            return True
     
     return False

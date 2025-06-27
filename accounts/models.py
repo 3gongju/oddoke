@@ -29,9 +29,17 @@ class User(AbstractUser):
        'unique': "이미 사용 중인 닉네임입니다."
     })
    
-    profile_image = models.ImageField(upload_to=profile_image_upload)
+    profile_image = models.ImageField(
+        upload_to=profile_image_upload,
+        default='default/profile.png',
+        blank=True, 
+        null=True,
+        
+    )
     followings = models.ManyToManyField('self', related_name='followers', symmetrical=False)
     bio = models.TextField(blank=True, null=True)
+
+    is_profile_completed = models.BooleanField(default=False, verbose_name="프로필 완성 여부")
 
     # 편의 메서드들
     def get_fandom_profile(self):

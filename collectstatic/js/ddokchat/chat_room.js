@@ -21,10 +21,11 @@ import { setupAutoDetect } from './auto_detect.js';
 import { setupImageLightbox } from './image_handler.js';
 import { setupPlusMenu, setupTradeCompleteModal, setupHeaderMenu, setupReviewModal } from './ui_setup.js';
 import { sendTextMessage } from './message_sender.js';
+import { setupTradeReport } from './trade_report.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 전역 변수에서 데이터 가져오기
-  const roomId = window.roomId;
+  // 전역 변수에서 데이터 가져오기 - room_code 사용
+  const roomCode = window.roomCode;  // room_code로 변경
   const currentUser = window.currentUser;
   const currentUserId = window.currentUserId;
   const isTradeCompleted = window.isTradeCompleted;
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupMessageHandlers(currentUser, currentUserId);
   setupFraudCheck();
   setupAutoDetect();
+  setupTradeReport();
   
   // WebSocket 메시지 핸들러 등록
   registerMessageHandler('showToast', showToast);
@@ -46,8 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
   registerMessageHandler('enter_chatroom_finish', handleEnterChatroomFinish);
   registerMessageHandler('trade_completed', handleTradeCompleted);
   
-  // WebSocket 연결
-  setupWebSocket(roomId);
+  // WebSocket 연결 - roomCode 사용
+  setupWebSocket(roomCode);
   
   // 전역 함수로 노출
   window.sendWebSocketMessage = sendMessage;
@@ -94,7 +96,7 @@ function setupUIComponents() {
   // 거래 완료 모달 설정
   setupTradeCompleteModal();
   
-  // 헤더 메뉴 설정
+  // 헤더 메뉴 설정 (신고 기능 포함)
   setupHeaderMenu();
   
   // 이미지 라이트박스 설정

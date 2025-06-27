@@ -123,16 +123,16 @@ def intro_view(request):
     # 각 슬라이드별 콘텐츠 정보 정의 (18개 슬라이드)
     slide_contents = [
         {
-            'title': '어덕해에 오신 것을 환영합니다',
-            'subtitle': '팬들을 위한 특별한 공간',
-            'description': '덕질의 모든 것을 경험하세요',
+            'title': '어덕해',
+            'subtitle': '어떻게? 어떡해!',
+            'description': '덕질 종합 플랫폼',
             'type': 'welcome',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '덕팜 - 굿즈 거래의 새로운 방식',
             'subtitle': '안전하고 편리한 거래',
-            'description': '판매, 대여, 공동구매까지 모든 거래를 한 곳에서',
+            'description': '양도, 대여, 분철까지 모든 거래를 한 곳에서',
             'type': 'ddokfarm',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokfarm_posts  # 🔥 실제 데이터 추가
@@ -140,24 +140,24 @@ def intro_view(request):
         {
             'title': '덕담 - 팬들만의 소통 공간',
             'subtitle': '자유로운 소통과 정보 공유',
-            'description': '커뮤니티, 매너샷, 생일카페 정보까지',
+            'description': '커뮤니티, 예절샷, 생일카페 후기까지',
             'type': 'ddokdam',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokdam_posts  # 🔥 실제 데이터 추가
         },
         {
-            'title': '덕생 - 아티스트 생일 달력',
-            'subtitle': '소중한 순간을 놓치지 마세요',
-            'description': '생일 알림과 기념 이벤트 정보',
+            'title': '덕생 - 아티스트 생일 캘린더',
+            'subtitle': '생일을 함께 축하해요!',
+            'description': '이번주의 생일을 확인하고, 생일을 축하하며, 덕을 쌓아요.',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': birthday_artists,  # 🔥 실제 생일 아티스트 데이터
             'stats_data': birthday_stats    # 🔥 생일 통계 데이터 추가
         },
         {
-            'title': '덕채팅 - 실시간 소통',
-            'subtitle': '팬들과의 즉석 대화',
-            'description': '같은 관심사를 가진 사람들과 실시간으로 소통하세요',
+            'title': '덕챗 - 팬과 팬을 잇는 대화',
+            'subtitle': '실시간 채팅으로 더 편하게',
+            'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
             'type': 'ddokchat',
             'image': DEFAULT_SLIDE_IMAGE
         },
@@ -170,15 +170,15 @@ def intro_view(request):
         },
         {
             'title': '다양한 아티스트 지원',
-            'subtitle': 'K-POP부터 일본 아티스트까지',
-            'description': '모든 장르의 아티스트 팬들을 위한 공간',
+            'subtitle': '모든 덕들을 위한 플랫폼',
+            'description': 'K-POP 팬들을 위한 맞춤형 공간',
             'type': 'artists',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
-            'title': '모바일 최적화',
-            'subtitle': '언제 어디서나 편리하게',
-            'description': '모바일에서도 완벽한 사용자 경험',
+            'title': '웹 최적화',
+            'subtitle': '큰 화면으로 크게 덕질 즐기자!',
+            'description': '조만간 모바일에서도 즐길 수 있어요!',
             'type': 'mobile',
             'image': DEFAULT_SLIDE_IMAGE
         },
@@ -192,7 +192,7 @@ def intro_view(request):
         {
             'title': '이벤트 & 혜택',
             'subtitle': '특별한 혜택과 이벤트',
-            'description': '정기적인 이벤트와 회원 전용 혜택',
+            'description': '정기적인 이벤트와 어덕해 주민들 전용 혜택 IS COMING SOON',
             'type': 'events',
             'image': DEFAULT_SLIDE_IMAGE
         },
@@ -213,14 +213,14 @@ def intro_view(request):
         {
             'title': '글로벌 서비스',
             'subtitle': '전 세계 팬들과 연결',
-            'description': '국경을 넘나드는 팬 문화 교류',
+            'description': '(ENGLISH VERSION IS 커밍쑨)',
             'type': 'global',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
-            'title': 'AI 추천 시스템',
+            'title': '찜한 아티스트 모아보기',
             'subtitle': '맞춤형 콘텐츠 추천',
-            'description': '취향에 맞는 굿즈와 정보를 추천받으세요',
+            'description': '취향에 맞는 굿즈와 정보를 쉽게 찾기',
             'type': 'ai',
             'image': DEFAULT_SLIDE_IMAGE
         },

@@ -40,7 +40,7 @@ export function sendTextMessage() {
   
   if (message) {
     sendMessage({ 
-      'room_id': window.roomId,
+      'room_code': window.roomCode,
       'message': message
     });
     input.value = '';
@@ -60,7 +60,7 @@ export function sendAccountInfo() {
     return;
   }
 
-  fetch(`/ddokchat/send-account/${window.roomId}/`, {
+  fetch(`/ddokchat/send-account/${window.roomCode}/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': csrfToken,
@@ -79,7 +79,7 @@ export function sendAccountInfo() {
     if (data.success) {
       sendMessage({
         type: 'account_info',
-        room_id: window.roomId,
+        room_code: window.roomCode,
         account_info: data.account_info,
         sender_id: window.currentUserId,
         message_id: data.message_id
@@ -115,7 +115,7 @@ export function sendAddressInfo() {
     return;
   }
 
-  fetch(`/ddokchat/send-address/${window.roomId}/`, {
+  fetch(`/ddokchat/send-address/${window.roomCode}/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': csrfToken,
@@ -134,7 +134,7 @@ export function sendAddressInfo() {
     if (data.success) {
       sendMessage({
         type: 'address_info',
-        room_id: window.roomId,
+        room_code: window.roomCode,
         address_info: data.address_info,
         sender_id: window.currentUserId,
         message_id: data.message_id

@@ -59,7 +59,7 @@ export function handleImageUpload(file) {
   extractExifData(file, function(exifData) {
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('room_id', window.roomId);
+    formData.append('room_code', window.roomCode);
     
     if (exifData && exifData.taken_datetime) {
       formData.append('taken_datetime', exifData.taken_datetime);

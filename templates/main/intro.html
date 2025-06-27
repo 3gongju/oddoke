@@ -32,7 +32,7 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
-    <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}"
+    <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -200,60 +200,7 @@
                     </a>
                 </div>
                 
-                <!-- 네비게이션 메뉴 -->
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
-                        <a href="/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-                            홈
-                        </a>
-                        <a href="/ddokfarm/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-                            덕팜
-                        </a>
-                        <a href="/ddokdam/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-                            덕담
-                        </a>
-                        <a href="/calendar/" class="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium transition-colors">
-                            덕생
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- CTA 버튼 -->
-                <div class="flex items-center space-x-3">
-                    {% if user.is_authenticated %}
-                        <span class="text-gray-300 text-sm">{{ user.display_name }}님</span>
-                        <a href="/accounts/logout/" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
-                            로그아웃
-                        </a>
-                    {% else %}
-                        <a href="/accounts/login/" class="text-white hover:text-gray-300 px-3 py-2 text-sm font-medium transition-colors">
-                            로그인
-                        </a>
-                        <a href="/accounts/signup/" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors">
-                            회원가입
-                        </a>
-                    {% endif %}
-                </div>
-                
-                <!-- 모바일 메뉴 버튼 -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-gray-300 hover:text-white p-2">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 모바일 메뉴 -->
-        <div id="mobile-menu" class="md:hidden hidden bg-black bg-opacity-90">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a href="/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">홈</a>
-                <a href="/ddokfarm/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">덕팜</a>
-                <a href="/ddokdam/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">덕담</a>
-                <a href="/calendar/" class="text-gray-300 hover:text-white block px-3 py-2 text-base font-medium">덕생</a>
-            </div>
+
         </div>
     </nav>
     
@@ -261,7 +208,7 @@
     <div class="fixed right-4 md:right-8 top-1/2 transform -translate-y-1/2 z-40">
         <div class="nav-dots-container space-y-2">
             {% for slide in slide_contents %}
-            <div class="nav-dot w-3 h-3 bg-white bg-opacity-50 rounded-full cursor-pointer transition-all hover:bg-opacity-80 {% if forloop.first %}active{% endif %}" 
+            <div class="nav-dot w-1 h-1 bg-white bg-opacity-50 rounded-full cursor-pointer transition-all hover:bg-opacity-80 {% if forloop.first %}active{% endif %}" 
                  data-section="{{ forloop.counter0 }}" 
                  title="{{ slide.subtitle }}"></div>
             {% endfor %}
@@ -352,7 +299,7 @@
                     {% if slide.type == 'ddokfarm' %}
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
                         <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">판매</div>
+                            <div class="text-lg font-semibold mb-2">양도</div>
                             <div class="text-sm opacity-90">안전한 굿즈 거래</div>
                         </div>
                         <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
@@ -360,8 +307,8 @@
                             <div class="text-sm opacity-90">경제적인 선택</div>
                         </div>
                         <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">공동구매</div>
-                            <div class="text-sm opacity-90">함께하는 즐거움</div>
+                            <div class="text-lg font-semibold mb-2">분철</div>
+                            <div class="text-sm opacity-90">취향대로 함께</div>
                         </div>
                     </div>
                     
@@ -372,8 +319,8 @@
                             <div class="text-sm opacity-90">자유로운 소통</div>
                         </div>
                         <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">매너샷</div>
-                            <div class="text-sm opacity-90">예쁜 인증샷</div>
+                            <div class="text-lg font-semibold mb-2">예절샷</div>
+                            <div class="text-sm opacity-90">정성의 기록</div>
                         </div>
                         <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
                             <div class="text-lg font-semibold mb-2">생일카페</div>

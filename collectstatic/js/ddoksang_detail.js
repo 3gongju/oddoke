@@ -97,6 +97,7 @@
         
         const modalImage = document.getElementById('modalImage');
         const modalTitle = document.getElementById('modalImageTitle');
+        const modalCaption = document.getElementById('modalImageCaption');
         const modalCounter = document.getElementById('modalImageCounter');
         
         const image = imageData[currentModalIndex];
@@ -408,8 +409,18 @@
         const data = getCafeData();
         if (!data) return;
         
-        const url = `https://map.kakao.com/link/map/${data.name},${data.latitude},${data.longitude}`;
-        window.open(url, '_blank');
+        // 모바일/웹 모두에서 작동하는 카카오맵 URL 형식
+        const encodedName = encodeURIComponent(data.name);
+        const url = `https://map.kakao.com/link/map/${encodedName},${data.latitude},${data.longitude}`;
+        
+        // 모바일에서는 앱으로, 웹에서는 새 탭으로 열기
+        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // 모바일 환경
+            window.location.href = url;
+        } else {
+            // 데스크톱 환경
+            window.open(url, '_blank');
+        }
     }
 
     // 주소 복사
