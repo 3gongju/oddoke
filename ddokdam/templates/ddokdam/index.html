@@ -29,7 +29,7 @@
   {% else %}
     <div class="text-center py-12">
       <div class="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto mb-4 sm:mb-6 opacity-50">
-          <img src="{% static 'image/ddok_logo_filled.png' %}" alt="게시글 없음" class="w-full h-full object-contain" />
+          <img src="{% static 'image/ddok_y.png' %}" alt="게시글 없음" class="w-full h-full object-contain" />
       </div>
       <p class="text-gray-500 text-lg">
         {% if favorites_only and user.is_authenticated %}
@@ -43,13 +43,9 @@
       {% if favorites_only %}
         <p class="text-gray-400 text-sm mt-2">찜한 아티스트 필터를 해제하거나 다른 아티스트를 찜해보세요.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-4">
-          <button onclick="clearFavoriteFilter()" 
-                  class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-            전체 게시글 보기
-          </button>
           <a href="{% url 'artist:index' %}" 
-             class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-            아티스트 찜하러 가기
+             class="px-4 py-2 bg-gray-200 text-black rounded-lg hover:bg-pink-100 transition-colors">
+            찜
           </a>
         </div>
       {% elif query %}
@@ -59,16 +55,13 @@
             검색 초기화
           </button>
           <a href="{% url 'ddokdam:post_create' %}" 
-             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-            새 게시글 작성하기
+             class="px-4 py-2 bg-pink-200 text-black rounded-lg hover:bg-gray-200 transition-colors">
+            글쓰기
           </a>
         </div>
       {% else %}
         <div class="flex justify-center mt-4">
-          <a href="{% url 'ddokdam:post_create' %}" 
-             class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-            첫 번째 게시글 작성하기
-          </a>
+
         </div>
       {% endif %}
     </div>

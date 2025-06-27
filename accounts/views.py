@@ -1118,72 +1118,116 @@ def google_login(request):
     return redirect(auth_url)
 
 def google_callback(request):
-    """🔥 수정: 구글 로그인 콜백 처리 - SocialAccount 모델 사용"""
-    print("=== 구글 콜백 디버깅 ===")
+    """🔥 수정: 구글 로그인 콜백 처리 - 향상된 디버깅과 오류 처리"""
+    print("=" * 60)
+    print("=== 구글 콜백 처리 시작 ===")
+    print("=" * 60)
     
     code = request.GET.get('code')
     error = request.GET.get('error')
     
+    print(f"🔍 URL 파라미터:")
+    print(f"   code: {code[:20] if code else 'None'}...")
+    print(f"   error: {error}")
+    print(f"   전체 GET: {dict(request.GET)}")
+    
     # 에러 확인
     if error:
-        print(f"구글 로그인 에러: {error}")
+        print(f"❌ 구글 로그인 에러: {error}")
         messages.error(request, '구글 로그인이 취소되었습니다.')
         return redirect('accounts:login')
     
     if not code:
-        print("구글 코드 없음")
+        print("❌ 구글 코드 없음")
         messages.error(request, '구글 로그인에 실패했습니다.')
         return redirect('accounts:login')
-    
-    print(f"구글 코드 받음: {code[:10]}...")
     
     service = GoogleAuthService()
     
     try:
-        print("구글 콜백 처리 시작...")
+        print("🚀 구글 서비스로 콜백 처리 시작...")
         user = service.handle_callback(code)
-        print(f"반환된 사용자: {user.username}")
-        print(f"사용자 이메일: {user.email}")
+        
+        print(f"✅ 서비스에서 반환된 사용자:")
+        print(f"   Username: {user.username}")
+        print(f"   Email: {user.email}")
+        print(f"   ID: {user.id}")
+        print(f"   Active: {user.is_active}")
         
         # 🔥 SocialAccount 모델을 통해 소셜 상태 확인
         social_account = user.get_social_account()
-        print(f"소셜 계정: {social_account}")
-        print(f"가입 완료 여부: {social_account.signup_completed if social_account else 'N/A'}")
+        print(f"🔍 소셜 계정 정보:")
+        print(f"   Social Account: {social_account}")
+        if social_account:
+            print(f"   Provider: {social_account.provider}")
+            print(f"   Social ID: {social_account.social_id}")
+            print(f"   가입 완료: {social_account.signup_completed}")
         
-        # 이메일 기반 인증 (패스워드 없이)
+        # 🔥 이메일 기반 인증 (패스워드 없이)
+        print("🔐 이메일 기반 인증 시도...")
         from django.contrib.auth import authenticate
-        print("이메일 기반 인증 시도...")
+        
         authenticated_user = authenticate(
             request, 
             email=user.email, 
             password=None
         )
-        print(f"인증 결과: {authenticated_user}")
+        
+        print(f"🔍 인증 결과:")
+        print(f"   Authenticated User: {authenticated_user}")
+        print(f"   인증 성공: {authenticated_user is not None}")
         
         if authenticated_user:
-            print("인증 성공, 로그인 처리...")
+            print("✅ 인증 성공! 로그인 처리 중...")
+            
+            # Django 로그인 처리
             auth_login(request, authenticated_user, backend='accounts.backends.EmailBackend')
-            print(f"로그인 성공: {request.user.is_authenticated}")
+            
+            print(f"🔍 로그인 후 상태:")
+            print(f"   request.user.is_authenticated: {request.user.is_authenticated}")
+            print(f"   request.user.username: {request.user.username}")
             
             # 🔥 SocialAccount를 통해 프로필 완성 여부 확인
             social_account = authenticated_user.get_social_account()
             if not social_account or not social_account.signup_completed:
-                print("신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
+                print("🔄 신규 사용자 또는 미완성 프로필 → 프로필 완성 페이지로")
                 return redirect('accounts:social_signup_complete')
             else:
-                print(f"기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
+                print(f"🎉 기존 완성된 사용자 → 메인으로 ({authenticated_user.display_name})")
                 messages.success(request, f'환영합니다, {authenticated_user.display_name}님!')
                 
             next_url = request.GET.get('next') or '/'
-            print(f"리다이렉트 URL: {next_url}")
+            print(f"🔗 리다이렉트 URL: {next_url}")
             return redirect(next_url)
+            
         else:
-            print("인증 실패!")
+            print("❌ 인증 실패!")
+            print("🔍 추가 디버깅 정보:")
+            print(f"   User email: {user.email}")
+            print(f"   User exists: {User.objects.filter(email=user.email).exists()}")
+            
+            # 사용자가 존재하는지 직접 확인
+            try:
+                db_user = User.objects.get(email=user.email)
+                print(f"   DB User: {db_user.username}")
+                print(f"   DB User ID: {db_user.id}")
+                print(f"   DB User Active: {db_user.is_active}")
+                
+                # SocialAccount 확인
+                social_accounts = SocialAccount.objects.filter(user=db_user)
+                print(f"   Social Accounts: {list(social_accounts)}")
+                
+            except User.DoesNotExist:
+                print("   DB에서 사용자를 찾을 수 없음!")
+            
             messages.error(request, '구글 로그인 인증에 실패했습니다.')
             return redirect('accounts:login')
         
     except Exception as e:
-        print(f"전체 에러: {str(e)}")
+        print("=" * 60)
+        print(f"❌ 구글 콜백 처리 중 전체 오류: {e}")
+        print("=" * 60)
+        
         import traceback
         traceback.print_exc()
         
