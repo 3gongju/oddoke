@@ -40,14 +40,18 @@
 
   <hr class="border-gray-300">
 
-  <!-- 수정 / 삭제 버튼 - 본인일 경우 -->
+  <!-- ✅ 수정된 수정/삭제 버튼 - 본인일 경우 -->
   {% if request.user == post.user %}
     <div class="flex justify-end space-x-2 mt-2">
       <a href="{% url app_name|add:':post_edit' category=category post_id=post.id %}"
          class="text-sm text-blue-600 hover:underline">수정</a>
-      <a href="{% url app_name|add:':post_delete' category=category post_id=post.id %}"
-         class="text-sm text-red-600 hover:underline"
-         onclick="return confirm('정말 삭제하시겠습니까?')">삭제</a>
+      
+      <!-- ✅ 삭제 버튼을 JavaScript 함수로 변경 -->
+      <button type="button" 
+              onclick="confirmDelete('{% url app_name|add:':post_delete' category=category post_id=post.id %}')"
+              class="text-sm text-red-600 hover:underline bg-transparent border-none cursor-pointer">
+        삭제
+      </button>
     </div>
   {% endif %}
 
@@ -98,3 +102,32 @@
   </div>
 </div>
 {% endif %}
+
+<!-- ✅ 삭제 확인 JavaScript 함수 추가 -->
+<script>
+function confirmDelete(deleteUrl) {
+  if (confirm('정말 삭제하시겠습니까?')) {
+    // POST 요청을 위한 폼 생성
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = deleteUrl;
+    
+    // CSRF 토큰 추가
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                      document.querySelector('meta[name=csrf-token]')?.content ||
+                      window.csrfToken;
+    
+    if (csrfToken) {
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'csrfmiddlewaretoken';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+    }
+    
+    // 폼을 body에 추가하고 전송
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+</script>
