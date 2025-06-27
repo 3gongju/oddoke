@@ -119,6 +119,13 @@ def index(request):
     for post in posts:
         post.detail_url = reverse('ddokdam:post_detail', args=[post.category_type, post.id])
 
+        # 댓글 개수 계산 추가
+        content_type = ContentType.objects.get_for_model(post.__class__)
+        post.total_comment_count = DamComment.objects.filter(
+            content_type=content_type, 
+            object_id=post.id
+        ).count()
+
     clean_category = (category or 'community').split('?')[0]
     
     # ✅ 찜한 아티스트 목록 추가
