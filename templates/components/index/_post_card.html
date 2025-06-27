@@ -45,9 +45,14 @@
     <!-- ✅ 가격 정보 (덕팜만) - get_display_price 사용 -->
     {% if app_name == 'ddokfarm' %}
       <div class="mb-3">
-        <div class="text-lg font-bold text-gray-900">
-          {{ post.get_display_price }}
-        </div>
+        <span class="block text-base font-semibold text-gray-900">
+          {{ post.get_price_base }}
+        </span>
+        {% if post.get_price_note %}
+          <span class="block text-sm text-gray-500 mt-0.5">
+            {{ post.get_price_note }}
+          </span>
+        {% endif %}
       </div>
     {% endif %}
 
