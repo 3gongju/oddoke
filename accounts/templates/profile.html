@@ -360,23 +360,28 @@
     opacity: 1;
   }
 
-  /* Follow List Styles */
+ /* Follow List Styles */
 .follow-list-item {
   @apply flex items-center p-3 sm:p-4 hover:bg-gray-50 rounded-2xl transition-all duration-200;
 }
 
 .user-info {
   @apply flex items-center gap-3 w-full;
-  align-items: center; /* 명시적으로 중앙 정렬 */
+  align-items: center !important; /* 강제로 중앙 정렬 */
 }
 
 .user-info > a {
-  display: inline-flex; /* 인라인 플렉스로 강제 */
+  display: flex !important; /* 프로필 이미지 링크를 flex로 */
+  align-items: center; /* 프로필 이미지 중앙 정렬 */
 }
 
 .user-name {
-  @apply font-semibold text-black text-base sm:text-lg font-body flex-1;
-  display: inline-block; /* 인라인 블록으로 강제 */
+  @apply font-semibold text-black text-base sm:text-lg font-body;
+  display: flex !important; /* 닉네임 링크를 flex로 */
+  align-items: center !important; /* 닉네임 중앙 정렬 */
+  line-height: 1 !important; /* 라인 높이 조정 */
+  margin: 0 !important; /* 마진 제거 */
+  padding: 0 !important; /* 패딩 제거 */
 }
 
 /* 모바일 최적화 */
@@ -499,32 +504,21 @@
     const li = document.createElement('li');
     li.className = 'follow-list-item';
     
-    // 프로필 이미지 HTML 생성
-    let profileImageHtml;
-    if (user.profile_image_url) {
-      profileImageHtml = `
-        <a href="/accounts/profile/${user.username}/" class="flex-shrink-0">
-          <img src="${user.profile_image_url}" 
-              alt="${user.username}의 프로필" 
-              class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 hover:border-gray-400 transition-colors">
-        </a>
-      `;
-    } else {
-      profileImageHtml = `
-        <a href="/accounts/profile/${user.username}/" class="flex-shrink-0">
-          <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-lg hover:bg-gray-400 transition-colors border-2 border-gray-200">
-            ${getInitials(user.username)}
-          </div>
-        </a>
-      `;
-    }
-    
+    // 전체를 하나의 링크로 만들기
     li.innerHTML = `
-      <div class="user-info">
-        ${profileImageHtml}
-        <a href="/accounts/profile/${user.username}/" class="user-name hover:text-gray-600 transition-colors">${user.username}</a>
-      </div>
+      <a href="/accounts/profile/${user.username}/" class="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-all duration-200 no-underline">
+        ${user.profile_image_url ? 
+          `<img src="${user.profile_image_url}" 
+               alt="${user.username}의 프로필" 
+               class="w-12 h-12 rounded-full object-cover border-2 border-gray-200 flex-shrink-0">` :
+          `<div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-lg border-2 border-gray-200 flex-shrink-0">
+             ${getInitials(user.username)}
+           </div>`
+        }
+        <span class="font-semibold text-black text-base sm:text-lg font-body">${user.username}</span>
+      </a>
     `;
+    
     followModalList.appendChild(li);
   });
 }
