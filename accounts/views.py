@@ -225,6 +225,25 @@ def profile(request, username):
     user_profile = User.objects.get(username=username)
     fandom_profile = user_profile.get_fandom_profile() # 팬덤 프로필 추가
 
+    # 🔥 디버깅 코드 추가
+    print(f"=== 신뢰덕 점수 디버깅 ===")
+    print(f"사용자: {user_profile.username}")
+    
+    try:
+        trust_score = user_profile.trust_score
+        trust_level = user_profile.trust_score_level
+        print(f"신뢰덕 점수: {trust_score}")
+        print(f"신뢰덕 레벨: {trust_level}")
+    except Exception as e:
+        print(f"신뢰덕 점수 계산 오류: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    # 리뷰 개수도 확인
+    review_count = MannerReview.objects.filter(target_user=user_profile).count()
+    print(f"매너 리뷰 개수: {review_count}")
+    print("========================")
+
     # 덕담 게시글 모두 가져오기
     community_posts = DamCommunityPost.objects.filter(user=user_profile)
     manner_posts = DamMannerPost.objects.filter(user=user_profile)

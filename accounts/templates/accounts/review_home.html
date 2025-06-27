@@ -15,14 +15,6 @@
           <h2 class="text-xl font-bold text-gray-800">
             {{ user_profile.username }}
           </h2>
-          
-          <!-- 신뢰덕 점수 뱃지 -->
-          <span class="trust-score-badge {{ user_profile.trust_score_level }}">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            신뢰덕 {{ user_profile.trust_score }}점
-          </span>
         </div>
         <p class="text-gray-600">신뢰덕 통계</p>
       </div>
