@@ -73,7 +73,7 @@
                         네이버 연결됨
                       </span>
                     {% elif user_profile.social_account.provider == 'google' %}
-                      <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                      <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium bg-pink-100 text-pink-800 border border-pink-200">
                         구글 연결됨
                       </span>
                     {% endif %}
@@ -113,7 +113,7 @@
                 <p class="text-base sm:text-lg font-medium text-gray-800 mb-2" id="current-nickname">
                   {{ user_profile.username }}
                 </p>
-                <button id="edit-nickname-btn" class="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                <button id="edit-nickname-btn" class="px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition">
                   수정
                 </button>
               </div>
@@ -128,12 +128,12 @@
                 <div>
                   <input type="text" id="new-nickname" name="username" 
                         value="{{ user_profile.username }}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm sm:text-base" 
                         placeholder="새로운 닉네임을 입력하세요">
                 </div>
                 
-                <div class="bg-blue-50 p-3 rounded-lg">
-                  <p class="text-xs sm:text-sm text-blue-700">
+                <div class="bg-pink-50 p-3 rounded-lg">
+                  <p class="text-xs sm:text-sm text-pink-700">
                     <strong>닉네임 변경 안내</strong><br>
                     • 2-20자의 한글, 영문, 숫자 사용 가능<br>
                     • 중복되지 않는 고유한 이름이어야 합니다<br>
@@ -175,7 +175,7 @@
                     <span class="text-gray-400 italic">소개글을 작성해보세요!</span>
                   {% endif %}
                 </p>
-                <button id="edit-bio-btn" class="px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                <button id="edit-bio-btn" class="px-3 py-1 text-sm font-medium text-pink-600 bg-pink-50 rounded-lg hover:bg-pink-100 transition">
                   수정
                 </button>
               </div>
@@ -189,7 +189,7 @@
               <div class="space-y-4">
                 <div>
                   <textarea id="new-bio" name="bio" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-sm sm:text-base" 
                             placeholder="자신을 소개해보세요! (최대 150자)">{% if user_profile.bio %}{{ user_profile.bio }}{% endif %}</textarea>
                 </div>
                 
