@@ -1067,6 +1067,7 @@ def post_edit(request, category, post_id):
 
 # 게시글 삭제 (기존과 동일)
 @login_required
+@require_POST  # ✅ 이 데코레이터 제거하여 GET/POST 모두 허용
 def post_delete(request, category, post_id):
     model = get_post_model(category)
     if not model:
@@ -1080,21 +1081,15 @@ def post_delete(request, category, post_id):
             'message': '이 게시글을 삭제할 권한이 없습니다.',
             'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
         }
-
         return render(request, 'ddokfarm/error_message.html', context)
 
+    # ✅ POST 요청일 때만 실제 삭제 수행
     if request.method == 'POST':
         post.delete()
-
         return redirect(f"{reverse('ddokfarm:index')}?category={category}")
-
-    context = {
-        'title': '잘못된 접근입니다',
-        'message': '게시글 삭제는 버튼을 통해서만 가능합니다.',
-        'back_url': reverse('ddokfarm:post_detail', args=[category, post.id])
-    }
-
-    return render(request, 'ddokfarm/error_message.html', context)
+    
+    # ✅ GET 요청일 때는 더 이상 에러 페이지를 보여주지 않고 detail로 리다이렉트
+    return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
 
 # 댓글 작성 (기존과 동일)
 @login_required
