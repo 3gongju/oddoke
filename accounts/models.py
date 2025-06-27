@@ -148,6 +148,89 @@ class User(AbstractUser):
         ddok_point, created = DdokPoint.objects.get_or_create(user=self)
         return ddok_point
 
+    def calculate_trust_score(self):
+        """매너 리뷰를 기반으로 신뢰덕 점수 계산 (100점 만점)"""
+        from django.db import models
+        
+        reviews = MannerReview.objects.filter(target_user=self)
+        
+        if not reviews.exists():
+            return 50  # 기본 점수 50점 (리뷰가 없는 경우)
+        
+        total_reviews = reviews.count()
+        
+        # 1. 별점 점수 (40점 만점) - 가장 중요한 지표
+        avg_rating = reviews.aggregate(avg_rating=models.Avg('rating'))['avg_rating']
+        rating_score = (avg_rating / 5.0) * 40 if avg_rating else 20
+        
+        # 2. 상품 상태 일치도 점수 (20점 만점)
+        description_stats = reviews.values('description_match').annotate(count=models.Count('id'))
+        description_score = 0
+        for stat in description_stats:
+            match_type = stat['description_match']
+            count = stat['count']
+            percentage = count / total_reviews
+            
+            if match_type == '동일':
+                description_score += percentage * 20
+            elif match_type == '미세 차이':
+                description_score += percentage * 15
+            elif match_type == '많이 다름':
+                description_score += percentage * 5
+        
+        # 3. 응답 속도 점수 (15점 만점)
+        response_stats = reviews.values('response_speed').annotate(count=models.Count('id'))
+        response_score = 0
+        for stat in response_stats:
+            speed_type = stat['response_speed']
+            count = stat['count']
+            percentage = count / total_reviews
+            
+            if speed_type == '빠름':
+                response_score += percentage * 15
+            elif speed_type == '보통':
+                response_score += percentage * 10
+            elif speed_type == '느림':
+                response_score += percentage * 5
+            elif speed_type == '무응답':
+                response_score += percentage * 0
+        
+        # 4. 메시지 매너 점수 (15점 만점)
+        politeness_stats = reviews.values('politeness').annotate(count=models.Count('id'))
+        politeness_score = 0
+        for stat in politeness_stats:
+            manner_type = stat['politeness']
+            count = stat['count']
+            percentage = count / total_reviews
+            
+            if manner_type == '친절':
+                politeness_score += percentage * 15
+            elif manner_type == '보통':
+                politeness_score += percentage * 10
+            elif manner_type == '불친절':
+                politeness_score += percentage * 0
+        
+        # 5. 재거래 의사 점수 (10점 만점)
+        deal_again_yes = reviews.filter(deal_again='O').count()
+        deal_again_percentage = deal_again_yes / total_reviews if total_reviews > 0 else 0
+        deal_again_score = deal_again_percentage * 10
+        
+        # 총점 계산 (100점 만점)
+        total_score = rating_score + description_score + response_score + politeness_score + deal_again_score
+        
+        # 리뷰 개수 보정 (리뷰가 적으면 기본 점수로 수렴)
+        if total_reviews < 5:
+            # 리뷰가 적을 때는 기본 점수(50점)와 계산된 점수를 가중평균
+            weight = total_reviews / 5.0  # 5개 이상일 때 100% 반영
+            total_score = (total_score * weight) + (50 * (1 - weight))
+        
+        return round(total_score, 1)
+
+    @property 
+    def trust_score(self):
+            """신뢰덕 점수 프로퍼티"""
+            return self.calculate_trust_score()
+
 
 class SocialAccount(models.Model):
     """소셜 로그인 계정 정보"""
