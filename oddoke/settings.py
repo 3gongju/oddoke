@@ -356,3 +356,16 @@ os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 # 나중에 실제 API 사용시 설정
 # REAL_BANK_API_KEY = 'your_api_key_here'
 # USE_MOCK_BANK_SERVICE = False
+
+
+# 배너 일자, 포인트 설정 변경시
+BANNER_DISPLAY_DAYS = 3
+BANNER_COST_POINTS = 1000
+
+
+# 혹은 최대 배너수도 설정 가능 일단은 주석
+# BANNER_CONFIG = {
+#     'DISPLAY_DAYS': 3,
+#     'COST_POINTS': 1000,
+#     'MAX_ACTIVE_BANNERS': 10,  # 동시에 활성화될 수 있는 최대 배너 수
+# }

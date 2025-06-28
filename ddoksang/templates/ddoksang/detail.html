@@ -142,11 +142,12 @@
 <script id="share-data" type="application/json">
 {
   "title": "{{ cafe.cafe_name|escapejs }}",
-  "imageUrl": "{% with first_image=cafe.images.first %}{% if first_image %}{{ request.scheme }}://{{ request.get_host }}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=🎂+생일카페{% endif %}{% endwith %}",
+  "imageUrl": "{% with first_image=cafe.images.first %}{% if first_image %}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페{% endif %}{% endwith %}",
   "linkUrl": "{{ request.scheme }}://{{ request.get_host }}{{ request.get_full_path }}",
   "address": "{{ cafe.address|escapejs }}",
   "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",
-  "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}"
+  "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}",
+  "description": "{{ cafe.artist.display_name }} 생일카페"
 }
 </script>
 
