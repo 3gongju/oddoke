@@ -161,6 +161,8 @@
     color: white;
   }
 
+
+
   /* 태블릿 */
   @media (min-width: 641px) and (max-width: 1024px) {
     #main-tabs {
@@ -239,46 +241,28 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // ✅ 모든 카테고리 링크들을 페이지 로드 시 한 번 업데이트
-  updateCategoryLinksWithFilters();
-  
-  // ✅ 찜한 아티스트 필터만 유지하는 간단한 함수
-  function updateCategoryLinksWithFilters() {
-    const currentParams = new URLSearchParams(window.location.search);
-    const categoryLinks = document.querySelectorAll('.main-tab, .sub-tab');
-    
-    // 찜한 아티스트 필터가 켜져 있는지 확인
-    const favoritesOnly = currentParams.get('favorites_only') === 'on';
-    
-    if (favoritesOnly) {
-      categoryLinks.forEach(link => {
-        const url = new URL(link.href, window.location.origin);
-        const newParams = new URLSearchParams(url.search);
-        
-        // 찜한 아티스트 필터만 추가
-        newParams.set('favorites_only', 'on');
-        
-        url.search = newParams.toString();
-        link.href = url.toString();
-      });
-    }
-  }
-  
-  // ✅ 기존 클릭 이벤트는 그대로 유지 (추가 처리용)
+  // URL 파라미터 유지 스크립트
   const categoryLinks = document.querySelectorAll('.main-tab, .sub-tab');
   
   categoryLinks.forEach(link => {
     link.addEventListener('click', function(e) {
-      // ✅ 이미 updateCategoryLinksWithFilters()에서 URL이 업데이트되었으므로
-      // 추가 처리가 필요한 경우에만 여기서 수행
+      const url = new URL(this.href, window.location.origin);
+      const currentParams = new URLSearchParams(window.location.search);
       
-      // 예시: 분석 추적 등
-      const category = this.getAttribute('data-category') || this.href.match(/category=([^&]*)/)?.[1] || '';
-      console.log('카테고리 클릭:', category);
+      // 검색어와 정렬 옵션 유지 (덕팜만)
+      const query = currentParams.get('q');
+      const sort = currentParams.get('sort');
+      const availableOnly = currentParams.get('available_only');
+      
+      if (query) url.searchParams.set('q', query);
+      if (sort) url.searchParams.set('sort', sort);
+      if (availableOnly) url.searchParams.set('available_only', availableOnly);
+      
+      this.href = url.toString();
     });
   });
 
-  // ✅ 필터 버튼 이벤트 (덕팜만)
+  // 필터 버튼 이벤트 (덕팜만)
   const filterToggleBtn = document.getElementById('filter-toggle-btn');
   if (filterToggleBtn) {
     filterToggleBtn.addEventListener('click', function() {
@@ -290,41 +274,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-  
-  // ✅ URL 변경 감지 시 링크 업데이트 (뒤로가기/앞으로가기 대응)
-  window.addEventListener('popstate', function() {
-    updateCategoryLinksWithFilters();
-  });
-  
-  // ✅ 찜한 아티스트 필터 변경 감지 (favorite_filter.html에서 호출)
-  window.addEventListener('favoriteFilterChanged', function() {
-    setTimeout(updateCategoryLinksWithFilters, 100); // 약간의 지연 후 업데이트
-  });
 });
 
-// ✅ 전역 함수: 외부에서 카테고리 링크 업데이트 트리거 (찜한 아티스트 필터 변경 시)
-window.updateCategoryLinks = function() {
-  const currentParams = new URLSearchParams(window.location.search);
-  const categoryLinks = document.querySelectorAll('.main-tab, .sub-tab');
-  const favoritesOnly = currentParams.get('favorites_only') === 'on';
+// 데모용: 현재 선택 상태 표시 (실제 구현에서는 제거)
+function updateCurrentSelection() {
+  const currentCategory = new URLSearchParams(window.location.search).get('category') || '전체';
+  const currentWantto = new URLSearchParams(window.location.search).get('wantto') || '';
   
-  categoryLinks.forEach(link => {
-    const url = new URL(link.href, window.location.origin);
-    const newParams = new URLSearchParams(url.search);
-    
-    // 찜한 아티스트 필터 상태 반영
-    if (favoritesOnly) {
-      newParams.set('favorites_only', 'on');
-    } else {
-      newParams.delete('favorites_only');
-    }
-    
-    url.search = newParams.toString();
-    link.href = url.toString();
-  });
-};
-
-
+  console.log(`현재 카테고리: ${currentCategory}, 서브: ${currentWantto || '없음'}`);
+}
 
 // 초기 로드 시 상태 업데이트
 updateCurrentSelection();
