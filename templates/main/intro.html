@@ -39,6 +39,29 @@
     
     <!-- 커스텀 스타일 -->
     <style>
+        /* 스크롤바 숨기기 - 모든 브라우저 대응 */
+        .snap-container {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            /* 스크롤바 숨기기 */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+
+        .snap-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        /* body 전체 스크롤바도 숨기기 */
+        body {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+        }
+
+        body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+        
         /* 스크롤 스냅 설정 */
         .snap-container {
             scroll-snap-type: y mandatory;
@@ -165,18 +188,18 @@
         .nav-dots-container {
             max-height: 80vh;
             overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
         }
-        
+
         .nav-dots-container::-webkit-scrollbar {
-            display: none;
+            display: none; /* Chrome, Safari, Opera */
         }
-        
-        /* 통계 카운터 애니메이션 */
-        .counter {
-            font-variant-numeric: tabular-nums;
-        }
+                
+                /* 통계 카운터 애니메이션 */
+                .counter {
+                    font-variant-numeric: tabular-nums;
+                }
     </style>
 </head>
 <body class="bg-gray-900 overflow-x-hidden">
