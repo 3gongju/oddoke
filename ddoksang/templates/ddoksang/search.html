@@ -14,8 +14,22 @@
         <img src="{% static 'image/ddok_y.png' %}" alt="덕덕이" class="w-16 h-16 object-cover rounded-full">
         <h1 class="text-xl text-gray-700 font-bold">{{ query }} 덕 축하해요 (덕덕)</h1>
         <img src="{% static 'image/ddok_y.png' %}" alt="덕덕이" class="w-16 h-16 object-cover rounded-full">
+        
       </div>
     </div>
+
+    <!-- 마커 클릭 안내 텍스트  -->
+    {% if results %}
+      <div class="text-center mb-3">
+        <p class="text-sm text-gray-600">
+          <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 616 0z"/>
+          </svg>
+          지도 위의 마커를 클릭해서 해당 생카에 대한 정보를 확인하세요!
+        </p>
+      </div>
+    {% endif %}
 
     <!-- 검색 헤더 컴포넌트 - 축하해요 아래로 -->
     <section class="pt-2 pb-2">
@@ -49,18 +63,18 @@
   {% if query %}
     {% if results %}
       <!-- 결과 개수, 상태 필터, 정렬을 한 줄에 배치 -->
-      <div class="max-w-7xl mx-auto px-4 mb-20" style="padding-top: 4rem;">
+      <div class="mx-auto mb-20" style="width: 85%; padding-top: 4rem;">
         <div class="flex justify-between items-center w-full">
           <!-- 왼쪽: 결과 개수 (카드 너비 왼쪽 끝에 맞춤) -->
           <div class="flex items-center space-x-2">
-            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="덕생" class="w-4 h-4">
+            <img src="{% static 'image/ddok_logo_filled.png' %}" alt="덕생" class="w-10 h-10">
             <p class="text-xs text-gray-600">
               <span class="text-pink-500 font-semibold">{{ results|length }}개</span>의 생일카페를 찾았습니다
             </p>
           </div>
 
           <!-- 중간: 상태 필터 -->
-          <div class="flex justify-center gap-2">
+          <div class="flex justify-center gap-1">
             <a href="?q={{ query }}&sort={{ current_sort }}" 
                class="status-btn px-3 py-1.5 rounded-md border text-xs transition
                {% if not current_status %}bg-black text-white {% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50{% endif %}">
@@ -95,7 +109,7 @@
       </div>
 
       <!-- 카페 목록 - 자세히 보기 버튼 숨김 -->
-      <div class="max-w-7xl mx-auto px-4 pb-48">
+      <div class="mx-auto px-4 pb-48" style="width: 85%;">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {% for cafe in results %}
             {% include 'ddoksang/components/_cafe_card_base.html' with cafe=cafe card_variant='compact' show_status_badge=True show_favorite_btn=True user_favorites=user_favorites show_benefits=True hide_detail_button=True %}
@@ -255,25 +269,25 @@
   position: relative;
 }
 
-/* 카드 그리드 컨테이너 - 중앙에서 왼쪽 정렬 */
+/* 카드 그리드 컨테이너 - 왼쪽부터 채우기 */
 section .grid {
   justify-content: flex-start !important;
-  margin: 0 auto !important;
-  max-width: fit-content !important;
+  margin: 0 !important;
+  max-width: 100% !important;
 }
 
-/* 모든 그리드 요소에 적용 */
-.max-w-7xl .grid {
+/* 지도 폭에 맞춘 그리드 컨테이너 (85% 폭) */
+.grid {
   justify-content: flex-start !important;
   display: flex !important;
   flex-wrap: wrap !important;
   gap: 1.5rem !important;
-  margin: 0 auto !important;
-  max-width: fit-content !important;
+  margin: 0 !important;
+  max-width: 100% !important;
 }
 
 /* 카드 크기 통일 - 검색 페이지 전용 */
-.max-w-7xl .grid > [data-cafe-id] {
+.grid > [data-cafe-id] {
   width: 280px !important;
   max-width: 280px !important;
   min-width: 280px !important;
@@ -283,15 +297,15 @@ section .grid {
 }
 
 /* 카드 정보 영역 플렉스 설정 */
-.max-w-7xl .grid > [data-cafe-id] .cafe-info-container,
-.max-w-7xl .grid > [data-cafe-id] .px-6 {
+.grid > [data-cafe-id] .cafe-info-container,
+.grid > [data-cafe-id] .px-6 {
   display: flex !important;
   flex-direction: column !important;
   flex: 1 !important;
 }
 
 /* 버튼 영역을 하단에 고정 */
-.max-w-7xl .grid > [data-cafe-id] .space-y-2 {
+.grid > [data-cafe-id] .space-y-2 {
   margin-top: auto !important;
 }
 
@@ -358,11 +372,11 @@ section .grid {
     flex-shrink: 0 !important;
   }
   
-  /* 모바일에서도 카드 그리드 중앙에서 왼쪽 정렬 */
+  /* 모바일에서도 카드 그리드 왼쪽부터 정렬 */
   section .grid {
     justify-content: flex-start !important;
-    margin: 0 auto !important;
-    max-width: fit-content !important;
+    margin: 0 !important;
+    max-width: 100% !important;
   }
   
   .max-w-7xl .grid {
@@ -370,8 +384,8 @@ section .grid {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 1rem !important;
-    margin: 0 auto !important;
-    max-width: fit-content !important;
+    margin: 0 !important;
+    max-width: 100% !important;
   }
   
   /* 모바일에서 카드 크기 조정 */
