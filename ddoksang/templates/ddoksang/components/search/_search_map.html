@@ -79,7 +79,24 @@
 
   function showSearchMapCard(cafe) {
     document.getElementById("cardTitle").textContent = cafe.cafe_name || "제목 없음";
-    document.getElementById("cardPlace").textContent = cafe.place_name;
+    
+    // 장소명 (주소) 형태로 표시
+    let locationText = '';
+    if (cafe.place_name && cafe.address) {
+      // 둘 다 있으면 "장소명 (주소)" 형태
+      locationText = `${cafe.place_name} (${cafe.address})`;
+    } else if (cafe.place_name) {
+      // 장소명만 있으면 장소명만
+      locationText = cafe.place_name;
+    } else if (cafe.address) {
+      // 주소만 있으면 주소만
+      locationText = cafe.address;
+    }
+    
+    // 12자 truncate
+    const truncatedLocation = locationText.length > 12 ? locationText.substring(0, 12) + '...' : locationText;
+    document.getElementById("cardPlace").textContent = truncatedLocation;
+    
     document.getElementById("cardDate").textContent = (cafe.start_date || '') + " ~ " + (cafe.end_date || '');
     document.getElementById("cardImage").src = cafe.main_image_url || '';
     document.getElementById("cardLink").href = `/ddoksang/cafe/${cafe.id}/`;

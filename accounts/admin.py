@@ -9,6 +9,9 @@ from .models import (
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
+from .models import BannerRequest, get_banner_display_days
+from django.utils.html import format_html
+
 
 # Register your models here.
 @admin.register(User)
@@ -781,10 +784,11 @@ class BannerRequestAdmin(admin.ModelAdmin):
         return '이미지 없음'
     banner_preview.short_description = '배너 미리보기'
     
-    @admin.action(description="✅ 배너 승인 (3일간 표시)")
+    @admin.action(description="✅ 배너 승인")
     def approve_banners(self, request, queryset):
         """선택된 배너들을 승인"""
         approved_count = 0
+        display_days = get_banner_display_days()  # 설정값 사용
         
         for banner_request in queryset.filter(status='pending'):
             try:
@@ -800,7 +804,7 @@ class BannerRequestAdmin(admin.ModelAdmin):
         if approved_count > 0:
             self.message_user(
                 request, 
-                f"{approved_count}개의 배너가 승인되었습니다. 3일간 메인 페이지에 표시됩니다."
+                f"{approved_count}개의 배너가 승인되었습니다. {display_days}일간 메인 페이지에 표시됩니다."
             )
     
     @admin.action(description="❌ 배너 거절 (포인트 환불)")

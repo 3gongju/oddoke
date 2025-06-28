@@ -9,6 +9,14 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 import os
 from datetime import datetime
 
+def get_banner_display_days():
+    """배너 표시 일수 반환 (설정값 또는 기본값)"""
+    return getattr(settings, 'BANNER_DISPLAY_DAYS', 3)
+
+def get_banner_cost_points():
+    """배너 신청 비용 반환 (설정값 또는 기본값)"""
+    return getattr(settings, 'BANNER_COST_POINTS', 1000)
+
 def profile_image_upload(instance, filename):
     now = datetime.now()
     return os.path.join('accounts/profile', now.strftime('%y/%m'), filename)
@@ -869,14 +877,15 @@ class BannerRequest(models.Model):
         return self.start_date <= today <= self.end_date
     
     def approve(self, admin_user, start_date=None, end_date=None):
-        """배너 승인 처리"""
+        """배너 승인 처리 - 설정값 사용"""
         from django.utils import timezone
-        from datetime import timedelta
+        
+        display_days = get_banner_display_days()  # 설정값 사용
         
         self.status = 'approved'
         self.approved_by = admin_user
         self.approved_at = timezone.now()
-        self.expires_at = timezone.now() + timedelta(days=3)
+        self.expires_at = timezone.now() + timedelta(days=display_days)
         
         if start_date:
             self.start_date = start_date
@@ -886,10 +895,11 @@ class BannerRequest(models.Model):
         if end_date:
             self.end_date = end_date
         else:
-            self.end_date = timezone.now().date() + timedelta(days=3)
+            self.end_date = timezone.now().date() + timedelta(days=display_days)
             
         self.is_active = True
         self.save()
+        return self
     
     def reject(self, admin_user, reason=""):
         """배너 거절 처리"""
@@ -899,4 +909,6 @@ class BannerRequest(models.Model):
         self.approved_by = admin_user
         self.approved_at = timezone.now()
         self.rejection_reason = reason
-        self.is_
+        self.is_active = False
+        self.save()
+        return self
