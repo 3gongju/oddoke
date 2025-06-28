@@ -294,44 +294,57 @@ def intro_view(request):
     return render(request, 'main/intro.html', context)
 
 def get_active_user_banners_with_info():
-    """수정된 함수: 각 배너별 신청자 정보를 함께 반환"""
+    """각 배너별 신청자 정보를 함께 반환"""
     try:
         from django.utils import timezone
+        from accounts.models import get_banner_display_days  # import 추가
         
         today = timezone.now().date()
         now = timezone.now()
+        display_days = get_banner_display_days()  # 설정값 사용
         
-        # 활성화된 배너들 조회
         active_banners = BannerRequest.objects.filter(
             status='approved',
-            is_active=True,
-            start_date__lte=today,
-            end_date__gte=today
+            approved_at__isnull=False,
+            is_active=True
         ).select_related('user').order_by('-approved_at')
         
-        # expires_at도 체크 (있는 경우)
-        if active_banners.exists():
-            active_banners = active_banners.filter(
-                Q(expires_at__isnull=True) | Q(expires_at__gt=now)
-            )
-        
-        # 🔥 핵심 변경: 각 배너의 URL과 해당 배너의 신청자 정보를 매핑
-        banner_data = []  # [{url: '...', banner_info: BannerRequest객체}, ...]
-        
+        date_filtered_banners = []
         for banner in active_banners:
+            if banner.start_date and banner.end_date:
+                if banner.start_date <= today <= banner.end_date:
+                    date_filtered_banners.append(banner)
+            else:
+                # 설정값 사용한 날짜 계산
+                if banner.approved_at:
+                    approved_date = banner.approved_at.date()
+                    end_date = approved_date + timezone.timedelta(days=display_days)
+                    if approved_date <= today <= end_date:
+                        date_filtered_banners.append(banner)
+        
+        final_banners = []
+        for banner in date_filtered_banners:
+            if banner.expires_at:
+                if banner.expires_at > now:
+                    final_banners.append(banner)
+            else:
+                final_banners.append(banner)
+        
+        banner_data = []
+        for banner in final_banners:
             if banner.banner_image:
-                banner_data.append({
+                banner_info = {
                     'url': banner.banner_image.url,
                     'banner_info': banner,
                     'user': banner.user,
                     'artist_name': banner.artist_name
-                })
+                }
+                banner_data.append(banner_info)
         
         return banner_data
         
     except Exception as e:
         return []
-
 
 def main(request):
     # 1) 찜한 아티스트 원본 목록
