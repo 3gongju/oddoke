@@ -1,4 +1,4 @@
-// static/js/post_form/price_handler.js - 최종 수정된 버전
+// static/js/post_form/price_handler.js - 수정 문제 해결 버전
 
 export function setupPriceHandlers() {
     const singlePriceMode = document.getElementById('single-price-mode');
@@ -89,16 +89,61 @@ export function setupPriceHandlers() {
     }
 
     function initializeMultipleMode() {
-        // FormSet이 이미 렌더링되어 있으므로 itemCounter만 설정
+        // 🔧 기존 FormSet 아이템들의 name 속성 정규화
         const formsetItems = itemsList.querySelectorAll('.item-row');
         itemCounter = formsetItems.length;
         
         console.log(`Multiple mode initialized with ${itemCounter} FormSet items`);
         
-        // 각 FormSet 아이템에 이벤트 리스너 추가
+        // 🔧 각 FormSet 아이템의 name 속성을 올바르게 설정하고 이벤트 리스너 추가
         formsetItems.forEach((item, index) => {
+            normalizeFormsetItem(item, index);
             setupItemEventListeners(item, index);
         });
+    }
+
+    // 🔧 새로운 함수: FormSet 아이템의 name 속성 정규화
+    function normalizeFormsetItem(itemRow, index) {
+        // 모든 입력 필드의 name 속성을 올바른 FormSet 형식으로 설정
+        const nameInputs = itemRow.querySelectorAll('input[name*="item_name"], .item-name-input, .item-name-input-mobile');
+        nameInputs.forEach(input => {
+            input.name = `item_prices-${index}-item_name`;
+        });
+
+        const priceInputs = itemRow.querySelectorAll('input[name*="price"]:not([name*="undetermined"]), .item-price-input, .item-price-input-mobile');
+        priceInputs.forEach(input => {
+            input.name = `item_prices-${index}-price`;
+        });
+
+        const undeterminedCheckboxes = itemRow.querySelectorAll('input[name*="undetermined"], .item-price-undetermined-checkbox, .item-price-undetermined-checkbox-mobile');
+        undeterminedCheckboxes.forEach(checkbox => {
+            checkbox.name = `item_prices-${index}-is_price_undetermined`;
+        });
+
+        // 🔧 ID 필드 처리 - 기존 ID 유지
+        let idInput = itemRow.querySelector('input[name*="-id"]');
+        if (!idInput) {
+            idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            itemRow.appendChild(idInput);
+        }
+        idInput.name = `item_prices-${index}-id`;
+        
+        // 기존 데이터에서 ID 찾기
+        if (existingItemPrices[index]) {
+            idInput.value = existingItemPrices[index].id || '';
+            console.log(`Set existing ID for item ${index}: ${idInput.value}`);
+        }
+
+        // 🔧 DELETE 필드 추가
+        let deleteInput = itemRow.querySelector('input[name*="-DELETE"]');
+        if (!deleteInput) {
+            deleteInput = document.createElement('input');
+            deleteInput.type = 'hidden';
+            deleteInput.value = 'False';
+            itemRow.appendChild(deleteInput);
+        }
+        deleteInput.name = `item_prices-${index}-DELETE`;
     }
 
     function updateUIMode() {
@@ -173,7 +218,7 @@ export function setupPriceHandlers() {
             });
         }
 
-        // 삭제 버튼 이벤트
+        // 🔧 삭제 버튼 이벤트 - DELETE 플래그 설정으로 변경
         const removeButtons = itemRow.querySelectorAll('.remove-item-btn');
         removeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -183,7 +228,24 @@ export function setupPriceHandlers() {
                     alert('최소 1개의 덕템은 있어야 합니다.');
                     return;
                 }
-                itemRow.remove();
+
+                // 🔧 기존 아이템이면 DELETE 플래그 설정, 새 아이템이면 DOM에서 제거
+                const deleteInput = itemRow.querySelector('input[name*="-DELETE"]');
+                const idInput = itemRow.querySelector('input[name*="-id"]');
+                
+                if (idInput && idInput.value) {
+                    // 기존 아이템 - DELETE 플래그 설정하고 숨기기
+                    if (deleteInput) {
+                        deleteInput.value = 'True';
+                    }
+                    itemRow.style.display = 'none';
+                    console.log(`Marked item ${index} for deletion (ID: ${idInput.value})`);
+                } else {
+                    // 새 아이템 - DOM에서 제거
+                    itemRow.remove();
+                    console.log(`Removed new item ${index} from DOM`);
+                }
+                
                 updateItemNumbers();
                 updateFormsetManagement();
             });
@@ -198,17 +260,18 @@ export function setupPriceHandlers() {
         updateUIMode();
         
         // 🔧 기존 FormSet 아이템이 있는지 확인
-        const existingFormsetItems = itemsList.querySelectorAll('.item-row');
+        const existingFormsetItems = itemsList.querySelectorAll('.item-row:not([style*="display: none"])');
         
         if (existingFormsetItems.length === 0) {
             // 기존 FormSet 아이템이 없으면 단일 가격에서 첫 번째 아이템 생성
             console.log('No existing FormSet items, creating from single price');
             addItemFromSinglePrice();
         } else {
-            // 🔧 기존 FormSet 아이템이 있으면 해당 아이템들에 이벤트 리스너만 추가
+            // 🔧 기존 FormSet 아이템이 있으면 정규화하고 이벤트 리스너 추가
             console.log('Found existing FormSet items:', existingFormsetItems.length);
             itemCounter = existingFormsetItems.length;
             existingFormsetItems.forEach((item, index) => {
+                normalizeFormsetItem(item, index);
                 setupItemEventListeners(item, index);
             });
         }
@@ -242,12 +305,12 @@ export function setupPriceHandlers() {
     backToSingleBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         
-        // 첫 번째 아이템의 데이터를 단일 가격 필드로 복사
-        const firstItem = itemsList.querySelector('.item-row');
-        if (firstItem) {
-            const nameInput = firstItem.querySelector('.item-name-input');
-            const priceInput = firstItem.querySelector('.item-price-input');
-            const undeterminedCheckbox = firstItem.querySelector('.item-price-undetermined-checkbox');
+        // 첫 번째 보이는 아이템의 데이터를 단일 가격 필드로 복사
+        const firstVisibleItem = itemsList.querySelector('.item-row:not([style*="display: none"])');
+        if (firstVisibleItem) {
+            const nameInput = firstVisibleItem.querySelector('.item-name-input');
+            const priceInput = firstVisibleItem.querySelector('.item-price-input');
+            const undeterminedCheckbox = firstVisibleItem.querySelector('.item-price-undetermined-checkbox');
             
             const singlePriceInput = document.getElementById('single-price-input');
             const singlePriceUndetermined = document.getElementById('single-price-undetermined');
@@ -280,9 +343,15 @@ export function setupPriceHandlers() {
         currentMode = 'single';
         updateUIMode();
         
-        // 🔧 FormSet 아이템들을 완전히 제거
+        // 🔧 모든 FormSet 아이템을 삭제 표시 (DOM에서는 제거하지 않음)
         const items = itemsList.querySelectorAll('.item-row');
-        items.forEach(item => item.remove());
+        items.forEach(item => {
+            const deleteInput = item.querySelector('input[name*="-DELETE"]');
+            if (deleteInput) {
+                deleteInput.value = 'True';
+            }
+            item.style.display = 'none';
+        });
         itemCounter = 0;
     });
 
@@ -293,10 +362,14 @@ export function setupPriceHandlers() {
         const template = itemTemplate.content.cloneNode(true);
         const itemRow = template.querySelector('.item-row');
         
+        // 현재 보이는 아이템 개수 기준으로 번호 설정
+        const visibleItems = itemsList.querySelectorAll('.item-row:not([style*="display: none"])');
+        const displayNumber = visibleItems.length + 1;
+        
         // 번호 업데이트
         const itemNumbers = template.querySelectorAll('.item-number, .item-number-mobile');
         itemNumbers.forEach(el => {
-            el.textContent = `덕${itemCounter + 1}`;
+            el.textContent = `덕${displayNumber}`;
         });
 
         // ModelFormSet 필드명 설정
@@ -323,14 +396,14 @@ export function setupPriceHandlers() {
             checkbox.checked = isUndetermined;
         });
 
-        // ID 필드 추가 (수정 모드에서 기존 ID 유지)
+        // ID 필드 추가 (새 아이템은 빈 값)
         const idInput = document.createElement('input');
         idInput.type = 'hidden';
         idInput.name = `item_prices-${itemCounter}-id`;
         idInput.value = existingId || '';
         itemRow.appendChild(idInput);
 
-        // 🔧 DELETE 필드 추가 (FormSet 삭제용)
+        // DELETE 필드 추가
         const deleteInput = document.createElement('input');
         deleteInput.type = 'hidden';
         deleteInput.name = `item_prices-${itemCounter}-DELETE`;
@@ -345,46 +418,20 @@ export function setupPriceHandlers() {
         updateItemCounter();
     }
 
-    // 아이템 번호 재정렬
+    // 🔧 아이템 번호 재정렬 - 보이는 아이템만 대상
     function updateItemNumbers() {
-        const items = itemsList.querySelectorAll('.item-row');
-        items.forEach((item, index) => {
-            // 번호 업데이트
+        const visibleItems = itemsList.querySelectorAll('.item-row:not([style*="display: none"])');
+        visibleItems.forEach((item, index) => {
+            // 번호 업데이트 (보이는 순서대로)
             const numbers = item.querySelectorAll('.item-number, .item-number-mobile');
             numbers.forEach(el => {
                 el.textContent = `덕${index + 1}`;
             });
-
-            // name 속성 업데이트 (ModelFormSet 형식)
-            const nameInputs = item.querySelectorAll('.item-name-input, .item-name-input-mobile');
-            nameInputs.forEach(input => {
-                input.name = `item_prices-${index}-item_name`;
-            });
-
-            const priceInputs = item.querySelectorAll('.item-price-input, .item-price-input-mobile');
-            priceInputs.forEach(input => {
-                input.name = `item_prices-${index}-price`;
-            });
-
-            const checkboxes = item.querySelectorAll('.item-price-undetermined-checkbox, .item-price-undetermined-checkbox-mobile');
-            checkboxes.forEach(checkbox => {
-                checkbox.name = `item_prices-${index}-is_price_undetermined`;
-            });
-
-            // ID 필드 업데이트
-            const idInput = item.querySelector(`input[name^="item_prices-"][name$="-id"]`);
-            if (idInput) {
-                idInput.name = `item_prices-${index}-id`;
-            }
-
-            // DELETE 필드 업데이트
-            const deleteInput = item.querySelector(`input[name^="item_prices-"][name$="-DELETE"]`);
-            if (deleteInput) {
-                deleteInput.name = `item_prices-${index}-DELETE`;
-            }
         });
         
-        itemCounter = items.length;
+        // 🔧 전체 itemCounter 업데이트 (숨겨진 것 포함)
+        const allItems = itemsList.querySelectorAll('.item-row');
+        itemCounter = allItems.length;
         updateItemCounter();
     }
 
@@ -392,12 +439,14 @@ export function setupPriceHandlers() {
     function updateItemCounter() {
         const counterDisplay = document.getElementById('item-counter-display');
         if (counterDisplay) {
-            counterDisplay.textContent = `${itemCounter}/20`;
+            const visibleCount = itemsList.querySelectorAll('.item-row:not([style*="display: none"])').length;
+            counterDisplay.textContent = `${visibleCount}/20`;
         }
 
         // 추가 버튼 상태 업데이트
         if (addAnotherItemBtn) {
-            if (itemCounter >= 20) {
+            const visibleCount = itemsList.querySelectorAll('.item-row:not([style*="display: none"])').length;
+            if (visibleCount >= 20) {
                 addAnotherItemBtn.disabled = true;
                 addAnotherItemBtn.classList.add('opacity-50', 'cursor-not-allowed');
             } else {
@@ -414,11 +463,13 @@ export function setupPriceHandlers() {
 
         // 다중 모드일 때만 FormSet 관리 필드 업데이트
         if (currentMode === 'multiple') {
-            // 기존 아이템 개수 계산 (수정 모드에서)
+            // 🔧 전체 아이템 개수 (숨겨진 것 포함)
+            const totalItems = itemsList.querySelectorAll('.item-row').length;
+            // 기존 아이템 개수 (수정 모드에서)
             const initialFormsCount = existingItemPrices.length;
             
             const managementFields = [
-                { name: 'item_prices-TOTAL_FORMS', value: itemCounter.toString() },
+                { name: 'item_prices-TOTAL_FORMS', value: totalItems.toString() },
                 { name: 'item_prices-INITIAL_FORMS', value: initialFormsCount.toString() },
                 { name: 'item_prices-MIN_NUM_FORMS', value: '0' },
                 { name: 'item_prices-MAX_NUM_FORMS', value: '20' }
@@ -434,6 +485,8 @@ export function setupPriceHandlers() {
                 }
                 input.value = field.value;
             });
+            
+            console.log(`FormSet management updated: TOTAL=${totalItems}, INITIAL=${initialFormsCount}`);
         }
     }
 
@@ -474,14 +527,16 @@ export function setupPriceHandlers() {
 
             // 단일 모드인 경우
             if (currentMode === 'single') {
-                console.log('Single mode: removing FormSet fields');
+                console.log('Single mode: cleaning FormSet fields');
                 
-                // FormSet 관련 필드 모두 제거
-                const formsetFields = form.querySelectorAll('input[name^="item_prices-"], select[name^="item_prices-"], textarea[name^="item_prices-"]');
-                console.log(`Removing ${formsetFields.length} FormSet fields`);
-                formsetFields.forEach(field => {
-                    console.log(`Removing field: ${field.name}`);
-                    field.remove();
+                // 🔧 모든 FormSet 아이템을 삭제 표시
+                const formsetItems = itemsList.querySelectorAll('.item-row');
+                formsetItems.forEach((item, index) => {
+                    const deleteInput = item.querySelector('input[name*="-DELETE"]');
+                    if (deleteInput) {
+                        deleteInput.value = 'True';
+                        console.log(`Marked FormSet item ${index} for deletion`);
+                    }
                 });
                 
                 // 단일 가격 데이터 확인
@@ -510,10 +565,10 @@ export function setupPriceHandlers() {
                     field.remove();
                 });
                 
-                const items = itemsList.querySelectorAll('.item-row');
+                const visibleItems = itemsList.querySelectorAll('.item-row:not([style*="display: none"])');
                 let hasValidItem = false;
                 
-                items.forEach((item, index) => {
+                visibleItems.forEach((item, index) => {
                     const priceInput = item.querySelector('.item-price-input');
                     const checkbox = item.querySelector('.item-price-undetermined-checkbox');
                     const nameInput = item.querySelector('.item-name-input');
