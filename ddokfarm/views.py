@@ -1011,10 +1011,8 @@ def post_edit(request, category, post_id):
             if category in ['sell', 'rental']:
                 # 기존 가격 정보 삭제
                 content_type = ContentType.objects.get_for_model(post.__class__)
-                ItemPrice.objects.filter(
-                    content_type=content_type,
-                    object_id=post.id
-                ).delete()
+                if item_price_formset:
+                    save_item_prices_from_formset(item_price_formset, post)
                 
                 # 새 가격 정보 저장
                 if is_single_mode and single_price_data:
