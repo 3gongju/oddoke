@@ -12,7 +12,8 @@ import {
   handleReadMessageSyncFinish,
   handleEnterChatroomFinish,
   handleTradeCompleted,
-  handleTradeCancelNotification
+  handleTradeCancelNotification,
+  handleTradeStatusUpdate
 } from './message_handler.js';
 import { 
   setupUIManager, 
@@ -26,8 +27,8 @@ import { sendTextMessage } from './message_sender.js';
 import { setupTradeReport } from './trade_report.js';
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 전역 변수에서 데이터 가져오기 - room_code 사용
-  const roomCode = window.roomCode;  // room_code로 변경
+  // 전역 변수에서 데이터 가져오기
+  const roomCode = window.roomCode;
   const currentUser = window.currentUser;
   const currentUserId = window.currentUserId;
   const isTradeCompleted = window.isTradeCompleted;
@@ -38,8 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFraudCheck();
   setupAutoDetect();
   setupTradeReport();
-  
-  // ✅ 거래 취소 모듈을 먼저 초기화
   setupTradeCancel();
   
   // WebSocket 메시지 핸들러 등록
@@ -53,8 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
   registerMessageHandler('enter_chatroom_finish', handleEnterChatroomFinish);
   registerMessageHandler('trade_completed', handleTradeCompleted);
   registerMessageHandler('trade_cancel_notification', handleTradeCancelNotification);
+  registerMessageHandler('trade_status_update', handleTradeStatusUpdate);
   
-  // WebSocket 연결 - roomCode 사용
+  // WebSocket 연결
   setupWebSocket(roomCode);
   
   // 전역 함수로 노출
@@ -70,14 +70,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     setupReviewModal();
   }, 500);
-  
-  // ✅ 전역 함수들이 제대로 노출되었는지 확인
-  console.log('🔧 전역 함수 확인:', {
-    requestTradeCancel: typeof window.requestTradeCancel,
-    respondToCancel: typeof window.respondToCancel,
-    withdrawCancelRequest: typeof window.withdrawCancelRequest,
-    closeHeaderMenu: typeof window.closeHeaderMenu
-  });
 });
 
 function setupEventListeners() {
