@@ -196,6 +196,36 @@
         }
     }
 
+    // 이미지 타입별 스타일 적용
+    function applyImageTypeStyles() {
+        const thumbnails = document.querySelectorAll('.gallery-thumbnail');
+        thumbnails.forEach(thumbnail => {
+            const typeLabel = thumbnail.querySelector('[class*="type-label"]');
+            if (typeLabel) {
+                const typeText = typeLabel.textContent.toLowerCase();
+                
+                // 타입별 배경 그라데이션 적용
+                if (typeText.includes('메인')) {
+                    typeLabel.className += ' type-label-main';
+                } else if (typeText.includes('포스터')) {
+                    typeLabel.className += ' type-label-poster';
+                    thumbnail.classList.add('poster-display');
+                } else if (typeText.includes('메뉴')) {
+                    typeLabel.className += ' type-label-menu';
+                } else if (typeText.includes('내부')) {
+                    typeLabel.className += ' type-label-interior';
+                } else if (typeText.includes('외부')) {
+                    typeLabel.className += ' type-label-exterior';
+                } else if (typeText.includes('굿즈')) {
+                    typeLabel.className += ' type-label-goods';
+                } else if (typeText.includes('이벤트')) {
+                    typeLabel.className += ' type-label-event';
+                } else {
+                    typeLabel.className += ' type-label-other';
+                }
+            }
+        });
+    }
 
     // 갤러리 반응형 그리드 클래스 적용
     function updateGalleryGrid() {
@@ -641,8 +671,8 @@
             }
         });
         
-        // // 갤러리 썸네일에 타입별 스타일 적용
-        // applyImageTypeStyles();
+        // 갤러리 썸네일에 타입별 스타일 적용
+        applyImageTypeStyles();
         
         // 모달 배경 클릭으로 닫기 이벤트
         const modal = document.getElementById('imageModal');
