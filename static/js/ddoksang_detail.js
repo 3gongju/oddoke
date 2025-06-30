@@ -196,6 +196,36 @@
         }
     }
 
+    // 이미지 타입별 스타일 적용
+    function applyImageTypeStyles() {
+        const thumbnails = document.querySelectorAll('.gallery-thumbnail');
+        thumbnails.forEach(thumbnail => {
+            const typeLabel = thumbnail.querySelector('[class*="type-label"]');
+            if (typeLabel) {
+                const typeText = typeLabel.textContent.toLowerCase();
+                
+                // 타입별 배경 그라데이션 적용
+                if (typeText.includes('메인')) {
+                    typeLabel.className += ' type-label-main';
+                } else if (typeText.includes('포스터')) {
+                    typeLabel.className += ' type-label-poster';
+                    thumbnail.classList.add('poster-display');
+                } else if (typeText.includes('메뉴')) {
+                    typeLabel.className += ' type-label-menu';
+                } else if (typeText.includes('내부')) {
+                    typeLabel.className += ' type-label-interior';
+                } else if (typeText.includes('외부')) {
+                    typeLabel.className += ' type-label-exterior';
+                } else if (typeText.includes('굿즈')) {
+                    typeLabel.className += ' type-label-goods';
+                } else if (typeText.includes('이벤트')) {
+                    typeLabel.className += ' type-label-event';
+                } else {
+                    typeLabel.className += ' type-label-other';
+                }
+            }
+        });
+    }
 
     // 갤러리 반응형 그리드 클래스 적용
     function updateGalleryGrid() {
@@ -506,8 +536,11 @@
     }
 
     // 카카오톡 공유 함수 (기존 함수 교체)
+    // 카카오톡 공유 함수 - 상세 디버깅 버전
+// 기존 shareKakao() 함수를 완전히 삭제하고 이것으로 교체
+
     function shareKakao() {
-        console.log('🔗 카카오톡 공유 시작');
+        console.log('🔗 카카오톡 공유 시작 (이미지 포함 버전)');
         
         // 카카오 SDK 초기화 확인
         if (!kakaoInitialized) {
@@ -518,79 +551,185 @@
             }
         }
 
-        // 공유 데이터 가져오기
+        // 공유 데이터 확인
         shareData = shareData || getShareData();
         if (!shareData) {
             showToast('공유할 데이터를 찾을 수 없습니다.', 'error');
             return;
         }
 
+        console.log('📋 공유 데이터:', shareData); // 디버그용 로그 추가
+
+        // 🖼️ 이미지 URL 준비
+        const imageUrl = getShareImageUrl();
+        console.log('🖼️ 최종 이미지 URL:', imageUrl); // 디버그용 로그 추가
+        
         try {
-            // 카카오링크 공유 실행
-            Kakao.Link.sendDefault({
-                objectType: 'location',
-                address: shareData.address,
-                addressTitle: shareData.title,
-                content: {
-                    title: shareData.title,
-                    description: `${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}`,
-                    imageUrl: shareData.imageUrl,
+            if (imageUrl && imageUrl.startsWith('https://')) {
+                // 📸 이미지 포함 Feed 형태로 공유
+                console.log('📤 이미지 포함 Feed 공유 시도...');
+                
+                Kakao.Link.sendDefault({
+                    objectType: 'feed',
+                    content: {
+                        title: shareData.title,
+                        description: `${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}\n📍 ${shareData.address}`,
+                        imageUrl: imageUrl,
+                        imageWidth: 400,
+                        imageHeight: 400,
+                        link: {
+                            webUrl: window.location.href,
+                            mobileWebUrl: window.location.href
+                        }
+                    },
+                    buttons: [
+                        {
+                            title: '카페 보러가기',
+                            link: {
+                                webUrl: window.location.href,
+                                mobileWebUrl: window.location.href
+                            }
+                        },
+                        {
+                            title: '위치 보기',
+                            link: {
+                                webUrl: `http://map.daum.net/link/map/${shareData.address}`,
+                                mobileWebUrl: `http://map.daum.net/link/map/${shareData.address}`
+                            }
+                        }
+                    ]
+                });
+                
+                console.log('✅ 이미지 포함 공유 성공');
+                showToast('카카오톡으로 공유되었습니다!', 'success');
+                
+            } else {
+                // 📝 이미지 없을 때는 텍스트만 공유
+                console.log('📤 텍스트 공유 시도... (이미지 없음)');
+                
+                Kakao.Link.sendDefault({
+                    objectType: 'text',
+                    text: `🎂 ${shareData.title}\n\n${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}\n📍 ${shareData.address}\n\n👉 자세히 보기: ${window.location.href}`,
                     link: {
-                        mobileWebUrl: shareData.linkUrl,
-                        webUrl: shareData.linkUrl,
-                    },
-                },
-                buttons: [
-                    {
-                        title: '카페 보러가기',
-                        link: {
-                            mobileWebUrl: shareData.linkUrl,
-                            webUrl: shareData.linkUrl,
-                        },
-                    },
-                    {
-                        title: '또독이 홈',
-                        link: {
-                            mobileWebUrl: window.location.origin,
-                            webUrl: window.location.origin,
-                        },
-                    },
-                ],
-                installTalk: true,
-            });
-
-            console.log('✅ 카카오톡 공유 성공');
-            showToast('카카오톡 공유창이 열렸습니다!', 'success');
-
-        } catch (error) {
-            console.error('❌ 카카오톡 공유 오류:', error);
-            
-            // 에러 타입별 메시지
-            let errorMessage = '카카오톡 공유 중 오류가 발생했습니다.';
-            
-            if (error.message && error.message.includes('domain')) {
-                errorMessage = '도메인이 등록되지 않았습니다. 관리자에게 문의해주세요.';
-            } else if (error.message && error.message.includes('app')) {
-                errorMessage = 'API 키 설정을 확인해주세요.';
+                        webUrl: window.location.href,
+                        mobileWebUrl: window.location.href
+                    }
+                });
+                
+                console.log('✅ 텍스트 공유 성공');
+                showToast('카카오톡으로 공유되었습니다!', 'success');
             }
             
-            showToast(errorMessage, 'error');
+        } catch (error) {
+            console.error('❌ 카카오톡 공유 실패:', error);
+            
+            // 🚀 최후의 수단: 링크 복사
+            try {
+                const shareText = `🎂 ${shareData.title}\n\n${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}\n📍 ${shareData.address}\n\n👉 ${window.location.href}`;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(shareText);
+                    showToast('공유 내용이 복사되었습니다! 카카오톡에 붙여넣기 해주세요.', 'info');
+                } else {
+                    // 구형 브라우저 대응
+                    const textArea = document.createElement('textarea');
+                    textArea.value = shareText;
+                    textArea.style.position = 'fixed';
+                    textArea.style.opacity = '0';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showToast('공유 내용이 복사되었습니다!', 'info');
+                }
+                
+            } catch (copyError) {
+                console.error('❌ 복사도 실패:', copyError);
+                showToast('공유에 실패했습니다. 수동으로 링크를 복사해주세요.', 'error');
+            }
         }
     }
-
-    // 이미지 데이터 초기화
     function initImageData() {
+        console.log('이미지 데이터 초기화 시작');
+        
         const imageDataElement = document.getElementById('image-data');
         if (imageDataElement) {
             try {
                 imageData = JSON.parse(imageDataElement.textContent);
                 totalImages = imageData.length;
+                console.log(`이미지 데이터 로드 완료: ${totalImages}개`);
             } catch (error) {
                 console.error('이미지 데이터 파싱 실패:', error);
                 imageData = [];
                 totalImages = 0;
             }
+        } else {
+            console.warn('image-data 엘리먼트를 찾을 수 없음');
+            imageData = [];
+            totalImages = 0;
         }
+    }
+
+
+// 🖼️ 공유용 이미지 URL 가져오기 함수 (추가 필요)
+    // 1. getShareImageUrl 함수 교체
+    function getShareImageUrl() {
+        console.log('공유용 이미지 URL 검색 중...');
+        
+        // 방법 1: share-data에서 imageUrl 사용 (get_kakao_share_image 결과)
+        if (shareData && shareData.imageUrl) {
+            console.log('share-data에서 찾은 이미지 URL:', shareData.imageUrl);
+            return shareData.imageUrl;
+        }
+        
+        // 방법 2: imageData에서 첫 번째 이미지 사용 (S3 URL)
+        if (imageData && imageData.length > 0) {
+            const firstImage = imageData[0];
+            console.log('첫 번째 이미지:', firstImage);
+            
+            // image_url 또는 url 키 확인
+            const imageUrl = firstImage.image_url || firstImage.url;
+            
+            if (imageUrl) {
+                console.log('imageData에서 찾은 이미지 URL:', imageUrl);
+                
+                // 이미 HTTPS URL이면 그대로 사용
+                if (imageUrl.startsWith('https://')) {
+                    return imageUrl;
+                }
+                
+                // HTTP를 HTTPS로 변경
+                if (imageUrl.startsWith('http://')) {
+                    return imageUrl.replace('http://', 'https://');
+                }
+                
+                // 상대경로면 도메인 추가
+                if (imageUrl.startsWith('/')) {
+                    return 'https://oddoke.com' + imageUrl;
+                }
+            }
+        }
+        
+        // 방법 3: HTML에서 첫 번째 갤러리 이미지 찾기
+        const firstImg = document.querySelector('.gallery-slide img, .gallery-thumbnail img, img');
+        if (firstImg && firstImg.src) {
+            let imageUrl = firstImg.src;
+            console.log('HTML에서 찾은 이미지 URL:', imageUrl);
+            
+            // HTTPS 확인
+            if (imageUrl.startsWith('https://')) {
+                return imageUrl;
+            }
+            
+            // HTTP를 HTTPS로 변경
+            if (imageUrl.startsWith('http://')) {
+                return imageUrl.replace('http://', 'https://');
+            }
+        }
+        
+        // 방법 4: 기본 플레이스홀더 이미지
+        console.log('기본 플레이스홀더 이미지 사용');
+        return 'https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페';
     }
 
     // DOM 로드 완료 후 초기화
@@ -641,8 +780,8 @@
             }
         });
         
-        // // 갤러리 썸네일에 타입별 스타일 적용
-        // applyImageTypeStyles();
+        // 갤러리 썸네일에 타입별 스타일 적용
+        applyImageTypeStyles();
         
         // 모달 배경 클릭으로 닫기 이벤트
         const modal = document.getElementById('imageModal');
