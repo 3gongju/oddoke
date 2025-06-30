@@ -160,9 +160,9 @@ def intro_view(request):
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
-            'title': '안전한 거래 환경',
-            'subtitle': '신뢰할 수 있는 플랫폼',
-            'description': '검증된 사용자들과 안전하게 거래하세요',
+            'title': '아이돌 굿즈 거래의 신뢰성 강화',
+            'subtitle': '체계적인 신뢰 시스템으로 안전한 거래',
+            'description': '공식 팬덤 인증, 사기 신고 제도, 매너 리뷰 시스템을 통해 믿을 수 있는 거래 환경을 제공해요!',
             'type': 'safety',
             'image': DEFAULT_SLIDE_IMAGE
         },

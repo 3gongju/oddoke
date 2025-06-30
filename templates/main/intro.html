@@ -497,21 +497,10 @@
                     {% include 'main/intro/ddokchat_slide.html' %}
                     
                     {% elif slide.type == 'safety' %}
-                    <div class="mt-8 flex justify-center items-center space-x-8">
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">🔒</div>
-                            <div class="text-sm">보안 거래</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">✅</div>
-                            <div class="text-sm">신뢰성 검증</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">🛡️</div>
-                            <div class="text-sm">안전 보장</div>
-                        </div>
-                    </div>
-                    {% endif %}
+                    <!-- 신뢰성 강화 - 별도 파일로 분리 -->
+                    {% include 'main/intro/safety_slide.html' %}
+                    
+                    {% endif %} 
                     
                     {% endif %}
                 </div>
