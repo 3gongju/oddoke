@@ -128,21 +128,112 @@ class BdayCafe(models.Model):
         return 0
 
     # 이미지 관련 메서드들 (JSON 기반)
+# ddoksang/models.py에 추가 - 기존 get_main_image는 그대로 두고 새 메서드 추가
+
     def get_main_image(self):
-        """대표 이미지 URL 반환"""
+        """대표 이미지 URL 반환 - 기존 방식 (페이지 표시용)"""
         if not self.image_gallery:
             return None
             
         # is_main=True인 이미지 찾기
         for img in self.image_gallery:
             if img.get('is_main', False) and img.get('url'):
-                return img['url']
+                return img['url']  # 원본 URL 그대로 반환
         
         # 대표 이미지가 없으면 첫 번째 이미지
         if self.image_gallery and self.image_gallery[0].get('url'):
             return self.image_gallery[0]['url']
             
         return None
+    
+    # models.py에 메서드 추가
+
+    def get_all_images_with_s3_urls(self):
+        """모든 이미지를 S3 URL로 변환해서 반환 (카카오톡 공유용)"""
+        if not self.image_gallery:
+            return []
+        
+        from django.conf import settings
+        from urllib.parse import unquote
+        
+        images_with_s3 = []
+        
+        for img in sorted(self.image_gallery, key=lambda x: x.get('order', 0)):
+            url = img.get('url', '')
+            
+            # 이미 절대경로면 그대로 사용
+            if url.startswith('http'):
+                s3_url = url
+            else:
+                # S3 URL로 변환
+                clean_url = unquote(url)
+                
+                # /media/ 제거
+                if clean_url.startswith('/media/'):
+                    clean_path = clean_url[7:]
+                else:
+                    clean_path = clean_url
+                
+                # S3 URL 생성
+                if hasattr(settings, 'AWS_STORAGE_BUCKET_NAME') and settings.AWS_STORAGE_BUCKET_NAME:
+                    bucket = settings.AWS_STORAGE_BUCKET_NAME
+                    region = getattr(settings, 'AWS_S3_REGION_NAME', 'ap-northeast-2')
+                    s3_url = f"https://{bucket}.s3.{region}.amazonaws.com/{clean_path}"
+                else:
+                    # 로컬 개발환경에서는 기본 URL 사용
+                    s3_url = url
+            
+            images_with_s3.append({
+                'url': s3_url,
+                'image_url': s3_url,  # JavaScript에서 사용하는 키
+                'type': img.get('type', ''),
+                'type_display': img.get('type', ''),
+                'caption': img.get('caption', ''),
+                'alt': img.get('caption', self.cafe_name),
+                'order': img.get('order', 0),
+                'is_main': img.get('is_main', False)
+            })
+        
+        return images_with_s3
+
+    def get_kakao_share_image(self):
+        """카카오톡 공유용 이미지 URL - S3 절대경로로 변환"""
+        
+        if not self.image_gallery:
+            return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
+        
+        # 첫 번째 이미지 가져오기
+        first_image = self.image_gallery[0]
+        url = first_image.get('url')
+        
+        if not url:
+            return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
+        
+        # 이미 절대경로면 반환
+        if url.startswith('http'):
+            return url
+        
+        # S3 URL로 변환
+        from django.conf import settings
+        from urllib.parse import unquote
+        
+        # URL 디코딩
+        clean_url = unquote(url)
+        
+        # /media/ 제거
+        if clean_url.startswith('/media/'):
+            clean_path = clean_url[7:]
+        else:
+            clean_path = clean_url
+        
+        # S3 URL 생성
+        if hasattr(settings, 'AWS_STORAGE_BUCKET_NAME') and settings.AWS_STORAGE_BUCKET_NAME:
+            bucket = settings.AWS_STORAGE_BUCKET_NAME
+            region = getattr(settings, 'AWS_S3_REGION_NAME', 'ap-northeast-2')
+            return f"https://{bucket}.s3.{region}.amazonaws.com/{clean_path}"
+        
+        # S3 설정이 없으면 기본 이미지
+        return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
 
     def get_all_images(self):
         """모든 이미지 정보 반환"""

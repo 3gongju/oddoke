@@ -560,95 +560,53 @@
 
         console.log('📋 공유 데이터:', shareData); // 디버그용 로그 추가
 
-        // 🖼️ 이미지 URL 준비
-        const imageUrl = getShareImageUrl();
-        console.log('🖼️ 최종 이미지 URL:', imageUrl); // 디버그용 로그 추가
-        
-        try {
-            if (imageUrl && imageUrl.startsWith('https://')) {
-                // 📸 이미지 포함 Feed 형태로 공유
-                console.log('📤 이미지 포함 Feed 공유 시도...');
+            // 🖼️ 이미지 URL 준비
+            // 기존 getShareImageUrl 함수 교체
+            async function getShareImageUrl() {
+                console.log('🖼️ 공유용 이미지 URL 검색 시작...');
                 
-                Kakao.Link.sendDefault({
-                    objectType: 'feed',
-                    content: {
-                        title: shareData.title,
-                        description: `${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}\n📍 ${shareData.address}`,
-                        imageUrl: imageUrl,
-                        imageWidth: 400,
-                        imageHeight: 400,
-                        link: {
-                            webUrl: window.location.href,
-                            mobileWebUrl: window.location.href
-                        }
-                    },
-                    buttons: [
-                        {
-                            title: '카페 보러가기',
-                            link: {
-                                webUrl: window.location.href,
-                                mobileWebUrl: window.location.href
-                            }
-                        },
-                        {
-                            title: '위치 보기',
-                            link: {
-                                webUrl: `http://map.daum.net/link/map/${shareData.address}`,
-                                mobileWebUrl: `http://map.daum.net/link/map/${shareData.address}`
-                            }
-                        }
-                    ]
-                });
-                
-                console.log('✅ 이미지 포함 공유 성공');
-                showToast('카카오톡으로 공유되었습니다!', 'success');
-                
-            } else {
-                // 📝 이미지 없을 때는 텍스트만 공유
-                console.log('📤 텍스트 공유 시도... (이미지 없음)');
-                
-                Kakao.Link.sendDefault({
-                    objectType: 'text',
-                    text: `🎂 ${shareData.title}\n\n${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}\n📍 ${shareData.address}\n\n👉 자세히 보기: ${window.location.href}`,
-                    link: {
-                        webUrl: window.location.href,
-                        mobileWebUrl: window.location.href
+                // 1. share-data에서 가져오기 (Django에서 처리된 URL)
+                if (shareData && shareData.imageUrl) {
+                    console.log('share-data 이미지 URL:', shareData.imageUrl);
+                    
+                    // AVIF 형식 체크 및 변환
+                    let imageUrl = shareData.imageUrl;
+                    if (imageUrl.includes('.avif')) {
+                        imageUrl = imageUrl.replace('.avif', '.jpg');
+                        console.log('AVIF → JPG 변환:', imageUrl);
                     }
-                });
-                
-                console.log('✅ 텍스트 공유 성공');
-                showToast('카카오톡으로 공유되었습니다!', 'success');
-            }
-            
-        } catch (error) {
-            console.error('❌ 카카오톡 공유 실패:', error);
-            
-            // 🚀 최후의 수단: 링크 복사
-            try {
-                const shareText = `🎂 ${shareData.title}\n\n${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}\n📍 ${shareData.address}\n\n👉 ${window.location.href}`;
-                
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(shareText);
-                    showToast('공유 내용이 복사되었습니다! 카카오톡에 붙여넣기 해주세요.', 'info');
-                } else {
-                    // 구형 브라우저 대응
-                    const textArea = document.createElement('textarea');
-                    textArea.value = shareText;
-                    textArea.style.position = 'fixed';
-                    textArea.style.opacity = '0';
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    showToast('공유 내용이 복사되었습니다!', 'info');
+                    
+                    // 이미지 접근성 테스트
+                    const testResult = await testImageAccessibility(imageUrl);
+                    if (testResult.success) {
+                        return imageUrl;
+                    }
                 }
                 
-            } catch (copyError) {
-                console.error('❌ 복사도 실패:', copyError);
-                showToast('공유에 실패했습니다. 수동으로 링크를 복사해주세요.', 'error');
+                // 2. 대체 이미지들 시도
+                const imageCandidates = [];
+                
+                if (imageData && imageData.length > 0) {
+                    imageData.forEach(img => {
+                        const url = img.image_url || img.url;
+                        if (url && !url.includes('.avif')) { // AVIF 제외
+                            imageCandidates.push(url);
+                        }
+                    });
+                }
+                
+                for (const url of imageCandidates) {
+                    const testResult = await testImageAccessibility(url);
+                    if (testResult.success) {
+                        return url;
+                    }
+                }
+                
+                // 3. 기본 이미지
+                return 'https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페';
             }
-        }
-    }
+
+
     function initImageData() {
         console.log('이미지 데이터 초기화 시작');
         
