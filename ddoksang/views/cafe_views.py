@@ -42,14 +42,41 @@ def cafe_create_view(request):
             # 파일 검증
             valid_files = []
             for file in uploaded_files:
-                if (
-                    file.name.strip() and 
+                if (file.name.strip() and 
                     file.size > 0 and 
                     file.content_type.startswith('image/') and
-                    file.size <= 10 * 1024 * 1024  # 10MB 제한
-                ):
+                    file.size <= 10 * 1024 * 1024):
+                    
+                    # AVIF 파일 감지 및 변환
+                    if file.name.lower().endswith('.avif') or 'avif' in file.content_type.lower():
+                        try:
+                            from PIL import Image
+                            import io
+                            
+                            # AVIF → JPG 변환
+                            image = Image.open(file)
+                            if image.mode in ('RGBA', 'LA', 'P'):
+                                image = image.convert('RGB')
+                            
+                            # JPG로 저장
+                            jpg_buffer = io.BytesIO()
+                            image.save(jpg_buffer, format='JPEG', quality=85)
+                            jpg_buffer.seek(0)
+                            
+                            # 파일명 변경
+                            new_filename = file.name.rsplit('.', 1)[0] + '.jpg'
+                            file.name = new_filename
+                            file._file = jpg_buffer
+                            file.content_type = 'image/jpeg'
+                            
+                            print(f"✅ AVIF → JPG 변환 완료: {new_filename}")
+                            
+                        except Exception as e:
+                            print(f"❌ AVIF 변환 실패: {e}")
+                            continue  # 변환 실패 시 해당 파일 제외
+                    
                     valid_files.append(file)
-
+        
             # x_source 처리 
             raw_x_source = request.POST.get('x_source', '').strip()
             x_source = ''

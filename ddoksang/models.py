@@ -197,27 +197,60 @@ class BdayCafe(models.Model):
         return images_with_s3
 
     def get_kakao_share_image(self):
-        """카카오톡 공유용 이미지 URL - S3 절대경로로 변환"""
+        """카카오톡 공유용 이미지 URL - 카카오톡 지원 형식으로 변환"""
         
         if not self.image_gallery:
             return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
         
-        # 첫 번째 이미지 가져오기
-        first_image = self.image_gallery[0]
-        url = first_image.get('url')
-        
-        if not url:
-            return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
-        
-        # 이미 절대경로면 반환
-        if url.startswith('http'):
-            return url
-        
-        # S3 URL로 변환
         from django.conf import settings
         from urllib.parse import unquote
         
-        # URL 디코딩
+        # 카카오톡 지원 형식 (AVIF 제외)
+        KAKAO_SUPPORTED_FORMATS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+        
+        # 1. 카카오톡 지원 형식의 이미지 우선 검색
+        kakao_compatible_image = None
+        for img in self.image_gallery:
+            url = img.get('url', '')
+            if any(fmt in url.lower() for fmt in KAKAO_SUPPORTED_FORMATS):
+                if img.get('is_main', False):
+                    kakao_compatible_image = img
+                    break
+                elif not kakao_compatible_image:  # 첫 번째 호환 이미지 저장
+                    kakao_compatible_image = img
+        
+        # 2. 호환 이미지가 없으면 AVIF → JPG 변환 시도
+        if not kakao_compatible_image:
+            for img in self.image_gallery:
+                url = img.get('url', '')
+                if '.avif' in url.lower():
+                    if img.get('is_main', False):
+                        kakao_compatible_image = img
+                        break
+                    elif not kakao_compatible_image:
+                        kakao_compatible_image = img
+        
+        # 3. 그래도 없으면 첫 번째 이미지
+        if not kakao_compatible_image:
+            kakao_compatible_image = self.image_gallery[0]
+        
+        if not kakao_compatible_image or not kakao_compatible_image.get('url'):
+            return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
+        
+        url = kakao_compatible_image.get('url')
+        
+        # 절대경로 처리
+        if url.startswith('http'):
+            # AVIF → JPG 변환
+            if '.avif' in url.lower():
+                jpg_url = url.replace('.avif', '.jpg').replace('.AVIF', '.jpg')
+                print(f"📸 카카오톡 공유: AVIF → JPG 변환 시도")
+                print(f"   원본: {url}")
+                print(f"   변환: {jpg_url}")
+                return jpg_url
+            return url
+        
+        # S3 URL로 변환
         clean_url = unquote(url)
         
         # /media/ 제거
@@ -226,14 +259,22 @@ class BdayCafe(models.Model):
         else:
             clean_path = clean_url
         
+        # AVIF 확장자 → JPG 변환
+        if clean_path.lower().endswith('.avif'):
+            clean_path = clean_path.rsplit('.', 1)[0] + '.jpg'
+            print(f"📸 카카오톡 공유: 경로에서 AVIF → JPG 변환")
+        
         # S3 URL 생성
         if hasattr(settings, 'AWS_STORAGE_BUCKET_NAME') and settings.AWS_STORAGE_BUCKET_NAME:
             bucket = settings.AWS_STORAGE_BUCKET_NAME
             region = getattr(settings, 'AWS_S3_REGION_NAME', 'ap-northeast-2')
-            return f"https://{bucket}.s3.{region}.amazonaws.com/{clean_path}"
+            s3_url = f"https://{bucket}.s3.{region}.amazonaws.com/{clean_path}"
+            print(f"📸 최종 카카오톡 공유 이미지: {s3_url}")
+            return s3_url
         
         # S3 설정이 없으면 기본 이미지
         return "https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페"
+
 
     def get_all_images(self):
         """모든 이미지 정보 반환"""
