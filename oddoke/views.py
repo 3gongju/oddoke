@@ -145,7 +145,7 @@ def intro_view(request):
         },
         {
             'title': '덕생, 전국 생일카페를 한눈에',
-            'subtitle': '이번주의 생일을 확인하고, 생일시 게임으로 `덕`을 쌓아요.',
+            'subtitle': '이번주의 생일을 확인하고, 생일시 게임으로 `덕`을 쌓아요!',
             'description': '팬 중심의 지도기반 생카 정보 아카이브',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
@@ -153,9 +153,9 @@ def intro_view(request):
             'stats_data': birthday_stats
         },
         {
-            'title': '덕챗 - 팬과 팬을 잇는 대화',
-            'subtitle': '실시간 채팅으로 더 편하게',
-            'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
+            'title': '덕챗, 안전한 1:1 실시간 채팅',
+            'subtitle': '편리한 계좌 및 주소 정보 공유, 사기 조회까지 지원해요!',
+            # 'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
             'type': 'ddokchat',
             'image': DEFAULT_SLIDE_IMAGE
         },
