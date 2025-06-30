@@ -235,7 +235,7 @@
         </h4>
 
         <div class="grid grid-cols-4 gap-1.5">
-          {% for item in "가챠 뽑기,당일 특전,랜덤 특전,럭키 드로우,럭키 넘버,메뉴 특전, 디저트 특전, 선착 특전,전시회,포토부스,해시태그 이벤트,+기타"|split:"," %}
+          {% for item in "가챠 뽑기,당일 특전,랜덤 특전,럭키 드로우,럭키 넘버,메뉴 특전,디저트 특전,선착 특전,전시회,포토부스,해시태그 이벤트,+기타"|split:"," %}
             <label class="inline-flex items-center p-1.5 border rounded hover:bg-gray-50 cursor-pointer">
               <input type="checkbox" name="perks_extra" value="{{ item }}" class="sr-only">
               <span class="perk-btn">{{ item }}</span>

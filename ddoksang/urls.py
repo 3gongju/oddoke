@@ -11,7 +11,6 @@ app_name = 'ddoksang'
 urlpatterns = [
     # === 기본 페이지 ===
     path('', views.home_view, name='home'),
-    path('map/', views.map_view, name='map'),
     path('search/', views.search_view, name='search'),
     # path('list/', views.cafe_list_view, name='cafe_list'),
     path('tour_map/', cafe_views.tour_map_view, name='tour_map'),

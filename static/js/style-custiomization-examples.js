@@ -1,14 +1,14 @@
 // style-customization-examples.js - 스타일 커스터마이징 예시
 
 /**
- * 🎨 중복 확인 카드 스타일 커스터마이징 예시
+ * 중복 확인 카드 스타일 커스터마이징 예시
  * 
  * duplicate-card-template.js가 로드된 후에 실행하세요.
  */
 
 // 사용 예시들:
 
-// ✅ 1. 카드 색상을 빨간색에서 주황색으로 변경
+// 1. 카드 색상을 빨간색에서 주황색으로 변경
 function changeToOrangeTheme() {
     window.DuplicateCardTemplate.updateStyles({
         card: {
@@ -19,10 +19,9 @@ function changeToOrangeTheme() {
         }
     });
     
-    console.log('🟠 주황색 테마로 변경됨');
 }
 
-// ✅ 2. 더 부드러운 스타일로 변경
+// 2. 더 부드러운 스타일로 변경
 function changeToPastelTheme() {
     window.DuplicateCardTemplate.updateStyles({
         card: {
@@ -37,10 +36,9 @@ function changeToPastelTheme() {
         }
     });
     
-    console.log('🌸 파스텔 테마로 변경됨');
 }
 
-// ✅ 3. 미니멀한 스타일로 변경
+// 3. 미니멀한 스타일로 변경
 function changeToMinimalTheme() {
     window.DuplicateCardTemplate.updateStyles({
         card: {
@@ -55,12 +53,11 @@ function changeToMinimalTheme() {
         }
     });
     
-    console.log('⚪ 미니멀 테마로 변경됨');
 }
 
 
 
-// ✅ 5. 실시간 스타일 변경 함수
+// 5. 실시간 스타일 변경 함수
 function applyCustomTheme(themeName) {
     const themes = {
         default: {}, // 기본 스타일 유지
@@ -80,11 +77,11 @@ function applyCustomTheme(themeName) {
             window.DuplicateChecker.showDuplicateCafes(window.DuplicateChecker.state.currentResults);
         }
     } else {
-        console.warn(`❌ 알 수 없는 테마: ${themeName}`);
+        console.warn(`알 수 없는 테마: ${themeName}`);
     }
 }
 
-// ✅ 6. HTML에서 직접 사용할 수 있는 테마 선택기
+// 6. HTML에서 직접 사용할 수 있는 테마 선택기
 function createThemeSelector() {
     const selector = document.createElement('div');
     selector.innerHTML = `
@@ -114,18 +111,11 @@ function createThemeSelector() {
     document.body.appendChild(toggleButton);
 }
 
-// ✅ 개발 환경에서만 테마 선택기 표시
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(createThemeSelector, 1000); // 1초 후에 생성
-    });
-}
 
 // 전역 함수로 노출
 window.applyCustomTheme = applyCustomTheme;
 window.createThemeSelector = createThemeSelector;
 
-console.log('🎨 스타일 커스터마이징 도구 로드 완료');
 
 /**
  *  사용 방법:

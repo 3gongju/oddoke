@@ -128,23 +128,23 @@ class DdoksangLocation {
         }
     }
 
-    // ✅ 수정된 메인 함수: 브라우저 위치 권한 팝업을 우선으로 호출
+    // 브라우저 위치 권한 팝업을 우선으로 호출
     static async handleMyLocationClick() {
         try {
             const permissionState = await this.checkBrowserPermission();
             
-            // ✅ 1. 권한이 이미 거부된 경우에만 가이드 표시
+            // 1. 권한이 이미 거부된 경우에만 가이드 표시
             if (permissionState === 'denied') {
                 this.showPermissionGuide();
                 return;
             }
             
-            // ✅ 2. 권한 상태에 관계없이 브라우저 위치 API 호출 시도
+            // 2. 권한 상태에 관계없이 브라우저 위치 API 호출 시도
             // (브라우저가 자동으로 권한 요청 팝업을 띄움)
             await this.requestUserLocation();
             
         } catch (error) {
-            // ✅ 3. 실패한 경우에만 에러 처리
+            // 3. 실패한 경우에만 에러 처리
             console.warn('위치 요청 실패:', error);
             
             // 권한이 거부된 경우가 아니라면 일반 에러 메시지만 표시
@@ -168,7 +168,7 @@ class DdoksangLocation {
     static init() {
         if (this.isInitialized) return;
         
-        // ✅ 자동 모달 표시 제거 - 사용자가 버튼을 클릭할 때만 권한 요청
+        // 자동 모달 표시 제거 - 사용자가 버튼을 클릭할 때만 권한 요청
         const consent = this.getLocationConsent();
         
         this.setupModalEventListeners();
