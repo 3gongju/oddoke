@@ -13,7 +13,7 @@ def group_artists(artists, group_size=5):
 
 
 def main(request):
-    # 1) 찜한 아티스트 원본 목록
+    # 1) 찜한 아티스트 목록
     raw_favs = list(Artist.objects.filter(followers=request.user)) if request.user.is_authenticated else []
 
     # 2) 그룹별 페이징 캐러셀을 위한 5개씩 묶기
