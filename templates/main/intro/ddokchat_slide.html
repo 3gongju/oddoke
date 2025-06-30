@@ -1,0 +1,112 @@
+{% load static %}
+
+<!-- 덕챗 UI 이미지 추가 -->
+<div class="ddokchat-ui-container mt-8 max-w-4xl mx-auto">
+    <!-- 채팅 UI 모형 (CSS로 구현) -->
+    <div class="ddokchat-ui-mockup bg-white backdrop-blur-sm border border-gray-200 rounded-2xl overflow-hidden shadow-2xl max-w-sm mx-auto">
+        <!-- 채팅 헤더 -->
+        <div class="bg-gray-900 text-white px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button class="text-white hover:text-gray-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div class="flex items-center space-x-2">
+                        <!-- ✅ 프로필 이미지 수정 -->
+                        <div class="w-8 h-8 bg-white-500 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden">
+                            <img src="{% static 'image/ddok_y.png' %}" alt="김덕질" class="w-full h-full object-cover">
+                        </div>
+                        <span class="font-medium text-sm">김덕질</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">거래 진행 중</span>
+                    <button class="text-white hover:text-gray-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 상품 정보 카드 -->
+        <div class="bg-gray-50 border-b border-gray-200 px-4 py-3">
+            <div class="flex items-center space-x-3">
+                <!-- ✅ 상품 이미지 수정 -->
+                <div class="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden bg-gray-100">
+                    <img src="{% static 'image/ive_poca.png' %}" alt="아이브 포토카드" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full font-medium">양도</span>
+                    </div>
+                    <h3 class="font-medium text-gray-900 text-sm">아이브 러브다이브 포토카드</h3>
+                    <p class="text-sm font-bold text-pink-600">15,000원</p>
+                </div>
+                <div class="text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 채팅 메시지들 -->
+        <div class="bg-gray-100 p-4 space-y-3 min-h-[200px]">
+            <!-- 상대방 메시지 -->
+            <div class="flex justify-start">
+                <div class="bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md max-w-[80%] shadow-sm">
+                    <p class="text-sm">안녕하세요! 굿즈 거래 문의드려요</p>
+                </div>
+            </div>
+            <div class="flex justify-start">
+                <div class="bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md max-w-[80%] shadow-sm">
+                    <p class="text-sm">상태는 어떤가요?</p>
+                </div>
+            </div>
+            
+            <!-- 내 메시지 -->
+            <div class="flex justify-end">
+                <div class="bg-gray-900 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] shadow-sm">
+                    <p class="text-sm">네, 어떤 굿즈인지 알려주세요!</p>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <div class="bg-gray-900 text-white px-4 py-2 rounded-2xl rounded-br-md max-w-[80%] shadow-sm">
+                    <p class="text-sm">상태 좋습니다</p>
+                </div>
+            </div>
+            
+            <!-- 계좌정보 메시지 (특별한 UI) -->
+            <div class="flex justify-end">
+                <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl rounded-br-md max-w-[85%] shadow-sm">
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                            </svg>
+                            <span class="text-xs">계좌정보 전송</span>
+                        </div>
+                        <div class="bg-gray-800 rounded-lg p-3 space-y-1 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">은행</span>
+                                <span class="text-white">카카오뱅크</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">계좌번호</span>
+                                <span class="text-white font-mono">3333-03-1234567</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">예금주</span>
+                                <span class="text-white">어덕해</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

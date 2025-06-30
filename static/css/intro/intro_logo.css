@@ -1,0 +1,155 @@
+/* 인트로 로고 스타일 */
+/* static/css/intro/intro_logo.css */
+
+.logo-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
+}
+
+.intro-logo {
+    transition: all 0.5s ease;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+    animation: logoFloat 6s ease-in-out infinite;
+}
+
+.intro-logo:hover {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 15px 40px rgba(0, 0, 0, 0.4)) brightness(1.1);
+}
+
+/* 로고 플로팅 애니메이션 */
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) rotate(2deg);
+    }
+    50% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    75% {
+        transform: translateY(-5px) rotate(-2deg);
+    }
+}
+
+/* 로고 글로우 효과 */
+.logo-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    animation: logoGlow 4s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+    0%, 100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    50% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(1.2);
+    }
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .intro-logo {
+        width: 5rem !important;
+        height: 5rem !important;
+    }
+    
+    .logo-container {
+        margin: 1.5rem 0;
+    }
+    
+    @keyframes logoFloat {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-5px);
+        }
+    }
+}
+
+@media (max-width: 640px) {
+    .intro-logo {
+        width: 4rem !important;
+        height: 4rem !important;
+    }
+    
+    .logo-container {
+        margin: 1rem 0;
+    }
+}
+
+/* 태블릿 크기 */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .intro-logo {
+        width: 7rem !important;
+        height: 7rem !important;
+    }
+}
+
+/* 데스크톱 크기 */
+@media (min-width: 1024px) {
+    .intro-logo {
+        width: 10rem !important;
+        height: 10rem !important;
+    }
+}
+
+/* 접근성 - 모션 감소 설정 */
+@media (prefers-reduced-motion: reduce) {
+    .intro-logo {
+        animation: none;
+    }
+    
+    .intro-logo:hover {
+        transform: scale(1.05);
+    }
+    
+    .logo-container::before {
+        animation: none;
+        opacity: 0;
+    }
+    
+    @keyframes logoFloat {
+        0%, 100% {
+            transform: none;
+        }
+    }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .intro-logo {
+        filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.8)) contrast(1.2);
+    }
+    
+    .logo-container::before {
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    }
+}
+
+/* 다크 모드 대응 */
+@media (prefers-color-scheme: dark) {
+    .intro-logo {
+        filter: drop-shadow(0 10px 30px rgba(255, 255, 255, 0.1));
+    }
+    
+    .intro-logo:hover {
+        filter: drop-shadow(0 15px 40px rgba(255, 255, 255, 0.2)) brightness(1.1);
+    }
+}

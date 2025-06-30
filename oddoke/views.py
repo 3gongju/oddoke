@@ -122,47 +122,44 @@ def intro_view(request):
     slide_contents = [
         {
             'title': '어덕해',
-            'subtitle': '어떻게? 어떡해!',
-            'description': '덕질 종합 플랫폼',
+            'subtitle': '어디서든, 어떻게든 덕질해!',
+            'description': '덕질 올인원 종합 플랫폼',
             'type': 'welcome',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
-            'title': '덕팜 - 굿즈 거래의 새로운 방식',
-            'subtitle': '안전하고 편리한 거래',
-            'description': '양도, 대여, 분철까지 모든 거래를 한 곳에서',
+            'title': '덕팜, 굿즈 거래의 새로운 방식',
+            'subtitle': '제각각이던 게시글 형식을 통일해, 기존 트위터 거래의 문제점을 개선했어요!',
             'type': 'ddokfarm',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokfarm_posts
         },
         {
-            'title': '덕담 - 팬들만의 소통 공간',
-            'subtitle': '자유로운 소통과 정보 공유',
-            'description': '커뮤니티, 예절샷, 생일카페 후기까지',
+            'title': '덕담, 팬들만의 소통 공간',
+            'subtitle': '나만의 덕질 기록, 다른 유저들과 자유롭게 소통해요!',
             'type': 'ddokdam',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': latest_ddokdam_posts
+            'real_data': latest_ddokdam_posts[:4]
         },
         {
-            'title': '덕생 - 아티스트 생일 캘린더',
-            'subtitle': '생일을 함께 축하해요!',
-            'description': '이번주의 생일을 확인하고, 생일을 축하하며, 덕을 쌓아요.',
+            'title': '덕생, 카카오 지도기반 생카 아카이브',
+            'subtitle': '생일 캘린더로 이번주의 생일을 확인해보세요!',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': birthday_artists,
             'stats_data': birthday_stats
         },
         {
-            'title': '덕챗 - 팬과 팬을 잇는 대화',
-            'subtitle': '실시간 채팅으로 더 편하게',
-            'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
+            'title': '덕챗, 안전한 1:1 실시간 채팅',
+            'subtitle': '편리한 계좌 및 주소 정보 공유, 사기 조회까지 지원해요!',
+            # 'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
             'type': 'ddokchat',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
-            'title': '안전한 거래 환경',
-            'subtitle': '신뢰할 수 있는 플랫폼',
-            'description': '검증된 사용자들과 안전하게 거래하세요',
+            'title': '아이돌 굿즈 거래의 신뢰성 강화',
+            'subtitle': '체계적인 신뢰 시스템으로 믿을 수 있는 거래 환경을 제공해요!',
+            # 'description': '공식 팬덤 인증, 사기 신고 제도, 매너 리뷰 시스템',
             'type': 'safety',
             'image': DEFAULT_SLIDE_IMAGE
         },

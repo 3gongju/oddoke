@@ -1,0 +1,156 @@
+<!-- C:\Users\1-17\Desktop\DAMF2\oddoke\templates\main\intro\intro_ddokfarm_form.html -->
+<div class="mt-8 max-w-full mx-auto px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-24">
+
+
+        <!-- 왼쪽 덩어리: 기본 정보 -->
+        <div class="bg-white rounded-lg p-8 space-y-8">
+            
+            <!-- 아티스트 선택 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">아티스트 선택</h4>
+                <select class="w-full px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 text-sm mb-2">
+                    <option>New Jeans</option>
+                    <option>aespa</option>
+                    <option>IVE</option>
+                    <option>LE SSERAFIM</option>
+                </select>
+                <input type="text" placeholder="검색으로 아티스트 추가" class="w-full px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 text-sm placeholder-gray-400">
+            </div>
+
+            <!-- 멤버 선택 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">멤버 선택</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">전체 선택</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">민지</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">하니</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">다니엘</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">해린</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">혜인</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 제목 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">제목</h4>
+                <input type="text" placeholder="제목을 입력하세요" class="w-full px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 text-sm placeholder-gray-400">
+            </div>
+
+            <!-- 내용 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">내용</h4>
+                <textarea placeholder="내용을 입력하세요" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 text-sm placeholder-gray-400 resize-none"></textarea>
+            </div>
+        </div>
+        
+        <!-- 오른쪽 덩어리: 거래 정보 (모든 것을 하나로 통합) -->
+        <div class="bg-white rounded-lg p-8 space-y-8">
+
+            <!-- 거래 방식 -->
+            <div class="bg-gray-600 rounded-lg p-6 -m-2">
+                <h4 class="text-white text-sm font-medium mb-3 text-left">거래 방식</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="radio" name="want_to" value="sell" class="w-4 h-4 text-blue-600 border-white bg-transparent mr-2" checked>
+                        <span class="text-white text-sm">팝니다</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="want_to" value="buy" class="w-4 h-4 text-blue-600 border-white bg-transparent mr-2">
+                        <span class="text-white text-sm">삽니다</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="want_to" value="exchange" class="w-4 h-4 text-blue-600 border-white bg-transparent mr-2">
+                        <span class="text-white text-sm">교환해요</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 가격 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">가격</h4>
+                <input type="text" placeholder="가격을 입력하세요" class="w-full px-3 py-2 border border-gray-300 rounded bg-white text-gray-700 text-sm placeholder-gray-400">
+                <div class="flex items-center mt-2">
+                    <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                    <span class="text-gray-700 text-sm">가격 미정 (문의로 등록 협의)</span>
+                </div>
+                <button class="text-blue-600 text-sm mt-2 underline">+ 덕템 추가하기</button>
+            </div>
+
+            <!-- 종류 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">종류</h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">포토카드</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">MD</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">응원봉</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">앨범</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="w-4 h-4 text-blue-600 border-gray-300 rounded mr-2">
+                        <span class="text-gray-700 text-sm">기타</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 상품 상태 -->
+            <div>
+                <h4 class="text-black text-sm font-medium mb-3 text-left">상품 상태</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="radio" name="condition" value="new" class="w-4 h-4 text-blue-600 border-gray-300 mr-2" checked>
+                        <span class="text-gray-700 text-sm">미개봉</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="condition" value="almost_new" class="w-4 h-4 text-blue-600 border-gray-300 mr-2">
+                        <span class="text-gray-700 text-sm">거의 새것</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="condition" value="used" class="w-4 h-4 text-blue-600 border-gray-300 mr-2">
+                        <span class="text-gray-700 text-sm">사용감 있음</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="condition" value="damaged" class="w-4 h-4 text-blue-600 border-gray-300 mr-2">
+                        <span class="text-gray-700 text-sm">하자 있음</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 덕팜 페이지로 이동하는 링크 버튼 -->
+    <!-- <div class="text-center mt-6">
+        <a href="/ddokfarm/"
+           class="intro-btn">
+            <span>거래 하러가기</span>
+        </a>
+    </div> -->
+</div>

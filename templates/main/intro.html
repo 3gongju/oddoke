@@ -4,8 +4,130 @@
 <html lang="ko" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>{{ page_title }} - 어덕해</title>
+
+    <!-- 100% 줌 고정 및 스크롤 줌 방지 -->
+    <style>
+    /* 전체 페이지 100% 줌 고정 */
+    html {
+        zoom: 1.0;
+        -moz-transform: scale(1.0);
+        -moz-transform-origin: 0 0;
+        -webkit-transform: scale(1.0);
+        -webkit-transform-origin: 0 0;
+        transform: scale(1.0);
+        transform-origin: 0 0;
+        
+        /* 사용자의 줌 조정 방지 */
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        
+        /* 터치 줌 방지 */
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: pan-y;
+    }
+
+    /* Firefox 전용 보정 */
+    @-moz-document url-prefix() {
+        html {
+            zoom: 1;
+            -moz-transform: scale(1.0);
+            width: 100%; /* 100% / 1.0 = 100% */
+            height: 100%;
+        }
+        
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+    }
+
+    /* 스크롤바 영역 조정 */
+    body {
+        width: 100vw;
+        height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* 마우스 휠 줌 방지 */
+    .zoom-disabled {
+        pointer-events: auto;
+    }
+
+    /* 키보드 줌 단축키 방지를 위한 포커스 제거 */
+    * {
+        outline: none;
+    }
+    </style>
+
+    <!-- 마우스 휠 줌 방지 JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 마우스 휠 + Ctrl 키 조합으로 줌 방지
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                return false;
+            }
+        }, { passive: false });
+        
+        // 키보드 줌 단축키 방지
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + +, Ctrl + -, Ctrl + 0 방지
+            if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '0' || e.key === '=' || e.key === '_')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Ctrl + 마우스휠 방지
+            if (e.ctrlKey && (e.keyCode === 107 || e.keyCode === 109 || e.keyCode === 187 || e.keyCode === 189)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // 터치 줌 방지 (모바일)
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // 더블탭 줌 방지 (모바일)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // 브라우저 줌 레벨 강제 재설정 (일부 브라우저용)
+        function enforceZoom() {
+            if (document.body.style.zoom !== '1.0') {
+                document.documentElement.style.zoom = '1.0';
+                document.body.style.zoom = '1.0';
+            }
+        }
+        
+        // 정기적으로 줌 레벨 체크
+        setInterval(enforceZoom, 500);
+        
+        console.log('어덕해 인트로: 100% 줌 고정 모드 활성화');
+    });
+    </script>
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="어덕해 - 팬들을 위한 특별한 공간. 굿즈 거래, 팬 커뮤니티, 생일 달력 등 덕질의 모든 것을 경험하세요.">
@@ -36,6 +158,13 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 인트로 로고 전용 CSS 추가 -->
+    <link rel="stylesheet" href="{% static 'css/intro/intro_logo.css' %}">
+
+    <!-- 기존 CSS 링크 아래에 추가 -->
+    <link rel="stylesheet" href="{% static 'css/intro/intro_ddokfarm.css' %}">
+    <link rel="stylesheet" href="{% static 'css/intro/intro_ddokdam.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -255,12 +384,18 @@
                     
                     {% if slide.type == 'welcome' %}
                     <!-- 첫 번째 슬라이드 - 웰컴 -->
-                    <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ slide.title }}</h1>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">{{ slide.title }}</h1>
                     <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-                        {{ slide.subtitle }}<br>
+                        {{ slide.subtitle }}<br> 
                         {{ slide.description }}
                     </p>
-                    
+                    <!--로고 이미지 추가 -->
+                    <div class="logo-container mb-6">
+                        <img src="{% static 'image/ddok_logo_filled.png' %}" 
+                            alt="어덕해 로고" 
+                            class="intro-logo mx-auto w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-2xl">
+                    </div>
+
                     {% elif slide.type == 'cta' %}
                     <!-- 마지막 슬라이드 - CTA -->
                     <h2 class="text-4xl md:text-6xl font-bold mb-6">{{ slide.title }}</h2>
@@ -311,71 +446,33 @@
                     </div>
                     
                     {% else %}
-                    <!-- 일반 슬라이드 -->
+                    <!-- 모든 일반 슬라이드의 공통 헤더 -->
                     <h2 class="text-3xl md:text-5xl font-bold mb-4">{{ slide.title }}</h2>
                     <h3 class="text-xl md:text-2xl mb-6 text-pink-200">{{ slide.subtitle }}</h3>
-                    <p class="text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                    <p class="text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-6">
                         {{ slide.description }}
                     </p>
-                    
-                    <!-- 슬라이드 타입별 추가 콘텐츠 -->
+
+                    <!-- 슬라이드 타입별 콘텐츠만 -->
                     {% if slide.type == 'ddokfarm' %}
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">양도</div>
-                            <div class="text-sm opacity-90">안전한 굿즈 거래</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">대여</div>
-                            <div class="text-sm opacity-90">경제적인 선택</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">분철</div>
-                            <div class="text-sm opacity-90">취향대로 함께</div>
-                        </div>
-                    </div>
-                    
+                        {% include 'main/intro/intro_ddokfarm_form.html' %}
+
                     {% elif slide.type == 'ddokdam' %}
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">커뮤니티</div>
-                            <div class="text-sm opacity-90">자유로운 소통</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">예절샷</div>
-                            <div class="text-sm opacity-90">정성의 기록</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">생일카페</div>
-                            <div class="text-sm opacity-90">특별한 순간</div>
-                        </div>
-                    </div>
+                        {% include 'main/intro/intro_ddokdam_form.html' %}
 
                     {% elif slide.type == 'favorite_artists' %}
-                    <!-- 찜한 아티스트 슬라이드 - 별도 파일로 분리 -->
-                    {% include 'main/intro/favorite_artists_slide.html' %}
-                    
+                        {% include 'main/intro/favorite_artists_slide.html' %}
+
                     {% elif slide.type == 'ddoksang' %}
-                    <!-- 덕생 - 아티스트 생일 달력 슬라이드 - 별도 파일로 분리 -->
-                    {% include 'main/intro/birthday_artists_slide.html' %}
-                    
+                        {% include 'main/intro/birthday_artists_slide.html' %}
+
+                    {% elif slide.type == 'ddokchat' %}
+                        {% include 'main/intro/ddokchat_slide.html' %}
+                        
                     {% elif slide.type == 'safety' %}
-                    <div class="mt-8 flex justify-center items-center space-x-8">
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">🔒</div>
-                            <div class="text-sm">보안 거래</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">✅</div>
-                            <div class="text-sm">신뢰성 검증</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">🛡️</div>
-                            <div class="text-sm">안전 보장</div>
-                        </div>
-                    </div>
+                        {% include 'main/intro/safety_slide.html' %}
                     {% endif %}
-                    
+
                     {% endif %}
                 </div>
             </div>
@@ -400,6 +497,9 @@
             <div id="progress-bar" class="bg-white h-full transition-all duration-300" style="width: 0%"></div>
         </div>
     </div>
+
+    <script src="{% static 'js/intro/intro_ddokfarm.js' %}"></script>
+    <script src="{% static 'js/intro/intro_ddokdam.js' %}"></script>
     
     <!-- JavaScript -->
     <script>
