@@ -164,6 +164,29 @@ def search_view(request):
 
 
 
+@cache_page(60 * 5)  # 5분 캐시
+def map_view(request):
+    """지도 페이지 (별도 지도 전용 페이지)"""
+    #  map_utils 사용으로 간소화
+    approved_cafes = BdayCafe.objects.filter(status='approved').select_related('artist', 'member')
+
+    active_cafes = filter_operating_cafes(approved_cafes)
+    
+    # 지도 관련 컨텍스트 생성 (map_utils 사용)
+    map_context = get_map_context(cafes_queryset=active_cafes)
+    
+    # 사용자 찜 목록
+    user_favorites = get_user_favorites(request.user)
+    
+    context = {
+        'active_cafes': active_cafes,
+        'user_favorites': user_favorites,
+        **map_context,
+    }
+    
+    logger.info(f"지도 페이지 로드: 운영중 카페 {map_context.get('total_cafes', 0)}개")
+    
+    return render(request, 'ddoksang/map.html', context)
 
 # 최신 본 글 저장
 def cafe_detail_view(request, cafe_id):
