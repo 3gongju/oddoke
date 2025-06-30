@@ -4,7 +4,7 @@
   <div class="max-w-4xl mx-auto px-4 py-4">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
-      <!-- ✅ 메시지 영역 -->
+      <!-- 메시지 영역 -->
       <div class="flex items-start sm:items-center space-x-3">
         {% if preview_type == 'user' %}
           <!-- Heroicon: Clock -->
@@ -35,7 +35,7 @@
         {% endif %}
       </div>
 
-      <!-- ✅ 버튼 영역 -->
+      <!-- 버튼 영역 -->
       {% if preview_type == 'user' %}
       <div class="flex justify-end w-full">
         <a href="{% url 'ddoksang:my_cafes' %}" 

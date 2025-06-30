@@ -1085,24 +1085,24 @@ Ddoksang.FavoriteManager = class {
 <!-- 초기화 스크립트 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ 찜하기 매니저 초기화
+    // 찜하기 매니저 초기화
     if (document.querySelector('[data-favorite-btn]')) {
         Ddoksang.favoriteManager = new Ddoksang.FavoriteManager();
     }
 
-    // ✅ 이미지 업로더
+    // 이미지 업로더
     const imageUploadContainer = document.querySelector('#image-upload-container');
     if (imageUploadContainer) {
         Ddoksang.imageUploader = new Ddoksang.ImageUploader('#image-upload-container');
     }
 
-    // ✅ 다단계 폼
+    // 다단계 폼
     const multiStepForm = document.querySelector('#multiStepForm');
     if (multiStepForm) {
         Ddoksang.multiStepForm = new Ddoksang.MultiStepForm('#multiStepForm');
     }
 
-    // ✅ 장소 검색
+    // 장소 검색
     const placeSearchInput = document.querySelector('#place-search');
     const mapContainer = document.querySelector('#map');
     if (placeSearchInput && mapContainer && window.kakao) {
@@ -1113,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 기존 아래 코드 완전히 제거
     // if (mapContainerMain && window.kakao) { ... }
 
-    // ✅ 전역 이벤트 리스너는 유지
+    // 전역 이벤트 리스너는 유지
     Ddoksang.events.on('memberSelected', (data) => console.log('멤버 선택됨:', data));
     Ddoksang.events.on('placeSelected', (data) => console.log('장소 선택됨:', data));
     Ddoksang.events.on('filesChanged', (files) => console.log('파일 변경됨:', files));

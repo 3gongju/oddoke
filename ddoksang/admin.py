@@ -159,6 +159,6 @@ class BdayCafeAdmin(admin.ModelAdmin):
 
 
 # Admin 사이트 커스터마이징
-admin.site.site_header = "최고 경영자 및 관리자"
+admin.site.site_header = "최고 경영자"
 admin.site.site_title = "덕생 관리자"
 admin.site.index_title = "생카 관리 시스템"

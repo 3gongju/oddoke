@@ -4,7 +4,6 @@ from .base_views import (
     home_view,
     cafe_detail_view,
     search_view,
-    map_view,
     # cafe_list_view,
 )
 

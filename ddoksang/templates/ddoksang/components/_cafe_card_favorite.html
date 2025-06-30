@@ -5,7 +5,7 @@
   {% with cafe|cafe_status as cafe_state %}
   <div class="relative overflow-hidden rounded-2xl border border-gray-200 transition-all duration-300 h-80">
 
-    <!-- ✅ 회색 오버레이 + 블러 (종료된 경우) -->
+    <!-- 회색 오버레이 + 블러 (종료된 경우) -->
     {% if cafe_state == 'ended' %}
       <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-[1px] z-30 rounded-2xl pointer-events-none"></div>
     {% endif %}
@@ -16,7 +16,7 @@
         <img src="{{ cafe.get_main_image }}" alt="{{ cafe.cafe_name }}" class="w-full h-full object-cover" loading="lazy">
       {% else %}
         <div class="w-full h-full bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center">
-          <span class="text-pink-400 text-4xl">🎂</span>
+          <span class="text-pink-400 text-4xl">생카</span>
         </div>
       {% endif %}
 
