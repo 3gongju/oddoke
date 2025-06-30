@@ -314,15 +314,15 @@
 <!-- 히어로 섹션 포함 -->
 {% include 'main/home_hero_section.html' %}
 
-<!-- 찜한 아티스트 섹션 - 패딩 축소 -->
-<section class="compact-section mb-4 sm:mb-6">
+<!-- 찜한 아티스트 섹션 - 패딩 축소, 하단 마진 미세 조정 -->
+<section class="compact-section mb-3 sm:mb-5" style="margin-bottom: calc(0.75rem - 1.4px); margin-bottom: calc(1.25rem - 1.4px) !important;">
   <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
     <div class="relative">
       {% if raw_favs %}
         <!-- 가운데 정렬된 아티스트 로고들 -->
-        <div class="flex flex-wrap justify-center items-center gap-3 sm:gap-6 lg:gap-8">
+        <div class="flex flex-wrap justify-center items-center gap-3 sm:gap-6 lg:gap-8 py-2">
           {% for artist in raw_favs %}
-            <div class="text-center">
+            <div class="text-center flex flex-col items-center justify-center">
               <a href="{% url 'artist:index' %}" class="block group">
                 <img src="{% static artist.logo %}" 
                      alt="{{ artist.display_name }}"
@@ -347,65 +347,6 @@
     </div>
   </div>
 </section>
-
-<!-- 찜한 아티스트 바로가기 버튼들 - 패딩 축소 -->
-{% if raw_favs %}
-<section class="py-4 sm:py-6 bg-gradient-to-r from-red-50 to-pink-50">
-  <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
-    <div class="text-center mb-3 sm:mb-4">
-      <h3 class="font-heading text-sm sm:text-base font-semibold text-gray-800 mb-1 flex items-center justify-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-pink-400">
-          <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
-        </svg>
-        ONLY 찜
-      </h3>
-      <p class="text-xs sm:text-sm text-gray-600">오직 찜한 아티스트의 게시글만 모아봐요</p>
-    </div>
-    
-    <!-- 모바일 최적화된 버튼 그리드 -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg sm:max-w-none mx-auto">
-      <!-- 찜한 덕 거래 보기 -->
-      <a href="{% url 'ddokfarm:index' %}?favorites_only=on" 
-         class="group relative flex items-center justify-center bg-white hover:bg-pink-50 border-2 hover:border-pink-300 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
-        <span class="font-light text-gray-800 group-hover:text-pink-700 text-sm group-hover:opacity-0 transition-opacity duration-300">찜 팜</span>
-        <span class="font-light text-gray-700 text-sm absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕팜 보기</span>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 text-pink-600 group-hover:translate-x-1 transition-transform absolute right-3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-        </svg>
-      </a>
-
-      <!-- 찜한 덕 생활 보기 -->
-      <a href="{% url 'ddokdam:index' %}?favorites_only=on" 
-         class="group relative flex items-center justify-center bg-white hover:bg-pink-50 border-2 hover:border-pink-300 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
-        <span class="font-light text-gray-800 group-hover:text-pink-700 text-sm group-hover:opacity-0 transition-opacity duration-300">찜 담</span>
-        <span class="font-light text-gray-700 text-sm absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕담 보기</span>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 text-pink-600 group-hover:translate-x-1 transition-transform absolute right-3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-        </svg>
-      </a>
-    </div>
-
-    <!-- 찜한 아티스트 미니 통계 및 관리 -->
-    <div class="mt-6 sm:mt-8">
-      <div class="relative flex items-center justify-center">
-        <div class="inline-flex items-center gap-2 px-2 py-1 bg-white/60 rounded-full text-xs text-gray-900">
-          <span>아티스트 {{ raw_favs|length }}그룹을 찜 중</span>
-        </div>
-        
-        <a href="{% url 'artist:index' %}" 
-           class="absolute right-0 inline-flex items-center gap-1 px-2 py-1 text-xs text-pink-600 hover:text-pink-700 font-medium underline hover:no-underline transition-all">
-          <span>덕 찜</span>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
-{% endif %}
 
 <!-- 배너 캐러셀 섹션 - 수정된 버전 -->
 <section class="py-4 sm:py-6 lg:py-8 bg-gray-50 mb-8 sm:mb-12 lg:mb-16">
@@ -522,6 +463,67 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
+
+
+<!-- 찜한 아티스트 바로가기 버튼들 - 패딩 축소 -->
+{% if raw_favs %}
+<section class="py-4 sm:py-6 bg-gradient-to-r from-red-50 to-pink-50">
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
+    <div class="text-center mb-3 sm:mb-4">
+      <h3 class="font-heading text-sm sm:text-base font-semibold text-gray-800 mb-1 flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-pink-400">
+          <path d="m11.645 20.91-.007-.003-.022-.012a15.247 15.247 0 0 1-.383-.218 25.18 25.18 0 0 1-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0 1 12 5.052 5.5 5.5 0 0 1 16.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 0 1-4.244 3.17 15.247 15.247 0 0 1-.383.219l-.022.012-.007.004-.003.001a.752.752 0 0 1-.704 0l-.003-.001Z" />
+        </svg>
+        ONLY 찜
+      </h3>
+      <p class="text-xs sm:text-sm text-gray-600">오직 찜한 아티스트의 게시글만 모아봐요</p>
+    </div>
+    
+    <!-- 모바일 최적화된 버튼 그리드 -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-lg sm:max-w-none mx-auto">
+      <!-- 찜한 덕 거래 보기 -->
+      <a href="{% url 'ddokfarm:index' %}?favorites_only=on" 
+         class="group relative flex items-center justify-center bg-white hover:bg-pink-50 border-2 hover:border-pink-300 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
+        <span class="font-light text-gray-800 group-hover:text-pink-700 text-sm group-hover:opacity-0 transition-opacity duration-300">찜 팜</span>
+        <span class="font-light text-gray-700 text-sm absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕팜 보기</span>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 text-pink-600 group-hover:translate-x-1 transition-transform absolute right-3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </a>
+
+      <!-- 찜한 덕 생활 보기 -->
+      <a href="{% url 'ddokdam:index' %}?favorites_only=on" 
+         class="group relative flex items-center justify-center bg-white hover:bg-pink-50 border-2 hover:border-pink-300 rounded-lg px-3 py-2 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden">
+        <span class="font-light text-gray-800 group-hover:text-pink-700 text-sm group-hover:opacity-0 transition-opacity duration-300">찜 담</span>
+        <span class="font-light text-gray-700 text-sm absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">찜한 아티스트의 덕담 보기</span>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3 text-pink-600 group-hover:translate-x-1 transition-transform absolute right-3">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- 찜한 아티스트 미니 통계 및 관리 -->
+    <div class="mt-6 sm:mt-8">
+      <div class="relative flex items-center justify-center">
+        <div class="inline-flex items-center gap-2 px-2 py-1 bg-white/60 rounded-full text-xs text-gray-900">
+          <span>아티스트 {{ raw_favs|length }}그룹을 찜 중</span>
+        </div>
+        
+        <a href="{% url 'artist:index' %}" 
+           class="absolute right-0 inline-flex items-center gap-1 px-2 py-1 text-xs text-pink-600 hover:text-pink-700 font-medium underline hover:no-underline transition-all">
+          <span>덕 찜</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 
 <!-- 오늘의 새 소식 - 패딩 축소 -->
 <section class="py-4 sm:py-6 lg:py-8 bg-white mb-4 sm:mb-6">
