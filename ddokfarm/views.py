@@ -1291,9 +1291,7 @@ def like_post(request, category, post_id):
 
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
-# 판매 완료 표시 (기존과 동일)
-# ddokfarm/views.py - mark_as_sold 함수 수정
-
+# 판매 완료 표시
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
@@ -1321,22 +1319,32 @@ def mark_as_sold(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
 
-    # 🔥 4. 트랜잭션으로 게시글과 채팅방 동시 업데이트
+    # 🔥 4. 이미 거래완료된 경우 처리 불가
+    if post.is_sold:
+        context = {
+            'title': '처리 불가',
+            'message': '이미 거래가 완료된 게시글입니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
+
+    # 🔥 5. 트랜잭션으로 게시글과 채팅방 동시 업데이트 (토글 → 완료만)
     with transaction.atomic():
-        # 게시글 판매 상태 토글
-        post.is_sold = not post.is_sold
+        # 게시글을 거래완료로 설정 (되돌릴 수 없음)
+        post.is_sold = True
         post.save()
 
-        # 🔥 5. 연결된 채팅방의 seller_completed도 같이 업데이트
+        # 🔥 6. 연결된 모든 채팅방의 seller_completed를 True로 설정
         content_type = ContentType.objects.get_for_model(post)
         updated_count = ChatRoom.objects.filter(
             content_type=content_type, 
-            object_id=post_id
-        ).update(seller_completed=post.is_sold)
+            object_id=post_id,
+            seller_completed=False  # 아직 완료하지 않은 채팅방만
+        ).update(seller_completed=True)
         
-        print(f"✅ 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = {post.is_sold}")
+        print(f"✅ 게시글 거래완료 → 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = True")
 
-    # 🔹 6. 리디렉션
+    # 🔹 7. 리디렉션
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
 # 아티스트 선택시 멤버 목록 출력 (기존과 동일)
