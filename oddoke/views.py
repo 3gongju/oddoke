@@ -129,8 +129,8 @@ def intro_view(request):
         },
         {
             'title': '덕팜, 굿즈 거래의 새로운 방식',
-            'subtitle': '안전하고 편리한 거래를 지원해요!',
-            'description': '거래방식부터 상품 상태, 배송 유형까지! 세분화된 게시글 작성으로 정보 제공',
+            'subtitle': '세분화된 게시글 작성으로 안전하고 편리한 거래를 지원해요!',
+            # 'description': '거래방식부터 상품 상태, 배송 유형까지!',
             'type': 'ddokfarm',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokfarm_posts
@@ -145,7 +145,7 @@ def intro_view(request):
         },
         {
             'title': '덕생, 전국 생일카페를 한눈에',
-            'subtitle': '이번주의 생일을 확인하고, 생일시 게임으로 `덕`을 쌓아요!',
+            'subtitle': '생일 캘린더로 이번주의 생일을 확인해보세요!',
             'description': '카카오 지도기반 생카 정보 아카이브',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
@@ -161,8 +161,8 @@ def intro_view(request):
         },
         {
             'title': '아이돌 굿즈 거래의 신뢰성 강화',
-            'subtitle': '체계적인 신뢰 시스템으로 안전한 거래',
-            'description': '공식 팬덤 인증, 사기 신고 제도, 매너 리뷰 시스템을 통해 믿을 수 있는 거래 환경을 제공해요!',
+            'subtitle': '체계적인 신뢰 시스템으로 믿을 수 있는 거래 환경을 제공해요!',
+            # 'description': '공식 팬덤 인증, 사기 신고 제도, 매너 리뷰 시스템',
             'type': 'safety',
             'image': DEFAULT_SLIDE_IMAGE
         },

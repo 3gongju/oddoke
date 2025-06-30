@@ -161,6 +161,9 @@
 
     <!-- 인트로 로고 전용 CSS 추가 -->
     <link rel="stylesheet" href="{% static 'css/intro/intro_logo.css' %}">
+
+    <!-- 기존 CSS 링크 아래에 추가 -->
+    <link rel="stylesheet" href="{% static 'css/intro/intro_ddokfarm.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -381,19 +384,17 @@
                     {% if slide.type == 'welcome' %}
                     <!-- 첫 번째 슬라이드 - 웰컴 -->
                     <h1 class="text-4xl md:text-6xl font-bold mb-6">{{ slide.title }}</h1>
-
                     <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
                         {{ slide.subtitle }}<br> 
                         {{ slide.description }}
                     </p>
-
                     <!--로고 이미지 추가 -->
                     <div class="logo-container mb-6">
                         <img src="{% static 'image/ddok_logo_filled.png' %}" 
                             alt="어덕해 로고" 
                             class="intro-logo mx-auto w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-2xl">
                     </div>
-                    
+
                     {% elif slide.type == 'cta' %}
                     <!-- 마지막 슬라이드 - CTA -->
                     <h2 class="text-4xl md:text-6xl font-bold mb-6">{{ slide.title }}</h2>
@@ -444,64 +445,41 @@
                     </div>
                     
                     {% else %}
-                    <!-- 일반 슬라이드 -->
+                    <!-- 모든 일반 슬라이드의 공통 헤더 -->
                     <h2 class="text-3xl md:text-5xl font-bold mb-4">{{ slide.title }}</h2>
                     <h3 class="text-xl md:text-2xl mb-6 text-pink-200">{{ slide.subtitle }}</h3>
-                    <p class="text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                    <p class="text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-6">
                         {{ slide.description }}
                     </p>
-                    
-                    <!-- 슬라이드 타입별 추가 콘텐츠 -->
+
+                    <!-- 슬라이드 타입별 콘텐츠만 -->
                     {% if slide.type == 'ddokfarm' %}
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">양도</div>
-                            <div class="text-sm opacity-90">안전한 굿즈 거래</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">대여</div>
-                            <div class="text-sm opacity-90">경제적인 선택</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">분철</div>
-                            <div class="text-sm opacity-90">취향대로 함께</div>
-                        </div>
-                    </div>
-                    
+                        {% include 'main/intro/intro_ddokfarm_form.html' %}
                     {% elif slide.type == 'ddokdam' %}
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">커뮤니티</div>
-                            <div class="text-sm opacity-90">자유로운 소통</div>
+                        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                                <div class="text-lg font-semibold mb-2">커뮤니티</div>
+                                <div class="text-sm opacity-90">자유로운 소통</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                                <div class="text-lg font-semibold mb-2">예절샷</div>
+                                <div class="text-sm opacity-90">예절샷 남기기</div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
+                                <div class="text-lg font-semibold mb-2">생일카페</div>
+                                <div class="text-sm opacity-90">최애의 생카 자랑</div>
+                            </div>
                         </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">예절샷</div>
-                            <div class="text-sm opacity-90">예절샷 남기기</div>
-                        </div>
-                        <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                            <div class="text-lg font-semibold mb-2">생일카페</div>
-                            <div class="text-sm opacity-90">최애의 생카 자랑</div>
-                        </div>
-                    </div>
-
                     {% elif slide.type == 'favorite_artists' %}
-                    <!-- 찜한 아티스트 슬라이드 - 별도 파일로 분리 -->
-                    {% include 'main/intro/favorite_artists_slide.html' %}
-                    
+                        {% include 'main/intro/favorite_artists_slide.html' %}
                     {% elif slide.type == 'ddoksang' %}
-                    <!-- 덕생 - 아티스트 생일 달력 슬라이드 - 별도 파일로 분리 -->
-                    {% include 'main/intro/birthday_artists_slide.html' %}
-
+                        {% include 'main/intro/birthday_artists_slide.html' %}
                     {% elif slide.type == 'ddokchat' %}
-                    <!-- 덕챗 - 실시간 채팅 슬라이드 - 별도 파일로 분리 -->
-                    {% include 'main/intro/ddokchat_slide.html' %}
-                    
+                        {% include 'main/intro/ddokchat_slide.html' %}
                     {% elif slide.type == 'safety' %}
-                    <!-- 신뢰성 강화 - 별도 파일로 분리 -->
-                    {% include 'main/intro/safety_slide.html' %}
-                    
-                    {% endif %} 
-                    
+                        {% include 'main/intro/safety_slide.html' %}
+                    {% endif %}
+
                     {% endif %}
                 </div>
             </div>
@@ -526,6 +504,8 @@
             <div id="progress-bar" class="bg-white h-full transition-all duration-300" style="width: 0%"></div>
         </div>
     </div>
+
+    <script src="{% static 'js/intro/intro_ddokfarm.js' %}"></script>
     
     <!-- JavaScript -->
     <script>
