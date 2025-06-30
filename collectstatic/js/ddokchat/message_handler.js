@@ -407,3 +407,58 @@ export function handleTradeCompleted(data) {
  updateSensitiveInfoCards();
  updateUIAfterTradeComplete(true);
 }
+
+export function handleTradeCancelNotification(data) {
+  const action = data.action;
+  const currentUser = window.currentUser || '';
+  
+  // 액션별 메시지 처리
+  switch (action) {
+    case 'request':
+      showToast('상대방이 거래 취소를 요청했습니다.', 'info');
+      break;
+    case 'cancelled':
+      showToast('거래가 취소되었습니다.', 'error');
+      updateUIAfterTradeCancel();
+      break;
+    case 'rejected':
+      showToast('거래 취소 요청이 거절되었습니다. 거래가 계속 진행됩니다.', 'info');
+      break;
+    case 'withdrawn':
+      showToast('상대방이 거래 취소 요청을 철회했습니다.', 'info');
+      break;
+    default:
+      console.log('알 수 없는 취소 액션:', action);
+  }
+  
+  // UI 업데이트 (헤더 새로고침)
+  setTimeout(() => {
+    location.reload(); // 간단한 방법으로 페이지 새로고침
+  }, 2000);
+}
+
+// 거래 취소 후 UI 업데이트
+function updateUIAfterTradeCancel() {
+  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+  const messageInputArea = document.getElementById('messageInputArea');
+
+  if (tradeStatusContainer) {
+    // 모든 버튼을 취소 상태로 변경
+    tradeStatusContainer.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="status-text cancelled text-xs px-2 py-1 rounded font-medium">거래 취소됨</span>
+      </div>
+    `;
+  }
+
+  if (messageInputArea) {
+    messageInputArea.innerHTML = `
+      <div class="text-center text-sm text-gray-500 py-4">
+        ❌ 거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
+      </div>
+    `;
+  }
+  
+  // 전역 상태 업데이트
+  window.isTradeCompleted = true; // 취소도 완료 상태로 간주
+}

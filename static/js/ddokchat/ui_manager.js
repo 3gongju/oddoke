@@ -9,6 +9,9 @@ export function setupUIManager(tradeCompletedStatus) {
   
   // ✅ scrollToBottom를 전역으로 노출 (auto_detect에서 사용)
   window.scrollToBottom = scrollToBottom;
+  window.showToast = showToast;
+  window.showLoadingToast = showLoadingToast;
+  window.hideLoadingToast = hideLoadingToast;
   
   if (chatLog) {
     // 1. 숨긴 상태에서 스크롤 위치 먼저 설정

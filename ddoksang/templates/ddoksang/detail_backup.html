@@ -147,12 +147,7 @@
   "address": "{{ cafe.address|escapejs }}",
   "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",
   "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}",
-  "description": "{{ cafe.artist.display_name }} 생일카페",
-  "debug": {
-    "originalImageUrl": "{{ cafe.get_main_image|escapejs }}",
-    "totalImages": {{ cafe.image_count }},
-    "hasImages": {% if cafe.image_gallery %}true{% else %}false{% endif %}
-  }
+  "description": "{{ cafe.artist.display_name }} 생일카페"
 }
 </script>
 

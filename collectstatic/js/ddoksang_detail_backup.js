@@ -536,11 +536,8 @@
     }
 
     // 카카오톡 공유 함수 (기존 함수 교체)
-    // 카카오톡 공유 함수 - 상세 디버깅 버전
-// 기존 shareKakao() 함수를 완전히 삭제하고 이것으로 교체
-
     function shareKakao() {
-        console.log('🔗 카카오톡 공유 시작 (이미지 포함 버전)');
+        console.log('🔗 카카오톡 공유 시작');
         
         // 카카오 SDK 초기화 확인
         if (!kakaoInitialized) {
@@ -551,143 +548,79 @@
             }
         }
 
-        // 공유 데이터 확인
+        // 공유 데이터 가져오기
         shareData = shareData || getShareData();
         if (!shareData) {
             showToast('공유할 데이터를 찾을 수 없습니다.', 'error');
             return;
         }
 
-        console.log('📋 공유 데이터:', shareData); // 디버그용 로그 추가
+        try {
+            // 카카오링크 공유 실행
+            Kakao.Link.sendDefault({
+                objectType: 'location',
+                address: shareData.address,
+                addressTitle: shareData.title,
+                content: {
+                    title: shareData.title,
+                    description: `${shareData.description}\n📅 ${shareData.startDate} ~ ${shareData.endDate}`,
+                    imageUrl: shareData.imageUrl,
+                    link: {
+                        mobileWebUrl: shareData.linkUrl,
+                        webUrl: shareData.linkUrl,
+                    },
+                },
+                buttons: [
+                    {
+                        title: '카페 보러가기',
+                        link: {
+                            mobileWebUrl: shareData.linkUrl,
+                            webUrl: shareData.linkUrl,
+                        },
+                    },
+                    {
+                        title: '또독이 홈',
+                        link: {
+                            mobileWebUrl: window.location.origin,
+                            webUrl: window.location.origin,
+                        },
+                    },
+                ],
+                installTalk: true,
+            });
 
-            // 🖼️ 이미지 URL 준비
-            // 기존 getShareImageUrl 함수 교체
-            async function getShareImageUrl() {
-                console.log('🖼️ 공유용 이미지 URL 검색 시작...');
-                
-                // 1. share-data에서 가져오기 (Django에서 처리된 URL)
-                if (shareData && shareData.imageUrl) {
-                    console.log('share-data 이미지 URL:', shareData.imageUrl);
-                    
-                    // AVIF 형식 체크 및 변환
-                    let imageUrl = shareData.imageUrl;
-                    if (imageUrl.includes('.avif')) {
-                        imageUrl = imageUrl.replace('.avif', '.jpg');
-                        console.log('AVIF → JPG 변환:', imageUrl);
-                    }
-                    
-                    // 이미지 접근성 테스트
-                    const testResult = await testImageAccessibility(imageUrl);
-                    if (testResult.success) {
-                        return imageUrl;
-                    }
-                }
-                
-                // 2. 대체 이미지들 시도
-                const imageCandidates = [];
-                
-                if (imageData && imageData.length > 0) {
-                    imageData.forEach(img => {
-                        const url = img.image_url || img.url;
-                        if (url && !url.includes('.avif')) { // AVIF 제외
-                            imageCandidates.push(url);
-                        }
-                    });
-                }
-                
-                for (const url of imageCandidates) {
-                    const testResult = await testImageAccessibility(url);
-                    if (testResult.success) {
-                        return url;
-                    }
-                }
-                
-                // 3. 기본 이미지
-                return 'https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페';
+            console.log('✅ 카카오톡 공유 성공');
+            showToast('카카오톡 공유창이 열렸습니다!', 'success');
+
+        } catch (error) {
+            console.error('❌ 카카오톡 공유 오류:', error);
+            
+            // 에러 타입별 메시지
+            let errorMessage = '카카오톡 공유 중 오류가 발생했습니다.';
+            
+            if (error.message && error.message.includes('domain')) {
+                errorMessage = '도메인이 등록되지 않았습니다. 관리자에게 문의해주세요.';
+            } else if (error.message && error.message.includes('app')) {
+                errorMessage = 'API 키 설정을 확인해주세요.';
             }
+            
+            showToast(errorMessage, 'error');
+        }
+    }
 
-
+    // 이미지 데이터 초기화
     function initImageData() {
-        console.log('이미지 데이터 초기화 시작');
-        
         const imageDataElement = document.getElementById('image-data');
         if (imageDataElement) {
             try {
                 imageData = JSON.parse(imageDataElement.textContent);
                 totalImages = imageData.length;
-                console.log(`이미지 데이터 로드 완료: ${totalImages}개`);
             } catch (error) {
                 console.error('이미지 데이터 파싱 실패:', error);
                 imageData = [];
                 totalImages = 0;
             }
-        } else {
-            console.warn('image-data 엘리먼트를 찾을 수 없음');
-            imageData = [];
-            totalImages = 0;
         }
-    }
-
-
-// 🖼️ 공유용 이미지 URL 가져오기 함수 (추가 필요)
-    // 1. getShareImageUrl 함수 교체
-    function getShareImageUrl() {
-        console.log('공유용 이미지 URL 검색 중...');
-        
-        // 방법 1: share-data에서 imageUrl 사용 (get_kakao_share_image 결과)
-        if (shareData && shareData.imageUrl) {
-            console.log('share-data에서 찾은 이미지 URL:', shareData.imageUrl);
-            return shareData.imageUrl;
-        }
-        
-        // 방법 2: imageData에서 첫 번째 이미지 사용 (S3 URL)
-        if (imageData && imageData.length > 0) {
-            const firstImage = imageData[0];
-            console.log('첫 번째 이미지:', firstImage);
-            
-            // image_url 또는 url 키 확인
-            const imageUrl = firstImage.image_url || firstImage.url;
-            
-            if (imageUrl) {
-                console.log('imageData에서 찾은 이미지 URL:', imageUrl);
-                
-                // 이미 HTTPS URL이면 그대로 사용
-                if (imageUrl.startsWith('https://')) {
-                    return imageUrl;
-                }
-                
-                // HTTP를 HTTPS로 변경
-                if (imageUrl.startsWith('http://')) {
-                    return imageUrl.replace('http://', 'https://');
-                }
-                
-                // 상대경로면 도메인 추가
-                if (imageUrl.startsWith('/')) {
-                    return 'https://oddoke.com' + imageUrl;
-                }
-            }
-        }
-        
-        // 방법 3: HTML에서 첫 번째 갤러리 이미지 찾기
-        const firstImg = document.querySelector('.gallery-slide img, .gallery-thumbnail img, img');
-        if (firstImg && firstImg.src) {
-            let imageUrl = firstImg.src;
-            console.log('HTML에서 찾은 이미지 URL:', imageUrl);
-            
-            // HTTPS 확인
-            if (imageUrl.startsWith('https://')) {
-                return imageUrl;
-            }
-            
-            // HTTP를 HTTPS로 변경
-            if (imageUrl.startsWith('http://')) {
-                return imageUrl.replace('http://', 'https://');
-            }
-        }
-        
-        // 방법 4: 기본 플레이스홀더 이미지
-        console.log('기본 플레이스홀더 이미지 사용');
-        return 'https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페';
     }
 
     // DOM 로드 완료 후 초기화

@@ -38,6 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFraudCheck();
   setupAutoDetect();
   setupTradeReport();
+  
+  // ✅ 거래 취소 모듈을 먼저 초기화
   setupTradeCancel();
   
   // WebSocket 메시지 핸들러 등록
@@ -68,6 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     setupReviewModal();
   }, 500);
+  
+  // ✅ 전역 함수들이 제대로 노출되었는지 확인
+  console.log('🔧 전역 함수 확인:', {
+    requestTradeCancel: typeof window.requestTradeCancel,
+    respondToCancel: typeof window.respondToCancel,
+    withdrawCancelRequest: typeof window.withdrawCancelRequest,
+    closeHeaderMenu: typeof window.closeHeaderMenu
+  });
 });
 
 function setupEventListeners() {
