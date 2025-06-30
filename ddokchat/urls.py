@@ -20,12 +20,12 @@ urlpatterns = [
     path('my/', views.my_chatrooms, name='my_chatrooms'),
 
     # 계좌정보 및 주소정보 전송
-    path('send-account/<str:room_code>/', views.send_account_info, name='send_account_info'),
+    path('send-bank/<str:room_code>/', views.send_bank_info, name='send_bank_info'),
     path('send-address/<str:room_code>/', views.send_address_info, name='send_address_info'),
 
     # 더치트 사기조회 및 로그
-    path('check-fraud/', views.check_account_fraud, name='check_account_fraud'),
-    path('copy-account/', views.copy_account_log, name='copy_account_log'),
+    path('check-fraud/', views.check_bank_fraud, name='check_bank_fraud'),
+    path('copy-bank/', views.copy_bank_log, name='copy_bank_log'),
 
     # 분철 참여자와의 채팅
     path('start-split/<int:post_id>/<int:user_id>/', views.get_or_create_split_chatroom, name='start_split_chat'),

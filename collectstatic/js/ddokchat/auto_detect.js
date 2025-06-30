@@ -5,7 +5,7 @@ import { showToast } from './ui_manager.js';
 export function setupAutoDetect() {
   // 전역 함수로 노출
   window.quickFraudCheck = quickFraudCheck;
-  window.dismissAccountAlert = dismissAccountAlert;
+  window.dismissBankAlert = dismissBankAlert;
   
   // 페이지 로드 후 기존 메시지들 스캔
   setTimeout(() => {
@@ -14,7 +14,7 @@ export function setupAutoDetect() {
 }
 
 // 계좌번호 패턴 감지 함수 - 실제 한국 은행 패턴 기반
-export function detectAccountNumber(message) {
+export function detectBankNumber(message) {
   if (!message || typeof message !== 'string') return null;
   
   // 010으로 시작하는 전화번호 제외
@@ -53,20 +53,20 @@ export function detectAccountNumber(message) {
 }
 
 // 메시지 래퍼 하단에 계좌번호 감지 알림 추가 - 크기 개선
-export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
+export function addBankDetectionAlert(messageWrapper, detectedBank) {
   if (!messageWrapper) {
     return;
   }
   
   // 이미 알림이 있는지 체크
-  if (messageWrapper.querySelector('.account-detection-alert')) {
+  if (messageWrapper.querySelector('.bank-detection-alert')) {
     return;
   }
   
   const alertDiv = document.createElement('div');
   
   // ✅ 크기를 더 크게 조정 (max-w-md로 변경)
-  alertDiv.className = 'account-detection-alert mt-4 max-w-md mx-2';
+  alertDiv.className = 'bank-detection-alert mt-4 max-w-md mx-2';
   alertDiv.innerHTML = `
     <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-4 transition-all duration-300 shadow-sm">
       <div class="flex flex-col gap-4">
@@ -85,7 +85,7 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
             </p>
           </div>
           <button 
-            onclick="dismissAccountAlert(this)" 
+            onclick="dismissBankAlert(this)" 
             class="flex-shrink-0 text-orange-400 hover:text-orange-600 transition-colors p-1 rounded-full hover:bg-orange-100"
             title="닫기"
           >
@@ -97,7 +97,7 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
         
         <div class="flex items-center justify-center">
           <button 
-            onclick="quickFraudCheck('${detectedAccount}')" 
+            onclick="quickFraudCheck('${detectedBank}')" 
             class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors font-semibold text-sm shadow-sm hover:shadow-md flex items-center gap-2"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,24 +144,24 @@ export function addAccountDetectionAlert(messageWrapper, detectedAccount) {
 }
 
 // 빠른 사기조회 (감지된 계좌번호로)
-function quickFraudCheck(accountNumber) {
+function quickFraudCheck(bankNumber) {
   if (window.openManualFraudCheck) {
     window.openManualFraudCheck();
     
     // 감지된 계좌번호 자동 입력
     setTimeout(() => {
-      const accountInput = document.getElementById('fraudAccountNumberInput');
-      if (accountInput) {
-        accountInput.value = accountNumber;
-        accountInput.focus();
+      const bankInput = document.getElementById('fraudBankNumberInput');
+      if (bankInput) {
+        bankInput.value = bankNumber;
+        bankInput.focus();
       }
     }, 200);
   }
 }
 
 // 계좌번호 감지 알림 닫기
-function dismissAccountAlert(button) {
-  const alert = button.closest('.account-detection-alert');
+function dismissBankAlert(button) {
+  const alert = button.closest('.bank-detection-alert');
   if (alert) {
     alert.style.opacity = '0';
     alert.style.transform = 'translateY(-15px)';
@@ -181,11 +181,11 @@ export function handleReceivedMessage(messageText, messageWrapper, senderName) {
     return;
   }
   
-  const detectedAccount = detectAccountNumber(messageText);
-  if (detectedAccount) {
+  const detectedBank = detectBankNumber(messageText);
+  if (detectedBank) {
     // 1초 후에 알림 표시 (메시지가 완전히 렌더링된 후)
     setTimeout(() => {
-      addAccountDetectionAlert(messageWrapper, detectedAccount);
+      addBankDetectionAlert(messageWrapper, detectedBank);
     }, 1000);
   }
 }
@@ -199,7 +199,7 @@ export function scanExistingMessages() {
   
   messageWrappers.forEach((wrapper) => {
     // 이미 알림창이 있는지 체크
-    if (wrapper.querySelector('.account-detection-alert')) {
+    if (wrapper.querySelector('.bank-detection-alert')) {
       return; // 이미 처리된 메시지는 건너뛰기
     }
     
@@ -216,11 +216,11 @@ export function scanExistingMessages() {
     if (!textElement) return;
     
     const messageText = textElement.textContent;
-    const detectedAccount = detectAccountNumber(messageText);
+    const detectedBank = detectBankNumber(messageText);
     
-    if (detectedAccount) {
+    if (detectedBank) {
       // 기존 메시지에서 발견된 계좌번호에 알림 추가
-      addAccountDetectionAlert(wrapper, detectedAccount);
+      addBankDetectionAlert(wrapper, detectedBank);
     }
   });
 }
@@ -228,7 +228,7 @@ export function scanExistingMessages() {
 // 수동으로 스캔하는 함수 (필요시 호출 가능)
 export function rescanAllMessages() {
   // 기존 알림창들 모두 제거
-  document.querySelectorAll('.account-detection-alert').forEach(alert => {
+  document.querySelectorAll('.bank-detection-alert').forEach(alert => {
     alert.remove();
   });
   

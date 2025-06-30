@@ -17,29 +17,29 @@ class MockBankService:
         self.service_name = "Mock 계좌인증 서비스"
         print(f"🧪 {self.service_name} 초기화 완료")
     
-    def verify_account(self, bank_code, account_number, account_holder):
+    def verify_bank(self, bank_code, bank_number, bank_holder):
         """
         Mock 계좌 실명 확인
         실제 API와 동일한 응답 형식 제공
         
         Args:
             bank_code (str): 은행 코드 (예: '004')
-            account_number (str): 계좌번호
-            account_holder (str): 예금주명
+            bank_number (str): 계좌번호
+            bank_holder (str): 예금주명
             
         Returns:
             dict: 확인 결과 {'success': bool, 'message': str, 'verified_name': str}
         """
         print(f"🔍 Mock 계좌 인증 중...")
         print(f"   은행: {self.get_bank_name(bank_code)}")
-        print(f"   계좌: {account_number[:4]}****")
-        print(f"   예금주: {account_holder}")
+        print(f"   계좌: {bank_number[:4]}****")
+        print(f"   예금주: {bank_holder}")
         
         # 실제 API 호출처럼 약간의 지연 시간 시뮬레이션
         time.sleep(0.5)
         
         # 계좌번호와 예금주명 검증
-        validation_result = self._validate_account_data(bank_code, account_number, account_holder)
+        validation_result = self._validate_bank_data(bank_code, bank_number, bank_holder)
         if not validation_result['valid']:
             return {
                 'success': False,
@@ -51,20 +51,20 @@ class MockBankService:
         success_cases = self._get_success_test_cases()
         
         # 입력된 정보와 매칭되는 성공 케이스 찾기
-        test_key = (bank_code, account_number.replace('-', '').replace(' ', ''), account_holder.strip())
+        test_key = (bank_code, bank_number.replace('-', '').replace(' ', ''), bank_holder.strip())
         
         if test_key in success_cases:
             print("✅ Mock 계좌 인증 성공!")
             return {
                 'success': True,
                 'message': '계좌 인증이 완료되었습니다. (Mock 서비스)',
-                'verified_name': account_holder
+                'verified_name': bank_holder
             }
         
         # 실패 케이스 처리
-        return self._handle_failure_case(bank_code, account_number, account_holder)
+        return self._handle_failure_case(bank_code, bank_number, bank_holder)
     
-    def _validate_account_data(self, bank_code, account_number, account_holder):
+    def _validate_bank_data(self, bank_code, bank_number, bank_holder):
         """입력 데이터 유효성 검사"""
         
         # 은행 코드 검증
@@ -75,27 +75,27 @@ class MockBankService:
             }
         
         # 계좌번호 형식 검증
-        clean_account = account_number.replace('-', '').replace(' ', '')
-        if not clean_account.isdigit():
+        clean_bank = bank_number.replace('-', '').replace(' ', '')
+        if not clean_bank.isdigit():
             return {
                 'valid': False,
                 'message': '계좌번호는 숫자만 입력 가능합니다.'
             }
         
-        if len(clean_account) < 8 or len(clean_account) > 20:
+        if len(clean_bank) < 8 or len(clean_bank) > 20:
             return {
                 'valid': False,
                 'message': '계좌번호는 8~20자리여야 합니다.'
             }
         
         # 예금주명 검증
-        if not account_holder or len(account_holder.strip()) < 2:
+        if not bank_holder or len(bank_holder.strip()) < 2:
             return {
                 'valid': False,
                 'message': '예금주명을 정확히 입력해주세요.'
             }
         
-        if len(account_holder.strip()) > 20:
+        if len(bank_holder.strip()) > 20:
             return {
                 'valid': False,
                 'message': '예금주명이 너무 깁니다. (최대 20자)'
@@ -124,7 +124,7 @@ class MockBankService:
             ('032', '7777777777', '부산사람'),    # 부산은행
         ]
     
-    def _handle_failure_case(self, bank_code, account_number, account_holder):
+    def _handle_failure_case(self, bank_code, bank_number, bank_holder):
         """실패 케이스 처리 및 사용자 친화적 메시지 제공"""
         
         print("❌ Mock 계좌 인증 실패")
@@ -272,12 +272,12 @@ def test_mock_service():
     
     # 성공 케이스 테스트
     print("\n✅ 성공 케이스 테스트:")
-    result = service.verify_account('004', '1234567890', '홍길동')
+    result = service.verify_bank('004', '1234567890', '홍길동')
     print(f"결과: {result}")
     
     # 실패 케이스 테스트  
     print("\n❌ 실패 케이스 테스트:")
-    result = service.verify_account('004', '1234567890', '잘못된이름')
+    result = service.verify_bank('004', '1234567890', '잘못된이름')
     print(f"결과: {result}")
     
     # 서비스 상태 확인
@@ -305,33 +305,33 @@ class DutcheatAPIService:
         self.service_name = "더치트 API 서비스"
         print(f"🔍 {self.service_name} 초기화 완료")
     
-    def check_account_fraud_history(self, bank_code, account_number, account_holder=None):
+    def check_bank_fraud_history(self, bank_code, bank_number, bank_holder=None):
         """
         계좌 사기 신고 이력 조회
         
         Args:
             bank_code (str): 은행 코드 (예: '004')
-            account_number (str): 계좌번호 (하이픈 제거된 숫자만)
-            account_holder (str): 예금주명 (선택사항)
+            bank_number (str): 계좌번호 (하이픈 제거된 숫자만)
+            bank_holder (str): 예금주명 (선택사항)
             
         Returns:
             dict: 조회 결과
         """
         print(f"🔍 계좌 사기 이력 조회 중...")
         print(f"   은행: {self.get_bank_name(bank_code)}")
-        print(f"   계좌: {account_number[:4]}****")
-        if account_holder:
-            print(f"   예금주: {account_holder}")
+        print(f"   계좌: {bank_number[:4]}****")
+        if bank_holder:
+            print(f"   예금주: {bank_holder}")
         
         # API 요청 데이터 준비
         request_data = {
             'bank_code': bank_code,
-            'account_number': account_number,
+            'bank_number': bank_number,
             'api_key': self.api_key
         }
         
-        if account_holder:
-            request_data['account_holder'] = account_holder
+        if bank_holder:
+            request_data['bank_holder'] = bank_holder
         
         try:
             # 실제 API 호출 (현재는 Mock 데이터 반환)
@@ -339,7 +339,7 @@ class DutcheatAPIService:
             # result = response.json()
             
             # Mock 데이터 반환 (테스트용)
-            result = self._get_mock_fraud_data(bank_code, account_number, account_holder)
+            result = self._get_mock_fraud_data(bank_code, bank_number, bank_holder)
             
             return {
                 'success': True,
@@ -359,14 +359,14 @@ class DutcheatAPIService:
                 'reports': []
             }
     
-    def _get_mock_fraud_data(self, bank_code, account_number, account_holder):
+    def _get_mock_fraud_data(self, bank_code, bank_number, bank_holder):
         """
         Mock 사기 신고 데이터 생성 (테스트용)
         실제 API 연동 시 이 메서드는 제거
         """
         
         # 테스트용 사기 계좌 목록
-        fraud_accounts = [
+        fraud_banks = [
             ('004', '1111111111', [
                 {
                     'report_date': '2024-01-15',
@@ -418,10 +418,10 @@ class DutcheatAPIService:
         ]
         
         # 해당 계좌의 신고 이력 찾기
-        clean_account = account_number.replace('-', '').replace(' ', '')
+        clean_bank = bank_number.replace('-', '').replace(' ', '')
         
-        for fraud_bank, fraud_account, reports in fraud_accounts:
-            if fraud_bank == bank_code and fraud_account == clean_account:
+        for fraud_bank, fraud_bank, reports in fraud_banks:
+            if fraud_bank == bank_code and fraud_bank == clean_bank:
                 return {
                     'has_reports': True,
                     'report_count': len(reports),
@@ -490,12 +490,12 @@ def test_dutcheat_service():
     
     # 신고 이력이 있는 계좌 테스트
     print("\n❌ 신고 이력이 있는 계좌 테스트:")
-    result = service.check_account_fraud_history('004', '1111111111', '사기꾼')
+    result = service.check_bank_fraud_history('004', '1111111111', '사기꾼')
     print(f"결과: {result}")
     
     # 신고 이력이 없는 계좌 테스트  
     print("\n✅ 신고 이력이 없는 계좌 테스트:")
-    result = service.check_account_fraud_history('004', '1234567890', '홍길동')
+    result = service.check_bank_fraud_history('004', '1234567890', '홍길동')
     print(f"결과: {result}")
     
     # 서비스 상태 확인

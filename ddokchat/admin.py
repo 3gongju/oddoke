@@ -160,7 +160,7 @@ class TradeReportAdmin(admin.ModelAdmin):
                             content = msg.text_content.content[:50]
                         elif msg.message_type == 'image':
                             content = '[이미지]'
-                        elif msg.message_type == 'account_info':
+                        elif msg.message_type == 'bank_info':
                             content = '[계좌정보]'
                         elif msg.message_type == 'address_info':
                             content = '[배송정보]'

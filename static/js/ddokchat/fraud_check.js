@@ -4,7 +4,7 @@ import { showToast } from './ui_manager.js';
 
 export function setupFraudCheck() {
   // 전역 함수로 노출 (템플릿에서 onclick으로 호출하기 위해)
-  window.copyAccountNumber = copyAccountNumber;
+  window.copyBankNumber = copyBankNumber;
   window.copyAddress = copyAddress;
   window.copyPhoneNumber = copyPhoneNumber;
   window.copyDeliveryInfo = copyDeliveryInfo;
@@ -42,15 +42,15 @@ function setupFraudCheckEventListeners() {
   }
   
   // 계좌번호 입력 시 숫자만 허용
-  const accountInput = document.getElementById('fraudAccountNumberInput');
-  if (accountInput) {
-    accountInput.addEventListener('input', function(e) {
+  const bankInput = document.getElementById('fraudBankNumberInput');
+  if (bankInput) {
+    bankInput.addEventListener('input', function(e) {
       // 숫자와 하이픈만 허용
       e.target.value = e.target.value.replace(/[^0-9-]/g, '');
     });
     
     // 엔터키로 조회
-    accountInput.addEventListener('keypress', function(e) {
+    bankInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
         startFraudCheck();
@@ -64,12 +64,12 @@ export function openManualFraudCheck() {
   const modal = document.getElementById('fraudCheckModal');
   const inputStep = document.getElementById('fraudInputStep');
   const resultStep = document.getElementById('fraudResultStep');
-  const accountInput = document.getElementById('fraudAccountNumberInput');
+  const bankInput = document.getElementById('fraudBankNumberInput');
   
   if (!modal) return;
   
   // 입력 필드 초기화
-  if (accountInput) accountInput.value = '';
+  if (bankInput) bankInput.value = '';
   
   // Step 1 표시, Step 2 숨김
   inputStep?.classList.remove('hidden');
@@ -79,21 +79,21 @@ export function openManualFraudCheck() {
   
   // 입력창에 포커스
   setTimeout(() => {
-    accountInput?.focus();
+    bankInput?.focus();
   }, 100);
 }
 
 // 기존 계좌정보에서 사기조회 (자동입력) - 예금주명 제거
-export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
+export function checkFraudHistory(bankCode, bankNumber, bankHolder) {
   const modal = document.getElementById('fraudCheckModal');
   const inputStep = document.getElementById('fraudInputStep');
   const resultStep = document.getElementById('fraudResultStep');
-  const accountInput = document.getElementById('fraudAccountNumberInput');
+  const bankInput = document.getElementById('fraudBankNumberInput');
   
   if (!modal) return;
   
   // 계좌번호만 자동 입력 (예금주명 제거)
-  if (accountInput) accountInput.value = accountNumber || '';
+  if (bankInput) bankInput.value = bankNumber || '';
   
   // Step 1 표시, Step 2 숨김
   inputStep?.classList.remove('hidden');
@@ -104,29 +104,29 @@ export function checkFraudHistory(bankCode, accountNumber, accountHolder) {
 
 // 조회 시작
 function startFraudCheck() {
-  const accountNumber = document.getElementById('fraudAccountNumberInput')?.value?.trim();
+  const bankNumber = document.getElementById('fraudBankNumberInput')?.value?.trim();
   
-  if (!accountNumber) {
+  if (!bankNumber) {
     showToast('계좌번호를 입력해주세요.', 'error');
-    document.getElementById('fraudAccountNumberInput')?.focus();
+    document.getElementById('fraudBankNumberInput')?.focus();
     return;
   }
   
   // 계좌번호 기본 검증 (최소 10자리)
-  if (accountNumber.length < 10) {
+  if (bankNumber.length < 10) {
     showToast('올바른 계좌번호를 입력해주세요. (최소 10자리)', 'error');
     return;
   }
   
   // Step 2로 전환
-  showResultStep(accountNumber);
+  showResultStep(bankNumber);
   
   // 실제 조회 실행
-  performFraudCheck(accountNumber);
+  performFraudCheck(bankNumber);
 }
 
 // 결과 단계로 전환 - 예금주명 관련 코드 제거
-function showResultStep(accountNumber) {
+function showResultStep(bankNumber) {
   const inputStep = document.getElementById('fraudInputStep');
   const resultStep = document.getElementById('fraudResultStep');
   const loading = document.getElementById('fraudLoading');
@@ -145,15 +145,15 @@ function showResultStep(accountNumber) {
   errorDiv?.classList.add('hidden');
   
   // 조회된 계좌 정보 표시 (계좌번호만)
-  const displayAccountNumber = document.getElementById('fraudDisplayAccountNumber');
+  const displayBankNumber = document.getElementById('fraudDisplayBankNumber');
   
-  if (displayAccountNumber) {
-    displayAccountNumber.textContent = accountNumber;
+  if (displayBankNumber) {
+    displayBankNumber.textContent = bankNumber;
   }
 }
 
 // 실제 사기조회 API 호출 - 예금주명 제거
-function performFraudCheck(accountNumber) {
+function performFraudCheck(bankNumber) {
   const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                    document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   
@@ -165,8 +165,8 @@ function performFraudCheck(accountNumber) {
     },
     body: JSON.stringify({
       bank_code: '', // 빈 값으로 (계좌번호만으로 조회)
-      account_number: accountNumber,
-      account_holder: '' // 예금주명 제거
+      bank_number: bankNumber,
+      bank_holder: '' // 예금주명 제거
     })
   })
   .then(response => response.json())
@@ -220,7 +220,7 @@ function goBackToInput() {
   
   // 입력창에 포커스
   setTimeout(() => {
-    document.getElementById('fraudAccountNumberInput')?.focus();
+    document.getElementById('fraudBankNumberInput')?.focus();
   }, 100);
 }
 
@@ -260,10 +260,10 @@ export function closeFraudModal() {
 }
 
 // 기존 복사 함수들 유지
-export function copyAccountNumber(accountNumber) {
+export function copyBankNumber(bankNumber) {
   if (!navigator.clipboard) {
     const textArea = document.createElement('textarea');
-    textArea.value = accountNumber;
+    textArea.value = bankNumber;
     document.body.appendChild(textArea);
     textArea.select();
     try {
@@ -276,18 +276,18 @@ export function copyAccountNumber(accountNumber) {
     return;
   }
 
-  navigator.clipboard.writeText(accountNumber).then(function() {
+  navigator.clipboard.writeText(bankNumber).then(function() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
                      document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     
-    fetch('/ddokchat/copy-account/', {
+    fetch('/ddokchat/copy-bank/', {
       method: 'POST',
       headers: {
         'X-CSRFToken': csrfToken,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        account_number: accountNumber
+        bank_number: bankNumber
       })
     }).catch(error => {
       console.error('복사 로그 전송 실패:', error);

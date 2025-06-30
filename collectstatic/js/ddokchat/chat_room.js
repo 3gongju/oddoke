@@ -6,7 +6,7 @@ import {
   setupMessageHandlers, 
   handleTextMessage, 
   handleImageMessage, 
-  handleAccountMessage, 
+  handleBankMessage, 
   handleAddressMessage,
   handleReadUpdate,
   handleReadMessageSyncFinish,
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   registerMessageHandler('showToast', showToast);
   registerMessageHandler('chat_message', handleTextMessage);
   registerMessageHandler('chat_image', handleImageMessage);
-  registerMessageHandler('account_info', handleAccountMessage);
+  registerMessageHandler('bank_info', handleBankMessage);
   registerMessageHandler('address_info', handleAddressMessage);
   registerMessageHandler('read_update', handleReadUpdate);
   registerMessageHandler('read_message_sync_finish', handleReadMessageSyncFinish);

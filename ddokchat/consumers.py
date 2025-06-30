@@ -118,7 +118,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'enter_chatroom': self.handle_enter_chatroom,
             'chat': self.handle_text_message,
             'chat_image': self.handle_image_message,
-            'account_info': self.handle_account_info,
+            'bank_info': self.handle_bank_info,
             'address_info': self.handle_address_info,
         }
         
@@ -216,13 +216,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-    async def handle_account_info(self, data):
+    async def handle_bank_info(self, data):
         """계좌정보 메시지 처리"""
-        account_info = data.get('account_info')
+        bank_info = data.get('bank_info')
         sender_id = data.get('sender_id')
         message_id = data.get('message_id')
         
-        if not all([account_info, sender_id]):
+        if not all([bank_info, sender_id]):
             await self.send_error("계좌정보가 부족합니다.")
             return
         
@@ -234,8 +234,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
-                    'type': 'account_info_message',
-                    'account_info': account_info,
+                    'type': 'bank_info_message',
+                    'bank_info': bank_info,
                     'sender_id': sender_id,
                     'message_id': message_id,
                     'is_read': False,
@@ -302,13 +302,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception:
             pass
 
-    async def account_info_message(self, event):
+    async def bank_info_message(self, event):
         """계좌정보 메시지 전송"""
         try:
             sender = await self.get_username(event['sender_id'])
             await self.send(text_data=json.dumps({
-                'type': 'account_info',
-                'account_info': event['account_info'],
+                'type': 'bank_info',
+                'bank_info': event['bank_info'],
                 'sender': sender,
                 'message_id': event.get('message_id'),
                 'is_read': event.get('is_read', False),

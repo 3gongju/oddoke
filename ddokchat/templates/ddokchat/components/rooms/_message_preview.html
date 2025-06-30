@@ -7,7 +7,7 @@
                     <p class="text-sm">{{ message.text_content.content|truncatechars:truncate|default_if_none:50 }}</p>
                 {% elif message.message_type == 'image' %}
                     <p class="text-sm italic">사진을 보냈습니다.</p>
-                {% elif message.message_type == 'account_info' %}
+                {% elif message.message_type == 'bank_info' %}
                     <p class="text-sm italic">계좌정보를 보냈습니다.</p>
                 {% elif message.message_type == 'address_info' %}
                     <p class="text-sm italic">배송정보를 보냈습니다.</p>
@@ -21,7 +21,7 @@
                 <p class="text-sm text-gray-800">{{ message.text_content.content|truncatechars:truncate|default_if_none:50 }}</p>
             {% elif message.message_type == 'image' %}
                 <p class="text-sm italic text-gray-600">사진을 보냈습니다.</p>
-            {% elif message.message_type == 'account_info' %}
+            {% elif message.message_type == 'bank_info' %}
                 <p class="text-sm italic text-gray-600">계좌정보를 보냈습니다.</p>
             {% elif message.message_type == 'address_info' %}
                 <p class="text-sm italic text-gray-600">배송정보를 보냈습니다.</p>

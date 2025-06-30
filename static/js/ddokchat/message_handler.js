@@ -5,7 +5,8 @@ import {
   scrollToBottomAfterImageLoad, 
   registerObserver, 
   updateSensitiveInfoCards, 
-  updateUIAfterTradeComplete 
+  updateUIAfterTradeComplete,
+  showToast  // ✅ showToast import 추가
 } from './ui_manager.js';
 import { handleReceivedMessage } from './auto_detect.js';
 
@@ -162,22 +163,22 @@ export function handleImageMessage(data) {
   }
 }
 
-export function handleAccountMessage(data) {
-  const accountInfo = data.account_info;
+export function handleBankMessage(data) {
+  const bankInfo = data.bank_info;
   const isMine = data.sender === currentUser;
   
   const messageContainer = document.createElement("div");
   messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} message-enter mb-3`;
 
   let buttonsHtml = '';
-  if (!isMine && !accountInfo.is_deleted) {
+  if (!isMine && !bankInfo.is_deleted) {
     buttonsHtml = `
       <div class="flex space-x-2 mt-3">
-        <button onclick="copyAccountNumber('${accountInfo.account_number}')" 
+        <button onclick="copyBankNumber('${bankInfo.bank_number}')" 
                 class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
           계좌번호 복사
         </button>
-        <button onclick="checkFraudHistory('${accountInfo.bank_code || ''}', '${accountInfo.account_number}', '${accountInfo.account_holder}')" 
+        <button onclick="checkFraudHistory('${bankInfo.bank_code || ''}', '${bankInfo.bank_number}', '${bankInfo.bank_holder}')" 
                 class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
           신고이력 조회
         </button>
@@ -186,7 +187,7 @@ export function handleAccountMessage(data) {
   }
 
   let contentHtml = '';
-  if (accountInfo.is_deleted) {
+  if (bankInfo.is_deleted) {
     contentHtml = `
       <div class="bg-${isMine ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
         <p class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'} font-medium">계좌정보가 삭제되었습니다</p>
@@ -198,15 +199,15 @@ export function handleAccountMessage(data) {
       <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-${isMine ? '4' : '3'} space-y-2 info-card ${isMine ? 'min-w-[220px]' : ''}">
         <div class="flex justify-between">
           <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">은행</span>
-          <span class="text-sm">${accountInfo.bank_name}</span>
+          <span class="text-sm">${bankInfo.bank_name}</span>
         </div>
         <div class="flex justify-between">
           <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
-          <span class="text-sm">${accountInfo.account_number}</span>
+          <span class="text-sm">${bankInfo.bank_number}</span>
         </div>
         <div class="flex justify-between">
           <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
-          <span class="text-sm">${accountInfo.account_holder}</span>
+          <span class="text-sm">${bankInfo.bank_holder}</span>
         </div>
       </div>
       ${buttonsHtml}
@@ -408,6 +409,49 @@ export function handleTradeCompleted(data) {
  updateUIAfterTradeComplete(true);
 }
 
+// 거래 상태 업데이트 핸들러 (게시글에서 거래완료 시)
+export function handleTradeStatusUpdate(data) {
+  if (data.post_marked_sold && data.seller_completed) {
+    // 게시글에서 거래완료가 되어 채팅방의 seller_completed가 True가 된 경우
+    showToast('게시글이 거래완료 처리되었습니다.', 'info');
+    
+    // UI 업데이트
+    updateTradeStatusUI();
+    
+    // 1-2초 후 페이지 새로고침으로 최신 상태 반영
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  }
+}
+
+// 거래 상태 UI 업데이트 함수
+function updateTradeStatusUI() {
+  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+  
+  if (tradeStatusContainer) {
+    // 데스크탑/모바일 모두 업데이트
+    const desktopStatus = tradeStatusContainer.querySelector('.desktop-only .status-text');
+    const mobileStatus = tradeStatusContainer.querySelector('.mobile-only .status-text');
+    
+    if (desktopStatus) {
+      desktopStatus.className = 'status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap completed bg-green-100 text-green-800';
+      desktopStatus.textContent = '거래 완료됨';
+    }
+    
+    if (mobileStatus) {
+      mobileStatus.className = 'status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap completed bg-green-100 text-green-800';
+      mobileStatus.textContent = '거래 완료됨';
+    }
+    
+    // 거래완료 버튼들 숨기기
+    const completeButtons = document.querySelectorAll('#completeTradeBtn, #mobileCompleteTradeBtn');
+    completeButtons.forEach(btn => {
+      if (btn) btn.style.display = 'none';
+    });
+  }
+}
+
 export function handleTradeCancelNotification(data) {
   const action = data.action;
   const currentUser = window.currentUser || '';
@@ -453,8 +497,11 @@ function updateUIAfterTradeCancel() {
 
   if (messageInputArea) {
     messageInputArea.innerHTML = `
-      <div class="text-center text-sm text-gray-500 py-4">
-        ❌ 거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
+      <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
       </div>
     `;
   }

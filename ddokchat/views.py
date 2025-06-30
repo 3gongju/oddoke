@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import ChatRoom, Message, TextMessage, ImageMessage, AccountInfoMessage, AddressMessage, TradeReport
+from .models import ChatRoom, Message, TextMessage, ImageMessage, BankInfoMessage, AddressMessage, TradeReport
 from accounts.models import MannerReview, User
 from accounts.forms import MannerReviewForm
 from .forms import TradeReportForm
@@ -76,7 +76,7 @@ def chat_room(request, room_code):
     ).prefetch_related(
         'text_content',
         'image_content',
-        'account_content__bank_profile',
+        'bank_content__bank_profile',
         'address_content__address_profile'
     ).order_by('timestamp')
     
@@ -530,7 +530,7 @@ def delete_sensitive_info(room):
     now = timezone.now()
     
     # 계좌 정보 삭제 처리
-    AccountInfoMessage.objects.filter(
+    BankInfoMessage.objects.filter(
         message__room=room,
         is_deleted=False
     ).update(
@@ -550,7 +550,7 @@ def delete_sensitive_info(room):
 # ✅ 수정된 계좌 정보 메시지 전송 함수 (읽음 처리 개선)
 @require_POST
 @login_required
-def send_account_info(request, room_code):
+def send_bank_info(request, room_code):
     """계좌정보 전송"""
     try:
         room = get_object_or_404(ChatRoom, room_code=room_code)
@@ -576,7 +576,7 @@ def send_account_info(request, room_code):
         # BankProfile에서 계좌정보 확인
         bank_profile = sender.get_bank_profile()
         
-        if not bank_profile or not all([bank_profile.bank_name, bank_profile.account_number, bank_profile.account_holder]):
+        if not bank_profile or not all([bank_profile.bank_name, bank_profile.bank_number, bank_profile.bank_holder]):
             return JsonResponse({
                 'success': False,
                 'redirect_to_mypage': True,
@@ -588,32 +588,32 @@ def send_account_info(request, room_code):
             message = Message.objects.create(
                 room=room,
                 sender=sender,
-                receiver=receiver,  # ✅ receiver 설정
-                message_type='account_info'
+                receiver=receiver,
+                message_type='bank_info'
             )
             
-            AccountInfoMessage.objects.create(
+            BankInfoMessage.objects.create( 
                 message=message,
                 bank_profile=bank_profile,
             )
         
         # 클라이언트로 전송할 계좌정보
-        account_info = {
+        bank_info = {
             'bank_name': bank_profile.bank_name,
             'bank_code': bank_profile.bank_code or '',
-            'account_number': bank_profile.account_number,
-            'account_holder': bank_profile.account_holder,
+            'bank_number': bank_profile.bank_number,
+            'bank_holder': bank_profile.bank_holder,
             'is_deleted': False,
         }
         
         return JsonResponse({
             'success': True,
-            'account_info': account_info,
+            'bank_info': bank_info,
             'message_id': message.id
         })
         
     except Exception as e:
-        print(f"send_account_info 에러: {e}")
+        print(f"send_bank_info 에러: {e}")  # 함수명 업데이트
         return JsonResponse({
             'success': False,
             'error': f'서버 오류가 발생했습니다: {str(e)}'
@@ -701,26 +701,26 @@ def send_address_info(request, room_code):
 
 @require_POST
 @login_required
-def check_account_fraud(request):
-    """계좌 사기 이력 조회 - 예금주명 제거 버전"""
+def check_bank_fraud(request):
+    """계좌 사기 이력 조회"""
     try:
         data = json.loads(request.body)
-        bank_code = data.get('bank_code', '').strip()  # 빈 값 허용
-        account_number = data.get('account_number', '').strip()
-        account_holder = data.get('account_holder', '').strip()  # 빈 값 허용
+        bank_code = data.get('bank_code', '').strip()
+        bank_number = data.get('bank_number', '').strip()
+        bank_holder = data.get('bank_holder', '').strip()
         
         # ✅ 입력값 검증: 계좌번호만 필수
-        if not account_number:
+        if not bank_number:
             return JsonResponse({
                 'success': False,
                 'error': '계좌번호를 입력해주세요.'
             })
         
         # ✅ 계좌번호 정규화 (하이픈, 공백 제거)
-        clean_account_number = account_number.replace('-', '').replace(' ', '')
+        clean_bank_number = bank_number.replace('-', '').replace(' ', '')
         
         # ✅ 계좌번호 길이 검증 (최소 10자리)
-        if len(clean_account_number) < 10:
+        if len(clean_bank_number) < 10:
             return JsonResponse({
                 'success': False,
                 'error': '올바른 계좌번호를 입력해주세요. (최소 10자리)'
@@ -729,10 +729,10 @@ def check_account_fraud(request):
         # 더치트 서비스 사용
         try:
             dutcheat_service = get_dutcheat_service()
-            result = dutcheat_service.check_account_fraud_history(
-                bank_code=bank_code if bank_code else None,  # 빈 값이면 None 전달
-                account_number=clean_account_number,  # ✅ 정규화된 계좌번호 사용
-                account_holder=account_holder if account_holder else None  # ✅ 빈 값이면 None 전달
+            result = dutcheat_service.check_bank_fraud_history(  # 외부 API는 그대로
+                bank_code=bank_code if bank_code else None,
+                bank_number=clean_bank_number,
+                bank_holder=bank_holder if bank_holder else None
             )
             
             if result.get('success'):
@@ -744,12 +744,10 @@ def check_account_fraud(request):
                     'last_updated': result.get('last_updated', '')
                 })
             else:
-                # 더치트 서비스 실패 시 더미 데이터로 폴백
-                return _get_dummy_fraud_data(clean_account_number)
+                return _get_dummy_fraud_data(clean_bank_number)
                 
         except Exception as e:
-            # 서비스 오류 시 더미 데이터로 폴백
-            return _get_dummy_fraud_data(clean_account_number)
+            return _get_dummy_fraud_data(clean_bank_number)
         
     except json.JSONDecodeError:
         return JsonResponse({
@@ -762,12 +760,12 @@ def check_account_fraud(request):
             'error': f'조회 중 오류가 발생했습니다: {str(e)}'
         })
 
-def _get_dummy_fraud_data(account_number):
+def _get_dummy_fraud_data(bank_number):
     """더미 사기 신고 데이터 반환 (폴백용)"""
     dummy_reports = []
     
     # 테스트용: 특정 계좌번호에 대해서만 신고 내역 있는 것으로 처리
-    if '1111' in account_number:
+    if '1111' in bank_number:
         dummy_reports = [
             {
                 'report_type': '입금 후 연락두절',
@@ -795,14 +793,14 @@ def _get_dummy_fraud_data(account_number):
 
 @require_POST
 @login_required
-def copy_account_log(request):
+def copy_bank_log(request):
     """계좌번호 복사 로그 기록"""
     try:
         data = json.loads(request.body)
-        account_number = data.get('account_number')
+        bank_number = data.get('bank_number')
         
         # 로그 기록 (실제로는 데이터베이스에 저장)
-        print(f"사용자 {request.user.username}이 계좌번호 {account_number}를 복사했습니다.")
+        print(f"사용자 {request.user.username}이 계좌번호 {bank_number}를 복사했습니다.")
         
         return JsonResponse({
             'success': True
@@ -1395,7 +1393,8 @@ def send_trade_cancel_notification(room, action_type):
     except Exception as e:
         print(f"WebSocket 알림 전송 실패: {e}")
 
-# ✅ 기존 complete_trade 함수 수정 (취소된 거래는 완료 불가)
+# ddokchat/views.py의 complete_trade 함수 수정
+
 @require_POST
 @login_required
 def complete_trade(request, room_code):
@@ -1417,13 +1416,59 @@ def complete_trade(request, room_code):
         return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
 
     user_role = room.get_user_role(current_user)
+    post_updated = False  # 🔥 게시글 업데이트 여부 추적
 
-    if user_role == 'buyer':
-        room.buyer_completed = True
-    elif user_role == 'seller':
-        room.seller_completed = True
-
-    room.save()
+    # 🔥 강화된 트랜잭션으로 채팅방과 게시글 동시 업데이트
+    try:
+        with transaction.atomic():
+            # 채팅방 완료 상태 업데이트
+            if user_role == 'buyer':
+                room.buyer_completed = True
+                print(f"✅ 구매자 거래완료: Room#{room.room_code}")
+            elif user_role == 'seller':
+                room.seller_completed = True
+                print(f"✅ 판매자 거래완료: Room#{room.room_code}")
+                
+                # 🔥 판매자가 완료할 때는 게시글도 함께 완료 처리 (강화된 로직)
+                try:
+                    post = room.post
+                    if post:
+                        print(f"🔍 게시글 정보: Post#{post.id}, is_sold={post.is_sold}")
+                        
+                        if not post.is_sold:
+                            # 게시글 업데이트 전 상태 로깅
+                            print(f"📝 게시글 업데이트 시작: Post#{post.id}")
+                            post.is_sold = True
+                            post.save()
+                            post_updated = True
+                            print(f"✅ 게시글 거래완료 동기화 성공: Post#{post.id}")
+                            
+                            # 🔥 업데이트 후 다시 확인
+                            post.refresh_from_db()
+                            print(f"🔍 업데이트 후 확인: Post#{post.id}, is_sold={post.is_sold}")
+                        else:
+                            print(f"ℹ️ 게시글은 이미 거래완료 상태입니다: Post#{post.id}")
+                    else:
+                        print(f"❌ 연결된 게시글을 찾을 수 없습니다: Room#{room.room_code}")
+                        
+                except Exception as post_error:
+                    print(f"❌ 게시글 업데이트 실패: {post_error}")
+                    print(f"❌ 에러 타입: {type(post_error)}")
+                    import traceback
+                    print(f"❌ 전체 스택트레이스: {traceback.format_exc()}")
+                    # 🔥 게시글 업데이트 실패 시 전체 트랜잭션 롤백
+                    raise post_error
+            
+            # 채팅방 저장
+            room.save()
+            print(f"✅ 채팅방 저장 완료: Room#{room.room_code}")
+            
+    except Exception as e:
+        print(f"❌ 트랜잭션 전체 실패: {e}")
+        return JsonResponse({
+            'success': False, 
+            'error': f'거래완료 처리 중 오류가 발생했습니다: {str(e)}'
+        }, status=500)
 
     is_fully_completed = room.is_fully_completed
 
@@ -1445,5 +1490,6 @@ def complete_trade(request, room_code):
         'success': True,
         'is_fully_completed': is_fully_completed,
         'user_role': user_role,
+        'post_updated': post_updated,  # 🔥 게시글 업데이트 여부 전달
         'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
     })
