@@ -249,6 +249,10 @@ def goto_content(request, notification_id):
         elif hasattr(content_object, 'id'):
             post_url = get_post_url(content_object)
             return redirect(post_url)
+
+        # 10. 거래완료 요청 알림 → 채팅방으로 이동
+        elif notification_type == 'trade_complete_request':
+            return redirect('ddokchat:my_chatrooms')
         
         else:
             messages.warning(request, '해당 페이지로 이동할 수 없습니다.')
