@@ -444,24 +444,28 @@
     }
 
     // 토스트 메시지 표시
+// ddoksang_detail.js에서 기존 showToast 함수를 수정하여 사용
+// (ddoksang_toast.js 대신 이 방법 사용)
+
     function showToast(message, type = 'info') {
-        // 기존 토스트 제거
         const existing = document.querySelector('.toast-message');
         if (existing) existing.remove();
 
         const toast = document.createElement('div');
-        toast.className = 'toast-message fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 transform';
+        
+        // 하단 오른쪽 위치로 설정
+        toast.className = 'toast-message fixed bottom-5 right-5 z-[9999] px-4 py-3 rounded-lg shadow-lg text-white transition-all duration-300 transform';
 
         const colors = {
             success: 'bg-green-500',
             error: 'bg-red-500',
-            warning: 'bg-gray-900',
+            warning: 'bg-yellow-500',
             info: 'bg-blue-500'
         };
         toast.classList.add(colors[type] || colors.info);
 
         toast.textContent = message;
-        toast.style.transform = 'translateX(100%)';
+        toast.style.transform = 'translateX(100%)'; // 오른쪽에서 슬라이드 인
 
         document.body.appendChild(toast);
 
