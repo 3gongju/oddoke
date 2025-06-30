@@ -36,6 +36,9 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 인트로 로고 전용 CSS 추가 -->
+    <link rel="stylesheet" href="{% static 'css/intro/intro_logo.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -255,11 +258,19 @@
                     
                     {% if slide.type == 'welcome' %}
                     <!-- 첫 번째 슬라이드 - 웰컴 -->
-                    <h1 class="text-4xl md:text-6xl font-bold mb-4">{{ slide.title }}</h1>
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">{{ slide.title }}</h1>
+
                     <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-                        {{ slide.subtitle }}<br>
+                        {{ slide.subtitle }}<br> 
                         {{ slide.description }}
                     </p>
+
+                    <!--로고 이미지 추가 -->
+                    <div class="logo-container mb-6">
+                        <img src="{% static 'image/ddok_logo_filled.png' %}" 
+                            alt="어덕해 로고" 
+                            class="intro-logo mx-auto w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 object-contain drop-shadow-2xl">
+                    </div>
                     
                     {% elif slide.type == 'cta' %}
                     <!-- 마지막 슬라이드 - CTA -->

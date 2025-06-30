@@ -122,8 +122,8 @@ def intro_view(request):
     slide_contents = [
         {
             'title': '어덕해',
-            'subtitle': '어떻게? 어떡해!',
-            'description': '덕질 종합 플랫폼',
+            'subtitle': '어디서든, 어떻게든 덕질해!',
+            'description': '덕질 올인원 종합 플랫폼',
             'type': 'welcome',
             'image': DEFAULT_SLIDE_IMAGE
         },
