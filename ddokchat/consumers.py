@@ -352,13 +352,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'reader': event['reader'],
         }))
 
-    async def trade_completed_notification(self, event):
-        """거래 완료 알림"""
-        await self.send(text_data=json.dumps({
-            'type': 'trade_completed',
-            'room_code': event['room_code'],
-        }))
-
     # 유틸리티 메서드들
     async def send_error(self, message):
         """에러 메시지 전송"""
@@ -369,6 +362,36 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }))
         except Exception:
             pass
+    
+    async def trade_progress_notification(self, event):
+        """거래 진행 알림 (한쪽만 완료)"""
+        await self.send(text_data=json.dumps({
+            'type': 'trade_progress_notification',
+            'room_code': event['room_code'],
+            'completed_by': event['completed_by'],
+            'completed_user': event['completed_user'],
+            'other_user': event['other_user'],
+            'is_fully_completed': event['is_fully_completed'],
+        }))
+
+    async def trade_cancel_notification(self, event):
+        """거래 취소 알림"""
+        await self.send(text_data=json.dumps({
+            'type': 'trade_cancel_notification',
+            'room_code': event['room_code'],
+            'action': event['action'],
+            'timestamp': event['timestamp'],
+        }))
+
+    # 기존 trade_completed_notification은 그대로 유지
+    async def trade_completed_notification(self, event):
+        """거래 완료 알림 (양쪽 모두 완료)"""
+        await self.send(text_data=json.dumps({
+            'type': 'trade_completed',
+            'room_code': event['room_code'],
+            'is_fully_completed': event.get('is_fully_completed', True),
+            'user_role': event.get('user_role'),
+        }))
 
     @database_sync_to_async
     def check_room_permission(self):

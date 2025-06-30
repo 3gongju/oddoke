@@ -20,6 +20,7 @@ class Notification(models.Model):
         ('cafe_rejected', '생일카페 반려'),
         ('fandom_verified', '팬덤 인증 승인'),
         ('fandom_rejected', '팬덤 인증 반려'),
+        ('trade_complete_request', '거래완료 요청'),
     ]
     
     # ✅ 통합 읽음 처리 대상 알림 타입
@@ -43,7 +44,7 @@ class Notification(models.Model):
     
     # 알림 유형
     notification_type = models.CharField(
-        max_length=20, 
+        max_length=25, 
         choices=NOTIFICATION_TYPES,
         verbose_name='알림 유형'
     )
@@ -335,6 +336,10 @@ class Notification(models.Model):
             }
             return split_messages.get(notification_type, f'{actor_name}님의 분철 알림')
         
+        if notification_type == 'trade_complete_request':
+            title = content_object.title[:20] + "..." if len(content_object.title) > 20 else content_object.title
+            return f'{actor_name}님이 \'{title}\' 거래완료를 요청했습니다'
+            
         # 기타 알림들
         messages = {
             'chat': f'{actor_name}님이 메시지를 보냈습니다',  # 이제 사용되지 않음 (별도 로직)
