@@ -137,8 +137,10 @@ body > div:has(footer),
 }
 </style>
 
+<!-- chat_room.html의 JavaScript 부분 수정 -->
+
 <script>
-  // 전역 변수 설정 - 
+  // 전역 변수 설정
   window.roomCode = "{{ room.room_code }}";
   window.currentUser = "{{ current_user.username }}";
   window.currentUserId = "{{ current_user.id }}";
@@ -146,7 +148,13 @@ body > div:has(footer),
   window.hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
   window.isFullyCompleted = {{ room.is_fully_completed|yesno:"true,false" }};
   window.roomBuyer = "{{ room.buyer.username }}";
+  window.roomSeller = "{{ room.seller.username }}";
   window.csrfToken = "{{ csrf_token }}";
+  
+  // 🔥 WebSocket 상태를 확인하는 헬퍼 함수
+  function isWebSocketReady() {
+    return window.sendWebSocketMessage && typeof window.sendWebSocketMessage === 'function';
+  }
   
   // 🔥 신고 모달 연결
   document.addEventListener('DOMContentLoaded', function() {
@@ -178,7 +186,6 @@ body > div:has(footer),
     }
   });
 
-  // 채팅방 위치 추적 관련 JavaScript
   // ✅ 1. 현재 채팅방 위치 업데이트 함수
   function updateCurrentChatroom(roomCode) {
       fetch('/ddokchat/api/update-current-chatroom/', {
@@ -192,11 +199,9 @@ body > div:has(footer),
           })
       }).then(response => response.json())
       .then(data => {
-          if (data.success) {
-              console.log('✅ 현재 채팅방 위치 업데이트:', roomCode);
-          }
+          // 성공 시 아무것도 하지 않음
       }).catch(error => {
-          console.error('❌ 채팅방 위치 업데이트 실패:', error);
+          console.error('채팅방 위치 업데이트 실패:', error);
       });
   }
 
@@ -210,48 +215,41 @@ body > div:has(footer),
           }
       }).then(response => response.json())
       .then(data => {
-          if (data.success) {
-              console.log('🗑️ 현재 채팅방 위치 해제됨');
-          }
+          // 성공 시 아무것도 하지 않음
       }).catch(error => {
-          console.error('❌ 채팅방 위치 해제 실패:', error);
+          console.error('채팅방 위치 해제 실패:', error);
       });
   }
 
   // ✅ 3. 안읽은 메시지 읽음 처리 함수 (탭 활성화 시)
   function markMessagesAsReadOnFocus() {
-      if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-          chatSocket.send(JSON.stringify({
+      if (isWebSocketReady()) {
+          window.sendWebSocketMessage({
               'type': 'read_all'
-          }));
-          console.log('📖 탭 활성화로 인한 메시지 읽음 처리');
+          });
       }
   }
 
   // ✅ 4. 이벤트 리스너 등록
   document.addEventListener('DOMContentLoaded', function() {
-      const roomCode = '{{ room.room_code }}';  // Django 템플릿 변수
+      const roomCode = '{{ room.room_code }}';
       
       // 페이지 로드 시 현재 위치 설정
       updateCurrentChatroom(roomCode);
       
       // 탭/창 활성화 이벤트
       window.addEventListener('focus', function() {
-          console.log('🎯 탭 활성화됨 - 채팅방:', roomCode);
           updateCurrentChatroom(roomCode);
           markMessagesAsReadOnFocus();
       });
       
       // 탭/창 비활성화 이벤트
       window.addEventListener('blur', function() {
-          console.log('😴 탭 비활성화됨');
           clearCurrentChatroom();
       });
       
       // 페이지 이탈 시 위치 해제
       window.addEventListener('beforeunload', function() {
-          console.log('👋 페이지 이탈 - 위치 해제');
-          // 동기 방식으로 빠르게 전송
           navigator.sendBeacon('/ddokchat/api/clear-current-chatroom/', 
               new Blob([JSON.stringify({})], {type: 'application/json'})
           );
@@ -260,24 +258,13 @@ body > div:has(footer),
       // 페이지 숨김/표시 이벤트 (모바일 대응)
       document.addEventListener('visibilitychange', function() {
           if (document.hidden) {
-              console.log('📱 페이지 숨김 (백그라운드)');
               clearCurrentChatroom();
           } else {
-              console.log('📱 페이지 표시 (포그라운드)');
               updateCurrentChatroom(roomCode);
               markMessagesAsReadOnFocus();
           }
       });
   });
-
-  // ✅ 5. WebSocket 연결 해제 시에도 위치 정리
-  // 기존 WebSocket close 이벤트에 추가
-  if (typeof chatSocket !== 'undefined') {
-      chatSocket.addEventListener('close', function(e) {
-          console.log('🔌 WebSocket 연결 해제 - 위치 해제');
-          clearCurrentChatroom();
-      });
-  }
 </script>
 
 <!-- 🔥 신고 모달 스크립트 로드 -->

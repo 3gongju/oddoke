@@ -2,8 +2,12 @@
 
 <div id="messageInputArea" class="bg-gray-50 border-t border-gray-300 px-4 py-3">
   {% if room.is_fully_completed %}
-    <div class="text-center text-sm text-gray-500 py-4">
-      ✅ 거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
+    <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
+      <!-- Heroicons Check Circle Icon -->
+      <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+      </svg>
+      거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
     </div>
   {% else %}
   <div class="flex items-center gap-3">

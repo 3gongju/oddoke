@@ -29,13 +29,20 @@ class ChatRoom(models.Model):
     
     room_code = models.CharField(max_length=12, unique=True, blank=True, db_index=True)
     
+    is_cancelled = models.BooleanField(default=False, verbose_name='거래 취소 여부')
+    buyer_cancel_requested = models.BooleanField(default=False, verbose_name='구매자 취소 요청')
+    seller_cancel_requested = models.BooleanField(default=False, verbose_name='판매자 취소 요청')
+    cancel_requested_at = models.DateTimeField(null=True, blank=True, verbose_name='최초 취소 요청 시간')
+    cancelled_at = models.DateTimeField(null=True, blank=True, verbose_name='실제 취소 완료 시간')
+    
     class Meta:
         unique_together = ('content_type', 'object_id', 'buyer')
         indexes = [
             models.Index(fields=['buyer', 'created_at']),
             models.Index(fields=['seller', 'created_at']),
             models.Index(fields=['buyer_completed', 'seller_completed']),
-            models.Index(fields=['room_code']),  # ✅ room_code 인덱스만 추가
+            models.Index(fields=['room_code']),
+            models.Index(fields=['is_cancelled', 'cancel_requested_at']),
         ]
 
     def save(self, *args, **kwargs):
@@ -161,6 +168,130 @@ class ChatRoom(models.Model):
         
     def __str__(self):
         return f"Post#{self.object_id} | {self.buyer.username} ↔ {self.seller.username}"
+
+    @property
+    def cancel_status(self):
+        """현재 취소 상태 반환"""
+        if self.is_cancelled:
+            return 'cancelled'
+        elif self.buyer_cancel_requested and self.seller_cancel_requested:
+            return 'both_agreed'  # 자동 취소 대기 (실제로는 즉시 처리되어야 함)
+        elif self.buyer_cancel_requested or self.seller_cancel_requested:
+            return 'pending'
+        else:
+            return 'none'
+    
+    def get_cancel_requester(self):
+        """취소 요청자 반환"""
+        if self.buyer_cancel_requested and not self.seller_cancel_requested:
+            return self.buyer
+        elif self.seller_cancel_requested and not self.buyer_cancel_requested:
+            return self.seller
+        elif self.buyer_cancel_requested and self.seller_cancel_requested:
+            return None  # 양쪽 다 요청
+        else:
+            return None  # 아무도 요청 안함
+    
+    def can_user_request_cancel(self, user):
+        """해당 사용자가 취소 요청할 수 있는지 확인"""
+        if not self.is_participant(user) or self.is_cancelled or self.is_fully_completed:
+            return False
+        
+        # 이미 해당 사용자가 취소 요청했으면 불가
+        if user == self.buyer and self.buyer_cancel_requested:
+            return False
+        if user == self.seller and self.seller_cancel_requested:
+            return False
+        
+        return True
+    
+    def can_user_respond_to_cancel(self, user):
+        """해당 사용자가 취소 요청에 응답할 수 있는지 확인"""
+        if not self.is_participant(user) or self.is_cancelled or self.is_fully_completed:
+            return False
+        
+        # 상대방이 취소 요청했고, 내가 아직 응답 안했으면 가능
+        if user == self.buyer:
+            return self.seller_cancel_requested and not self.buyer_cancel_requested
+        elif user == self.seller:
+            return self.buyer_cancel_requested and not self.seller_cancel_requested
+        
+        return False
+    
+    def get_trade_status_display(self, user):
+        """사용자별 거래 상태 텍스트 반환"""
+        if self.is_cancelled:
+            return {'text': '거래 취소됨', 'class': 'cancelled'}
+        elif self.is_fully_completed:
+            return {'text': '거래 완료됨', 'class': 'completed'}
+        elif self.cancel_status == 'pending':
+            requester = self.get_cancel_requester()
+            if requester == user:
+                return {'text': '취소 요청 중', 'class': 'pending'}
+            else:
+                return {'text': '취소 요청 받음', 'class': 'pending'}
+        elif self.buyer_completed and not self.seller_completed:
+            if user == self.seller:
+                return {'text': '거래완료 버튼을 눌러주세요', 'class': 'pending'}
+            else:
+                return {'text': '판매자의 완료를 기다리는 중', 'class': 'waiting'}
+        elif self.seller_completed and not self.buyer_completed:
+            if user == self.buyer:
+                return {'text': '거래완료 버튼을 눌러주세요', 'class': 'pending'}
+            else:
+                return {'text': '구매자의 완료를 기다리는 중', 'class': 'waiting'}
+        else:
+            return {'text': '거래 진행 중', 'class': 'active'}
+    
+    def get_available_actions(self, user):
+        """사용자별 사용 가능한 액션 목록 반환"""
+        actions = []
+        
+        if self.is_cancelled or self.is_fully_completed:
+            return actions  # 완료되거나 취소된 거래는 액션 없음
+        
+        # 거래 완료 액션
+        if not self.get_completion_status_for_user(user):
+            if not (self.cancel_status == 'pending'):  # 취소 요청 중이 아닐 때만
+                actions.append({
+                    'type': 'complete',
+                    'text': '거래 완료',
+                    'class': 'complete-btn',
+                    'primary': True
+                })
+        
+        # 취소 관련 액션
+        if self.can_user_request_cancel(user):
+            actions.append({
+                'type': 'request_cancel',
+                'text': '거래 취소 요청',
+                'class': 'cancel-request-btn',
+                'primary': False
+            })
+        elif self.can_user_respond_to_cancel(user):
+            actions.extend([
+                {
+                    'type': 'accept_cancel',
+                    'text': '취소 동의',
+                    'class': 'cancel-accept-btn',
+                    'primary': False
+                },
+                {
+                    'type': 'reject_cancel',
+                    'text': '취소 거절',
+                    'class': 'cancel-reject-btn',
+                    'primary': False
+                }
+            ])
+        elif self.cancel_status == 'pending' and self.get_cancel_requester() == user:
+            actions.append({
+                'type': 'withdraw_cancel',
+                'text': '취소 요청 철회',
+                'class': 'cancel-withdraw-btn',
+                'primary': False
+            })
+        
+        return actions
 
 
 class Message(models.Model):

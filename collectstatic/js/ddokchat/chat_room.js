@@ -1,6 +1,7 @@
 // static/js/ddokchat/chat_room.js - 메인 초기화 파일
 
 import { setupWebSocket, registerMessageHandler, sendMessage } from './websocket_manager.js';
+import { setupTradeCancel } from './trade_cancel.js';
 import { 
   setupMessageHandlers, 
   handleTextMessage, 
@@ -10,7 +11,8 @@ import {
   handleReadUpdate,
   handleReadMessageSyncFinish,
   handleEnterChatroomFinish,
-  handleTradeCompleted
+  handleTradeCompleted,
+  handleTradeCancelNotification
 } from './message_handler.js';
 import { 
   setupUIManager, 
@@ -37,6 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupAutoDetect();
   setupTradeReport();
   
+  // ✅ 거래 취소 모듈을 먼저 초기화
+  setupTradeCancel();
+  
   // WebSocket 메시지 핸들러 등록
   registerMessageHandler('showToast', showToast);
   registerMessageHandler('chat_message', handleTextMessage);
@@ -47,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   registerMessageHandler('read_message_sync_finish', handleReadMessageSyncFinish);
   registerMessageHandler('enter_chatroom_finish', handleEnterChatroomFinish);
   registerMessageHandler('trade_completed', handleTradeCompleted);
+  registerMessageHandler('trade_cancel_notification', handleTradeCancelNotification);
   
   // WebSocket 연결 - roomCode 사용
   setupWebSocket(roomCode);
@@ -64,6 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(() => {
     setupReviewModal();
   }, 500);
+  
+  // ✅ 전역 함수들이 제대로 노출되었는지 확인
+  console.log('🔧 전역 함수 확인:', {
+    requestTradeCancel: typeof window.requestTradeCancel,
+    respondToCancel: typeof window.respondToCancel,
+    withdrawCancelRequest: typeof window.withdrawCancelRequest,
+    closeHeaderMenu: typeof window.closeHeaderMenu
+  });
 });
 
 function setupEventListeners() {

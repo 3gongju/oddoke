@@ -97,15 +97,54 @@ export function setupPlusMenu() {
 // 거래 완료 모달 설정
 export function setupTradeCompleteModal() {
   const completeTradeBtn = document.getElementById('completeTradeBtn');
+  const mobileCompleteTradeBtn = document.getElementById('mobileCompleteTradeBtn'); // 모바일 버튼
   const confirmModal = document.getElementById('confirmModal');
   const cancelBtn = document.getElementById('cancelBtn');
   const confirmBtn = document.getElementById('confirmBtn');
+  const buyerMessage = document.getElementById('buyerMessage');
+  const sellerMessage = document.getElementById('sellerMessage');
 
-  if (completeTradeBtn) {
-    completeTradeBtn.addEventListener('click', function() {
-      if (confirmModal) {
-        confirmModal.classList.remove('hidden');
+  // 사용자 역할 확인 함수
+  function getUserRole() {
+    const currentUser = window.currentUser;
+    const roomBuyer = window.roomBuyer;
+    return currentUser === roomBuyer ? 'buyer' : 'seller';
+  }
+
+  // 모달 열기 함수
+  function openTradeCompleteModal() {
+    if (confirmModal && buyerMessage && sellerMessage) {
+      const userRole = getUserRole();
+      
+      // 역할에 따라 적절한 메시지 표시
+      if (userRole === 'buyer') {
+        buyerMessage.classList.remove('hidden');
+        sellerMessage.classList.add('hidden');
+      } else {
+        sellerMessage.classList.remove('hidden');
+        buyerMessage.classList.add('hidden');
       }
+      
+      confirmModal.classList.remove('hidden');
+    }
+  }
+
+  // 데스크탑 거래완료 버튼 (기존)
+  if (completeTradeBtn) {
+    completeTradeBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openTradeCompleteModal();
+    });
+  }
+
+  // 모바일 거래완료 버튼 (새로 추가)
+  if (mobileCompleteTradeBtn) {
+    mobileCompleteTradeBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openTradeCompleteModal();
+      // 모바일 드롭다운 닫기
+      const dropdown = document.getElementById('headerDropdownMenu');
+      if (dropdown) dropdown.classList.add('hidden');
     });
   }
 
@@ -149,6 +188,18 @@ export function setupTradeCompleteModal() {
           updateUIAfterTradeComplete(data.is_fully_completed);
           if (confirmModal) {
             confirmModal.classList.add('hidden');
+          }
+          
+          // 역할별 성공 메시지
+          const userRole = getUserRole();
+          if (data.is_fully_completed) {
+            showToast('거래가 완료되었습니다!', 'success');
+          } else {
+            if (userRole === 'buyer') {
+              showToast('거래완료 요청을 보냈습니다. 판매자의 확인을 기다려주세요.', 'success');
+            } else {
+              showToast('거래완료 처리되었습니다. 구매자의 확인을 기다려주세요.', 'success');
+            }
           }
         } else {
           throw new Error(data.error || "처리 중 오류가 발생했습니다.");

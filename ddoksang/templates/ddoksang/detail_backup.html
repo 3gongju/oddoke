@@ -1,0 +1,165 @@
+{% extends "ddoksang/base/ddoksang_base.html" %}
+{% load static %}
+{% load filters %}
+{% load benefits_filters %}
+
+{% block title %}{{ cafe.cafe_name }} - {{ cafe.artist.display_name }}{% endblock %}
+
+<!-- Viewport 메타 태그 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ddoksang_detail.css' %}">
+{% endblock %}
+
+{% block body %}
+
+
+
+<!-- 네비게이션 바는 이 wrapper 밖에 있어야 함 -->
+<div class="detail-content-wrapper">
+  <div class="bg-gradient-to-br from-white">
+    {% include "ddoksang/components/detail/_status_banner.html" %}
+    
+    <!-- 상단 여백 추가 -->
+    <div class="pt-12"></div>
+    
+    {% include "ddoksang/components/detail/_image_header.html" %}
+
+    <div id="page-identifier" data-page="detail" style="display: none;"></div>
+
+    <!-- 이미지 모달 (공통 사용) -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center">
+      <div class="relative max-w-7xl max-h-full mx-4">
+        <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-70 transition-colors z-10">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+
+        <img id="modalImage" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-lg">
+
+        <div id="modalImageInfo" class="absolute bottom-4 left-4 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+          <p id="modalImageTitle" class="font-medium"></p>
+          <p id="modalImageCaption" class="text-sm opacity-90 mt-1"></p>
+        </div>
+
+        {% if cafe.get_all_images|length > 1 %}
+          <button onclick="prevModalImage()" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <button onclick="nextModalImage()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+          <div class="absolute top-4 left-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg backdrop-blur-sm">
+            <span id="modalImageCounter">1</span> / {{ cafe.get_all_images|length }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 메인 컨테이너 구조 -->
+    <div class="detail-page-container mx-auto px-4 py-6" style="max-width: 1100px; margin: 0 auto;">
+      <div class="detail-main-grid grid grid-cols-1 lg:grid-cols-5 gap-6" style="max-width: 100%; margin: 0 auto;">
+        <!-- 왼쪽 영역 (3칸) -->
+        <div class="lg:col-span-3 space-y-4">
+          {% include "ddoksang/components/detail/_poster_section.html" %}
+          
+          <!-- 특전 정보 -->
+          {% include "ddoksang/components/detail/_perks_section.html" %}
+          
+          <!-- 이벤트 설명 -->
+          {% include "ddoksang/components/detail/_description_section.html" %}
+
+          <!-- 다른 생카 섹션 -->
+          {% include "ddoksang/components/detail/_nearby_cafes.html" %}
+        </div>
+
+        <!-- 오른쪽 사이드바 영역 (2칸) -->
+        <div class="sidebar-container space-y-4 lg:col-span-2">
+          {% include "ddoksang/components/detail/_address_duration_info.html" %}
+
+          <!-- 출처 섹션 -->
+          {% if cafe.x_source %}
+          <div class="sidebar-card">
+            {% include "ddoksang/components/detail/_source_section.html" %}
+          </div>
+          {% endif %}
+         
+          <div class="sidebar-card map-card">
+           {% include "ddoksang/components/detail/_quick_view_section.html" %}
+          </div>
+
+
+
+          <!-- 공유 섹션 -->
+          <div class="sidebar-card">
+            {% include "ddoksang/components/detail/_share_section.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript 및 데이터 -->
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey={{ kakao_api_key }}"></script>
+
+<!-- ✅ 카카오톡 공유용 SDK 추가 -->
+<script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+
+<script id="cafe-data" type="application/json">
+{
+  "latitude": {{ cafe.latitude|default:"37.5665" }},
+  "longitude": {{ cafe.longitude|default:"126.9780" }},
+  "name": "{{ cafe.cafe_name|escapejs }}",
+  "address": "{{ cafe.address|escapejs }}",
+  "id": {{ cafe.id }},
+  "isAuthenticated": {% if user.is_authenticated %}true{% else %}false{% endif %},
+  "apiKey": "{{ kakao_api_key|escapejs }}",
+  "jsKey": "{{ settings.KAKAO_JAVASCRIPT_KEY|escapejs }}"
+}
+</script>
+
+<script id="image-data" type="application/json">
+[
+  {% for image in cafe.get_all_images_with_s3_urls %}
+  {
+    "url": "{{ image.url|escapejs }}",
+    "image_url": "{{ image.url|escapejs }}",
+    "type": "{{ image.type_display|escapejs }}",
+    "caption": "{{ image.caption|escapejs }}",
+    "alt": "{{ image.alt|escapejs }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]
+</script>
+
+<!-- 카카오 공유용 데이터 추가 -->
+<script id="share-data" type="application/json">
+{
+  "title": "{{ cafe.cafe_name|escapejs }}",
+  "imageUrl": "{{ cafe.get_kakao_share_image|escapejs }}",
+  "address": "{{ cafe.address|escapejs }}",
+  "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",
+  "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}",
+  "description": "{{ cafe.artist.display_name }} 생일카페"
+}
+</script>
+
+{% csrf_token %}
+
+<div id="user-data" 
+     data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
+     data-cafe-id="{{ cafe.id }}"
+     data-is-favorited="{% if is_favorited %}true{% else %}false{% endif %}"
+     style="display: none;">
+</div>
+
+<script src="{% static 'js/favorite.js' %}"></script>
+<script src="{% static 'js/ddoksang_detail.js' %}"></script>
+{% endblock %}

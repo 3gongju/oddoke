@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.forms import modelformset_factory
 from django.utils import timezone
+from django.db import transaction
 from django import forms
 from operator import attrgetter
 from itertools import chain
@@ -1147,29 +1148,61 @@ def post_edit(request, category, post_id):
 
 # 게시글 삭제
 @login_required
-@require_POST  # ✅ 이 데코레이터 제거하여 GET/POST 모두 허용
 def post_delete(request, category, post_id):
     model = get_post_model(category)
     if not model:
-        raise Http404("존재하지 않는 카테고리입니다.")
+        return JsonResponse({'success': False, 'message': '존재하지 않는 카테고리입니다.'})
 
     post = get_object_or_404(model, id=post_id)
 
+    # 권한 확인
     if request.user != post.user:
-        context = {
-            'title': '접근 권한 없음',
-            'message': '이 게시글을 삭제할 권한이 없습니다.',
-            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
-        }
-        return render(request, 'ddokfarm/error_message.html', context)
+        return JsonResponse({'success': False, 'message': '이 게시글을 삭제할 권한이 없습니다.'})
 
-    # ✅ POST 요청일 때만 실제 삭제 수행
-    if request.method == 'POST':
-        post.delete()
-        return redirect(f"{reverse('ddokfarm:index')}?category={category}")
+    # GET 요청: 삭제 가능 여부 확인
+    if request.method == 'GET':
+        content_type = ContentType.objects.get_for_model(post)
+        
+        # 거래가 완료되지 않고 취소되지 않은 채팅방 찾기
+        active_chatrooms = ChatRoom.objects.filter(
+            content_type=content_type,
+            object_id=post.id,
+            is_cancelled=False
+        ).exclude(
+            Q(buyer_completed=True) & Q(seller_completed=True)
+        )
+        
+        if active_chatrooms.exists():
+            return JsonResponse({
+                'can_delete': False,
+                'message': '진행 중인 거래가 있어 삭제할 수 없습니다.'
+            })
+        
+        return JsonResponse({'can_delete': True})
     
-    # ✅ GET 요청일 때는 더 이상 에러 페이지를 보여주지 않고 detail로 리다이렉트
-    return redirect('ddokfarm:post_detail', category=category, post_id=post_id)
+    # POST 요청: 실제 삭제
+    elif request.method == 'POST':
+        # 다시 한번 체크 (동시성 문제 방지)
+        content_type = ContentType.objects.get_for_model(post)
+        active_chatrooms = ChatRoom.objects.filter(
+            content_type=content_type,
+            object_id=post.id,
+            is_cancelled=False
+        ).exclude(
+            Q(buyer_completed=True) & Q(seller_completed=True)
+        )
+        
+        if active_chatrooms.exists():
+            return JsonResponse({'success': False, 'message': '진행 중인 거래가 있어 삭제할 수 없습니다.'})
+        
+        post.delete()
+        return JsonResponse({
+            'success': True, 
+            'redirect_url': f"{reverse('ddokfarm:index')}?category={category}"
+        })
+    
+    else:
+        return JsonResponse({'success': False, 'message': '허용되지 않는 요청 방식입니다.'})
 
 # 댓글 작성 (기존과 동일)
 @login_required
@@ -1258,7 +1291,7 @@ def like_post(request, category, post_id):
 
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
-# 판매 완료 표시 (기존과 동일)
+# 판매 완료 표시
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
@@ -1286,17 +1319,32 @@ def mark_as_sold(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
 
-    # 🔹 4. 판매 상태 토글
-    post.is_sold = not post.is_sold
-    post.save()
+    # 🔥 4. 이미 거래완료된 경우 처리 불가
+    if post.is_sold:
+        context = {
+            'title': '처리 불가',
+            'message': '이미 거래가 완료된 게시글입니다.',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
 
-    # 🔹 5. 연결된 채팅방의 seller_completed도 같이 업데이트
-    content_type = ContentType.objects.get_for_model(post)
-    ChatRoom.objects.filter(content_type=content_type, object_id=post_id).update(
-        seller_completed=post.is_sold
-    )
+    # 🔥 5. 트랜잭션으로 게시글과 채팅방 동시 업데이트 (토글 → 완료만)
+    with transaction.atomic():
+        # 게시글을 거래완료로 설정 (되돌릴 수 없음)
+        post.is_sold = True
+        post.save()
 
-    # 🔹 6. 리디렉션
+        # 🔥 6. 연결된 모든 채팅방의 seller_completed를 True로 설정
+        content_type = ContentType.objects.get_for_model(post)
+        updated_count = ChatRoom.objects.filter(
+            content_type=content_type, 
+            object_id=post_id,
+            seller_completed=False  # 아직 완료하지 않은 채팅방만
+        ).update(seller_completed=True)
+        
+        print(f"✅ 게시글 거래완료 → 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = True")
+
+    # 🔹 7. 리디렉션
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
 
 # 아티스트 선택시 멤버 목록 출력 (기존과 동일)

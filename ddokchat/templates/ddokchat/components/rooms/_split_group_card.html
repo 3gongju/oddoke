@@ -1,9 +1,155 @@
 <!-- ddokchat/templates/ddokchat/components/rooms/_split_group_card.html 수정 -->
+
+<!-- 1. ddokchat/templates/ddokchat/components/chat/_header.html 수정 -->
+{% load humanize %}
+{% load price_filters %}
+
+<div class="bg-gray-50 border-b border-gray-200 px-4 py-3 shadow-sm">
+  <!-- 기존 코드 유지... -->
+  
+  <!-- 상품 정보 카드 -->
+  <div class="mt-3">
+    <a href="{% url 'ddokfarm:post_detail' category=room.category post_id=room.post.id %}" 
+       class="block bg-white rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm">
+      <div class="flex items-center gap-3">
+        <!-- 상품 썸네일 -->
+        <div class="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm">
+          <img src="{{ room.post.get_main_image }}" 
+               alt="{{ room.post.title }}" 
+               class="w-full h-full object-cover">
+        </div>
+        
+        <!-- 상품 정보 -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1">
+            <!-- 카테고리 배지 -->
+            {% if room.post.category_type == 'sell' %}
+              <span class="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full font-medium">양도</span>
+            {% elif room.post.category_type == 'rental' %}
+              <span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">대여</span>
+            {% elif room.post.category_type == 'split' %}
+              <span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-medium">분철</span>
+            {% else %}
+              <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">거래</span>
+            {% endif %}
+            
+            <!-- ✅ 분철 참여자 정보 표시 (분철인 경우에만) -->
+            {% if room.post.category_type == 'split' and current_user != room.post.user %}
+              {% get_participant_member_names room.post current_user as member_names %}
+              {% if member_names != "멤버 정보 없음" %}
+                <span class="text-xs text-gray-500">{{ member_names }}</span>
+              {% endif %}
+            {% endif %}
+          </div>
+          
+          <!-- 상품 제목 -->
+          <h3 class="font-medium text-gray-900 truncate text-sm">{{ room.post.title }}</h3>
+          
+          <!-- ✅ 수정된 가격 정보 -->
+          <div class="flex items-center space-x-2">
+            <p class="text-sm font-bold text-orange-600">
+              {% get_smart_post_price room.post current_user room %}
+            </p>
+          </div>
+        </div>
+        
+        <!-- 상세보기 아이콘 -->
+        <div class="flex flex-col items-center gap-1 text-gray-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+          <span class="text-xs">상세보기</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- 기존 CSS 스타일 유지 -->
+<style>
+.status-text.active {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+/* 나머지 스타일 동일... */
+</style>
+
+
+<!-- 2. ddokchat/templates/ddokchat/components/rooms/_single_room_card.html 수정 -->
 {% load humanize %}
 {% load price_filters %}
 
 <div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 chat-item">
-    <!-- 그룹 헤더 (클릭하면 접기/펼치기) -->
+    <a href="{% url 'ddokchat:chat_room' room_code=room.room_code %}" class="block p-4">
+        <div class="space-y-4">
+            <!-- 상품 정보 -->
+            <div class="flex items-center space-x-3">
+                <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shadow-sm flex-shrink-0">
+                    <img src="{{ room.post.get_main_image }}" alt="{{ room.post.title }}" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-base text-gray-900 font-semibold truncate">{{ room.post.title }}</p>
+                    
+                    <!-- ✅ 수정된 가격 표시 -->
+                    <div class="flex items-center space-x-2">
+                        <p class="text-lg text-orange-600 font-bold">
+                            {% get_smart_post_price room.post current_user room %}
+                        </p>
+                    </div>
+                    
+                    <!-- ✅ 개수/참여자 정보 표시 -->
+                    {% if room.post.category_type == 'sell' or room.post.category_type == 'rental' %}
+                        {% if room.post.has_multiple_items %}
+                            <p class="text-xs text-gray-500 mt-1">
+                                {% if room.post.category_type == 'sell' %}
+                                    총 {{ room.post.get_item_prices.count }}개 물건
+                                {% else %}
+                                    총 {{ room.post.get_item_prices.count }}개 물건 (대여)
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    {% elif room.post.category_type == 'split' %}
+                        {% if current_user == room.post.user %}
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ room.post.member_prices.count }}개 멤버 가격
+                            </p>
+                        {% else %}
+                            {% get_participant_member_names room.post current_user as member_names %}
+                            {% if member_names != "멤버 정보 없음" %}
+                                <p class="text-xs text-gray-500 mt-1">
+                                    참여 멤버: {{ member_names }}
+                                </p>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-2">
+                    {% if room.last_message %}
+                        <span class="text-xs text-gray-500">{{ room.last_message.timestamp|timesince }} 전</span>
+                    {% endif %}
+                    {% if room.unread_count %}
+                        <span class="unread-badge bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-medium">
+                            {{ room.unread_count }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 사용자 정보 + 메시지 (기존과 동일) -->
+            <div class="flex items-start space-x-3">
+                <!-- 기존 코드 유지... -->
+            </div>
+        </div>
+    </a>
+</div>
+
+
+<!-- 3. ddokchat/templates/ddokchat/components/rooms/_split_group_card.html 수정 -->
+{% load humanize %}
+{% load price_filters %}
+
+<div class="chat-card bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 chat-item">
+    <!-- 그룹 헤더 -->
     <div class="split-group-header cursor-pointer" onclick="toggleSplitGroup(this)">
         <div class="p-4">
             <div class="space-y-4">
@@ -19,32 +165,17 @@
                         </div>
                         <p class="text-base text-gray-900 font-semibold truncate">{{ group.post.title }}</p>
                         
-                        <!-- ✅ 최적화된 분철 가격 표시 (총대 기준) -->
-                        {% get_post_price_info group.post current_user as price_info %}
-                        {% if price_info and price_info.category_type == 'split' %}
-                            <div class="flex items-center space-x-2">
-                                <p class="text-lg text-orange-600 font-bold">
-                                    {{ price_info.display_price }}
-                                </p>
-                                <!-- ✅ 뱃지 제거됨 - 요구사항대로 -->
-                            </div>
-                            
-                            <!-- 멤버 수 정보 -->
-                            {% if price_info.item_count > 0 %}
-                                <p class="text-xs text-gray-500 mt-1">
-                                    총 {{ price_info.item_count }}개 멤버 가격
-                                </p>
-                            {% endif %}
-                        {% else %}
-                            <!-- 가격 정보 조회 실패 시 폴백 -->
+                        <!-- ✅ 수정된 분철 가격 표시 -->
+                        <div class="flex items-center space-x-2">
                             <p class="text-lg text-orange-600 font-bold">
-                                {% if group.total_price %}
-                                    {{ group.total_price|floatformat:0|add:"0"|intcomma }}원
-                                {% else %}
-                                    가격 협의
-                                {% endif %}
+                                {{ group.post.get_price_base }}
                             </p>
-                        {% endif %}
+                        </div>
+                        
+                        <!-- 멤버 수 정보 -->
+                        <p class="text-xs text-gray-500 mt-1">
+                            총 {{ group.post.member_prices.count }}개 멤버 가격
+                        </p>
                     </div>
                     <div class="flex items-center space-x-2">
                         {% if group.latest_message_time %}
@@ -160,18 +291,13 @@
                                 <div class="flex items-center justify-between mb-2">
                                     <div class="flex items-center gap-2">
                                         <h4 class="font-semibold text-gray-900">{{ room.partner.username }}</h4>
-                                        <!-- ✅ 수정된 멤버 배지 - 여러 멤버 표시 -->
+                                        <!-- ✅ 수정된 멤버 배지 -->
                                         {% if room.partner == group.post.user %}
-                                            <!-- 총대(게시글 작성자)인 경우 -->
                                             <span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-medium">덕장</span>
                                         {% else %}
-                                            <!-- ✅ 일반 참여자인 경우 - 여러 멤버명 표시 -->
-                                            {% if group.partner_member_map %}
-                                                {% for user, member_names in group.partner_member_map.items %}
-                                                    {% if user == room.partner %}
-                                                        <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">{{ member_names }}</span>
-                                                    {% endif %}
-                                                {% endfor %}
+                                            {% get_participant_member_names group.post room.partner as member_names %}
+                                            {% if member_names != "멤버 정보 없음" %}
+                                                <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">{{ member_names }}</span>
                                             {% endif %}
                                         {% endif %}
                                     </div>
