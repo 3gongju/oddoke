@@ -145,7 +145,8 @@ body > div:has(footer),
   window.isTradeCompleted = "{{ room.is_fully_completed }}" === "True";
   window.hasAlreadyReviewed = {{ has_already_reviewed|yesno:"true,false" }};
   window.isFullyCompleted = {{ room.is_fully_completed|yesno:"true,false" }};
-  window.roomBuyer = "{{ room.buyer.username }}";
+  window.roomBuyer = "{{ room.buyer.username }}";  // 🔧 이 값이 올바르게 설정되는지 확인
+  window.roomSeller = "{{ room.seller.username }}"; // 🔧 추가로 판매자도 설정
   window.csrfToken = "{{ csrf_token }}";
   
   // 🔥 신고 모달 연결
