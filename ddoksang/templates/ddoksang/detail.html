@@ -127,13 +127,12 @@
 
 <script id="image-data" type="application/json">
 [
-  {% for image in cafe.get_all_images_with_s3_urls %}
+  {% for image in cafe.get_all_images %}
   {
     "url": "{{ image.url|escapejs }}",
-    "image_url": "{{ image.url|escapejs }}",
     "type": "{{ image.type_display|escapejs }}",
     "caption": "{{ image.caption|escapejs }}",
-    "alt": "{{ image.alt|escapejs }}"
+    "alt": "{{ image.caption|default:cafe.cafe_name|escapejs }}"
   }{% if not forloop.last %},{% endif %}
   {% endfor %}
 ]
@@ -143,16 +142,11 @@
 <script id="share-data" type="application/json">
 {
   "title": "{{ cafe.cafe_name|escapejs }}",
-  "imageUrl": "{{ cafe.get_kakao_share_image|escapejs }}",
+  "imageUrl": "{% with main_img=cafe.get_main_image %}{% if main_img %}{% if 'amazonaws.com' in main_img %}{{ main_img|escapejs }}{% else %}https://oddoke-bucket.s3.ap-northeast-2.amazonaws.com/{{ main_img|slice:'7:'|escapejs }}{% endif %}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페{% endif %}{% endwith %}",  "linkUrl": "{{ request.scheme }}://{{ request.get_host }}{{ request.get_full_path }}",
   "address": "{{ cafe.address|escapejs }}",
   "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",
   "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}",
-  "description": "{{ cafe.artist.display_name }} 생일카페",
-  "debug": {
-    "originalImageUrl": "{{ cafe.get_main_image|escapejs }}",
-    "totalImages": {{ cafe.image_count }},
-    "hasImages": {% if cafe.image_gallery %}true{% else %}false{% endif %}
-  }
+  "description": "{{ cafe.artist.display_name }} 생일카페"
 }
 </script>
 
