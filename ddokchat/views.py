@@ -22,6 +22,8 @@ from operator import attrgetter
 from .services import get_dutcheat_service
 from django.contrib.contenttypes.models import ContentType
 from utils.redis_client import redis_client
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 import json
 # Create your views here.
@@ -29,10 +31,10 @@ import json
 # 채팅방
 @login_required 
 def chat_room(request, room_code):
-    # N+1 해결: 관련 데이터 한번에 로드
+    # ✅ 복잡한 가격 캐싱 로직 제거
     room = get_object_or_404(
         ChatRoom.objects.select_related(
-            'buyer', 'seller', 'content_type'  # content_type도 추가
+            'buyer', 'seller', 'content_type'
         ),
         room_code=room_code
     )
@@ -41,8 +43,7 @@ def chat_room(request, room_code):
     other_user = room.seller if room.buyer == current_user else room.buyer
     room.other_user = other_user
 
-    # 🔧 카테고리 설정 개선
-    # ContentType을 이용해서 정확한 카테고리 문자열 설정
+    # 카테고리 설정
     if room.content_type.model == 'farmsellpost':
         room.category = 'sell'
     elif room.content_type.model == 'farmrentalpost':
@@ -50,11 +51,7 @@ def chat_room(request, room_code):
     elif room.content_type.model == 'farmsplitpost':
         room.category = 'split'
     else:
-        # 기본값 설정 (혹시 모를 다른 타입)
         room.category = 'sell'
-
-    # ✅ 게시글 가격 정보 캐싱
-    _cache_post_price_data(room.post, room.category, current_user)
 
     # 리뷰 여부 확인 최적화
     has_already_reviewed = False
@@ -85,24 +82,17 @@ def chat_room(request, room_code):
     
     # 분철 관련 정보 추가 (기존 코드 유지)
     split_info = None
-    if room.category == 'split':  # 🔧 수정된 카테고리 사용
-        # N+1 최적화: prefetch_related 사용
+    if room.category == 'split':
         application = SplitApplication.objects.filter(
             post=room.post,
             user=room.buyer,
             status='approved'
-        ).prefetch_related(
-            'members',
-            'post__member_prices__member'  # member_prices 관련 데이터도 미리 로드
-        ).first()
+        ).prefetch_related('members').first()
         
         if application:
-            # ✅ 캐싱된 데이터 사용하여 가격 계산
-            total_price = _calculate_split_participant_total_price(room.post, application)
-            
             split_info = {
                 'applied_members': application.members.all(),
-                'total_price': total_price  # 신청한 멤버들의 가격 합계
+                # 가격은 템플릿에서 get_smart_post_price 사용
             }
 
     context = {
@@ -152,20 +142,19 @@ def get_or_create_chatroom(request, category, post_id):
 # ✅ 새로운 최적화된 내 채팅 목록
 @login_required
 def my_chatrooms(request):
-    current_user = request.user
+    current_user = request.user  # ✅ 누락된 변수 정의 추가
     
-    # ✅ ContentType 미리 캐싱
+    # ✅ ContentType 미리 정의
     sell_ct = ContentType.objects.get_for_model(FarmSellPost)
     rental_ct = ContentType.objects.get_for_model(FarmRentalPost)
     split_ct = ContentType.objects.get_for_model(FarmSplitPost)
     
-    # ✅ 메인 쿼리 - 최적화된 prefetch 사용
+    # ✅ 간소화된 쿼리 - 복잡한 가격 캐싱 로직 제거
     rooms = ChatRoom.objects.filter(
         Q(buyer=current_user) | Q(seller=current_user)
     ).select_related(
         'buyer', 'seller', 'content_type'
     ).prefetch_related(
-        # 최신 메시지 1개만 가져오기
         Prefetch(
             'messages',
             queryset=Message.objects.select_related('sender', 'receiver')
@@ -192,125 +181,12 @@ def my_chatrooms(request):
         )
     ).order_by('-last_message_time')
     
-    # ✅ 게시글 ID별로 분류하여 bulk 조회
-    sell_post_ids = []
-    rental_post_ids = []
-    split_post_ids = []
-    
-    for room in rooms:
-        try:
-            if room.content_type == sell_ct:
-                sell_post_ids.append(room.object_id)
-            elif room.content_type == rental_ct:
-                rental_post_ids.append(room.object_id)
-            elif room.content_type == split_ct:
-                split_post_ids.append(room.object_id)
-        except Exception as e:
-            print(f"ContentType 확인 오류: {e}")
-            continue
-    
-    # ✅ 모든 관련 데이터 한 번에 가져오기
-    price_cache = {}
-    
-    # ItemPrice 가져오기 (양도/대여용)
-    if sell_post_ids:
-        sell_prices = ItemPrice.objects.filter(
-            content_type=sell_ct, 
-            object_id__in=sell_post_ids
-        ).select_related()
-        
-        for price in sell_prices:
-            key = f"sell_{price.object_id}"
-            if key not in price_cache:
-                price_cache[key] = []
-            price_cache[key].append(price)
-    
-    if rental_post_ids:
-        rental_prices = ItemPrice.objects.filter(
-            content_type=rental_ct, 
-            object_id__in=rental_post_ids
-        ).select_related()
-        
-        for price in rental_prices:
-            key = f"rental_{price.object_id}"
-            if key not in price_cache:
-                price_cache[key] = []
-            price_cache[key].append(price)
-    
-    # SplitPrice와 SplitApplication 가져오기 (분철용)
-    split_price_cache = {}
-    split_application_cache = {}
-    
-    if split_post_ids:
-        # SplitPrice 가져오기
-        split_prices = SplitPrice.objects.filter(
-            post_id__in=split_post_ids
-        ).select_related('member')
-        
-        for price in split_prices:
-            key = f"split_{price.post_id}"
-            if key not in split_price_cache:
-                split_price_cache[key] = []
-            split_price_cache[key].append(price)
-        
-        # SplitApplication 가져오기 (참여자 가격 계산용)
-        split_applications = SplitApplication.objects.filter(
-            post_id__in=split_post_ids,
-            status='approved'
-        ).prefetch_related('members').select_related('user')
-        
-        for app in split_applications:
-            key = f"split_{app.post_id}"
-            if key not in split_application_cache:
-                split_application_cache[key] = []
-            split_application_cache[key].append(app)
-    
-    # ✅ 각 room의 post에 캐싱된 데이터 설정
-    for room in rooms:
-        try:
-            # ContentType으로 카테고리 판단
-            if room.content_type == sell_ct:
-                category = 'sell'
-            elif room.content_type == rental_ct:
-                category = 'rental'
-            elif room.content_type == split_ct:
-                category = 'split'
-            else:
-                category = 'unknown'
-            
-            post_id = room.object_id
-            
-            if category in ['sell', 'rental']:
-                # ItemPrice 설정
-                key = f"{category}_{post_id}"
-                cached_prices = price_cache.get(key, [])
-                room.post._cached_item_prices = cached_prices
-                    
-            elif category == 'split':
-                # SplitPrice 설정
-                key = f"split_{post_id}"
-                cached_prices = split_price_cache.get(key, [])
-                room.post._cached_member_prices = cached_prices
-                
-                # SplitApplication 설정 (참여자 가격 계산용)
-                cached_applications = split_application_cache.get(key, [])
-                room.post._cached_applications = cached_applications
-            
-            # 가격 정보 캐싱
-            _cache_post_price_data(room.post, category, current_user, room)
-                
-        except Exception as e:
-            print(f"캐시 설정 오류 (room {room.id}): {e}")
-            # 오류 시 안전하게 빈 리스트 설정
-            room.post._cached_item_prices = []
-            room.post._cached_member_prices = []
-    
-    # 기본 후처리
+    # ✅ 기본 후처리만 수행 - 가격 정보는 템플릿에서 처리
     for room in rooms:
         room.partner = room.get_other_user(current_user)
         room.last_message = room.latest_messages[0] if room.latest_messages else None
         
-        # ✅ ContentType으로 카테고리 설정
+        # ContentType으로 카테고리 설정
         if room.content_type == sell_ct:
             room.category = 'sell'
         elif room.content_type == rental_ct:
@@ -334,7 +210,7 @@ def my_chatrooms(request):
         else:
             other_rooms.append(room)
     
-    # ✅ 분철 채팅방들을 게시글별로 그룹핑
+    # ✅ 분철 채팅방들을 게시글별로 그룹핑 (기존 로직 유지)
     split_groups = []
     if split_rooms:
         # 같은 게시글별로 정렬
@@ -342,38 +218,18 @@ def my_chatrooms(request):
         
         # itertools.groupby로 그룹핑
         for post_id, group_rooms in groupby(split_rooms_sorted, key=attrgetter('object_id')):
-            group_rooms_list = list(group_rooms)  # iterator를 리스트로 변환
+            group_rooms_list = list(group_rooms)
             
             if group_rooms_list:
                 # 그룹 내에서 최신 메시지 시간순으로 정렬
                 group_rooms_list.sort(key=lambda x: x.last_message_time or timezone.make_aware(datetime.min), reverse=True)
                 
-                # ✅ 최근 활동한 대화 상대방들 분석
+                # 최근 활동한 대화 상대방들 분석
                 recent_partners = []
                 latest_message = None
                 latest_message_time = None
                 
-                # ✅ 각 참여자의 멤버 정보 매핑
-                partner_member_map = {}
-                split_post = group_rooms_list[0].post  # FarmSplitPost 객체
-                
-                # ✅ 캐싱된 applications 사용
-                if hasattr(split_post, '_cached_applications'):
-                    applications = split_post._cached_applications
-                else:
-                    # 캐시 없으면 DB 조회
-                    applications = SplitApplication.objects.filter(
-                        post=split_post,
-                        status='approved'
-                    ).prefetch_related('members')
-                
-                for application in applications:
-                    user = application.user
-                    applied_members = application.members.all()
-                    if applied_members:
-                        # ✅ 여러 멤버 참여 시 모든 멤버명 표시
-                        member_names = [member.member_name for member in applied_members]
-                        partner_member_map[user] = ', '.join(member_names)
+                # 각 참여자의 멤버 정보는 템플릿에서 처리
                 
                 # 최근 활동 분석
                 for room in group_rooms_list:
@@ -391,7 +247,7 @@ def my_chatrooms(request):
                     if (has_unread or has_recent_activity) and partner not in recent_partners:
                         recent_partners.append(partner)
                 
-                # ✅ 2명 이상이 최근에 활동했는지 확인
+                # 2명 이상이 최근에 활동했는지 확인
                 has_multiple_partners = len(recent_partners) >= 2
                 
                 # 그룹 정보 생성
@@ -409,16 +265,13 @@ def my_chatrooms(request):
                         default=timezone.make_aware(datetime.min)
                     ),
                     'is_completed': all(room.is_fully_completed for room in group_rooms_list),
-                    'total_price': None,  # 필요시 계산 로직 추가
+                    'total_price': None,
                     
-                    # ✅ 수정된 필드들 - 대화 상대방들 기준
+                    # 대화 상대방들 정보
                     'has_multiple_partners': has_multiple_partners,
-                    'recent_partners': recent_partners,  # 최근 활동한 상대방들
+                    'recent_partners': recent_partners,
                     'latest_message': latest_message,
-                    'primary_partner': recent_partners[0] if recent_partners else None,  # 대표 상대방
-                    
-                    # ✅ 수정된 멤버 정보 매핑
-                    'partner_member_map': partner_member_map,  # {user: "카리나, 닝닝"} 매핑
+                    'primary_partner': recent_partners[0] if recent_partners else None,
                 }
                 split_groups.append(group_info)
     
@@ -426,14 +279,13 @@ def my_chatrooms(request):
     for room in other_rooms:
         room.type = 'single_room'
     
-    # ✅ 모든 아이템을 최신 메시지 시간순으로 통합 정렬
+    # ✅ 거래중/완료 분리
     def get_latest_time(item):
         if isinstance(item, dict) and item.get('type') == 'split_group':
             return item['latest_message_time'] or timezone.make_aware(datetime.min)
         else:
             return item.last_message_time or timezone.make_aware(datetime.min)
     
-    # 거래중/완료 분리
     active_split_groups = [group for group in split_groups if not group['is_completed']]
     completed_split_groups = [group for group in split_groups if group['is_completed']]
     
@@ -455,12 +307,12 @@ def my_chatrooms(request):
 
     context = {
         'rooms': rooms,
-        'active_rooms': active_other_rooms,  # 기존 호환성을 위해 유지
-        'completed_rooms': completed_other_rooms,  # 기존 호환성을 위해 유지
-        'active_items': active_items,  # ✅ 새로 추가: 통합된 아이템 리스트
-        'completed_items': completed_items,  # ✅ 새로 추가: 통합된 아이템 리스트
-        'active_split_groups': active_split_groups,  # 빈 상태 체크용
-        'completed_split_groups': completed_split_groups,  # 빈 상태 체크용
+        'active_rooms': active_other_rooms,
+        'completed_rooms': completed_other_rooms,
+        'active_items': active_items,
+        'completed_items': completed_items,
+        'active_split_groups': active_split_groups,
+        'completed_split_groups': completed_split_groups,
         'current_user': current_user,
     }
     return render(request, 'ddokchat/my_rooms.html', context)
@@ -613,17 +465,39 @@ def complete_trade(request, room_code):
     if not room.is_participant(current_user):
         return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
 
+    # ✅ 취소된 거래는 완료 불가
+    if room.is_cancelled:
+        return JsonResponse({'success': False, 'error': '취소된 거래는 완료할 수 없습니다.'}, status=400)
+
+    # ✅ 취소 요청 중인 거래는 완료 불가
+    if room.cancel_status == 'pending':
+        return JsonResponse({'success': False, 'error': '취소 요청 중인 거래는 완료할 수 없습니다. 취소 요청을 먼저 처리해주세요.'}, status=400)
+
     if room.get_completion_status_for_user(current_user):
         return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
 
     user_role = room.get_user_role(current_user)
 
-    if user_role == 'buyer':
-        room.buyer_completed = True
-    elif user_role == 'seller':
-        room.seller_completed = True
+    # 🔥 트랜잭션으로 채팅방과 게시글 동시 업데이트
+    with transaction.atomic():
+        # 채팅방 완료 상태 업데이트
+        if user_role == 'buyer':
+            room.buyer_completed = True
+        elif user_role == 'seller':
+            room.seller_completed = True
+            
+            # 🔥 판매자가 완료할 때는 게시글도 함께 완료 처리
+            try:
+                post = room.post
+                if post and not post.is_sold:
+                    post.is_sold = True
+                    post.save()
+                    print(f"✅ 게시글 거래완료 동기화: Post#{post.id}")
+            except Exception as e:
+                print(f"❌ 게시글 업데이트 실패: {e}")
+                # 게시글 업데이트 실패해도 채팅방 완료는 진행
 
-    room.save()
+        room.save()
 
     is_fully_completed = room.is_fully_completed
 
@@ -631,13 +505,10 @@ def complete_trade(request, room_code):
     if is_fully_completed:
         delete_sensitive_info(room)
         
-        # WebSocket으로 거래 완료 알림 전송
-        from channels.layers import get_channel_layer
-        from asgiref.sync import async_to_sync
-        
+        # WebSocket으로 거래 완료 알림 전송 (기존 코드 유지)
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"chat_{room.room_code}",  # ✅ room_code 사용
+            f"chat_{room.room_code}",
             {
                 "type": "trade_completed_notification",
                 "room_code": room.room_code,
@@ -648,6 +519,7 @@ def complete_trade(request, room_code):
         'success': True,
         'is_fully_completed': is_fully_completed,
         'user_role': user_role,
+        'post_updated': user_role == 'seller',  # 🔥 게시글 업데이트 여부 알림
         'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
     })
 
@@ -1291,3 +1163,287 @@ def get_current_chatroom_status(request):
             'success': False,
             'error': f'서버 오류: {str(e)}'
         })
+
+# ✅ 거래 취소 요청
+@login_required
+@require_POST
+def request_trade_cancel(request, room_code):
+    """거래 취소 요청"""
+    try:
+        room = get_object_or_404(ChatRoom, room_code=room_code)
+        
+        # 권한 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False, 
+                'error': '채팅방 참여자만 취소 요청할 수 있습니다.'
+            })
+        
+        # 취소 요청 가능 여부 확인
+        if not room.can_user_request_cancel(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '현재 취소 요청할 수 없는 상태입니다.'
+            })
+        
+        # 취소 요청 처리
+        user_role = room.get_user_role(request.user)
+        
+        if user_role == 'buyer':
+            room.buyer_cancel_requested = True
+        else:  # seller
+            room.seller_cancel_requested = True
+        
+        # 최초 요청 시간 기록
+        if not room.cancel_requested_at:
+            room.cancel_requested_at = timezone.now()
+        
+        # 양쪽 다 동의하면 즉시 취소 (실제로는 한 번에 둘 다 요청하는 경우는 없음)
+        if room.buyer_cancel_requested and room.seller_cancel_requested:
+            room.is_cancelled = True
+            room.cancelled_at = timezone.now()
+            
+            # WebSocket 알림
+            send_trade_cancel_notification(room, 'cancelled')
+            
+            return JsonResponse({
+                'success': True,
+                'message': '거래가 취소되었습니다.',
+                'status': 'cancelled',
+                'reload_required': True
+            })
+        
+        room.save()
+        
+        # WebSocket으로 상대방에게 알림
+        send_trade_cancel_notification(room, 'request')
+        
+        return JsonResponse({
+            'success': True,
+            'message': '거래 취소를 요청했습니다. 상대방의 응답을 기다려주세요.',
+            'status': 'pending',
+            'reload_required': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'취소 요청 처리 중 오류가 발생했습니다: {str(e)}'
+        })
+
+# ✅ 거래 취소 응답 (동의/거절)
+@login_required
+@require_POST
+def respond_trade_cancel(request, room_code):
+    """거래 취소 요청에 대한 응답"""
+    try:
+        room = get_object_or_404(ChatRoom, room_code=room_code)
+        action = request.POST.get('action')  # 'accept' or 'reject'
+        
+        # 권한 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '권한이 없습니다.'
+            })
+        
+        # 응답 가능 여부 확인
+        if not room.can_user_respond_to_cancel(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '현재 응답할 수 없는 상태입니다.'
+            })
+        
+        if action == 'accept':
+            # 취소 동의
+            user_role = room.get_user_role(request.user)
+            
+            if user_role == 'buyer':
+                room.buyer_cancel_requested = True
+            else:  # seller
+                room.seller_cancel_requested = True
+            
+            # 양쪽 다 동의하면 취소 완료
+            if room.buyer_cancel_requested and room.seller_cancel_requested:
+                room.is_cancelled = True
+                room.cancelled_at = timezone.now()
+                
+                # WebSocket 알림
+                send_trade_cancel_notification(room, 'cancelled')
+                
+                room.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': '거래 취소에 동의했습니다. 거래가 취소되었습니다.',
+                    'status': 'cancelled',
+                    'reload_required': True
+                })
+            
+            room.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': '거래 취소에 동의했습니다.',
+                'status': 'agreed',
+                'reload_required': True
+            })
+        
+        elif action == 'reject':
+            # 취소 거절 - 모든 취소 요청 초기화
+            room.buyer_cancel_requested = False
+            room.seller_cancel_requested = False
+            room.cancel_requested_at = None
+            room.save()
+            
+            # WebSocket으로 거절 알림
+            send_trade_cancel_notification(room, 'rejected')
+            
+            return JsonResponse({
+                'success': True,
+                'message': '거래 취소를 거절했습니다. 거래가 계속 진행됩니다.',
+                'status': 'rejected',
+                'reload_required': True
+            })
+        
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': '유효하지 않은 액션입니다.'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'응답 처리 중 오류가 발생했습니다: {str(e)}'
+        })
+
+# ✅ 거래 취소 요청 철회
+@login_required
+@require_POST
+def withdraw_cancel_request(request, room_code):
+    """거래 취소 요청 철회"""
+    try:
+        room = get_object_or_404(ChatRoom, room_code=room_code)
+        
+        # 권한 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '권한이 없습니다.'
+            })
+        
+        # 철회 가능 여부 확인 (본인이 요청한 경우만)
+        user_role = room.get_user_role(request.user)
+        can_withdraw = False
+        
+        if user_role == 'buyer' and room.buyer_cancel_requested:
+            can_withdraw = True
+            room.buyer_cancel_requested = False
+        elif user_role == 'seller' and room.seller_cancel_requested:
+            can_withdraw = True
+            room.seller_cancel_requested = False
+        
+        if not can_withdraw:
+            return JsonResponse({
+                'success': False,
+                'error': '철회할 수 있는 취소 요청이 없습니다.'
+            })
+        
+        # 아무도 취소 요청 안했으면 시간도 초기화
+        if not room.buyer_cancel_requested and not room.seller_cancel_requested:
+            room.cancel_requested_at = None
+        
+        room.save()
+        
+        # WebSocket으로 철회 알림
+        send_trade_cancel_notification(room, 'withdrawn')
+        
+        return JsonResponse({
+            'success': True,
+            'message': '거래 취소 요청을 철회했습니다.',
+            'status': 'withdrawn',
+            'reload_required': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'철회 처리 중 오류가 발생했습니다: {str(e)}'
+        })
+
+# ✅ WebSocket 알림 헬퍼 함수
+def send_trade_cancel_notification(room, action_type):
+    """거래 취소 관련 WebSocket 알림 전송"""
+    try:
+        channel_layer = get_channel_layer()
+        
+        # 알림 메시지 구성
+        notification_data = {
+            'type': 'trade_cancel_notification',
+            'room_code': room.room_code,
+            'action': action_type,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        # 채팅방 그룹에 알림 전송
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room.room_code}",
+            notification_data
+        )
+        
+    except Exception as e:
+        print(f"WebSocket 알림 전송 실패: {e}")
+
+# ✅ 기존 complete_trade 함수 수정 (취소된 거래는 완료 불가)
+@require_POST
+@login_required
+def complete_trade(request, room_code):
+    room = get_object_or_404(ChatRoom, room_code=room_code)
+    current_user = request.user
+
+    if not room.is_participant(current_user):
+        return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
+
+    # ✅ 취소된 거래는 완료 불가
+    if room.is_cancelled:
+        return JsonResponse({'success': False, 'error': '취소된 거래는 완료할 수 없습니다.'}, status=400)
+
+    # ✅ 취소 요청 중인 거래는 완료 불가
+    if room.cancel_status == 'pending':
+        return JsonResponse({'success': False, 'error': '취소 요청 중인 거래는 완료할 수 없습니다. 취소 요청을 먼저 처리해주세요.'}, status=400)
+
+    if room.get_completion_status_for_user(current_user):
+        return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
+
+    user_role = room.get_user_role(current_user)
+
+    if user_role == 'buyer':
+        room.buyer_completed = True
+    elif user_role == 'seller':
+        room.seller_completed = True
+
+    room.save()
+
+    is_fully_completed = room.is_fully_completed
+
+    # 거래가 완전히 완료되었을 때 민감한 정보 삭제 처리
+    if is_fully_completed:
+        delete_sensitive_info(room)
+        
+        # WebSocket으로 거래 완료 알림 전송
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room.room_code}",
+            {
+                "type": "trade_completed_notification",
+                "room_code": room.room_code,
+            }
+        )
+
+    return JsonResponse({
+        'success': True,
+        'is_fully_completed': is_fully_completed,
+        'user_role': user_role,
+        'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
+    })

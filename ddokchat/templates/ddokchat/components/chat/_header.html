@@ -1,6 +1,4 @@
 <!-- ddokchat/templates/ddokchat/components/chat/_header.html 수정 -->
-{% load humanize %}
-{% load price_filters %}
 
 <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 shadow-sm">
   <div class="flex items-center justify-between">
@@ -29,76 +27,222 @@
       </div>
     </div>
     
+    <!-- ✅ 새로운 반응형 상태/버튼 영역 -->
     <div class="flex items-center gap-2">
-      <!-- 거래 완료 버튼 -->
+      <!-- 거래 상태 및 액션 영역 -->
       <div id="tradeStatusContainer">
-        {% if room.is_fully_completed %}
-          <!-- 상황 1: 거래 완료됨 -->
-          <span class="text-xs text-red-500 font-semibold">거래 완료된 채팅</span>
-
-        {% elif current_user.pk == room.buyer.pk %}
-          {% if not room.buyer_completed and not room.seller_completed %}
-            <!-- 상황 2: 구매자, 아무도 완료 안함 -->
-            <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
-              거래 완료
-            </button>
-          {% elif not room.buyer_completed and room.seller_completed %}
-            <!-- 상황 5: 구매자, 판매자만 완료함 -->
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-red-500">거래완료 버튼을 눌러주세요!</span>
-              <button id="completeTradeBtn" class="bg-red-600 hover:bg-red-700 text-white text-xs font-medium px-3 py-1.5 rounded">
+        <!-- 🔥 데스크탑: 상태 텍스트 + 깔끔한 텍스트 버튼들 -->
+        <div class="desktop-only hidden md:flex items-center gap-3">
+          <span class="status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap
+            {% if room.is_cancelled %}cancelled bg-red-100 text-red-800
+            {% elif room.is_fully_completed %}completed bg-green-100 text-green-800  
+            {% elif room.cancel_status == 'pending' %}pending bg-yellow-100 text-yellow-800
+            {% elif room.buyer_completed and not room.seller_completed %}
+              {% if current_user == room.seller %}pending bg-yellow-100 text-yellow-800
+              {% else %}waiting bg-purple-100 text-purple-800{% endif %}
+            {% elif room.seller_completed and not room.buyer_completed %}
+              {% if current_user == room.buyer %}pending bg-yellow-100 text-yellow-800
+              {% else %}waiting bg-purple-100 text-purple-800{% endif %}
+            {% else %}active bg-blue-100 text-blue-800{% endif %}">
+            {% if room.is_cancelled %}거래 취소됨
+            {% elif room.is_fully_completed %}거래 완료됨
+            {% elif room.cancel_status == 'pending' %}
+              {% if room.get_cancel_requester == current_user %}취소 요청 중
+              {% else %}취소 요청 받음{% endif %}
+            {% elif room.buyer_completed and not room.seller_completed %}
+              {% if current_user == room.seller %}거래완료 버튼을 눌러주세요
+              {% else %}판매자의 완료를 기다리는 중{% endif %}
+            {% elif room.seller_completed and not room.buyer_completed %}
+              {% if current_user == room.buyer %}거래완료 버튼을 눌러주세요
+              {% else %}구매자의 완료를 기다리는 중{% endif %}
+            {% else %}거래 진행 중{% endif %}
+          </span>
+          
+          <!-- 🔥 웹용 액션 버튼들 - 아이콘 없는 깔끔한 텍스트 버튼 -->
+          {% if not room.is_cancelled and not room.is_fully_completed %}
+            <!-- 거래 완료 버튼 조건 -->
+            {% if current_user == room.buyer and not room.buyer_completed and room.cancel_status != 'pending' %}
+              <button id="completeTradeBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
                 거래 완료
               </button>
-            </div>
-          {% elif room.buyer_completed and not room.seller_completed %}
-            <!-- 상황 6: 구매자, 구매자만 완료함 -->
-            <span class="text-xs text-red-500 bg-gray-100 px-2 py-1 rounded">
-              판매자의 거래 완료를 기다리는 중입니다.
-            </span>
+            {% elif current_user == room.seller and not room.seller_completed and room.cancel_status != 'pending' %}
+              <button id="completeTradeBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                거래 완료
+              </button>
+            {% endif %}
+            
+            <!-- 취소 요청 버튼 조건 -->
+            {% if room.cancel_status == 'none' %}
+              <button onclick="requestTradeCancel()" class="bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                거래 취소 요청
+              </button>
+            {% elif room.cancel_status == 'pending' %}
+              <!-- 취소 응답 버튼들 -->
+              {% if current_user == room.buyer and room.seller_cancel_requested and not room.buyer_cancel_requested %}
+                <button onclick="respondToCancel('accept')" class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+                  취소 동의
+                </button>
+                <button onclick="respondToCancel('reject')" class="bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+                  취소 거절
+                </button>
+              {% elif current_user == room.seller and room.buyer_cancel_requested and not room.seller_cancel_requested %}
+                <button onclick="respondToCancel('accept')" class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+                  취소 동의
+                </button>
+                <button onclick="respondToCancel('reject')" class="bg-gray-400 hover:bg-gray-500 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+                  취소 거절
+                </button>
+              {% elif current_user == room.buyer and room.buyer_cancel_requested %}
+                <button onclick="withdrawCancelRequest()" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+                  취소 요청 철회
+                </button>
+              {% elif current_user == room.seller and room.seller_cancel_requested %}
+                <button onclick="withdrawCancelRequest()" class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+                  취소 요청 철회
+                </button>
+              {% endif %}
+            {% endif %}
           {% endif %}
-
-        {% elif current_user.pk == room.seller.pk %}
-          {% if not room.seller_completed and not room.buyer_completed %}
-            <!-- 상황 3: 판매자, 아무도 완료 안함 -->
-            <span class="text-xs text-gray-400 px-2 py-1 rounded">거래 진행 중</span>
-          {% elif room.seller_completed and not room.buyer_completed %}
-            <!-- 상황 4: 판매자, 판매자만 완료함 -->
-            <span class="text-xs text-gray-500 px-2 py-1 rounded">
-              구매자의 거래 완료를 기다리는 중입니다.
-            </span>
-          {% elif room.buyer_completed and not room.seller_completed %}
-            <!-- 상황 7: 판매자, 구매자만 완료함 -->
-            <span class="text-xs text-red-500 px-2 py-1 rounded">
-              게시글로 돌아가 거래완료 버튼을 눌러주세요!
-            </span>
-          {% endif %}
-
-        {% else %}
-          <span class="text-xs text-gray-400 px-2 py-1 rounded">권한이 없습니다.</span>
-        {% endif %}
+        </div>
+        
+        <!-- 모바일: 상태 텍스트만 -->
+        <div class="mobile-only md:hidden">
+          <span class="status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap
+            {% if room.is_cancelled %}cancelled bg-red-100 text-red-800
+            {% elif room.is_fully_completed %}completed bg-green-100 text-green-800  
+            {% elif room.cancel_status == 'pending' %}pending bg-yellow-100 text-yellow-800
+            {% elif room.buyer_completed and not room.seller_completed %}
+              {% if current_user == room.seller %}pending bg-yellow-100 text-yellow-800
+              {% else %}waiting bg-purple-100 text-purple-800{% endif %}
+            {% elif room.seller_completed and not room.buyer_completed %}
+              {% if current_user == room.buyer %}pending bg-yellow-100 text-yellow-800
+              {% else %}waiting bg-purple-100 text-purple-800{% endif %}
+            {% else %}active bg-blue-100 text-blue-800{% endif %}">
+            {% if room.is_cancelled %}거래 취소됨
+            {% elif room.is_fully_completed %}거래 완료됨
+            {% elif room.cancel_status == 'pending' %}
+              {% if room.get_cancel_requester == current_user %}취소 요청 중
+              {% else %}취소 요청 받음{% endif %}
+            {% elif room.buyer_completed and not room.seller_completed %}
+              {% if current_user == room.seller %}거래완료 버튼을 눌러주세요
+              {% else %}판매자의 완료를 기다리는 중{% endif %}
+            {% elif room.seller_completed and not room.buyer_completed %}
+              {% if current_user == room.buyer %}거래완료 버튼을 눌러주세요
+              {% else %}구매자의 완료를 기다리는 중{% endif %}
+            {% else %}거래 진행 중{% endif %}
+          </span>
+        </div>
       </div>
       
       <div class="relative">
         <button id="headerMenuBtn" class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+          <!-- Heroicons ellipsis-vertical -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
           </svg>
         </button>
         
         <!-- 드롭다운 메뉴 -->
         <div id="headerDropdownMenu" class="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[180px] hidden z-50">
-          <!-- 거래자 정보 보기 -->
+          
+          <!-- ✅ 모바일에서만 표시되는 거래 액션들 - 아이콘 포함 -->
+          <div class="md:hidden">
+            {% if not room.is_cancelled and not room.is_fully_completed %}
+              <!-- 거래 완료 버튼 조건 -->
+              {% if current_user == room.buyer and not room.buyer_completed and room.cancel_status != 'pending' %}
+                <button id="mobileCompleteTradeBtn" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                  <!-- Heroicons check-circle -->
+                  <svg class="w-5 h-5 mr-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  거래 완료
+                </button>
+              {% elif current_user == room.seller and not room.seller_completed and room.cancel_status != 'pending' %}
+                <button id="mobileCompleteTradeBtn" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                  <!-- Heroicons check-circle -->
+                  <svg class="w-5 h-5 mr-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  거래 완료
+                </button>
+              {% endif %}
+              
+              <!-- 취소 관련 버튼들 -->
+              {% if room.cancel_status == 'none' %}
+                <button onclick="requestTradeCancel(); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                  <!-- Heroicons x-circle -->
+                  <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  거래 취소 요청
+                </button>
+              {% elif room.cancel_status == 'pending' %}
+                {% if current_user == room.buyer and room.seller_cancel_requested and not room.buyer_cancel_requested %}
+                  <button onclick="respondToCancel('accept'); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                    <!-- Heroicons check -->
+                    <svg class="w-5 h-5 mr-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    취소 동의
+                  </button>
+                  <button onclick="respondToCancel('reject'); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                    <!-- Heroicons x-mark -->
+                    <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                    취소 거절
+                  </button>
+                {% elif current_user == room.seller and room.buyer_cancel_requested and not room.seller_cancel_requested %}
+                  <button onclick="respondToCancel('accept'); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                    <!-- Heroicons check -->
+                    <svg class="w-5 h-5 mr-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                    취소 동의
+                  </button>
+                  <button onclick="respondToCancel('reject'); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                    <!-- Heroicons x-mark -->
+                    <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                    취소 거절
+                  </button>
+                {% elif current_user == room.buyer and room.buyer_cancel_requested %}
+                  <button onclick="withdrawCancelRequest(); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                    <!-- Heroicons arrow-uturn-left -->
+                    <svg class="w-5 h-5 mr-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    </svg>
+                    취소 요청 철회
+                  </button>
+                {% elif current_user == room.seller and room.seller_cancel_requested %}
+                  <button onclick="withdrawCancelRequest(); closeHeaderMenu()" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
+                    <!-- Heroicons arrow-uturn-left -->
+                    <svg class="w-5 h-5 mr-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+                    </svg>
+                    취소 요청 철회
+                  </button>
+                {% endif %}
+              {% endif %}
+              
+              <hr class="my-2">
+            {% endif %}
+          </div>
+          
+          <!-- 기존 메뉴 항목들 -->
           <button id="viewUserInfoBtn" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-blue-500">
+            <!-- Heroicons user-circle -->
+            <svg class="w-5 h-5 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
             거래자 정보 보기
           </button>
           
-          <!-- 신고하기 -->
           <button id="reportUserBtn" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3 text-red-500">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+            <!-- Heroicons exclamation-triangle -->
+            <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.75 0a9 9 0 1 1 18 0 9 9 0 0 1-18 0Zm9 3.75h.008v.008H12v-.008Z" />
             </svg>
             신고하기
           </button>
@@ -107,7 +251,7 @@
     </div>
   </div>
   
-  <!-- 상품 정보 카드 (헤더 하단에 통합) -->
+  <!-- 상품 정보 카드 (기존과 동일) -->
   <div class="mt-3">
     <a href="{% url 'ddokfarm:post_detail' category=room.category post_id=room.post.id %}" 
        class="block bg-white rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm">
@@ -133,29 +277,34 @@
               <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">거래</span>
             {% endif %}
             
-            <!-- ✅ 분철 참여자 정보 표시 (분철인 경우에만) -->
+            <!-- ✅ 분철 참여자 정보 표시 (분철인 경우에만) - 임시 제거 -->
             {% if room.post.category_type == 'split' and current_user != room.post.user %}
-              {% get_split_participant_members room.post current_user as member_names %}
-              {% if member_names != "멤버 정보 없음" %}
-                <span class="text-xs text-gray-500">{{ member_names }}</span>
-              {% endif %}
+              <span class="text-xs text-gray-500">참여 중</span>
             {% endif %}
           </div>
           
           <!-- 상품 제목 -->
           <h3 class="font-medium text-gray-900 truncate text-sm">{{ room.post.title }}</h3>
           
-          <!-- ✅ 최적화된 가격 정보 -->
-          {% get_post_price_info room.post current_user room as price_info %}
+          <!-- ✅ 수정된 가격 정보 -->
           <div class="flex items-center space-x-2">
-            <p class="text-sm font-bold text-orange-600">{{ price_info.display_price }}</p>
+            <p class="text-sm font-bold text-orange-600">
+              {% if room.post.category_type == 'sell' or room.post.category_type == 'rental' %}
+                {{ room.post.get_price_base }}
+              {% elif room.post.category_type == 'split' %}
+                {{ room.post.get_display_price }}
+              {% else %}
+                가격 정보 없음
+              {% endif %}
+            </p>
           </div>
         </div>
         
         <!-- 상세보기 아이콘 -->
         <div class="flex flex-col items-center gap-1 text-gray-500">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          <!-- Heroicons arrow-top-right-on-square -->
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
           </svg>
           <span class="text-xs">상세보기</span>
         </div>
