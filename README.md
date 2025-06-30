@@ -49,7 +49,12 @@
 - GitHub
 - Notion
 
-## ERD
+## ERD (Entity Relationship Diagram)
+
+프로젝트의 데이터베이스 구조는 아래 링크에서 확인할 수 있습니다.
+
+[oddoke ERD 상세 링크](https://www.notion.so/oddoke-ERD-22270a83488280d9a7c3f1667b574cc2)
+
 ## 어덕해(Oddoke) URL 구조
 
 ### 메인 페이지 (oddoke/urls.py)
