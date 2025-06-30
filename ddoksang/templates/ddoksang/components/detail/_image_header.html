@@ -77,7 +77,7 @@
         <div id="imageGallery" class="relative w-full h-[350px]">
           {% for image in all_images %}
             <div class="gallery-slide absolute inset-0 opacity-0 transition-opacity duration-500 {% if forloop.first %}opacity-100{% endif %}"
-                 onclick="window.openImageModal({{ forloop.counter0 }})">
+                 onclick="window.openCurrentImage()">
               <div class="flex items-center justify-center w-full h-full bg-white rounded-lg relative">
                 <img src="{{ image.url }}" 
                      alt="{{ cafe.cafe_name }} 이미지"
