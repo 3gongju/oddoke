@@ -38,4 +38,9 @@ urlpatterns = [
     path('api/update-current-chatroom/', views.update_current_chatroom, name='update_current_chatroom'),
     path('api/clear-current-chatroom/', views.clear_current_chatroom, name='clear_current_chatroom'),
     path('api/current-chatroom-status/', views.get_current_chatroom_status, name='current_chatroom_status'),
+    
+    # 거래 취소
+    path('cancel/request/<str:room_code>/', views.request_trade_cancel, name='request_trade_cancel'),
+    path('cancel/respond/<str:room_code>/', views.respond_trade_cancel, name='respond_trade_cancel'),
+    path('cancel/withdraw/<str:room_code>/', views.withdraw_cancel_request, name='withdraw_cancel_request'),
 ]

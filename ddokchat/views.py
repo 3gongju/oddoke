@@ -22,6 +22,8 @@ from operator import attrgetter
 from .services import get_dutcheat_service
 from django.contrib.contenttypes.models import ContentType
 from utils.redis_client import redis_client
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 import json
 # Create your views here.
@@ -1291,3 +1293,287 @@ def get_current_chatroom_status(request):
             'success': False,
             'error': f'서버 오류: {str(e)}'
         })
+
+# ✅ 거래 취소 요청
+@login_required
+@require_POST
+def request_trade_cancel(request, room_code):
+    """거래 취소 요청"""
+    try:
+        room = get_object_or_404(ChatRoom, room_code=room_code)
+        
+        # 권한 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False, 
+                'error': '채팅방 참여자만 취소 요청할 수 있습니다.'
+            })
+        
+        # 취소 요청 가능 여부 확인
+        if not room.can_user_request_cancel(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '현재 취소 요청할 수 없는 상태입니다.'
+            })
+        
+        # 취소 요청 처리
+        user_role = room.get_user_role(request.user)
+        
+        if user_role == 'buyer':
+            room.buyer_cancel_requested = True
+        else:  # seller
+            room.seller_cancel_requested = True
+        
+        # 최초 요청 시간 기록
+        if not room.cancel_requested_at:
+            room.cancel_requested_at = timezone.now()
+        
+        # 양쪽 다 동의하면 즉시 취소 (실제로는 한 번에 둘 다 요청하는 경우는 없음)
+        if room.buyer_cancel_requested and room.seller_cancel_requested:
+            room.is_cancelled = True
+            room.cancelled_at = timezone.now()
+            
+            # WebSocket 알림
+            send_trade_cancel_notification(room, 'cancelled')
+            
+            return JsonResponse({
+                'success': True,
+                'message': '거래가 취소되었습니다.',
+                'status': 'cancelled',
+                'reload_required': True
+            })
+        
+        room.save()
+        
+        # WebSocket으로 상대방에게 알림
+        send_trade_cancel_notification(room, 'request')
+        
+        return JsonResponse({
+            'success': True,
+            'message': '거래 취소를 요청했습니다. 상대방의 응답을 기다려주세요.',
+            'status': 'pending',
+            'reload_required': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'취소 요청 처리 중 오류가 발생했습니다: {str(e)}'
+        })
+
+# ✅ 거래 취소 응답 (동의/거절)
+@login_required
+@require_POST
+def respond_trade_cancel(request, room_code):
+    """거래 취소 요청에 대한 응답"""
+    try:
+        room = get_object_or_404(ChatRoom, room_code=room_code)
+        action = request.POST.get('action')  # 'accept' or 'reject'
+        
+        # 권한 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '권한이 없습니다.'
+            })
+        
+        # 응답 가능 여부 확인
+        if not room.can_user_respond_to_cancel(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '현재 응답할 수 없는 상태입니다.'
+            })
+        
+        if action == 'accept':
+            # 취소 동의
+            user_role = room.get_user_role(request.user)
+            
+            if user_role == 'buyer':
+                room.buyer_cancel_requested = True
+            else:  # seller
+                room.seller_cancel_requested = True
+            
+            # 양쪽 다 동의하면 취소 완료
+            if room.buyer_cancel_requested and room.seller_cancel_requested:
+                room.is_cancelled = True
+                room.cancelled_at = timezone.now()
+                
+                # WebSocket 알림
+                send_trade_cancel_notification(room, 'cancelled')
+                
+                room.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': '거래 취소에 동의했습니다. 거래가 취소되었습니다.',
+                    'status': 'cancelled',
+                    'reload_required': True
+                })
+            
+            room.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': '거래 취소에 동의했습니다.',
+                'status': 'agreed',
+                'reload_required': True
+            })
+        
+        elif action == 'reject':
+            # 취소 거절 - 모든 취소 요청 초기화
+            room.buyer_cancel_requested = False
+            room.seller_cancel_requested = False
+            room.cancel_requested_at = None
+            room.save()
+            
+            # WebSocket으로 거절 알림
+            send_trade_cancel_notification(room, 'rejected')
+            
+            return JsonResponse({
+                'success': True,
+                'message': '거래 취소를 거절했습니다. 거래가 계속 진행됩니다.',
+                'status': 'rejected',
+                'reload_required': True
+            })
+        
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': '유효하지 않은 액션입니다.'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'응답 처리 중 오류가 발생했습니다: {str(e)}'
+        })
+
+# ✅ 거래 취소 요청 철회
+@login_required
+@require_POST
+def withdraw_cancel_request(request, room_code):
+    """거래 취소 요청 철회"""
+    try:
+        room = get_object_or_404(ChatRoom, room_code=room_code)
+        
+        # 권한 확인
+        if not room.is_participant(request.user):
+            return JsonResponse({
+                'success': False,
+                'error': '권한이 없습니다.'
+            })
+        
+        # 철회 가능 여부 확인 (본인이 요청한 경우만)
+        user_role = room.get_user_role(request.user)
+        can_withdraw = False
+        
+        if user_role == 'buyer' and room.buyer_cancel_requested:
+            can_withdraw = True
+            room.buyer_cancel_requested = False
+        elif user_role == 'seller' and room.seller_cancel_requested:
+            can_withdraw = True
+            room.seller_cancel_requested = False
+        
+        if not can_withdraw:
+            return JsonResponse({
+                'success': False,
+                'error': '철회할 수 있는 취소 요청이 없습니다.'
+            })
+        
+        # 아무도 취소 요청 안했으면 시간도 초기화
+        if not room.buyer_cancel_requested and not room.seller_cancel_requested:
+            room.cancel_requested_at = None
+        
+        room.save()
+        
+        # WebSocket으로 철회 알림
+        send_trade_cancel_notification(room, 'withdrawn')
+        
+        return JsonResponse({
+            'success': True,
+            'message': '거래 취소 요청을 철회했습니다.',
+            'status': 'withdrawn',
+            'reload_required': True
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'철회 처리 중 오류가 발생했습니다: {str(e)}'
+        })
+
+# ✅ WebSocket 알림 헬퍼 함수
+def send_trade_cancel_notification(room, action_type):
+    """거래 취소 관련 WebSocket 알림 전송"""
+    try:
+        channel_layer = get_channel_layer()
+        
+        # 알림 메시지 구성
+        notification_data = {
+            'type': 'trade_cancel_notification',
+            'room_code': room.room_code,
+            'action': action_type,
+            'timestamp': timezone.now().isoformat()
+        }
+        
+        # 채팅방 그룹에 알림 전송
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room.room_code}",
+            notification_data
+        )
+        
+    except Exception as e:
+        print(f"WebSocket 알림 전송 실패: {e}")
+
+# ✅ 기존 complete_trade 함수 수정 (취소된 거래는 완료 불가)
+@require_POST
+@login_required
+def complete_trade(request, room_code):
+    room = get_object_or_404(ChatRoom, room_code=room_code)
+    current_user = request.user
+
+    if not room.is_participant(current_user):
+        return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
+
+    # ✅ 취소된 거래는 완료 불가
+    if room.is_cancelled:
+        return JsonResponse({'success': False, 'error': '취소된 거래는 완료할 수 없습니다.'}, status=400)
+
+    # ✅ 취소 요청 중인 거래는 완료 불가
+    if room.cancel_status == 'pending':
+        return JsonResponse({'success': False, 'error': '취소 요청 중인 거래는 완료할 수 없습니다. 취소 요청을 먼저 처리해주세요.'}, status=400)
+
+    if room.get_completion_status_for_user(current_user):
+        return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
+
+    user_role = room.get_user_role(current_user)
+
+    if user_role == 'buyer':
+        room.buyer_completed = True
+    elif user_role == 'seller':
+        room.seller_completed = True
+
+    room.save()
+
+    is_fully_completed = room.is_fully_completed
+
+    # 거래가 완전히 완료되었을 때 민감한 정보 삭제 처리
+    if is_fully_completed:
+        delete_sensitive_info(room)
+        
+        # WebSocket으로 거래 완료 알림 전송
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{room.room_code}",
+            {
+                "type": "trade_completed_notification",
+                "room_code": room.room_code,
+            }
+        )
+
+    return JsonResponse({
+        'success': True,
+        'is_fully_completed': is_fully_completed,
+        'user_role': user_role,
+        'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
+    })
