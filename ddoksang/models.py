@@ -265,7 +265,7 @@ class BdayCafe(models.Model):
 
     def reorder_images(self, image_orders):
         """이미지 순서 변경"""
-        # image_orders: [{'id': 'img_1', 'order': 0}, {'id': 'img_2', 'order': 1}, ...]
+        # image_order: [{'id': 'img_1', 'order': 0}, {'id': 'img_2', 'order': 1}, ...]
         if not self.image_gallery:
             return False
         
