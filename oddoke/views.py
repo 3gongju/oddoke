@@ -146,7 +146,7 @@ def intro_view(request):
         {
             'title': '덕생, 전국 생일카페를 한눈에',
             'subtitle': '이번주의 생일을 확인하고, 생일시 게임으로 `덕`을 쌓아요!',
-            'description': '팬 중심의 지도기반 생카 정보 아카이브',
+            'description': '카카오 지도기반 생카 정보 아카이브',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': birthday_artists,

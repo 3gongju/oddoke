@@ -1,3 +1,5 @@
+{% load static %}
+
 <!-- 덕챗 UI 이미지 추가 -->
 <div class="ddokchat-ui-container mt-8 max-w-4xl mx-auto">
     <!-- 채팅 UI 모형 (CSS로 구현) -->
@@ -12,8 +14,9 @@
                         </svg>
                     </button>
                     <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            김
+                        <!-- ✅ 프로필 이미지 수정 -->
+                        <div class="w-8 h-8 bg-white-500 rounded-full flex items-center justify-center text-white text-sm font-medium overflow-hidden">
+                            <img src="{% static 'image/ddok_y.png' %}" alt="김덕질" class="w-full h-full object-cover">
                         </div>
                         <span class="font-medium text-sm">김덕질</span>
                     </div>
@@ -32,7 +35,10 @@
         <!-- 상품 정보 카드 -->
         <div class="bg-gray-50 border-b border-gray-200 px-4 py-3">
             <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-lg flex-shrink-0"></div>
+                <!-- ✅ 상품 이미지 수정 -->
+                <div class="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden bg-gray-100">
+                    <img src="{% static 'image/ive_poca.png' %}" alt="아이브 포토카드" class="w-full h-full object-cover">
+                </div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1">
                         <span class="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full font-medium">양도</span>
@@ -102,7 +108,5 @@
                 </div>
             </div>
         </div>
-        
-       
     </div>
 </div>
