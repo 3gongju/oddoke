@@ -3,11 +3,20 @@
 import { showToast, showLoadingToast, hideLoadingToast } from './ui_manager.js';
 
 export function setupTradeCancel() {
+  console.log('🔧 거래 취소 모듈 초기화 중...');
+  
   // 전역 함수로 노출
   window.requestTradeCancel = requestTradeCancel;
   window.respondToCancel = respondToCancel;
   window.withdrawCancelRequest = withdrawCancelRequest;
   window.closeHeaderMenu = closeHeaderMenu;
+  
+  console.log('✅ 거래 취소 함수들이 전역으로 노출되었습니다:', {
+    requestTradeCancel: typeof window.requestTradeCancel,
+    respondToCancel: typeof window.respondToCancel,
+    withdrawCancelRequest: typeof window.withdrawCancelRequest,
+    closeHeaderMenu: typeof window.closeHeaderMenu
+  });
   
   // 모바일 거래 완료 버튼 이벤트 연결
   const mobileCompleteBtn = document.getElementById('mobileCompleteTradeBtn');
@@ -20,6 +29,7 @@ export function setupTradeCancel() {
         completeTradeBtn.click();
       }
     });
+    console.log('✅ 모바일 거래 완료 버튼 이벤트 연결됨');
   }
 }
 
@@ -61,6 +71,8 @@ function closeHeaderMenu() {
 
 // 거래 취소 요청
 function requestTradeCancel() {
+  console.log('🔧 requestTradeCancel 함수 호출됨');
+  
   if (!confirm('정말 거래 취소를 요청하시겠습니까?\n\n상대방이 동의해야 취소가 완료됩니다.')) {
     return;
   }
@@ -107,6 +119,8 @@ function requestTradeCancel() {
 
 // 거래 취소 응답 (동의/거절)
 function respondToCancel(action) {
+  console.log('🔧 respondToCancel 함수 호출됨, action:', action);
+  
   const actionText = action === 'accept' ? '동의' : '거절';
   const confirmMessage = action === 'accept' 
     ? '거래 취소에 동의하시겠습니까?\n\n동의하면 거래가 즉시 취소됩니다.'
@@ -161,6 +175,8 @@ function respondToCancel(action) {
 
 // 거래 취소 요청 철회
 function withdrawCancelRequest() {
+  console.log('🔧 withdrawCancelRequest 함수 호출됨');
+  
   if (!confirm('거래 취소 요청을 철회하시겠습니까?\n\n철회 후에는 거래가 정상적으로 진행됩니다.')) {
     return;
   }
