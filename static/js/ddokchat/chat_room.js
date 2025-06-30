@@ -1,4 +1,4 @@
-// static/js/ddokchat/chat_room.js - 메인 초기화 파일
+// static/js/ddokchat/chat_room.js - 메인 초기화 파일 수정
 
 import { setupWebSocket, registerMessageHandler, sendMessage } from './websocket_manager.js';
 import { setupTradeCancel } from './trade_cancel.js';
@@ -12,6 +12,7 @@ import {
   handleReadMessageSyncFinish,
   handleEnterChatroomFinish,
   handleTradeCompleted,
+  handleTradeProgressNotification, // 🔥 NEW: 추가
   handleTradeCancelNotification,
   handleTradeStatusUpdate
 } from './message_handler.js';
@@ -51,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   registerMessageHandler('read_message_sync_finish', handleReadMessageSyncFinish);
   registerMessageHandler('enter_chatroom_finish', handleEnterChatroomFinish);
   registerMessageHandler('trade_completed', handleTradeCompleted);
+  registerMessageHandler('trade_progress_notification', handleTradeProgressNotification); // 🔥 NEW
   registerMessageHandler('trade_cancel_notification', handleTradeCancelNotification);
   registerMessageHandler('trade_status_update', handleTradeStatusUpdate);
   
@@ -66,10 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // UI 컴포넌트 설정
   setupUIComponents();
   
-  // 리뷰 모달 체크 (거래 완료 시)
-  setTimeout(() => {
-    setupReviewModal();
-  }, 500);
+  // 🔥 REMOVED: 리뷰 모달 체크 제거 (이제 WebSocket으로 처리)
+  // setTimeout(() => {
+  //   setupReviewModal();
+  // }, 500);
 });
 
 function setupEventListeners() {

@@ -94,7 +94,7 @@ export function setupPlusMenu() {
   }
 }
 
-// 거래 완료 모달 설정
+// 🔥 수정된 거래 완료 모달 설정
 export function setupTradeCompleteModal() {
   const completeTradeBtn = document.getElementById('completeTradeBtn');
   const mobileCompleteTradeBtn = document.getElementById('mobileCompleteTradeBtn'); // 모바일 버튼
@@ -170,6 +170,9 @@ export function setupTradeCompleteModal() {
         return;
       }
       
+      const userRole = getUserRole();
+      const isBuyer = userRole === 'buyer';
+      
       fetch(`/ddokchat/complete/${window.roomCode}/`, {
         method: 'POST',
         headers: {
@@ -185,22 +188,35 @@ export function setupTradeCompleteModal() {
       })
       .then(data => {
         if (data.success) {
-          updateUIAfterTradeComplete(data.is_fully_completed);
+          // 🔥 NEW: 즉시 모달 처리 로직
           if (confirmModal) {
             confirmModal.classList.add('hidden');
           }
           
-          // 역할별 성공 메시지
-          const userRole = getUserRole();
           if (data.is_fully_completed) {
+            // 양쪽 모두 완료 - WebSocket handleTradeCompleted에서 처리됨
             showToast('거래가 완료되었습니다!', 'success');
           } else {
-            if (userRole === 'buyer') {
+            // 한쪽만 완료 - 역할별 메시지 (WebSocket에서도 처리되지만 즉시 피드백)
+            if (isBuyer) {
               showToast('거래완료 요청을 보냈습니다. 판매자의 확인을 기다려주세요.', 'success');
             } else {
               showToast('거래완료 처리되었습니다. 구매자의 확인을 기다려주세요.', 'success');
             }
           }
+          
+          // 🔥 NEW: 구매자가 마지막에 완료하는 경우 즉시 리뷰 모달 표시
+          if (data.is_fully_completed && isBuyer) {
+            const hasAlreadyReviewed = window.hasAlreadyReviewed || false;
+            if (!hasAlreadyReviewed) {
+              setTimeout(() => {
+                if (window.showReviewRedirectModal) {
+                  window.showReviewRedirectModal();
+                }
+              }, 1500); // WebSocket 처리 후 실행
+            }
+          }
+          
         } else {
           throw new Error(data.error || "처리 중 오류가 발생했습니다.");
         }
@@ -281,20 +297,9 @@ function getOtherUserUsername() {
   return null;
 }
 
-// 리뷰 모달 관련 처리 - 🔥 주석 해제
+// 🔥 REMOVED: 기존 setupReviewModal 함수 제거 (더 이상 사용 안함)
+// 이제 WebSocket으로 실시간 처리하므로 기존 리뷰 모달 설정은 불필요
 export function setupReviewModal() {
-  const hasAlreadyReviewed = window.hasAlreadyReviewed || false;
-  const isFullyCompleted = window.isFullyCompleted || false;
-  const isBuyer = window.currentUser === window.roomBuyer;
-
-  if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
-    const reviewModal = document.getElementById("reviewModal");
-    if (reviewModal) {
-      try {
-        reviewModal.showModal();
-      } catch (e) {
-        reviewModal.style.display = "block";
-      }
-    }
-  }
+  // 더 이상 사용하지 않음 - WebSocket에서 실시간 처리
+  console.log('기존 리뷰 모달 설정은 더 이상 사용되지 않습니다. WebSocket으로 실시간 처리됩니다.');
 }
