@@ -268,7 +268,7 @@
     </div>
   </div>
   
-  <!-- 상품 정보 카드 (기존과 동일) -->
+  <!-- 상품 정보 카드 -->
   <div class="mt-3">
     <a href="{% url 'ddokfarm:post_detail' category=room.category post_id=room.post.id %}" 
        class="block bg-white rounded-lg p-3 cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm">
@@ -296,7 +296,7 @@
             
             <!-- ✅ 분철 참여자 정보 표시 (분철인 경우에만) -->
             {% if room.post.category_type == 'split' and current_user != room.post.user %}
-              {% get_split_participant_members room.post current_user as member_names %}
+              {% get_participant_member_names room.post current_user as member_names %}
               {% if member_names != "멤버 정보 없음" %}
                 <span class="text-xs text-gray-500">{{ member_names }}</span>
               {% endif %}
@@ -306,10 +306,11 @@
           <!-- 상품 제목 -->
           <h3 class="font-medium text-gray-900 truncate text-sm">{{ room.post.title }}</h3>
           
-          <!-- ✅ 최적화된 가격 정보 -->
-          {% get_post_price_info room.post current_user room as price_info %}
+          <!-- ✅ 수정된 가격 정보 -->
           <div class="flex items-center space-x-2">
-            <p class="text-sm font-bold text-orange-600">{{ price_info.display_price }}</p>
+            <p class="text-sm font-bold text-orange-600">
+              {% get_smart_post_price room.post current_user room %}
+            </p>
           </div>
         </div>
         
