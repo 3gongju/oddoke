@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.forms import modelformset_factory
 from django.utils import timezone
+from django.db import transaction
 from django import forms
 from operator import attrgetter
 from itertools import chain
@@ -1293,6 +1294,8 @@ def like_post(request, category, post_id):
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
 # 판매 완료 표시 (기존과 동일)
+# ddokfarm/views.py - mark_as_sold 함수 수정
+
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
@@ -1320,15 +1323,20 @@ def mark_as_sold(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
 
-    # 🔹 4. 판매 상태 토글
-    post.is_sold = not post.is_sold
-    post.save()
+    # 🔥 4. 트랜잭션으로 게시글과 채팅방 동시 업데이트
+    with transaction.atomic():
+        # 게시글 판매 상태 토글
+        post.is_sold = not post.is_sold
+        post.save()
 
-    # 🔹 5. 연결된 채팅방의 seller_completed도 같이 업데이트
-    content_type = ContentType.objects.get_for_model(post)
-    ChatRoom.objects.filter(content_type=content_type, object_id=post_id).update(
-        seller_completed=post.is_sold
-    )
+        # 🔥 5. 연결된 채팅방의 seller_completed도 같이 업데이트
+        content_type = ContentType.objects.get_for_model(post)
+        updated_count = ChatRoom.objects.filter(
+            content_type=content_type, 
+            object_id=post_id
+        ).update(seller_completed=post.is_sold)
+        
+        print(f"✅ 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = {post.is_sold}")
 
     # 🔹 6. 리디렉션
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)

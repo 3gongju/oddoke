@@ -1,39 +1,185 @@
-// static/js/ddokchat/trade_cancel.js - 새로 생성할 파일
-
-import { showToast, showLoadingToast, hideLoadingToast } from './ui_manager.js';
+// static/js/ddokchat/trade_cancel.js - 모달 방식으로 수정
 
 export function setupTradeCancel() {
-  console.log('🔧 거래 취소 모듈 초기화 중...');
+  setupTradeCancelModals();
   
   // 전역 함수로 노출
   window.requestTradeCancel = requestTradeCancel;
   window.respondToCancel = respondToCancel;
   window.withdrawCancelRequest = withdrawCancelRequest;
   window.closeHeaderMenu = closeHeaderMenu;
+}
+
+function setupTradeCancelModals() {
+  // 거래 취소 요청 모달
+  const cancelRequestModal = document.getElementById('cancelRequestModal');
+  const cancelRequestCancel = document.getElementById('cancelRequestCancel');
+  const cancelRequestConfirm = document.getElementById('cancelRequestConfirm');
   
-  console.log('✅ 거래 취소 함수들이 전역으로 노출되었습니다:', {
-    requestTradeCancel: typeof window.requestTradeCancel,
-    respondToCancel: typeof window.respondToCancel,
-    withdrawCancelRequest: typeof window.withdrawCancelRequest,
-    closeHeaderMenu: typeof window.closeHeaderMenu
-  });
+  // 거래 취소 응답 모달
+  const cancelResponseModal = document.getElementById('cancelResponseModal');
+  const cancelResponseReject = document.getElementById('cancelResponseReject');
+  const cancelResponseAccept = document.getElementById('cancelResponseAccept');
   
-  // 모바일 거래 완료 버튼 이벤트 연결
-  const mobileCompleteBtn = document.getElementById('mobileCompleteTradeBtn');
-  if (mobileCompleteBtn) {
-    mobileCompleteBtn.addEventListener('click', function() {
-      closeHeaderMenu();
-      // 기존 거래 완료 모달 실행
-      const completeTradeBtn = document.getElementById('completeTradeBtn');
-      if (completeTradeBtn) {
-        completeTradeBtn.click();
-      }
+  // 거래 취소 철회 모달
+  const cancelWithdrawModal = document.getElementById('cancelWithdrawModal');
+  const cancelWithdrawCancel = document.getElementById('cancelWithdrawCancel');
+  const cancelWithdrawConfirm = document.getElementById('cancelWithdrawConfirm');
+
+  // 취소 요청 모달 이벤트
+  if (cancelRequestCancel) {
+    cancelRequestCancel.addEventListener('click', () => {
+      cancelRequestModal.classList.add('hidden');
     });
-    console.log('✅ 모바일 거래 완료 버튼 이벤트 연결됨');
+  }
+  
+  if (cancelRequestConfirm) {
+    cancelRequestConfirm.addEventListener('click', () => {
+      cancelRequestModal.classList.add('hidden');
+      executeTradeCancel('request');
+    });
+  }
+
+  // 취소 응답 모달 이벤트
+  if (cancelResponseReject) {
+    cancelResponseReject.addEventListener('click', () => {
+      cancelResponseModal.classList.add('hidden');
+      executeTradeCancel('reject');
+    });
+  }
+  
+  if (cancelResponseAccept) {
+    cancelResponseAccept.addEventListener('click', () => {
+      cancelResponseModal.classList.add('hidden');
+      executeTradeCancel('accept');
+    });
+  }
+
+  // 취소 철회 모달 이벤트
+  if (cancelWithdrawCancel) {
+    cancelWithdrawCancel.addEventListener('click', () => {
+      cancelWithdrawModal.classList.add('hidden');
+    });
+  }
+  
+  if (cancelWithdrawConfirm) {
+    cancelWithdrawConfirm.addEventListener('click', () => {
+      cancelWithdrawModal.classList.add('hidden');
+      executeTradeCancel('withdraw');
+    });
+  }
+
+  // 모달 외부 클릭 시 닫기
+  [cancelRequestModal, cancelResponseModal, cancelWithdrawModal].forEach(modal => {
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+        }
+      });
+    }
+  });
+}
+
+function requestTradeCancel() {
+  const modal = document.getElementById('cancelRequestModal');
+  if (modal) {
+    modal.classList.remove('hidden');
   }
 }
 
-// CSRF 토큰 가져오는 함수
+function respondToCancel(action) {
+  if (action === 'accept' || action === 'reject') {
+    const modal = document.getElementById('cancelResponseModal');
+    if (modal) {
+      // 응답 액션을 모달에 저장
+      modal.setAttribute('data-action', action);
+      modal.classList.remove('hidden');
+    }
+  }
+}
+
+function withdrawCancelRequest() {
+  const modal = document.getElementById('cancelWithdrawModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+  }
+}
+
+function executeTradeCancel(action) {
+  const roomCode = window.roomCode;
+  const csrfToken = getCSRFToken();
+  
+  if (!csrfToken) {
+    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
+    return;
+  }
+
+  let url, data;
+  
+  switch (action) {
+    case 'request':
+      url = `/ddokchat/cancel/request/${roomCode}/`;
+      data = {};
+      break;
+    case 'accept':
+      url = `/ddokchat/cancel/respond/${roomCode}/`;
+      data = { action: 'accept' };
+      break;
+    case 'reject':
+      url = `/ddokchat/cancel/respond/${roomCode}/`;
+      data = { action: 'reject' };
+      break;
+    case 'withdraw':
+      url = `/ddokchat/cancel/withdraw/${roomCode}/`;
+      data = {};
+      break;
+    default:
+      console.error('알 수 없는 액션:', action);
+      return;
+  }
+
+  // 로딩 토스트 표시
+  const loadingToast = showLoadingToast('처리 중...');
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': csrfToken,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams(data)
+  })
+  .then(response => response.json())
+  .then(data => {
+    hideLoadingToast(loadingToast);
+    
+    if (data.success) {
+      showToast(data.message, 'success');
+      
+      if (data.reload_required) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    } else {
+      showToast(data.error || '처리 중 오류가 발생했습니다.', 'error');
+    }
+  })
+  .catch(error => {
+    hideLoadingToast(loadingToast);
+    console.error('거래 취소 처리 오류:', error);
+    showToast('처리 중 오류가 발생했습니다.', 'error');
+  });
+}
+
+function closeHeaderMenu() {
+  const dropdown = document.getElementById('headerDropdownMenu');
+  if (dropdown) {
+    dropdown.classList.add('hidden');
+  }
+}
+
 function getCSRFToken() {
   if (window.csrfToken) {
     return window.csrfToken;
@@ -61,161 +207,26 @@ function getCSRFToken() {
   return null;
 }
 
-// 헤더 메뉴 닫기
-function closeHeaderMenu() {
-  const headerDropdownMenu = document.getElementById('headerDropdownMenu');
-  if (headerDropdownMenu) {
-    headerDropdownMenu.classList.add('hidden');
+// UI 매니저에서 가져올 함수들 (import 대신 전역 참조)
+function showToast(message, type) {
+  if (window.showToast) {
+    window.showToast(message, type);
+  } else {
+    console.log(`Toast: ${message} (${type})`);
   }
 }
 
-// 거래 취소 요청
-function requestTradeCancel() {
-  console.log('🔧 requestTradeCancel 함수 호출됨');
-  
-  if (!confirm('정말 거래 취소를 요청하시겠습니까?\n\n상대방이 동의해야 취소가 완료됩니다.')) {
-    return;
+function showLoadingToast(message) {
+  if (window.showLoadingToast) {
+    return window.showLoadingToast(message);
+  } else {
+    console.log(`Loading: ${message}`);
+    return null;
   }
-  
-  const loadingToast = showLoadingToast('거래 취소 요청 중...');
-  const csrfToken = getCSRFToken();
-  
-  if (!csrfToken) {
-    hideLoadingToast(loadingToast);
-    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
-    return;
-  }
-  
-  fetch(`/ddokchat/cancel/request/${window.roomCode}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrfToken,
-      'Content-Type': 'application/json',
-    },
-  })
-  .then(response => response.json())
-  .then(data => {
-    hideLoadingToast(loadingToast);
-    
-    if (data.success) {
-      showToast(data.message, 'success');
-      
-      if (data.reload_required) {
-        // 페이지 새로고침 또는 동적 업데이트
-        setTimeout(() => {
-          location.reload();
-        }, 1500);
-      }
-    } else {
-      showToast(data.error || '취소 요청에 실패했습니다.', 'error');
-    }
-  })
-  .catch(error => {
-    hideLoadingToast(loadingToast);
-    console.error('거래 취소 요청 오류:', error);
-    showToast('취소 요청 중 오류가 발생했습니다.', 'error');
-  });
 }
 
-// 거래 취소 응답 (동의/거절)
-function respondToCancel(action) {
-  console.log('🔧 respondToCancel 함수 호출됨, action:', action);
-  
-  const actionText = action === 'accept' ? '동의' : '거절';
-  const confirmMessage = action === 'accept' 
-    ? '거래 취소에 동의하시겠습니까?\n\n동의하면 거래가 즉시 취소됩니다.'
-    : '거래 취소를 거절하시겠습니까?\n\n거절하면 거래가 계속 진행됩니다.';
-  
-  if (!confirm(confirmMessage)) {
-    return;
+function hideLoadingToast(toast) {
+  if (window.hideLoadingToast && toast) {
+    window.hideLoadingToast(toast);
   }
-  
-  const loadingToast = showLoadingToast(`취소 ${actionText} 처리 중...`);
-  const csrfToken = getCSRFToken();
-  
-  if (!csrfToken) {
-    hideLoadingToast(loadingToast);
-    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
-    return;
-  }
-  
-  const formData = new FormData();
-  formData.append('action', action);
-  
-  fetch(`/ddokchat/cancel/respond/${window.roomCode}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrfToken,
-    },
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    hideLoadingToast(loadingToast);
-    
-    if (data.success) {
-      const toastType = action === 'accept' ? 'success' : 'info';
-      showToast(data.message, toastType);
-      
-      if (data.reload_required) {
-        setTimeout(() => {
-          location.reload();
-        }, 1500);
-      }
-    } else {
-      showToast(data.error || `취소 ${actionText}에 실패했습니다.`, 'error');
-    }
-  })
-  .catch(error => {
-    hideLoadingToast(loadingToast);
-    console.error('거래 취소 응답 오류:', error);
-    showToast(`취소 ${actionText} 중 오류가 발생했습니다.`, 'error');
-  });
-}
-
-// 거래 취소 요청 철회
-function withdrawCancelRequest() {
-  console.log('🔧 withdrawCancelRequest 함수 호출됨');
-  
-  if (!confirm('거래 취소 요청을 철회하시겠습니까?\n\n철회 후에는 거래가 정상적으로 진행됩니다.')) {
-    return;
-  }
-  
-  const loadingToast = showLoadingToast('취소 요청 철회 중...');
-  const csrfToken = getCSRFToken();
-  
-  if (!csrfToken) {
-    hideLoadingToast(loadingToast);
-    showToast('보안 토큰 오류입니다. 페이지를 새로고침해주세요.', 'error');
-    return;
-  }
-  
-  fetch(`/ddokchat/cancel/withdraw/${window.roomCode}/`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrfToken,
-      'Content-Type': 'application/json',
-    },
-  })
-  .then(response => response.json())
-  .then(data => {
-    hideLoadingToast(loadingToast);
-    
-    if (data.success) {
-      showToast(data.message, 'info');
-      
-      if (data.reload_required) {
-        setTimeout(() => {
-          location.reload();
-        }, 1500);
-      }
-    } else {
-      showToast(data.error || '취소 요청 철회에 실패했습니다.', 'error');
-    }
-  })
-  .catch(error => {
-    hideLoadingToast(loadingToast);
-    console.error('취소 요청 철회 오류:', error);
-    showToast('철회 처리 중 오류가 발생했습니다.', 'error');
-  });
 }

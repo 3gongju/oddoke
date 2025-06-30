@@ -465,17 +465,39 @@ def complete_trade(request, room_code):
     if not room.is_participant(current_user):
         return JsonResponse({'success': False, 'error': '권한이 없습니다.'}, status=403)
 
+    # ✅ 취소된 거래는 완료 불가
+    if room.is_cancelled:
+        return JsonResponse({'success': False, 'error': '취소된 거래는 완료할 수 없습니다.'}, status=400)
+
+    # ✅ 취소 요청 중인 거래는 완료 불가
+    if room.cancel_status == 'pending':
+        return JsonResponse({'success': False, 'error': '취소 요청 중인 거래는 완료할 수 없습니다. 취소 요청을 먼저 처리해주세요.'}, status=400)
+
     if room.get_completion_status_for_user(current_user):
         return JsonResponse({'success': False, 'error': '이미 거래완료 처리하셨습니다.'}, status=400)
 
     user_role = room.get_user_role(current_user)
 
-    if user_role == 'buyer':
-        room.buyer_completed = True
-    elif user_role == 'seller':
-        room.seller_completed = True
+    # 🔥 트랜잭션으로 채팅방과 게시글 동시 업데이트
+    with transaction.atomic():
+        # 채팅방 완료 상태 업데이트
+        if user_role == 'buyer':
+            room.buyer_completed = True
+        elif user_role == 'seller':
+            room.seller_completed = True
+            
+            # 🔥 판매자가 완료할 때는 게시글도 함께 완료 처리
+            try:
+                post = room.post
+                if post and not post.is_sold:
+                    post.is_sold = True
+                    post.save()
+                    print(f"✅ 게시글 거래완료 동기화: Post#{post.id}")
+            except Exception as e:
+                print(f"❌ 게시글 업데이트 실패: {e}")
+                # 게시글 업데이트 실패해도 채팅방 완료는 진행
 
-    room.save()
+        room.save()
 
     is_fully_completed = room.is_fully_completed
 
@@ -483,13 +505,10 @@ def complete_trade(request, room_code):
     if is_fully_completed:
         delete_sensitive_info(room)
         
-        # WebSocket으로 거래 완료 알림 전송
-        from channels.layers import get_channel_layer
-        from asgiref.sync import async_to_sync
-        
+        # WebSocket으로 거래 완료 알림 전송 (기존 코드 유지)
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            f"chat_{room.room_code}",  # ✅ room_code 사용
+            f"chat_{room.room_code}",
             {
                 "type": "trade_completed_notification",
                 "room_code": room.room_code,
@@ -500,6 +519,7 @@ def complete_trade(request, room_code):
         'success': True,
         'is_fully_completed': is_fully_completed,
         'user_role': user_role,
+        'post_updated': user_role == 'seller',  # 🔥 게시글 업데이트 여부 알림
         'message': f'{"구매자" if user_role == "buyer" else "판매자"} 거래완료 처리되었습니다.'
     })
 
