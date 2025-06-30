@@ -116,19 +116,13 @@ export function setupTradeCompleteModal() {
     if (confirmModal && buyerMessage && sellerMessage) {
       const userRole = getUserRole();
       
-      // 🔥 역할에 상관없이 항상 구매자용 메시지 표시
-      // (거래완료는 구매자가 상품을 확인하는 것이 핵심)
-      buyerMessage.classList.remove('hidden');
-      sellerMessage.classList.add('hidden');
-      
-      // 🔥 판매자인 경우 모달 제목도 조금 다르게
-      const modalTitle = confirmModal.querySelector('h2');
-      if (modalTitle) {
-        if (userRole === 'seller') {
-          modalTitle.textContent = '거래완료 처리하시겠습니까?';
-        } else {
-          modalTitle.textContent = '정말 거래를 완료하시겠습니까?';
-        }
+      // 역할에 따라 적절한 메시지 표시
+      if (userRole === 'buyer') {
+        buyerMessage.classList.remove('hidden');
+        sellerMessage.classList.add('hidden');
+      } else {
+        sellerMessage.classList.remove('hidden');
+        buyerMessage.classList.add('hidden');
       }
       
       confirmModal.classList.remove('hidden');
@@ -199,7 +193,7 @@ export function setupTradeCompleteModal() {
           // 역할별 성공 메시지
           const userRole = getUserRole();
           if (data.is_fully_completed) {
-            showToast('거래가 완료되었습니다! 🎉', 'success');
+            showToast('거래가 완료되었습니다!', 'success');
           } else {
             if (userRole === 'buyer') {
               showToast('거래완료 요청을 보냈습니다. 판매자의 확인을 기다려주세요.', 'success');
