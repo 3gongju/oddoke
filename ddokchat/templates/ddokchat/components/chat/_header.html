@@ -268,13 +268,13 @@
           <div class="flex items-center gap-2 mb-1">
             <!-- 카테고리 배지 -->
             {% if room.post.category_type == 'sell' %}
-              <span class="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full font-medium">양도</span>
+              <span class="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full font-medium">양도</span>
             {% elif room.post.category_type == 'rental' %}
-              <span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">대여</span>
+              <span class="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full font-medium">대여</span>
             {% elif room.post.category_type == 'split' %}
-              <span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full font-medium">분철</span>
+              <span class="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full font-medium">분철</span>
             {% else %}
-              <span class="text-xs bg-gray-500 text-white px-2 py-0.5 rounded-full font-medium">거래</span>
+              <span class="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full font-medium">거래</span>
             {% endif %}
             
             <!-- ✅ 분철 참여자 정보 표시 (분철인 경우에만) - 임시 제거 -->
@@ -288,7 +288,7 @@
           
           <!-- ✅ 수정된 가격 정보 -->
           <div class="flex items-center space-x-2">
-            <p class="text-sm font-bold text-orange-600">
+            <p class="text-sm font-bold text-pink-600">
               {% if room.post.category_type == 'sell' or room.post.category_type == 'rental' %}
                 {{ room.post.get_price_base }}
               {% elif room.post.category_type == 'split' %}
