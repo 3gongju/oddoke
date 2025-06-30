@@ -127,12 +127,13 @@
 
 <script id="image-data" type="application/json">
 [
-  {% for image in cafe.get_all_images %}
+  {% for image in cafe.get_all_images_with_s3_urls %}
   {
     "url": "{{ image.url|escapejs }}",
+    "image_url": "{{ image.url|escapejs }}",
     "type": "{{ image.type_display|escapejs }}",
     "caption": "{{ image.caption|escapejs }}",
-    "alt": "{{ image.caption|default:cafe.cafe_name|escapejs }}"
+    "alt": "{{ image.alt|escapejs }}"
   }{% if not forloop.last %},{% endif %}
   {% endfor %}
 ]
@@ -142,8 +143,7 @@
 <script id="share-data" type="application/json">
 {
   "title": "{{ cafe.cafe_name|escapejs }}",
-  "imageUrl": "{% with first_image=cafe.images.first %}{% if first_image %}{{ first_image.image.url }}{% else %}https://via.placeholder.com/600x400/FEE500/3C1E1E?text=생일카페{% endif %}{% endwith %}",
-  "linkUrl": "{{ request.scheme }}://{{ request.get_host }}{{ request.get_full_path }}",
+  "imageUrl": "{{ cafe.get_kakao_share_image|escapejs }}",
   "address": "{{ cafe.address|escapejs }}",
   "startDate": "{{ cafe.start_date|date:'Y년 m월 d일' }}",
   "endDate": "{{ cafe.end_date|date:'Y년 m월 d일' }}",
