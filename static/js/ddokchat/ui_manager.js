@@ -184,21 +184,21 @@ export function updateSensitiveInfoCards() {
   console.log('민감한 정보 카드 업데이트 시작');
   
   document.querySelectorAll('#chat-log .flex').forEach(messageContainer => {
-    const accountCard = messageContainer.querySelector('.space-y-3');
-    if (accountCard && accountCard.innerHTML.includes('💳')) {
+    const bankCard = messageContainer.querySelector('.space-y-3');
+    if (bankCard && bankCard.innerHTML.includes('💳')) {
       console.log('계좌 카드 발견, 업데이트 중...');
       
       const isMyMessage = messageContainer.classList.contains('justify-end');
       
       if (isMyMessage) {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-800 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-300 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-400 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
           </div>
         `;
       } else {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-100 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-600 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-500 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
@@ -208,20 +208,20 @@ export function updateSensitiveInfoCards() {
       console.log('계좌 카드 업데이트 완료');
     }
     
-    if (accountCard && accountCard.innerHTML.includes('📍')) {
+    if (bankCard && bankCard.innerHTML.includes('📍')) {
       console.log('주소 카드 발견, 업데이트 중...');
       
       const isMyMessage = messageContainer.classList.contains('justify-end');
       
       if (isMyMessage) {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-800 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-300 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-400 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
           </div>
         `;
       } else {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-100 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-600 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-500 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>

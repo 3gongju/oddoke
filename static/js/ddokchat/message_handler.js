@@ -162,22 +162,22 @@ export function handleImageMessage(data) {
   }
 }
 
-export function handleAccountMessage(data) {
-  const accountInfo = data.account_info;
+export function handleBankMessage(data) {
+  const bankInfo = data.bank_info;
   const isMine = data.sender === currentUser;
   
   const messageContainer = document.createElement("div");
   messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} message-enter mb-3`;
 
   let buttonsHtml = '';
-  if (!isMine && !accountInfo.is_deleted) {
+  if (!isMine && !bankInfo.is_deleted) {
     buttonsHtml = `
       <div class="flex space-x-2 mt-3">
-        <button onclick="copyAccountNumber('${accountInfo.account_number}')" 
+        <button onclick="copyBankNumber('${bankInfo.bank_number}')" 
                 class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
           계좌번호 복사
         </button>
-        <button onclick="checkFraudHistory('${accountInfo.bank_code || ''}', '${accountInfo.account_number}', '${accountInfo.account_holder}')" 
+        <button onclick="checkFraudHistory('${bankInfo.bank_code || ''}', '${bankInfo.bank_number}', '${bankInfo.bank_holder}')" 
                 class="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-lg transition-colors action-button">
           신고이력 조회
         </button>
@@ -186,7 +186,7 @@ export function handleAccountMessage(data) {
   }
 
   let contentHtml = '';
-  if (accountInfo.is_deleted) {
+  if (bankInfo.is_deleted) {
     contentHtml = `
       <div class="bg-${isMine ? 'gray-800' : 'gray-100'} rounded-lg p-4 text-center">
         <p class="text-sm ${isMine ? 'text-gray-300' : 'text-gray-600'} font-medium">계좌정보가 삭제되었습니다</p>
@@ -198,15 +198,15 @@ export function handleAccountMessage(data) {
       <div class="bg-${isMine ? 'gray-800' : 'gray-50'} rounded-lg p-${isMine ? '4' : '3'} space-y-2 info-card ${isMine ? 'min-w-[220px]' : ''}">
         <div class="flex justify-between">
           <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">은행</span>
-          <span class="text-sm">${accountInfo.bank_name}</span>
+          <span class="text-sm">${bankInfo.bank_name}</span>
         </div>
         <div class="flex justify-between">
           <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">계좌번호</span>
-          <span class="text-sm">${accountInfo.account_number}</span>
+          <span class="text-sm">${bankInfo.bank_number}</span>
         </div>
         <div class="flex justify-between">
           <span class="text-xs ${isMine ? 'text-gray-300' : 'text-gray-600'}">예금주</span>
-          <span class="text-sm">${accountInfo.account_holder}</span>
+          <span class="text-sm">${bankInfo.bank_holder}</span>
         </div>
       </div>
       ${buttonsHtml}
@@ -454,7 +454,7 @@ function updateUIAfterTradeCancel() {
   if (messageInputArea) {
     messageInputArea.innerHTML = `
       <div class="text-center text-sm text-gray-500 py-4">
-        ❌ 거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
+        거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
       </div>
     `;
   }

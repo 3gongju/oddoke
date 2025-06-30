@@ -2,7 +2,7 @@
 
 import { showToast, showLoadingToast, hideLoadingToast, updateUIAfterTradeComplete } from './ui_manager.js';
 import { handleImageUpload } from './image_handler.js';
-import { sendAccountInfo, sendAddressInfo } from './message_sender.js';
+import { sendBankInfo, sendAddressInfo } from './message_sender.js';
 
 // CSRF 토큰 가져오는 함수
 function getCSRFToken() {
@@ -37,7 +37,7 @@ export function setupPlusMenu() {
   const plusMenuBtn = document.getElementById('plus-menu-btn');
   const plusMenu = document.getElementById('plus-menu');
   const sendImageBtn = document.getElementById('send-image-btn');
-  const sendAccountBtn = document.getElementById('send-account-btn');
+  const sendBankBtn = document.getElementById('send-bank-btn');
   const sendAddressBtn = document.getElementById('send-address-btn');
   const imageUpload = document.getElementById('chat-image-upload');
 
@@ -75,12 +75,12 @@ export function setupPlusMenu() {
     });
   }
 
-  if (sendAccountBtn) {
-    sendAccountBtn.addEventListener('click', function(e) {
+  if (sendBankBtn) {
+    sendBankBtn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
       if (plusMenu) plusMenu.classList.add('hidden');
-      sendAccountInfo();
+      sendBankInfo();
     });
   }
 

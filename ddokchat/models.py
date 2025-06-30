@@ -299,7 +299,7 @@ class Message(models.Model):
     MESSAGE_TYPES = [
         ('text', '텍스트'),
         ('image', '이미지'),
-        ('account_info', '계좌정보'),
+        ('bank_info', '계좌정보'),
         ('address_info', '주소정보'),
     ]
     
@@ -333,8 +333,8 @@ class Message(models.Model):
                 return self.text_content
             elif self.message_type == 'image':
                 return self.image_content
-            elif self.message_type == 'account_info':
-                return self.account_content
+            elif self.message_type == 'bank_info':
+                return self.bank_content
             elif self.message_type == 'address_info':
                 return self.address_content
         except AttributeError:
@@ -348,7 +348,7 @@ class Message(models.Model):
                 return f"{self.sender.username}: {content.content[:50]}"
             elif self.message_type == 'image':
                 return f"{self.sender.username}: [이미지]"
-            elif self.message_type == 'account_info':
+            elif self.message_type == 'bank_info':
                 return f"{self.sender.username}: [계좌정보]"
             elif self.message_type == 'address_info':
                 return f"{self.sender.username}: [주소정보]"
@@ -382,9 +382,9 @@ class ImageMessage(models.Model):
         return None
 
 
-class AccountInfoMessage(models.Model):
+class BankInfoMessage(models.Model):
     """계좌 정보 메시지 상세 정보"""
-    message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='account_content')
+    message = models.OneToOneField(Message, on_delete=models.CASCADE, related_name='bank_content')
     bank_profile = models.ForeignKey(
         'accounts.BankProfile', 
         on_delete=models.SET_NULL,  # 계좌 삭제 시 NULL로 설정
@@ -414,8 +414,8 @@ class AccountInfoMessage(models.Model):
             return {
                 'is_deleted': False,
                 'bank_name': self.bank_profile.bank_name,
-                'account_number': self.bank_profile.account_number,
-                'account_holder': self.bank_profile.account_holder,
+                'bank_number': self.bank_profile.bank_number,
+                'bank_holder': self.bank_profile.bank_holder,
                 'bank_code': self.bank_profile.bank_code or '',
             }
 
@@ -425,8 +425,7 @@ class AccountInfoMessage(models.Model):
         elif not self.bank_profile:
             return "계좌정보: [계좌 삭제됨]"
         else:
-            return f"계좌정보: {self.bank_profile.bank_name} {self.bank_profile.account_number}"
-
+            return f"계좌정보: {self.bank_profile.bank_name} {self.bank_profile.bank_number}"
 
 class AddressMessage(models.Model):
     """주소 정보 메시지 상세 정보"""
