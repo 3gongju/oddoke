@@ -164,6 +164,7 @@
 
     <!-- 기존 CSS 링크 아래에 추가 -->
     <link rel="stylesheet" href="{% static 'css/intro/intro_ddokfarm.css' %}">
+    <link rel="stylesheet" href="{% static 'css/intro/intro_ddokdam.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -455,27 +456,19 @@
                     <!-- 슬라이드 타입별 콘텐츠만 -->
                     {% if slide.type == 'ddokfarm' %}
                         {% include 'main/intro/intro_ddokfarm_form.html' %}
+
                     {% elif slide.type == 'ddokdam' %}
-                        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                            <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                                <div class="text-lg font-semibold mb-2">커뮤니티</div>
-                                <div class="text-sm opacity-90">자유로운 소통</div>
-                            </div>
-                            <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                                <div class="text-lg font-semibold mb-2">예절샷</div>
-                                <div class="text-sm opacity-90">예절샷 남기기</div>
-                            </div>
-                            <div class="bg-white bg-opacity-20 p-4 rounded-lg backdrop-blur-sm">
-                                <div class="text-lg font-semibold mb-2">생일카페</div>
-                                <div class="text-sm opacity-90">최애의 생카 자랑</div>
-                            </div>
-                        </div>
+                        {% include 'main/intro/intro_ddokdam_form.html' %}
+
                     {% elif slide.type == 'favorite_artists' %}
                         {% include 'main/intro/favorite_artists_slide.html' %}
+
                     {% elif slide.type == 'ddoksang' %}
                         {% include 'main/intro/birthday_artists_slide.html' %}
+
                     {% elif slide.type == 'ddokchat' %}
                         {% include 'main/intro/ddokchat_slide.html' %}
+                        
                     {% elif slide.type == 'safety' %}
                         {% include 'main/intro/safety_slide.html' %}
                     {% endif %}
@@ -506,6 +499,7 @@
     </div>
 
     <script src="{% static 'js/intro/intro_ddokfarm.js' %}"></script>
+    <script src="{% static 'js/intro/intro_ddokdam.js' %}"></script>
     
     <!-- JavaScript -->
     <script>

@@ -129,8 +129,7 @@ def intro_view(request):
         },
         {
             'title': '덕팜, 굿즈 거래의 새로운 방식',
-            'subtitle': '세분화된 게시글 작성으로 안전하고 편리한 거래를 지원해요!',
-            # 'description': '거래방식부터 상품 상태, 배송 유형까지!',
+            'subtitle': '제각각이던 게시글 형식을 통일해, 기존 트위터 거래의 문제점을 개선했어요!',
             'type': 'ddokfarm',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': latest_ddokfarm_posts
@@ -138,15 +137,13 @@ def intro_view(request):
         {
             'title': '덕담, 팬들만의 소통 공간',
             'subtitle': '나만의 덕질 기록, 다른 유저들과 자유롭게 소통해요!',
-            'description': '커뮤니티, 예절샷, 생일카페 후기까지',
             'type': 'ddokdam',
             'image': DEFAULT_SLIDE_IMAGE,
-            'real_data': latest_ddokdam_posts
+            'real_data': latest_ddokdam_posts[:4]
         },
         {
-            'title': '덕생, 전국 생일카페를 한눈에',
+            'title': '덕생, 카카오 지도기반 생카 아카이브',
             'subtitle': '생일 캘린더로 이번주의 생일을 확인해보세요!',
-            'description': '카카오 지도기반 생카 정보 아카이브',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': birthday_artists,
