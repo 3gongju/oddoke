@@ -454,7 +454,7 @@ function updateUIAfterTradeCancel() {
   if (messageInputArea) {
     messageInputArea.innerHTML = `
       <div class="text-center text-sm text-gray-500 py-4">
-        ❌ 거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
+        거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
       </div>
     `;
   }

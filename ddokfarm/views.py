@@ -1291,11 +1291,12 @@ def like_post(request, category, post_id):
 
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
-# 판매 완료 표시
+# ddokfarm/views.py의 mark_as_sold 함수 수정
+
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
-    # 🔹 1. 카테고리 → 모델 매핑 함수 또는 직접 매핑
+    # 🔹 1. 카테고리 → 모델 매핑
     def get_post_model(category):
         return {
             'sell': FarmSellPost,
@@ -1328,25 +1329,67 @@ def mark_as_sold(request, category, post_id):
         }
         return render(request, 'ddokfarm/error_message.html', context)
 
-    # 🔥 5. 트랜잭션으로 게시글과 채팅방 동시 업데이트 (토글 → 완료만)
-    with transaction.atomic():
-        # 게시글을 거래완료로 설정 (되돌릴 수 없음)
-        post.is_sold = True
-        post.save()
+    # 🔥 5. 강화된 트랜잭션으로 게시글과 채팅방 동시 업데이트
+    try:
+        with transaction.atomic():
+            print(f"📝 게시글 거래완료 처리 시작: Post#{post.id}")
+            
+            # 게시글을 거래완료로 설정 (되돌릴 수 없음)
+            post.is_sold = True
+            post.save()
+            print(f"✅ 게시글 거래완료 설정: Post#{post.id}")
 
-        # 🔥 6. 연결된 모든 채팅방의 seller_completed를 True로 설정
-        content_type = ContentType.objects.get_for_model(post)
-        updated_count = ChatRoom.objects.filter(
-            content_type=content_type, 
-            object_id=post_id,
-            seller_completed=False  # 아직 완료하지 않은 채팅방만
-        ).update(seller_completed=True)
+            # 🔥 6. 연결된 모든 채팅방의 seller_completed를 True로 설정
+            content_type = ContentType.objects.get_for_model(post)
+            chatrooms_to_update = ChatRoom.objects.filter(
+                content_type=content_type, 
+                object_id=post_id,
+                seller_completed=False  # 아직 완료하지 않은 채팅방만
+            )
+            
+            print(f"🔍 업데이트할 채팅방 수: {chatrooms_to_update.count()}")
+            
+            updated_count = chatrooms_to_update.update(seller_completed=True)
+            print(f"✅ 게시글 거래완료 → 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = True")
+            
+            # 🔥 7. 각 채팅방에 WebSocket 알림 전송
+            channel_layer = get_channel_layer()
+            for chatroom in chatrooms_to_update:
+                try:
+                    async_to_sync(channel_layer.group_send)(
+                        f"chat_{chatroom.room_code}",
+                        {
+                            "type": "trade_status_update",
+                            "room_code": chatroom.room_code,
+                            "post_marked_sold": True,
+                            "seller_completed": True,
+                        }
+                    )
+                    print(f"✅ WebSocket 알림 전송: Room#{chatroom.room_code}")
+                except Exception as ws_error:
+                    print(f"⚠️ WebSocket 알림 실패 (무시): Room#{chatroom.room_code}, Error: {ws_error}")
+                    # WebSocket 오류는 무시하고 계속 진행
+            
+            # 🔥 8. 업데이트 후 확인
+            post.refresh_from_db()
+            print(f"🔍 최종 확인: Post#{post.id}, is_sold={post.is_sold}")
+            
+    except Exception as e:
+        print(f"❌ 게시글 거래완료 처리 실패: {e}")
+        import traceback
+        print(f"❌ 전체 스택트레이스: {traceback.format_exc()}")
         
-        print(f"✅ 게시글 거래완료 → 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = True")
+        context = {
+            'title': '처리 실패',
+            'message': f'거래완료 처리 중 오류가 발생했습니다: {str(e)}',
+            'back_url': reverse('ddokfarm:post_detail', args=[category, post.id]),
+        }
+        return render(request, 'ddokfarm/error_message.html', context)
 
-    # 🔹 7. 리디렉션
+    # 🔹 9. 성공 시 리디렉션
+    print(f"🎉 게시글 거래완료 처리 완료: Post#{post.id}")
     return redirect('ddokfarm:post_detail', category=category, post_id=post.id)
-
+    
 # 아티스트 선택시 멤버 목록 출력 (기존과 동일)
 def get_members_by_artist(request, artist_id):
     members = Member.objects.filter(artist_name__id=artist_id).distinct()

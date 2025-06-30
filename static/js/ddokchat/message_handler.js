@@ -5,7 +5,8 @@ import {
   scrollToBottomAfterImageLoad, 
   registerObserver, 
   updateSensitiveInfoCards, 
-  updateUIAfterTradeComplete 
+  updateUIAfterTradeComplete,
+  showToast  // ✅ showToast import 추가
 } from './ui_manager.js';
 import { handleReceivedMessage } from './auto_detect.js';
 
@@ -408,6 +409,49 @@ export function handleTradeCompleted(data) {
  updateUIAfterTradeComplete(true);
 }
 
+// 거래 상태 업데이트 핸들러 (게시글에서 거래완료 시)
+export function handleTradeStatusUpdate(data) {
+  if (data.post_marked_sold && data.seller_completed) {
+    // 게시글에서 거래완료가 되어 채팅방의 seller_completed가 True가 된 경우
+    showToast('게시글이 거래완료 처리되었습니다.', 'info');
+    
+    // UI 업데이트
+    updateTradeStatusUI();
+    
+    // 1-2초 후 페이지 새로고침으로 최신 상태 반영
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  }
+}
+
+// 거래 상태 UI 업데이트 함수
+function updateTradeStatusUI() {
+  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+  
+  if (tradeStatusContainer) {
+    // 데스크탑/모바일 모두 업데이트
+    const desktopStatus = tradeStatusContainer.querySelector('.desktop-only .status-text');
+    const mobileStatus = tradeStatusContainer.querySelector('.mobile-only .status-text');
+    
+    if (desktopStatus) {
+      desktopStatus.className = 'status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap completed bg-green-100 text-green-800';
+      desktopStatus.textContent = '거래 완료됨';
+    }
+    
+    if (mobileStatus) {
+      mobileStatus.className = 'status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap completed bg-green-100 text-green-800';
+      mobileStatus.textContent = '거래 완료됨';
+    }
+    
+    // 거래완료 버튼들 숨기기
+    const completeButtons = document.querySelectorAll('#completeTradeBtn, #mobileCompleteTradeBtn');
+    completeButtons.forEach(btn => {
+      if (btn) btn.style.display = 'none';
+    });
+  }
+}
+
 export function handleTradeCancelNotification(data) {
   const action = data.action;
   const currentUser = window.currentUser || '';
@@ -453,7 +497,10 @@ function updateUIAfterTradeCancel() {
 
   if (messageInputArea) {
     messageInputArea.innerHTML = `
-      <div class="text-center text-sm text-gray-500 py-4">
+      <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
         거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
       </div>
     `;

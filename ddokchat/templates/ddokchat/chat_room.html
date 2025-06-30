@@ -137,11 +137,10 @@ body > div:has(footer),
 }
 </style>
 
-<!-- chat_room.html의 JavaScript 부분 수정 -->
-
 <script>
   // 전역 변수 설정
   window.roomCode = "{{ room.room_code }}";
+  window.room_code = "{{ room.room_code }}";
   window.currentUser = "{{ current_user.username }}";
   window.currentUserId = "{{ current_user.id }}";
   window.isTradeCompleted = "{{ room.is_fully_completed }}" === "True";
@@ -151,12 +150,17 @@ body > div:has(footer),
   window.roomSeller = "{{ room.seller.username }}";
   window.csrfToken = "{{ csrf_token }}";
   
-  // 🔥 WebSocket 상태를 확인하는 헬퍼 함수
+  // roomCode 유효성 검사
+  if (!window.roomCode || window.roomCode === 'undefined' || window.roomCode === '') {
+    alert('채팅방 정보를 불러올 수 없습니다. 페이지를 새로고침해주세요.');
+  }
+  
+  // WebSocket 상태를 확인하는 헬퍼 함수
   function isWebSocketReady() {
     return window.sendWebSocketMessage && typeof window.sendWebSocketMessage === 'function';
   }
   
-  // 🔥 신고 모달 연결
+  // 신고 모달 연결
   document.addEventListener('DOMContentLoaded', function() {
     // 신고 모달 초기화
     ReportModal.init({
@@ -186,7 +190,7 @@ body > div:has(footer),
     }
   });
 
-  // ✅ 1. 현재 채팅방 위치 업데이트 함수
+  // 현재 채팅방 위치 업데이트 함수
   function updateCurrentChatroom(roomCode) {
       fetch('/ddokchat/api/update-current-chatroom/', {
           method: 'POST',
@@ -205,7 +209,7 @@ body > div:has(footer),
       });
   }
 
-  // ✅ 2. 현재 채팅방 위치 해제 함수
+  // 현재 채팅방 위치 해제 함수
   function clearCurrentChatroom() {
       fetch('/ddokchat/api/clear-current-chatroom/', {
           method: 'POST',
@@ -221,7 +225,7 @@ body > div:has(footer),
       });
   }
 
-  // ✅ 3. 안읽은 메시지 읽음 처리 함수 (탭 활성화 시)
+  // 안읽은 메시지 읽음 처리 함수 (탭 활성화 시)
   function markMessagesAsReadOnFocus() {
       if (isWebSocketReady()) {
           window.sendWebSocketMessage({
@@ -230,9 +234,14 @@ body > div:has(footer),
       }
   }
 
-  // ✅ 4. 이벤트 리스너 등록
+  // 이벤트 리스너 등록
   document.addEventListener('DOMContentLoaded', function() {
       const roomCode = '{{ room.room_code }}';
+      
+      // roomCode 검증
+      if (!roomCode || roomCode === 'undefined' || roomCode === '') {
+          return;
+      }
       
       // 페이지 로드 시 현재 위치 설정
       updateCurrentChatroom(roomCode);
