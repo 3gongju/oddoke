@@ -404,9 +404,144 @@ export function handleEnterChatroomFinish(data) {
  }
 }
 
+// 🔥 수정된 handleTradeCompleted (양쪽 모두 완료)
 export function handleTradeCompleted(data) {
- updateSensitiveInfoCards();
- updateUIAfterTradeComplete(true);
+  updateSensitiveInfoCards();
+  updateUIAfterTradeComplete(true);
+  
+  // 🔥 NEW: 구매자인 경우 즉시 리뷰 모달 표시
+  const currentUser = window.currentUser || '';
+  const roomBuyer = window.roomBuyer || '';
+  const isBuyer = currentUser === roomBuyer;
+  
+  if (isBuyer) {
+    // 이미 리뷰를 작성했는지 확인
+    const hasAlreadyReviewed = window.hasAlreadyReviewed || false;
+    if (!hasAlreadyReviewed) {
+      setTimeout(() => {
+        showReviewRedirectModal();
+      }, 1000); // 1초 후 표시 (완료 처리 완료 후)
+    }
+  }
+}
+
+// 🔥 NEW: 거래 진행 알림 핸들러 (한쪽만 완료)
+export function handleTradeProgressNotification(data) {
+  const currentUser = window.currentUser || '';
+  const roomBuyer = window.roomBuyer || '';
+  const isBuyer = currentUser === roomBuyer;
+  const completedBy = data.completed_by; // 'buyer' 또는 'seller'
+  const completedUser = data.completed_user;
+  const otherUser = data.other_user;
+  
+  if (completedBy === 'buyer') {
+    // 구매자가 먼저 완료한 경우
+    if (isBuyer) {
+      // 구매자 본인 - 판매자 완료 대기 메시지
+      showToast('거래완료 요청을 보냈습니다. 판매자의 확인을 기다려주세요.', 'success');
+    } else {
+      // 판매자 - 구매자 완료 알림
+      showToast(`${completedUser}님이 거래완료를 요청했습니다. 확인 후 거래완료 버튼을 눌러주세요.`, 'info');
+    }
+  } else if (completedBy === 'seller') {
+    // 판매자가 먼저 완료한 경우
+    if (isBuyer) {
+      // 구매자 - 판매자 완료 알림
+      showToast(`${completedUser}님이 거래완료 처리했습니다. 상품 확인 후 거래완료 버튼을 눌러주세요.`, 'info');
+    } else {
+      // 판매자 본인 - 구매자 완료 대기 메시지
+      showToast('거래완료 처리되었습니다. 구매자의 확인을 기다려주세요.', 'success');
+    }
+  }
+  
+  // UI 상태 업데이트 (헤더의 상태 텍스트 등)
+  updateTradeProgressUI(completedBy, currentUser);
+}
+
+// 🔥 NEW: 거래 진행 상태 UI 업데이트
+function updateTradeProgressUI(completedBy, currentUser) {
+  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+  const roomBuyer = window.roomBuyer || '';
+  const isBuyer = currentUser === roomBuyer;
+  
+  if (tradeStatusContainer) {
+    const desktopStatus = tradeStatusContainer.querySelector('.desktop-only .status-text');
+    const mobileStatus = tradeStatusContainer.querySelector('.mobile-only .status-text');
+    
+    let statusText = '';
+    let statusClass = 'waiting bg-purple-100 text-purple-800';
+    
+    if (completedBy === 'buyer' && !isBuyer) {
+      // 구매자 완료, 현재 사용자는 판매자
+      statusText = '거래완료 버튼을 눌러주세요';
+      statusClass = 'pending bg-yellow-100 text-yellow-800';
+    } else if (completedBy === 'seller' && isBuyer) {
+      // 판매자 완료, 현재 사용자는 구매자
+      statusText = '거래완료 버튼을 눌러주세요';
+      statusClass = 'pending bg-yellow-100 text-yellow-800';
+    } else {
+      // 본인이 완료한 경우
+      statusText = '상대방의 완료를 기다리는 중';
+      statusClass = 'waiting bg-purple-100 text-purple-800';
+    }
+    
+    if (desktopStatus) {
+      desktopStatus.className = `status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap ${statusClass}`;
+      desktopStatus.textContent = statusText;
+    }
+    
+    if (mobileStatus) {
+      mobileStatus.className = `status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap ${statusClass}`;
+      mobileStatus.textContent = statusText;
+    }
+  }
+}
+
+// 🔥 NEW: 리뷰 페이지 이동 모달 표시
+function showReviewRedirectModal() {
+  const modal = document.getElementById('reviewRedirectModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    
+    // 버튼 이벤트 설정
+    const laterBtn = document.getElementById('reviewRedirectLater');
+    const nowBtn = document.getElementById('reviewRedirectNow');
+    
+    if (laterBtn) {
+      laterBtn.onclick = function() {
+        modal.classList.add('hidden');
+      };
+    }
+    
+    if (nowBtn) {
+      nowBtn.onclick = function() {
+        modal.classList.add('hidden');
+        // 리뷰 작성 페이지로 이동
+        const otherUser = window.roomSeller || getOtherUserFromHeader();
+        if (otherUser) {
+          window.location.href = `/accounts/write-review/${otherUser}/?room_code=${window.roomCode}`;
+        } else {
+          showToast('리뷰 페이지로 이동할 수 없습니다.', 'error');
+        }
+      };
+    }
+    
+    // 모달 외부 클릭 시 닫기
+    modal.onclick = function(e) {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    };
+  }
+}
+
+// 🔥 NEW: 헤더에서 상대방 사용자명 추출
+function getOtherUserFromHeader() {
+  const userNameElement = document.querySelector('.bg-gray-50 h2.font-semibold');
+  if (userNameElement) {
+    return userNameElement.textContent.trim();
+  }
+  return null;
 }
 
 // 거래 상태 업데이트 핸들러 (게시글에서 거래완료 시)
@@ -509,3 +644,6 @@ function updateUIAfterTradeCancel() {
   // 전역 상태 업데이트
   window.isTradeCompleted = true; // 취소도 완료 상태로 간주
 }
+
+// 전역 함수로 노출
+window.showReviewRedirectModal = showReviewRedirectModal;
