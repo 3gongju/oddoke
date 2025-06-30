@@ -65,7 +65,7 @@
     }
 
     // 이미지 모달 기능
-    function openImageModal(index = 0) {
+    function openImageModal(index = currentImageIndex) {
         if (totalImages === 0) return;
         
         const modal = document.getElementById('imageModal');
@@ -74,6 +74,8 @@
         // 모달 표시
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // 스크롤 방지
+
+        modal.style.zIndex = '9999';
         
         // 이미지 로드
         currentModalIndex = index;
@@ -725,6 +727,10 @@
 
     // 창 크기 변경 시 그리드 업데이트
     window.addEventListener('resize', updateGalleryGrid);
+
+    window.openCurrentImage = function() {
+    openImageModal(currentImageIndex);
+    };
 
     // 전역 함수 노출
     window.showGalleryImage = showGalleryImage;
