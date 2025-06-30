@@ -1,13 +1,10 @@
 // ddoksang_image_upload.js - JSON 기반 이미지 갤러리용
 
-console.log('🚀 JSON 기반 이미지 업로드 모듈 로드 시작');
 
 // 메인 초기화 함수
 window.initDdoksangImageUpload = function() {
-    console.log('🖼️ JSON 기반 이미지 업로드 초기화 시작');
     
     if (window.ddoksangImageUploader && window.ddoksangImageUploader.isInitialized) {
-        console.log('✅ 이미지 업로더 이미 초기화됨');
         return window.ddoksangImageUploader;
     }
 
@@ -15,10 +12,8 @@ window.initDdoksangImageUpload = function() {
     
     if (uploader && uploader.isInitialized) {
         window.ddoksangImageUploader = uploader;
-        console.log('✅ JSON 기반 이미지 업로더 초기화 완료');
         return uploader;
     } else {
-        console.error('❌ 이미지 업로더 초기화 실패');
         return null;
     }
 };
@@ -36,12 +31,6 @@ const ImageCompressor = {
     async compressImage(file, options = {}) {
         const config = { ...this.config, ...options };
         
-        console.log('🔄 이미지 압축 시작:', {
-            원본파일: file.name,
-            원본크기: `${(file.size / 1024).toFixed(1)}KB`,
-            설정: config
-        });
-
         return new Promise((resolve) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -50,20 +39,14 @@ const ImageCompressor = {
             img.onload = () => {
                 try {
                     const result = this.processImage(img, canvas, ctx, config, file);
-                    console.log('✅ 이미지 압축 완료:', {
-                        압축파일: result.name,
-                        압축크기: `${(result.size / 1024).toFixed(1)}KB`,
-                        압축률: `${((1 - result.size / file.size) * 100).toFixed(1)}%`
-                    });
+                    
                     resolve(result);
                 } catch (error) {
-                    console.error('❌ 이미지 압축 실패:', error);
                     resolve(file);
                 }
             };
 
             img.onerror = () => {
-                console.error('❌ 이미지 로딩 실패');
                 resolve(file);
             };
 
@@ -99,10 +82,6 @@ const ImageCompressor = {
                 const dataURL = canvas.toDataURL(format, currentQuality);
                 const blob = this.dataURLToBlob(dataURL);
                 
-                console.log(`🔄 압축 시도 ${attempt + 1}:`, {
-                    품질: currentQuality,
-                    크기: `${(blob.size / 1024).toFixed(1)}KB`
-                });
 
                 if (blob.size <= maxSizeKB * 1024 || attempt === 2) {
                     result = new File([blob], this.generateFileName(originalFile, format), {
@@ -115,7 +94,6 @@ const ImageCompressor = {
                 currentQuality *= 0.8;
                 attempt++;
             } catch (error) {
-                console.error(`❌ 압축 시도 ${attempt + 1} 실패:`, error);
                 break;
             }
         }
@@ -165,9 +143,8 @@ const ImageCompressor = {
     }
 };
 
-// ✅ JSON 기반 이미지 업로더 설정 함수
+// JSON 기반 이미지 업로더 설정 함수
 function setupImageUploader() {
-    console.log('⚙️ JSON 기반 이미지 업로더 설정 시작');
     
     // DOM 요소 확인
     const fileInput = document.getElementById('image-upload');
@@ -176,25 +153,19 @@ function setupImageUploader() {
     const previewList = document.getElementById('image-preview-list');
 
     if (!fileInput || !fileCount || !previewContainer || !previewList) {
-        console.error('❌ 필수 DOM 요소를 찾을 수 없습니다:', {
-            fileInput: !!fileInput,
-            fileCount: !!fileCount,
-            previewContainer: !!previewContainer,
-            previewList: !!previewList
-        });
+        
         return null;
     }
 
-    console.log('✅ 모든 필수 DOM 요소 확인됨');
 
-    // ✅ JSON 기반 상태 변수
+    // JSON 기반 상태 변수
     let imageGallery = [];  // JSON 형태로 이미지 정보 저장
     let fileIdCounter = Date.now();
     let sortableInstance = null;
     const maxFiles = 10;
     const maxSizeMB = 5;
 
-    // ✅ 이미지 갤러리 JSON 구조
+    //  이미지 갤러리 JSON 구조
     // {
     //   id: "img_xxx",
     //   file: File객체,
@@ -233,16 +204,14 @@ function setupImageUploader() {
         return { valid: errors.length === 0, errors };
     }
 
-    // ✅ 미리보기 업데이트 함수 (JSON 기반)
+    // 미리보기 업데이트 함수 (JSON 기반)
     function updatePreview() {
-        console.log('🔄 JSON 기반 미리보기 업데이트:', imageGallery.length, '개 이미지');
 
         // 기존 Sortable 정리
         if (sortableInstance) {
             try {
                 sortableInstance.destroy();
             } catch (e) {
-                console.warn('Sortable 정리 오류:', e);
             }
             sortableInstance = null;
         }
@@ -250,7 +219,7 @@ function setupImageUploader() {
         // 미리보기 목록 초기화
         previewList.innerHTML = "";
 
-        // ✅ 이미지 갤러리 렌더링 (order 순으로 정렬)
+        // 이미지 갤러리 렌더링 (order 순으로 정렬)
         const sortedImages = [...imageGallery].sort((a, b) => a.order - b.order);
         
         sortedImages.forEach((imageData, index) => {
@@ -278,10 +247,9 @@ function setupImageUploader() {
         // 메인 앱에 알림
         notifyMainApp();
         
-        console.log('✅ JSON 기반 미리보기 업데이트 완료');
     }
 
-    // ✅ 이미지 래퍼 생성 (JSON 기반)
+    // 이미지 래퍼 생성 (JSON 기반)
     function createImageWrapper(imageData, index) {
         const wrapper = document.createElement("div");
         wrapper.className = "relative w-full aspect-[3/4] cursor-move bg-gray-100 rounded border";
@@ -296,7 +264,7 @@ function setupImageUploader() {
             img.src = createErrorPlaceholder();
         };
 
-        // ✅ 미리보기 URL 설정
+        // 미리보기 URL 설정
         if (imageData.url) {
             img.src = imageData.url;
         } else {
@@ -312,7 +280,7 @@ function setupImageUploader() {
         // 드래그 핸들
         const dragHandle = createDragHandle();
 
-        // ✅ 압축 상태 표시
+        // 압축 상태 표시
         if (imageData.isCompressed) {
             const compressedBadge = document.createElement("div");
             compressedBadge.className = "absolute bottom-1 left-1 bg-green-600 bg-opacity-90 text-white text-xs px-1 py-0.5 rounded z-10";
@@ -327,10 +295,9 @@ function setupImageUploader() {
         return wrapper;
     }
 
-    // ✅ 이미지 미리보기 생성 (JSON 기반)
+    // 이미지 미리보기 생성 (JSON 기반)
     function createImagePreview(imageData, img) {
         if (!imageData.file) {
-            console.warn('파일 객체가 없습니다:', imageData);
             img.src = createErrorPlaceholder();
             return;
         }
@@ -341,24 +308,22 @@ function setupImageUploader() {
             img.src = e.target.result;
         };
         reader.onerror = (e) => {
-            console.error('FileReader 오류:', e);
             img.src = createErrorPlaceholder();
         };
         
         try {
             reader.readAsDataURL(imageData.file);
         } catch (error) {
-            console.error('파일 읽기 오류:', error);
             img.src = createErrorPlaceholder();
         }
     }
 
-    // 오류 플레이스홀더 생성 (기존과 동일)
+    // 오류 플레이스홀더 생성 
     function createErrorPlaceholder() {
         return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuydtOuvuOyngCDroZzrk5nlsaDsiJgg7LqY7J6EPC90ZXh0Pjwvc3ZnPg==';
     }
 
-    // ✅ 배지 추가 (JSON 기반)
+    // 배지 추가 (JSON 기반)
     function addBadges(wrapper, imageData, index) {
         if (imageData.is_main) {
             const badge = document.createElement("div");
@@ -424,7 +389,7 @@ function setupImageUploader() {
         return addWrapper;
     }
 
-    // ✅ 파일 선택 처리 (JSON 기반 + 압축)
+    // 파일 선택 처리 (JSON 기반 + 압축)
     async function handleFileSelection(newFiles) {
         console.log('JSON 기반 파일 선택 처리:', newFiles.length, '개');
 
@@ -449,21 +414,20 @@ function setupImageUploader() {
             return;
         }
 
-        // ✅ 압축 진행 표시
+        // 압축 진행 표시
         if (filesToAdd.length > 0) {
             showToast('이미지 압축 중...', 'info', 5000);
         }
 
-        // ✅ JSON 기반 이미지 객체 생성
+        // JSON 기반 이미지 객체 생성
         for (const file of filesToAdd) {
             try {
-                console.log('🔄 JSON 기반 파일 처리:', file.name);
                 
                 // 이미지 압축
                 const compressedFile = await ImageCompressor.compressImage(file);
                 const isCompressed = compressedFile !== file;
                 
-                // ✅ JSON 형태의 이미지 데이터 생성
+                // JSON 형태의 이미지 데이터 생성
                 const currentOrder = imageGallery.length;
                 const imageData = {
                     id: `img_${Date.now()}_${fileIdCounter++}_${Math.random().toString(36).substr(2, 9)}`,
@@ -481,19 +445,8 @@ function setupImageUploader() {
                 
                 imageGallery.push(imageData);
                 
-                if (isCompressed) {
-                    console.log('✅ 압축 완료:', {
-                        파일명: file.name,
-                        원본크기: `${(file.size / 1024).toFixed(1)}KB`,
-                        압축크기: `${(compressedFile.size / 1024).toFixed(1)}KB`,
-                        압축률: `${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`
-                    });
-                } else {
-                    console.log('⚡ 압축 불필요:', file.name);
-                }
-                
+
             } catch (error) {
-                console.error('❌ JSON 기반 파일 처리 오류:', error);
                 
                 // 실패시 원본 파일로 추가
                 const currentOrder = imageGallery.length;
@@ -514,7 +467,7 @@ function setupImageUploader() {
         
         updatePreview();
         
-        // ✅ 압축 완료 알림
+        // 압축 완료 알림
         const compressedCount = imageGallery.filter(img => img.isCompressed).length;
         if (compressedCount > 0) {
             showToast(`${compressedCount}개 이미지가 압축되었습니다.`, 'success');
@@ -546,13 +499,12 @@ function setupImageUploader() {
                         oldIndex < imageGallery.length && 
                         newIndex < imageGallery.length) {
                         
-                        console.log('🔄 JSON 기반 순서 변경:', { oldIndex, newIndex });
                         
-                        // ✅ JSON 배열에서 순서 변경
+                        // JSON 배열에서 순서 변경
                         const movedItem = imageGallery.splice(oldIndex, 1)[0];
                         imageGallery.splice(newIndex, 0, movedItem);
                         
-                        // ✅ order 값 재조정 및 대표 이미지 플래그 업데이트
+                        // order 값 재조정 및 대표 이미지 플래그 업데이트
                         imageGallery.forEach((img, index) => {
                             img.order = index;
                             // 첫 번째 위치(index=0)에 있는 이미지만 대표로 설정
@@ -560,19 +512,16 @@ function setupImageUploader() {
                             img.type = (index === 0) ? "main" : "other";
                         });
                         
-                        console.log('대표 이미지 플래그 업데이트 완료:', 
-                                imageGallery.find(img => img.is_main)?.id || 'none');
-                        
+                       
                         updatePreview();
                     }
                 }
             });
         } catch (error) {
-            console.error('Sortable 초기화 오류:', error);
         }
     }
 
-    // ✅ 이미지 제거 (JSON 기반)
+    // 이미지 제거 (JSON 기반)
     function removeImage(imageId) {
         
         const initialLength = imageGallery.length;
@@ -590,7 +539,7 @@ function setupImageUploader() {
             return shouldKeep;
         });
         
-        // ✅ order 재조정 및 대표 이미지 재설정
+        // order 재조정 및 대표 이미지 재설정
         if (imageGallery.length > 0) {
             imageGallery.forEach((img, index) => {
                 img.order = index;
@@ -599,16 +548,14 @@ function setupImageUploader() {
                 img.type = (index === 0) ? "main" : "other";
             });
             
-            console.log('✅ 대표 이미지 재설정:', imageGallery[0].id);
         }
         
         if (imageGallery.length !== initialLength) {
-            console.log('✅ JSON 기반 이미지 제거 완료');
             updatePreview();
         }
     }
 
-    // ✅ 파일 개수 업데이트 (JSON 기반)
+    // 파일 개수 업데이트 (JSON 기반)
     function updateFileCount() {
         if (imageGallery.length === 0) {
             fileCount.textContent = "선택된 파일 없음";
@@ -621,42 +568,36 @@ function setupImageUploader() {
         }
     }
 
-    // ✅ 폼 파일 입력 업데이트 (JSON 기반)
+    // 폼 파일 입력 업데이트 (JSON 기반)
     function updateFormFileInput() {
-        console.log('🔄 JSON 기반 폼 파일 입력 업데이트 시작');
         
         try {
             const dt = new DataTransfer();
             
-            // ✅ JSON 갤러리에서 실제 파일들 추출
+            // JSON 갤러리에서 실제 파일들 추출
             const files = imageGallery
                 .sort((a, b) => a.order - b.order)  // order 순으로 정렬
                 .map(imageData => imageData.file)
                 .filter(file => file instanceof File);
-            
-            console.log('📎 JSON에서 추출한 파일들:', files.length, '개');
-            
+                        
             files.forEach((file, index) => {
                 try {
                     dt.items.add(file);
-                    console.log(`✅ 파일 ${index + 1} 추가됨: ${file.name}`);
                 } catch (error) {
-                    console.error(`❌ 파일 ${index + 1} 추가 실패:`, error);
                 }
             });
             
             fileInput.files = dt.files;
             
             const resultFiles = Array.from(fileInput.files);
-            console.log('🎯 최종 폼 파일 상태:', resultFiles.length, '개');
+            console.log('최종 폼 파일 상태:', resultFiles.length, '개');
             
         } catch (error) {
-            console.error('❌ JSON 기반 폼 파일 입력 업데이트 실패:', error);
             showToast('파일 업데이트 중 오류가 발생했습니다.', 'error');
         }
     }
 
-    // ✅ 메인 앱에 알림 (JSON 기반)
+    // 메인 앱에 알림 (JSON 기반)
     function notifyMainApp() {
         const event = new CustomEvent('filesUpdated', {
             detail: {
@@ -664,7 +605,7 @@ function setupImageUploader() {
                 formFileCount: fileInput.files.length,
                 compressedCount: imageGallery.filter(img => img.isCompressed).length,
                 isReady: imageGallery.length > 0,
-                imageGallery: imageGallery  // ✅ JSON 갤러리 정보 포함
+                imageGallery: imageGallery  // JSON 갤러리 정보 포함
             }
         });
         document.dispatchEvent(event);
@@ -676,18 +617,15 @@ function setupImageUploader() {
         }
     }
 
-    // 토스트 메시지 (기존과 동일)
+    // 토스트 메시지
     function showToast(message, type = 'info', duration = 3000) {
         if (window.showToast) {
             window.showToast(message, type, duration);
-        } else {
-            console.log(`Toast: ${message}`);
         }
     }
 
     // 파일 입력 이벤트 핸들러 (기존과 동일)
     function handleFileInput(event) {
-        console.log('📂 JSON 기반 파일 입력 이벤트:', event.target.files.length);
         
         const newFiles = Array.from(event.target.files);
         
@@ -704,7 +642,7 @@ function setupImageUploader() {
     // 초기 상태 설정
     updatePreview();
 
-    // ✅ JSON 기반 API 객체 생성
+    // JSON 기반 API 객체 생성
     const apiObject = {
         isInitialized: true,
         
@@ -712,7 +650,7 @@ function setupImageUploader() {
         getFileCount: () => imageGallery.length,
         getFormFileCount: () => fileInput.files.length,
         
-        // ✅ JSON 기반 메서드들
+        // JSON 기반 메서드들
         getImageGallery: () => [...imageGallery],  // 복사본 반환
         getImageGalleryJSON: () => JSON.stringify(imageGallery),
         
@@ -748,7 +686,6 @@ function setupImageUploader() {
             // 해당 이미지를 찾아서 맨 앞으로 이동
             const targetIndex = imageGallery.findIndex(img => img.id === imageId);
             if (targetIndex === -1) {
-                console.warn('❌ 해당 이미지를 찾을 수 없음:', imageId);
                 return;
             }
             
@@ -763,7 +700,6 @@ function setupImageUploader() {
                 img.type = (index === 0) ? "main" : "other";
             });
             
-            console.log('대표 이미지 설정 완료:', imageGallery[0].id);
             updatePreview();
         },
         
@@ -780,7 +716,6 @@ function setupImageUploader() {
                 try {
                     sortableInstance.destroy();
                 } catch (e) {
-                    console.warn('Sortable 정리 오류:', e);
                 }
                 sortableInstance = null;
             }
@@ -792,7 +727,6 @@ function setupImageUploader() {
         },
         
         syncFormFiles: () => {
-            console.log('🔄 JSON 기반 수동 파일 동기화 실행');
             updateFormFileInput();
             notifyMainApp();
         },
@@ -811,7 +745,6 @@ function setupImageUploader() {
         }
     };
 
-    console.log('✅ JSON 기반 이미지 업로드 모듈 설정 완료');
     return apiObject;
 }
 
@@ -841,4 +774,3 @@ if (!document.getElementById('ddoksang-json-image-upload-styles')) {
     document.head.appendChild(styleElement);
 }
 
-console.log('✅ JSON 기반 이미지 업로드 모듈 로드 완료');

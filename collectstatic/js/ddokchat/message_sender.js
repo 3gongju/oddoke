@@ -48,7 +48,7 @@ export function sendTextMessage() {
 }
 
 // 계좌정보 전송
-export function sendAccountInfo() {
+export function sendBankInfo() {
   if (!checkTradeCompletedBeforeSend()) return;
 
   const loadingToast = showLoadingToast('계좌정보 전송 중...');
@@ -60,7 +60,7 @@ export function sendAccountInfo() {
     return;
   }
 
-  fetch(`/ddokchat/send-account/${window.roomCode}/`, {
+  fetch(`/ddokchat/send-bank/${window.roomCode}/`, {
     method: 'POST',
     headers: {
       'X-CSRFToken': csrfToken,
@@ -78,9 +78,9 @@ export function sendAccountInfo() {
     
     if (data.success) {
       sendMessage({
-        type: 'account_info',
+        type: 'bank_info',
         room_code: window.roomCode,
-        account_info: data.account_info,
+        bank_info: data.bank_info,
         sender_id: window.currentUserId,
         message_id: data.message_id
       });
@@ -88,7 +88,7 @@ export function sendAccountInfo() {
     } else {
       if (data.redirect_to_mypage) {
         if (confirm('계좌 정보를 먼저 등록해주세요. 마이페이지로 이동하시겠습니까?')) {
-          window.location.href = '/accounts/mypage/';
+          window.location.href = '/banks/mypage/';
         }
       } else {
         showToast(data.error || '계좌정보 전송에 실패했습니다.', 'error');

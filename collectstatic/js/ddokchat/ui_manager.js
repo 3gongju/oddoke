@@ -157,6 +157,38 @@ export function addMessageAnimation(messageContainer) {
   }, 10);
 }
 
+// static/js/ddokchat/message_handler.js의 updateUIAfterTradeCancel 함수 수정
+
+function updateUIAfterTradeCancel() {
+  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+  const messageInputArea = document.getElementById('messageInputArea');
+
+  if (tradeStatusContainer) {
+    // 모든 버튼을 취소 상태로 변경
+    tradeStatusContainer.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="status-text cancelled text-xs px-2 py-1 rounded font-medium">거래 취소됨</span>
+      </div>
+    `;
+  }
+
+  if (messageInputArea) {
+    messageInputArea.innerHTML = `
+      <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
+      </div>
+    `;
+  }
+  
+  // 전역 상태 업데이트
+  window.isTradeCompleted = true; // 취소도 완료 상태로 간주
+}
+
+// static/js/ddokchat/ui_manager.js의 updateUIAfterTradeComplete 함수 수정
+
 export function updateUIAfterTradeComplete(isFullyCompleted) {
   const tradeStatusContainer = document.getElementById('tradeStatusContainer');
   const messageInputArea = document.getElementById('messageInputArea');
@@ -167,8 +199,11 @@ export function updateUIAfterTradeComplete(isFullyCompleted) {
     }
     if (messageInputArea) {
       messageInputArea.innerHTML = `
-        <div class="text-center text-sm text-gray-500 py-4">
-          ✅ 거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
+        <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
         </div>`;
     }
     isTradeCompleted = true;
@@ -184,21 +219,21 @@ export function updateSensitiveInfoCards() {
   console.log('민감한 정보 카드 업데이트 시작');
   
   document.querySelectorAll('#chat-log .flex').forEach(messageContainer => {
-    const accountCard = messageContainer.querySelector('.space-y-3');
-    if (accountCard && accountCard.innerHTML.includes('💳')) {
+    const bankCard = messageContainer.querySelector('.space-y-3');
+    if (bankCard && bankCard.innerHTML.includes('💳')) {
       console.log('계좌 카드 발견, 업데이트 중...');
       
       const isMyMessage = messageContainer.classList.contains('justify-end');
       
       if (isMyMessage) {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-800 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-300 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-400 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
           </div>
         `;
       } else {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-100 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-600 font-medium">거래 완료로 계좌정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-500 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
@@ -208,20 +243,20 @@ export function updateSensitiveInfoCards() {
       console.log('계좌 카드 업데이트 완료');
     }
     
-    if (accountCard && accountCard.innerHTML.includes('📍')) {
+    if (bankCard && bankCard.innerHTML.includes('📍')) {
       console.log('주소 카드 발견, 업데이트 중...');
       
       const isMyMessage = messageContainer.classList.contains('justify-end');
       
       if (isMyMessage) {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-800 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-300 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-400 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>
           </div>
         `;
       } else {
-        accountCard.innerHTML = `
+        bankCard.innerHTML = `
           <div class="bg-gray-100 rounded-lg p-4 text-center">
             <p class="text-sm text-gray-600 font-medium">거래 완료로 주소정보가 삭제되었습니다</p>
             <p class="text-xs text-gray-500 mt-1">개인정보 보호를 위해 자동으로 삭제되었습니다</p>

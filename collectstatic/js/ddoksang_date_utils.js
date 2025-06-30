@@ -95,7 +95,6 @@ window.DdoksangDateUtils = {
         element._hyphenHandler = hyphenHandler;
         element._keydownHandler = keydownHandler;
         
-        console.log(`자동 하이픈 기능 추가: ${element.id}`);
     },
 
     // 단일 날짜 선택기 초기화
@@ -274,11 +273,9 @@ window.DdoksangDateUtils = {
                 // 자동 하이픈 기능 추가
                 this.addAutoHyphen(element);
                 
-                console.log(`강제 활성화: ${fieldId}`);
             }
         });
         
-        console.log('모든 날짜 필드 강제 활성화 완료');
     },
 
     // 디버깅 정보
@@ -300,7 +297,6 @@ window.DdoksangDateUtils = {
             }
         });
         
-        console.log('flatpickr 사용 가능:', typeof flatpickr !== 'undefined');
     }
 };
 
@@ -327,4 +323,3 @@ window.DdoksangDateUtils = {
     }
 })();
 
-console.log('DdoksangDateUtils 로드 완료');

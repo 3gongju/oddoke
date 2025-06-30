@@ -4,13 +4,28 @@ let socket;
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
 let reconnectInterval = null;
-let roomCode; // ✅ 변수명 유지
+let roomCode;
 
 // 메시지 핸들러 콜백들
 let messageHandlers = {};
 
 export function setupWebSocket(chatRoomCode) {
-  roomCode = chatRoomCode; // ✅ 수정: 올바른 변수에 할당
+  // roomCode 검증
+  if (!chatRoomCode || chatRoomCode === 'undefined' || chatRoomCode === '' || chatRoomCode === 'null') {
+    // 전역 변수에서 다시 시도
+    const fallbackRoomCode = window.roomCode || window.room_code;
+    if (fallbackRoomCode && fallbackRoomCode !== 'undefined' && fallbackRoomCode !== '') {
+      roomCode = fallbackRoomCode;
+    } else {
+      if (messageHandlers.showToast) {
+        messageHandlers.showToast('채팅방 정보를 불러올 수 없습니다. 페이지를 새로고침해주세요.', 'error');
+      }
+      return;
+    }
+  } else {
+    roomCode = chatRoomCode;
+  }
+  
   connectWebSocket();
 }
 
@@ -31,20 +46,28 @@ export function getSocketState() {
 }
 
 function connectWebSocket() {
-  socket = new WebSocket(
-    window.location.protocol === "https:"
-      ? `wss://${window.location.host}/ws/chat/${roomCode}/`
-      : `ws://${window.location.host}/ws/chat/${roomCode}/`
-  );
-
-  socket.onopen = handleOpen;
-  socket.onclose = handleClose;
-  socket.onmessage = handleMessage;
-  socket.onerror = handleError;
+  // 최종 검증
+  if (!roomCode || roomCode === 'undefined') {
+    return;
+  }
+  
+  const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${wsProtocol}//${window.location.host}/ws/chat/${roomCode}/`;
+  
+  try {
+    socket = new WebSocket(wsUrl);
+    socket.onopen = handleOpen;
+    socket.onclose = handleClose;
+    socket.onmessage = handleMessage;
+    socket.onerror = handleError;
+  } catch (error) {
+    if (messageHandlers.showToast) {
+      messageHandlers.showToast('채팅 연결에 실패했습니다.', 'error');
+    }
+  }
 }
 
 function handleOpen() {
-  console.log('WebSocket 연결 성공');
   reconnectAttempts = 0;
   
   if (reconnectInterval) {
@@ -60,9 +83,7 @@ function handleOpen() {
 }
 
 function handleClose(e) {
-  console.log('WebSocket 연결 종료:', e.code, e.reason);
-  
-  if (reconnectAttempts < maxReconnectAttempts) {
+  if (reconnectAttempts < maxReconnectAttempts && roomCode && roomCode !== 'undefined') {
     reconnectAttempts++;
     
     // UI 업데이트 콜백 호출
@@ -103,7 +124,6 @@ function handleMessage(e) {
 }
 
 function handleError(error) {
-  console.error('WebSocket 오류:', error);
   if (messageHandlers.showToast) {
     messageHandlers.showToast('연결 오류가 발생했습니다.', 'error');
   }
@@ -111,8 +131,7 @@ function handleError(error) {
 
 // 페이지 이벤트 리스너들
 document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && socket.readyState === WebSocket.CLOSED) {
-    console.log('페이지 포커스 시 WebSocket 재연결 시도');
+  if (!document.hidden && socket && socket.readyState === WebSocket.CLOSED && roomCode) {
     connectWebSocket();
   }
 });
@@ -127,7 +146,7 @@ window.addEventListener('online', function() {
   if (messageHandlers.showToast) {
     messageHandlers.showToast('네트워크가 연결되었습니다.', 'success');
   }
-  if (socket.readyState === WebSocket.CLOSED) {
+  if (socket && socket.readyState === WebSocket.CLOSED && roomCode) {
     connectWebSocket();
   }
 });
