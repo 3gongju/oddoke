@@ -174,39 +174,33 @@ def intro_view(request):
         {
             'title': '덕챗, 안전한 1:1 실시간 채팅',
             'subtitle': '편리한 계좌 및 주소 정보 공유, 사기 조회까지 지원해요!',
-            # 'description': '굿즈 거래를 안전하게, 실시간 채팅으로',
             'type': 'ddokchat',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '아이돌 굿즈 거래의 신뢰성 강화',
             'subtitle': '체계적인 신뢰 시스템으로 믿을 수 있는 거래 환경을 제공해요!',
-            # 'description': '공식 팬덤 인증, 사기 신고 제도, 매너 리뷰 시스템',
             'type': 'safety',
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
             'title': '찜한 아티스트만 골라보는 나만의 피드',
             'subtitle': '덕팜 & 덕담에서 찜한 아티스트 게시글만 필터링해 볼 수 있어요!',
-            # 'description': '찜한 아티스트들의 최신 소식을 놓치지 마세요',
             'type': 'favorite_artists',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': raw_favs
         },
-        # {
-        #     'title': '다양한 아티스트 지원',
-        #     'subtitle': '모든 덕들을 위한 플랫폼',
-        #     'description': 'K-POP 팬들을 위한 맞춤형 공간',
-        #     'type': 'artists',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '웹 최적화',
-        #     'subtitle': '큰 화면으로 크게 덕질 즐기자!',
-        #     'description': '조만간 모바일에서도 즐길 수 있어요!',
-        #     'type': 'mobile',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
+        {
+            'title': '내 최애 생일시 맞추고 덕 쌓기',
+            'subtitle': '게임에서 1000덕을 모으면 마이페이지에서 배너 광고를 신청할 수 있어요!',
+            'type': 'ddokgame',
+            'image': DEFAULT_SLIDE_IMAGE
+        },
+        {
+            'title': '자세한 사항은 웹 하단 서비스 안내와 FAQ를 확인하세요!',
+            'type': 'faq',
+            'image': DEFAULT_SLIDE_IMAGE
+        },
         # {
         #     'title': '커뮤니티 기능',
         #     'subtitle': '팬들과 함께 만드는 문화',
