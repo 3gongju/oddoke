@@ -1,0 +1,83 @@
+{# templates/main/intro/cafe_map_slide.html #}
+{% load static %}
+
+<!-- 생카 지도 전용 CSS 로드 -->
+<link rel="stylesheet" href="{% static 'css/intro/cafe_map.css' %}">
+
+<!-- 덕생 - 생카 지도 슬라이드 -->
+<div class="mt-8 max-w-6xl mx-auto">
+    <!-- 지도 미리보기 컨테이너 -->
+    <div class="cafe-map-preview-container">
+        <!-- 지도 미리보기 -->
+        <div class="cafe-map-preview">
+            <!-- 미니 지도 영역 -->
+            <div class="mini-map-container">
+                <img src="{% static 'image/map_preview.png' %}" 
+                     alt="생카 지도 미리보기" 
+                     class="mini-map-image">
+                
+                <!-- 검색창 오버레이 -->
+                <div class="map-search-overlay">
+                    <div class="search-box">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" placeholder="내 위치 주변 생카 찾기..." readonly>
+                    </div>
+                </div>
+                
+                <!-- 내 위치 버튼 -->
+                <div class="my-location-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- 지도 정보 패널 -->
+            <div class="map-info-panel">
+                <div class="info-header">
+                    <h4 class="info-title">생카 지도</h4>
+                    <span class="cafe-count">{{ slide.stats_data.weekly_count|default:0 }}개 운영중</span>
+                </div>
+                
+                <div class="info-stats">
+                    <div class="stat-item">
+                        <div class="stat-content">
+                            <div class="stat-label">내 주변</div>
+                            <div class="stat-value">2km 이내</div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-content">
+                            <div class="stat-label">도보 시간</div>
+                            <div class="stat-value">5-15분</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-content">
+                            <div class="stat-label">추천 생카</div>
+                            <div class="stat-value">실시간 업데이트</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 지도 보러가기 버튼 -->
+    <div class="text-center mt-6">
+        <a href="/ddoksang/"
+           class="intro-btn">
+            <span>생카 지도 보러가기</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+        </a>
+    </div>
+</div>
+
+<!-- 생카 지도 전용 JavaScript 로드 -->
+<script src="{% static 'js/intro/cafe_map.js' %}"></script>

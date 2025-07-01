@@ -1,0 +1,252 @@
+/* 덕챗 UI 모형 스타일 - 개선된 버전 */
+/* static/css/intro/ddokchat_ui.css */
+
+.ddokchat-ui-container {
+    position: relative;
+    padding: 1rem;
+    margin: 2rem auto;
+}
+
+.ddokchat-ui-mockup {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition: all 0.5s ease;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transform: perspective(1000px) rotateX(2deg);
+}
+
+.ddokchat-ui-mockup:hover {
+    transform: perspective(1000px) rotateX(0deg) translateY(-8px);
+    box-shadow: 
+        0 30px 80px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* 헤더 스타일 */
+.ddokchat-ui-mockup .bg-gray-900 {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+/* 메시지 버블 애니메이션 */
+.ddokchat-ui-mockup .space-y-3 > div {
+    animation: messageSlideIn 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.ddokchat-ui-mockup .space-y-3 > div:nth-child(1) { animation-delay: 0.2s; }
+.ddokchat-ui-mockup .space-y-3 > div:nth-child(2) { animation-delay: 0.4s; }
+.ddokchat-ui-mockup .space-y-3 > div:nth-child(3) { animation-delay: 0.6s; }
+.ddokchat-ui-mockup .space-y-3 > div:nth-child(4) { animation-delay: 0.8s; }
+.ddokchat-ui-mockup .space-y-3 > div:nth-child(5) { animation-delay: 1.0s; }
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 메시지 버블 호버 효과 */
+.ddokchat-ui-mockup .bg-white:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ddokchat-ui-mockup .bg-gray-900:hover {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+}
+
+/* 상품 카드 스타일 개선 */
+.ddokchat-ui-mockup .bg-gray-50 {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+/* 입력창 스타일 개선 */
+.ddokchat-ui-mockup .bg-gray-100 {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.ddokchat-ui-mockup .bg-gray-100:hover {
+    background: #e5e7eb;
+    border-color: #d1d5db;
+}
+
+/* 버튼 호버 효과 */
+.ddokchat-ui-mockup button {
+    transition: all 0.3s ease;
+}
+
+.ddokchat-ui-mockup button:hover {
+    transform: scale(1.05);
+}
+
+/* 전송 버튼 특별 효과 */
+.ddokchat-ui-mockup .bg-gray-900.p-2 {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ddokchat-ui-mockup .bg-gray-900.p-2:hover {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 글로우 효과 */
+.ddokchat-ui-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(
+        ellipse,
+        rgba(59, 130, 246, 0.05) 0%,
+        rgba(147, 51, 234, 0.05) 30%,
+        transparent 70%
+    );
+    border-radius: 2rem;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: -1;
+}
+
+.ddokchat-ui-container:hover::before {
+    opacity: 1;
+}
+
+/* 타이핑 인디케이터 효과 (선택사항) */
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    margin-top: 8px;
+}
+
+.typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #9ca3af;
+    border-radius: 50%;
+    animation: typingPulse 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: 0s; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingPulse {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 반응형 조정 */
+@media (max-width: 768px) {
+    .ddokchat-ui-container {
+        padding: 0.5rem;
+        margin: 1.5rem auto;
+    }
+    
+    .ddokchat-ui-mockup {
+        border-radius: 0.75rem;
+        transform: none;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+    }
+    
+    .ddokchat-ui-mockup:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+    }
+}
+
+@media (max-width: 640px) {
+    .ddokchat-ui-container {
+        padding: 0.25rem;
+        margin: 1rem auto;
+    }
+    
+    .ddokchat-ui-mockup {
+        border-radius: 0.5rem;
+        max-width: 100%;
+    }
+}
+
+/* 데스크톱 크기 */
+@media (min-width: 1024px) {
+    .ddokchat-ui-mockup {
+        max-width: 400px;
+    }
+    
+    .ddokchat-ui-container {
+        padding: 2rem;
+    }
+}
+
+/* 로딩 애니메이션 */
+.ddokchat-ui-mockup {
+    opacity: 0;
+    animation: fadeInUp 1s ease-out 0.5s forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: perspective(1000px) rotateX(10deg) translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: perspective(1000px) rotateX(2deg) translateY(0);
+    }
+}
+
+/* 접근성 - 모션 감소 설정 */
+@media (prefers-reduced-motion: reduce) {
+    .ddokchat-ui-mockup,
+    .ddokchat-ui-mockup *,
+    .ddokchat-ui-container::before {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+    }
+    
+    .ddokchat-ui-mockup:hover {
+        transform: translateY(-2px);
+    }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .ddokchat-ui-mockup {
+        border: 2px solid #000000;
+    }
+    
+    .ddokchat-ui-mockup .bg-white {
+        border: 1px solid #000000;
+    }
+    
+    .ddokchat-ui-mockup .bg-gray-900 {
+        background: #000000 !important;
+    }
+}

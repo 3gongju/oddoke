@@ -1,0 +1,277 @@
+/* C:\Users\1-17\Desktop\DAMF2\oddoke\static\css\intro\intro_ddokdam.css */
+
+/* 덕담 슬라이드 전용 스타일 - 첫 번째 이미지와 완전히 동일한 UI */
+.ddokdam-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* 데스크톱에서 정확히 4개가 한 줄로 나오도록 */
+@media (min-width: 1025px) {
+    .ddokdam-posts-grid {
+        grid-template-columns: repeat(4, minmax(200px, 1fr));
+        gap: 1.5rem;
+        max-width: 1000px;
+    }
+}
+
+.ddokdam-post-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    aspect-ratio: 3/5; /* 카드를 더 길게 만들어서 콘텐츠 공간 확보 */
+}
+
+.ddokdam-post-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* 게시물 이미지 - 카드의 대부분을 차지 */
+.ddokdam-post-image {
+    width: 100%;
+    height: 65%; /* 75%에서 65%로 줄여서 콘텐츠 공간 확보 */
+    object-fit: cover;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+/* 카드 콘텐츠 영역 - 하단 35%만 차지 */
+.ddokdam-post-content {
+    padding: 0.75rem;
+    color: #333;
+    height: 35%; /* 25%에서 35%로 늘려서 콘텐츠 공간 확보 */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* 다시 space-between으로 설정 */
+    gap: 0.25rem;
+}
+
+.ddokdam-post-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 0; /* 제목이 줄어들지 않도록 */
+}
+
+/* 사용자 정보 - 간소화 */
+.ddokdam-post-user {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0; /* 사용자 정보가 줄어들지 않도록 */
+}
+
+.ddokdam-user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+.ddokdam-user-name {
+    font-size: 0.8rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.ddokdam-user-badge {
+    background: #e53e3e;
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* 카테고리 배지 - 이미지 위에 오버레이로 표시 */
+.ddokdam-post-category {
+    background: #f9a8d4;
+    color: #333;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    display: inline-block;
+    position: absolute;
+    top: 0.5rem; /* 하단에서 상단으로 이동 */
+    left: 0.5rem;
+    z-index: 10;
+}
+
+/* 메타 정보 - 최소화 */
+.ddokdam-post-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #718096;
+    margin-top: auto; /* 하단에 고정 */
+}
+
+.ddokdam-post-stats {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.ddokdam-post-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #718096;
+}
+
+.ddokdam-post-stat svg {
+    width: 12px;
+    height: 12px;
+}
+
+/* 좋아요 하트 버튼 */
+.ddokdam-like-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ddokdam-like-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.ddokdam-like-btn svg {
+    width: 14px;
+    height: 14px;
+    color: #e53e3e;
+}
+
+/* 더보기 버튼 */
+.intro-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f9a8d4; /* pink-400 색상으로 변경 */
+    color: #000000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(244, 114, 182, 0.3); /* 그림자도 pink-400으로 변경 */
+    border: none;
+    cursor: pointer;
+}
+
+.intro-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(244, 114, 182, 0.4); /* 호버 그림자도 pink-400으로 변경 */
+    background: #ec4899; /* 호버 시 pink-500로 변경 */
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) {
+    .ddokdam-posts-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        max-width: 750px;
+    }
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .ddokdam-posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        max-width: 500px;
+    }
+    
+    .ddokdam-post-title {
+        font-size: 0.8rem;
+    }
+    
+    .ddokdam-user-name {
+        font-size: 0.7rem;
+    }
+    
+    .ddokdam-post-category {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .ddokdam-posts-grid {
+        grid-template-columns: repeat(1, 1fr);
+        gap: 0.75rem;
+        max-width: 400px;
+        padding: 0 0.5rem;
+    }
+}
+
+/* 빈 상태 스타일 */
+.ddokdam-empty-state {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.ddokdam-empty-state .empty-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1rem;
+    opacity: 0.6;
+}
+
+.ddokdam-empty-state p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1rem;
+}
+
+.ddokdam-empty-state .empty-btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 182, 193, 0.8);
+    color: #333;
+    text-decoration: none;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ddokdam-empty-state .empty-btn:hover {
+    background: rgba(255, 182, 193, 1);
+    transform: translateY(-1px);
+}
