@@ -180,9 +180,9 @@
     gap: 0.5rem;
     margin-top: 1.5rem;
     padding: 0.75rem 1.5rem;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    color: white;
+    background: rgba(255, 182, 193, 1); /* empty-btn과 동일한 색상 */
+    border: 1px solid rgba(255, 182, 193, 1);
+    color: #333; /* 텍스트 색상을 어둡게 변경 */
     text-decoration: none;
     border-radius: 25px;
     font-weight: 500;
@@ -191,9 +191,10 @@
 }
 
 .ddokdam-more-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 182, 193, 0.8); /* 호버 시 약간 투명하게 */
+    border-color: rgba(255, 182, 193, 0.8);
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(255, 182, 193, 0.4);
 }
 
 /* 태블릿 반응형 */
