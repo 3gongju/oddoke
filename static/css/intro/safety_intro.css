@@ -22,12 +22,12 @@
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
-    padding: 2rem;
+    padding: 2.5rem;
     text-align: center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    min-height: 280px;
+    min-height: 320px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -116,7 +116,7 @@
 /* 제목 스타일 */
 .safety-feature-card .safety-feature-title {
     text-align: center !important;
-    font-size: 1.25rem;
+    font-size: 1.4rem;  /* 1.25rem → 1.4rem으로 증가 */
     font-weight: 700;
     color: white;
     margin-bottom: 1rem;
