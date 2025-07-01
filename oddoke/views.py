@@ -165,7 +165,7 @@ def intro_view(request):
         },
         {
             'title': '덕생, 카카오 지도기반 생카 아카이브',
-            'subtitle': '생일 캘린더로 이번주의 생일을 확인해보세요!',
+            'subtitle': '내 위치 주변 생카를 확인해보세요!',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': birthday_artists,

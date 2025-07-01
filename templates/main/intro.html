@@ -187,6 +187,7 @@
     <!-- 기존 CSS 링크 아래에 추가 -->
     <link rel="stylesheet" href="{% static 'css/intro/intro_ddokfarm.css' %}">
     <link rel="stylesheet" href="{% static 'css/intro/intro_ddokdam.css' %}">
+    <link rel="stylesheet" href="{% static 'css/intro/cafe_map.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -486,7 +487,7 @@
                         {% include 'main/intro/favorite_artists_slide.html' %}
 
                     {% elif slide.type == 'ddoksang' %}
-                        {% include 'main/intro/birthday_artists_slide.html' %}
+                        {% include 'main/intro/cafe_map_slide.html' %}
 
                     {% elif slide.type == 'ddokchat' %}
                         {% include 'main/intro/ddokchat_slide.html' %}

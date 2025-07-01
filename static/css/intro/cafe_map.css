@@ -1,0 +1,473 @@
+/* 덕생 - 생카 지도 슬라이드 전용 CSS */
+/* static/css/intro/cafe_map.css */
+
+/* 생카 지도 미리보기 컨테이너 */
+.cafe-map-preview-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* 지도 미리보기 메인 영역 */
+.cafe-map-preview {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .cafe-map-preview {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+}
+
+/* 미니 지도 컨테이너 */
+.mini-map-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fafc;
+    height: 300px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+    .mini-map-container {
+        height: 350px;
+    }
+}
+
+/* 미니 지도 이미지 */
+.mini-map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.mini-map-container:hover .mini-map-image {
+    transform: scale(1.05);
+}
+
+/* 지도 마커들 */
+.map-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.map-marker {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translate(-50%, -50%);
+    animation: markerBounce 2s ease-in-out infinite;
+}
+
+.map-marker:nth-child(2) {
+    animation-delay: 0.5s;
+}
+
+.map-marker:nth-child(3) {
+    animation-delay: 1s;
+}
+
+.map-marker:nth-child(4) {
+    animation-delay: 1.5s;
+}
+
+.marker-icon {
+    background: #ef4444;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50% 50% 50% 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    border: 2px solid white;
+    transform: rotate(-45deg);
+}
+
+.marker-icon::before {
+    content: attr(data-emoji);
+    transform: rotate(45deg);
+}
+
+.marker-label {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+}
+
+@keyframes markerBounce {
+    0%, 100% {
+        transform: translate(-50%, -50%) translateY(0);
+    }
+    50% {
+        transform: translate(-50%, -50%) translateY(-4px);
+    }
+}
+
+/* 검색창 오버레이 */
+.map-search-overlay {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 0.75rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.search-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: #6b7280;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.875rem;
+    color: #374151;
+    cursor: pointer;
+}
+
+.search-box input::placeholder {
+    color: #9ca3af;
+}
+
+/* 내 위치 버튼 */
+.my-location-btn {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.my-location-btn:hover {
+    background: #2563eb;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.my-location-btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* 지도 정보 패널 */
+.map-info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.info-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+}
+
+.cafe-count {
+    background: #f9a8d4; /* pink-400 색상으로 변경 */
+    color: black;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* 통계 정보 */
+.info-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* 가운데 정렬 추가 */
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+}
+
+.stat-icon {
+    font-size: 1.25rem;
+    width: 2rem;
+    text-align: center;
+}
+
+.stat-content {
+    flex: 1;
+    text-align: center; /* 텍스트 가운데 정렬 추가 */
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.125rem;
+}
+
+.stat-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+}
+
+/* 지도 기능 */
+.map-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    justify-items: center; 
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 0.875rem;
+}
+
+/* 인기 지역 */
+.popular-areas {
+    margin-top: 1.5rem;
+}
+
+.areas-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.areas-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+    .areas-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.area-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+}
+
+.area-card:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.area-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.25rem;
+}
+
+.area-count {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* 버튼 스타일 */
+.intro-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f9a8d4; /* pink-400 색상으로 변경 */
+    color: #000000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(244, 114, 182, 0.3); /* 그림자도 pink-400으로 변경 */
+    border: none;
+    cursor: pointer;
+}
+
+.intro-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(244, 114, 182, 0.4); /* 호버 그림자도 pink-400으로 변경 */
+    background: #ec4899; /* 호버 시 pink-500로 변경 */
+}
+
+@media (min-width: 640px) {
+    .intro-btn {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+}
+
+/* 로딩 애니메이션 */
+.cafe-map-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem;
+}
+
+.cafe-map-loading-spinner {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #000000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 키프레임 애니메이션 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 접근성 개선 */
+.cafe-map-preview:focus,
+.cafe-map-preview:focus-within {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.area-card:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .cafe-map-preview {
+        border: 2px solid #ffffff;
+    }
+    
+    .area-card {
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .area-card:hover {
+        border-color: #3b82f6;
+    }
+}
+
+/* 모션 감소 설정 */
+@media (prefers-reduced-motion: reduce) {
+    .mini-map-image,
+    .area-card,
+    .intro-btn,
+    .my-location-btn {
+        transition: none;
+        animation: none;
+    }
+    
+    .map-marker {
+        animation: none;
+    }
+    
+    .cafe-map-preview:hover .mini-map-image,
+    .area-card:hover,
+    .intro-btn:hover,
+    .my-location-btn:hover {
+        transform: none;
+    }
+    
+    .cafe-map-loading-spinner {
+        animation: none;
+    }
+}
