@@ -233,7 +233,6 @@
 │   └── uwsgi/
 │
 ├── accounts/                              # 계정 관리 앱
-│   ├── backup/
 │   ├── management/
 │   │   └── commands/
 │   ├── migrations/
