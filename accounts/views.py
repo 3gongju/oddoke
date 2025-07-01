@@ -375,9 +375,11 @@ def review_home(request, username):
     return render(request, 'accounts/review_home.html', context)
 
 
+# accounts/views.py의 write_review 함수 수정
+
 @login_required
 def write_review(request, username):
-    """매너 리뷰 작성 처리 - GET 시 독립 페이지, POST 시 기존 로직"""
+    """매너 리뷰 작성 처리 - GET 시 독립 페이지, POST 시 기존 로직 + 채팅방 정보 추가"""
     target_user = get_object_or_404(User, username=username)
     
     # 자신에게 리뷰할 수 없음
@@ -389,7 +391,7 @@ def write_review(request, username):
     room_code = request.GET.get('room_code') or request.POST.get('room_code')
     chatroom = None
     
-    # 채팅방 관련 검증
+    # 🔥 채팅방 관련 검증 (room_code가 있는 경우에만)
     if room_code:
         try:
             from ddokchat.models import ChatRoom
@@ -403,6 +405,11 @@ def write_review(request, username):
             # 거래가 완료되었는지 확인
             if not chatroom.is_fully_completed:
                 messages.error(request, '거래가 완료된 후에 리뷰를 작성할 수 있습니다.')
+                return redirect('ddokchat:chat_room', room_code=room_code)
+            
+            # 구매자만 리뷰 작성 가능
+            if request.user != chatroom.buyer:
+                messages.error(request, '구매자만 리뷰를 작성할 수 있습니다.')
                 return redirect('ddokchat:chat_room', room_code=room_code)
             
             # 이미 리뷰를 작성했는지 확인
@@ -420,7 +427,7 @@ def write_review(request, username):
             messages.error(request, '유효하지 않은 채팅방입니다.')
             return redirect('accounts:profile', username=username)
     
-    # 🔥 NEW: GET 요청 시 독립 페이지 렌더링
+    # 🔥 GET 요청 시 독립 페이지 렌더링
     if request.method == 'GET':
         form = MannerReviewForm()
         
@@ -428,11 +435,11 @@ def write_review(request, username):
             'form': form,
             'target_user': target_user,
             'room_code': room_code,
-            'chatroom': chatroom,
+            'chatroom': chatroom,  # 🔥 NEW: 채팅방 정보 추가
         }
         
-        # 독립된 리뷰 작성 페이지로 렌더링
-        return render(request, 'accounts/write_review_standalone.html', context)
+        # 🔥 독립된 리뷰 작성 페이지로 렌더링 (템플릿명 수정)
+        return render(request, 'accounts/write_review.html', context)
     
     # 🔥 기존 POST 처리 로직 (약간 수정)
     elif request.method == 'POST':
@@ -450,17 +457,24 @@ def write_review(request, username):
                     
                     review.save()
                 
-                # AJAX 요청 처리 (새 페이지에서 사용할 수 있도록)
+                # 🔥 AJAX 요청 처리 (새 페이지에서 사용할 수 있도록)
                 if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
                         'success': True,
                         'message': f'{target_user.username}님에 대한 매너 리뷰가 작성되었습니다.',
-                        'redirect_url': reverse('accounts:review_home', args=[username])
+                        'redirect_url': reverse('accounts:review_home', args=[username]) if not room_code else reverse('ddokchat:chat_room', args=[room_code])
                     })
                 
                 # 일반 폼 제출
                 messages.success(request, f'{target_user.username}님에 대한 매너 리뷰가 작성되었습니다.')
-                return redirect('accounts:review_home', username=username)
+                
+                # 🔥 NEW: 리다이렉트 로직 개선
+                if room_code:
+                    # 채팅방에서 온 경우 채팅방으로 돌아가기
+                    return redirect('ddokchat:chat_room', room_code=room_code)
+                else:
+                    # 일반 경우 리뷰 홈으로
+                    return redirect('accounts:review_home', username=username)
                 
             except Exception as e:
                 print(f"리뷰 저장 오류: {e}")
@@ -484,7 +498,10 @@ def write_review(request, username):
             messages.error(request, '입력 정보를 확인해주세요.')
     
     # 오류 시 기본 리다이렉트
-    return redirect('accounts:review_home', username=username)
+    if room_code:
+        return redirect('ddokchat:chat_room', room_code=room_code)
+    else:
+        return redirect('accounts:review_home', username=username)
 
 @login_required
 def mypage(request): 

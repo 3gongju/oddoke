@@ -29,63 +29,6 @@
   </div>
 </div>
 
-<!-- 🔥 NEW: 리뷰 작성 페이지 이동 안내 모달 -->
-<div id="reviewRedirectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
-  <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4">
-    <div class="text-center p-6">
-      <!-- 성공 아이콘 -->
-      <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-        <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-      </div>
-      
-      <h3 class="text-xl font-semibold text-gray-900 mb-2">거래가 완료되었습니다! 🎉</h3>
-      <p class="text-gray-600 mb-6">
-        거래 경험을 다른 분들과 공유해주세요.<br>
-        <span class="text-sm text-gray-500">매너 리뷰는 상대방의 프로필에 표시됩니다.</span>
-      </p>
-      
-      <div class="flex gap-3">
-        <button id="reviewRedirectLater" class="flex-1 px-4 py-2 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-          나중에
-        </button>
-        <button id="reviewRedirectNow" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
-          리뷰 작성하기
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 🔥 NEW: 거래 완료 알림 모달 (상대방 완료 시) -->
-<div id="tradeCompletedNotifyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
-  <div class="bg-white rounded-xl shadow-lg max-w-md w-full mx-4">
-    <div class="text-center p-6">
-      <!-- 알림 아이콘 -->
-      <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-4">
-        <svg class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-        </svg>
-      </div>
-      
-      <h3 class="text-xl font-semibold text-gray-900 mb-2">거래가 완료되었습니다!</h3>
-      <p id="tradeCompletedMessage" class="text-gray-600 mb-6">
-        <!-- 동적으로 메시지 설정 -->
-      </p>
-      
-      <div class="flex gap-3">
-        <button id="tradeCompletedClose" class="flex-1 px-4 py-2 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-          확인
-        </button>
-        <button id="tradeCompletedReview" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">
-          리뷰 작성하기
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- 거래 취소 요청 확인 모달 -->
 <div id="cancelRequestModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex justify-center items-center">
   <div class="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full mx-4">

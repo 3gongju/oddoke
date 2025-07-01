@@ -367,21 +367,7 @@ export function handleEnterChatroomFinish(data) {
 // 🔥 간소화된 거래완료 핸들러 (양쪽 모두 완료)
 export function handleTradeCompleted(data) {
   updateSensitiveInfoCards();
-  updateUIAfterTradeComplete(true);
-  
-  // 🔥 구매자인 경우 즉시 리뷰 모달 표시
-  const currentUser = window.currentUser || '';
-  const roomBuyer = window.roomBuyer || '';
-  const isBuyer = currentUser === roomBuyer;
-  
-  if (isBuyer) {
-    const hasAlreadyReviewed = window.hasAlreadyReviewed || false;
-    if (!hasAlreadyReviewed) {
-      setTimeout(() => {
-        showReviewRedirectModal();
-      }, 1000);
-    }
-  }
+  updateUIAfterTradeComplete(true);  
 }
 
 // 🔥 간소화된 거래 진행 알림 핸들러 (상대방용 실시간 업데이트만)
@@ -433,53 +419,3 @@ export function handleTradeStatusUpdate(data) {
     }, 1500);
   }
 }
-
-// 🔥 리뷰 페이지 이동 모달 표시 함수
-function showReviewRedirectModal() {
-  const modal = document.getElementById('reviewRedirectModal');
-  if (modal) {
-    modal.classList.remove('hidden');
-    
-    // 버튼 이벤트 설정
-    const laterBtn = document.getElementById('reviewRedirectLater');
-    const nowBtn = document.getElementById('reviewRedirectNow');
-    
-    if (laterBtn) {
-      laterBtn.onclick = function() {
-        modal.classList.add('hidden');
-      };
-    }
-    
-    if (nowBtn) {
-      nowBtn.onclick = function() {
-        modal.classList.add('hidden');
-        // 🔥 수정: 새로운 리뷰 작성 페이지로 이동
-        const otherUser = window.roomSeller || getOtherUserFromHeader();
-        if (otherUser) {
-          window.location.href = `/accounts/${otherUser}/review/write/?room_code=${window.roomCode}`;
-        } else {
-          showToast('리뷰 페이지로 이동할 수 없습니다.', 'error');
-        }
-      };
-    }
-    
-    // 모달 외부 클릭 시 닫기
-    modal.onclick = function(e) {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
-      }
-    };
-  }
-}
-
-// 헤더에서 상대방 사용자명 추출
-function getOtherUserFromHeader() {
-  const userNameElement = document.querySelector('.bg-gray-50 h2.font-semibold');
-  if (userNameElement) {
-    return userNameElement.textContent.trim();
-  }
-  return null;
-}
-
-// 전역 함수로 노출
-window.showReviewRedirectModal = showReviewRedirectModal;
