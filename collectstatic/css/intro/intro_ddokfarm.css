@@ -1,0 +1,315 @@
+/* C:\Users\1-17\Desktop\DAMF2\oddoke\static\css\intro\intro_ddokfarm.css */
+
+/* 덕팜 폼 전용 스타일 - 최대한 넓게 */
+.ddokfarm-form-container {
+    width: 95vw; /* 화면 너비의 95%로 줄임 */
+    max-width: none;
+    margin: 0 auto;
+    padding: 0 30px; /* 패딩 늘림 */
+}
+
+/* 2분할 그리드 레이아웃 - 최대한 넓게 */
+.ddokfarm-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px; /* 간격 약간 줄임 */
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
+}
+
+/* 큰 덩어리 박스 스타일 */
+.ddokfarm-section-box {
+    background: white;
+    border-radius: 16px;
+    padding: 40px; /* 패딩 약간 줄임 */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    min-height: 700px;
+    width: 100%;
+    min-width: 400px; /* 최소 너비 줄임 */
+    max-width: 600px; /* 최대 너비 추가 */
+}
+
+/* 거래 방식 섹션 - 오른쪽 덩어리 내부에 포함 */
+.ddokfarm-trade-section {
+    background: #4a5568;
+    color: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin: -8px -8px 32px -8px; /* 상단 여백 조정 */
+}
+
+.ddokfarm-trade-section h4 {
+    color: white;
+    text-align: left;
+}
+
+.ddokfarm-trade-section label span {
+    color: white;
+}
+
+/* 섹션 내부 간격 */
+.ddokfarm-section-item {
+    margin-bottom: 40px; /* 더 넓은 간격 */
+}
+
+.ddokfarm-section-item:last-child {
+    margin-bottom: 0;
+}
+
+/* 제목 스타일 - 왼쪽 정렬 */
+.ddokfarm-section-title {
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    text-align: left; /* 명시적 왼쪽 정렬 */
+    letter-spacing: 0px;
+}
+
+/* 입력 필드들 - 더 큰 크기 */
+.ddokfarm-input {
+    width: 100%;
+    padding: 12px 16px; /* 더 넓은 패딩 */
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ddokfarm-input::placeholder {
+    color: #9ca3af;
+}
+
+.ddokfarm-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 셀렉트 박스 */
+.ddokfarm-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.ddokfarm-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+/* 체크박스와 라디오 버튼 */
+.ddokfarm-checkbox,
+.ddokfarm-radio {
+    width: 16px;
+    height: 16px;
+    margin-right: 12px; /* 더 넓은 간격 */
+    accent-color: #2563eb;
+    cursor: pointer;
+}
+
+/* 라벨 텍스트 */
+.ddokfarm-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 12px; /* 더 넓은 간격 */
+    padding: 4px 0;
+}
+
+.ddokfarm-label span {
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* 버튼들 - 더 큰 크기 */
+.ddokfarm-btn-primary {
+    background: #1a1a1a;
+    color: white;
+    padding: 12px 24px; /* 더 큰 버튼 */
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ddokfarm-btn-primary:hover {
+    background: #2a2a2a;
+}
+
+.ddokfarm-btn-secondary {
+    background: white;
+    color: #374151;
+    padding: 12px 24px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ddokfarm-btn-secondary:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.ddokfarm-btn-link {
+    background: none;
+    border: none;
+    color: #2563eb;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.ddokfarm-btn-link:hover {
+    color: #1d4ed8;
+}
+
+/* 그리드 레이아웃 (종류 섹션용) */
+.ddokfarm-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px; /* 더 넓은 간격 */
+}
+
+/* 텍스트에어리어 - 더 큰 크기 */
+.ddokfarm-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    line-height: 1.4;
+    resize: none;
+    min-height: 120px; /* 더 높게 */
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ddokfarm-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.ddokfarm-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 버튼 컨테이너 - 중앙 정렬, 더 넓은 간격 */
+.ddokfarm-button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 40px; /* 더 넓은 상단 여백 */
+    gap: 24px; /* 더 넓은 버튼 간격 */
+}
+
+/* 파일 업로드 영역 */
+.ddokfarm-file-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px; /* 더 넓은 간격 */
+}
+
+.ddokfarm-file-label {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* 체크박스/라디오 그룹 */
+.ddokfarm-checkbox-group,
+.ddokfarm-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* 더 넓은 간격 */
+}
+
+/* 제목들 명시적 왼쪽 정렬 */
+h4 {
+    text-align: left !important;
+    color: #1a1a1a;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 1023px) {
+    .ddokfarm-form-container {
+        width: 95vw;
+        padding: 0 15px;
+    }
+    
+    .ddokfarm-grid-layout {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    
+    .ddokfarm-section-box,
+    .ddokfarm-trade-section {
+        padding: 30px;
+        min-width: auto;
+        min-height: auto;
+    }
+    
+    .ddokfarm-section-item {
+        margin-bottom: 30px;
+    }
+    
+    .ddokfarm-button-container {
+        flex-direction: row;
+        gap: 16px;
+        margin-top: 32px;
+    }
+    
+    .ddokfarm-btn-primary,
+    .ddokfarm-btn-secondary {
+        padding: 14px 28px; /* 모바일에서도 큰 버튼 */
+    }
+}
+
+/* 아주 작은 모바일 */
+@media (max-width: 640px) {
+    .ddokfarm-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ddokfarm-button-container {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .ddokfarm-btn-primary,
+    .ddokfarm-btn-secondary {
+        width: 100%;
+        padding: 16px;
+    }
+    
+    .ddokfarm-section-box,
+    .ddokfarm-trade-section {
+        padding: 20px;
+    }
+    
+    .ddokfarm-form-container {
+        width: 100%;
+        padding: 0 10px;
+    }
+}

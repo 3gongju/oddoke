@@ -1,4 +1,4 @@
-// static/js/ddokchat/message_handler.js
+// static/js/ddokchat/message_handler.js - 간소화된 버전
 
 import { 
   scrollToBottom, 
@@ -6,7 +6,7 @@ import {
   registerObserver, 
   updateSensitiveInfoCards, 
   updateUIAfterTradeComplete,
-  showToast  // ✅ showToast import 추가
+  showToast
 } from './ui_manager.js';
 import { handleReceivedMessage } from './auto_detect.js';
 
@@ -20,28 +20,23 @@ export function setupMessageHandlers(user, userId) {
   chatLog = document.getElementById('chat-log');
 }
 
+// 기존 메시지 핸들러들은 그대로 유지 (텍스트, 이미지, 계좌, 주소)
 export function handleTextMessage(data) {
   const isMine = data.sender === currentUser;
   
-  // 전체 메시지 래퍼 생성 (세로 배치)
   const messageWrapper = document.createElement("div");
   messageWrapper.className = `message-wrapper mb-3`;
   
-  // 기존 메시지 컨테이너 (가로 배치)
   const messageContainer = document.createElement("div");
   messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} group message-enter`;
   
   if (isMine) {
-    // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
-        <!-- 시간/읽음상태 (왼쪽) -->
         <div class="flex flex-col items-end text-xs text-gray-400 gap-0.5 mb-1">
           ${!data.is_read ? '<span class="unread-label">안읽음</span>' : ''}
           <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
         </div>
-        
-        <!-- 말풍선 (오른쪽) -->
         <div class="max-w-xs">
           <div class="bg-gray-900 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm">
             <p class="text-sm break-words">${data.message}</p>
@@ -49,34 +44,26 @@ export function handleTextMessage(data) {
         </div>
       </div>`;
   } else {
-    // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
-        <!-- 말풍선 (왼쪽) -->
         <div class="max-w-xs">
           <div class="bg-white text-gray-800 px-4 py-2 rounded-2xl rounded-bl-md shadow-sm border border-gray-200">
             <p class="text-sm break-words">${data.message}</p>
           </div>
         </div>
-        
-        <!-- 시간 (오른쪽) -->
         <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
           <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
         </div>
       </div>`;
   }
   
-  // 메시지를 래퍼에 추가
   messageWrapper.appendChild(messageContainer);
   
   if (chatLog) {
-    // 래퍼를 채팅 로그에 추가
     chatLog.appendChild(messageWrapper);
-    
     registerObserver(messageContainer, data.sender);
     scrollToBottom();
     
-    // 상대방이 보낸 메시지에서만 자동 감지 (래퍼를 전달)
     if (!isMine) {
       setTimeout(() => {
         handleReceivedMessage(data.message, messageWrapper, data.sender);
@@ -91,16 +78,12 @@ export function handleImageMessage(data) {
   messageContainer.className = `flex ${isMine ? 'justify-end' : 'justify-start'} message-enter mb-3`;
 
   if (isMine) {
-    // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
-        <!-- 시간/읽음상태 (왼쪽) -->
         <div class="flex flex-col items-end text-xs text-gray-400 gap-0.5 mb-1">
           ${!data.is_read ? '<span class="unread-label">안읽음</span>' : ''}
           <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
         </div>
-        
-        <!-- 말풍선 (오른쪽) -->
         <div class="max-w-xs">
           <div class="bg-gray-900 text-white px-3 py-2 rounded-2xl rounded-br-md shadow-sm message-image">
             <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover image-loading" data-taken-datetime="${data.taken_datetime || ''}">
@@ -108,17 +91,13 @@ export function handleImageMessage(data) {
         </div>
       </div>`;
   } else {
-    // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
-        <!-- 말풍선 (왼쪽) -->
         <div class="max-w-xs">
           <div class="bg-white text-gray-800 border border-gray-200 px-3 py-2 rounded-2xl rounded-bl-md shadow-sm message-image">
             <img src="${data.image_url}" alt="전송 이미지" class="w-full max-h-64 rounded-lg object-cover image-loading" data-taken-datetime="${data.taken_datetime || ''}">
           </div>
         </div>
-        
-        <!-- 시간 (오른쪽) -->
         <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
           <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
         </div>
@@ -129,7 +108,6 @@ export function handleImageMessage(data) {
     chatLog.appendChild(messageContainer);
     registerObserver(messageContainer, data.sender);
     
-    // 이미지 로딩 처리
     const imgElement = messageContainer.querySelector('img');
     if (imgElement) {
       imgElement.style.opacity = '0.7';
@@ -214,7 +192,6 @@ export function handleBankMessage(data) {
     `;
   }
 
-  // Heroicons Credit Card Icon SVG
   const creditCardIcon = `
     <svg class="w-4 h-4 ${isMine ? 'text-white' : 'text-blue-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"></path>
@@ -222,16 +199,12 @@ export function handleBankMessage(data) {
   `;
 
   if (isMine) {
-    // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
     messageContainer.innerHTML = `
       <div class="flex items-end gap-2">
-        <!-- 시간/읽음상태 (왼쪽) -->
         <div class="flex flex-col items-end text-xs text-gray-400 gap-0.5 mb-1">
           ${!data.is_read ? '<span class="unread-label">안읽음</span>' : ''}
           <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
         </div>
-        
-        <!-- 말풍선 (오른쪽) -->
         <div class="max-w-sm">
           <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
             <div class="space-y-3">
@@ -245,10 +218,8 @@ export function handleBankMessage(data) {
        </div>
      </div>`;
  } else {
-   // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
    messageContainer.innerHTML = `
      <div class="flex items-end gap-2">
-       <!-- 말풍선 (왼쪽) -->
        <div class="max-w-sm">
          <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
            <div class="space-y-3">
@@ -260,8 +231,6 @@ export function handleBankMessage(data) {
            </div>
          </div>
        </div>
-       
-       <!-- 시간 (오른쪽) -->
        <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
          <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
        </div>
@@ -326,7 +295,6 @@ export function handleAddressMessage(data) {
    `;
  }
 
- // Heroicons Map Pin Icon SVG
  const mapPinIcon = `
    <svg class="w-4 h-4 ${isMine ? 'text-white' : 'text-green-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
@@ -335,16 +303,12 @@ export function handleAddressMessage(data) {
  `;
 
  if (isMine) {
-   // 내 메시지: 시간/읽음상태가 말풍선 왼쪽에
    messageContainer.innerHTML = `
      <div class="flex items-end gap-2">
-       <!-- 시간/읽음상태 (왼쪽) -->
        <div class="flex flex-col items-end text-xs text-gray-400 gap-0.5 mb-1">
          ${!data.is_read ? '<span class="unread-label">안읽음</span>' : ''}
          <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
        </div>
-       
-       <!-- 말풍선 (오른쪽) -->
        <div class="max-w-sm">
          <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl rounded-br-md shadow-sm">
            <div class="space-y-3">
@@ -358,10 +322,8 @@ export function handleAddressMessage(data) {
        </div>
      </div>`;
  } else {
-   // 상대방 메시지: 시간/읽음상태가 말풍선 오른쪽에 (닉네임 제거)
    messageContainer.innerHTML = `
      <div class="flex items-end gap-2">
-       <!-- 말풍선 (왼쪽) -->
        <div class="max-w-sm">
          <div class="bg-white text-gray-800 border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
            <div class="space-y-3">
@@ -373,8 +335,6 @@ export function handleAddressMessage(data) {
            </div>
          </div>
        </div>
-       
-       <!-- 시간 (오른쪽) -->
        <div class="flex flex-col items-start text-xs text-gray-400 gap-0.5 mb-1">
          <span>${new Date().toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', hour12: false})}</span>
        </div>
@@ -388,7 +348,7 @@ export function handleAddressMessage(data) {
  }
 }
 
-// 읽음 처리 관련 핸들러들
+// 읽음 처리 관련 핸들러들 (기존과 동일)
 export function handleReadUpdate(data) {
  document.querySelectorAll(".unread-label").forEach(el => el.remove());
 }
@@ -404,108 +364,58 @@ export function handleEnterChatroomFinish(data) {
  }
 }
 
+// 🔥 간소화된 거래완료 핸들러 (양쪽 모두 완료)
 export function handleTradeCompleted(data) {
- updateSensitiveInfoCards();
- updateUIAfterTradeComplete(true);
+  updateSensitiveInfoCards();
+  updateUIAfterTradeComplete(true);  
 }
 
-// 거래 상태 업데이트 핸들러 (게시글에서 거래완료 시)
-export function handleTradeStatusUpdate(data) {
-  if (data.post_marked_sold && data.seller_completed) {
-    // 게시글에서 거래완료가 되어 채팅방의 seller_completed가 True가 된 경우
-    showToast('게시글이 거래완료 처리되었습니다.', 'info');
-    
-    // UI 업데이트
-    updateTradeStatusUI();
-    
-    // 1-2초 후 페이지 새로고침으로 최신 상태 반영
-    setTimeout(() => {
-      location.reload();
-    }, 1500);
-  }
-}
-
-// 거래 상태 UI 업데이트 함수
-function updateTradeStatusUI() {
-  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+// 🔥 간소화된 거래 진행 알림 핸들러 (상대방용 실시간 업데이트만)
+export function handleTradeProgressNotification(data) {
+  const currentUser = window.currentUser || '';
+  const completedUser = data.completed_user;
   
-  if (tradeStatusContainer) {
-    // 데스크탑/모바일 모두 업데이트
-    const desktopStatus = tradeStatusContainer.querySelector('.desktop-only .status-text');
-    const mobileStatus = tradeStatusContainer.querySelector('.mobile-only .status-text');
-    
-    if (desktopStatus) {
-      desktopStatus.className = 'status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap completed bg-green-100 text-green-800';
-      desktopStatus.textContent = '거래 완료됨';
-    }
-    
-    if (mobileStatus) {
-      mobileStatus.className = 'status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap completed bg-green-100 text-green-800';
-      mobileStatus.textContent = '거래 완료됨';
-    }
-    
-    // 거래완료 버튼들 숨기기
-    const completeButtons = document.querySelectorAll('#completeTradeBtn, #mobileCompleteTradeBtn');
-    completeButtons.forEach(btn => {
-      if (btn) btn.style.display = 'none';
-    });
-  }
+  // 🔥 간소화: 상대방에게만 토스트 메시지 표시
+  showToast(`${completedUser}님이 거래완료를 요청했습니다.`, 'info');
+  
+  // UI 상태는 새로고침으로 처리 (간단함)
+  setTimeout(() => {
+    location.reload();
+  }, 2000);
 }
 
+// 🔥 간소화된 거래 취소 알림
 export function handleTradeCancelNotification(data) {
   const action = data.action;
-  const currentUser = window.currentUser || '';
   
-  // 액션별 메시지 처리
   switch (action) {
     case 'request':
       showToast('상대방이 거래 취소를 요청했습니다.', 'info');
       break;
     case 'cancelled':
       showToast('거래가 취소되었습니다.', 'error');
-      updateUIAfterTradeCancel();
       break;
     case 'rejected':
-      showToast('거래 취소 요청이 거절되었습니다. 거래가 계속 진행됩니다.', 'info');
+      showToast('거래 취소 요청이 거절되었습니다.', 'info');
       break;
     case 'withdrawn':
       showToast('상대방이 거래 취소 요청을 철회했습니다.', 'info');
       break;
-    default:
-      console.log('알 수 없는 취소 액션:', action);
   }
   
-  // UI 업데이트 (헤더 새로고침)
+  // 간단하게 새로고침으로 처리
   setTimeout(() => {
-    location.reload(); // 간단한 방법으로 페이지 새로고침
+    location.reload();
   }, 2000);
 }
 
-// 거래 취소 후 UI 업데이트
-function updateUIAfterTradeCancel() {
-  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
-  const messageInputArea = document.getElementById('messageInputArea');
-
-  if (tradeStatusContainer) {
-    // 모든 버튼을 취소 상태로 변경
-    tradeStatusContainer.innerHTML = `
-      <div class="flex items-center gap-2">
-        <span class="status-text cancelled text-xs px-2 py-1 rounded font-medium">거래 취소됨</span>
-      </div>
-    `;
+// 거래 상태 업데이트 핸들러 (게시글에서 거래완료 시)
+export function handleTradeStatusUpdate(data) {
+  if (data.post_marked_sold && data.seller_completed) {
+    showToast('게시글이 거래완료 처리되었습니다.', 'info');
+    
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
   }
-
-  if (messageInputArea) {
-    messageInputArea.innerHTML = `
-      <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
-        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        거래가 취소되어 더 이상 채팅을 보낼 수 없습니다.
-      </div>
-    `;
-  }
-  
-  // 전역 상태 업데이트
-  window.isTradeCompleted = true; // 취소도 완료 상태로 간주
 }

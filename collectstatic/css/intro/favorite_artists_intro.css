@@ -1,0 +1,230 @@
+/* 찜한 아티스트 인트로 슬라이드 전용 CSS */
+/* static/css/intro/favorite_artists_intro.css */
+
+/* 메인 컨테이너 */
+.favorite-artist-item {
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.favorite-artist-item:hover {
+    transform: translateY(-2px);
+}
+
+/* 아티스트 로고 스타일 */
+.favorite-artist-item img {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.favorite-artist-item:hover img {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 1) !important;
+}
+
+/* 아티스트 이름 호버 효과 */
+.favorite-artist-item:hover p {
+    color: #60a5fa; /* blue-400 */
+    text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+/* 체크박스 스타일링 */
+#intro-favorites-demo {
+    accent-color: #3b82f6; /* blue-600 */
+}
+
+#intro-favorites-demo:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+/* 글래스모피즘 효과 강화 */
+.bg-black.bg-opacity-80 {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* 내부 검은 박스 */
+.bg-black {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 버튼 호버 효과 */
+.bg-gradient-to-r {
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-gradient-to-r::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.bg-gradient-to-r:hover::before {
+    left: 100%;
+}
+
+/* 링크 호버 효과 */
+.text-blue-400:hover {
+    text-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+}
+
+/* 더보기 버튼 */
+.intro-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #f9a8d4; /* pink-400 색상으로 변경 */
+    color: #000000;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px rgba(244, 114, 182, 0.3); /* 그림자도 pink-400으로 변경 */
+    border: none;
+    cursor: pointer;
+}
+
+.intro-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(244, 114, 182, 0.4); /* 호버 그림자도 pink-400으로 변경 */
+    background: #ec4899; /* 호버 시 pink-500로 변경 */
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .favorite-artist-item img {
+        width: 3.5rem !important; /* 14 */
+        height: 3.5rem !important; /* 14 */
+    }
+    
+    .favorite-artist-item p {
+        font-size: 0.75rem; /* text-xs */
+        margin-top: 0.5rem;
+    }
+    
+    /* 모바일에서 간격 조정 */
+    .gap-6 {
+        gap: 1rem !important;
+    }
+    
+    /* 모바일에서 패딩 조정 */
+    .bg-black.bg-opacity-80 {
+        padding: 1.5rem !important;
+    }
+    
+    .bg-black.p-4 {
+        padding: 1rem !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .favorite-artist-item img {
+        width: 3rem !important; /* 12 */
+        height: 3rem !important; /* 12 */
+    }
+    
+    .gap-6 {
+        gap: 0.75rem !important;
+    }
+    
+    /* 텍스트 크기 조정 */
+    .text-2xl {
+        font-size: 1.25rem !important; /* text-xl */
+    }
+    
+    .text-sm {
+        font-size: 0.75rem !important; /* text-xs */
+    }
+    
+    /* 체크박스 영역 모바일 최적화 */
+    .flex.items-center.justify-between {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .flex.items-center.gap-4 {
+        align-self: flex-end;
+    }
+}
+
+/* 초소형 화면 */
+@media (max-width: 375px) {
+    .favorite-artist-item img {
+        width: 2.5rem !important; /* 10 */
+        height: 2.5rem !important; /* 10 */
+    }
+    
+    .gap-6 {
+        gap: 0.5rem !important;
+    }
+    
+    .bg-black.bg-opacity-80 {
+        padding: 1rem !important;
+    }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+    .favorite-artist-item,
+    .favorite-artist-item img,
+    .bg-gradient-to-r::before {
+        transition: none;
+    }
+    
+    .favorite-artist-item:hover {
+        transform: none;
+    }
+    
+    .favorite-artist-item:hover img {
+        transform: none;
+    }
+}
+
+/* 고대비 모드 */
+@media (prefers-contrast: high) {
+    .bg-black.bg-opacity-80 {
+        background: rgba(0, 0, 0, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+    
+    .favorite-artist-item img {
+        border-width: 3px !important;
+    }
+}
+
+/* 포커스 스타일 */
+.favorite-artist-item:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+}
+
+/* 로딩 애니메이션 */
+.favorite-artist-item img[src*="loading"] {
+    background: linear-gradient(90deg, #374151, #4b5563, #374151);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
