@@ -374,12 +374,11 @@ def review_home(request, username):
 
     return render(request, 'accounts/review_home.html', context)
 
-
-# accounts/views.py의 write_review 함수 수정
+# accounts/views.py의 review_create 함수 수정
 
 @login_required
-def write_review(request, username):
-    """매너 리뷰 작성 처리 - GET 시 독립 페이지, POST 시 기존 로직 + 채팅방 정보 추가"""
+def review_create(request, username):
+    """매너 리뷰 작성 처리 - GET 시 독립 페이지, POST 시 AJAX JSON 응답"""
     target_user = get_object_or_404(User, username=username)
     
     # 자신에게 리뷰할 수 없음
@@ -399,16 +398,31 @@ def write_review(request, username):
             
             # 채팅방 참여자인지 확인
             if not chatroom.is_participant(request.user):
+                if request.method == 'POST':
+                    return JsonResponse({
+                        'success': False,
+                        'error': '해당 채팅방의 참여자가 아닙니다.'
+                    })
                 messages.error(request, '해당 채팅방의 참여자가 아닙니다.')
                 return redirect('accounts:profile', username=username)
             
             # 거래가 완료되었는지 확인
             if not chatroom.is_fully_completed:
+                if request.method == 'POST':
+                    return JsonResponse({
+                        'success': False,
+                        'error': '거래가 완료된 후에 리뷰를 작성할 수 있습니다.'
+                    })
                 messages.error(request, '거래가 완료된 후에 리뷰를 작성할 수 있습니다.')
                 return redirect('ddokchat:chat_room', room_code=room_code)
             
             # 구매자만 리뷰 작성 가능
             if request.user != chatroom.buyer:
+                if request.method == 'POST':
+                    return JsonResponse({
+                        'success': False,
+                        'error': '구매자만 리뷰를 작성할 수 있습니다.'
+                    })
                 messages.error(request, '구매자만 리뷰를 작성할 수 있습니다.')
                 return redirect('ddokchat:chat_room', room_code=room_code)
             
@@ -420,10 +434,20 @@ def write_review(request, username):
             ).first()
             
             if existing_review:
+                if request.method == 'POST':
+                    return JsonResponse({
+                        'success': False,
+                        'error': '이미 이 거래에 대한 리뷰를 작성하셨습니다.'
+                    })
                 messages.info(request, '이미 이 거래에 대한 리뷰를 작성하셨습니다.')
                 return redirect('accounts:review_home', username=username)
                 
         except ChatRoom.DoesNotExist:
+            if request.method == 'POST':
+                return JsonResponse({
+                    'success': False,
+                    'error': '유효하지 않은 채팅방입니다.'
+                })
             messages.error(request, '유효하지 않은 채팅방입니다.')
             return redirect('accounts:profile', username=username)
     
@@ -435,15 +459,15 @@ def write_review(request, username):
             'form': form,
             'target_user': target_user,
             'room_code': room_code,
-            'chatroom': chatroom,  # 🔥 NEW: 채팅방 정보 추가
+            'chatroom': chatroom,
         }
         
-        # 🔥 독립된 리뷰 작성 페이지로 렌더링 (템플릿명 수정)
-        return render(request, 'accounts/write_review.html', context)
+        return render(request, 'accounts/review_create.html', context)
     
-    # 🔥 기존 POST 처리 로직 (약간 수정)
+    # 🔥 POST 요청 처리 - 무조건 JSON 응답
     elif request.method == 'POST':
         form = MannerReviewForm(request.POST)
+        
         if form.is_valid():
             try:
                 with transaction.atomic():
@@ -457,51 +481,45 @@ def write_review(request, username):
                     
                     review.save()
                 
-                # 🔥 AJAX 요청 처리 (새 페이지에서 사용할 수 있도록)
-                if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'message': f'{target_user.username}님에 대한 매너 리뷰가 작성되었습니다.',
-                        'redirect_url': reverse('accounts:review_home', args=[username]) if not room_code else reverse('ddokchat:chat_room', args=[room_code])
-                    })
-                
-                # 일반 폼 제출
-                messages.success(request, f'{target_user.username}님에 대한 매너 리뷰가 작성되었습니다.')
-                
-                # 🔥 NEW: 리다이렉트 로직 개선
+                # 🔥 성공 시 항상 JSON 응답 (더 나은 리다이렉트 로직)
+                redirect_url = None
                 if room_code:
-                    # 채팅방에서 온 경우 채팅방으로 돌아가기
-                    return redirect('ddokchat:chat_room', room_code=room_code)
+                    # 채팅방에서 온 경우 → 리뷰 홈으로 (채팅방 복귀는 어색함)
+                    redirect_url = f'/accounts/{username}/reviews/'
                 else:
-                    # 일반 경우 리뷰 홈으로
-                    return redirect('accounts:review_home', username=username)
+                    # 일반 경우 → 리뷰 홈으로
+                    redirect_url = f'/accounts/{username}/reviews/'
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{target_user.username}님에 대한 매너 리뷰가 작성되었습니다.',
+                    'redirect_url': redirect_url
+                })
                 
             except Exception as e:
-                print(f"리뷰 저장 오류: {e}")
-                
-                if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': False,
-                        'error': '리뷰 저장 중 오류가 발생했습니다.'
-                    })
-                
-                messages.error(request, '리뷰 저장 중 오류가 발생했습니다.')
-        else:
-            # 폼 에러 처리
-            if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                logger.error(f"리뷰 저장 오류: {e}")
                 return JsonResponse({
                     'success': False,
-                    'error': '입력 정보를 확인해주세요.',
-                    'form_errors': form.errors
+                    'error': '리뷰 저장 중 오류가 발생했습니다.'
                 })
+        else:
+            # 🔥 폼 에러 시에도 JSON 응답
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_messages.append(f"{field}: {error}")
             
-            messages.error(request, '입력 정보를 확인해주세요.')
+            return JsonResponse({
+                'success': False,
+                'error': '입력 정보를 확인해주세요.',
+                'form_errors': error_messages
+            })
     
-    # 오류 시 기본 리다이렉트
-    if room_code:
-        return redirect('ddokchat:chat_room', room_code=room_code)
-    else:
-        return redirect('accounts:review_home', username=username)
+    # 🔥 기본 fallback (GET/POST가 아닌 경우)
+    return JsonResponse({
+        'success': False,
+        'error': '잘못된 요청입니다.'
+    })
 
 @login_required
 def mypage(request): 

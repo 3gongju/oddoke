@@ -6,10 +6,10 @@
   <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 review-banner">
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- Heroicons: check-circle -->
-        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        <!-- 🔥 심플한 별점 아이콘 (그라데이션 제거) -->
+        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
           </svg>
         </div>
         <div>
@@ -18,84 +18,38 @@
         </div>
       </div>
       
-      <!-- 데스크탑과 모바일 모두 동일한 버튼 -->
+      <!-- 🔥 심플한 버튼 (이모지 제거, 그라데이션 제거) -->
       <button 
         id="reviewBannerBtn"
         onclick="goToReviewPage()"
         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
       >
-        리뷰 작성
+        신뢰덕 작성
       </button>
     </div>
-    
-    <!-- 선택적: 닫기 버튼 (사용자가 배너를 숨기고 싶을 때) -->
-    <button 
-      onclick="hideReviewBanner()"
-      class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors p-1"
-      title="배너 숨기기"
-    >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
   </div>
 </div>
 {% endif %}
 
 <script>
-// 리뷰 작성 페이지로 이동
+// 리뷰 작성 페이지로 이동 (🔥 네이밍 변경: review_create로)
 function goToReviewPage() {
   const otherUsername = "{{ room.other_user.username }}";
   const roomCode = "{{ room.room_code }}";
   
   if (otherUsername && roomCode) {
-    window.location.href = `/accounts/${otherUsername}/review/write/?room_code=${roomCode}`;
+    // 🔥 URL 변경: write → create
+    window.location.href = `/accounts/${otherUsername}/review/create/?room_code=${roomCode}`;
   } else {
     if (window.showToast) {
       window.showToast('리뷰 페이지로 이동할 수 없습니다.', 'error');
     }
   }
 }
-
-// 배너 숨기기 (세션 저장으로 새로고침해도 유지)
-function hideReviewBanner() {
-  const banner = document.querySelector('.review-banner');
-  if (banner) {
-    banner.style.opacity = '0';
-    banner.style.transform = 'translateY(-10px)';
-    
-    setTimeout(() => {
-      banner.parentElement.remove();
-    }, 300);
-    
-    // 세션에 숨김 상태 저장
-    try {
-      sessionStorage.setItem(`review_banner_hidden_${window.roomCode}`, 'true');
-    } catch (e) {
-      console.warn('세션 저장 실패');
-    }
-  }
-}
-
-// 페이지 로드 시 숨김 상태 확인
-document.addEventListener('DOMContentLoaded', function() {
-  try {
-    const isHidden = sessionStorage.getItem(`review_banner_hidden_${window.roomCode}`);
-    if (isHidden === 'true') {
-      const banner = document.querySelector('.review-banner');
-      if (banner) {
-        banner.parentElement.remove();
-      }
-    }
-  } catch (e) {
-    console.warn('세션 확인 실패');
-  }
-});
 </script>
 
 <style>
 .review-banner {
-  position: relative;
   transition: all 0.3s ease;
 }
 
