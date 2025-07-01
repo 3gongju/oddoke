@@ -23,8 +23,7 @@ import {
 import { setupFraudCheck } from './fraud_check.js';
 import { setupAutoDetect } from './auto_detect.js';
 import { setupImageLightbox } from './image_handler.js';
-import { setupPlusMenu, setupTradeCompleteModal, setupHeaderMenu, setupReviewModal } from './ui_setup.js';
-import { sendTextMessage } from './message_sender.js';
+import { setupPlusMenu, setupTradeCompleteModal, setupHeaderMenu } from './ui_setup.js';import { sendTextMessage } from './message_sender.js';
 import { setupTradeReport } from './trade_report.js';
 
 document.addEventListener("DOMContentLoaded", () => {

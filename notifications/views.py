@@ -6,6 +6,8 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 import json
 from .models import Notification
+from ddokchat.models import ChatRoom
+from django.contrib.contenttypes.models import ContentType
 
 
 @login_required
@@ -201,6 +203,39 @@ def goto_content(request, notification_id):
         notification_type = notification.notification_type
         model_name = notification.content_type.model.lower()
         
+        # 🔥 NEW: 거래완료 요청 알림 → 해당 채팅방으로 직접 이동
+        if notification_type == 'trade_complete_request':
+            # content_object는 거래 게시글
+            post = content_object
+            actor = notification.actor  # 거래완료를 요청한 사용자
+            recipient = notification.recipient  # 알림을 받은 사용자 (현재 사용자)
+            
+            try:               
+                # 해당 게시글과 사용자들 간의 채팅방 찾기
+                content_type = ContentType.objects.get_for_model(post)
+                
+                # 알림을 보낸 사람(actor)과 받은 사람(recipient) 간의 채팅방 찾기
+                chatroom = ChatRoom.objects.filter(
+                    content_type=content_type,
+                    object_id=post.id
+                ).filter(
+                    Q(buyer=actor, seller=recipient) |
+                    Q(buyer=recipient, seller=actor)
+                ).first()
+                
+                if chatroom:
+                    # 채팅방으로 직접 이동
+                    return redirect('ddokchat:chat_room', room_code=chatroom.room_code)
+                else:
+                    # 채팅방을 찾을 수 없으면 채팅 목록으로
+                    messages.info(request, '해당 채팅방을 찾을 수 없습니다.')
+                    return redirect('ddokchat:my_chatrooms')
+                    
+            except Exception as e:
+                print(f"거래완료 알림 처리 오류: {e}")
+                # 오류 시 채팅 목록으로
+                return redirect('ddokchat:my_chatrooms')
+        
         # 1. 분철 참여 신청 알림 → 분철 관리 페이지로 (개별 처리)
         if notification_type == 'split_application':
             return redirect('ddokfarm:manage_split_applications', 
@@ -249,10 +284,6 @@ def goto_content(request, notification_id):
         elif hasattr(content_object, 'id'):
             post_url = get_post_url(content_object)
             return redirect(post_url)
-
-        # 10. 거래완료 요청 알림 → 채팅방으로 이동
-        elif notification_type == 'trade_complete_request':
-            return redirect('ddokchat:my_chatrooms')
         
         else:
             messages.warning(request, '해당 페이지로 이동할 수 없습니다.')
