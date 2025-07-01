@@ -440,6 +440,7 @@ function showReviewRedirectModal() {
   if (modal) {
     modal.classList.remove('hidden');
     
+    // 버튼 이벤트 설정
     const laterBtn = document.getElementById('reviewRedirectLater');
     const nowBtn = document.getElementById('reviewRedirectNow');
     
@@ -452,15 +453,17 @@ function showReviewRedirectModal() {
     if (nowBtn) {
       nowBtn.onclick = function() {
         modal.classList.add('hidden');
+        // 🔥 수정: 새로운 리뷰 작성 페이지로 이동
         const otherUser = window.roomSeller || getOtherUserFromHeader();
         if (otherUser) {
-          window.location.href = `/accounts/write-review/${otherUser}/?room_code=${window.roomCode}`;
+          window.location.href = `/accounts/${otherUser}/review/write/?room_code=${window.roomCode}`;
         } else {
           showToast('리뷰 페이지로 이동할 수 없습니다.', 'error');
         }
       };
     }
     
+    // 모달 외부 클릭 시 닫기
     modal.onclick = function(e) {
       if (e.target === modal) {
         modal.classList.add('hidden');
