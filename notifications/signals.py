@@ -3,14 +3,14 @@ from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from ddokfarm.models import FarmComment, FarmSellPost, FarmRentalPost, FarmSplitPost, SplitApplication
 from ddokdam.models import DamComment, DamCommunityPost, DamMannerPost, DamBdaycafePost
-from ddokchat.models import Message
+from ddokchat.models import Message, ChatRoom
 from accounts.models import User, FandomProfile
 from ddoksang.models import BdayCafe
 from .models import Notification
 from utils.redis_client import redis_client
 
 
-# 1. ✅ 개선된 댓글 관련 알림 (그룹핑 적용)
+# 1. 개선된 댓글 관련 알림 (그룹핑 적용)
 @receiver(post_save, sender=FarmComment)
 @receiver(post_save, sender=DamComment)
 def create_comment_notification(sender, instance, created, **kwargs):
@@ -54,7 +54,7 @@ def create_comment_notification(sender, instance, created, **kwargs):
             )
 
 
-# 2. ✅ 개선된 채팅 관련 알림 (Redis 기반 위치 확인 + 그룹핑 적용)
+# 2. 개선된 채팅 관련 알림 (Redis 기반 위치 확인 + 그룹핑 적용)
 @receiver(post_save, sender=Message)
 def create_chat_notification(sender, instance, created, **kwargs):
     """채팅 메시지 발송 시 알림 생성 (Redis 기반 위치 확인 + 그룹핑 적용)"""
@@ -94,7 +94,42 @@ def create_chat_notification(sender, instance, created, **kwargs):
         )
 
 
-# 3. 분철 관련 알림 - 기존과 동일
+# 3. 거래완료 요청 시그널 추가
+@receiver(post_save, sender=ChatRoom)
+def create_trade_complete_request_notification(sender, instance, created, **kwargs):
+    """채팅방 거래완료 상태 변경 시 알림 생성"""
+    if created:
+        return  # 새로 생성된 채팅방은 제외
+    
+    room = instance
+    
+    # 거래가 취소되었거나 양쪽 모두 완료된 경우는 알림 생성 안함
+    if room.is_cancelled or room.is_fully_completed:
+        return
+    
+    # 한쪽만 완료된 경우에만 알림 생성
+    if room.buyer_completed and not room.seller_completed:
+        # 구매자가 먼저 완료 → 판매자에게 알림
+        Notification.create_notification(
+            recipient=room.seller,
+            actor=room.buyer,
+            notification_type='trade_complete_request',
+            content_object=room.post
+        )
+        print(f"✅ 거래완료 요청 알림 생성: {room.buyer.username} → {room.seller.username}")
+        
+    elif room.seller_completed and not room.buyer_completed:
+        # 판매자가 먼저 완료 → 구매자에게 알림
+        Notification.create_notification(
+            recipient=room.buyer,
+            actor=room.seller,
+            notification_type='trade_complete_request',
+            content_object=room.post
+        )
+        print(f"✅ 거래완료 요청 알림 생성: {room.seller.username} → {room.buyer.username}")
+
+
+# 4. 분철 관련 알림
 @receiver(post_save, sender=SplitApplication)
 def create_split_application_notification(sender, instance, created, **kwargs):
     """분철 참여 신청 및 상태 변경 시 알림 생성"""
@@ -128,7 +163,7 @@ def create_split_application_notification(sender, instance, created, **kwargs):
             )
 
 
-# 4. 좋아요 관련 알림 - 기존과 동일
+# 5. 좋아요 관련 알림
 @receiver(m2m_changed, sender=FarmSellPost.like.through)
 @receiver(m2m_changed, sender=FarmRentalPost.like.through)
 @receiver(m2m_changed, sender=FarmSplitPost.like.through)
@@ -153,7 +188,7 @@ def create_like_notification(sender, instance, action, pk_set, **kwargs):
                 continue
 
 
-# 5. 팔로우 관련 알림 - 기존과 동일
+# 6. 팔로우 관련 알림
 @receiver(m2m_changed, sender=User.followings.through)
 def create_follow_notification(sender, instance, action, pk_set, **kwargs):
     """팔로우 시 알림 생성"""

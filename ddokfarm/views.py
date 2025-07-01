@@ -1293,8 +1293,6 @@ def like_post(request, category, post_id):
 
     return JsonResponse({'liked': liked, 'like_count': post.like.count()})
 
-# ddokfarm/views.py의 mark_as_sold 함수 수정
-
 @login_required
 @require_POST
 def mark_as_sold(request, category, post_id):
@@ -1351,22 +1349,41 @@ def mark_as_sold(request, category, post_id):
             
             print(f"🔍 업데이트할 채팅방 수: {chatrooms_to_update.count()}")
             
-            updated_count = chatrooms_to_update.update(seller_completed=True)
-            print(f"✅ 게시글 거래완료 → 채팅방 동기화: {updated_count}개 채팅방의 seller_completed = True")
+            # 🔥 각 채팅방을 개별적으로 업데이트 (시그널 발생을 위해)
+            for chatroom in chatrooms_to_update:
+                chatroom.seller_completed = True
+                chatroom.save()  # 🔥 이때 시그널이 발생하여 알림 자동 생성
+                print(f"✅ 채팅방 업데이트: Room#{chatroom.room_code}")
             
             # 🔥 7. 각 채팅방에 WebSocket 알림 전송
             channel_layer = get_channel_layer()
             for chatroom in chatrooms_to_update:
                 try:
-                    async_to_sync(channel_layer.group_send)(
-                        f"chat_{chatroom.room_code}",
-                        {
-                            "type": "trade_status_update",
-                            "room_code": chatroom.room_code,
-                            "post_marked_sold": True,
-                            "seller_completed": True,
-                        }
-                    )
+                    # 거래완료 상태에 따라 다른 알림 전송
+                    if chatroom.is_fully_completed:
+                        # 양쪽 모두 완료된 경우
+                        async_to_sync(channel_layer.group_send)(
+                            f"chat_{chatroom.room_code}",
+                            {
+                                "type": "trade_completed_notification",
+                                "room_code": chatroom.room_code,
+                                "is_fully_completed": True,
+                                "user_role": "seller",
+                            }
+                        )
+                    else:
+                        # 판매자만 완료된 경우
+                        async_to_sync(channel_layer.group_send)(
+                            f"chat_{chatroom.room_code}",
+                            {
+                                "type": "trade_progress_notification",
+                                "room_code": chatroom.room_code,
+                                "completed_by": "seller",
+                                "completed_user": post.user.username,
+                                "other_user": chatroom.buyer.username,
+                                "is_fully_completed": False,
+                            }
+                        )
                     print(f"✅ WebSocket 알림 전송: Room#{chatroom.room_code}")
                 except Exception as ws_error:
                     print(f"⚠️ WebSocket 알림 실패 (무시): Room#{chatroom.room_code}, Error: {ws_error}")
