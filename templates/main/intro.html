@@ -190,6 +190,7 @@
     <link rel="stylesheet" href="{% static 'css/intro/cafe_map.css' %}">
     <link rel="stylesheet" href="{% static 'css/intro/safety_intro.css' %}">
     <link rel="stylesheet" href="{% static 'css/intro/favorite_artists_intro.css' %}">
+    <link rel="stylesheet" href="{% static 'css/intro/ddokgame_intro.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -496,6 +497,9 @@
                         
                     {% elif slide.type == 'safety' %}
                         {% include 'main/intro/safety_slide.html' %}
+
+                    {% elif slide.type == 'ddokgame' %}
+                        {% include 'main/intro/ddokgame_slide.html' %}
                     {% endif %}
 
                     {% endif %}
@@ -526,6 +530,7 @@
     <script src="{% static 'js/intro/intro_ddokfarm.js' %}"></script>
     <script src="{% static 'js/intro/intro_ddokdam.js' %}"></script>
     <script src="{% static 'js/intro/favorite_artists_intro.js' %}"></script>
+    <script src="{% static 'js/intro/ddokgame_intro.js' %}"></script>
     
     <!-- JavaScript -->
     <script>

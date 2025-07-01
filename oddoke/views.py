@@ -193,13 +193,12 @@ def intro_view(request):
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': raw_favs
         },
-        # {
-        #     'title': '다양한 아티스트 지원',
-        #     'subtitle': '모든 덕들을 위한 플랫폼',
-        #     'description': 'K-POP 팬들을 위한 맞춤형 공간',
-        #     'type': 'artists',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
+        {
+            'title': '내 최애 생일시 맞추고 덕 쌓기',
+            'subtitle': '게임에서 1000덕을 모으면 마이페이지에서 배너 광고를 신청할 수 있어요!',
+            'type': 'ddokgame',
+            'image': DEFAULT_SLIDE_IMAGE
+        },
         # {
         #     'title': '웹 최적화',
         #     'subtitle': '큰 화면으로 크게 덕질 즐기자!',
