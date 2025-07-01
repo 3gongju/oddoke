@@ -2,12 +2,12 @@
 
 {% load static %}
 
-<!-- 덕담 최신 게시물 4개 표시 - 덕담 인덱스와 동일한 UI -->
+<!-- 덕담 최신 게시물 4개 표시 - 첫 번째 이미지와 완전히 동일한 UI -->
 {% if slide.real_data and slide.real_data|length > 0 %}
     <div class="ddokdam-posts-grid">
         {% for post in slide.real_data|slice:":4" %}
             <article class="ddokdam-post-card" onclick="openDdokdamPost('{{ post.get_absolute_url }}')">
-                <!-- 게시물 이미지 -->
+                <!-- 게시물 이미지 - 카드의 대부분을 차지 -->
                 {% if post.images.first %}
                     <img src="{{ post.images.first.image.url }}" 
                          alt="{{ post.title }}"
@@ -26,51 +26,42 @@
                     </svg>
                 </button>
                 
-                <!-- 카드 콘텐츠 -->
+                <!-- 카드 하단 콘텐츠 - 최소화된 정보만 -->
                 <div class="ddokdam-post-content">
-                    <!-- 게시물 제목 -->
-                    <h4 class="ddokdam-post-title">{{ post.title|truncatechars:50 }}</h4>
+                    <!-- 게시물 제목 - 1줄로 제한 -->
+                    <h4 class="ddokdam-post-title">{{ post.title|truncatechars:30 }}</h4>
                     
-                    <!-- 사용자 정보 -->
+                    <!-- 사용자 정보 - 간소화 -->
                     <div class="ddokdam-post-user">
                         <div class="ddokdam-user-avatar">
                             {% if post.user.profile_image %}
                                 <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-full h-full object-cover">
                             {% endif %}
                         </div>
-                        <span class="ddokdam-user-name">{{ post.user.username|default:"익명" }}</span>
+                        <span class="ddokdam-user-name">{{ post.user.username|default:"익명"|truncatechars:8 }}</span>
                         {% if post.user.is_verified %}
                             <span class="ddokdam-user-badge">인증</span>
                         {% endif %}
                     </div>
                     
-                    <!-- 카테고리 배지 -->
-                    <span class="ddokdam-post-category">
-                        {% if post.category == 'community' %}커뮤니티
-                        {% elif post.category == 'manner' %}예절샷
-                        {% elif post.category == 'bdaycafe' %}생일카페
-                        {% else %}덕담
-                        {% endif %}
-                    </span>
-                    
-                    <!-- 메타 정보 -->
+                    <!-- 메타 정보 - 최소화 -->
                     <div class="ddokdam-post-meta">
                         <div class="ddokdam-post-stats">
-                            {% if post.like_count %}
-                                <span class="ddokdam-post-stat">
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                                    </svg>
-                                    {{ post.like_count|default:0 }}
-                                </span>
-                            {% endif %}
-                            
                             {% if post.view_count %}
                                 <span class="ddokdam-post-stat">
                                     <svg viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                                     </svg>
                                     {{ post.view_count|default:0 }}
+                                </span>
+                            {% endif %}
+                            
+                            {% if post.like_count %}
+                                <span class="ddokdam-post-stat">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    {{ post.like_count|default:0 }}
                                 </span>
                             {% endif %}
                             
@@ -93,6 +84,15 @@
                         </span>
                     </div>
                 </div>
+                
+                <!-- 카테고리 배지 - 하단에 위치 -->
+                <span class="ddokdam-post-category">
+                    {% if post.category == 'community' %}커뮤니티
+                    {% elif post.category == 'manner' %}예절샷
+                    {% elif post.category == 'bdaycafe' %}생일카페
+                    {% else %}덕담
+                    {% endif %}
+                </span>
             </article>
         {% endfor %}
     </div>
