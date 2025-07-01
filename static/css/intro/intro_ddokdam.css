@@ -103,7 +103,7 @@
 
 /* 카테고리 배지 - 이미지 위에 오버레이로 표시 */
 .ddokdam-post-category {
-    background: #ffb6c1;
+    background: #f9a8d4;
     color: #333;
     padding: 0.2rem 0.5rem;
     border-radius: 8px;
@@ -174,27 +174,26 @@
 }
 
 /* 더보기 버튼 */
-.ddokdam-more-btn {
+.intro-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 1.5rem;
+    background: #f9a8d4; /* pink-400 색상으로 변경 */
+    color: #000000;
     padding: 0.75rem 1.5rem;
-    background: rgba(255, 182, 193, 1); /* empty-btn과 동일한 색상 */
-    border: 1px solid rgba(255, 182, 193, 1);
-    color: #333; /* 텍스트 색상을 어둡게 변경 */
-    text-decoration: none;
-    border-radius: 25px;
+    border-radius: 9999px;
     font-weight: 500;
+    text-decoration: none;
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 14px rgba(244, 114, 182, 0.3); /* 그림자도 pink-400으로 변경 */
+    border: none;
+    cursor: pointer;
 }
 
-.ddokdam-more-btn:hover {
-    background: rgba(255, 182, 193, 0.8); /* 호버 시 약간 투명하게 */
-    border-color: rgba(255, 182, 193, 0.8);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(255, 182, 193, 0.4);
+.intro-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(244, 114, 182, 0.4); /* 호버 그림자도 pink-400으로 변경 */
+    background: #ec4899; /* 호버 시 pink-500로 변경 */
 }
 
 /* 태블릿 반응형 */
