@@ -9,10 +9,10 @@
 <div class="min-h-screen bg-gray-50 py-8">
   <div class="max-w-2xl mx-auto px-4">
     
-    <!-- 헤더 -->
+    <!-- 🔥 개선된 헤더 - 뒤로가기 로직 향상 -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
       <div class="flex items-center gap-4 mb-4">
-        <button onclick="history.back()" class="text-gray-600 hover:text-gray-800 transition-colors">
+        <button onclick="goBackToPreviousPage()" class="text-gray-600 hover:text-gray-800 transition-colors">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
@@ -45,6 +45,19 @@
           </div>
         </div>
       </div>
+      
+      <!-- 🔥 NEW: 거래 완료된 채팅방 정보 표시 (room_code가 있는 경우) -->
+      {% if room_code and chatroom %}
+        <div class="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div class="flex items-center gap-2 text-sm text-green-800">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="font-medium">{{ chatroom.post.title }}</span>
+            <span>거래 완료</span>
+          </div>
+        </div>
+      {% endif %}
     </div>
 
     <!-- 리뷰 작성 폼 -->
@@ -185,8 +198,8 @@
       <!-- 제출 버튼 -->
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex flex-col sm:flex-row gap-4">
-          <button type="button" onclick="history.back()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-            나중에 작성하기
+          <button type="button" onclick="goBackToPreviousPage()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+            뒤로 가기
           </button>
           <button type="submit" id="submitBtn" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
             리뷰 작성 완료
@@ -209,11 +222,62 @@
   </div>
 </div>
 
+<!-- 🔥 완료 모달 추가 -->
+<div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 text-center">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">리뷰 작성 완료!</h3>
+    <p class="text-gray-600 mb-6">소중한 후기를 남겨주셔서 감사합니다.</p>
+    <button 
+      id="goBackBtn" 
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+    >
+      확인
+    </button>
+  </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const form = document.getElementById('reviewForm');
   const submitBtn = document.getElementById('submitBtn');
   const loadingModal = document.getElementById('loadingModal');
+  const successModal = document.getElementById('successModal');
+  const goBackBtn = document.getElementById('goBackBtn');
+  
+  // 🔥 개선된 뒤로가기 로직
+  function goBackToPreviousPage() {
+    const roomCode = '{{ room_code }}';
+    const hasRoomCode = roomCode && roomCode !== '';
+    
+    if (hasRoomCode) {
+      // 채팅방에서 온 경우 채팅방으로 돌아가기
+      window.location.href = `/ddokchat/room/${roomCode}/`;
+    } else {
+      // 일반적인 경우 이전 페이지로
+      if (document.referrer && document.referrer.includes(window.location.origin)) {
+        history.back();
+      } else {
+        // referrer가 없거나 외부 사이트인 경우 프로필 페이지로
+        window.location.href = '/accounts/{{ target_user.username }}/';
+      }
+    }
+  }
+  
+  // 전역 함수로 노출
+  window.goBackToPreviousPage = goBackToPreviousPage;
+  
+  // 완료 모달의 확인 버튼
+  if (goBackBtn) {
+    goBackBtn.addEventListener('click', function() {
+      successModal.classList.add('hidden');
+      goBackToPreviousPage();
+    });
+  }
   
   // 폼 제출 처리
   form.addEventListener('submit', function(e) {
@@ -271,15 +335,8 @@ document.addEventListener('DOMContentLoaded', function() {
       loadingModal.classList.add('hidden');
       
       if (data.success) {
-        // 성공 시 완료 페이지로 이동 또는 이전 페이지로 돌아가기
-        alert('리뷰가 성공적으로 작성되었습니다!');
-        
-        // 채팅방으로 돌아가거나 마이페이지로 이동
-        if (data.redirect_url) {
-          window.location.href = data.redirect_url;
-        } else {
-          history.back();
-        }
+        // 🔥 성공 시 완료 모달 표시
+        successModal.classList.remove('hidden');
       } else {
         alert(data.error || '리뷰 작성에 실패했습니다.');
         submitBtn.disabled = false;

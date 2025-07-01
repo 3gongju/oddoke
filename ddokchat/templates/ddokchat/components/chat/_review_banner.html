@@ -1,0 +1,118 @@
+<!-- ddokchat/templates/ddokchat/components/chat/_review_banner.html -->
+
+<!-- 구매자이면서 거래완료되었고 아직 리뷰를 작성하지 않은 경우에만 표시 -->
+{% if room.is_fully_completed and current_user == room.buyer and not has_already_reviewed %}
+<div class="px-4 py-3 bg-gray-100"> <!-- 메시지 영역 배경과 동일 -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 review-banner">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Heroicons: check-circle -->
+        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-gray-900">거래가 완료되었습니다!</p>
+          <p class="text-xs text-gray-600">거래 경험을 다른 분들과 공유해주세요</p>
+        </div>
+      </div>
+      
+      <!-- 데스크탑과 모바일 모두 동일한 버튼 -->
+      <button 
+        id="reviewBannerBtn"
+        onclick="goToReviewPage()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+      >
+        리뷰 작성
+      </button>
+    </div>
+    
+    <!-- 선택적: 닫기 버튼 (사용자가 배너를 숨기고 싶을 때) -->
+    <button 
+      onclick="hideReviewBanner()"
+      class="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors p-1"
+      title="배너 숨기기"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<script>
+// 리뷰 작성 페이지로 이동
+function goToReviewPage() {
+  const otherUsername = "{{ room.other_user.username }}";
+  const roomCode = "{{ room.room_code }}";
+  
+  if (otherUsername && roomCode) {
+    window.location.href = `/accounts/${otherUsername}/review/write/?room_code=${roomCode}`;
+  } else {
+    if (window.showToast) {
+      window.showToast('리뷰 페이지로 이동할 수 없습니다.', 'error');
+    }
+  }
+}
+
+// 배너 숨기기 (세션 저장으로 새로고침해도 유지)
+function hideReviewBanner() {
+  const banner = document.querySelector('.review-banner');
+  if (banner) {
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-10px)';
+    
+    setTimeout(() => {
+      banner.parentElement.remove();
+    }, 300);
+    
+    // 세션에 숨김 상태 저장
+    try {
+      sessionStorage.setItem(`review_banner_hidden_${window.roomCode}`, 'true');
+    } catch (e) {
+      console.warn('세션 저장 실패');
+    }
+  }
+}
+
+// 페이지 로드 시 숨김 상태 확인
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    const isHidden = sessionStorage.getItem(`review_banner_hidden_${window.roomCode}`);
+    if (isHidden === 'true') {
+      const banner = document.querySelector('.review-banner');
+      if (banner) {
+        banner.parentElement.remove();
+      }
+    }
+  } catch (e) {
+    console.warn('세션 확인 실패');
+  }
+});
+</script>
+
+<style>
+.review-banner {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.review-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 모바일에서 버튼이 잘리지 않도록 */
+@media (max-width: 640px) {
+  .review-banner .flex {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .review-banner button {
+    min-width: fit-content;
+  }
+}
+</style>
