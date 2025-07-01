@@ -85,6 +85,195 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
     }
+
+    /* 기본 반응형 컨테이너 */
+    .responsive-container {
+        width: 100%;
+        max-width: 100vw;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
+
+    /* 모든 텍스트를 vw 단위로 조정 (화면 크기에 따라 자동 조절) */
+    .text-6xl {
+        font-size: clamp(2rem, 6vw, 4rem) !important;
+    }
+
+    .text-5xl {
+        font-size: clamp(1.8rem, 5vw, 3rem) !important;
+    }
+
+    .text-4xl {
+        font-size: clamp(1.5rem, 4vw, 2.5rem) !important;
+    }
+
+    .text-3xl {
+        font-size: clamp(1.25rem, 3vw, 2rem) !important;
+    }
+
+    .text-2xl {
+        font-size: clamp(1.1rem, 2.5vw, 1.5rem) !important;
+    }
+
+    .text-xl {
+        font-size: clamp(1rem, 2vw, 1.25rem) !important;
+    }
+
+    .text-lg {
+        font-size: clamp(0.95rem, 1.8vw, 1.125rem) !important;
+    }
+
+    .text-base {
+        font-size: clamp(0.9rem, 1.5vw, 1rem) !important;
+    }
+
+    /* 최대 너비를 더 작게 설정 */
+    .max-w-6xl {
+        max-width: min(72rem, 90vw) !important;
+    }
+
+    .max-w-5xl {
+        max-width: min(64rem, 85vw) !important;
+    }
+
+    .max-w-4xl {
+        max-width: min(56rem, 80vw) !important;
+    }
+
+    .max-w-3xl {
+        max-width: min(48rem, 75vw) !important;
+    }
+
+    .max-w-2xl {
+        max-width: min(42rem, 70vw) !important;
+    }
+
+    /* 로고 크기 반응형 */
+    .intro-logo {
+        width: clamp(4rem, 8vw, 8rem) !important;
+        height: clamp(4rem, 8vw, 8rem) !important;
+    }
+
+    /* 덕담 카드 그리드 반응형 */
+    .ddokdam-posts-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: clamp(0.5rem, 2vw, 1.5rem);
+        max-width: min(1200px, 95vw);
+    }
+
+    /* 덕팜 폼 반응형 */
+    .ddokfarm-form-container {
+        width: min(95vw, 1200px);
+        padding: clamp(15px, 3vw, 30px);
+    }
+
+    .ddokfarm-grid-layout {
+        gap: clamp(20px, 5vw, 80px);
+    }
+
+    .ddokfarm-section-box {
+        padding: clamp(20px, 4vw, 40px);
+        min-height: auto;
+        min-width: auto;
+        max-width: 100%;
+    }
+
+    /* 생카 지도 반응형 */
+    .cafe-map-preview-container {
+        max-width: min(1000px, 90vw);
+        padding: clamp(0.5rem, 2vw, 1rem);
+    }
+
+    .cafe-map-preview {
+        gap: clamp(1rem, 3vw, 1.5rem);
+        padding: clamp(1rem, 3vw, 1.5rem);
+    }
+
+    /* 게임 컨테이너 반응형 */
+    .ddokgame-container {
+        max-width: min(1000px, 95vw);
+        padding: clamp(1rem, 3vw, 1.5rem);
+    }
+
+    /* 버튼 크기 반응형 */
+    .intro-btn {
+        padding: clamp(0.5rem 1rem, 2vw, 0.75rem 1.5rem);
+        font-size: clamp(0.875rem, 1.5vw, 1rem);
+    }
+
+    /* 패딩과 마진 반응형 */
+    .p-8 {
+        padding: clamp(1rem, 3vw, 2rem) !important;
+    }
+
+    .p-6 {
+        padding: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+    }
+
+    .p-4 {
+        padding: clamp(0.5rem, 2vw, 1rem) !important;
+    }
+
+    .px-8 {
+        padding-left: clamp(1rem, 3vw, 2rem) !important;
+        padding-right: clamp(1rem, 3vw, 2rem) !important;
+    }
+
+    .py-4 {
+        padding-top: clamp(0.5rem, 2vw, 1rem) !important;
+        padding-bottom: clamp(0.5rem, 2vw, 1rem) !important;
+    }
+
+    /* 갭 반응형 */
+    .gap-6 {
+        gap: clamp(0.75rem, 2.5vw, 1.5rem) !important;
+    }
+
+    .gap-4 {
+        gap: clamp(0.5rem, 2vw, 1rem) !important;
+    }
+
+    /* 오버레이 콘텐츠 중앙 정렬 개선 */
+    .fade-in {
+        max-width: 90vw;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    /* 줄바꿈 방지 */
+    h1, h2, h3, h4, h5, h6 {
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        line-height: 1.3;
+    }
+
+    p {
+        word-break: keep-all;
+        overflow-wrap: break-word;
+        line-height: 1.6;
+    }
+
+    /* 특정 화면 크기에서 추가 조정 */
+    @media (max-width: 640px) {
+        .ddokfarm-grid-layout {
+            grid-template-columns: 1fr;
+        }
+        
+        .cafe-map-preview {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* 큰 화면에서 최대 크기 제한 */
+    @media (min-width: 1920px) {
+        .max-w-6xl {
+            max-width: 65rem !important;
+        }
+        
+        .text-6xl {
+            font-size: 3.5rem !important;
+        }
+    }
     </style>
 
     <!-- 마우스 휠 줌 방지 JavaScript -->
@@ -446,7 +635,7 @@
                         </div>
                         <div class="text-center">
                             <div class="text-2xl md:text-3xl font-bold counter">{{ stats.total_trades }}</div>
-                            <div class="text-sm opacity-80">거래 완료</div>
+                            <div class="text-sm opacity-80">거래 중</div>
                         </div>
                     </div>
                     {% endif %}

@@ -201,55 +201,6 @@ def intro_view(request):
             'type': 'faq',
             'image': DEFAULT_SLIDE_IMAGE
         },
-        # {
-        #     'title': '커뮤니티 기능',
-        #     'subtitle': '팬들과 함께 만드는 문화',
-        #     'description': '후기, 리뷰, 정보 공유로 더 풍부한 덕질',
-        #     'type': 'community',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '이벤트 & 혜택',
-        #     'subtitle': '특별한 혜택과 이벤트',
-        #     'description': '정기적인 이벤트와 어덕해 주민들 전용 혜택 IS COMING SOON',
-        #     'type': 'events',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '24/7 고객 지원',
-        #     'subtitle': '언제든 도움을 받으세요',
-        #     'description': '빠른 문의 응답과 친절한 고객 서비스',
-        #     'type': 'support',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '개인정보 보호',
-        #     'subtitle': '안전한 개인정보 관리',
-        #     'description': '철저한 보안으로 개인정보를 보호합니다',
-        #     'type': 'privacy',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '글로벌 서비스',
-        #     'subtitle': '전 세계 팬들과 연결',
-        #     'description': '(ENGLISH VERSION IS 커밍쑨)',
-        #     'type': 'global',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '실시간 알림',
-        #     'subtitle': '중요한 소식을 놓치지 마세요',
-        #     'description': '관심 아티스트의 새로운 소식을 실시간으로',
-        #     'type': 'notifications',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
-        # {
-        #     'title': '팬클럽 연동',
-        #     'subtitle': '공식 팬클럽과의 연계',
-        #     'description': '공식 정보와 이벤트를 한 번에',
-        #     'type': 'fanclub',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
         {
             'title': '지금 시작하세요',
             'subtitle': '새로운 덕질의 시작',
