@@ -30,10 +30,10 @@ class RedisClient:
                 
                 # 연결 테스트
                 self._client.ping()
-                print("✅ Redis 연결 성공!")
+                logger.info("Redis 연결 성공")
                 
             except Exception as e:
-                print(f"❌ Redis 연결 실패: {e}")
+                logger.error(f"Redis 연결 실패: {e}")
                 self._client = None
     
     @property
@@ -57,10 +57,10 @@ class RedisClient:
             if self.is_connected():
                 key = f"user:{user_id}:current_chatroom"
                 result = self.client.setex(key, ttl, room_code)
-                print(f"✅ Redis 설정: user {user_id} -> {room_code}")
+                logger.debug(f"사용자 {user_id}의 현재 채팅방을 {room_code}로 설정")
                 return result
         except Exception as e:
-            print(f"❌ Redis 설정 실패: {e}")
+            logger.error(f"사용자 현재 채팅방 설정 실패: {e}")
         return False
     
     def get_user_current_chatroom(self, user_id):
@@ -69,10 +69,10 @@ class RedisClient:
             if self.is_connected():
                 key = f"user:{user_id}:current_chatroom"
                 result = self.client.get(key)
-                print(f"🔍 Redis 조회: user {user_id} -> {result}")
+                logger.debug(f"사용자 {user_id}의 현재 채팅방: {result}")
                 return result
         except Exception as e:
-            print(f"❌ Redis 조회 실패: {e}")
+            logger.error(f"사용자 현재 채팅방 조회 실패: {e}")
         return None
     
     def clear_user_current_chatroom(self, user_id):
@@ -81,10 +81,10 @@ class RedisClient:
             if self.is_connected():
                 key = f"user:{user_id}:current_chatroom"
                 result = self.client.delete(key)
-                print(f"🗑️ Redis 삭제: user {user_id}")
+                logger.debug(f"사용자 {user_id}의 현재 채팅방 정보 삭제")
                 return result
         except Exception as e:
-            print(f"❌ Redis 삭제 실패: {e}")
+            logger.error(f"사용자 현재 채팅방 정보 삭제 실패: {e}")
         return False
 
 # 전역에서 사용할 인스턴스
