@@ -1,6 +1,6 @@
 /* C:\Users\1-17\Desktop\DAMF2\oddoke\static\js\intro\intro_ddokdam.js */
 
-// 덕담 슬라이드 전용 JavaScript
+// 덕담 슬라이드 전용 JavaScript - 인덱스 페이지와 동일한 상호작용
 
 /**
  * 덕담 게시물 클릭 시 해당 페이지로 이동
@@ -11,6 +11,39 @@ function openDdokdamPost(url) {
         window.open(url, '_blank');
     } else {
         console.warn('유효하지 않은 덕담 게시물 URL:', url);
+    }
+}
+
+/**
+ * 좋아요 버튼 클릭 처리 (시각적 피드백만)
+ * @param {Event} event - 클릭 이벤트
+ * @param {HTMLElement} button - 좋아요 버튼 요소
+ */
+function handleLikeClick(event, button) {
+    event.stopPropagation();
+    
+    // 버튼 애니메이션
+    button.style.transform = 'scale(0.8)';
+    button.style.transition = 'transform 0.1s ease';
+    
+    setTimeout(() => {
+        button.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+            button.style.transform = 'scale(1)';
+        }, 100);
+    }, 100);
+    
+    // 하트 색상 변경 효과
+    const heart = button.querySelector('svg');
+    if (heart) {
+        heart.style.color = '#e53e3e';
+        heart.style.fill = '#e53e3e';
+        
+        // 0.5초 후 원래 색상으로 복원
+        setTimeout(() => {
+            heart.style.color = '#e53e3e';
+            heart.style.fill = 'currentColor';
+        }, 500);
     }
 }
 
@@ -29,7 +62,7 @@ function initDdokdamSlideAnimations() {
         setTimeout(() => {
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
-        }, index * 100 + 300); // 0.3초 후부터 0.1초 간격으로 순차 표시
+        }, index * 150 + 300); // 0.3초 후부터 0.15초 간격으로 순차 표시
     });
 }
 
@@ -42,14 +75,14 @@ function enhanceDdokdamCardHoverEffects() {
     ddokdamCards.forEach(card => {
         // 마우스 엔터 시
         card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-4px) scale(1.02)';
-            this.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.4)';
+            this.style.transform = 'translateY(-4px)';
+            this.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.15)';
         });
         
         // 마우스 리브 시
         card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-            this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
         });
         
         // 클릭 시 임시 눌림 효과
@@ -58,7 +91,7 @@ function enhanceDdokdamCardHoverEffects() {
         });
         
         card.addEventListener('mouseup', function() {
-            this.style.transform = 'translateY(-4px) scale(1.02)';
+            this.style.transform = 'translateY(-4px) scale(1)';
         });
     });
 }
@@ -85,6 +118,30 @@ function initDdokdamMoreButtonAnimation() {
             }
         });
     }
+}
+
+/**
+ * 좋아요 버튼 이벤트 리스너 설정
+ */
+function initLikeButtons() {
+    const likeButtons = document.querySelectorAll('.ddokdam-like-btn');
+    
+    likeButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            handleLikeClick(event, this);
+        });
+        
+        // 호버 효과
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'scale(1.1)';
+            this.style.boxShadow = '0 4px 12px rgba(229, 62, 62, 0.3)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        });
+    });
 }
 
 /**
@@ -120,11 +177,11 @@ function handleDdokdamErrors() {
     ddokdamImages.forEach(img => {
         img.addEventListener('error', function() {
             // 이미지 로드 실패 시 기본 그라데이션으로 대체
-            this.style.background = 'linear-gradient(135deg, rgba(255,182,193,0.3), rgba(255,192,203,0.3))';
+            this.style.background = 'linear-gradient(135deg, #f8fafc, #e2e8f0)';
             this.style.display = 'flex';
             this.style.alignItems = 'center';
             this.style.justifyContent = 'center';
-            this.innerHTML = '<span style="color: rgba(255,255,255,0.7); font-size: 0.7rem;">이미지 없음</span>';
+            this.innerHTML = '<span style="color: #718096; font-size: 0.875rem;">이미지 없음</span>';
         });
     });
 }
@@ -138,27 +195,66 @@ function initDdokdamMobileTouchFeedback() {
         
         ddokdamCards.forEach(card => {
             card.addEventListener('touchstart', function() {
-                this.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                this.style.transform = 'translateY(-2px) scale(0.98)';
+                this.style.transition = 'transform 0.1s ease';
             });
             
             card.addEventListener('touchend', function() {
                 setTimeout(() => {
-                    this.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                    this.style.transform = 'translateY(0) scale(1)';
+                    this.style.transition = 'transform 0.3s ease';
                 }, 100);
+            });
+        });
+        
+        // 좋아요 버튼 터치 피드백
+        const likeButtons = document.querySelectorAll('.ddokdam-like-btn');
+        likeButtons.forEach(button => {
+            button.addEventListener('touchstart', function(event) {
+                event.stopPropagation();
+                this.style.transform = 'scale(0.9)';
+            });
+            
+            button.addEventListener('touchend', function(event) {
+                event.stopPropagation();
+                handleLikeClick(event, this);
             });
         });
     }
 }
 
 /**
+ * 카드 로딩 상태 시뮬레이션
+ */
+function simulateCardLoading() {
+    const ddokdamCards = document.querySelectorAll('.ddokdam-post-card');
+    
+    ddokdamCards.forEach((card, index) => {
+        // 로딩 상태 추가
+        card.style.opacity = '0.3';
+        card.style.pointerEvents = 'none';
+        
+        // 순차적으로 로딩 완료
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
+            card.style.transition = 'opacity 0.3s ease';
+        }, index * 100 + 500);
+    });
+}
+
+/**
  * 덕담 슬라이드 초기화 함수
  */
 function initDdokdamSlide() {
-    console.log('덕담 슬라이드 초기화 시작');
+    console.log('덕담 슬라이드 초기화 시작 - 인덱스 UI 스타일');
     
     try {
         // 에러 핸들링 먼저 설정
         handleDdokdamErrors();
+        
+        // 좋아요 버튼 초기화
+        initLikeButtons();
         
         // 호버 효과 설정
         enhanceDdokdamCardHoverEffects();
@@ -171,6 +267,9 @@ function initDdokdamSlide() {
         
         // 슬라이드 가시성 관찰자 설정
         checkDdokdamSlideVisibility();
+        
+        // 로딩 애니메이션 시뮬레이션
+        simulateCardLoading();
         
         console.log('덕담 슬라이드 초기화 완료');
     } catch (error) {
@@ -189,3 +288,4 @@ document.addEventListener('DOMContentLoaded', function() {
 // 전역 스코프에 함수 노출 (다른 스크립트에서 접근 가능하도록)
 window.openDdokdamPost = openDdokdamPost;
 window.initDdokdamSlideAnimations = initDdokdamSlideAnimations;
+window.handleLikeClick = handleLikeClick;

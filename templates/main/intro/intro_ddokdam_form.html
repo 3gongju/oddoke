@@ -2,7 +2,7 @@
 
 {% load static %}
 
-<!-- 덕담 최신 게시물 4개 표시 -->
+<!-- 덕담 최신 게시물 4개 표시 - 덕담 인덱스와 동일한 UI -->
 {% if slide.real_data and slide.real_data|length > 0 %}
     <div class="ddokdam-posts-grid">
         {% for post in slide.real_data|slice:":4" %}
@@ -14,16 +14,37 @@
                          class="ddokdam-post-image">
                 {% else %}
                     <div class="ddokdam-post-image" 
-                         style="background: linear-gradient(135deg, rgba(255,182,193,0.3), rgba(255,192,203,0.3)); display: flex; align-items: center; justify-content: center;">
-                        <span style="color: rgba(255,255,255,0.7); font-size: 0.7rem;">이미지 없음</span>
+                         style="background: linear-gradient(135deg, #f8fafc, #e2e8f0); display: flex; align-items: center; justify-content: center;">
+                        <span style="color: #718096; font-size: 0.875rem;">이미지 없음</span>
                     </div>
                 {% endif %}
                 
-                <!-- 게시물 제목 -->
-                <h4 class="ddokdam-post-title">{{ post.title|truncatechars:40 }}</h4>
+                <!-- 좋아요 하트 버튼 -->
+                <button class="ddokdam-like-btn" onclick="event.stopPropagation();">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
                 
-                <!-- 메타 정보 -->
-                <div class="ddokdam-post-meta">
+                <!-- 카드 콘텐츠 -->
+                <div class="ddokdam-post-content">
+                    <!-- 게시물 제목 -->
+                    <h4 class="ddokdam-post-title">{{ post.title|truncatechars:50 }}</h4>
+                    
+                    <!-- 사용자 정보 -->
+                    <div class="ddokdam-post-user">
+                        <div class="ddokdam-user-avatar">
+                            {% if post.user.profile_image %}
+                                <img src="{{ post.user.profile_image.url }}" alt="{{ post.user.username }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <span class="ddokdam-user-name">{{ post.user.username|default:"익명" }}</span>
+                        {% if post.user.is_verified %}
+                            <span class="ddokdam-user-badge">인증</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 카테고리 배지 -->
                     <span class="ddokdam-post-category">
                         {% if post.category == 'community' %}커뮤니티
                         {% elif post.category == 'manner' %}예절샷
@@ -32,43 +53,45 @@
                         {% endif %}
                     </span>
                     
-                    <span class="ddokdam-post-date">
-                        {% if post.created_at.date == today %}
-                            {{ post.created_at|date:"H:i" }}
-                        {% else %}
-                            {{ post.created_at|date:"m/d" }}
-                        {% endif %}
-                    </span>
-                </div>
-                
-                <!-- 통계 정보 -->
-                <div class="ddokdam-post-stats">
-                    {% if post.like_count %}
-                        <span class="ddokdam-post-stat">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                            {{ post.like_count|default:0 }}
+                    <!-- 메타 정보 -->
+                    <div class="ddokdam-post-meta">
+                        <div class="ddokdam-post-stats">
+                            {% if post.like_count %}
+                                <span class="ddokdam-post-stat">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                    {{ post.like_count|default:0 }}
+                                </span>
+                            {% endif %}
+                            
+                            {% if post.view_count %}
+                                <span class="ddokdam-post-stat">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                    </svg>
+                                    {{ post.view_count|default:0 }}
+                                </span>
+                            {% endif %}
+                            
+                            {% if post.comment_count %}
+                                <span class="ddokdam-post-stat">
+                                    <svg viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                                    </svg>
+                                    {{ post.comment_count|default:0 }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        <span class="ddokdam-post-date">
+                            {% if post.created_at.date == today %}
+                                {{ post.created_at|date:"H:i" }}
+                            {% else %}
+                                {{ post.created_at|date:"m/d" }}
+                            {% endif %}
                         </span>
-                    {% endif %}
-                    
-                    {% if post.view_count %}
-                        <span class="ddokdam-post-stat">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                            </svg>
-                            {{ post.view_count|default:0 }}
-                        </span>
-                    {% endif %}
-                    
-                    {% if post.comment_count %}
-                        <span class="ddokdam-post-stat">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-                            </svg>
-                            {{ post.comment_count|default:0 }}
-                        </span>
-                    {% endif %}
+                    </div>
                 </div>
             </article>
         {% endfor %}
@@ -76,9 +99,12 @@
     
     <!-- 더보기 버튼 -->
     <div class="text-center mt-6">
-        <a href= "/ddokdam/" 
-           class="intro-btn">
+        <a href="/ddokdam/" 
+           class="ddokdam-more-btn">
             <span>덕담 나누러 가기</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
         </a>
     </div>
 
