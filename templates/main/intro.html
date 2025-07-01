@@ -63,6 +63,28 @@
     * {
         outline: none;
     }
+
+    /* 덕담 카드 전용 추가 스타일 */
+    .intro-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .intro-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+    }
     </style>
 
     <!-- 마우스 휠 줌 방지 JavaScript -->
@@ -165,6 +187,7 @@
     <!-- 기존 CSS 링크 아래에 추가 -->
     <link rel="stylesheet" href="{% static 'css/intro/intro_ddokfarm.css' %}">
     <link rel="stylesheet" href="{% static 'css/intro/intro_ddokdam.css' %}">
+    <link rel="stylesheet" href="{% static 'css/intro/cafe_map.css' %}">
     
     <!-- 커스텀 스타일 -->
     <style>
@@ -464,7 +487,7 @@
                         {% include 'main/intro/favorite_artists_slide.html' %}
 
                     {% elif slide.type == 'ddoksang' %}
-                        {% include 'main/intro/birthday_artists_slide.html' %}
+                        {% include 'main/intro/cafe_map_slide.html' %}
 
                     {% elif slide.type == 'ddokchat' %}
                         {% include 'main/intro/ddokchat_slide.html' %}

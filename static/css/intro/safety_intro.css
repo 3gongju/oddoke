@@ -114,7 +114,8 @@
 }
 
 /* 제목 스타일 */
-.safety-feature-title {
+.safety-feature-card .safety-feature-title {
+    text-align: center !important;
     font-size: 1.25rem;
     font-weight: 700;
     color: white;

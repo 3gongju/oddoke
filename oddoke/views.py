@@ -100,10 +100,32 @@ def intro_view(request):
         
         # 최신 덕담 게시물 (실제 데이터)
         latest_ddokdam_posts = []
-        community_posts = list(DamCommunityPost.objects.select_related('user').prefetch_related('images').order_by('-created_at')[:3])
+        community_posts = list(DamCommunityPost.objects.select_related('user').prefetch_related('images').order_by('-created_at')[:4])
         for post in community_posts:
             post.category = 'community'
+            # 필요한 속성 추가
+            if not hasattr(post, 'like_count'):
+                post.like_count = 0
+            if not hasattr(post, 'view_count'):
+                post.view_count = 0
+            if not hasattr(post, 'comment_count'):
+                post.comment_count = 0
             latest_ddokdam_posts.append(post)
+
+        # 예절샷, 생일카페 포스트도 추가
+        manner_posts = list(DamMannerPost.objects.select_related('user').prefetch_related('images').order_by('-created_at')[:2])
+        for post in manner_posts:
+            post.category = 'manner'
+            if not hasattr(post, 'like_count'):
+                post.like_count = 0
+            if not hasattr(post, 'view_count'):
+                post.view_count = 0
+            if not hasattr(post, 'comment_count'):
+                post.comment_count = 0
+            latest_ddokdam_posts.append(post)
+
+        # 전체 4개로 제한
+        latest_ddokdam_posts = latest_ddokdam_posts[:4]
             
     except Exception as e:
         raw_favs = []
@@ -143,7 +165,7 @@ def intro_view(request):
         },
         {
             'title': '덕생, 카카오 지도기반 생카 아카이브',
-            'subtitle': '생일 캘린더로 이번주의 생일을 확인해보세요!',
+            'subtitle': '내 위치 주변 생카를 확인해보세요!',
             'type': 'ddoksang',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': birthday_artists,
@@ -287,6 +309,7 @@ def intro_view(request):
         'birthday_stats': birthday_stats,
         'latest_ddokfarm_posts': latest_ddokfarm_posts,
         'latest_ddokdam_posts': latest_ddokdam_posts,
+        'today': timezone.now().date(),
     }
     return render(request, 'main/intro.html', context)
 
