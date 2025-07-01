@@ -23,7 +23,7 @@
                         <img src="{% static 'image/member_namu_images/NCT,NCT_127_태용.jpg' %}" 
                              alt="태용 프로필 사진" 
                              class="member-image w-20 h-20 mx-auto rounded-full border-2 border-pink-400 shadow-lg"
-                             onerror="this.src='{% static 'image/default_member.jpg' %}'; console.log('태용 이미지 로드 실패, 기본 이미지로 대체');">
+                             onerror="this.src='{% static 'image/ddok_logo_filled.png' %}'; console.log('태용 이미지 로드 실패, 기본 로고로 대체');">
                         <div class="birthday-badge absolute -top-2 -right-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">
                             BIRTHDAY
                         </div>
@@ -40,19 +40,19 @@
             <!-- 가운데: 시간 표시 -->
             <div class="time-display-section">
                 <!-- 목표 시간 -->
-                <!-- <div class="target-time-container mb-4">
+                <div class="target-time-container mb-4">
                     <div class="bg-gray-800 bg-opacity-60 p-4 rounded-xl border border-white border-opacity-10 text-center">
                         <div class="target-time-label text-sm text-gray-300 mb-2">목표 생일시</div>
-                        <div class="target-time-value text-2xl font-mono font-bold text-green-400">--:--:--</div>
+                        <div class="target-time-value text-2xl font-mono font-bold text-green-400">07:01:00</div>
                     </div>
-                </div> -->
+                </div>
                 
                 <!-- 현재 시간 -->
                 <div class="current-time-container mb-4">
                     <div class="bg-gray-900 bg-opacity-80 p-6 rounded-xl border border-white border-opacity-20 text-center">
                         <div class="current-time-display">
-                            <div class="time-main text-4xl font-mono font-bold text-white mb-1">13:29:12</div>
-                            <div class="time-ms text-lg font-mono text-gray-400">.654</div>
+                            <div class="time-main text-4xl font-mono font-bold text-white mb-1">--:--:--</div>
+                            <div class="time-ms text-lg font-mono text-gray-400">.---</div>
                         </div>
                     </div>
                 </div>
@@ -81,7 +81,7 @@
                 <div class="game-info bg-gray-800 bg-opacity-60 p-4 rounded-xl border border-white border-opacity-10">
                     <h4 class="text-sm font-semibold text-white mb-2">게임 방법</h4>
                     <ul class="text-xs text-gray-300 space-y-1">
-                        <li>• 생일시에 맞춰 덕 쌓기 클릭</li>
+                        <li>• 07:01:00에 맞춰 덕 쌓기 클릭</li>
                         <li>• 정확할수록 더 많은 덕!</li>
                         <li>• 1000덕 모으면 배너 신청 가능</li>
                     </ul>
@@ -98,13 +98,13 @@
     </div>
 
     <!-- 하단 버튼들 -->
-        <div class="game-actions flex justify-center gap-4 mt-6">
-            <a href="/bday_calendar/" 
-               class="intro-btn">
-                <span>생일시 게임 하러 가기</span>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline ml-2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-            </a>
-        </div>
+    <div class="game-actions flex justify-center gap-4 mt-6">
+        <a href="/calendar/" 
+           class="intro-btn">
+            <span>생일시 게임 하러 가기</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 inline ml-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+        </a>
+    </div>
 </div>

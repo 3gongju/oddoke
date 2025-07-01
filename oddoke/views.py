@@ -199,13 +199,11 @@ def intro_view(request):
             'type': 'ddokgame',
             'image': DEFAULT_SLIDE_IMAGE
         },
-        # {
-        #     'title': '웹 최적화',
-        #     'subtitle': '큰 화면으로 크게 덕질 즐기자!',
-        #     'description': '조만간 모바일에서도 즐길 수 있어요!',
-        #     'type': 'mobile',
-        #     'image': DEFAULT_SLIDE_IMAGE
-        # },
+        {
+            'title': '자세한 사항은 웹 하단 서비스 안내 및 FAQ를 확인하세요!',
+            'type': 'faq',
+            'image': DEFAULT_SLIDE_IMAGE
+        },
         # {
         #     'title': '커뮤니티 기능',
         #     'subtitle': '팬들과 함께 만드는 문화',
