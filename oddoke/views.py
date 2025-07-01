@@ -186,83 +186,76 @@ def intro_view(request):
             'image': DEFAULT_SLIDE_IMAGE
         },
         {
-            'title': '다양한 아티스트 지원',
-            'subtitle': '모든 덕들을 위한 플랫폼',
-            'description': 'K-POP 팬들을 위한 맞춤형 공간',
-            'type': 'artists',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '웹 최적화',
-            'subtitle': '큰 화면으로 크게 덕질 즐기자!',
-            'description': '조만간 모바일에서도 즐길 수 있어요!',
-            'type': 'mobile',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '커뮤니티 기능',
-            'subtitle': '팬들과 함께 만드는 문화',
-            'description': '후기, 리뷰, 정보 공유로 더 풍부한 덕질',
-            'type': 'community',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '이벤트 & 혜택',
-            'subtitle': '특별한 혜택과 이벤트',
-            'description': '정기적인 이벤트와 어덕해 주민들 전용 혜택 IS COMING SOON',
-            'type': 'events',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '24/7 고객 지원',
-            'subtitle': '언제든 도움을 받으세요',
-            'description': '빠른 문의 응답과 친절한 고객 서비스',
-            'type': 'support',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '개인정보 보호',
-            'subtitle': '안전한 개인정보 관리',
-            'description': '철저한 보안으로 개인정보를 보호합니다',
-            'type': 'privacy',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '글로벌 서비스',
-            'subtitle': '전 세계 팬들과 연결',
-            'description': '(ENGLISH VERSION IS 커밍쑨)',
-            'type': 'global',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '찜한 아티스트 모아보기',
-            'subtitle': '맞춤형 콘텐츠 추천',
-            'description': '취향에 맞는 굿즈와 정보를 쉽게 찾기',
-            'type': 'ai',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '실시간 알림',
-            'subtitle': '중요한 소식을 놓치지 마세요',
-            'description': '관심 아티스트의 새로운 소식을 실시간으로',
-            'type': 'notifications',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '팬클럽 연동',
-            'subtitle': '공식 팬클럽과의 연계',
-            'description': '공식 정보와 이벤트를 한 번에',
-            'type': 'fanclub',
-            'image': DEFAULT_SLIDE_IMAGE
-        },
-        {
-            'title': '찜한 아티스트',
-            'subtitle': '내가 좋아하는 아티스트들',
-            'description': '찜한 아티스트들의 최신 소식을 놓치지 마세요',
+            'title': '찜한 아티스트만 골라보는 나만의 피드',
+            'subtitle': '덕팜 & 덕담에서 찜한 아티스트 게시글만 필터링해 볼 수 있어요!',
+            # 'description': '찜한 아티스트들의 최신 소식을 놓치지 마세요',
             'type': 'favorite_artists',
             'image': DEFAULT_SLIDE_IMAGE,
             'real_data': raw_favs
         },
+        # {
+        #     'title': '다양한 아티스트 지원',
+        #     'subtitle': '모든 덕들을 위한 플랫폼',
+        #     'description': 'K-POP 팬들을 위한 맞춤형 공간',
+        #     'type': 'artists',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '웹 최적화',
+        #     'subtitle': '큰 화면으로 크게 덕질 즐기자!',
+        #     'description': '조만간 모바일에서도 즐길 수 있어요!',
+        #     'type': 'mobile',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '커뮤니티 기능',
+        #     'subtitle': '팬들과 함께 만드는 문화',
+        #     'description': '후기, 리뷰, 정보 공유로 더 풍부한 덕질',
+        #     'type': 'community',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '이벤트 & 혜택',
+        #     'subtitle': '특별한 혜택과 이벤트',
+        #     'description': '정기적인 이벤트와 어덕해 주민들 전용 혜택 IS COMING SOON',
+        #     'type': 'events',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '24/7 고객 지원',
+        #     'subtitle': '언제든 도움을 받으세요',
+        #     'description': '빠른 문의 응답과 친절한 고객 서비스',
+        #     'type': 'support',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '개인정보 보호',
+        #     'subtitle': '안전한 개인정보 관리',
+        #     'description': '철저한 보안으로 개인정보를 보호합니다',
+        #     'type': 'privacy',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '글로벌 서비스',
+        #     'subtitle': '전 세계 팬들과 연결',
+        #     'description': '(ENGLISH VERSION IS 커밍쑨)',
+        #     'type': 'global',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '실시간 알림',
+        #     'subtitle': '중요한 소식을 놓치지 마세요',
+        #     'description': '관심 아티스트의 새로운 소식을 실시간으로',
+        #     'type': 'notifications',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
+        # {
+        #     'title': '팬클럽 연동',
+        #     'subtitle': '공식 팬클럽과의 연계',
+        #     'description': '공식 정보와 이벤트를 한 번에',
+        #     'type': 'fanclub',
+        #     'image': DEFAULT_SLIDE_IMAGE
+        # },
         {
             'title': '지금 시작하세요',
             'subtitle': '새로운 덕질의 시작',
