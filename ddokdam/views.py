@@ -402,28 +402,35 @@ def post_edit(request, category, post_id):
 
 # 게시글 삭제
 @login_required
-def post_delete(request, category, post_id):  # ✅ @require_POST 데코레이터 제거
+def post_delete(request, category, post_id):
     model = get_post_model(category)
     if not model:
-        raise Http404("존재하지 않는 카테고리입니다.")
+        return JsonResponse({'success': False, 'message': '존재하지 않는 카테고리입니다.'})
 
     post = get_object_or_404(model, id=post_id)
 
+    # 권한 확인
     if request.user != post.user:
-        context = {
-            'title': '접근 권한 없음',
-            'message': '이 게시글을 삭제할 권한이 없습니다.',
-            'back_url': reverse('ddokdam:post_detail', args=[category, post.id]),
-        }
-        return render(request, 'ddokdam/error_message.html', context)
+        return JsonResponse({'success': False, 'message': '이 게시글을 삭제할 권한이 없습니다.'})
 
-    # ✅ POST 요청일 때만 실제 삭제 수행
-    if request.method == 'POST':
-        post.delete()
-        return redirect(f"{reverse('ddokdam:index')}?category={category}")
-
-    # ✅ GET 요청일 때는 detail로 리다이렉트 (에러 페이지 대신)
-    return redirect('ddokdam:post_detail', category=category, post_id=post_id)
+    # GET 요청: 삭제 가능 여부 확인 (덕담은 항상 삭제 가능)
+    if request.method == 'GET':
+        return JsonResponse({'can_delete': True})
+    
+    # POST 요청: 실제 삭제
+    elif request.method == 'POST':
+        try:
+            post.delete()
+            return JsonResponse({
+                'success': True, 
+                'message': '게시글이 삭제되었습니다.',
+                'redirect_url': f"{reverse('ddokdam:index')}?category={category}"
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'삭제 중 오류가 발생했습니다: {str(e)}'})
+    
+    else:
+        return JsonResponse({'success': False, 'message': '허용되지 않는 요청 방식입니다.'})
 
 # 댓글 작성
 @login_required
