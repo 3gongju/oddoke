@@ -2,7 +2,7 @@
 {% load humanize %}
 {% load ddokfarm_filters %}
 <div class="flex flex-col justify-start h-full">
-  <!-- 덕팜: 거래 완료 버튼 (수정된 부분) -->
+  <!-- 덕팜: 거래 완료 버튼 -->
   {% if is_ddokfarm %}
     {% if request.user == post.user %}
       <div class="flex gap-2 self-end mb-2">
