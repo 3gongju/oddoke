@@ -1,3 +1,6 @@
+// static/js/post_form/artist_change_handler.js - 수정된 버전
+import memberSelectAllManager from './member_select_all.js';
+
 export function setupArtistChangeHandlers(ajaxBaseUrl) {
   const artistSelect = document.getElementById("artist");
   const memberWrapper = document.getElementById("member-wrapper");
@@ -11,6 +14,8 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
   artistSelect.addEventListener("change", () => {
     const artistId = artistSelect.value;
     const currentCategory = categoryElement.value;
+
+    console.log('🎯 Artist change handler triggered:', { artistId, currentCategory });
 
     if (currentCategory === "split" && artistId) {
       const url = new URL(`${ajaxBaseUrl}/load_split_members_and_prices/`, window.location.origin);
@@ -35,6 +40,7 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
           }
         })
         .catch(err => {
+          console.error('❌ Split data loading failed:', err);
           alert("split 데이터를 불러오지 못했습니다. 다시 시도해주세요.");
         });
     } else if (currentCategory !== "split" && artistId) {
@@ -63,6 +69,12 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
               });
               
               memberWrapper.classList.remove("hidden");
+              
+              // ✅ 멤버 로딩 완료 후 전체선택 기능 재초기화
+              setTimeout(() => {
+                console.log('🔧 Reinitializing member select all after artist change...');
+                memberSelectAllManager.reinitializeForArtistChange();
+              }, 100);
             }
           }
         })
@@ -70,6 +82,7 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
           console.error("멤버 로딩 실패:", err);
         });
     } else if (!artistId) {
+      // 아티스트가 선택되지 않은 경우 초기화
       if (memberWrapper) {
         memberWrapper.classList.add("hidden");
         const memberContainer = document.getElementById("member-checkboxes");
