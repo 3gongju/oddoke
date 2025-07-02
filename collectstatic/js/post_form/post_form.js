@@ -1,4 +1,4 @@
-// static/js/post_form/post_form.js - 가격 처리 기능 추가
+// static/js/post_form/post_form.js - 수정된 버전
 
 import { setupArtistAutocomplete } from "./artist_autocomplete.js";
 import { setupCategoryButtons } from "./category_buttons.js";
@@ -6,12 +6,18 @@ import { setupImageUpload } from "./image_upload.js";
 import { setupMembersLoader } from "./members_loader.js";
 import { setupArtistChangeHandlers } from "./artist_change_handler.js";
 import { setupDdoksangCafeAutocomplete } from "./cafe_autocomplete.js";
-import { setupPriceHandlers } from "./price_handler.js"; // 새로 추가
+import { setupPriceHandlers } from "./price_handler.js";
+import memberSelectAllManager from "./member_select_all.js"; // ✅ 추가
 
 document.addEventListener("DOMContentLoaded", () => {
   const ajaxBaseUrl = window.ajaxBaseUrl;
   const selectedMemberIds = window.selectedMemberIds || [];
   const category = document.getElementById("selected-category")?.value || 'community';
+
+  console.log('🚀 Post form initialized with category:', category);
+
+  // ✅ 전체선택 관리자 초기화 (가장 먼저)
+  memberSelectAllManager.initialize();
 
   // 기존 기능들 유지
   setupArtistAutocomplete(ajaxBaseUrl);
@@ -31,4 +37,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (category === 'sell' || category === 'rental') {
     setupPriceHandlers();
   }
+
+  console.log('✅ All post form features initialized');
 });
