@@ -1,4 +1,4 @@
-// ✅ 댓글 섹션으로 즉시 이동 함수 (알림에서 올 때)
+// 댓글 섹션으로 즉시 이동 함수 (알림에서 올 때)
 function scrollToCommentsSection() {
   const commentsSection = document.querySelector('#comments');
   if (commentsSection) {
@@ -9,7 +9,7 @@ function scrollToCommentsSection() {
   }
 }
 
-// ✅ CSRF 토큰 가져오는 함수
+// CSRF 토큰 가져오는 함수
 function getCsrfToken() {
   const tokenInput = document.querySelector("[name=csrfmiddlewaretoken]");
   if (tokenInput && tokenInput.value) {
@@ -78,12 +78,11 @@ async function refreshCommentSection() {
       }
     }
   } catch (error) {
-    console.error('댓글 영역 새로고침 실패:', error);
     window.location.reload();
   }
 }
 
-// ✅ 댓글 폼 submit 처리 함수
+// 댓글 폼 submit 처리 함수
 async function handleCommentSubmit(e) {
   e.preventDefault();
   
@@ -120,7 +119,7 @@ async function handleCommentSubmit(e) {
   }
 }
 
-// ✅ 삭제 버튼 바인딩 함수
+// 삭제 버튼 바인딩 함수
 function bindDeleteButtons(scope = document) {
   scope.querySelectorAll(".delete-comment-btn").forEach(btn => {
     if (btn.hasAttribute('data-bound')) return;
@@ -154,7 +153,7 @@ function bindDeleteButtons(scope = document) {
   });
 }
 
-// ✅ 모든 이벤트 바인딩
+// 모든 이벤트 바인딩
 function bindAllEvents() {
   document.querySelectorAll("form[id^='comment-form']").forEach(form => {
     form.removeAttribute('data-bound');
@@ -167,12 +166,12 @@ function bindAllEvents() {
   bindDeleteButtons();
 }
 
-// ✅ 페이지 로드 시 실행
+// 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', () => {
   bindAllEvents();
 });
 
-// ✅ 페이지 완전 로딩 후 즉시 이동
+// 페이지 완전 로딩 후 즉시 이동
 window.addEventListener('load', () => {
   // 알림에서 온 경우 댓글 섹션으로 즉시 이동
   if (window.location.hash === '#comments') {

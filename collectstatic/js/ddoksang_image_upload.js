@@ -60,7 +60,6 @@ const ImageCompressor = {
         if (originalFile.size <= maxSizeKB * 1024 && 
             img.width <= maxWidth && 
             img.height <= maxHeight) {
-            console.log('⚡ 압축 불필요 - 원본 반환');
             return originalFile;
         }
 
@@ -391,7 +390,6 @@ function setupImageUploader() {
 
     // 파일 선택 처리 (JSON 기반 + 압축)
     async function handleFileSelection(newFiles) {
-        console.log('JSON 기반 파일 선택 처리:', newFiles.length, '개');
 
         const remainingSlots = maxFiles - imageGallery.length;
         
@@ -590,7 +588,6 @@ function setupImageUploader() {
             fileInput.files = dt.files;
             
             const resultFiles = Array.from(fileInput.files);
-            console.log('최종 폼 파일 상태:', resultFiles.length, '개');
             
         } catch (error) {
             showToast('파일 업데이트 중 오류가 발생했습니다.', 'error');
@@ -681,7 +678,6 @@ function setupImageUploader() {
         // 조작 메서드들
         removeFileById: (imageId) => removeImage(imageId),
         setMainImage: (imageId) => {
-            console.log('대표 이미지 설정:', imageId);
             
             // 해당 이미지를 찾아서 맨 앞으로 이동
             const targetIndex = imageGallery.findIndex(img => img.id === imageId);

@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
     init();
     
     function init() {
-        console.log('초기화 시작');
         
         // 1. 날짜 입력 활성화
         enableAllDateInputs();
@@ -103,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return {artistId, cafeName, startDate, endDate};
         };
         
-        console.log('날짜 입력 활성화 완료');
     }
     
     // 2. 중복 확인 설정
@@ -273,7 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('중복 확인 오류:', error);
                 alert('중복 확인 중 오류가 발생했습니다.');
             })
             .finally(() => {
@@ -442,7 +439,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setValue('start_date', startDate);
         setValue('end_date', endDate);
         
-        console.log('폼 데이터 복사 완료');
     }
     
     // 3. 네비게이션 설정
@@ -461,7 +457,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        console.log('네비게이션 설정 완료');
     }
     
     function moveToNextStep() {
@@ -566,7 +561,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 폼 파일 동기화 확인
         if (fileCount > 0 && formFileCount === 0) {
-            console.warn('⚠️ 파일 동기화 문제 감지 - 수동 동기화 실행');
             window.ddoksangImageUploader.syncFormFiles();
             
             // 동기화 후 재확인
@@ -593,7 +587,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showStep(index) {
-        console.log(`Step ${index} 표시`);
         
         currentStep = index;
         
@@ -827,7 +820,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        console.log('지도 검색 설정 완료');
     }
     
     function searchPlace() {
