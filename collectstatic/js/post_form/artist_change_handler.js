@@ -15,8 +15,6 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
     const artistId = artistSelect.value;
     const currentCategory = categoryElement.value;
 
-    console.log('🎯 Artist change handler triggered:', { artistId, currentCategory });
-
     if (currentCategory === "split" && artistId) {
       const url = new URL(`${ajaxBaseUrl}/load_split_members_and_prices/`, window.location.origin);
       url.searchParams.set("artist_id", artistId);
@@ -40,7 +38,6 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
           }
         })
         .catch(err => {
-          console.error('❌ Split data loading failed:', err);
           alert("split 데이터를 불러오지 못했습니다. 다시 시도해주세요.");
         });
     } else if (currentCategory !== "split" && artistId) {
@@ -72,7 +69,6 @@ export function setupArtistChangeHandlers(ajaxBaseUrl) {
               
               // ✅ 멤버 로딩 완료 후 전체선택 기능 재초기화
               setTimeout(() => {
-                console.log('🔧 Reinitializing member select all after artist change...');
                 memberSelectAllManager.reinitializeForArtistChange();
               }, 100);
             }

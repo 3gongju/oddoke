@@ -10,9 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const existingImages = window.existingImages || [];
   const category = document.getElementById("selected-category")?.value || 'sell';
 
-  console.log('🚀 Edit form initialized with category:', category);
-  console.log('Existing item prices from window:', window.existingItemPrices);
-
   // ✅ 전체선택 관리자 초기화 (가장 먼저)
   memberSelectAllManager.initialize();
 
@@ -25,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 가격 처리 기능 (판매/대여 카테고리에만)
   if (category === 'sell' || category === 'rental') {
-    console.log('Setting up price handlers for category:', category);
     setupPriceHandlers();
   }
 
@@ -42,8 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 폼 제출 시 validation
   setupFormValidation();
-
-  console.log('✅ All edit form features initialized');
 });
 
 // 아티스트 선택 비활성화
