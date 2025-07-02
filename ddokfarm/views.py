@@ -1197,11 +1197,15 @@ def post_delete(request, category, post_id):
         if active_chatrooms.exists():
             return JsonResponse({'success': False, 'message': '진행 중인 거래가 있어 삭제할 수 없습니다.'})
         
-        post.delete()
-        return JsonResponse({
-            'success': True, 
-            'redirect_url': f"{reverse('ddokfarm:index')}?category={category}"
-        })
+        try:
+            post.delete()
+            return JsonResponse({
+                'success': True, 
+                'message': '게시글이 삭제되었습니다.',
+                'redirect_url': f"{reverse('ddokfarm:index')}?category={category}"
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'삭제 중 오류가 발생했습니다: {str(e)}'})
     
     else:
         return JsonResponse({'success': False, 'message': '허용되지 않는 요청 방식입니다.'})
