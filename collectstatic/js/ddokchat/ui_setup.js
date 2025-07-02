@@ -94,10 +94,10 @@ export function setupPlusMenu() {
   }
 }
 
-// 거래 완료 모달 설정
+// 🔥 개선된 거래 완료 모달 설정 - 즉시 UI 업데이트
 export function setupTradeCompleteModal() {
   const completeTradeBtn = document.getElementById('completeTradeBtn');
-  const mobileCompleteTradeBtn = document.getElementById('mobileCompleteTradeBtn'); // 모바일 버튼
+  const mobileCompleteTradeBtn = document.getElementById('mobileCompleteTradeBtn');
   const confirmModal = document.getElementById('confirmModal');
   const cancelBtn = document.getElementById('cancelBtn');
   const confirmBtn = document.getElementById('confirmBtn');
@@ -116,7 +116,6 @@ export function setupTradeCompleteModal() {
     if (confirmModal && buyerMessage && sellerMessage) {
       const userRole = getUserRole();
       
-      // 역할에 따라 적절한 메시지 표시
       if (userRole === 'buyer') {
         buyerMessage.classList.remove('hidden');
         sellerMessage.classList.add('hidden');
@@ -129,7 +128,7 @@ export function setupTradeCompleteModal() {
     }
   }
 
-  // 데스크탑 거래완료 버튼 (기존)
+  // 데스크탑 거래완료 버튼
   if (completeTradeBtn) {
     completeTradeBtn.addEventListener('click', function(e) {
       e.preventDefault();
@@ -137,12 +136,11 @@ export function setupTradeCompleteModal() {
     });
   }
 
-  // 모바일 거래완료 버튼 (새로 추가)
+  // 모바일 거래완료 버튼
   if (mobileCompleteTradeBtn) {
     mobileCompleteTradeBtn.addEventListener('click', function(e) {
       e.preventDefault();
       openTradeCompleteModal();
-      // 모바일 드롭다운 닫기
       const dropdown = document.getElementById('headerDropdownMenu');
       if (dropdown) dropdown.classList.add('hidden');
     });
@@ -170,6 +168,9 @@ export function setupTradeCompleteModal() {
         return;
       }
       
+      const userRole = getUserRole();
+      const isBuyer = userRole === 'buyer';
+      
       fetch(`/ddokchat/complete/${window.roomCode}/`, {
         method: 'POST',
         headers: {
@@ -185,22 +186,40 @@ export function setupTradeCompleteModal() {
       })
       .then(data => {
         if (data.success) {
-          updateUIAfterTradeComplete(data.is_fully_completed);
+          // 🔥 즉시 모달 닫기
           if (confirmModal) {
             confirmModal.classList.add('hidden');
           }
           
-          // 역할별 성공 메시지
-          const userRole = getUserRole();
+          // 🔥 API 응답으로 즉시 UI 업데이트
+          if (data.ui_update) {
+            updateTradeStatusImmediate(data.ui_update, data.is_fully_completed);
+          }
+          
           if (data.is_fully_completed) {
+            // 양쪽 모두 완료
             showToast('거래가 완료되었습니다!', 'success');
+            
+            // 🔥 구매자가 마지막에 완료하는 경우 즉시 리뷰 모달 표시
+            if (isBuyer) {
+              const hasAlreadyReviewed = window.hasAlreadyReviewed || false;
+              if (!hasAlreadyReviewed) {
+                setTimeout(() => {
+                  if (window.showReviewRedirectModal) {
+                    window.showReviewRedirectModal();
+                  }
+                }, 1500);
+              }
+            }
           } else {
-            if (userRole === 'buyer') {
+            // 한쪽만 완료 - 역할별 즉시 피드백
+            if (isBuyer) {
               showToast('거래완료 요청을 보냈습니다. 판매자의 확인을 기다려주세요.', 'success');
             } else {
               showToast('거래완료 처리되었습니다. 구매자의 확인을 기다려주세요.', 'success');
             }
           }
+          
         } else {
           throw new Error(data.error || "처리 중 오류가 발생했습니다.");
         }
@@ -224,12 +243,57 @@ export function setupTradeCompleteModal() {
   }
 }
 
-// 헤더 메뉴 설정 - 🔥 신고 로직 간소화
+// 🔥 NEW: 즉시 UI 업데이트 함수
+function updateTradeStatusImmediate(uiData, isFullyCompleted) {
+  const tradeStatusContainer = document.getElementById('tradeStatusContainer');
+  
+  if (tradeStatusContainer) {
+    // 데스크탑/모바일 상태 텍스트 업데이트
+    const desktopStatus = tradeStatusContainer.querySelector('.desktop-only .status-text');
+    const mobileStatus = tradeStatusContainer.querySelector('.mobile-only .status-text');
+    
+    if (desktopStatus) {
+      desktopStatus.className = `status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap ${uiData.status_class}`;
+      desktopStatus.textContent = uiData.status_text;
+    }
+    
+    if (mobileStatus) {
+      mobileStatus.className = `status-text text-xs px-2 py-1 rounded font-medium whitespace-nowrap ${uiData.status_class}`;
+      mobileStatus.textContent = uiData.status_text;
+    }
+    
+    // 거래완료 버튼 숨기기
+    if (uiData.hide_complete_button) {
+      const completeButtons = document.querySelectorAll('#completeTradeBtn, #mobileCompleteTradeBtn');
+      completeButtons.forEach(btn => {
+        if (btn) btn.style.display = 'none';
+      });
+    }
+  }
+  
+  // 완전히 완료된 경우 입력창도 비활성화
+  if (isFullyCompleted) {
+    const messageInputArea = document.getElementById('messageInputArea');
+    if (messageInputArea) {
+      messageInputArea.innerHTML = `
+        <div class="text-center text-sm text-gray-500 py-4 flex items-center justify-center gap-2">
+          <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          거래가 완료되어 더 이상 채팅을 보낼 수 없습니다.
+        </div>`;
+    }
+    
+    // 전역 상태 업데이트
+    window.isTradeCompleted = true;
+  }
+}
+
+// 헤더 메뉴 설정
 export function setupHeaderMenu() {
   const headerMenuBtn = document.getElementById('headerMenuBtn');
   const headerDropdownMenu = document.getElementById('headerDropdownMenu');
   const viewUserInfoBtn = document.getElementById('viewUserInfoBtn');
-  // 🔥 reportUserBtn은 chat_room.html에서 직접 처리하므로 여기서는 제거
 
   if (headerMenuBtn && headerDropdownMenu) {
     headerMenuBtn.addEventListener('click', function(e) {
@@ -279,22 +343,4 @@ function getOtherUserUsername() {
   }
   
   return null;
-}
-
-// 리뷰 모달 관련 처리 - 🔥 주석 해제
-export function setupReviewModal() {
-  const hasAlreadyReviewed = window.hasAlreadyReviewed || false;
-  const isFullyCompleted = window.isFullyCompleted || false;
-  const isBuyer = window.currentUser === window.roomBuyer;
-
-  if (isFullyCompleted && isBuyer && !hasAlreadyReviewed) {
-    const reviewModal = document.getElementById("reviewModal");
-    if (reviewModal) {
-      try {
-        reviewModal.showModal();
-      } catch (e) {
-        reviewModal.style.display = "block";
-      }
-    }
-  }
 }
