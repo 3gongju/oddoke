@@ -132,6 +132,101 @@
 {% endif %}
 
 <script>
+// CSRF 토큰 가져오기 함수
+function getCsrfToken() {
+  const csrfCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='));
+  
+  if (csrfCookie) {
+    return csrfCookie.split('=')[1];
+  }
+  
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  if (csrfMeta) {
+    return csrfMeta.getAttribute('content');
+  }
+  
+  const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+  if (csrfInput) {
+    return csrfInput.value;
+  }
+  
+  return null;
+}
+
+// 삭제 확인 함수
+async function confirmDelete(deleteUrl) {
+  if (!deleteUrl) {
+    alert('삭제 URL이 없습니다.');
+    return;
+  }
+
+  try {
+    // 1. 먼저 삭제 가능 여부 확인
+    const checkResponse = await fetch(deleteUrl, {
+      method: 'GET',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      }
+    });
+
+    const checkResult = await checkResponse.json();
+
+    if (!checkResult.can_delete) {
+      alert(checkResult.message || '삭제할 수 없습니다.');
+      return;
+    }
+
+    // 2. 삭제 확인
+    if (confirm('정말로 이 게시글을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.')) {
+      await continueDelete(deleteUrl);
+    }
+  } catch (error) {
+    console.error('삭제 확인 중 오류:', error);
+    // 에러가 발생해도 기본 확인창 표시
+    if (confirm('정말로 이 게시글을 삭제하시겠습니까?\n삭제 후에는 복구할 수 없습니다.')) {
+      await continueDelete(deleteUrl);
+    }
+  }
+}
+
+// 실제 삭제 함수
+async function continueDelete(deleteUrl) {
+  try {
+    const csrfToken = getCsrfToken();
+    if (!csrfToken) {
+      alert('CSRF 토큰을 찾을 수 없습니다. 페이지를 새로고침해주세요.');
+      return;
+    }
+
+    const response = await fetch(deleteUrl, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      alert(result.message || '게시글이 삭제되었습니다.');
+      if (result.redirect_url) {
+        window.location.href = result.redirect_url;
+      } else {
+        window.location.href = '/ddokfarm/';
+      }
+    } else {
+      alert(result.message || '삭제 중 오류가 발생했습니다.');
+    }
+  } catch (error) {
+    console.error('삭제 처리 중 오류:', error);
+    alert('삭제 중 오류가 발생했습니다.');
+  }
+}
+
 // 🔥 거래완료 모달 관련 JavaScript 함수들
 function showMarkAsSoldModal() {
   const modal = document.getElementById('markAsSoldModal');
@@ -158,8 +253,12 @@ async function confirmMarkAsSold() {
     button.disabled = true;
     button.textContent = '처리 중...';
     
+    // 현재 URL에서 mark-as-sold URL 생성
+    const currentUrl = window.location.pathname;
+    const markAsSoldUrl = currentUrl.replace(/\/$/, '') + '/mark-as-sold/';
+    
     // 서버에 요청
-    const response = await fetch(window.location.href.replace('/ddokfarm/', '/ddokfarm/').replace(/\/(\d+)\/$/, '/mark-as-sold/'), {
+    const response = await fetch(markAsSoldUrl, {
       method: 'POST',
       headers: {
         'X-CSRFToken': getCsrfToken(),
