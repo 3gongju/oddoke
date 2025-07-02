@@ -275,11 +275,36 @@ ASGI_APPLICATION = 'oddoke.asgi.application'
 REDIS_URL = os.getenv('REDIS_URL')
 
 # 채널 레이어 설정
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # 개발용: 메모리 기반
-    },
-}
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',  # 개발용: 메모리 기반
+#     },
+# }
+if DEBUG:
+    # 개발환경: InMemory (로컬에서만)
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        },
+    }
+else:
+    # 🔥 운영환경: Redis 채널 레이어 (필수!)
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [
+                    os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')
+                ],
+                "capacity": 300,
+                "expiry": 10,
+            },
+        },
+    }
+
+
+
+
 # 오픈 API 키 설정
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
