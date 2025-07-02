@@ -14,8 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const selectedMemberIds = window.selectedMemberIds || [];
   const category = document.getElementById("selected-category")?.value || 'community';
 
-  console.log('🚀 Post form initialized with category:', category);
-
   // ✅ 전체선택 관리자 초기화 (가장 먼저)
   memberSelectAllManager.initialize();
 
@@ -37,6 +35,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (category === 'sell' || category === 'rental') {
     setupPriceHandlers();
   }
-
-  console.log('✅ All post form features initialized');
 });

@@ -89,7 +89,6 @@ export function setupArtistAutocomplete(ajaxBaseUrl) {
   const artistSelect = document.getElementById('artist');
   if (artistSelect) {
     artistSelect.addEventListener('change', function() {
-      console.log('🎯 Artist changed, reinitializing member select all...');
       memberSelectAllManager.reinitializeForArtistChange();
     });
   }
