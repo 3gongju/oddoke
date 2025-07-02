@@ -565,11 +565,9 @@
                 installTalk: true,
             });
 
-            console.log('✅ 카카오톡 공유 성공');
             showToast('카카오톡 공유창이 열렸습니다!', 'success');
 
         } catch (error) {
-            console.error('❌ 카카오톡 공유 오류:', error);
             
             // 에러 타입별 메시지
             let errorMessage = '카카오톡 공유 중 오류가 발생했습니다.';

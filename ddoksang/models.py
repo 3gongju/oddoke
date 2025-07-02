@@ -58,7 +58,7 @@ class BdayCafe(models.Model):
     special_benefits = models.TextField(blank=True, verbose_name='특전 정보')
     event_description = models.TextField(blank=True, verbose_name='이벤트 설명')
 
-    # ✅ 이미지 갤러리 (JSON 형태로 저장)
+    # 이미지 갤러리 (JSON 형태로 저장)
     image_gallery = models.JSONField(default=list, blank=True, verbose_name='이미지 갤러리')
     # 예시 구조:
     # [
@@ -207,7 +207,7 @@ class BdayCafe(models.Model):
         self.image_gallery.append(image_data)
         self.save(update_fields=['image_gallery'])
         
-        print(f"✅ 덕생 이미지 저장 성공: {saved_path}")
+        print(f"덕생 이미지 저장 성공: {saved_path}")
         return image_data
 
     def remove_image(self, image_id):
@@ -234,9 +234,9 @@ class BdayCafe(models.Model):
                     
                     if file_path and default_storage.exists(file_path):
                         default_storage.delete(file_path)
-                        print(f"✅ S3 파일 삭제 성공: {file_path}")
+                        print(f"파일 삭제 성공: {file_path}")
                 except Exception as e:
-                    print(f"❌ S3 파일 삭제 실패: {e}")
+                    print(f"파일 삭제 실패: {e}")
                 
                 # 목록에서 제거
                 self.image_gallery.pop(i)

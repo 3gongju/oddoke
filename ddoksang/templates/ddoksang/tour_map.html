@@ -1,4 +1,5 @@
 <!-- templates/ddoksang/tour_map.html -->
+ <!-- 추후 구현 위해 남겨놓음 -->
 {% extends "ddoksang/base/ddoksang_base.html" %}
 {% load static %}
 
@@ -125,30 +126,23 @@ let userLocationMarker = null;
 let bdayCafes = [];
 try {
     const rawData = `{{ bday_cafes_json|escapejs }}`;
-    console.log('Raw JSON 데이터 길이:', rawData.length);
     
     if (rawData && rawData.trim() !== '[]' && rawData.trim() !== '') {
         bdayCafes = JSON.parse(rawData);
-        console.log('파싱된 생일카페 데이터:', bdayCafes);
-        console.log('생일카페 개수:', bdayCafes.length);
         
         // 첫 번째 카페 데이터 구조 확인
         if (bdayCafes.length > 0) {
-            console.log('첫 번째 카페 데이터:', bdayCafes[0]);
         }
     } else {
         console.warn('생일카페 데이터가 비어있습니다.');
     }
 } catch (error) {
-    console.error('생일카페 데이터 파싱 오류:', error);
     bdayCafes = [];
 }
 
-// ✅ 마커 생성 함수
+// 마커 생성 함수
 function createMarkers() {
-    console.log('=== createMarkers 함수 시작 ===');
-    console.log('처리할 카페 수:', bdayCafes.length);
-    
+
     markers = [];
     let successCount = 0;
     let errorCount = 0;
@@ -202,7 +196,7 @@ function createMarkers() {
             const marker = new kakao.maps.Marker({
                 position: position,
                 image: markerImage,
-                title: cafe.name || cafe.cafe_name || '생일카페'  // ✅ cafe.name을 우선 사용
+                title: cafe.name || cafe.cafe_name || '생일카페'  // cafe.name을 우선 사용
             });
             
             // 마커 클릭 이벤트
@@ -214,7 +208,6 @@ function createMarkers() {
             markers.push(marker);
             successCount++;
             
-            console.log(`마커 ${successCount} 생성 완료: ${cafe.name || cafe.cafe_name} (${lat}, ${lng})`);
             
         } catch (error) {
             console.error(`카페 ${index} 마커 생성 오류:`, error, cafe);
@@ -222,16 +215,13 @@ function createMarkers() {
         }
     });
     
-    console.log(`마커 생성 완료 - 성공: ${successCount}, 실패: ${errorCount}`);
     
     // 클러스터러에 마커 추가
     if (clusterer && markers.length > 0) {
         if (isClusteringEnabled) {
             clusterer.addMarkers(markers);
-            console.log('클러스터러에 마커 추가됨');
         } else {
             markers.forEach(marker => marker.setMap(map));
-            console.log('지도에 개별 마커 추가됨');
         }
         
         // 클러스터 클릭 이벤트
@@ -245,7 +235,6 @@ function createMarkers() {
             const firstMarkerPosition = markers[0].getPosition();
             map.setCenter(firstMarkerPosition);
             map.setLevel(8);
-            console.log('지도 중심을 첫 번째 마커로 이동');
         }
     } else {
         console.warn('클러스터러가 없거나 마커가 없습니다.');
@@ -254,7 +243,6 @@ function createMarkers() {
 
 // 지도 초기화 함수
 function initMap() {
-    console.log('=== 지도 초기화 시작 ===');
     
     const loadingEl = document.getElementById('mapLoading');
     if (loadingEl) {
@@ -275,7 +263,6 @@ function initMap() {
         };
         
         map = new kakao.maps.Map(mapContainer, mapOption);
-        console.log('지도 생성 완료');
         
         // 클러스터러 생성
         if (typeof kakao.maps.MarkerClusterer !== 'undefined') {
@@ -320,9 +307,7 @@ function initMap() {
                     }
                 ]
             });
-            console.log('클러스터러 생성 완료');
         } else {
-            console.error('MarkerClusterer를 사용할 수 없습니다.');
         }
         
         // 마커 생성
@@ -332,7 +317,6 @@ function initMap() {
             loadingEl.classList.add('hidden');
         }
         
-        console.log('지도 초기화 완료');
         
     } catch (error) {
         console.error('지도 초기화 오류:', error);
@@ -352,7 +336,7 @@ function initMap() {
     }
 }
 
-// ✅ 카페 정보 표시 - 수정된 버전
+// 카페 정보 표시 - 수정된 버전
 function showCafeInfo(cafe) {
     console.log('카페 정보 표시:', cafe); // 디버깅용
     
@@ -360,7 +344,7 @@ function showCafeInfo(cafe) {
     const title = document.getElementById('cafeInfoTitle');
     const content = document.getElementById('cafeInfoContent');
     
-    // ✅ 카페명 확인 - cafe.name을 우선 사용
+    // 카페명 확인 - cafe.name을 우선 사용
     const cafeName = cafe.name || cafe.cafe_name || '생일카페';
     const artistName = cafe.artist || '아티스트';
     const memberName = cafe.member || '';
@@ -397,7 +381,7 @@ function showCafeInfo(cafe) {
             
             ${specialBenefits ? `
             <div class="border-t pt-4">
-                <h5 class="font-medium mb-2">🎁 특전</h5>
+                <h5 class="font-medium mb-2">특전</h5>
                 <p class="text-sm text-gray-600">${specialBenefits}</p>
             </div>
             ` : ''}
@@ -416,7 +400,7 @@ function showCafeInfo(cafe) {
     panel.classList.remove('translate-y-full');
 }
 
-// ✅ 내 위치 찾기 및 주변 카페 표시 - 수정된 버전
+// 내 위치 찾기 및 주변 카페 표시 - 수정된 버전
 function findMyLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
@@ -449,11 +433,10 @@ function findMyLocation() {
             map.setCenter(locPosition);
             map.setLevel(6);
 
-            // ✅ 주변 카페 표시
+            // 주변 카페 표시
             showNearbyCafes(lat, lng);
         }, (error) => {
             alert('위치 정보를 가져올 수 없습니다.');
-            console.error('위치 정보 오류:', error);
         });
     } else {
         alert('이 브라우저에서는 위치 서비스를 지원하지 않습니다.');
@@ -490,7 +473,7 @@ function toggleClustering() {
     }
 }
 
-// ✅ 주변 카페 표시 - 수정된 버전
+// 주변 카페 표시 - 수정된 버전
 function showNearbyCafes(userLat, userLng) {
     const panel = document.getElementById('nearbyPanel');
     const list = document.getElementById('nearbyList');
@@ -522,7 +505,7 @@ function showNearbyCafes(userLat, userLng) {
             const item = document.createElement('div');
             item.className = 'border border-gray-200 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors';
             
-            // ✅ cafe.name을 우선 사용
+            // cafe.name을 우선 사용
             const cafeName = cafe.name || cafe.cafe_name || '생일카페';
             const artistName = cafe.artist || '';
             const memberName = cafe.member || '';
@@ -561,9 +544,8 @@ function showNearbyCafes(userLat, userLng) {
     panel.classList.remove('hidden');
 }
 
-// ✅ 이벤트 리스너 설정
+// 이벤트 리스너 설정
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM 로드 완료, 카카오맵 API 확인 중...');
     
     // 카카오맵 API 로드 확인
     if (typeof kakao === 'undefined' || !kakao.maps) {
@@ -583,7 +565,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    console.log('카카오맵 API 로드 완료, 지도 초기화 시작...');
     
     // 지도 초기화
     try {
@@ -624,10 +605,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
         
-        console.log('모든 이벤트 리스너 설정 완료');
         
     } catch (error) {
-        console.error('지도 초기화 중 오류:', error);
     }
 });
 
