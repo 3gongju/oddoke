@@ -239,7 +239,7 @@ def intro_view(request):
     
     context = {
         'page_title': '어덕해 소개',
-        'total_slides': 18,
+        'total_slides': len(slide_contents),
         'slide_contents': slide_contents,
         'stats': stats,
         'raw_favs': raw_favs,
