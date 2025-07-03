@@ -802,27 +802,39 @@
                 });
             }, 500);
             
+            // 첫 번째 슬라이드가 CTA 슬라이드인 경우에만 카운터 애니메이션 실행
             if (currentSection === totalSections - 1) {
-                animateCounters();
+                setTimeout(() => {
+                    console.log('초기화시 CTA 슬라이드 감지, 카운터 애니메이션 시작');
+                    animateCounters();
+                }, 1000);
             }
         }
         
-        // 카운터 애니메이션
+        // 카운터 애니메이션 (개선된 버전)
         function animateCounters() {
             const counters = document.querySelectorAll('.counter');
-            counters.forEach(counter => {
-                const target = parseInt(counter.textContent);
+            console.log(`카운터 애니메이션 시작: ${counters.length}개 카운터 발견`);
+            
+            counters.forEach((counter, index) => {
+                const target = parseInt(counter.textContent.replace(/,/g, ''));
+                console.log(`카운터 ${index}: 목표값 ${target}`);
+                
                 if (target > 0) {
+                    counter.textContent = '0'; // 초기값을 0으로 설정
                     let current = 0;
-                    const increment = target / 50;
+                    const duration = 2000; // 2초 동안 애니메이션
+                    const increment = target / (duration / 50); // 50ms마다 업데이트
+                    
                     const timer = setInterval(() => {
                         current += increment;
                         if (current >= target) {
                             current = target;
                             clearInterval(timer);
+                            console.log(`카운터 ${index} 애니메이션 완료: ${target}`);
                         }
                         counter.textContent = Math.floor(current).toLocaleString();
-                    }, 40);
+                    }, 50);
                 }
             });
         }
@@ -998,11 +1010,15 @@
                 }
             }
             
-            // 마지막 슬라이드에서 카운터 애니메이션 실행
-            if (sectionIndex === totalSections - 1) {
+            // CTA 슬라이드에서 카운터 애니메이션 실행 (슬라이드 타입 확인)
+            const ctaSlideIndex = {{ slide_contents|length|add:"-1" }}; // 마지막 슬라이드 인덱스
+            console.log(`현재 섹션: ${sectionIndex}, CTA 슬라이드 인덱스: ${ctaSlideIndex}`);
+            
+            if (sectionIndex === ctaSlideIndex) {
+                console.log('CTA 슬라이드 진입, 카운터 애니메이션 시작');
                 setTimeout(() => {
                     animateCounters();
-                }, 500);
+                }, 800); // 페이드인 후 카운터 애니메이션
             }
             
             setTimeout(() => {
@@ -1109,9 +1125,13 @@
                     }
                 }
                 
-                // 마지막 슬라이드에서 카운터 애니메이션
-                if (currentSection === totalSections - 1) {
-                    animateCounters();
+                // CTA 슬라이드에서 카운터 애니메이션
+                const ctaSlideIndex = totalSections - 1; // 마지막 슬라이드가 CTA라고 가정
+                if (currentSection === ctaSlideIndex) {
+                    console.log('CTA 슬라이드 자동 감지, 카운터 애니메이션 시작');
+                    setTimeout(() => {
+                        animateCounters();
+                    }, 500);
                 }
             }
         }
